@@ -246,11 +246,13 @@ export function RunnerThreadRunActivityCard({
       {expanded ? (
         <div className="tb-thread-run-body">
           <div className="tb-thread-run-toolbar">
-            <div className="tb-thread-run-filters" role="group" aria-label="Filter run activity">
+            <div className="tb-thread-run-filters" role="tablist" aria-label="Filter run activity">
               {FILTERS.map((item) => (
                 <button
                   key={item.id}
                   type="button"
+                  role="tab"
+                  aria-selected={filter === item.id}
                   className={filter === item.id ? "is-active" : ""}
                   onClick={() => setFilter(item.id)}
                 >

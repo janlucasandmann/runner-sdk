@@ -75,6 +75,7 @@ import { useRunnerExecution } from "./use-runner-execution.js";
 import { RUNNER_CHAT_ENTER_ANIMATION_DURATION_MS, getRunnerChatEnterAnimationStyle } from "./runner-chat-animations.js";
 import { mountRunnerChatStyles } from "./runner-chat-styles.js";
 import { RunnerThreadRunActivityCard } from "./thread/run-activity-card.js";
+import { adaptRunnerThreadActionToRunnerLog } from "./thread/activity-action-list.js";
 import { RunnerThreadUserMessageTime } from "./thread/thread-message.js";
 import { RunnerThreadTimeline } from "./thread/thread-timeline.js";
 import { useRunnerThreadProjection } from "./thread/use-runner-thread-projection.js";
@@ -20346,6 +20347,91 @@ export function RunnerChat({
     });
   }
 
+  const originalThreadActionLogIndex = useMemo(() => {
+    const byIdentity = new Map<string, { log: RunnerLog; turn: RunnerTurn; logIndex: number }>();
+    const entries: Array<{ log: RunnerLog; turn: RunnerTurn; logIndex: number }> = [];
+    const addIdentity = (value: unknown, entry: { log: RunnerLog; turn: RunnerTurn; logIndex: number }) => {
+      const normalized = String(value || "").trim();
+      if (normalized && !byIdentity.has(normalized)) byIdentity.set(normalized, entry);
+    };
+
+    turns.forEach((turn) => {
+      turn.logs.forEach((log, logIndex) => {
+        const entry = { log, turn, logIndex };
+        const metadata = (log.metadata || {}) as Record<string, unknown>;
+        entries.push(entry);
+        [
+          metadata.toolId,
+          metadata.tool_id,
+          metadata.actionId,
+          metadata.action_id,
+          metadata.logId,
+          metadata.log_id,
+          metadata.stepId,
+          metadata.step_id,
+          metadata.eventId,
+          metadata.event_id,
+        ].forEach((value) => addIdentity(value, entry));
+      });
+    });
+
+    return { byIdentity, entries };
+  }, [turns]);
+
+  function resolveOriginalThreadActionLog(action: RunnerThreadAction) {
+    const metadata = (action.metadata || {}) as Record<string, unknown>;
+    const identities = [
+      action.id,
+      action.sourceEventId,
+      metadata.toolId,
+      metadata.tool_id,
+      metadata.actionId,
+      metadata.action_id,
+      metadata.logId,
+      metadata.log_id,
+      metadata.stepId,
+      metadata.step_id,
+      metadata.eventId,
+      metadata.event_id,
+    ];
+    for (const identity of identities) {
+      const normalized = String(identity || "").trim();
+      const exact = normalized ? originalThreadActionLogIndex.byIdentity.get(normalized) : null;
+      if (exact) return exact;
+    }
+
+    const actionMessage = String(action.summary || action.title || "").replace(/\s+/g, " ").trim();
+    const actionEventType = String(metadata.legacyEventType || metadata.eventType || action.type || "").trim();
+    const actionToolName = String(action.toolName || metadata.toolName || metadata.tool_name || "").trim();
+    const actionInput = action.input && typeof action.input === "object" && !Array.isArray(action.input)
+      ? action.input as Record<string, unknown>
+      : null;
+    const actionCommand = String(metadata.command || actionInput?.command || "").trim();
+    const actionCreatedAtMs = Date.parse(action.createdAt || "");
+    let bestMatch: { entry: { log: RunnerLog; turn: RunnerTurn; logIndex: number }; score: number } | null = null;
+
+    for (const entry of originalThreadActionLogIndex.entries) {
+      const logMetadata = (entry.log.metadata || {}) as Record<string, unknown>;
+      const logMessage = String(entry.log.message || "").replace(/\s+/g, " ").trim();
+      const logToolName = String(logMetadata.toolName || logMetadata.tool_name || "").trim();
+      const logCommand = String(logMetadata.command || "").trim();
+      let score = 0;
+      if (actionMessage && logMessage === actionMessage) score += 8;
+      if (actionEventType && entry.log.eventType === actionEventType) score += 4;
+      if (actionToolName && logToolName === actionToolName) score += 5;
+      if (actionCommand && logCommand === actionCommand) score += 10;
+      const logCreatedAtMs = Date.parse(entry.log.createdAt || "");
+      if (Number.isFinite(actionCreatedAtMs) && Number.isFinite(logCreatedAtMs)) {
+        const deltaMs = Math.abs(actionCreatedAtMs - logCreatedAtMs);
+        if (deltaMs <= 1_000) score += 4;
+        else if (deltaMs <= 30_000) score += 1;
+      }
+      if (score > (bestMatch?.score || 0)) bestMatch = { entry, score };
+    }
+
+    return bestMatch && bestMatch.score >= 8 ? bestMatch.entry : null;
+  }
+
   async function handlePermissionDecision(log: RunnerLog, decision: "allow" | "deny") {
     const requestId = String(log.metadata?.permissionRequestId || "").trim();
     if (!currentThreadId || !requestId || !normalizedBackendUrl || !apiKey.trim()) {
@@ -20406,6 +20492,102 @@ export function RunnerChat({
     } catch (error) {
       reportRunnerLifecycleCallbackError("onThreadStatusChange", error);
     }
+  }
+
+  function renderCanonicalThreadAction(action: RunnerThreadAction) {
+    const original = resolveOriginalThreadActionLog(action);
+    if (original) {
+      const timelineState = getTurnTimelineState(original.turn);
+      const originalTimelineItemIndex = timelineState.displayedTimelineItems.findIndex((item) => {
+        if (item.kind === "log") return item.log === original.log;
+        if (item.kind === "browser_group") return item.logs.includes(original.log);
+        if (item.kind === "deep_research_group") return item.runningCommandLog === original.log || item.logs.includes(original.log);
+        if (item.kind === "computer_use_group") return item.group.logs.includes(original.log) || item.group.sessionLogs.includes(original.log);
+        return item.invocationLog === original.log || item.completionLog === original.log || item.logs.includes(original.log);
+      });
+      if (originalTimelineItemIndex >= 0) {
+        const originalTimelineItem = timelineState.displayedTimelineItems[originalTimelineItemIndex];
+        const isGroupedAnchor = originalTimelineItem.kind === "log"
+          || (originalTimelineItem.kind === "browser_group" && originalTimelineItem.logs[0] === original.log)
+          || (originalTimelineItem.kind === "deep_research_group" && (originalTimelineItem.logs[0] || originalTimelineItem.runningCommandLog) === original.log)
+          || (originalTimelineItem.kind === "computer_use_group" && originalTimelineItem.group.startLog === original.log)
+          || (originalTimelineItem.kind === "subagent_group" && originalTimelineItem.invocationLog === original.log);
+        if (!isGroupedAnchor) return null;
+        return renderTimelineItem(original.turn, originalTimelineItem, originalTimelineItemIndex);
+      }
+    }
+
+    const log = original?.log || adaptRunnerThreadActionToRunnerLog(action);
+    const runnerEnvironmentId = scopedActiveThreadEnvironmentId || selectedEnvironment?.id || environmentId || null;
+    const runnerHeaders = buildRunnerHeaders(requestHeaders, apiKey.trim());
+    return (
+      <RunnerWorkLogEntry
+        log={log}
+        backendUrl={normalizedBackendUrl}
+        environmentId={runnerEnvironmentId}
+        requestHeaders={runnerHeaders}
+        activeTaskPreviewId={activeTaskPreviewId}
+        availableAgents={agents}
+        availableEnvironments={availableEnvironments}
+        availableProjects={availableProjects}
+        onPreviewDocument={(attachment) => toggleDocumentAttachmentPreview(attachment)}
+        onWorkspacePathClick={(path) => {
+          const normalizedPath = String(path || "").trim();
+          if (!normalizedPath) return;
+          toggleDocumentAttachmentPreview({
+            ...buildRunnerPreviewAttachmentFromPath(normalizedPath, {
+              backendUrl: normalizedBackendUrl,
+              environmentId: runnerEnvironmentId,
+              idPrefix: "thread-action-path",
+            }),
+            workspacePath: normalizedPath,
+          });
+        }}
+        onPermissionDecision={handlePermissionDecision}
+        onTaskPreviewClick={onTaskPreviewClick}
+        onAgentPreviewClick={(agent) => {
+          if (typeof onAgentTurnClick !== "function") return;
+          onAgentTurnClick({
+            turnId: action.runId,
+            agentId: agent.agentId || undefined,
+            agentName: agent.agentName || undefined,
+          });
+        }}
+        onEnvironmentPreviewClick={(environment) => {
+          const normalizedEnvironmentId = String(environment.environmentId || "").trim();
+          if (!normalizedEnvironmentId) return;
+          onResourcePreviewClick?.({
+            id: normalizedEnvironmentId,
+            name: String(environment.environmentName || "Environment").trim() || "Environment",
+            resourceType: "environment",
+            description: null,
+            model: null,
+            category: null,
+            projectId: null,
+            projectName: null,
+            isDefault: false,
+            status: null,
+          });
+        }}
+        onProjectPreviewClick={(project) => {
+          const normalizedProjectId = String(project.projectId || "").trim();
+          if (!normalizedProjectId) return;
+          onResourcePreviewClick?.({
+            id: normalizedProjectId,
+            name: String(project.projectName || "Project").trim() || "Project",
+            resourceType: "project",
+            description: null,
+            model: null,
+            category: null,
+            projectId: normalizedProjectId,
+            projectName: String(project.projectName || "").trim() || null,
+            isDefault: false,
+            status: null,
+          });
+        }}
+        onOpenTaskList={onOpenTaskList}
+      />
+    );
   }
 
   function renderTimelineItem(turn: RunnerTurn, item: RunnerTimelineItem, index: number, options?: { renderComputerUseMcpAsGeneric?: boolean; renderBrowserSkillAsGeneric?: boolean }) {
@@ -23154,6 +23336,7 @@ export function RunnerChat({
                         fallbackRunAgentName={displayedAgentLabel}
                         fallbackRunWorkspaceName={displayedWorkspaceLabel}
                         maxMountedItems={12}
+                        renderAction={renderCanonicalThreadAction}
                         renderMessageContent={(message) => (
                           <RunnerMarkdown
                             content={stripSystemTags(message.content)}
@@ -23174,6 +23357,7 @@ export function RunnerChat({
                   activityGroupActionStates={canonicalThread.activityGroupActionStates}
                   onLoadRunDetails={(run) => canonicalThread.loadRunDetails(run.id)}
                   onLoadActivityGroupActions={canonicalThread.loadActivityGroupActions}
+                  renderAction={renderCanonicalThreadAction}
                   renderMessageContent={(message) => (
                     <RunnerMarkdown
                       content={stripSystemTags(message.content)}
@@ -23245,6 +23429,7 @@ export function RunnerChat({
                         fallbackRunAgentName={displayedAgentLabel}
                         fallbackRunWorkspaceName={displayedWorkspaceLabel}
                         maxMountedItems={12}
+                        renderAction={renderCanonicalThreadAction}
                         renderMessageContent={(message) => (
                           <RunnerMarkdown
                             content={stripSystemTags(message.content)}
@@ -23909,18 +24094,7 @@ export function RunnerChat({
                         projection={effectiveLegacyTurnProjection}
                         fallbackAgentName={turnAgentLabel}
                         fallbackWorkspaceName={effectiveWorkspaceSelectorMode === "projects" ? displayedWorkspaceLabel : turnEnvironmentLabel}
-                        renderAction={(action: RunnerThreadAction) => {
-                          const metadata = (action.metadata || {}) as RunnerLog["metadata"];
-                          const legacyLog: RunnerLog = {
-                            createdAt: action.createdAt,
-                            time: "",
-                            message: action.summary || action.title,
-                            type: action.status === "failed" || action.status === "blocked" ? "error" : "info",
-                            eventType: action.type as RunnerLog["eventType"],
-                            metadata,
-                          };
-                          return renderTimelineItem(turn, { kind: "log", log: legacyLog }, action.sequence);
-                        }}
+                        renderAction={renderCanonicalThreadAction}
                         onPermissionDecision={(request: RunnerThreadPermissionRequest, decision) => handlePermissionDecision({
                           createdAt: request.createdAt,
                           time: "",

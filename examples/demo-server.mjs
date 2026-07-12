@@ -23,7 +23,11 @@ import { PLAYGROUND_EVALUATIONS_CSS, PLAYGROUND_EVALUATIONS_SCRIPT } from "./pla
 import { createPlaygroundEvaluationsRuntime } from "./playground-evaluations-runtime.mjs";
 import { PLAYGROUND_FINE_TUNING_CSS, PLAYGROUND_FINE_TUNING_SCRIPT } from "./playground-fine-tuning-page.mjs";
 import { createPlaygroundFineTuningRuntime } from "./playground-fine-tuning-runtime.mjs";
-import { matchDemoThreadV2ProxyRoute, wantsDemoThreadEventStream } from "./demo-thread-v2-proxy.mjs";
+import {
+  matchDemoThreadV2ProxyRoute,
+  shouldRetryUpstreamWithAiosSession,
+  wantsDemoThreadEventStream,
+} from "./demo-thread-v2-proxy.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -9906,7 +9910,7 @@ const html = `<!doctype html>
 
       .playground-notifications-empty-title {
         color: #fff;
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 400;
         line-height: 1.35;
       }
@@ -22296,6 +22300,7 @@ const html = `<!doctype html>
         max-width: var(--playground-centered-page-max-width);
         margin-left: auto;
         margin-right: auto;
+        margin-bottom: 12px;
       }
 
       .playground-guardrails-list-panel,
@@ -37987,7 +37992,7 @@ ${PLAYGROUND_EVALUATIONS_CSS}
 	      }
 
 	      .playground-database-settings-root {
-	        gap: 24px;
+	        gap: 0;
 	      }
 
 	      .playground-database-description-section.playground-agents-detail-instructions-section {
@@ -38000,11 +38005,11 @@ ${PLAYGROUND_EVALUATIONS_CSS}
 	      }
 
 	      .playground-database-description-section .playground-tasks-detail-section-title {
-	        font-size: 14px;
+	        font-size: 12px;
 	      }
 
 	      .playground-database-settings-root .playground-database-danger-section {
-	        margin-top: 0;
+	        margin-top: 24px;
 	      }
 
 	      .playground-database-api-quickstart-card {
@@ -38093,15 +38098,110 @@ ${PLAYGROUND_EVALUATIONS_CSS}
 	        background: #121212;
 	      }
 
+	      .playground-database-access-section-title {
+	        margin: 24px 0 12px;
+	        color: #fff;
+	        font-size: 14px;
+	        font-weight: 400;
+	      }
+
 	      .playground-database-access-table-toolbar.playground-develop-server-kind-table-toolbar {
 	        display: flex;
 	        align-items: center;
-	        justify-content: space-between;
+	        justify-content: flex-start;
 	        gap: 16px;
 	        width: 100%;
 	        margin: 0;
 	        padding: 0 0 12px;
 	        border: 0;
+	      }
+
+	      .playground-database-access-table-section .playground-database-access-table-toolbar .playground-develop-server-kind-table-controls {
+	        flex: 1 1 auto;
+	        width: auto;
+	        min-width: 0;
+	        margin-left: 0 !important;
+	        justify-content: flex-start !important;
+	        align-items: center;
+	        gap: 10px;
+	      }
+
+	      .playground-database-access-table-section .playground-database-access-table-toolbar .playground-plugins-toolbar-controls {
+	        flex: 0 0 auto;
+	        display: flex;
+	        align-items: center;
+	        justify-content: flex-start;
+	        gap: 10px;
+	      }
+
+	      .playground-database-access-table-toolbar .playground-develop-server-kind-search-shell {
+	        flex: 0 1 340px;
+	        width: min(340px, 100%);
+	        min-width: 0;
+	        max-width: 340px;
+	        background: rgba(255, 255, 255, 0.025) !important;
+	      }
+
+	      .playground-database-access-table-toolbar > .playground-project-teams-add-shell {
+	        flex: 0 0 auto;
+	        margin-left: auto;
+	      }
+
+	      .playground-database-access-table-toolbar .playground-tasks-toolbar-popup-shell {
+	        z-index: 520;
+	      }
+
+	      .playground-database-access-table-toolbar .playground-tasks-toolbar-popup-menu {
+	        z-index: 521;
+	      }
+
+	      .playground-database-access-empty {
+	        min-height: 96px;
+	        margin: 0;
+	        padding: 28px 20px;
+	      }
+
+	      .playground-database-access-table .playground-agents-overview-select-checkbox:disabled {
+	        cursor: default;
+	        opacity: 0.35;
+	      }
+
+	      .playground-tasks-toolbar-popup-shell.playground-tasks-toolbar-popup-shell-portal .playground-database-access-action-menu {
+	        --playground-platform-popup-border: var(--tb-task-input-border, var(--tb-runner-input-border, linear-gradient(-10deg, rgba(200, 200, 200, 0.25), rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.375))));
+	        width: 220px;
+	        min-width: 220px;
+	        max-height: min(360px, calc(100vh - 24px));
+	        padding: 4px 0;
+	        border: 0;
+	        border-radius: 25px;
+	        background: rgba(30, 30, 30, 0.5);
+	        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+	        -webkit-backdrop-filter: blur(5px);
+	        backdrop-filter: blur(5px);
+	        transform-origin: top right;
+	        pointer-events: auto;
+	      }
+
+	      .playground-tasks-toolbar-popup-shell.playground-tasks-toolbar-popup-shell-portal .playground-database-access-action-menu::before {
+	        content: "";
+	        pointer-events: none;
+	        position: absolute;
+	        inset: 0;
+	        z-index: 5;
+	        border-radius: inherit;
+	        padding: 1px;
+	        background: var(--playground-platform-popup-border);
+	        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+	        mask-clip: content-box, border-box;
+	        mask-composite: exclude;
+	        mask-origin: content-box, border-box;
+	        mask-repeat: repeat, repeat;
+	        mask-size: auto, auto;
+	      }
+
+	      .playground-database-access-action-menu > * {
+	        position: relative;
+	        z-index: 6;
 	      }
 
 	      .playground-database-access-table.playground-agents-overview-list-table {
@@ -43862,6 +43962,101 @@ ${METRONOME_PAGE_CSS}
         z-index: 0;
       }
 
+      .playground-team-page.is-organization-overview-page,
+      .playground-team-page.is-team-overview-page {
+        background-image:
+          linear-gradient(
+            to bottom,
+            transparent,
+            transparent 200px,
+            #000 400px
+          ),
+          url('/img/bg/organizations.webp');
+        background-position: top center;
+        background-repeat: no-repeat;
+        background-size: 100% 100%, 100% auto;
+      }
+
+      .playground-organization-overview-page.is-develop-configure-page {
+        background: transparent;
+      }
+
+      .playground-organization-overview-content {
+        background: transparent;
+      }
+
+      .playground-organization-overview-hero-intro {
+        height: 280px;
+        min-height: 280px;
+        padding: 0;
+        box-sizing: border-box;
+        color: #fff;
+        text-shadow: none;
+      }
+
+      .playground-organization-overview-hero-title {
+        margin: 0;
+        max-width: 620px;
+        font-size: 18px;
+        font-weight: 500;
+        line-height: 1.1;
+        letter-spacing: 0;
+      }
+
+      .playground-organization-overview-hero-description {
+        max-width: 320px;
+        margin: 14px 0 0;
+        color: rgba(255, 255, 255, 0.76);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.6;
+      }
+
+      .playground-organization-overview-hero-actions {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 24px;
+        text-shadow: none;
+      }
+
+      .playground-organization-overview-docs-button {
+        background: #fff;
+        color: #000;
+        font-size: 12px;
+      }
+
+      .playground-organization-overview-docs-button:hover {
+        background: rgba(255, 255, 255, 0.9);
+        color: #000;
+      }
+
+      .playground-team-overview-page.playground-organization-overview-page.is-develop-configure-page .playground-organization-overview-table-section {
+        background: rgba(255, 255, 255, 0.075) !important;
+        -webkit-backdrop-filter: blur(50px) !important;
+        backdrop-filter: blur(50px) !important;
+      }
+
+      .playground-team-overview-page.playground-organization-overview-page.is-develop-configure-page .playground-organization-overview-sticky-table-header,
+      .playground-team-overview-page.playground-organization-overview-page.is-develop-configure-page .playground-organization-overview-toolbar-row {
+        background: transparent !important;
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+      }
+
+      @media (max-width: 720px) {
+        .playground-organization-overview-hero-intro {
+          height: 280px;
+          min-height: 280px;
+          padding: 0;
+        }
+
+        .playground-organization-overview-hero-title {
+          font-size: 18px;
+        }
+      }
+
       .playground-agents-overview-analytics-card.playground-project-overview-progress-combo-card {
         margin: 0;
         padding: 0;
@@ -46796,6 +46991,13 @@ ${METRONOME_PAGE_CSS}
 		        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 		      }
 
+		      .playground-develop-resource-overview-column-header.is-database > div:nth-child(5),
+		      .playground-develop-resource-overview-column-header.is-database > div:nth-child(6) {
+		        display: flex;
+		        justify-content: flex-end;
+		        text-align: right;
+		      }
+
 		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-project-overview-thread-cell,
 		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-resources-overview-name-title,
 		      .playground-resources-page.is-develop-server-kind-page .playground-develop-resource-overview-table-section .playground-agents-overview-table-value {
@@ -46852,18 +47054,30 @@ ${METRONOME_PAGE_CSS}
 		        margin-bottom: 24px;
 		      }
 
+		      .playground-resources-page.is-develop-server-kind-page.playground-develop-api-keys-page .playground-develop-api-keys-column-header {
+		        margin-top: 0;
+		      }
+
 		      .playground-develop-api-keys-page .playground-develop-api-keys-created-notice,
 		      .playground-develop-api-keys-page .playground-settings-inline-status {
 		        margin-bottom: 16px;
 		      }
 
-		      .playground-develop-api-keys-page .playground-develop-api-keys-table-section .playground-project-overview-threads-table-header,
-		      .playground-develop-api-keys-page .playground-develop-api-keys-table-section .playground-project-overview-threads-table-row {
-		        grid-template-columns: minmax(180px, 1.1fr) minmax(120px, 0.68fr) minmax(100px, 0.5fr) minmax(100px, 0.5fr) minmax(140px, 0.78fr) minmax(104px, 0.52fr) 28px !important;
+		      .playground-resources-page.is-develop-server-kind-page.playground-develop-api-keys-page .playground-develop-resource-overview-table-section.playground-develop-api-keys-table-section .playground-project-overview-threads-table-header,
+		      .playground-resources-page.is-develop-server-kind-page.playground-develop-api-keys-page .playground-develop-resource-overview-table-section.playground-develop-api-keys-table-section .playground-project-overview-threads-table-row {
+		        grid-template-columns: 28px minmax(180px, 1.45fr) minmax(112px, 0.72fr) minmax(88px, 0.52fr) minmax(88px, 0.52fr) minmax(140px, 0.8fr) minmax(96px, 0.56fr) 32px !important;
+		        gap: 12px;
 		      }
 
-		      .playground-develop-api-keys-page .playground-develop-api-keys-column-header > div:first-child {
+		      .playground-develop-api-keys-page .playground-develop-api-keys-column-header > div:nth-child(2) {
 		        justify-content: flex-start !important;
+		      }
+
+		      .playground-develop-api-keys-page .playground-develop-api-keys-column-header > div:first-child,
+		      .playground-develop-api-keys-page .playground-develop-api-keys-table-row .is-select {
+		        display: flex;
+		        align-items: center;
+		        justify-content: center;
 		      }
 
 		      .playground-develop-api-keys-page .playground-develop-api-keys-table-row {
@@ -46885,29 +47099,46 @@ ${METRONOME_PAGE_CSS}
 		      }
 
 		      @media (max-width: 1180px) {
-		        .playground-develop-api-keys-page .playground-develop-api-keys-column-header > div:nth-child(5),
+		        .playground-develop-api-keys-page .playground-develop-api-keys-column-header > div:nth-child(6),
 		        .playground-develop-api-keys-page .playground-develop-api-keys-table-row .is-created-by {
 		          display: none;
 		        }
 
-		        .playground-develop-api-keys-page .playground-develop-api-keys-table-section .playground-project-overview-threads-table-header,
-		        .playground-develop-api-keys-page .playground-develop-api-keys-table-section .playground-project-overview-threads-table-row {
-		          grid-template-columns: minmax(170px, 1fr) minmax(110px, 0.64fr) minmax(92px, 0.46fr) minmax(92px, 0.46fr) minmax(100px, 0.5fr) 28px !important;
+		        .playground-resources-page.is-develop-server-kind-page.playground-develop-api-keys-page .playground-develop-resource-overview-table-section.playground-develop-api-keys-table-section .playground-project-overview-threads-table-header,
+		        .playground-resources-page.is-develop-server-kind-page.playground-develop-api-keys-page .playground-develop-resource-overview-table-section.playground-develop-api-keys-table-section .playground-project-overview-threads-table-row {
+		          grid-template-columns: 28px minmax(170px, 1fr) minmax(110px, 0.64fr) minmax(92px, 0.46fr) minmax(92px, 0.46fr) minmax(100px, 0.5fr) 32px !important;
 		        }
 		      }
 
 		      @media (max-width: 860px) {
-		        .playground-develop-api-keys-page .playground-develop-api-keys-column-header > div:nth-child(2),
-		        .playground-develop-api-keys-page .playground-develop-api-keys-column-header > div:nth-child(4),
+		        .playground-develop-api-keys-page .playground-develop-api-keys-column-header > div:nth-child(3),
+		        .playground-develop-api-keys-page .playground-develop-api-keys-column-header > div:nth-child(5),
 		        .playground-develop-api-keys-page .playground-develop-api-keys-table-row .is-secret,
-		        .playground-develop-api-keys-page .playground-develop-api-keys-table-row > .is-date:nth-child(4) {
+		        .playground-develop-api-keys-page .playground-develop-api-keys-table-row > .is-date:nth-child(5) {
 		          display: none;
 		        }
 
-		        .playground-develop-api-keys-page .playground-develop-api-keys-table-section .playground-project-overview-threads-table-header,
-		        .playground-develop-api-keys-page .playground-develop-api-keys-table-section .playground-project-overview-threads-table-row {
-		          grid-template-columns: minmax(160px, 1fr) minmax(92px, 0.48fr) minmax(100px, 0.52fr) 28px !important;
+		        .playground-resources-page.is-develop-server-kind-page.playground-develop-api-keys-page .playground-develop-resource-overview-table-section.playground-develop-api-keys-table-section .playground-project-overview-threads-table-header,
+		        .playground-resources-page.is-develop-server-kind-page.playground-develop-api-keys-page .playground-develop-resource-overview-table-section.playground-develop-api-keys-table-section .playground-project-overview-threads-table-row {
+		          grid-template-columns: 28px minmax(160px, 1fr) minmax(92px, 0.48fr) minmax(100px, 0.52fr) 32px !important;
 		        }
+		      }
+
+		      .playground-api-key-reveal-modal .playground-settings-code-row {
+		        margin-top: 4px;
+		      }
+
+		      .playground-api-key-reveal-modal .playground-settings-code {
+		        min-width: 0;
+		        overflow-wrap: anywhere;
+		        white-space: normal;
+		        user-select: all;
+		      }
+
+		      .playground-api-key-reveal-error {
+		        color: rgba(255, 255, 255, 0.6);
+		        font-size: 12px;
+		        line-height: 1.5;
 		      }
 
 		      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-table-title,
@@ -62220,6 +62451,40 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
 
       const PLAYGROUND_ASSIGNABLE_TEAM_ROLE_DEFINITIONS = PLAYGROUND_TEAM_ROLE_DEFINITIONS.filter((role) => role.id !== "owner");
       const PLAYGROUND_TEAM_ROLE_IDS = PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => role.id);
+      const PLAYGROUND_ORGANIZATION_ROLE_DEFINITIONS = [
+        {
+          id: "owner",
+          label: "Owner",
+          description: "Has permanent full control of the organization, members, resources, usage, billing, and governance settings.",
+        },
+        {
+          id: "admin",
+          label: "Admin",
+          description: "Can manage organization members, resources, role permissions, and workspace settings.",
+        },
+        {
+          id: "billing",
+          label: "Billing",
+          description: "Can review and manage organization usage, credits, budgets, reservations, and billing operations.",
+        },
+        {
+          id: "developer",
+          label: "Developer",
+          description: "Can create and operate agents, computers, workflows, projects, and deployed resources.",
+        },
+        {
+          id: "member",
+          label: "Member",
+          description: "Can participate in organization work with standard access to shared resources.",
+        },
+        {
+          id: "viewer",
+          label: "Viewer",
+          description: "Can inspect organization resources and activity without changing workspace state.",
+        },
+      ];
+      const PLAYGROUND_ASSIGNABLE_ORGANIZATION_ROLE_DEFINITIONS = PLAYGROUND_ORGANIZATION_ROLE_DEFINITIONS.filter((role) => role.id !== "owner");
+      const PLAYGROUND_ORGANIZATION_ROLE_IDS = PLAYGROUND_ORGANIZATION_ROLE_DEFINITIONS.map((role) => role.id);
       const PLAYGROUND_TEAM_LEGACY_ROLE_MAP = {
         create: "member",
         member: "member",
@@ -62254,6 +62519,17 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
       function getPlaygroundTeamRoleApiValue(roleId) {
         const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
         return PLAYGROUND_TEAM_ROLE_API_VALUE_MAP[normalizedRoleId] || normalizedRoleId;
+      }
+
+      function normalizePlaygroundOrganizationRoleId(value, fallback = "member") {
+        const normalized = String(value || "").trim().toLowerCase();
+        return PLAYGROUND_ORGANIZATION_ROLE_IDS.includes(normalized) ? normalized : fallback;
+      }
+
+      function getPlaygroundOrganizationRoleDefinition(roleId) {
+        const normalizedRoleId = normalizePlaygroundOrganizationRoleId(roleId, "member");
+        return PLAYGROUND_ORGANIZATION_ROLE_DEFINITIONS.find((role) => role.id === normalizedRoleId)
+          || PLAYGROUND_ORGANIZATION_ROLE_DEFINITIONS.find((role) => role.id === "member");
       }
 
       const PLAYGROUND_PERMISSION_RING_DEFINITIONS = [
@@ -62385,6 +62661,55 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           label: "Edit team settings",
           description: "Rename the team, change governance settings, delete the team, or alter role permission pages.",
           subjectTypes: ["team", "team_role"],
+        },
+        {
+          id: "organization_workspace_view",
+          ringId: "ring_1",
+          label: "View organization workspace",
+          description: "View organization members, resources, usage, billing, and role configuration.",
+          subjectTypes: ["organization_role"],
+        },
+        {
+          id: "organization_member_invite",
+          ringId: "ring_2",
+          label: "Invite organization members",
+          description: "Invite people into the organization and assign an initial role.",
+          subjectTypes: ["organization_role"],
+        },
+        {
+          id: "organization_member_remove",
+          ringId: "ring_2",
+          label: "Remove organization members",
+          description: "Remove people from the organization membership roster.",
+          subjectTypes: ["organization_role"],
+        },
+        {
+          id: "organization_role_update",
+          ringId: "ring_2",
+          label: "Change member roles",
+          description: "Promote, demote, or otherwise change organization member roles.",
+          subjectTypes: ["organization_role"],
+        },
+        {
+          id: "organization_resource_manage",
+          ringId: "ring_2",
+          label: "Manage organization resources",
+          description: "Create, edit, operate, or remove resources owned by the organization.",
+          subjectTypes: ["organization_role"],
+        },
+        {
+          id: "organization_billing_manage",
+          ringId: "ring_3",
+          label: "Manage usage and billing",
+          description: "Manage credits, budgets, reservations, usage controls, and billing operations.",
+          subjectTypes: ["organization_role"],
+        },
+        {
+          id: "organization_settings_update",
+          ringId: "ring_3",
+          label: "Edit organization settings",
+          description: "Rename the organization and change governance or role-permission settings.",
+          subjectTypes: ["organization_role"],
         },
         {
           id: "project_rules_view",
@@ -62672,6 +62997,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           || normalized === "project_team_role"
           || normalized === "team"
           || normalized === "team_role"
+          || normalized === "organization_role"
           || normalized === "database"
           || normalized === "human_user"
           ? normalized
@@ -62936,6 +63262,75 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
             inputSets[role.id] || createPlaygroundTeamRolePermissionSet(role.id),
             "team_role"
           );
+          return rolePermissionSets;
+        }, {});
+      }
+
+      function createPlaygroundOrganizationRolePermissionSet(roleId) {
+        const normalizedRoleId = normalizePlaygroundOrganizationRoleId(roleId, "member");
+        if (normalizedRoleId === "owner") {
+          return createPlaygroundFullAccessPermissionSet("organization_role");
+        }
+        const teamRoleId = normalizedRoleId === "admin"
+          ? "admin"
+          : normalizedRoleId === "developer"
+            ? "contributor"
+            : "member";
+        const permissionSet = normalizePlaygroundPermissionSet(
+          createPlaygroundTeamRolePermissionSet(teamRoleId),
+          "organization_role"
+        );
+        const organizationActionIds = [
+          "organization_workspace_view",
+          "organization_member_invite",
+          "organization_member_remove",
+          "organization_role_update",
+          "organization_resource_manage",
+          "organization_billing_manage",
+          "organization_settings_update",
+        ];
+        organizationActionIds.forEach((actionId) => {
+          const actionDefinition = getPlaygroundPermissionActionDefinition(actionId);
+          if (!actionDefinition) return;
+          let access = "no_access";
+          if (normalizedRoleId === "admin") access = "full_access";
+          else if (actionId === "organization_workspace_view") access = normalizedRoleId === "viewer" ? "read_only" : "full_access";
+          else if (normalizedRoleId === "billing" && actionId === "organization_billing_manage") access = "full_access";
+          else if (normalizedRoleId === "developer" && actionId === "organization_resource_manage") access = "full_access";
+          else if (normalizedRoleId === "member" && actionId === "organization_resource_manage") access = "ask_for_permission";
+          permissionSet.actions[actionId] = {
+            ...(permissionSet.actions[actionId] || {}),
+            ringId: actionDefinition.ringId,
+            access,
+          };
+        });
+        if (normalizedRoleId === "viewer") {
+          permissionSet.defaultAccess = "read_only";
+          Object.keys(permissionSet.rings || {}).forEach((ringId) => {
+            permissionSet.rings[ringId] = {
+              ...(permissionSet.rings[ringId] || {}),
+              defaultAccess: ringId === "ring_1" ? "read_only" : "no_access",
+            };
+          });
+        }
+        if (normalizedRoleId === "billing") {
+          permissionSet.defaultAccess = "read_only";
+          if (permissionSet.rings?.ring_3) {
+            permissionSet.rings.ring_3 = { ...permissionSet.rings.ring_3, defaultAccess: "ask_for_permission" };
+          }
+        }
+        return permissionSet;
+      }
+
+      function normalizePlaygroundOrganizationRolePermissionSets(value) {
+        const inputSets = isPlaygroundPermissionRecord(value) ? value : {};
+        return PLAYGROUND_ORGANIZATION_ROLE_DEFINITIONS.reduce((rolePermissionSets, role) => {
+          rolePermissionSets[role.id] = role.id === "owner"
+            ? createPlaygroundOrganizationRolePermissionSet(role.id)
+            : normalizePlaygroundPermissionSet(
+                inputSets[role.id] || createPlaygroundOrganizationRolePermissionSet(role.id),
+                "organization_role"
+              );
           return rolePermissionSets;
         }, {});
       }
@@ -63635,7 +64030,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           ? handlers.onActionAccessChange
           : null;
         const visiblePermissionActions = PLAYGROUND_PERMISSION_ACTION_DEFINITIONS.filter((action) => {
-          if (subjectType === "team" || subjectType === "team_role" || subjectType === "database") {
+          if (subjectType === "team" || subjectType === "team_role" || subjectType === "organization_role" || subjectType === "database") {
             return Array.isArray(action.subjectTypes) && action.subjectTypes.includes(subjectType);
           }
           return !Array.isArray(action.subjectTypes) || action.subjectTypes.includes(subjectType);
@@ -65303,6 +65698,9 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           } catch {}
         }
         if (cachedRecord?.promise) {
+          if (!force && options?.staleWhileRevalidate === true && cachedRecord?.data) {
+            return cachedRecord.data;
+          }
           if (!force) {
             return cachedRecord.promise;
           }
@@ -65315,6 +65713,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         if (!force && cachedRecord?.data && cacheAgeMs >= 0 && cacheAgeMs < ttlMs) {
           return cachedRecord.data;
         }
+        const shouldReturnStale = !force && options?.staleWhileRevalidate === true && Boolean(cachedRecord?.data);
 
         const request = (async () => {
           const response = await fetch(normalizedUrl, {
@@ -65360,6 +65759,9 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
             });
           }
         }).catch(() => {});
+        if (shouldReturnStale) {
+          return cachedRecord.data;
+        }
         return request;
       }
 
@@ -87325,6 +87727,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const serverSecretDescriptionTextareaRef = useRef(null);
         const serverAgentRuntimeRunPromptTextareaRef = useRef(null);
         const serverActionsPopoverRef = useRef(null);
+        const resourceOverviewTopNavMenuRef = useRef(null);
         const serverFileActionsPopoverRef = useRef(null);
         const serverDeployProgressTimerRef = useRef(null);
         const serverRenameInputRef = useRef(null);
@@ -87365,6 +87768,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const environmentRenameInputRef = useRef(null);
         const environmentDescriptionTextareaRef = useRef(null);
         const databaseActionsPopoverRef = useRef(null);
+        const databaseAccessToolbarRef = useRef(null);
+        const databaseAccessActionMenuCloseTimerRef = useRef(null);
         const databaseExportMenuRef = useRef(null);
         const databaseRenameInputRef = useRef(null);
         const agentRuntimeSkillsActionsRef = useRef(null);
@@ -87570,6 +87975,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	        const [databasePermissionTeamId, setDatabasePermissionTeamId] = useState("");
 	        const [databasePermissionRoleId, setDatabasePermissionRoleId] = useState("member");
 	        const [databaseTeamMenuId, setDatabaseTeamMenuId] = useState("");
+	        const [databaseAccessSearchQuery, setDatabaseAccessSearchQuery] = useState("");
+	        const [databaseAccessFilter, setDatabaseAccessFilter] = useState("all");
+	        const [databaseAccessToolbarPopover, setDatabaseAccessToolbarPopover] = useState("");
+	        const [databaseAccessActionMenuState, setDatabaseAccessActionMenuState] = useState(null);
+	        const [databaseAccessActionMenuClosing, setDatabaseAccessActionMenuClosing] = useState(false);
 	        const [databaseAccessSort, setDatabaseAccessSort] = useState("name");
 	        const [databaseAccessSortDirection, setDatabaseAccessSortDirection] = useState("asc");
 	        const [selectedDatabaseAccessTeamIds, setSelectedDatabaseAccessTeamIds] = useState(() => new Set());
@@ -87626,6 +88036,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [environmentRenameError, setEnvironmentRenameError] = useState("");
         const [isEnvironmentDescriptionEditing, setIsEnvironmentDescriptionEditing] = useState(false);
         const [serverActionsPopoverOpen, setServerActionsPopoverOpen] = useState(false);
+        const [resourceOverviewTopNavMenuOpen, setResourceOverviewTopNavMenuOpen] = useState(false);
         const [serverPublishMenuOpen, setServerPublishMenuOpen] = useState(false);
         const [serverVersionsHeaderMenuOpen, setServerVersionsHeaderMenuOpen] = useState(false);
         const [serverVersionsSidebarOpen, setServerVersionsSidebarOpen] = useState(false);
@@ -88292,6 +88703,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           }
           return normalizePlaygroundServerOverviewKind(embeddedServerKind);
         }, [embeddedInResources, embeddedResourcesView, embeddedServerKind]);
+        const previousEmbeddedServerKindRef = useRef(normalizedEmbeddedServerKind);
 
         const visibleDisplayServerResources = useMemo(() => {
           if (!normalizedEmbeddedServerKind) {
@@ -89422,6 +89834,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           setDatabaseTeamMenuId("");
 	      setDatabaseAccessSort("name");
 	      setDatabaseAccessSortDirection("asc");
+	      setDatabaseAccessSearchQuery("");
+	      setDatabaseAccessFilter("all");
+	      setDatabaseAccessToolbarPopover("");
+	      setDatabaseAccessActionMenuState(null);
+	      setDatabaseAccessActionMenuClosing(false);
 	      setSelectedDatabaseAccessTeamIds(new Set());
           setDatabaseTeamAccessState({
             teamId: "",
@@ -92712,6 +93129,33 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }, [databaseTeamMenuId]);
 
         useEffect(() => {
+          if (!databaseAccessToolbarPopover) return undefined;
+
+          function handleDatabaseAccessToolbarPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || databaseAccessToolbarRef.current?.contains(target)) return;
+            setDatabaseAccessToolbarPopover("");
+          }
+
+          function handleDatabaseAccessToolbarEscape(event) {
+            if (event.key === "Escape") setDatabaseAccessToolbarPopover("");
+          }
+
+          document.addEventListener("mousedown", handleDatabaseAccessToolbarPointerDown);
+          window.addEventListener("keydown", handleDatabaseAccessToolbarEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleDatabaseAccessToolbarPointerDown);
+            window.removeEventListener("keydown", handleDatabaseAccessToolbarEscape);
+          };
+        }, [databaseAccessToolbarPopover]);
+
+        useEffect(() => () => {
+          if (databaseAccessActionMenuCloseTimerRef.current !== null && typeof window !== "undefined") {
+            window.clearTimeout(databaseAccessActionMenuCloseTimerRef.current);
+          }
+        }, []);
+
+        useEffect(() => {
           if (resourceMode !== "servers") {
             return;
           }
@@ -93284,6 +93728,27 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             window.removeEventListener("keydown", handleServerActionsPopoverEscape);
           };
         }, [serverActionsPopoverOpen]);
+
+        useEffect(() => {
+          if (!resourceOverviewTopNavMenuOpen) return undefined;
+
+          function handleResourceOverviewTopNavMenuPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || resourceOverviewTopNavMenuRef.current?.contains(target)) return;
+            setResourceOverviewTopNavMenuOpen(false);
+          }
+
+          function handleResourceOverviewTopNavMenuEscape(event) {
+            if (event.key === "Escape") setResourceOverviewTopNavMenuOpen(false);
+          }
+
+          document.addEventListener("mousedown", handleResourceOverviewTopNavMenuPointerDown);
+          window.addEventListener("keydown", handleResourceOverviewTopNavMenuEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleResourceOverviewTopNavMenuPointerDown);
+            window.removeEventListener("keydown", handleResourceOverviewTopNavMenuEscape);
+          };
+        }, [resourceOverviewTopNavMenuOpen]);
 
         useEffect(() => {
           if (!serverFileActionsPopoverOpen) return undefined;
@@ -94969,6 +95434,71 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           }
         }
 
+        async function handleRemoveDatabaseTeamAccessBulk(teams) {
+          const removableTeams = (Array.isArray(teams) ? teams : [])
+            .filter((team) => team && !team.locked && String(team.id || "").trim());
+          const removableTeamIds = Array.from(new Set(removableTeams.map((team) => String(team.id).trim())));
+          const currentDatabase = normalizePlaygroundDatabaseRecord(draftDatabase);
+          if (!removableTeamIds.length || !currentDatabase.id || currentDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID) return;
+
+          if (databasePermissionSaveTimerRef.current) {
+            window.clearTimeout(databasePermissionSaveTimerRef.current);
+            databasePermissionSaveTimerRef.current = null;
+          }
+          databasePermissionSaveQueuedRef.current = null;
+          const nextDatabase = removableTeamIds.reduce(
+            (database, teamId) => buildDatabaseTeamAccessRecord(database, teamId, false),
+            currentDatabase
+          );
+          setDatabaseTeamMenuId("");
+          setDatabaseTeamAccessState({ teamId: "bulk", teamIds: removableTeamIds, action: "remove", error: "" });
+          setDatabaseSaveState({ isSaving: true, error: "", message: "" });
+
+          try {
+            const shares = await Promise.all(removableTeamIds.map(async (teamId) => ({
+              teamId,
+              share: await findDatabaseTeamResourceShare(teamId, currentDatabase.id),
+            })));
+            const savedDatabase = await persistDatabaseTeamAccessRecord(nextDatabase);
+            await Promise.all(shares.map(async ({ teamId, share }) => {
+              if (!share?.id) return;
+              const { response, data } = await fetchJsonWithTimeout(
+                backendUrl + "/teams/" + encodeURIComponent(teamId) + "/resource-shares/" + encodeURIComponent(share.id),
+                {
+                  method: "DELETE",
+                  credentials: "include",
+                  cache: "no-store",
+                  headers: requestHeaders,
+                },
+                8000
+              );
+              if (!response.ok && response.status !== 404) {
+                throw new Error(data?.message || data?.error || "Failed to remove database from team.");
+              }
+            }));
+
+            if (removableTeamIds.includes(String(databasePermissionTeamId || ""))) setDatabasePermissionTeamId("");
+            setSelectedDatabaseAccessTeamIds((current) => {
+              const next = new Set(current || []);
+              removableTeamIds.forEach((teamId) => next.delete(teamId));
+              return next;
+            });
+            setDraftDatabase(savedDatabase);
+            setDatabaseTeamAccessState({ teamId: "", action: "", error: "" });
+            setDatabaseSaveState({ isSaving: false, error: "", message: "" });
+          } catch (error) {
+            try {
+              const restoredDatabase = await persistDatabaseTeamAccessRecord(currentDatabase);
+              await Promise.allSettled(removableTeams.map((team) =>
+                upsertDatabaseTeamResourceShare(team, restoredDatabase, currentDatabase.id)
+              ));
+            } catch {}
+            const message = error instanceof Error ? error.message : "Failed to remove database team access.";
+            setDatabaseTeamAccessState({ teamId: "bulk", teamIds: removableTeamIds, action: "", error: message });
+            setDatabaseSaveState({ isSaving: false, error: "", message: "" });
+          }
+        }
+
         function updateDatabaseDescriptionValue(nextValue, { recordHistory = true } = {}) {
           const normalizedNextValue = String(nextValue ?? "");
           const previousValue = String(draftDatabase?.description || "");
@@ -95251,6 +95781,15 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           resetDatabaseEditorAuxiliaryState();
           setIsHomeViewActive(true);
         }
+
+        useEffect(() => {
+          const previousKind = previousEmbeddedServerKindRef.current;
+          previousEmbeddedServerKindRef.current = normalizedEmbeddedServerKind;
+          if (!previousKind || !normalizedEmbeddedServerKind || previousKind === normalizedEmbeddedServerKind) {
+            return;
+          }
+          showEnvironmentsHome();
+        }, [normalizedEmbeddedServerKind]);
 
         function updateDraftServer(updater) {
           if (isSelectedServerTemplatePreview) {
@@ -111374,6 +111913,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	            }),
 	          ];
 	          const normalizedDatabaseAccessSortDirection = databaseAccessSortDirection === "desc" ? "desc" : "asc";
+	          const normalizedDatabaseAccessSearchQuery = String(databaseAccessSearchQuery || "").trim().toLowerCase();
 	          const getDatabaseAccessSortValue = (team, sortKey) => {
 	            if (sortKey === "policy") return String(team?.permission || "");
 	            if (sortKey === "created") {
@@ -111382,7 +111922,13 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	            }
 	            return String(team?.name || "");
 	          };
-	          const visibleDatabasePermissionTeams = databasePermissionTeams.slice().sort((left, right) => {
+	          const visibleDatabasePermissionTeams = databasePermissionTeams.filter((team) => {
+	            if (databaseAccessFilter === "teams" && team.locked) return false;
+	            if (databaseAccessFilter === "default" && !team.locked) return false;
+	            if (!normalizedDatabaseAccessSearchQuery) return true;
+	            return [team.name, team.permission, team.meta]
+	              .some((value) => String(value || "").toLowerCase().includes(normalizedDatabaseAccessSearchQuery));
+	          }).sort((left, right) => {
 	            const leftValue = getDatabaseAccessSortValue(left, databaseAccessSort);
 	            const rightValue = getDatabaseAccessSortValue(right, databaseAccessSort);
 	            let comparison = 0;
@@ -111403,6 +111949,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	            return normalizedDatabaseAccessSortDirection === "desc" ? -comparison : comparison;
 	          });
 	          const visibleDatabasePermissionTeamIds = visibleDatabasePermissionTeams
+	            .filter((team) => !team.locked)
 	            .map((team) => String(team?.id || "").trim())
 	            .filter(Boolean);
 	          const selectedVisibleDatabasePermissionTeamIds = visibleDatabasePermissionTeamIds
@@ -111499,6 +112046,17 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	            && draftDatabase.id
 	            && draftDatabase.id !== PLAYGROUND_DATABASE_DRAFT_ID
 	          );
+	          const databaseAccessSortOptions = [
+	            { id: "name-asc", label: "Name (A-Z)", sort: "name", direction: "asc" },
+	            { id: "name-desc", label: "Name (Z-A)", sort: "name", direction: "desc" },
+	            { id: "created-desc", label: "Recently Added", sort: "created", direction: "desc" },
+	            { id: "policy-asc", label: "Policy", sort: "policy", direction: "asc" },
+	          ];
+	          const databaseAccessFilterOptions = [
+	            { id: "all", label: "All access", description: "Show default and team access" },
+	            { id: "teams", label: "Teams", description: "Only show team access grants" },
+	            { id: "default", label: "Default access", description: "Only show the database default" },
+	          ];
 	          const formatDatabaseTeamCreatedDate = (value) => {
 	            if (!value) return "";
 	            try {
@@ -111507,49 +112065,122 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	              return String(value || "");
 	            }
 	          };
-	          const renderDatabaseTeamMenu = (team) => {
-	            const menuId = "team:" + String(team.id || "");
-	            if (databaseTeamMenuId !== menuId) {
-	              return null;
+	          const closeDatabaseAccessActionMenu = (options = {}) => {
+	            if (!databaseAccessActionMenuState) return;
+	            if (databaseAccessActionMenuCloseTimerRef.current !== null && typeof window !== "undefined") {
+	              window.clearTimeout(databaseAccessActionMenuCloseTimerRef.current);
+	              databaseAccessActionMenuCloseTimerRef.current = null;
 	            }
-	            return React.createElement("div", {
-	                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-project-team-action-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-	                onClick: (event) => event.stopPropagation(),
+	            if (options.animate === false || typeof window === "undefined") {
+	              setDatabaseAccessActionMenuClosing(false);
+	              setDatabaseAccessActionMenuState(null);
+	              return;
+	            }
+	            setDatabaseAccessActionMenuClosing(true);
+	            databaseAccessActionMenuCloseTimerRef.current = window.setTimeout(() => {
+	              databaseAccessActionMenuCloseTimerRef.current = null;
+	              setDatabaseAccessActionMenuClosing(false);
+	              setDatabaseAccessActionMenuState(null);
+	            }, 90);
+	          };
+	          const openDatabaseAccessActionMenu = (event, teams, options = {}) => {
+	            const targets = (Array.isArray(teams) ? teams : [teams]).filter(Boolean);
+	            if (!targets.length) return;
+	            event.preventDefault();
+	            event.stopPropagation();
+	            const menuWidth = 220;
+	            const menuHeight = targets.length > 1 ? 54 : 104;
+	            const gutter = 12;
+	            const viewportWidth = window.innerWidth || document.documentElement?.clientWidth || 0;
+	            const viewportHeight = window.innerHeight || document.documentElement?.clientHeight || 0;
+	            let left;
+	            let top;
+	            if (options.context) {
+	              left = Number(event.clientX || 0);
+	              top = Number(event.clientY || 0);
+	            } else {
+	              const rect = event.currentTarget.getBoundingClientRect();
+	              left = rect.left - menuWidth - 8;
+	              top = rect.top + rect.height / 2 - menuHeight / 2;
+	            }
+	            left = Math.max(gutter, Math.min(viewportWidth - menuWidth - gutter, left));
+	            top = Math.max(gutter, Math.min(viewportHeight - menuHeight - gutter, top));
+	            if (databaseAccessActionMenuCloseTimerRef.current !== null) {
+	              window.clearTimeout(databaseAccessActionMenuCloseTimerRef.current);
+	              databaseAccessActionMenuCloseTimerRef.current = null;
+	            }
+	            setDatabaseTeamMenuId("");
+	            setDatabaseAccessActionMenuClosing(false);
+	            setDatabaseAccessActionMenuState({ teams: targets, left, top });
+	          };
+	          const selectedRemovableDatabaseTeams = databasePermissionTeams.filter((team) =>
+	            !team.locked && selectedDatabaseAccessTeamIds.has(String(team.id || ""))
+	          );
+	          const databaseAccessActionMenuContent = databaseAccessActionMenuState
+	            ? React.createElement("div", {
+	                className: "sidebar-thread-popup-scrim",
+	                style: { zIndex: 360 },
+	                onClick: () => closeDatabaseAccessActionMenu(),
 	              },
-	              team.locked
-	                ? React.createElement("button", {
-	                    type: "button",
-	                    className: "tb-popup-row playground-project-team-menu-item",
-	                    disabled: true,
-	                  }, "Default agent access")
-	                : React.createElement(React.Fragment, null,
-	                    typeof onOpenTeamPage === "function"
+	                React.createElement("div", {
+	                    className: "playground-platform-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-toolbar-popup-shell-portal playground-agents-list-action-menu-shell is-open",
+	                    style: {
+	                      position: "fixed",
+	                      top: databaseAccessActionMenuState.top + "px",
+	                      left: databaseAccessActionMenuState.left + "px",
+	                      right: "auto",
+	                    },
+	                    onClick: (event) => event.stopPropagation(),
+	                  },
+	                  React.createElement("div", {
+	                      className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-database-access-action-menu"
+	                        + (databaseAccessActionMenuClosing ? " is-closing" : " playground-tasks-toolbar-popup-menu-animate-down-in"),
+	                      role: "menu",
+	                    },
+	                    databaseAccessActionMenuState.teams.length === 1 && typeof onOpenTeamPage === "function" && !databaseAccessActionMenuState.teams[0].locked
 	                      ? React.createElement("button", {
 	                          type: "button",
-	                          className: "tb-popup-row playground-project-team-menu-item",
+	                          role: "menuitem",
+	                          className: "tb-popup-row",
 	                          onClick: () => {
-	                            setDatabaseTeamMenuId("");
-	                            onOpenTeamPage(team.id);
+	                            const teamId = databaseAccessActionMenuState.teams[0].id;
+	                            closeDatabaseAccessActionMenu({ animate: false });
+	                            onOpenTeamPage(teamId);
 	                          },
 	                        },
-	                          React.createElement(ExternalLink, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                          React.createElement("span", null, "View team")
+	                          React.createElement(ExternalLink, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+	                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, "View team"))
 	                        )
 	                      : null,
-	                    canManageDatabaseTeamAccess && availableEnvironmentShareTeams.some((availableTeam) => availableTeam.id === team.id)
+	                    databaseAccessActionMenuState.teams.some((team) => !team.locked)
 	                      ? React.createElement("button", {
 	                          type: "button",
-	                          className: "tb-popup-row playground-project-team-menu-item is-danger",
-	                          disabled: databaseSaveState.isSaving || (databaseTeamAccessState.action === "remove" && databaseTeamAccessState.teamId === team.id),
-	                          onClick: () => void handleRemoveDatabaseTeamAccess(team),
+	                          role: "menuitem",
+	                          className: "tb-popup-row is-danger",
+	                          disabled: databaseSaveState.isSaving || Boolean(databaseTeamAccessState.action),
+	                          onClick: () => {
+	                            const targets = databaseAccessActionMenuState.teams.filter((team) => !team.locked);
+	                            closeDatabaseAccessActionMenu({ animate: false });
+	                            if (targets.length > 1) void handleRemoveDatabaseTeamAccessBulk(targets);
+	                            else if (targets[0]) void handleRemoveDatabaseTeamAccess(targets[0]);
+	                          },
 	                        },
-	                          React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                          React.createElement("span", null, "Remove from database")
+	                          React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+	                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+	                            React.createElement("span", null, databaseAccessActionMenuState.teams.length > 1 ? "Remove team access" : "Remove from database")
+	                          )
 	                        )
-	                      : null
+	                      : React.createElement("button", { type: "button", className: "tb-popup-row", disabled: true },
+	                          React.createElement(Shield, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+	                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, "Default agent access"))
+	                        )
 	                  )
-	            );
-	          };
+	                )
+	              )
+	            : null;
+	          const databaseAccessActionMenu = databaseAccessActionMenuContent && typeof document !== "undefined" && document.body
+	            ? createPortal(databaseAccessActionMenuContent, document.body)
+	            : databaseAccessActionMenuContent;
 	          const renderAddDatabaseTeamsMenu = () => {
 	            if (databaseTeamMenuId !== "add-teams") {
 	              return null;
@@ -111586,30 +112217,107 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	              className: "playground-project-settings-access-section playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-database-access-table-section",
 	            },
 	            React.createElement("div", { className: "playground-agents-overview-sticky-table-header playground-database-access-sticky-table-header" },
-	              React.createElement("div", { className: "playground-project-teams-table-heading playground-develop-server-kind-table-toolbar playground-database-access-table-toolbar" },
-	              React.createElement("h2", { className: "playground-project-teams-table-title" }, "Manage Database Access"),
-	              canManageDatabaseTeamAccess
-	                ? React.createElement("div", {
-	                    className: "playground-tasks-toolbar-popup-shell playground-project-teams-add-shell playground-database-team-menu-scope" + (databaseTeamMenuId === "add-teams" ? " is-open" : ""),
-	                  },
-	                    React.createElement("button", {
-	                      type: "button",
-	                      className: "playground-files-control-button playground-project-teams-add-button",
-	                      disabled: workspaceTeamsLoading || databaseSaveState.isSaving || Boolean(databaseTeamAccessState.action),
-	                      onClick: (event) => {
-	                        event.stopPropagation();
-	                        if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) {
-	                          onWorkspaceTeamsRequest({});
-	                        }
-	                        setDatabaseTeamMenuId((current) => current === "add-teams" ? "" : "add-teams");
+	              React.createElement("div", {
+	                  ref: databaseAccessToolbarRef,
+	                  className: "playground-plugins-search-row playground-resources-overview-search-row playground-develop-server-kind-table-toolbar playground-database-access-table-toolbar",
+	                },
+	                React.createElement("div", { className: "playground-develop-server-kind-table-controls" },
+	                  React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell" },
+	                    React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+	                    React.createElement("input", {
+	                      type: "search",
+	                      value: databaseAccessSearchQuery,
+	                      onChange: (event) => setDatabaseAccessSearchQuery(event.target.value),
+	                      className: "playground-plugins-search",
+	                      placeholder: "Search teams",
+	                    })
+	                  ),
+	                  React.createElement("div", { className: "playground-plugins-toolbar-controls" },
+	                    React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
+	                      React.createElement("button", {
+	                        type: "button",
+	                        className: "playground-files-control-button is-bare is-backlog-sort" + (databaseAccessToolbarPopover === "sort" ? " is-active" : ""),
+	                        onClick: () => setDatabaseAccessToolbarPopover((current) => current === "sort" ? "" : "sort"),
 	                      },
-	                    },
-	                      React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                      React.createElement("span", null, "Add Teams")
+	                        React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                        React.createElement("span", null, "Sort")
+	                      ),
+	                      databaseAccessToolbarPopover === "sort"
+	                        ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+	                            databaseAccessSortOptions.map((option) => {
+	                              const isSelected = databaseAccessSort === option.sort && normalizedDatabaseAccessSortDirection === option.direction;
+	                              return React.createElement("button", {
+	                                  key: option.id,
+	                                  type: "button",
+	                                  className: "tb-popup-row tb-popup-row-select" + (isSelected ? " selected" : ""),
+	                                  onClick: () => {
+	                                    setDatabaseAccessSort(option.sort);
+	                                    setDatabaseAccessSortDirection(option.direction);
+	                                    setDatabaseAccessToolbarPopover("");
+	                                  },
+	                                },
+	                                React.createElement("span", { className: "tb-popup-check-slot" }, isSelected
+	                                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+	                                  : null),
+	                                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, option.label))
+	                              );
+	                            })
+	                          )
+	                        : null
 	                    ),
-	                    renderAddDatabaseTeamsMenu()
+	                    React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
+	                      React.createElement("button", {
+	                        type: "button",
+	                        className: "playground-files-control-button is-bare is-backlog-filter" + (databaseAccessToolbarPopover === "filter" || databaseAccessFilter !== "all" ? " is-active" : ""),
+	                        onClick: () => setDatabaseAccessToolbarPopover((current) => current === "filter" ? "" : "filter"),
+	                      },
+	                        React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                        React.createElement("span", null, "Filter")
+	                      ),
+	                      databaseAccessToolbarPopover === "filter"
+	                        ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+	                            databaseAccessFilterOptions.map((option) => React.createElement("button", {
+	                                key: option.id,
+	                                type: "button",
+	                                className: "tb-popup-row tb-popup-row-select" + (databaseAccessFilter === option.id ? " selected" : ""),
+	                                onClick: () => {
+	                                  setDatabaseAccessFilter(option.id);
+	                                  setDatabaseAccessToolbarPopover("");
+	                                },
+	                              },
+	                              React.createElement("span", { className: "tb-popup-check-slot" }, databaseAccessFilter === option.id
+	                                ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
+	                                : null),
+	                              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+	                                React.createElement("span", null, option.label),
+	                                React.createElement("span", null, option.description)
+	                              )
+	                            ))
+	                          )
+	                        : null
+	                    )
 	                  )
-	                : null
+	                ),
+	                canManageDatabaseTeamAccess
+	                  ? React.createElement("div", {
+	                      className: "playground-tasks-toolbar-popup-shell playground-project-teams-add-shell playground-database-team-menu-scope" + (databaseTeamMenuId === "add-teams" ? " is-open" : ""),
+	                    },
+	                      React.createElement("button", {
+	                        type: "button",
+	                        className: "playground-files-control-button playground-project-teams-add-button",
+	                        disabled: workspaceTeamsLoading || databaseSaveState.isSaving || Boolean(databaseTeamAccessState.action),
+	                        onClick: (event) => {
+	                          event.stopPropagation();
+	                          if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) onWorkspaceTeamsRequest({});
+	                          setDatabaseTeamMenuId((current) => current === "add-teams" ? "" : "add-teams");
+	                        },
+	                      },
+	                        React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                        React.createElement("span", null, "Add Teams")
+	                      ),
+	                      renderAddDatabaseTeamsMenu()
+	                    )
+	                  : null
 	              )
 	            ),
 	            React.createElement("div", {
@@ -111630,6 +112338,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                          ? "true"
 	                          : (hasPartialVisibleDatabasePermissionTeamSelection ? "mixed" : "false"),
 	                        "aria-label": allVisibleDatabasePermissionTeamsSelected ? "Deselect all teams" : "Select all teams",
+	                        disabled: visibleDatabasePermissionTeamIds.length === 0,
 	                        onClick: (event) => {
 	                          event.preventDefault();
 	                          event.stopPropagation();
@@ -111642,9 +112351,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                    React.createElement("div", null, renderDatabaseAccessSortableHeader("Created", "created")),
 	                    React.createElement("div", null)
 	                  ),
-	                  visibleDatabasePermissionTeams.map((team) => {
-	                    const menuId = "team:" + String(team.id || "");
-	                    const menuOpen = databaseTeamMenuId === menuId;
+	                  visibleDatabasePermissionTeams.length
+	                    ? visibleDatabasePermissionTeams.map((team) => {
+	                    const menuOpen = databaseAccessActionMenuState?.teams?.length === 1
+	                      && String(databaseAccessActionMenuState.teams[0]?.id || "") === String(team.id || "");
 	                    const isSelected = selectedDatabaseAccessTeamIds.has(String(team.id || ""));
 	                    return React.createElement("div", {
 	                        key: team.id,
@@ -111654,8 +112364,16 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                          + (menuOpen ? " is-menu-open" : "")
 	                          + (isSelected ? " is-selected" : ""),
 	                        "aria-label": "Open " + team.name + " database permissions",
+	                        onContextMenu: (event) => {
+	                          if (isSelected && selectedRemovableDatabaseTeams.length > 1) {
+	                            openDatabaseAccessActionMenu(event, selectedRemovableDatabaseTeams, { context: true });
+	                            return;
+	                          }
+	                          openDatabaseAccessActionMenu(event, team, { context: true });
+	                        },
 	                        onClick: () => {
 	                          setDatabaseTeamMenuId("");
+	                          closeDatabaseAccessActionMenu({ animate: false });
 	                          setDatabasePermissionRoleId("member");
 	                          setDatabasePermissionTeamId(team.id);
 	                        },
@@ -111674,6 +112392,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                          role: "checkbox",
 	                          "aria-checked": isSelected ? "true" : "false",
 	                          "aria-label": "Select " + team.name,
+	                          disabled: team.locked,
 	                          onClick: (event) => {
 	                            event.preventDefault();
 	                            event.stopPropagation();
@@ -111696,26 +112415,30 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                        React.createElement("div", { className: "playground-agents-overview-table-value" }, team.locked ? "Default" : (formatDatabaseTeamCreatedDate(team.createdAt) || "—"))
 	                      ),
 	                      React.createElement("div", { className: "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell" },
-	                        React.createElement("div", {
-	                            className: "playground-tasks-toolbar-popup-shell playground-project-team-action-shell playground-database-team-menu-scope" + (menuOpen ? " is-open" : ""),
-	                          },
 	                          React.createElement("button", {
 	                            type: "button",
 	                            className: "playground-overview-table-action-button" + (menuOpen ? " is-open" : ""),
-	                            onClick: (event) => {
-	                              event.preventDefault();
-	                              event.stopPropagation();
-	                              setDatabaseTeamMenuId((current) => current === menuId ? "" : menuId);
-	                            },
+	                            onClick: (event) => openDatabaseAccessActionMenu(
+	                              event,
+	                              isSelected && selectedRemovableDatabaseTeams.length > 1 ? selectedRemovableDatabaseTeams : team
+	                            ),
+	                            onContextMenu: (event) => openDatabaseAccessActionMenu(
+	                              event,
+	                              isSelected && selectedRemovableDatabaseTeams.length > 1 ? selectedRemovableDatabaseTeams : team,
+	                              { context: true }
+	                            ),
 	                            onKeyDown: (event) => event.stopPropagation(),
 	                            "aria-label": "Team actions for " + team.name,
 	                            "aria-expanded": menuOpen ? "true" : "false",
-	                          }, React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 })),
-	                          renderDatabaseTeamMenu(team)
-	                        )
+	                          }, React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 }))
 	                      )
 	                    );
 	                  })
+	                    : React.createElement("div", { className: "playground-plugins-empty playground-database-access-empty" },
+	                        normalizedDatabaseAccessSearchQuery || databaseAccessFilter !== "all"
+	                          ? "No matching team access found."
+	                          : "No team access configured."
+	                      )
 	                )
 	            ),
 	            databaseTeamAccessState.error
@@ -111726,8 +112449,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	              className: "playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-teams-section playground-project-settings-root playground-database-settings-root",
 	            },
 	            databaseDescriptionSection,
+	            React.createElement("h2", { className: "playground-project-teams-table-title playground-database-access-section-title" }, "Manage Database Access"),
 	            databaseTeamAccessSection,
-	            databaseDangerSection
+	            databaseDangerSection,
+	            databaseAccessActionMenu
 	          );
 	          const selectedDatabaseRoleDefinition = getPlaygroundTeamRoleDefinition(databasePermissionRoleId);
 	          const selectedDatabaseRolePermissionSet = selectedDatabasePermissionTeam && selectedDatabasePermissionTeam.id !== "all_agents"
@@ -116232,6 +116957,71 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (isServersMode && normalizedEmbeddedServerKind === "voice_agent") {
             return null;
           }
+          if (isServersMode && shouldShowEnvironmentHome && normalizedEmbeddedServerKind) {
+            const resourceLabel = embeddedServerKindLabel || "Resource";
+            const resourceDocumentationPathByKind = {
+              web_app: "/developers/libraries/web-apps",
+              function: "/developers/libraries/functions",
+              database: "/developers/libraries/databases",
+              auth: "/developers/libraries/authentication",
+              agent_runtime: "/developers/libraries/agent-runtimes",
+              voice_agent: "/developers/libraries/voice-agents",
+              secrets: "/developers/libraries/secrets",
+              payments: "/developers/libraries/payments",
+            };
+            const documentationUrl = ${JSON.stringify(aiosOrigin)}
+              + (resourceDocumentationPathByKind[normalizedEmbeddedServerKind] || "/developers");
+            return renderPlaygroundPlatformPopup({
+              open: resourceOverviewTopNavMenuOpen,
+              shellRef: resourceOverviewTopNavMenuRef,
+              shellClassName: "playground-resource-overview-topnav-actions-shell",
+              menuClassName: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+              trigger: React.createElement("button", {
+                type: "button",
+                className: buttonClassName + (resourceOverviewTopNavMenuOpen ? " is-active" : ""),
+                title: resourceLabel + " options",
+                "aria-label": resourceLabel + " options",
+                "aria-haspopup": "menu",
+                "aria-expanded": resourceOverviewTopNavMenuOpen ? "true" : "false",
+                onClick: () => setResourceOverviewTopNavMenuOpen((current) => !current),
+              }, React.createElement(Ellipsis, { width: 16, height: 16, strokeWidth: 1.8 })),
+              menuProps: {
+                role: "menu",
+                onClick: (event) => event.stopPropagation(),
+              },
+              children: React.createElement(React.Fragment, null,
+                React.createElement("button", {
+                  type: "button",
+                  role: "menuitem",
+                  className: "tb-popup-row",
+                  onClick: () => {
+                    setResourceOverviewTopNavMenuOpen(false);
+                    const docsWindow = window.open(documentationUrl, "_blank", "noopener,noreferrer");
+                    if (docsWindow) docsWindow.opener = null;
+                  },
+                },
+                  React.createElement(BookOpen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                    React.createElement("span", null, resourceLabel + " documentation")
+                  )
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  role: "menuitem",
+                  className: "tb-popup-row",
+                  onClick: () => {
+                    setResourceOverviewTopNavMenuOpen(false);
+                    handleCreateServer(normalizedEmbeddedServerKind);
+                  },
+                },
+                  React.createElement(Plus, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                    React.createElement("span", null, "New " + resourceLabel)
+                  )
+                )
+              ),
+            });
+          }
           const shouldShowCreateLabel = String(buttonClassName || "").includes("playground-top-nav-private-chat-button");
           return React.createElement("div", { className: "playground-files-toolbar-anchor" },
             React.createElement("button", {
@@ -117627,7 +118417,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 			          const renderComputersOverviewStickyTableHeader = () => React.createElement("div", { className: "playground-computers-overview-sticky-table-header" },
 			            overviewSearchSortFilterRow
 			          );
-			          const renderServerOverviewTableColumnHeader = () => React.createElement("div", { className: "playground-project-overview-threads-table-header playground-develop-resource-overview-column-header" },
+		          const renderServerOverviewTableColumnHeader = () => React.createElement("div", {
+		              className: "playground-project-overview-threads-table-header playground-develop-resource-overview-column-header"
+		                + (normalizedEmbeddedServerKind === "database" ? " is-database" : ""),
+		            },
 			                  React.createElement("div", null,
 			                    React.createElement("button", {
 			                      type: "button",
@@ -171693,6 +172486,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [developApiKeysSortDirection, setDevelopApiKeysSortDirection] = useState("asc");
         const [developApiKeysFilter, setDevelopApiKeysFilter] = useState("all");
         const [developApiKeysToolbarPopover, setDevelopApiKeysToolbarPopover] = useState("");
+        const [developApiKeysSelectedIds, setDevelopApiKeysSelectedIds] = useState(() => new Set());
+        const [developApiKeyActionMenu, setDevelopApiKeyActionMenu] = useState(null);
+        const [developApiKeyActionMenuClosing, setDevelopApiKeyActionMenuClosing] = useState(false);
+        const developApiKeyActionMenuCloseTimerRef = useRef(null);
+        const [developApiKeyRevealModal, setDevelopApiKeyRevealModal] = useState(null);
+        const [settingsRevealableApiKeys, setSettingsRevealableApiKeys] = useState({});
         const [developQuickstartLanguage, setDevelopQuickstartLanguage] = useState("javascript");
         const [developServerOperationalMetrics, setDevelopServerOperationalMetrics] = useState(null);
         const [developServerOperationalMetricsLoading, setDevelopServerOperationalMetricsLoading] = useState(false);
@@ -171700,6 +172499,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [developServerOperationalMetricsPeriod, setDevelopServerOperationalMetricsPeriod] = useState("month");
         const developServerOperationalMetricsLoadSequenceRef = useRef(0);
         const developServerOperationalMetricsAbortRef = useRef(null);
+        const developServerOperationalMetricsRequestKeyRef = useRef("");
         const teamPageRef = useRef(null);
         const teamPageLoadAbortControllerRef = useRef(null);
         const teamPageLoadSequenceRef = useRef(0);
@@ -171761,9 +172561,20 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	        const [organizationPageLoading, setOrganizationPageLoading] = useState(false);
         const [organizationPageError, setOrganizationPageError] = useState("");
         const [organizationPageOrganizations, setOrganizationPageOrganizations] = useState([]);
-        const [organizationPageSelectedOrganizationId, setOrganizationPageSelectedOrganizationId] = useState("");
-        const [organizationPageMembers, setOrganizationPageMembers] = useState([]);
-        const [organizationPageInvitations, setOrganizationPageInvitations] = useState([]);
+	        const [organizationPageSelectedOrganizationId, setOrganizationPageSelectedOrganizationId] = useState("");
+	        const [organizationPageActiveTab, setOrganizationPageActiveTab] = useState("members");
+	        const [organizationPageSelectedRoleId, setOrganizationPageSelectedRoleId] = useState("member");
+	        const [organizationPageRoleMembersPopover, setOrganizationPageRoleMembersPopover] = useState("");
+	        const [organizationPermissionChartAnimationKey, setOrganizationPermissionChartAnimationKey] = useState(0);
+	        const [organizationPageMembers, setOrganizationPageMembers] = useState([]);
+	        const [organizationPageInvitations, setOrganizationPageInvitations] = useState([]);
+	        const [organizationPageResources, setOrganizationPageResources] = useState([]);
+	        const [organizationResourceSearchQuery, setOrganizationResourceSearchQuery] = useState("");
+	        const [organizationResourceFilter, setOrganizationResourceFilter] = useState("all");
+	        const [organizationResourceViewMode, setOrganizationResourceViewMode] = useState("list");
+	        const [organizationResourceToolbarPopover, setOrganizationResourceToolbarPopover] = useState("");
+	        const [organizationResourceSort, setOrganizationResourceSort] = useState("resource");
+	        const [organizationResourceSortDirection, setOrganizationResourceSortDirection] = useState("asc");
         const [organizationPageBillingSummary, setOrganizationPageBillingSummary] = useState(null);
         const [organizationPageBillingError, setOrganizationPageBillingError] = useState("");
         const [organizationPageCreateName, setOrganizationPageCreateName] = useState("");
@@ -171828,7 +172639,44 @@ ${PROJECT_OVERVIEW_SCRIPT}
             setTeamPermissionChartAnimationKey((current) => current + 1);
           });
           return () => window.cancelAnimationFrame(frameId);
-        }, [teamPageActiveTab, teamPageSelectedRoleId, teamPageSelectedTeamId]);
+	        }, [teamPageActiveTab, teamPageSelectedRoleId, teamPageSelectedTeamId]);
+	        useEffect(() => {
+	          if (organizationPageActiveTab !== "roles") {
+	            return undefined;
+	          }
+	          const frameId = window.requestAnimationFrame(() => {
+	            const scrollNode = organizationPageRef.current;
+	            if (scrollNode && typeof scrollNode.scrollTop === "number") {
+	              scrollNode.scrollTop = 0;
+	            }
+	            setOrganizationPermissionChartAnimationKey((current) => current + 1);
+	          });
+	          return () => window.cancelAnimationFrame(frameId);
+	        }, [organizationPageActiveTab, organizationPageSelectedRoleId, organizationPageSelectedOrganizationId]);
+	        useEffect(() => {
+	          if (!organizationPageRoleMembersPopover || typeof document === "undefined") {
+	            return undefined;
+	          }
+	          const handlePointerDown = (event) => {
+	            const target = event.target;
+	            if (target && typeof target.closest === "function" && target.closest(".playground-team-role-assigned-shell")) {
+	              return;
+	            }
+	            setOrganizationPageRoleMembersPopover("");
+	          };
+	          document.addEventListener("mousedown", handlePointerDown);
+	          return () => document.removeEventListener("mousedown", handlePointerDown);
+	        }, [organizationPageRoleMembersPopover]);
+	        useEffect(() => {
+	          if (organizationPageActiveTab !== "resources") {
+	            setOrganizationResourceToolbarPopover("");
+	          }
+	          if (organizationPageActiveTab !== "members") {
+	            setOrganizationMemberToolbarPopover("");
+	            setOrganizationMemberMenuId("");
+	            setSelectedOrganizationMemberIds(new Set());
+	          }
+	        }, [organizationPageActiveTab]);
         useEffect(() => {
           if (!teamPageRoleMembersPopover || typeof document === "undefined") {
             return undefined;
@@ -172193,6 +173041,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [settingsApiKeys, setSettingsApiKeys] = useState([]);
         const [settingsApiKeysLoading, setSettingsApiKeysLoading] = useState(false);
         const [settingsApiKeysError, setSettingsApiKeysError] = useState("");
+        const settingsApiKeysSnapshotRef = useRef({ keys: [], loadedAt: 0, scopeKey: "" });
+        const settingsApiKeysLoadPromiseRef = useRef(null);
         const pluginsOverviewToolbarRef = useRef(null);
         const [settingsApiKeyDialogOpen, setSettingsApiKeyDialogOpen] = useState(false);
         const [settingsNewKeyName, setSettingsNewKeyName] = useState("");
@@ -175009,6 +175859,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const membership = source.membership && typeof source.membership === "object" && !Array.isArray(source.membership)
             ? source.membership
             : {};
+          const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
+            ? source.metadata
+            : {};
           return {
             ...source,
             id: String(source.id || source.organizationId || source.organization_id || "").trim(),
@@ -175019,6 +175872,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
               return ["owner", "admin", "billing", "developer", "member", "viewer"].includes(role) ? role : "member";
             })(),
             membership,
+            metadata,
+            rolePermissionSets: normalizePlaygroundOrganizationRolePermissionSets(
+              source.rolePermissionSets
+              || source.rolePermissions
+              || metadata.organizationRolePermissionSets
+              || metadata.rolePermissionSets
+            ),
           };
         }
 
@@ -175157,6 +176017,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             setOrganizationPageOrganizations([]);
             setOrganizationPageMembers([]);
             setOrganizationPageInvitations([]);
+            setOrganizationPageResources([]);
             setOrganizationPageBillingSummary(null);
             setOrganizationPageBillingError("");
             return;
@@ -175211,6 +176072,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             if (!selectedOrganizationId || listOnly) {
               setOrganizationPageMembers([]);
               setOrganizationPageInvitations([]);
+              setOrganizationPageResources([]);
               setOrganizationPageBillingSummary(null);
               setOrganizationPageBillingError("");
               return;
@@ -175219,7 +176081,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               ...baseAuthRequestHeaders,
               [PLAYGROUND_ORGANIZATION_HEADER]: selectedOrganizationId,
             };
-            const [membersResult, invitationsResult, billingSummaryResult] = await Promise.allSettled([
+            const [membersResult, invitationsResult, resourcesResult, billingSummaryResult] = await Promise.allSettled([
               fetchJsonWithTimeout(proxyBackendBase + "/organizations/" + encodeURIComponent(selectedOrganizationId) + "/members", {
                 method: "GET",
                 credentials: "include",
@@ -175233,6 +176095,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 cache: "no-store",
                 signal: loadAbortController.signal,
                 headers: baseAuthRequestHeaders,
+              }, 10000),
+              fetchJsonWithTimeout(proxyBackendBase + "/organizations/" + encodeURIComponent(selectedOrganizationId) + "/resources", {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+                signal: loadAbortController.signal,
+                headers: selectedOrganizationHeaders,
               }, 10000),
               fetchJsonWithTimeout(proxyBackendBase + "/billing/organization/summary?activityLimit=6", {
                 method: "GET",
@@ -175257,6 +176126,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
               && invitationsResult.value.response.ok
               && Array.isArray(invitationsResult.value.data?.data)
                 ? invitationsResult.value.data.data
+                : []
+            );
+            setOrganizationPageResources(
+              resourcesResult.status === "fulfilled"
+              && resourcesResult.value.response.ok
+              && Array.isArray(resourcesResult.value.data?.data)
+                ? resourcesResult.value.data.data
                 : []
             );
             if (billingSummaryResult.status === "fulfilled" && billingSummaryResult.value.response.ok) {
@@ -175421,6 +176297,229 @@ ${PROJECT_OVERVIEW_SCRIPT}
           } finally {
             setOrganizationPageActionId("");
           }
+        }
+
+        async function handleUpdateOrganizationMemberRole(memberId, role) {
+          const organizationId = String(organizationPageSelectedOrganizationId || "").trim();
+          const normalizedMemberId = String(memberId || "").trim();
+          const normalizedRole = normalizePlaygroundOrganizationRoleId(role, "");
+          if (!organizationId || !normalizedMemberId || !normalizedRole || normalizedRole === "owner") {
+            return;
+          }
+          const actionId = "organization-member-role:" + normalizedMemberId;
+          setOrganizationPageActionId(actionId);
+          setOrganizationPageError("");
+          try {
+            const { response, data } = await fetchJsonWithTimeout(
+              proxyBackendBase + "/organizations/" + encodeURIComponent(organizationId) + "/members/" + encodeURIComponent(normalizedMemberId),
+              {
+                method: "PATCH",
+                credentials: "include",
+                cache: "no-store",
+                headers: {
+                  ...baseAuthRequestHeaders,
+                  "Content-Type": "application/json",
+                  [PLAYGROUND_ORGANIZATION_HEADER]: organizationId,
+                },
+                body: JSON.stringify({ role: normalizedRole }),
+              },
+              10000
+            );
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to update organization member.");
+            }
+            await loadOrganizationPageData({ selectedOrganizationId: organizationId, silent: true });
+          } catch (error) {
+            setOrganizationPageError(error instanceof Error ? error.message : "Failed to update organization member.");
+          } finally {
+            setOrganizationPageActionId((current) => current === actionId ? "" : current);
+          }
+        }
+
+        async function handleRemoveOrganizationMember(memberId) {
+          const organizationId = String(organizationPageSelectedOrganizationId || "").trim();
+          const normalizedMemberId = String(memberId || "").trim();
+          if (!organizationId || !normalizedMemberId || !window.confirm("Remove this member from the organization?")) {
+            return;
+          }
+          const actionId = "organization-member-remove:" + normalizedMemberId;
+          setOrganizationPageActionId(actionId);
+          setOrganizationPageError("");
+          try {
+            const { response, data } = await fetchJsonWithTimeout(
+              proxyBackendBase + "/organizations/" + encodeURIComponent(organizationId) + "/members/" + encodeURIComponent(normalizedMemberId),
+              {
+                method: "DELETE",
+                credentials: "include",
+                cache: "no-store",
+                headers: {
+                  ...baseAuthRequestHeaders,
+                  [PLAYGROUND_ORGANIZATION_HEADER]: organizationId,
+                },
+              },
+              10000
+            );
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to remove organization member.");
+            }
+            await loadOrganizationPageData({ selectedOrganizationId: organizationId, silent: true });
+          } catch (error) {
+            setOrganizationPageError(error instanceof Error ? error.message : "Failed to remove organization member.");
+          } finally {
+            setOrganizationPageActionId((current) => current === actionId ? "" : current);
+          }
+        }
+
+        function applyOrganizationRolePermissionSetLocally(organizationId, roleId, permissionSet) {
+          const normalizedOrganizationId = String(organizationId || "").trim();
+          const normalizedRoleId = normalizePlaygroundOrganizationRoleId(roleId, "");
+          if (!normalizedOrganizationId || !normalizedRoleId || normalizedRoleId === "owner") {
+            return;
+          }
+          const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, "organization_role");
+          setOrganizationPageOrganizations((current) => (Array.isArray(current) ? current : []).map((organization) => {
+            const normalizedOrganization = normalizeOrganizationPageRecord(organization);
+            if (normalizedOrganization.id !== normalizedOrganizationId) {
+              return normalizedOrganization;
+            }
+            const rolePermissionSets = normalizePlaygroundOrganizationRolePermissionSets(normalizedOrganization.rolePermissionSets);
+            const nextRolePermissionSets = {
+              ...rolePermissionSets,
+              [normalizedRoleId]: normalizedPermissionSet,
+            };
+            return normalizeOrganizationPageRecord({
+              ...normalizedOrganization,
+              rolePermissionSets: nextRolePermissionSets,
+              metadata: {
+                ...(normalizedOrganization.metadata || {}),
+                organizationRolePermissionSets: nextRolePermissionSets,
+              },
+            });
+          }));
+        }
+
+        async function persistOrganizationRolePermissionSet(organizationId, roleId, permissionSet) {
+          const normalizedOrganizationId = String(organizationId || "").trim();
+          const normalizedRoleId = normalizePlaygroundOrganizationRoleId(roleId, "");
+          if (!normalizedOrganizationId || !normalizedRoleId || normalizedRoleId === "owner") {
+            return null;
+          }
+          const selectedOrganization = organizationPageOrganizations.find((organization) => String(organization?.id || "") === normalizedOrganizationId) || null;
+          const currentRolePermissionSets = normalizePlaygroundOrganizationRolePermissionSets(selectedOrganization?.rolePermissionSets);
+          const nextRolePermissionSets = {
+            ...currentRolePermissionSets,
+            [normalizedRoleId]: normalizePlaygroundPermissionSet(permissionSet, "organization_role"),
+          };
+          const nextMetadata = {
+            ...(selectedOrganization?.metadata || {}),
+            organizationRolePermissionSets: nextRolePermissionSets,
+          };
+          const { response, data } = await fetchJsonWithTimeout(
+            proxyBackendBase + "/organizations/" + encodeURIComponent(normalizedOrganizationId),
+            {
+              method: "PATCH",
+              credentials: "include",
+              cache: "no-store",
+              headers: {
+                ...baseAuthRequestHeaders,
+                "Content-Type": "application/json",
+                [PLAYGROUND_ORGANIZATION_HEADER]: normalizedOrganizationId,
+              },
+              body: JSON.stringify({ metadata: nextMetadata }),
+            },
+            10000
+          );
+          if (!response.ok) {
+            throw new Error(data?.message || data?.error || "Failed to update organization role permissions.");
+          }
+          const updatedOrganization = normalizeOrganizationPageRecord(data?.data || data?.organization || data);
+          if (updatedOrganization.id) {
+            setOrganizationPageOrganizations((current) => (Array.isArray(current) ? current : []).map((organization) =>
+              String(organization?.id || "") === updatedOrganization.id ? updatedOrganization : normalizeOrganizationPageRecord(organization)
+            ));
+          }
+          return updatedOrganization;
+        }
+
+        function updateOrganizationRolePermissionSet(roleId, updater) {
+          const normalizedRoleId = normalizePlaygroundOrganizationRoleId(roleId, "");
+          const organizationId = String(organizationPageSelectedOrganizationId || "").trim();
+          const selectedOrganization = organizationPageOrganizations.find((organization) => String(organization?.id || "") === organizationId) || null;
+          if (!organizationId || !selectedOrganization || !normalizedRoleId || normalizedRoleId === "owner") {
+            return;
+          }
+          const currentRolePermissionSets = normalizePlaygroundOrganizationRolePermissionSets(selectedOrganization.rolePermissionSets);
+          const currentPermissionSet = normalizePlaygroundPermissionSet(currentRolePermissionSets[normalizedRoleId], "organization_role");
+          const nextPermissionSet = normalizePlaygroundPermissionSet(
+            typeof updater === "function" ? updater(currentPermissionSet) : updater,
+            "organization_role"
+          );
+          applyOrganizationRolePermissionSetLocally(organizationId, normalizedRoleId, nextPermissionSet);
+          const actionId = "organization-role-permissions:" + normalizedRoleId;
+          setOrganizationPageActionId(actionId);
+          setOrganizationPageError("");
+          void persistOrganizationRolePermissionSet(organizationId, normalizedRoleId, nextPermissionSet)
+            .catch((error) => {
+              applyOrganizationRolePermissionSetLocally(organizationId, normalizedRoleId, currentPermissionSet);
+              setOrganizationPageError(error instanceof Error ? error.message : "Failed to update organization role permissions.");
+            })
+            .finally(() => {
+              setOrganizationPageActionId((current) => current === actionId ? "" : current);
+            });
+        }
+
+        function updateOrganizationRolePermissionRingAccess(roleId, ringId, access) {
+          updateOrganizationRolePermissionSet(roleId, (currentPermissionSet) => ({
+            ...currentPermissionSet,
+            rings: {
+              ...(currentPermissionSet.rings || {}),
+              [ringId]: {
+                ...((currentPermissionSet.rings || {})[ringId] || {}),
+                defaultAccess: normalizePlaygroundPermissionAccess(access),
+              },
+            },
+          }));
+        }
+
+        function updateOrganizationRolePermissionActionRing(roleId, actionId, ringId) {
+          const actionDefinition = getPlaygroundPermissionActionDefinition(actionId);
+          if (!actionDefinition) return;
+          updateOrganizationRolePermissionSet(roleId, (currentPermissionSet) => {
+            const existingAction = (currentPermissionSet.actions || {})[actionId] || {};
+            return {
+              ...currentPermissionSet,
+              actions: {
+                ...(currentPermissionSet.actions || {}),
+                [actionId]: buildPlaygroundPermissionActionPolicy(
+                  currentPermissionSet,
+                  actionDefinition,
+                  existingAction,
+                  getPlaygroundPermissionActionExplicitAccess(currentPermissionSet, actionDefinition),
+                  ringId
+                ),
+              },
+            };
+          });
+        }
+
+        function updateOrganizationRolePermissionActionAccess(roleId, actionId, access) {
+          const actionDefinition = getPlaygroundPermissionActionDefinition(actionId);
+          if (!actionDefinition) return;
+          updateOrganizationRolePermissionSet(roleId, (currentPermissionSet) => {
+            const existingAction = (currentPermissionSet.actions || {})[actionId] || {};
+            return {
+              ...currentPermissionSet,
+              actions: {
+                ...(currentPermissionSet.actions || {}),
+                [actionId]: buildPlaygroundPermissionActionPolicy(
+                  currentPermissionSet,
+                  actionDefinition,
+                  existingAction,
+                  normalizePlaygroundPermissionAccess(access, "")
+                ),
+              },
+            };
+          });
         }
 
         async function loadTeamPageData(options = {}) {
@@ -181287,15 +182386,44 @@ ${PROJECT_OVERVIEW_SCRIPT}
           settingsProjectRoutingId,
         ]);
 
-        const loadSettingsApiKeys = useCallback(async function loadSettingsApiKeys() {
+        const loadSettingsApiKeys = useCallback(async function loadSettingsApiKeys(options = {}) {
           if (!hasSessionAuth) {
+            settingsApiKeysSnapshotRef.current = { keys: [], loadedAt: 0, scopeKey: "" };
+            settingsApiKeysLoadPromiseRef.current = null;
             setSettingsApiKeys([]);
+            setSettingsApiKeysLoading(false);
             return;
           }
 
-          setSettingsApiKeysLoading(true);
+          const force = options?.force === true;
+          const scopeKey = String(sessionState.userId || "").trim() || "session";
+          let snapshot = settingsApiKeysSnapshotRef.current;
+          if (snapshot.scopeKey !== scopeKey) {
+            snapshot = { keys: [], loadedAt: 0, scopeKey };
+            settingsApiKeysSnapshotRef.current = snapshot;
+            settingsApiKeysLoadPromiseRef.current = null;
+            setSettingsApiKeys([]);
+          }
+          const cacheAgeMs = Date.now() - Number(snapshot.loadedAt || 0);
+          if (!force && snapshot.loadedAt > 0 && cacheAgeMs >= 0 && cacheAgeMs < 60_000) {
+            setSettingsApiKeys(snapshot.keys);
+            setSettingsApiKeysLoading(false);
+            return snapshot.keys;
+          }
+          if (settingsApiKeysLoadPromiseRef.current) {
+            if (!force) {
+              return settingsApiKeysLoadPromiseRef.current;
+            }
+            try {
+              await settingsApiKeysLoadPromiseRef.current;
+            } catch {}
+            snapshot = settingsApiKeysSnapshotRef.current;
+          }
+
+          const hasSnapshot = snapshot.loadedAt > 0;
+          setSettingsApiKeysLoading(!hasSnapshot);
           setSettingsApiKeysError("");
-          try {
+          const request = (async () => {
             const response = await fetch("/api/aios/user/api-keys", {
               method: "GET",
               credentials: "include",
@@ -181307,14 +182435,31 @@ ${PROJECT_OVERVIEW_SCRIPT}
               throw new Error(data?.message || data?.error || "Failed to load API keys.");
             }
 
-            setSettingsApiKeys(Array.isArray(data?.keys) ? data.keys : []);
+            const keys = Array.isArray(data?.keys) ? data.keys : [];
+            settingsApiKeysSnapshotRef.current = {
+              keys,
+              loadedAt: Date.now(),
+              scopeKey,
+            };
+            setSettingsApiKeys(keys);
+            return keys;
+          })();
+          settingsApiKeysLoadPromiseRef.current = request;
+          try {
+            return await request;
           } catch (error) {
-            setSettingsApiKeys([]);
+            if (!hasSnapshot) {
+              setSettingsApiKeys([]);
+            }
             setSettingsApiKeysError(error instanceof Error ? error.message : "Failed to load API keys.");
+            return hasSnapshot ? snapshot.keys : [];
           } finally {
-            setSettingsApiKeysLoading(false);
+            if (settingsApiKeysLoadPromiseRef.current === request) {
+              settingsApiKeysLoadPromiseRef.current = null;
+              setSettingsApiKeysLoading(false);
+            }
           }
-        }, [hasSessionAuth]);
+        }, [hasSessionAuth, sessionState.userId]);
 
         const loadSettingsMarketingConsent = useCallback(async function loadSettingsMarketingConsent() {
           if (!hasSessionAuth) {
@@ -181646,11 +182791,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
             }
 
             setSettingsNewlyCreatedKey(typeof data?.key === "string" ? data.key : "");
+            if (typeof data?.id === "string" && data.id.trim() && typeof data?.key === "string" && data.key.trim()) {
+              setSettingsRevealableApiKeys((current) => ({ ...current, [data.id.trim()]: data.key.trim() }));
+            }
             setSettingsNewKeyName("");
             setSettingsNewKeyDescription("");
             setSettingsNewKeyScopePreset("full");
             setSettingsApiKeyDialogOpen(false);
-            await loadSettingsApiKeys();
+            await loadSettingsApiKeys({ force: true });
           } catch (error) {
             setSettingsApiKeysError(error instanceof Error ? error.message : "Failed to create API key.");
           } finally {
@@ -181713,7 +182861,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               throw new Error(data?.message || data?.error || "Failed to revoke API key.");
             }
 
-            await loadSettingsApiKeys();
+            await loadSettingsApiKeys({ force: true });
           } catch (error) {
             setSettingsApiKeysError(error instanceof Error ? error.message : "Failed to revoke API key.");
           } finally {
@@ -185132,8 +186280,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const requestedPeriod = targetKind
             ? normalizePlaygroundEnvironmentHomeChartPeriod(options?.period)
             : "day";
+          const requestKey = (targetKind || "overview") + ":" + requestedPeriod;
           const loadSequence = developServerOperationalMetricsLoadSequenceRef.current + 1;
           developServerOperationalMetricsLoadSequenceRef.current = loadSequence;
+          developServerOperationalMetricsRequestKeyRef.current = requestKey;
           if (developServerOperationalMetricsAbortRef.current) {
             developServerOperationalMetricsAbortRef.current.abort();
           }
@@ -185198,25 +186348,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
               getBucketKey,
             };
           };
-          const readListResponse = async (path, parser) => {
-            const response = await fetch(proxyBackendBase + path, {
-              method: "GET",
-              headers: authRequestHeaders,
-              signal: requestController.signal,
-              priority: "low",
-            });
-            const data = await response.json().catch(() => ({}));
-            if (isUnauthorizedStatus(response.status)) {
-              triggerPlatformSessionRecovery();
-              return [];
-            }
-            if (!response.ok) {
-              return [];
-            }
-            return parser(data);
-          };
           const readAnalyticsResponse = async (path) => {
-            if (String(path || "").startsWith("/databases/")) {
+            const normalizedAnalyticsPath = String(path || "");
+            const isDatabaseAnalyticsPath = normalizedAnalyticsPath.startsWith("/databases/");
+            const isServerOverviewAnalyticsPath = normalizedAnalyticsPath.startsWith("/servers/analytics/overview");
+            if (isDatabaseAnalyticsPath || isServerOverviewAnalyticsPath) {
               try {
                 return await fetchPlaygroundCachedDatabaseResourceJson(
                   proxyBackendBase + path,
@@ -185224,8 +186360,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
                   {
                     scopeKey: databaseResourceScopeKey,
                     ttlMs: PLAYGROUND_DATABASE_ANALYTICS_CACHE_TTL_MS,
-                    signal: requestController.signal,
                     priority: "low",
+                    persist: isServerOverviewAnalyticsPath,
+                    staleWhileRevalidate: isServerOverviewAnalyticsPath,
                   }
                 );
               } catch {
@@ -185254,19 +186391,33 @@ ${PROJECT_OVERVIEW_SCRIPT}
           try {
             const shouldLoadServerCatalog = targetKind !== "database";
             const shouldLoadDatabaseCatalog = !targetKind || targetKind === "database";
-            const [{ buckets, bucketByKey, bucketIndexByKey, bucketDurationMs, getBucketKey }, servers, databases] = await Promise.all([
+            const serverOverviewAnalyticsPath = "/servers/analytics/overview?period=" + encodeURIComponent(requestedPeriod);
+            const databaseOverviewAnalyticsPath = "/databases/analytics/overview?period=" + encodeURIComponent(requestedPeriod);
+            const [
+              { buckets, bucketByKey, bucketIndexByKey, bucketDurationMs, getBucketKey },
+              serverOverviewAnalytics,
+              databaseOverviewAnalytics,
+            ] = await Promise.all([
               Promise.resolve(buildOperationalBuckets()),
               shouldLoadServerCatalog
-                ? readListResponse("/servers", parsePlaygroundServerListResponse)
-                : Promise.resolve([]),
+                ? readAnalyticsResponse(serverOverviewAnalyticsPath)
+                : Promise.resolve(null),
               shouldLoadDatabaseCatalog
-                  ? fetchPlaygroundDatabaseList(proxyBackendBase, authRequestHeaders, {
-                    identity: databaseListIdentity,
-                    signal: requestController.signal,
-                    priority: "low",
-                  })
-                : Promise.resolve([]),
+                ? readAnalyticsResponse(databaseOverviewAnalyticsPath)
+                : Promise.resolve(null),
             ]);
+            const serverOverviewResources = Array.isArray(serverOverviewAnalytics?.analytics?.resources)
+              ? serverOverviewAnalytics.analytics.resources
+              : Array.isArray(serverOverviewAnalytics?.resources)
+                ? serverOverviewAnalytics.resources
+                : [];
+            const databaseOverviewResources = Array.isArray(databaseOverviewAnalytics?.analytics?.resources)
+              ? databaseOverviewAnalytics.analytics.resources
+              : Array.isArray(databaseOverviewAnalytics?.resources)
+                ? databaseOverviewAnalytics.resources
+                : [];
+            const servers = serverOverviewResources.map(normalizePlaygroundServerRecord);
+            const databases = databaseOverviewResources.map(normalizePlaygroundDatabaseRecord);
             const activeServerRecords = servers.filter((server) => (
               server?.id
               && !["deleted"].includes(String(server?.status || server?.state || "").toLowerCase())
@@ -185345,12 +186496,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
               bucket[field] += Math.max(0, Number(value || 0));
             };
 
-            const serverAnalyticsResults = await Promise.all(analyticsServers.map(async (server) => ({
-              server,
-              analytics: await readAnalyticsResponse(
-                "/servers/" + encodeURIComponent(server.id) + "/analytics?period=" + encodeURIComponent(requestedPeriod)
-              ),
-            })));
+            const serverById = new Map(analyticsServers.map((server) => [String(server?.id || ""), server]));
+            const scopedServerOverviewResources = targetKind && targetKind !== "database"
+              ? serverOverviewResources.filter((resource) => canonicalizePlaygroundServerKind(resource?.kind) === targetKind)
+              : serverOverviewResources;
+            const serverAnalyticsResults = scopedServerOverviewResources.map((resource) => ({
+              server: serverById.get(String(resource?.id || "")) || resource,
+              analytics: { charts: { traffic: Array.isArray(resource?.traffic) ? resource.traffic : [] } },
+            }));
             const activeServerKindCounts = activeServerRecords.reduce((counts, server) => {
               const kind = canonicalizePlaygroundServerKind(server?.kind);
               counts[kind] = (counts[kind] || 0) + 1;
@@ -185551,34 +186704,17 @@ ${PROJECT_OVERVIEW_SCRIPT}
               pushResourceMetricSeries("errors", database, errorValues, "Database");
               pushResourceMetricSeries("computeTokens", database, computeTokenValues, "Database");
             };
-            if (targetKind === "database") {
-              publishOperationalMetricsSnapshot();
-              if (isCurrentLoad() && analyticsDatabases.length === 0) {
-                setDevelopServerOperationalMetricsLoading(false);
-              }
-            }
-            let nextDatabaseAnalyticsIndex = 0;
-            const databaseAnalyticsWorkerCount = Math.min(4, analyticsDatabases.length);
-            await Promise.allSettled(Array.from({ length: databaseAnalyticsWorkerCount }, async () => {
-              while (isCurrentLoad() && nextDatabaseAnalyticsIndex < analyticsDatabases.length) {
-                const database = analyticsDatabases[nextDatabaseAnalyticsIndex];
-                nextDatabaseAnalyticsIndex += 1;
-                const analytics = await readAnalyticsResponse(
-                  "/databases/" + encodeURIComponent(database.id) + "/analytics?period=" + encodeURIComponent(requestedPeriod)
-                );
-                if (!isCurrentLoad()) {
-                  return;
-                }
-                ingestDatabaseAnalytics(database, analytics);
-                if (targetKind === "database") {
-                  publishOperationalMetricsSnapshot();
-                  setDevelopServerOperationalMetricsLoading(false);
-                }
-              }
-            }));
+            const databaseById = new Map(analyticsDatabases.map((database) => [String(database?.id || ""), database]));
+            databaseOverviewResources.forEach((resource) => {
+              const database = databaseById.get(String(resource?.id || "")) || resource;
+              ingestDatabaseAnalytics(database, {
+                analytics: { charts: { operations: Array.isArray(resource?.operations) ? resource.operations : [] } },
+              });
+            });
             publishOperationalMetricsSnapshot();
           } catch (error) {
             if (isCurrentLoad() && error?.name !== "AbortError") {
+              developServerOperationalMetricsRequestKeyRef.current = "";
               setDevelopServerOperationalMetricsError(error instanceof Error ? error.message : "Failed to load server activity.");
               setDevelopServerOperationalMetrics(null);
             }
@@ -185634,14 +186770,22 @@ ${PROJECT_OVERVIEW_SCRIPT}
           setInitialThreadPrivateMode(false);
           setThreadNavMenuOpen(false);
           metronomeRunTraceSelectionRef.current = null;
+          setSidebarWorkspaceMode("work");
           setActivePage("thread");
           setCurrentThreadId(threadId);
           setMetronomeRunTraceSelection(null);
           setThreadAgentSelectionOverride(null);
           setPendingThreadRunRequest(null);
+          setPendingThreadDocumentPreviewRequest(null);
+          setThreadTaskOpenRequest(null);
+          setThreadSubagentDetailOpen(false);
+          setThreadDeepResearchDetailOpen(false);
+          setThreadDocumentPreviewOpen(false);
+          setContentMode("chat");
           setChangesNavigationTarget(null);
           setThreadListMode("threads");
           setRunnerRenderKey((current) => current + 1);
+          void refreshThreads(undefined, threadId, { silent: true });
         }
 
         function closeThreadActionMenu() {
@@ -196025,18 +197169,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const selectedOrganization = organizationPageOrganizations.find((organization) => organization.id === organizationPageSelectedOrganizationId) || null;
           const activeOrganization = organizationPageOrganizations.find((organization) => isOrganizationPageActiveOrganization(organization))
             || getOrganizationPagePersonalOrganization(organizationPageOrganizations);
-          const organizationRoleOptions = [
-            { id: "admin", label: "Admin" },
-            { id: "billing", label: "Billing" },
-            { id: "developer", label: "Developer" },
-            { id: "member", label: "Member" },
-            { id: "viewer", label: "Viewer" },
-          ];
-          const organizationRoleIds = ["owner", ...organizationRoleOptions.map((role) => role.id)];
-          const normalizeOrganizationRoleId = (role, fallback = "member") => {
-            const normalized = String(role || "").trim().toLowerCase();
-            return organizationRoleIds.includes(normalized) ? normalized : fallback;
-          };
+          const organizationRoleOptions = PLAYGROUND_ASSIGNABLE_ORGANIZATION_ROLE_DEFINITIONS;
+          const normalizeOrganizationRoleId = normalizePlaygroundOrganizationRoleId;
           const currentRoleId = normalizeOrganizationRoleId(selectedOrganization?.membership?.role || selectedOrganization?.role, "member");
           const canManageOrganization = Boolean(selectedOrganization)
             && (
@@ -196057,20 +197191,41 @@ ${PROJECT_OVERVIEW_SCRIPT}
             if (normalized === "owner") return "Owner";
             return organizationRoleOptions.find((option) => option.id === normalized)?.label || "Member";
           };
-          const renderOrganizationRoleSelect = (props) => React.createElement("select", {
-            className: "playground-team-select",
-            ...props,
-            value: normalizeOrganizationRoleId(props?.value, "member"),
-          }, organizationRoleOptions.map((option) =>
-            React.createElement("option", { key: option.id, value: option.id }, option.label)
-          ));
+          const renderOrganizationRoleSelect = (props = {}) => {
+            const { variant, className, ...selectProps } = props || {};
+            const isMemberRowVariant = variant === "member-row";
+            const selectElement = React.createElement("select", {
+              className: "playground-team-select"
+                + (isMemberRowVariant ? " playground-team-member-role-select" : "")
+                + (className ? " " + className : ""),
+              ...selectProps,
+              value: normalizeOrganizationRoleId(props?.value, "member"),
+            }, organizationRoleOptions.map((option) =>
+              React.createElement("option", { key: option.id, value: option.id }, option.label)
+            ));
+            return isMemberRowVariant
+              ? React.createElement("span", { className: "playground-team-member-role-select-shell" },
+                  selectElement,
+                  React.createElement(ChevronsUpDown, {
+                    className: "playground-team-member-role-select-icon",
+                    width: 13,
+                    height: 13,
+                    strokeWidth: 1.55,
+                    "aria-hidden": "true",
+                  })
+                )
+              : selectElement;
+          };
           const formatOrganizationType = (type) => String(type || "").trim().toLowerCase() === "personal" ? "Personal" : "Company";
 	          const openOrganizationDetail = (organizationId) => {
 	            const normalizedOrganizationId = String(organizationId || "").trim();
 	            if (!normalizedOrganizationId) return;
+	            setOrganizationPageActiveTab("members");
+	            setOrganizationPageSelectedRoleId("member");
 	            setOrganizationPageSelectedOrganizationId(normalizedOrganizationId);
 	            setOrganizationPageMembers([]);
 	            setOrganizationPageInvitations([]);
+	            setOrganizationPageResources([]);
 	            setOrganizationPageBillingSummary(null);
 	            setOrganizationPageBillingError("");
 	            setOrganizationMemberSearchQuery("");
@@ -196759,14 +197914,19 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	          const renderOverview = () => React.createElement("div", { className: "playground-team-overview-page playground-agents-overview-page playground-organization-overview-page is-develop-configure-page" },
 	            React.createElement("div", { className: "playground-environments-home-content playground-team-overview-content playground-organization-overview-content" },
 	              React.createElement("section", { className: "playground-environments-home-hero playground-develop-server-kind-hero playground-agents-configure-hero playground-team-overview-hero playground-organization-overview-hero" },
-	                React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header playground-develop-server-kind-header playground-team-page-header" },
-	                  React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title playground-team-page-title" }, "Organizations")
-	                ),
-	                React.createElement("div", {
-	                    className: "playground-environments-home-metrics playground-develop-server-metrics playground-develop-server-kind-metrics playground-team-overview-empty-metrics",
-	                    "aria-hidden": "true",
-	                  },
-	                  React.createElement("div", { className: "playground-team-overview-empty-chart" })
+	                React.createElement("div", { className: "playground-organization-overview-hero-intro" },
+	                  React.createElement("h1", { className: "playground-organization-overview-hero-title" }, "Organizations"),
+	                  React.createElement("p", { className: "playground-organization-overview-hero-description" }, "Bring members, agents, computers, resources, usage, and billing into one company-wide workspace."),
+	                  React.createElement("div", { className: "playground-organization-overview-hero-actions" },
+	                    React.createElement("button", {
+	                      type: "button",
+	                      className: "playground-functions-empty-button is-primary playground-organization-overview-docs-button",
+	                      onClick: () => window.open(${JSON.stringify(aiosOrigin + "/developers/organizations")}, "_blank", "noopener,noreferrer"),
+	                    },
+	                      React.createElement("span", null, "Documentation"),
+	                      React.createElement(ArrowUpRight, { width: 13, height: 13, strokeWidth: 1.8 })
+	                    )
+	                  )
 	                ),
 	                organizationPageError
 	                  ? React.createElement("div", { className: "playground-team-error" }, organizationPageError)
@@ -197138,25 +198298,44 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	            );
 	            const renderOrganizationMemberRowMenu = (row) => {
 	              const menuId = getOrganizationMemberSelectionId(row);
-	              if (!menuId || organizationMemberMenuId !== menuId || row?.kind !== "invitation" || !canManageOrganization) {
+	              if (!menuId || organizationMemberMenuId !== menuId || !canManageOrganization) {
 	                return null;
 	              }
-	              const revokeActionId = "revoke-organization-invite:" + row.id;
+	              const isInvitation = row?.kind === "invitation";
+	              const item = row?.item || {};
+	              const isOwner = !isInvitation && (
+	                normalizeOrganizationRoleId(item.role, "member") === "owner"
+	                || String(item.userId || item.user_id || "").trim() === String(selectedOrganization?.ownerUserId || "").trim()
+	              );
+	              if (isOwner) {
+	                return null;
+	              }
+	              const actionId = isInvitation
+	                ? "revoke-organization-invite:" + row.id
+	                : "organization-member-remove:" + row.id;
 	              return React.createElement("div", {
 	                  className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in",
 	                },
 	                React.createElement("button", {
 	                  type: "button",
 	                  className: "tb-popup-row is-danger",
-	                  disabled: organizationPageActionId === revokeActionId,
+	                  disabled: organizationPageActionId === actionId,
 	                  onClick: () => {
 	                    setOrganizationMemberMenuId("");
-	                    handleRevokeOrganizationInvitation(row.id);
+	                    if (isInvitation) {
+	                      handleRevokeOrganizationInvitation(row.id);
+	                    } else {
+	                      handleRemoveOrganizationMember(row.id);
+	                    }
 	                  },
 	                },
 	                  React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
 	                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-	                    React.createElement("span", null, organizationPageActionId === revokeActionId ? "Revoking..." : "Revoke")
+	                    React.createElement("span", null,
+	                      organizationPageActionId === actionId
+	                        ? (isInvitation ? "Revoking..." : "Removing...")
+	                        : (isInvitation ? "Revoke" : "Remove member")
+	                    )
 	                  )
 	                )
 	              );
@@ -197179,11 +198358,15 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                          const memberSelectionId = getOrganizationMemberSelectionId(row);
 	                          const isOrganizationMemberSelected = selectedOrganizationMemberIds.has(memberSelectionId);
 	                          const menuOpen = organizationMemberMenuId === memberSelectionId;
+	                          const isOwner = !isInvitation && (
+	                            normalizeOrganizationRoleId(item.role, "member") === "owner"
+	                            || String(item.userId || item.user_id || "").trim() === String(selectedOrganization?.ownerUserId || "").trim()
+	                          );
 	                          return React.createElement("div", {
 	                              key: row.kind + ":" + row.id,
 	                              className: "playground-project-overview-threads-table-row",
 	                              onContextMenu: (event) => {
-	                                if (isInvitation && canManageOrganization) {
+	                                if (canManageOrganization && !isOwner) {
 	                                  event.preventDefault();
 	                                  setOrganizationMemberToolbarPopover("");
 	                                  setOrganizationMemberMenuId(memberSelectionId);
@@ -197210,7 +198393,15 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                                : renderMemberIdentity(item)
 	                            ),
 	                            React.createElement("div", { className: "playground-project-overview-thread-cell is-model" },
-	                              React.createElement("span", { className: "playground-team-badge playground-team-role-label" }, getOrganizationMemberRoleLabel(row))
+	                              !isInvitation && canManageOrganization && !isOwner
+	                                ? renderOrganizationRoleSelect({
+	                                    variant: "member-row",
+	                                    value: item.role,
+	                                    onChange: (event) => handleUpdateOrganizationMemberRole(item.id, event.target.value),
+	                                    disabled: organizationPageActionId === "organization-member-role:" + item.id,
+	                                    "aria-label": "Role for " + displayName,
+	                                  })
+	                                : React.createElement("span", { className: "playground-team-badge playground-team-role-label" }, getOrganizationMemberRoleLabel(row))
 	                            ),
 	                            React.createElement("div", { className: "playground-project-overview-thread-cell is-status" },
 	                              React.createElement("div", { className: "playground-agents-overview-table-value" }, getOrganizationMemberStatusLabel(row))
@@ -197219,7 +198410,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                              React.createElement("div", { className: "playground-agents-overview-table-value" }, joinedLabel)
 	                            ),
 	                            React.createElement("div", { className: "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell playground-tasks-toolbar-popup-shell playground-organization-member-action-shell" },
-	                              isInvitation && canManageOrganization
+	                              canManageOrganization && !isOwner
 	                                ? React.createElement(React.Fragment, null,
 	                                    React.createElement("button", {
 	                                      type: "button",
@@ -197251,7 +198442,247 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	            );
 	          };
 
-          return React.createElement("div", { className: "playground-team-page", ref: organizationPageRef },
+	          const organizationResourceTypeMeta = {
+	            project: { label: "Project", Icon: LayoutDashboard },
+	            environment: { label: "Computer", Icon: Monitor },
+	            agent: { label: "Agent", Icon: Bot },
+	            database: { label: "Database", Icon: Database },
+	            server: { label: "Deployed resource", Icon: Code2 },
+	          };
+	          const organizationResourceRowsAll = (Array.isArray(organizationPageResources) ? organizationPageResources : []).map((resource) => {
+	            const type = String(resource?.type || "server").trim().toLowerCase() || "server";
+	            const createdByUserId = String(resource?.createdByUserId || "").trim();
+	            const ownerLabel = createdByUserId && createdByUserId === String(sessionState.userId || "").trim()
+	              ? "Me"
+	              : "Organization member";
+	            return {
+	              key: type + ":" + String(resource?.id || ""),
+	              id: String(resource?.id || ""),
+	              resourceId: String(resource?.id || ""),
+	              type,
+	              title: String(resource?.name || resource?.title || resource?.id || "Untitled resource"),
+	              subtitle: organizationResourceTypeMeta[type]?.label || "Resource",
+	              secondaryLabel: "Organization",
+	              updatedLabel: formatDate(resource?.updatedAt || resource?.createdAt) || "-",
+	              ownerLabel,
+	              ownerAvatarUrl: ownerLabel === "Me" ? accountAvatarUrl : "",
+	              record: resource,
+	            };
+	          }).filter((row) => row.id);
+	          const normalizedOrganizationResourceSearchQuery = String(organizationResourceSearchQuery || "").trim().toLowerCase();
+	          const getOrganizationResourceSortValue = (row, sortKey) => {
+	            if (sortKey === "updated") {
+	              const timestamp = Date.parse(String(row?.record?.updatedAt || row?.record?.createdAt || ""));
+	              return Number.isFinite(timestamp) ? timestamp : 0;
+	            }
+	            if (sortKey === "owner") return row?.ownerLabel || "";
+	            if (sortKey === "access") return row?.secondaryLabel || "";
+	            return row?.title || "";
+	          };
+	          const organizationResourceRows = organizationResourceRowsAll
+	            .filter((row) => organizationResourceFilter === "all" || row.type === organizationResourceFilter)
+	            .filter((row) => !normalizedOrganizationResourceSearchQuery || [row.title, row.subtitle, row.ownerLabel]
+	              .join(" ").toLowerCase().includes(normalizedOrganizationResourceSearchQuery))
+	            .slice()
+	            .sort((left, right) => {
+	              const leftValue = getOrganizationResourceSortValue(left, organizationResourceSort);
+	              const rightValue = getOrganizationResourceSortValue(right, organizationResourceSort);
+	              const comparison = typeof leftValue === "number" && typeof rightValue === "number"
+	                ? leftValue - rightValue
+	                : String(leftValue || "").localeCompare(String(rightValue || ""), undefined, { numeric: true, sensitivity: "base" });
+	              return organizationResourceSortDirection === "desc" ? -comparison : comparison;
+	            });
+	          const organizationResourceTypeFilters = [
+	            { id: "all", label: "All" },
+	            { id: "project", label: "Projects" },
+	            { id: "environment", label: "Computers" },
+	            { id: "agent", label: "Agents" },
+	            { id: "database", label: "Databases" },
+	            { id: "server", label: "Deployed resources" },
+	          ].filter((option) => option.id === "all" || organizationResourceRowsAll.some((row) => row.type === option.id));
+	          const handleOrganizationResourceSortChange = (nextSortKey) => {
+	            const normalizedSortKey = String(nextSortKey || "resource").trim() || "resource";
+	            setOrganizationResourceToolbarPopover("");
+	            setOrganizationResourceSortDirection((currentDirection) => {
+	              if (organizationResourceSort !== normalizedSortKey) {
+	                return normalizedSortKey === "updated" ? "desc" : "asc";
+	              }
+	              return currentDirection === "asc" ? "desc" : "asc";
+	            });
+	            setOrganizationResourceSort(normalizedSortKey);
+	          };
+	          const openOrganizationResource = (row) => {
+	            const resourceId = String(row?.resourceId || row?.id || "").trim();
+	            if (!resourceId) return;
+	            if (!isOrganizationPageActiveOrganization(selectedOrganization)) {
+	              setActiveOrganizationFromRecord(selectedOrganization);
+	            }
+	            if (row.type === "project") {
+	              setLatestInteractedProjectId(resourceId);
+	              setTasksPageNavigationRequest({
+	                token: createPlaygroundPlatformNavigationToken(),
+	                projectId: resourceId,
+	                view: "overview",
+	                missionControlAction: "",
+	                projectComposerAction: "",
+	              });
+	              setActivePage("tasks");
+	              return;
+	            }
+	            if (row.type === "environment") {
+	              setEnvironmentId(resourceId);
+	              openResourcesView("computers");
+	              setEnvironmentsNavigationTargetId(resourceId);
+	              setEnvironmentsOpenToken((current) => current + 1);
+	              return;
+	            }
+	            if (row.type === "agent") {
+	              openResourcesView("agents");
+	              setAgentPageSelectionRequest({ agentId: resourceId, token: createPlaygroundPlatformNavigationToken() });
+	              return;
+	            }
+	            const serverKind = row.type === "database"
+	              ? "database"
+	              : normalizeDevelopServerPageKind(row?.record?.kind || "");
+	            openResourcesView("servers", {
+	              serverKind,
+	              resourceType: row.type === "database" ? "database" : "server",
+	              resourceId,
+	            });
+	          };
+	          const renderOrganizationResources = () => React.createElement("div", { className: "playground-team-detail-panel playground-team-resources-panel" },
+	            React.createElement(PlaygroundSharedResourcesTab, {
+	              rows: organizationResourceRows,
+	              allRows: organizationResourceRowsAll,
+	              searchQuery: organizationResourceSearchQuery,
+	              onSearchQueryChange: setOrganizationResourceSearchQuery,
+	              toolbarPopover: organizationResourceToolbarPopover,
+	              onToolbarPopoverChange: setOrganizationResourceToolbarPopover,
+	              filter: organizationResourceFilter,
+	              onFilterChange: setOrganizationResourceFilter,
+	              typeFilters: organizationResourceTypeFilters,
+	              viewMode: organizationResourceViewMode,
+	              onViewModeChange: setOrganizationResourceViewMode,
+	              sortKey: organizationResourceSort,
+	              sortDirection: organizationResourceSortDirection,
+	              sortableColumns: ["resource", "access", "updated", "owner"],
+	              onSortChange: handleOrganizationResourceSortChange,
+	              getTypeMeta: (type) => organizationResourceTypeMeta[type] || { label: "Resource", Icon: Layers },
+	              renderCreator: () => React.createElement("span", { className: "playground-team-badge playground-team-resource-access-label" }, "Organization"),
+	              renderOwner: (row) => React.createElement("span", { className: "playground-team-resource-owner-cell" },
+	                renderAccountAvatar(
+	                  "playground-team-resource-owner-avatar",
+	                  "playground-team-resource-owner-avatar-image",
+	                  getAccountInitials(row.ownerLabel),
+	                  normalizeSessionPhotoUrl(row.ownerAvatarUrl || "")
+	                ),
+	                React.createElement("span", { className: "playground-team-badge playground-team-resource-owner-label" }, row.ownerLabel)
+	              ),
+	              onRowOpen: openOrganizationResource,
+	              showNewButton: false,
+	              showSelectionColumn: false,
+	              searchAriaLabel: "Search organization resources",
+	              primaryHeader: "Resource",
+	              secondaryHeader: "Access",
+	              tertiaryHeader: "Updated",
+	              ownerHeader: "Owner",
+	              emptyLabel: organizationPageLoading ? "Loading resources..." : "No organization resources yet.",
+	              noMatchesLabel: "No organization resources match this view yet.",
+	            })
+	          );
+
+	          const renderOrganizationRoles = () => {
+	            const rolePermissionSets = normalizePlaygroundOrganizationRolePermissionSets(selectedOrganization?.rolePermissionSets);
+	            const requestedRoleId = normalizeOrganizationRoleId(organizationPageSelectedRoleId, "member");
+	            const selectedRoleId = canManageOrganization
+	              ? requestedRoleId
+	              : requestedRoleId === "owner" ? "owner" : currentRoleId;
+	            const selectedRoleDefinition = getPlaygroundOrganizationRoleDefinition(selectedRoleId);
+	            const selectedRolePermissionSet = normalizePlaygroundPermissionSet(rolePermissionSets[selectedRoleDefinition.id], "organization_role");
+	            const selectedRoleActionId = "organization-role-permissions:" + selectedRoleDefinition.id;
+	            const isSelectedOwnerRole = selectedRoleDefinition.id === "owner";
+	            const visibleRoleDefinitions = canManageOrganization
+	              ? PLAYGROUND_ORGANIZATION_ROLE_DEFINITIONS
+	              : PLAYGROUND_ORGANIZATION_ROLE_DEFINITIONS.filter((role) => role.id === currentRoleId || role.id === "owner");
+	            const assignedMembersForRole = (roleId) => organizationPageMembers.filter((member) =>
+	              normalizeOrganizationRoleId(member?.role, "member") === roleId
+	            );
+	            const renderAssignedUsersPopup = (role) => {
+	              const assignedMembers = assignedMembersForRole(role.id);
+	              return React.createElement("div", {
+	                  className: "playground-team-role-assigned-popup",
+	                  onMouseDown: (event) => event.stopPropagation(),
+	                },
+	                React.createElement("div", { className: "playground-team-role-assigned-popup-title" }, role.label + " users"),
+	                assignedMembers.length
+	                  ? React.createElement("div", { className: "playground-team-role-assigned-list" },
+	                      assignedMembers.map((member) => React.createElement("div", { key: member.id, className: "playground-team-role-assigned-row" },
+	                        renderMemberIdentity(member),
+	                        React.createElement("span", { className: "playground-team-role-assigned-status" }, member.status || "active")
+	                      ))
+	                    )
+	                  : React.createElement("div", { className: "playground-team-role-assigned-empty" }, "No users assigned to this role.")
+	              );
+	            };
+	            const renderAssignedUsersButton = (role) => {
+	              const assignedCount = assignedMembersForRole(role.id).length;
+	              const isOpen = organizationPageRoleMembersPopover === role.id;
+	              return React.createElement("div", { className: "playground-team-role-assigned-shell" },
+	                React.createElement("button", {
+	                  type: "button",
+	                  className: "playground-team-badge playground-team-role-assigned-button" + (isOpen ? " is-open" : ""),
+	                  onClick: () => setOrganizationPageRoleMembersPopover((current) => current === role.id ? "" : role.id),
+	                  "aria-haspopup": "dialog",
+	                  "aria-expanded": isOpen ? "true" : "false",
+	                }, assignedCount + " assigned"),
+	                isOpen ? renderAssignedUsersPopup(role) : null
+	              );
+	            };
+	            return React.createElement("div", { className: "playground-team-detail-panel playground-team-roles-panel" },
+	              React.createElement("div", { className: "playground-team-role-pages" },
+	                React.createElement("div", { className: "playground-team-role-list", role: "tablist", "aria-label": "Organization roles" },
+	                  visibleRoleDefinitions.map((role) => React.createElement("button", {
+	                      key: role.id,
+	                      type: "button",
+	                      role: "tab",
+	                      className: "playground-team-role-card" + (selectedRoleDefinition.id === role.id ? " is-active" : ""),
+	                      "aria-selected": selectedRoleDefinition.id === role.id ? "true" : "false",
+	                      onClick: () => {
+	                        setOrganizationPageSelectedRoleId(role.id);
+	                        setOrganizationPageRoleMembersPopover("");
+	                      },
+	                    },
+	                    React.createElement("span", { className: "playground-team-role-card-title" }, role.label),
+	                    React.createElement("span", { className: "playground-team-role-card-description" }, role.description),
+	                    React.createElement("span", { className: "playground-team-role-card-meta" }, assignedMembersForRole(role.id).length + " assigned")
+	                  ))
+	                ),
+	                React.createElement("div", { className: "playground-team-role-permission-page" + (!canManageOrganization || isSelectedOwnerRole ? " is-read-only" : "") },
+	                  React.createElement("div", { className: "playground-team-role-permission-header" },
+	                    React.createElement("div", null,
+	                      React.createElement("div", { className: "playground-team-role-permission-kicker" }, "Role"),
+	                      React.createElement("h2", { className: "playground-team-role-permission-title" }, selectedRoleDefinition.label),
+	                      React.createElement("p", { className: "playground-team-role-permission-copy" }, selectedRoleDefinition.description)
+	                    ),
+	                    renderAssignedUsersButton(selectedRoleDefinition)
+	                  ),
+	                  renderPlaygroundPermissionPanel(selectedRolePermissionSet, {
+	                    subjectType: "organization_role",
+	                    animationKey: organizationPermissionChartAnimationKey,
+	                    disabled: isSelectedOwnerRole || !canManageOrganization || organizationPageActionId === selectedRoleActionId,
+	                    onRingAccessChange: (ringId, access) => updateOrganizationRolePermissionRingAccess(selectedRoleDefinition.id, ringId, access),
+	                    onActionRingChange: (actionId, ringId) => updateOrganizationRolePermissionActionRing(selectedRoleDefinition.id, actionId, ringId),
+	                    onActionAccessChange: (actionId, access) => updateOrganizationRolePermissionActionAccess(selectedRoleDefinition.id, actionId, access),
+	                  })
+	                )
+	              )
+	            );
+	          };
+
+          return React.createElement("div", {
+              className: "playground-team-page" + (selectedOrganization ? "" : " is-organization-overview-page"),
+              ref: organizationPageRef,
+            },
             React.createElement("div", { className: "playground-team-shell" },
               selectedOrganization
                 ? React.createElement(React.Fragment, null,
@@ -197262,37 +198693,47 @@ ${PROJECT_OVERVIEW_SCRIPT}
                         setOrganizationPageSelectedOrganizationId("");
                         setOrganizationPageMembers([]);
                         setOrganizationPageInvitations([]);
+                        setOrganizationPageResources([]);
                         setOrganizationPageBillingSummary(null);
                         setOrganizationPageBillingError("");
                       },
-                    }, React.createElement(ArrowLeft, { width: 12, height: 12, strokeWidth: 1.8 }), "Organization"),
+                    }, React.createElement(ArrowLeft, { width: 12, height: 12, strokeWidth: 1.8 }), "Organizations"),
                     React.createElement("div", { className: "playground-team-detail-header" },
-                      React.createElement("div", null,
-                        React.createElement("h1", { className: "playground-team-detail-title" }, selectedOrganization.name || "Organization"),
-                        React.createElement("div", { className: "playground-team-detail-meta" }, formatOrganizationType(selectedOrganization.type) + " workspace")
-                      ),
+                      React.createElement("h1", { className: "playground-team-detail-title" }, selectedOrganization.name || "Organization"),
                       React.createElement("div", { className: "playground-team-detail-actions" },
-                        isOrganizationPageActiveOrganization(selectedOrganization)
-                          ? React.createElement("span", { className: "playground-team-badge playground-team-role-label" }, "Current")
-                          : renderOrganizationActionButton("Set active", () => setActiveOrganizationFromRecord(selectedOrganization), {
-                              icon: React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 }),
-                            }),
                         canManageOrganization
                           ? renderOrganizationActionButton("Edit", () => {
                               setOrganizationPageRenameName(selectedOrganization.name || "");
                               setOrganizationPageRenameModalOpen(true);
                             }, { icon: React.createElement(SquarePen, { width: 14, height: 14, strokeWidth: 1.8 }) })
-                          : null,
-                        canInviteOrganization
-                          ? renderOrganizationActionButton("Invite member", () => setOrganizationPageInviteModalOpen(true), {
-                              icon: React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                            })
                           : null
                       )
                     ),
+                    React.createElement("div", { className: "playground-agents-overview-tabs playground-project-overview-tabs playground-develop-tabs playground-develop-server-kind-tabs playground-team-detail-tabs" },
+                      React.createElement("div", { className: "playground-project-overview-chart-tabs" },
+                        [
+                          { id: "members", label: "Organization members" },
+                          { id: "resources", label: "Resources" },
+                          { id: "roles", label: "Roles" },
+                          { id: "billing", label: "Billing" },
+                        ].map((tab) => React.createElement("button", {
+                            key: tab.id,
+                            type: "button",
+                            className: "playground-project-overview-chart-tab playground-develop-tab" + (organizationPageActiveTab === tab.id ? " is-active" : ""),
+                            "aria-pressed": organizationPageActiveTab === tab.id ? "true" : "false",
+                            onClick: () => setOrganizationPageActiveTab(tab.id),
+                          }, tab.label)
+                        )
+                      )
+                    ),
                     organizationPageError ? React.createElement("div", { className: "playground-team-error" }, organizationPageError) : null,
-                    renderOrganizationBillingSection(),
-                    renderMembers(),
+                    organizationPageActiveTab === "resources"
+                      ? renderOrganizationResources()
+                      : organizationPageActiveTab === "roles"
+                        ? renderOrganizationRoles()
+                        : organizationPageActiveTab === "billing"
+                          ? renderOrganizationBillingSection()
+                          : renderMembers(),
                     renderOrganizationRenameModal(),
                     renderOrganizationInviteModal()
                   )
@@ -198350,7 +199791,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               )
             );
           };
-          const renderTeamOverviewColumnHeader = () => React.createElement("div", { className: "playground-project-overview-threads-table-header playground-agents-overview-column-header playground-team-overview-column-header" },
+          const renderTeamOverviewColumnHeader = () => React.createElement("div", { className: "playground-project-overview-threads-table-header playground-agents-overview-column-header playground-team-overview-column-header playground-organization-overview-column-header" },
             React.createElement("div", null,
               React.createElement("button", {
                 type: "button",
@@ -198409,9 +199850,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
               })
             );
           };
-          const renderTeamOverviewStickyTableHeader = (includeColumns = true) => React.createElement("div", { className: "playground-agents-overview-sticky-table-header playground-team-overview-sticky-table-header" },
+          const renderTeamOverviewStickyTableHeader = (includeColumns = true) => React.createElement("div", { className: "playground-agents-overview-sticky-table-header playground-team-overview-sticky-table-header playground-organization-overview-sticky-table-header" },
             React.createElement("div", {
-                className: "playground-develop-server-kind-table-toolbar playground-team-overview-toolbar-row",
+                className: "playground-develop-server-kind-table-toolbar playground-team-overview-toolbar-row playground-organization-overview-toolbar-row",
                 ref: teamOverviewToolbarRef,
               },
               React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell" },
@@ -198502,23 +199943,28 @@ ${PROJECT_OVERVIEW_SCRIPT}
               )
             );
           };
-          const renderTeamOverview = () => React.createElement("div", { className: "playground-team-overview-page playground-agents-overview-page is-develop-configure-page" },
-            React.createElement("div", { className: "playground-environments-home-content playground-team-overview-content" },
-              React.createElement("section", { className: "playground-environments-home-hero playground-develop-server-kind-hero playground-agents-configure-hero playground-team-overview-hero" },
-                React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header playground-develop-server-kind-header playground-team-page-header" },
-                  React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title playground-team-page-title" }, "Teams")
-                ),
-                React.createElement("div", {
-                    className: "playground-environments-home-metrics playground-develop-server-metrics playground-develop-server-kind-metrics playground-team-overview-empty-metrics",
-                    "aria-hidden": "true",
-                  },
-                  React.createElement("div", { className: "playground-team-overview-empty-chart" })
+          const renderTeamOverview = () => React.createElement("div", { className: "playground-team-overview-page playground-agents-overview-page playground-organization-overview-page is-develop-configure-page" },
+            React.createElement("div", { className: "playground-environments-home-content playground-team-overview-content playground-organization-overview-content" },
+              React.createElement("section", { className: "playground-environments-home-hero playground-develop-server-kind-hero playground-agents-configure-hero playground-team-overview-hero playground-organization-overview-hero" },
+                React.createElement("div", { className: "playground-organization-overview-hero-intro" },
+                  React.createElement("h1", { className: "playground-organization-overview-hero-title" }, "Teams"),
+                  React.createElement("p", { className: "playground-organization-overview-hero-description" }, "Share selected resources and projects with dedicated groups and control how every member can work."),
+                  React.createElement("div", { className: "playground-organization-overview-hero-actions" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-functions-empty-button is-primary playground-organization-overview-docs-button",
+                      onClick: () => window.open(${JSON.stringify(aiosOrigin + "/developers/teams")}, "_blank", "noopener,noreferrer"),
+                    },
+                      React.createElement("span", null, "Documentation"),
+                      React.createElement(ArrowUpRight, { width: 13, height: 13, strokeWidth: 1.8 })
+                    )
+                  )
                 ),
                 teamPageError
                   ? React.createElement("div", { className: "playground-team-error" }, teamPageError)
                   : null,
                 React.createElement("section", {
-                    className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-team-overview-table-section",
+                    className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-team-overview-table-section playground-organization-overview-table-section",
                   },
                   visibleOverviewTeams.length === 0 ? renderTeamOverviewStickyTableHeader(false) : null,
                   visibleOverviewTeams.length === 0
@@ -201116,7 +202562,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             );
           };
 
-          return React.createElement("div", { className: "playground-team-page", ref: teamPageRef },
+          return React.createElement("div", { className: "playground-team-page" + (selectedTeam ? "" : " is-team-overview-page"), ref: teamPageRef },
             React.createElement("div", { className: "playground-team-shell" },
               selectedTeam
                 ? React.createElement(React.Fragment, null,
@@ -202957,12 +204403,16 @@ ${PROJECT_OVERVIEW_SCRIPT}
           ) {
             return;
           }
-          if (developServerOperationalMetricsLoading) {
-            return;
-          }
           const rawMetricsScopeKind = String(developServerOperationalMetrics?.scopeKind || "").trim();
           const metricsScopeKind = rawMetricsScopeKind ? canonicalizePlaygroundServerKind(rawMetricsScopeKind) : "";
           const requestedMetricsPeriod = normalizePlaygroundEnvironmentHomeChartPeriod(developServerOperationalMetricsPeriod);
+          const requestedMetricsKey = activeResourcesServerKind + ":" + requestedMetricsPeriod;
+          if (
+            developServerOperationalMetricsLoading
+            && developServerOperationalMetricsRequestKeyRef.current === requestedMetricsKey
+          ) {
+            return;
+          }
           const loadedMetricsPeriod = String(developServerOperationalMetrics?.period || "day").trim();
           const loadedAt = Date.parse(String(developServerOperationalMetrics?.loadedAt || ""));
           const shouldRefresh = metricsScopeKind !== activeResourcesServerKind
@@ -208416,7 +209866,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             pathItems: resourcesPathItems,
             includeSearchDivider: activeResourcesView === "agents"
               || activeResourcesView === "computers"
-              || (activeResourcesView === "servers" && activeResourcesServerKind === "database"),
+              || (activeResourcesView === "servers" && Boolean(activeResourcesServerKind)),
             hideCommonActions: isResourcesVersionsDrawerOpen,
             extraActions: React.createElement("div", {
               id: "playground-resources-nav-actions",
@@ -209852,7 +211302,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
 
           return hasRealAccess
             ? React.createElement(PlaygroundEnvironmentsPage, {
-                key: "resources:" + activeResourcesView + (activeResourcesView === "servers" && activeResourcesServerKind ? ":" + activeResourcesServerKind : ""),
+                key: "resources:" + activeResourcesView,
                 backendUrl: proxyBackendBase,
                 requestHeaders,
                 environments: realEnvironments,
@@ -212752,19 +214202,136 @@ ${PROJECT_OVERVIEW_SCRIPT}
             { id: "standard", label: "Standard", description: "Show system-managed and default keys" },
             { id: "scoped", label: "Scoped", description: "Show keys created with custom access" },
           ];
+          const visibleApiKeyIds = visibleApiKeys.map((apiKeyRecord) => String(apiKeyRecord?.id || "").trim()).filter(Boolean);
+          const allVisibleApiKeysSelected = visibleApiKeyIds.length > 0 && visibleApiKeyIds.every((keyId) => developApiKeysSelectedIds.has(keyId));
+          const someVisibleApiKeysSelected = !allVisibleApiKeysSelected && visibleApiKeyIds.some((keyId) => developApiKeysSelectedIds.has(keyId));
+
+          const toggleApiKeySelection = (keyId) => {
+            const normalizedKeyId = String(keyId || "").trim();
+            if (!normalizedKeyId) return;
+            setDevelopApiKeysSelectedIds((current) => {
+              const next = new Set(current);
+              if (next.has(normalizedKeyId)) next.delete(normalizedKeyId);
+              else next.add(normalizedKeyId);
+              return next;
+            });
+          };
+
+          const toggleAllVisibleApiKeys = () => {
+            setDevelopApiKeysSelectedIds((current) => {
+              const next = new Set(current);
+              if (allVisibleApiKeysSelected) visibleApiKeyIds.forEach((keyId) => next.delete(keyId));
+              else visibleApiKeyIds.forEach((keyId) => next.add(keyId));
+              return next;
+            });
+          };
+
+          const closeApiKeyActionMenu = (options = {}) => {
+            if (!developApiKeyActionMenu) return;
+            if (developApiKeyActionMenuCloseTimerRef.current !== null && typeof window !== "undefined") {
+              window.clearTimeout(developApiKeyActionMenuCloseTimerRef.current);
+              developApiKeyActionMenuCloseTimerRef.current = null;
+            }
+            if (options.animate === false || typeof window === "undefined") {
+              setDevelopApiKeyActionMenuClosing(false);
+              setDevelopApiKeyActionMenu(null);
+              return;
+            }
+            setDevelopApiKeyActionMenuClosing(true);
+            developApiKeyActionMenuCloseTimerRef.current = window.setTimeout(() => {
+              developApiKeyActionMenuCloseTimerRef.current = null;
+              setDevelopApiKeyActionMenuClosing(false);
+              setDevelopApiKeyActionMenu(null);
+            }, 90);
+          };
+
+          const openApiKeyActionMenu = (event, apiKeyRecord, options = {}) => {
+            if (!apiKeyRecord?.id) return;
+            event.preventDefault();
+            event.stopPropagation();
+            const menuWidth = 220;
+            const menuHeight = 104;
+            const gutter = 12;
+            const viewportWidth = window.innerWidth || document.documentElement?.clientWidth || 0;
+            const viewportHeight = window.innerHeight || document.documentElement?.clientHeight || 0;
+            let left;
+            let top;
+            if (options.context) {
+              left = Number(event.clientX || 0);
+              top = Number(event.clientY || 0);
+            } else {
+              const rect = event.currentTarget.getBoundingClientRect();
+              left = rect.right - menuWidth;
+              top = rect.bottom + 6;
+            }
+            left = Math.max(gutter, Math.min(viewportWidth - menuWidth - gutter, left));
+            top = Math.max(gutter, Math.min(viewportHeight - menuHeight - gutter, top));
+            if (developApiKeyActionMenuCloseTimerRef.current !== null) {
+              window.clearTimeout(developApiKeyActionMenuCloseTimerRef.current);
+              developApiKeyActionMenuCloseTimerRef.current = null;
+            }
+            setDevelopApiKeyActionMenuClosing(false);
+            setDevelopApiKeyActionMenu({ apiKeyRecord, left, top });
+          };
+
+          const openApiKeyRevealModal = async (apiKeyRecord) => {
+            const keyId = String(apiKeyRecord?.id || "").trim();
+            if (!keyId) return;
+            const locallyAvailableKey = String(
+              settingsRevealableApiKeys[keyId]
+              || (apiKeyRecord?.isCurrentDefault ? resolvedSessionApiKey : "")
+              || ""
+            ).trim();
+            setDevelopApiKeyRevealModal({ apiKeyRecord, key: locallyAvailableKey, loading: !locallyAvailableKey, error: "" });
+            if (locallyAvailableKey) return;
+            try {
+              const response = await fetch("/api/aios/user/api-keys/" + encodeURIComponent(keyId) + "/reveal", {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+              });
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) throw new Error(data?.message || data?.error || "Failed to reveal API key.");
+              const revealedKey = typeof data?.key === "string" ? data.key.trim() : "";
+              if (!revealedKey) throw new Error("The API key value is unavailable.");
+              setSettingsRevealableApiKeys((current) => ({ ...current, [keyId]: revealedKey }));
+              setDevelopApiKeyRevealModal((current) => current?.apiKeyRecord?.id === keyId
+                ? { ...current, key: revealedKey, loading: false, error: "" }
+                : current);
+            } catch (error) {
+              setDevelopApiKeyRevealModal((current) => current?.apiKeyRecord?.id === keyId
+                ? { ...current, loading: false, error: error instanceof Error ? error.message : "Failed to reveal API key." }
+                : current);
+            }
+          };
+
           const renderApiKeyRow = (apiKeyRecord) => {
-            const canRevoke = apiKeyRecord?.canRevoke !== false && apiKeyRecord?.isActive;
             const keyPreview = String(apiKeyRecord?.keyPrefix || "key") + "••••";
             const createdByLabel = getApiKeyCreatedByLabel(apiKeyRecord);
+            const keyId = String(apiKeyRecord?.id || "").trim();
+            const isSelected = developApiKeysSelectedIds.has(keyId);
+            const isMenuOpen = developApiKeyActionMenu?.apiKeyRecord?.id === apiKeyRecord.id;
             return React.createElement("div", {
                 key: apiKeyRecord.id,
                 className: "playground-project-overview-threads-table-row playground-develop-api-keys-table-row",
+                onContextMenu: (event) => openApiKeyActionMenu(event, apiKeyRecord, { context: true }),
               },
+              React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-agents-overview-select-checkbox" + (isSelected ? " is-selected" : ""),
+                  role: "checkbox",
+                  "aria-checked": isSelected ? "true" : "false",
+                  "aria-label": "Select " + (apiKeyRecord.name || "API key"),
+                  onClick: (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    toggleApiKeySelection(keyId);
+                  },
+                })
+              ),
               React.createElement("div", { className: "playground-project-overview-thread-cell is-name" },
                 React.createElement("div", { className: "playground-resources-overview-name-cell" },
-                  React.createElement("span", { className: "playground-resources-overview-table-icon", "aria-hidden": "true" },
-                    React.createElement(Key, { width: 16, height: 16, strokeWidth: 1.8 })
-                  ),
                   React.createElement("div", { className: "playground-resources-overview-name-copy" },
                     React.createElement("div", { className: "playground-settings-api-keys-name-row" },
                       React.createElement("span", { className: "playground-resources-overview-name-title" }, apiKeyRecord.name || "API Key"),
@@ -212791,20 +214358,15 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 React.createElement("div", { className: "playground-agents-overview-table-value" }, getSettingsApiKeyScopeLabel(apiKeyRecord.permissions))
               ),
               React.createElement("div", { className: "playground-project-overview-thread-cell is-actions" },
-                canRevoke
-                  ? React.createElement("button", {
-                      type: "button",
-                      className: "playground-settings-api-keys-action-button",
-                      disabled: settingsRevokingKeyId === apiKeyRecord.id,
-                      title: "Revoke key",
-                      "aria-label": "Revoke " + (apiKeyRecord.name || "API key"),
-                      onClick: () => {
-                        void handleSettingsRevokeApiKey(apiKeyRecord.id);
-                      },
-                    }, settingsRevokingKeyId === apiKeyRecord.id
-                      ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-settings-records-spinner" })
-                      : React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }))
-                  : React.createElement("span", { className: "playground-agents-overview-table-value" }, "—")
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-overview-table-action-button" + (isMenuOpen ? " is-open" : ""),
+                  title: "API key actions",
+                  "aria-label": "Actions for " + (apiKeyRecord.name || "API key"),
+                  "aria-expanded": isMenuOpen ? "true" : "false",
+                  onClick: (event) => openApiKeyActionMenu(event, apiKeyRecord),
+                  onContextMenu: (event) => openApiKeyActionMenu(event, apiKeyRecord, { context: true }),
+                }, React.createElement(Ellipsis, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 }))
               )
             );
           };
@@ -212906,6 +214468,126 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 ? createPortal(apiKeyDialogContent, document.body)
                 : apiKeyDialogContent)
             : null;
+
+          const apiKeyActionMenuContent = developApiKeyActionMenu
+            ? React.createElement("div", {
+                className: "sidebar-thread-popup-scrim",
+                style: { zIndex: 360 },
+                onClick: () => closeApiKeyActionMenu(),
+              },
+                React.createElement("div", {
+                    className: "playground-platform-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-toolbar-popup-shell-portal playground-agents-list-action-menu-shell is-open",
+                    style: {
+                      position: "fixed",
+                      top: developApiKeyActionMenu.top + "px",
+                      left: developApiKeyActionMenu.left + "px",
+                      right: "auto",
+                    },
+                    onClick: (event) => event.stopPropagation(),
+                  },
+                  React.createElement("div", {
+                      className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu" + (developApiKeyActionMenuClosing ? " is-closing" : " playground-tasks-toolbar-popup-menu-animate-down-in"),
+                      role: "menu",
+                    },
+                    React.createElement("button", {
+                      type: "button",
+                      role: "menuitem",
+                      className: "tb-popup-row",
+                      onClick: () => {
+                        const apiKeyRecord = developApiKeyActionMenu.apiKeyRecord;
+                        closeApiKeyActionMenu({ animate: false });
+                        void openApiKeyRevealModal(apiKeyRecord);
+                      },
+                    },
+                      React.createElement(Eye, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                        React.createElement("span", null, "View key")
+                      )
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      role: "menuitem",
+                      className: "tb-popup-row",
+                      disabled: developApiKeyActionMenu.apiKeyRecord?.canRevoke === false || settingsRevokingKeyId === developApiKeyActionMenu.apiKeyRecord?.id,
+                      onClick: () => {
+                        const keyId = developApiKeyActionMenu.apiKeyRecord?.id;
+                        closeApiKeyActionMenu({ animate: false });
+                        void handleSettingsRevokeApiKey(keyId);
+                      },
+                    },
+                      settingsRevokingKeyId === developApiKeyActionMenu.apiKeyRecord?.id
+                        ? React.createElement(Loader2, { className: "tb-popup-icon playground-settings-records-spinner", width: 14, height: 14, strokeWidth: 1.8 })
+                        : React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                        React.createElement("span", null, "Delete")
+                      )
+                    )
+                  )
+                )
+              )
+            : null;
+          const apiKeyActionMenu = apiKeyActionMenuContent && typeof document !== "undefined" && document.body
+            ? createPortal(apiKeyActionMenuContent, document.body)
+            : apiKeyActionMenuContent;
+
+          const apiKeyRevealDialogContent = developApiKeyRevealModal
+            ? React.createElement("div", {
+                className: "playground-tasks-project-modal-backdrop playground-settings-api-key-modal-backdrop",
+                onClick: () => setDevelopApiKeyRevealModal(null),
+              },
+                React.createElement("div", {
+                    className: "playground-tasks-project-modal playground-agent-composer-modal playground-settings-api-key-modal playground-api-key-reveal-modal",
+                    role: "dialog",
+                    "aria-modal": "true",
+                    "aria-labelledby": "playground-api-key-reveal-title",
+                    onClick: (event) => event.stopPropagation(),
+                  },
+                  React.createElement("div", { className: "playground-tasks-project-modal-top playground-settings-api-key-modal-top" },
+                    React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                      React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
+                        React.createElement(Eye, { width: 18, height: 18, strokeWidth: 1.9 })
+                      ),
+                      React.createElement("div", { className: "playground-settings-api-key-modal-title-shell" },
+                        React.createElement("div", { id: "playground-api-key-reveal-title", className: "playground-settings-api-key-modal-title" }, developApiKeyRevealModal.apiKeyRecord?.name || "API Key"),
+                        React.createElement("div", { className: "playground-settings-api-key-modal-subtitle" }, "Use this key to authenticate SDK and API requests.")
+                      )
+                    ),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                      onClick: () => setDevelopApiKeyRevealModal(null),
+                      title: "Close",
+                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                  ),
+                  React.createElement("div", { className: "playground-agent-composer-modal-body playground-settings-api-key-modal-body" },
+                    developApiKeyRevealModal.loading
+                      ? React.createElement("div", { className: "playground-files-state" },
+                          React.createElement(Loader2, { className: "playground-files-state-loader", width: 16, height: 16, strokeWidth: 1.75 }),
+                          React.createElement("span", null, "Loading API key")
+                        )
+                      : developApiKeyRevealModal.key
+                        ? React.createElement(React.Fragment, null,
+                            React.createElement("div", { className: "playground-settings-code-row" },
+                              React.createElement("code", { className: "playground-settings-code" }, developApiKeyRevealModal.key),
+                              React.createElement("button", {
+                                type: "button",
+                                className: "playground-settings-icon-button",
+                                onClick: () => void handleSettingsCopyField(developApiKeyRevealModal.key, "revealed-api-key"),
+                                title: "Copy API key",
+                              }, settingsCopiedField === "revealed-api-key"
+                                ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 })
+                                : React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.8 }))
+                            ),
+                            React.createElement("div", { className: "playground-settings-muted-copy" }, "Keep this key private. Anyone with it can access resources allowed by its permissions.")
+                          )
+                        : React.createElement("div", { className: "playground-api-key-reveal-error" }, developApiKeyRevealModal.error || "The API key value is unavailable.")
+                  )
+                )
+              )
+            : null;
+          const apiKeyRevealDialog = apiKeyRevealDialogContent && typeof document !== "undefined" && document.body
+            ? createPortal(apiKeyRevealDialogContent, document.body)
+            : apiKeyRevealDialogContent;
 
           const apiKeysToolbar = React.createElement("div", {
               className: "playground-agents-overview-sticky-table-header playground-develop-resource-overview-sticky-table-header playground-develop-api-keys-sticky-table-header",
@@ -213012,6 +214694,16 @@ ${PROJECT_OVERVIEW_SCRIPT}
             },
             React.createElement("div", { className: "playground-project-overview-thread-list" },
               React.createElement("div", { className: "playground-project-overview-threads-table-header playground-develop-resource-overview-column-header playground-develop-api-keys-column-header" },
+                React.createElement("div", null,
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox" + (allVisibleApiKeysSelected ? " is-selected" : "") + (someVisibleApiKeysSelected ? " is-partial" : ""),
+                    role: "checkbox",
+                    "aria-checked": allVisibleApiKeysSelected ? "true" : (someVisibleApiKeysSelected ? "mixed" : "false"),
+                    "aria-label": allVisibleApiKeysSelected ? "Deselect all API keys" : "Select all API keys",
+                    onClick: toggleAllVisibleApiKeys,
+                  })
+                ),
                 React.createElement("div", null, "Name"),
                 React.createElement("div", null, "Secret key"),
                 React.createElement("div", null, "Created"),
@@ -213040,7 +214732,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 React.createElement("div", { className: "playground-settings-created-key-row" },
                   React.createElement("div", { style: { minWidth: 0, flex: "1 1 auto" } },
                     React.createElement("p", { className: "playground-settings-created-key-title" }, "API Key Created Successfully"),
-                    React.createElement("p", { className: "playground-settings-created-key-copy" }, "Copy this key now. You won't be able to see it again!"),
+                    React.createElement("p", { className: "playground-settings-created-key-copy" }, "Copy this key now or view it again from the API keys table."),
                     React.createElement("div", { className: "playground-settings-code-row" },
                       React.createElement("code", { className: "playground-settings-code" }, settingsNewlyCreatedKey),
                       React.createElement("button", {
@@ -213115,7 +214807,9 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 )
               )
             ),
-            apiKeyDialog
+            apiKeyDialog,
+            apiKeyActionMenu,
+            apiKeyRevealDialog
           );
         }
 
@@ -218295,6 +219989,18 @@ async function proxyUpstreamGet(req, res, upstreamPath, options = {}) {
         }),
         signal: controller.signal,
       });
+
+      if (shouldRetryUpstreamWithAiosSession({
+        status: upstream.status,
+        usedApiKey: true,
+        hasSession: hasAiosSession(req),
+      })) {
+        await upstream.body?.cancel().catch(() => undefined);
+        upstream = await fetchAiosCloud(req, upstreamPath + requestUrl.search, {
+          method: "GET",
+          signal: controller.signal,
+        });
+      }
     } else if (hasAiosSession(req)) {
       upstream = await fetchAiosCloud(req, upstreamPath + requestUrl.search, {
         method: "GET",
@@ -225564,6 +227270,12 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  const userApiKeyRevealMatch = url.pathname.match(/^\/api\/aios\/user\/api-keys\/([^/]+)\/reveal$/);
+  if (req.method === "GET" && userApiKeyRevealMatch) {
+    void proxyAiosJsonRequest(req, res, `/api/user/api-keys/${userApiKeyRevealMatch[1]}/reveal`, "GET");
+    return;
+  }
+
   if (req.method === "GET" && url.pathname === "/api/aios/lemonsqueezy/invoices") {
     void proxyAiosJsonRequest(req, res, "/api/lemonsqueezy/invoices", "GET");
     return;
@@ -226516,6 +228228,11 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (req.method === "GET" && url.pathname === "/api/real/databases/analytics/overview") {
+    void proxyUpstreamGet(req, res, `/databases/analytics/overview${url.search || ""}`);
+    return;
+  }
+
   const databaseAnalyticsMatch = url.pathname.match(/^\/api\/real\/databases\/([^/]+)\/analytics$/);
   if (req.method === "GET" && databaseAnalyticsMatch) {
     void proxyUpstreamGet(
@@ -226534,6 +228251,11 @@ const server = http.createServer((req, res) => {
       `/servers/${encodeURIComponent(decodeURIComponent(serverDeployMatch[1]))}/deploy`,
       "POST",
     );
+    return;
+  }
+
+  if (req.method === "GET" && url.pathname === "/api/real/servers/analytics/overview") {
+    void proxyUpstreamGet(req, res, `/servers/analytics/overview${url.search || ""}`);
     return;
   }
 

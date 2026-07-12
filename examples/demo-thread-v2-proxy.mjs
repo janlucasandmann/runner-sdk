@@ -63,3 +63,7 @@ export function wantsDemoThreadEventStream(req, url) {
   const accept = String(req?.headers?.accept || "").toLowerCase();
   return accept.includes("text/event-stream");
 }
+
+export function shouldRetryUpstreamWithAiosSession({ status, usedApiKey, hasSession }) {
+  return Boolean(usedApiKey && hasSession && (status === 401 || status === 403));
+}

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
@@ -18,9 +19,78 @@ import {
   mergeRunnerThreadDetailItems,
 } from "../dist/react/thread/run-detail-hydration.js";
 import { isRunnerThreadProjectionRequestCurrent } from "../dist/react/thread/use-runner-thread-projection.js";
+import {
+  adaptRunnerThreadActionToRunnerLog,
+  describeRunnerThreadAction,
+} from "../dist/react/thread/activity-action-list.js";
+import { RunnerWorkLogEntry } from "../dist/react/runner-log-boxes.js";
 
 const threadId = "thread-ui-test";
 const createdAt = "2026-07-10T08:00:00.000Z";
+
+const runnerChatSource = await readFile(new URL("../src/react/runner-chat.tsx", import.meta.url), "utf8");
+assert.equal(
+  (runnerChatSource.match(/renderAction=\{renderCanonicalThreadAction\}/g) || []).length,
+  4,
+  "every canonical, compatibility, and legacy run-card path must use the original typed log renderer",
+);
+
+assert.equal(describeRunnerThreadAction({
+  status: "completed",
+  type: "action_summary",
+  title: "write_file",
+  summary: "Writing: /workspace/jojojo.txt",
+  input: { path: "/workspace/jojojo.txt", content: "hi" },
+  output: JSON.stringify({ type: "create", filePath: "/workspace/jojojo.txt" }),
+}), "Created jojojo.txt");
+assert.equal(describeRunnerThreadAction({
+  status: "completed",
+  type: "command_execution",
+  title: "bash",
+  summary: "$ rm /workspace/jojojo.txt",
+  input: { command: "rm /workspace/jojojo.txt" },
+}), "Deleted jojojo.txt");
+assert.equal(describeRunnerThreadAction({
+  status: "completed",
+  type: "command_execution",
+  title: "command_execution",
+  summary: "Completed command_execution",
+  input: { command: "python3 /workspace/.claude/skills/web-search/scripts/search.py query" },
+  output: JSON.stringify({ query: "how tall is Donald Trump" }),
+}), "Searched the web for “how tall is Donald Trump”");
+
+const clickableFileAction = {
+  kind: "action",
+  id: "clickable-file-action",
+  threadId,
+  runId: "run-1",
+  sequence: 1,
+  status: "completed",
+  type: "action_summary",
+  title: "write_file",
+  summary: "Writing: /workspace/jojojo.txt",
+  input: { path: "/workspace/jojojo.txt", content: "hi" },
+  output: JSON.stringify({ type: "create", filePath: "/workspace/jojojo.txt" }),
+  metadata: {
+    source: "legacy_log",
+    legacyEventType: "file_change",
+    output: JSON.stringify({ type: "create", filePath: "/workspace/jojojo.txt", content: "hi" }),
+    filePaths: ["/workspace/jojojo.txt"],
+    changeKinds: ["created"],
+  },
+  permissionRing: 1,
+  createdAt,
+};
+const restoredFileLog = adaptRunnerThreadActionToRunnerLog(clickableFileAction);
+assert.equal(restoredFileLog.eventType, "file_change");
+const restoredFileLogMarkup = renderToStaticMarkup(React.createElement(RunnerWorkLogEntry, {
+  log: restoredFileLog,
+  onPreviewDocument: () => undefined,
+}));
+assert.match(restoredFileLogMarkup, /tb-log-compact-action/);
+assert.match(restoredFileLogMarkup, /Created file/);
+assert.match(restoredFileLogMarkup, /\/workspace\/jojojo.txt/);
+assert.doesNotMatch(restoredFileLogMarkup, />Details</);
 
 assert.equal(isRunnerThreadProjectionRequestCurrent("thread-a", 4, "thread-a", 4), true);
 assert.equal(isRunnerThreadProjectionRequestCurrent("thread-a", 4, "thread-b", 4), false, "old-thread responses are stale");
@@ -209,6 +279,8 @@ assert.match(
 assert.match(expandedMarkup, /tb-thread-activity-group-header" aria-expanded="false"/);
 assert.doesNotMatch(expandedMarkup, /Run integration tests/);
 assert.doesNotMatch(expandedMarkup, /Details/);
+assert.doesNotMatch(expandedMarkup, /tb-thread-activity-group-rationale/);
+assert.doesNotMatch(expandedMarkup, /The public API must remain compatible/);
 
 const completedGroupProjection = {
   ...projection,

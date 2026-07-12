@@ -22,6 +22,7 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
         max-width: var(--playground-centered-page-max-width);
         margin-left: auto;
         margin-right: auto;
+        margin-bottom: 12px;
       }
 
       .playground-fine-tuning-page .playground-guardrails-table-header,

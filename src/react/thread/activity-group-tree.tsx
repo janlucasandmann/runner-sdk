@@ -238,7 +238,6 @@ function GroupRow({
       </button>
       {expanded ? (
         <div className="tb-thread-activity-group-body">
-          {group.rationale ? <p className="tb-thread-activity-group-rationale">{group.rationale}</p> : null}
           {visiblePermissions.map((permission) => (
             <RunnerThreadPermissionRequestCard
               key={permission.id}
