@@ -976,7 +976,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   justify-content: center;
   align-items: flex-start;
   overflow-y: auto;
-  padding: 12px 20px 180px;
+  padding: 0 20px 180px;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -1188,7 +1188,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .tb-turn-user:first-child {
-  padding-top: 12px;
+  padding-top: 24px;
 }
 
 .tb-runner-chat .tb-turn-user:not(:first-child) {
@@ -3462,7 +3462,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 .tb-runner-chat .tb-log-compact-action-title {
   flex: 0 0 auto;
   color: rgba(255, 255, 255, 0.96);
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.35;
   font-weight: 500;
   white-space: nowrap;
@@ -15138,9 +15138,18 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 .tb-thread-ring.is-ring-unknown { color: #b6abbf; background: rgba(182, 171, 191, 0.1); }
 
 .tb-thread-run-body {
-  margin-top: 12px;
+  margin-top: 0;
   border-top: 0;
   padding: 0;
+}
+
+.tb-thread-run-supervision-header {
+  position: sticky;
+  z-index: 6;
+  top: 0;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  background: #000;
 }
 
 .tb-thread-run-toolbar {
@@ -15148,9 +15157,53 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   align-items: flex-end;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 11px;
+  margin-bottom: 12px;
   padding-bottom: 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 0;
+}
+
+.tb-thread-run-time-progress-row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+}
+
+.tb-thread-run-time-progress {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  height: 4px;
+  flex: 1 1 auto;
+  overflow: hidden;
+  border: 0;
+  border-radius: 2px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.tb-thread-run-time-progress-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: #4da3ff;
+  transform-origin: left center;
+  transition: transform 90ms linear;
+}
+
+.tb-thread-run-time-progress-label {
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.tb-thread-run-activity-timeline {
+  display: flow-root;
+  min-width: 0;
 }
 
 .tb-thread-run-filters,
@@ -15438,9 +15491,9 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 
 .tb-thread-activity-group-summary {
   max-width: 100%;
-  margin: 5px 0 0;
+  margin: 12px 0 0;
   color: rgba(255, 255, 255, 0.82);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 450;
   line-height: 1.45;
 }
@@ -15455,7 +15508,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-thread-activity-group-body > .tb-thread-action-list {
-  margin-left: 0;
+  margin-left: 32px;
 }
 
 .tb-thread-activity-group-children {

@@ -7,7 +7,7 @@ import {
   Pause,
   Play,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type {
   RunnerThreadAction,
   RunnerThreadActivityGroup,
@@ -52,7 +52,6 @@ const FILTERS: Array<{ id: RunnerThreadActivityFilter; label: string }> = [
   { id: "errors", label: "Errors" },
   { id: "permissions", label: "Permissions" },
   { id: "ring2", label: "Ring 2+" },
-  { id: "ring3", label: "Ring 3" },
   { id: "subagents", label: "Subagents" },
 ];
 
@@ -60,15 +59,56 @@ export function isRunnerThreadRunActive(run: RunnerThreadRun): boolean {
   return ["queued", "pending", "running", "parked", "waiting", "waiting_permission", "requires_action"].includes(run.status);
 }
 
-function formatWorkedDuration(start?: string | null, end?: string | null, now = Date.now()): string {
+function resolveWorkedDurationMs(start?: string | null, end?: string | null, now = Date.now()): number {
   const startMs = start ? new Date(start).getTime() : Number.NaN;
-  if (!Number.isFinite(startMs)) return "0s";
+  if (!Number.isFinite(startMs)) return 0;
   const endMs = end ? new Date(end).getTime() : now;
-  const seconds = Math.max(0, Math.round(((Number.isFinite(endMs) ? endMs : now) - startMs) / 1000));
+  return Math.max(0, (Number.isFinite(endMs) ? endMs : now) - startMs);
+}
+
+function formatWorkedDuration(start?: string | null, end?: string | null, now = Date.now()): string {
+  const seconds = Math.max(0, Math.round(resolveWorkedDurationMs(start, end, now) / 1000));
   if (seconds < 60) return `${seconds}s`;
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
   return remainingSeconds > 0 ? `${minutes} min ${remainingSeconds}s` : `${minutes} min`;
+}
+
+export function formatRunnerThreadTimelineClock(durationMs: number): string {
+  const totalSeconds = Math.max(0, Math.round((Number.isFinite(durationMs) ? durationMs : 0) / 1_000));
+  const hours = Math.floor(totalSeconds / 3_600);
+  const minutes = Math.floor((totalSeconds % 3_600) / 60);
+  const seconds = totalSeconds % 60;
+  const minuteAndSecondLabel = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  return hours > 0 ? `${String(hours).padStart(2, "0")}:${minuteAndSecondLabel}` : minuteAndSecondLabel;
+}
+
+export function calculateRunnerThreadTimelineProgress({
+  timelineTop,
+  timelineHeight,
+  stickyBottom,
+  viewportBottom,
+}: {
+  timelineTop: number;
+  timelineHeight: number;
+  stickyBottom: number;
+  viewportBottom: number;
+}): number {
+  if (![timelineTop, timelineHeight, stickyBottom, viewportBottom].every(Number.isFinite) || timelineHeight <= 0) return 0;
+  const visibleTimelineHeight = Math.max(0, viewportBottom - stickyBottom);
+  if (timelineHeight <= visibleTimelineHeight) return timelineTop < viewportBottom ? 1 : 0;
+  const scrollableTimelineHeight = timelineHeight - visibleTimelineHeight;
+  return Math.max(0, Math.min(1, (stickyBottom - timelineTop) / scrollableTimelineHeight));
+}
+
+function findRunnerThreadScrollContainer(element: HTMLElement): HTMLElement | Window {
+  let parent = element.parentElement;
+  while (parent) {
+    const overflowY = window.getComputedStyle(parent).overflowY;
+    if (/(?:auto|scroll|overlay)/i.test(overflowY)) return parent;
+    parent = parent.parentElement;
+  }
+  return window;
 }
 
 function progressEventSummary(event: RunnerThreadEvent): string {
@@ -116,6 +156,9 @@ export function RunnerThreadRunActivityCard({
 }: RunnerThreadRunActivityCardProps) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [filter, setFilter] = useState<RunnerThreadActivityFilter>("all");
+  const [timelineProgress, setTimelineProgress] = useState(0);
+  const supervisionHeaderRef = useRef<HTMLDivElement>(null);
+  const activityTimelineRef = useRef<HTMLDivElement>(null);
   const [now, setNow] = useState(() => {
     const stableTimestamp = Date.parse(run.updatedAt || run.startedAt || run.queuedAt || run.createdAt);
     return Number.isFinite(stableTimestamp) ? stableTimestamp : 0;
@@ -141,6 +184,10 @@ export function RunnerThreadRunActivityCard({
   const actions = useMemo(
     () => providedActions || Object.values(projection.actionsById).filter((action) => action.runId === run.id),
     [providedActions, projection.actionsById, run.id],
+  );
+  const runActionsById = useMemo(
+    () => Object.fromEntries(actions.map((action) => [action.id, action])),
+    [actions],
   );
   const progressEvents = useMemo(() => {
     const ordered = Object.values(projection.eventsById)
@@ -192,7 +239,10 @@ export function RunnerThreadRunActivityCard({
   ]) || metadataText(run.projection?.metadata, [
     "projectName", "project_name", "computerName", "computer_name", "environmentName", "environment_name",
   ]) || String(fallbackWorkspaceName || "").trim();
-  const duration = formatWorkedDuration(run.startedAt || run.queuedAt || run.createdAt, run.completedAt, now);
+  const runStartedAt = run.startedAt || run.queuedAt || run.createdAt;
+  const totalTimelineDurationMs = resolveWorkedDurationMs(runStartedAt, run.completedAt, now);
+  const duration = formatWorkedDuration(runStartedAt, run.completedAt, now);
+  const timelineTimeLabel = `${formatRunnerThreadTimelineClock(totalTimelineDurationMs * timelineProgress)} of ${formatRunnerThreadTimelineClock(totalTimelineDurationMs)}`;
   const observerWorkingLabel = useMemo(
     () => selectRunnerThreadRunWorkingLabel(projection, run.id),
     [projection, run.id],
@@ -200,6 +250,48 @@ export function RunnerThreadRunActivityCard({
   const headerLine = active
     ? formatRunnerThreadActiveWorkingLabel(observerWorkingLabel)
     : `Worked for ${duration}`;
+
+  useEffect(() => {
+    const timelineElement = activityTimelineRef.current;
+    const stickyElement = supervisionHeaderRef.current;
+    if (!expanded || !timelineElement || !stickyElement) {
+      setTimelineProgress(0);
+      return;
+    }
+    const scrollContainer = findRunnerThreadScrollContainer(timelineElement);
+    let animationFrame = 0;
+    const updateProgress = () => {
+      animationFrame = 0;
+      const timelineRect = timelineElement.getBoundingClientRect();
+      const stickyRect = stickyElement.getBoundingClientRect();
+      const viewportBottom = scrollContainer === window
+        ? window.innerHeight
+        : (scrollContainer as HTMLElement).getBoundingClientRect().bottom;
+      const nextProgress = calculateRunnerThreadTimelineProgress({
+        timelineTop: timelineRect.top,
+        timelineHeight: timelineRect.height,
+        stickyBottom: stickyRect.bottom,
+        viewportBottom,
+      });
+      setTimelineProgress((current) => Math.abs(current - nextProgress) < 0.001 ? current : nextProgress);
+    };
+    const scheduleUpdate = () => {
+      if (animationFrame) return;
+      animationFrame = window.requestAnimationFrame(updateProgress);
+    };
+    scrollContainer.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", scheduleUpdate, { passive: true });
+    const resizeObserver = typeof ResizeObserver === "function" ? new ResizeObserver(scheduleUpdate) : null;
+    resizeObserver?.observe(timelineElement);
+    resizeObserver?.observe(stickyElement);
+    scheduleUpdate();
+    return () => {
+      scrollContainer.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
+      resizeObserver?.disconnect();
+      if (animationFrame) window.cancelAnimationFrame(animationFrame);
+    };
+  }, [actions.length, detailLoadState?.status, expanded, filter, groups.length]);
 
   return (
     <div className="tb-thread-run-shell">
@@ -217,7 +309,6 @@ export function RunnerThreadRunActivityCard({
         aria-expanded={expanded}
       >
         <span className="tb-thread-run-headline" aria-live={active ? "polite" : "off"}>
-          <span className="tb-thread-run-headline-copy">{headerLine}</span>
           {active ? (
             <DotLoader
               dotCount={9}
@@ -227,6 +318,7 @@ export function RunnerThreadRunActivityCard({
               className="tb-thread-run-dot-loader"
             />
           ) : null}
+          <span className="tb-thread-run-headline-copy">{headerLine}</span>
         </span>
         {expanded ? <ChevronUp className="tb-thread-run-chevron" strokeWidth={1.7} /> : <ChevronDown className="tb-thread-run-chevron" strokeWidth={1.7} />}
       </button>
@@ -245,33 +337,52 @@ export function RunnerThreadRunActivityCard({
 
       {expanded ? (
         <div className="tb-thread-run-body">
-          <div className="tb-thread-run-toolbar">
-            <div className="tb-thread-run-filters" role="tablist" aria-label="Filter run activity">
-              {FILTERS.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={filter === item.id}
-                  className={filter === item.id ? "is-active" : ""}
-                  onClick={() => setFilter(item.id)}
-                >
-                  {item.label}
-                </button>
-              ))}
+          <div ref={supervisionHeaderRef} className="tb-thread-run-supervision-header">
+            <div className="tb-thread-run-toolbar">
+              <div className="tb-thread-run-filters" role="tablist" aria-label="Filter run activity">
+                {FILTERS.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={filter === item.id}
+                    className={filter === item.id ? "is-active" : ""}
+                    onClick={() => setFilter(item.id)}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+              <div className="tb-thread-run-controls">
+                {onOpenChanges ? <button type="button" onClick={() => onOpenChanges(run)}>Changes</button> : null}
+                {onControlRun && active ? (
+                  run.status === "parked" || run.status === "waiting" || run.status === "waiting_permission"
+                    ? <button type="button" onClick={() => void onControlRun(run, "resume")}><Play strokeWidth={1.6} /> Resume</button>
+                    : <button type="button" onClick={() => void onControlRun(run, "pause")}><Pause strokeWidth={1.6} /> Pause</button>
+                ) : null}
+                {onControlRun && active ? (
+                  <button type="button" className="is-danger" onClick={() => void onControlRun(run, "cancel")}>
+                    <CircleStop strokeWidth={1.6} /> Cancel
+                  </button>
+                ) : null}
+              </div>
             </div>
-            <div className="tb-thread-run-controls">
-              {onOpenChanges ? <button type="button" onClick={() => onOpenChanges(run)}>Changes</button> : null}
-              {onControlRun && active ? (
-                run.status === "parked" || run.status === "waiting" || run.status === "waiting_permission"
-                  ? <button type="button" onClick={() => void onControlRun(run, "resume")}><Play strokeWidth={1.6} /> Resume</button>
-                  : <button type="button" onClick={() => void onControlRun(run, "pause")}><Pause strokeWidth={1.6} /> Pause</button>
-              ) : null}
-              {onControlRun && active ? (
-                <button type="button" className="is-danger" onClick={() => void onControlRun(run, "cancel")}>
-                  <CircleStop strokeWidth={1.6} /> Cancel
-                </button>
-              ) : null}
+            <div className="tb-thread-run-time-progress-row">
+              <div
+                className="tb-thread-run-time-progress"
+                role="progressbar"
+                aria-label="Position in work timeline"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round(timelineProgress * 100)}
+                aria-valuetext={timelineTimeLabel}
+              >
+                <span
+                  className="tb-thread-run-time-progress-fill"
+                  style={{ transform: `scaleX(${timelineProgress})` }}
+                />
+              </div>
+              <span className="tb-thread-run-time-progress-label">{timelineTimeLabel}</span>
             </div>
           </div>
 
@@ -317,18 +428,21 @@ export function RunnerThreadRunActivityCard({
             </div>
           ) : null}
 
-          <RunnerThreadActivityGroupTree
-            groups={groups}
-            actionsById={projection.actionsById}
-            permissions={groupedPermissions.filter((permission) => permission.status !== "pending")}
-            filter={filter}
-            renderAction={renderAction}
-            onPermissionDecision={onPermissionDecision}
-            actionLoadStates={activityGroupActionStates}
-            onLoadActions={onLoadActivityGroupActions
-              ? (group) => onLoadActivityGroupActions(group.id, group.runId)
-              : undefined}
-          />
+          <div ref={activityTimelineRef} className="tb-thread-run-activity-timeline">
+            <RunnerThreadActivityGroupTree
+              groups={groups}
+              actionsById={runActionsById}
+              permissions={groupedPermissions.filter((permission) => permission.status !== "pending")}
+              endAt={active ? new Date(now).toISOString() : run.completedAt || run.updatedAt}
+              filter={filter}
+              renderAction={renderAction}
+              onPermissionDecision={onPermissionDecision}
+              actionLoadStates={activityGroupActionStates}
+              onLoadActions={onLoadActivityGroupActions
+                ? (group) => onLoadActivityGroupActions(group.id, group.runId)
+                : undefined}
+            />
+          </div>
 
           {ungroupedResolvedPermissions.length > 0 && (filter === "all" || filter === "permissions") ? (
             <div className="tb-thread-permission-history" aria-label="Permission history">

@@ -22,7 +22,7 @@ import {
 import { RunnerThreadPermissionRequestCard } from "./permission-request-card.js";
 import type { RunnerThreadDetailLoadState } from "./run-detail-hydration.js";
 
-export type RunnerThreadActivityFilter = "all" | "errors" | "permissions" | "ring2" | "ring3" | "subagents";
+export type RunnerThreadActivityFilter = "all" | "errors" | "permissions" | "ring2" | "subagents";
 
 export interface RunnerThreadActivityGroupTreeProps {
   groups: RunnerThreadActivityGroup[];
@@ -33,14 +33,14 @@ export interface RunnerThreadActivityGroupTreeProps {
   onPermissionDecision?: (request: RunnerThreadPermissionRequest, decision: "allow" | "deny") => Promise<void> | void;
   actionLoadStates?: Record<string, RunnerThreadDetailLoadState>;
   onLoadActions?: (group: RunnerThreadActivityGroup) => Promise<void> | void;
+  endAt?: string | null;
   depth?: number;
 }
 
 function matchesActionFilter(action: RunnerThreadAction, filter: RunnerThreadActivityFilter): boolean {
   if (filter === "all" || filter === "permissions") return filter === "all";
   if (filter === "errors") return action.status === "failed" || action.status === "blocked";
-  if (filter === "ring2") return (action.permissionRing || 0) >= 2;
-  if (filter === "ring3") return action.permissionRing === 3;
+  if (filter === "ring2") return true;
   if (filter === "subagents") {
     const metadata = action.metadata || {};
     return action.type.includes("subagent") || Boolean(metadata.parentRunId || metadata.subagentInvocationId);
@@ -121,6 +121,45 @@ function inferLegacyPermissionRing(
   return 1;
 }
 
+function resolveActivityGroupPermissionRing(
+  group: RunnerThreadActivityGroup,
+  actions: RunnerThreadAction[],
+  permissions: RunnerThreadPermissionRequest[],
+): RunnerThreadPermissionRing {
+  const permissionRings = [
+    group.highestPermissionRing,
+    ...actions.map((action) => action.permissionRing),
+    ...permissions.map((permission) => permission.permissionRing),
+  ].filter((ring): ring is RunnerThreadPermissionRing => ring === 1 || ring === 2 || ring === 3);
+  return permissionRings.length > 0
+    ? Math.max(...permissionRings) as RunnerThreadPermissionRing
+    : inferLegacyPermissionRing(group, actions);
+}
+
+export function matchesRunnerThreadActivityGroupFilter(
+  group: RunnerThreadActivityGroup,
+  actions: RunnerThreadAction[],
+  permissions: RunnerThreadPermissionRequest[],
+  filter: RunnerThreadActivityFilter,
+): boolean {
+  if (filter === "all") return true;
+  if (filter === "permissions") return permissions.length > 0;
+  if (filter === "ring2") return resolveActivityGroupPermissionRing(group, actions, permissions) >= 2;
+  return actions.some((action) => matchesActionFilter(action, filter));
+}
+
+function collectActivityGroupActions(
+  group: RunnerThreadActivityGroup,
+  actionsById: Record<string, RunnerThreadAction>,
+  actionsByGroup: Map<string, RunnerThreadAction[]>,
+): RunnerThreadAction[] {
+  return Array.from(new Map([
+    ...group.actionIds.map((actionId) => actionsById[actionId]).filter((action): action is RunnerThreadAction => Boolean(action)),
+    ...(actionsByGroup.get(group.id) || []),
+  ].map((action) => [action.id, action])).values())
+    .sort((left, right) => left.sequence - right.sequence || left.createdAt.localeCompare(right.createdAt));
+}
+
 function PermissionRingIcon({ ring }: { ring: RunnerThreadPermissionRing }) {
   const RingIcon = ring === 1
     ? ArrowDownToLine
@@ -139,15 +178,54 @@ function PermissionRingIcon({ ring }: { ring: RunnerThreadPermissionRing }) {
   );
 }
 
-function formatActivityGroupDuration(group: RunnerThreadActivityGroup): string {
+function timestampMs(value: string | null | undefined): number | null {
+  if (!value) return null;
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function positiveDurationMs(value: unknown): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+}
+
+function actionDurationMs(action: RunnerThreadAction): number {
+  const metadata = action.metadata || {};
+  const reportedDurationMs = positiveDurationMs(metadata.durationMs ?? metadata.duration_ms);
+  if (reportedDurationMs > 0) return reportedDurationMs;
+  const startMs = timestampMs(action.startedAt || action.createdAt);
+  const endMs = timestampMs(action.completedAt || action.updatedAt || action.createdAt);
+  return startMs !== null && endMs !== null ? Math.max(0, endMs - startMs) : 0;
+}
+
+function formatActivityGroupDuration(
+  group: RunnerThreadActivityGroup,
+  actions: RunnerThreadAction[],
+  fallbackEndAt?: string | null,
+): string {
   const reportedDurationMs = Number(group.metrics?.durationMs || 0);
-  const startMs = Date.parse(group.createdAt);
-  const endMs = Date.parse(group.sealedAt || group.updatedAt || group.createdAt);
-  const fallbackDurationMs = Number.isFinite(startMs) && Number.isFinite(endMs)
-    ? Math.max(0, endMs - startMs)
+  const startMs = timestampMs(group.createdAt);
+  const explicitEndMs = timestampMs(group.sealedAt || group.updatedAt);
+  const boundaryEndMs = timestampMs(fallbackEndAt);
+  const groupEndMs = explicitEndMs !== null && startMs !== null && explicitEndMs > startMs
+    ? explicitEndMs
+    : boundaryEndMs;
+  const groupRangeDurationMs = startMs !== null && groupEndMs !== null
+    ? Math.max(0, groupEndMs - startMs)
     : 0;
+  const actionStartTimes = actions
+    .map((action) => timestampMs(action.startedAt || action.createdAt))
+    .filter((value): value is number => value !== null);
+  const actionEndTimes = actions
+    .map((action) => timestampMs(action.completedAt || action.updatedAt || action.createdAt))
+    .filter((value): value is number => value !== null);
+  const actionRangeDurationMs = actionStartTimes.length > 0 && actionEndTimes.length > 0
+    ? Math.max(0, Math.max(...actionEndTimes) - Math.min(...actionStartTimes))
+    : 0;
+  const summedActionDurationMs = actions.reduce((total, action) => total + actionDurationMs(action), 0);
+  const fallbackDurationMs = Math.max(groupRangeDurationMs, actionRangeDurationMs, summedActionDurationMs);
   const durationMs = reportedDurationMs > 0 ? reportedDurationMs : fallbackDurationMs;
-  const seconds = Math.max(0, Math.round(durationMs / 1_000));
+  const seconds = durationMs > 0 ? Math.max(1, Math.round(durationMs / 1_000)) : 0;
   if (seconds < 60) return `${seconds}s`;
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
@@ -165,6 +243,8 @@ function GroupRow({
   onPermissionDecision,
   actionLoadStates,
   onLoadActions,
+  fallbackEndAt,
+  visibleGroupIds,
   depth,
   ancestorIds,
 }: {
@@ -178,6 +258,8 @@ function GroupRow({
   onPermissionDecision?: (request: RunnerThreadPermissionRequest, decision: "allow" | "deny") => Promise<void> | void;
   actionLoadStates?: Record<string, RunnerThreadDetailLoadState>;
   onLoadActions?: (group: RunnerThreadActivityGroup) => Promise<void> | void;
+  fallbackEndAt?: string | null;
+  visibleGroupIds: Set<string>;
   depth: number;
   ancestorIds: Set<string>;
 }) {
@@ -188,28 +270,16 @@ function GroupRow({
     void Promise.resolve(onLoadActions(group)).catch(() => undefined);
   }, [actionLoadState, expanded, group, onLoadActions]);
   const children = (groupsByParent.get(group.id) || []).filter((child) => !ancestorIds.has(child.id));
-  const allGroupActions = Array.from(new Map([
-    ...group.actionIds.map((actionId) => actionsById[actionId]).filter((action): action is RunnerThreadAction => Boolean(action)),
-    ...(actionsByGroup.get(group.id) || []),
-  ].map((action) => [action.id, action])).values())
-    .sort((left, right) => left.sequence - right.sequence || left.createdAt.localeCompare(right.createdAt))
-    .filter((action): action is RunnerThreadAction => Boolean(action));
-  const groupActions = allGroupActions.filter((action) => matchesActionFilter(action, filter));
+  if (!visibleGroupIds.has(group.id)) return null;
+  const allGroupActions = collectActivityGroupActions(group, actionsById, actionsByGroup);
   const groupPermissions = permissions.filter((permission) => permission.activityGroupId === group.id);
+  const groupMatchesFilter = matchesRunnerThreadActivityGroupFilter(group, allGroupActions, groupPermissions, filter);
+  const groupActions = filter === "all" || (filter === "ring2" && groupMatchesFilter)
+    ? allGroupActions
+    : allGroupActions.filter((action) => matchesActionFilter(action, filter));
   const visiblePermissions = filter === "all" || filter === "permissions" ? groupPermissions : [];
-  const childMayMatch = children.length > 0;
-  const hasVisibleContent = groupActions.length > 0 || visiblePermissions.length > 0 || childMayMatch || filter === "all";
-  if (!hasVisibleContent) return null;
-
-  const permissionRings = [
-    group.highestPermissionRing,
-    ...allGroupActions.map((action) => action.permissionRing),
-    ...groupPermissions.map((permission) => permission.permissionRing),
-  ].filter((ring): ring is RunnerThreadPermissionRing => ring === 1 || ring === 2 || ring === 3);
-  const groupPermissionRing = permissionRings.length > 0
-    ? Math.max(...permissionRings) as RunnerThreadPermissionRing
-    : inferLegacyPermissionRing(group, allGroupActions);
-  const duration = formatActivityGroupDuration(group);
+  const groupPermissionRing = resolveActivityGroupPermissionRing(group, allGroupActions, groupPermissions);
+  const duration = formatActivityGroupDuration(group, allGroupActions, fallbackEndAt);
   const summary = String(group.liveSummary || group.title || "Work completed")
     .replace(/\s+/g, " ")
     .trim();
@@ -264,7 +334,7 @@ function GroupRow({
           ) : null}
           {children.length > 0 ? (
             <div className="tb-thread-activity-group-children">
-              {children.map((child) => (
+              {children.map((child, childIndex) => (
                 <GroupRow
                   key={child.id}
                   group={child}
@@ -277,6 +347,8 @@ function GroupRow({
                   onPermissionDecision={onPermissionDecision}
                   actionLoadStates={actionLoadStates}
                   onLoadActions={onLoadActions}
+                  fallbackEndAt={children[childIndex + 1]?.createdAt || group.sealedAt || group.updatedAt || fallbackEndAt}
+                  visibleGroupIds={visibleGroupIds}
                   depth={depth + 1}
                   ancestorIds={new Set([...ancestorIds, child.id])}
                 />
@@ -299,6 +371,7 @@ export function RunnerThreadActivityGroupTree({
   onPermissionDecision,
   actionLoadStates,
   onLoadActions,
+  endAt,
   depth = 0,
 }: RunnerThreadActivityGroupTreeProps) {
   const groupsByParent = useMemo(() => {
@@ -324,6 +397,26 @@ export function RunnerThreadActivityGroupTree({
     }
     return map;
   }, [actionsById]);
+  const visibleGroupIds = useMemo(() => {
+    const groupById = new Map(groups.map((group) => [group.id, group]));
+    const directMatches = groups.filter((group) => matchesRunnerThreadActivityGroupFilter(
+      group,
+      collectActivityGroupActions(group, actionsById, actionsByGroup),
+      permissions.filter((permission) => permission.activityGroupId === group.id),
+      filter,
+    ));
+    const visible = new Set(directMatches.map((group) => group.id));
+    for (const group of directMatches) {
+      const visited = new Set<string>([group.id]);
+      let parentId = group.parentGroupId || null;
+      while (parentId && !visited.has(parentId)) {
+        visited.add(parentId);
+        visible.add(parentId);
+        parentId = groupById.get(parentId)?.parentGroupId || null;
+      }
+    }
+    return visible;
+  }, [actionsByGroup, actionsById, filter, groups, permissions]);
   const discoveredRoots = groupsByParent.get(null) || groups.filter((group) => !groups.some((candidate) => candidate.id === group.parentGroupId));
   const roots = discoveredRoots.length > 0
     ? discoveredRoots
@@ -335,7 +428,7 @@ export function RunnerThreadActivityGroupTree({
 
   return (
     <div className="tb-thread-activity-tree">
-      {roots.map((group) => (
+      {roots.map((group, groupIndex) => (
         <GroupRow
           key={group.id}
           group={group}
@@ -348,6 +441,8 @@ export function RunnerThreadActivityGroupTree({
           onPermissionDecision={onPermissionDecision}
           actionLoadStates={actionLoadStates}
           onLoadActions={onLoadActions}
+          fallbackEndAt={roots[groupIndex + 1]?.createdAt || endAt}
+          visibleGroupIds={visibleGroupIds}
           depth={depth}
           ancestorIds={new Set([group.id])}
         />

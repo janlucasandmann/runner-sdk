@@ -311,7 +311,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   justify-content: center;
   align-items: flex-start;
   overflow-y: auto;
-  padding: 12px 20px 180px;
+  padding: 0 20px 180px;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -523,7 +523,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .tb-turn-user:first-child {
-  padding-top: 12px;
+  padding-top: 24px;
 }
 
 .tb-runner-chat .tb-turn-user:not(:first-child) {
@@ -2797,7 +2797,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 .tb-runner-chat .tb-log-compact-action-title {
   flex: 0 0 auto;
   color: rgba(255, 255, 255, 0.96);
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.35;
   font-weight: 500;
   white-space: nowrap;

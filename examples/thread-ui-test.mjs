@@ -9,6 +9,7 @@ import {
 import {
   RunnerChat,
   RunnerThread,
+  RunnerThreadActivityGroupTree,
   RunnerThreadRunActivityCard,
 } from "../dist/react/index.js";
 import {
@@ -18,6 +19,10 @@ import {
   fetchRunnerThreadRunDetailBatch,
   mergeRunnerThreadDetailItems,
 } from "../dist/react/thread/run-detail-hydration.js";
+import {
+  calculateRunnerThreadTimelineProgress,
+  formatRunnerThreadTimelineClock,
+} from "../dist/react/thread/run-activity-card.js";
 import { isRunnerThreadProjectionRequestCurrent } from "../dist/react/thread/use-runner-thread-projection.js";
 import {
   adaptRunnerThreadActionToRunnerLog,
@@ -27,6 +32,28 @@ import { RunnerWorkLogEntry } from "../dist/react/runner-log-boxes.js";
 
 const threadId = "thread-ui-test";
 const createdAt = "2026-07-10T08:00:00.000Z";
+
+assert.equal(calculateRunnerThreadTimelineProgress({
+  timelineTop: 100,
+  timelineHeight: 1_000,
+  stickyBottom: 100,
+  viewportBottom: 600,
+}), 0);
+assert.equal(calculateRunnerThreadTimelineProgress({
+  timelineTop: -150,
+  timelineHeight: 1_000,
+  stickyBottom: 100,
+  viewportBottom: 600,
+}), 0.5);
+assert.equal(calculateRunnerThreadTimelineProgress({
+  timelineTop: -400,
+  timelineHeight: 1_000,
+  stickyBottom: 100,
+  viewportBottom: 600,
+}), 1);
+assert.equal(formatRunnerThreadTimelineClock(2_000), "00:02");
+assert.equal(formatRunnerThreadTimelineClock(94_000), "01:34");
+assert.equal(formatRunnerThreadTimelineClock(3_723_000), "01:02:03");
 
 const runnerChatSource = await readFile(new URL("../src/react/runner-chat.tsx", import.meta.url), "utf8");
 assert.equal(
@@ -269,13 +296,23 @@ assert.doesNotMatch(expandedMarkup, />Working</);
 assert.doesNotMatch(expandedMarkup, />1 group</);
 assert.match(expandedMarkup, /tb-thread-run-headline-copy">Validate backward compatibility\.\.\.<\/span>/);
 assert.match(expandedMarkup, /tb-thread-run-dot-loader/);
+assert.ok(
+  expandedMarkup.indexOf("tb-thread-run-dot-loader") < expandedMarkup.indexOf("tb-thread-run-headline-copy"),
+  "the active-run dot loader renders to the left of the working label",
+);
+assert.match(expandedMarkup, /class="tb-thread-run-supervision-header"/);
+assert.match(expandedMarkup, /class="tb-thread-run-time-progress" role="progressbar"/);
+assert.match(expandedMarkup, /aria-label="Position in work timeline"/);
+assert.match(expandedMarkup, /class="tb-thread-run-time-progress-label">00:00 of 00:00<\/span>/);
 assert.match(expandedMarkup, /tb-thread-permission-ring-icon is-ring-1/);
 assert.match(expandedMarkup, /aria-label="Ring 1"/);
+assert.doesNotMatch(expandedMarkup, /role="tab"[^>]*>Ring 3<\/button>/);
 assert.match(
   expandedMarkup,
   /tb-thread-activity-group-duration">Worked for 3s<\/span><\/span><span class="tb-thread-activity-group-chevron"/,
   "the activity-group chevron sits immediately after its duration label",
 );
+
 assert.match(expandedMarkup, /tb-thread-activity-group-header" aria-expanded="false"/);
 assert.doesNotMatch(expandedMarkup, /Run integration tests/);
 assert.doesNotMatch(expandedMarkup, /Details/);
@@ -288,6 +325,76 @@ const completedGroupProjection = {
     "group-1": { ...projection.activityGroupsById["group-1"], status: "sealed" },
   },
 };
+const timestampFallbackProjection = {
+  ...completedGroupProjection,
+  actionsById: {
+    "action-1": {
+      ...completedGroupProjection.actionsById["action-1"],
+      startedAt: "2026-07-10T08:00:01.000Z",
+      completedAt: "2026-07-10T08:00:09.000Z",
+      createdAt: "2026-07-10T08:00:01.000Z",
+    },
+  },
+  activityGroupsById: {
+    "group-1": {
+      ...completedGroupProjection.activityGroupsById["group-1"],
+      metrics: { actionCount: 1, durationMs: 0 },
+      createdAt: "2026-07-10T08:00:01.000Z",
+      updatedAt: "2026-07-10T08:00:01.000Z",
+      sealedAt: null,
+    },
+  },
+};
+const timestampFallbackMarkup = renderToStaticMarkup(React.createElement(RunnerThreadRunActivityCard, {
+  run: timestampFallbackProjection.runsById["run-1"],
+  projection: timestampFallbackProjection,
+  defaultExpanded: true,
+}));
+assert.match(timestampFallbackMarkup, /tb-thread-activity-group-duration">Worked for 8s<\/span>/);
+
+const ringFilterGroups = [
+  {
+    ...timestampFallbackProjection.activityGroupsById["group-1"],
+    id: "ring-1-group",
+    title: "Local-only group",
+    liveSummary: "Local-only work",
+    highestPermissionRing: 1,
+    actionIds: ["ring-1-action"],
+    startSequence: 1,
+  },
+  {
+    ...timestampFallbackProjection.activityGroupsById["group-1"],
+    id: "ring-2-group",
+    title: "External-read group",
+    liveSummary: "External-read work",
+    highestPermissionRing: 2,
+    actionIds: ["ring-2-action"],
+    startSequence: 2,
+  },
+];
+const ringFilterActions = {
+  "ring-1-action": {
+    ...timestampFallbackProjection.actionsById["action-1"],
+    id: "ring-1-action",
+    activityGroupId: "ring-1-group",
+    permissionRing: null,
+  },
+  "ring-2-action": {
+    ...timestampFallbackProjection.actionsById["action-1"],
+    id: "ring-2-action",
+    activityGroupId: "ring-2-group",
+    permissionRing: null,
+  },
+};
+const ring2FilterMarkup = renderToStaticMarkup(React.createElement(RunnerThreadActivityGroupTree, {
+  groups: ringFilterGroups,
+  actionsById: ringFilterActions,
+  permissions: [],
+  filter: "ring2",
+}));
+assert.match(ring2FilterMarkup, /External-read work/);
+assert.doesNotMatch(ring2FilterMarkup, /Local-only work/);
+assert.match(ring2FilterMarkup, /ring-2-group|Ring 2/);
 const completedGroupMarkup = renderToStaticMarkup(React.createElement(RunnerThreadRunActivityCard, {
   run: completedGroupProjection.runsById["run-1"],
   projection: completedGroupProjection,

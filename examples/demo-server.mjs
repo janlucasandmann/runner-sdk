@@ -29435,6 +29435,10 @@ ${PLAYGROUND_EVALUATIONS_CSS}
         white-space: nowrap;
       }
 
+      .playground-server-detail-navbar.is-function-detail-navbar .playground-server-service-url-row {
+        color: #4da3ff;
+      }
+
       .playground-server-service-url-copy {
         appearance: none;
         display: inline-flex;
@@ -30415,6 +30419,12 @@ ${PLAYGROUND_EVALUATIONS_CSS}
         border-radius: 15px;
         background: #000;
         box-shadow: none;
+        margin-top: 24px;
+        margin-bottom: 24px;
+      }
+
+      .playground-server-settings-tab .playground-server-danger-section {
+        margin-top: 24px;
       }
 
       .playground-server-custom-domain-section::before {
@@ -38008,6 +38018,10 @@ ${PLAYGROUND_EVALUATIONS_CSS}
 	        font-size: 12px;
 	      }
 
+	      .playground-server-settings-tab .playground-environments-connections-title {
+	        font-size: 14px;
+	      }
+
 	      .playground-database-settings-root .playground-database-danger-section {
 	        margin-top: 24px;
 	      }
@@ -38041,6 +38055,22 @@ ${PLAYGROUND_EVALUATIONS_CSS}
 	        justify-content: flex-end;
 	      }
 
+	      .playground-server-detail-usage-header {
+	        justify-content: space-between;
+	        gap: 16px;
+	        margin-bottom: 12px;
+	      }
+
+	      .playground-server-detail-usage-title {
+	        min-width: 0;
+	        margin: 0;
+	        color: rgba(255, 255, 255, 0.95);
+	        font-size: 14px;
+	        font-weight: 400;
+	        line-height: 1.3;
+	        white-space: nowrap;
+	      }
+
 	      .playground-database-detail-usage-metrics.playground-environments-home-metrics {
 	        width: 100%;
 	        margin-bottom: 0;
@@ -38063,6 +38093,11 @@ ${PLAYGROUND_EVALUATIONS_CSS}
 	      .playground-database-detail-usage-fact-rows {
 	        width: 100%;
 	        margin-top: 12px;
+	      }
+
+	      .playground-function-usage-invoke-section,
+	      .playground-web-app-usage-fact-rows {
+	        margin-bottom: 24px;
 	      }
 
 	      .playground-database-access-table-section,
@@ -38099,10 +38134,157 @@ ${PLAYGROUND_EVALUATIONS_CSS}
 	      }
 
 	      .playground-database-access-section-title {
-	        margin: 24px 0 12px;
+	        margin: 0;
 	        color: #fff;
 	        font-size: 14px;
 	        font-weight: 400;
+	      }
+
+	      .playground-database-access-section-group {
+	        width: 100%;
+	        margin-top: 24px;
+	        overflow: visible;
+	      }
+
+	      .playground-database-access-section-header {
+	        width: 100%;
+	        min-width: 0;
+	        margin-bottom: 12px;
+	        display: flex;
+	        align-items: center;
+	        justify-content: space-between;
+	        gap: 24px;
+	      }
+
+	      .playground-database-access-owner-row {
+	        position: relative;
+	        z-index: 260;
+	        width: auto;
+	        min-width: 0;
+	        min-height: 32px;
+	        margin: 0 0 0 auto;
+	        display: flex;
+	        align-items: center;
+	        justify-content: flex-end;
+	        gap: 0;
+	      }
+
+	      .playground-database-access-owner-label {
+	        margin-right: 24px;
+	        color: rgba(255, 255, 255, 0.7);
+	        font-size: 12px;
+	        font-weight: 400;
+	      }
+
+	      .playground-database-owner-popup-shell {
+	        flex: 0 1 auto;
+	        width: auto;
+	        min-width: 0;
+	        z-index: 280;
+	      }
+
+	      .playground-database-owner-trigger {
+	        min-width: 0;
+	        max-width: min(320px, 60vw);
+	        padding: 4px 0;
+	        border: 0;
+	        background: transparent;
+	        color: inherit;
+	        display: flex;
+	        align-items: center;
+	        justify-content: flex-end;
+	        gap: 8px;
+	        font: inherit;
+	        text-align: right;
+	        cursor: pointer;
+	      }
+
+	      .playground-database-owner-trigger:disabled {
+	        cursor: default;
+	        opacity: 0.58;
+	      }
+
+	      .playground-database-owner-trigger .playground-team-member-cell {
+	        min-width: 0;
+	        justify-content: flex-end;
+	        gap: 8px;
+	      }
+
+	      .playground-database-owner-trigger .playground-team-member-avatar {
+	        width: 20px;
+	        height: 20px;
+	        flex: 0 0 20px;
+	        font-size: 8px;
+	      }
+
+	      .playground-database-owner-trigger .playground-team-table-title {
+	        max-width: 220px;
+	        overflow: hidden;
+	        color: rgba(255, 255, 255, 0.88);
+	        font-size: 12px;
+	        font-weight: 400;
+	        text-overflow: ellipsis;
+	        white-space: nowrap;
+	      }
+
+	      .playground-database-owner-popup-shell .playground-database-owner-menu {
+	        top: calc(100% + 8px);
+	        right: 0;
+	        left: auto;
+	        width: 280px;
+	        min-width: 280px;
+	        max-height: min(320px, calc(100vh - 180px));
+	        overflow: auto;
+	        transform-origin: top right;
+	        scrollbar-width: none;
+	      }
+
+	      .playground-database-owner-popup-shell .playground-database-owner-menu::-webkit-scrollbar {
+	        display: none;
+	      }
+
+	      .playground-database-owner-transfer-modal.playground-tasks-project-modal {
+	        width: min(500px, calc(100vw - 48px));
+	      }
+
+	      .playground-database-owner-transfer-copy {
+	        display: flex;
+	        flex-direction: column;
+	        gap: 12px;
+	        padding: 4px 0 8px;
+	      }
+
+	      .playground-database-owner-transfer-person {
+	        display: flex;
+	        align-items: center;
+	        gap: 10px;
+	      }
+
+	      .playground-database-owner-transfer-person .playground-team-member-avatar {
+	        width: 28px;
+	        height: 28px;
+	        flex: 0 0 28px;
+	      }
+
+	      .playground-database-owner-transfer-person-copy {
+	        min-width: 0;
+	        display: flex;
+	        flex-direction: column;
+	        gap: 2px;
+	      }
+
+	      .playground-database-owner-transfer-person-name {
+	        color: #fff;
+	        font-size: 13px;
+	        font-weight: 500;
+	      }
+
+	      .playground-database-owner-transfer-person-email,
+	      .playground-database-owner-transfer-warning {
+	        color: rgba(255, 255, 255, 0.58);
+	        font-size: 12px;
+	        font-weight: 400;
+	        line-height: 1.5;
 	      }
 
 	      .playground-database-access-table-toolbar.playground-develop-server-kind-table-toolbar {
@@ -47741,7 +47923,8 @@ ${METRONOME_PAGE_CSS}
         background: linear-gradient(to top, #082673, #1D59BE);
       }
 
-      .playground-computer-detail-header-publish-button.playground-agents-detail-publish-split-control:not(.playground-agents-detail-version-selector-control) {
+      .playground-computer-detail-header-publish-button.playground-agents-detail-publish-split-control:not(.playground-agents-detail-version-selector-control),
+      .playground-server-detail-header-publish-button.playground-agents-detail-publish-split-control:not(.playground-agents-detail-version-selector-control) {
         background: linear-gradient(to top, #082673, #1D59BE);
       }
 
@@ -47750,7 +47933,10 @@ ${METRONOME_PAGE_CSS}
       .playground-agents-detail-header-publish-button.playground-agents-detail-publish-split-control:not(.playground-agents-detail-version-selector-control):not(.playground-computer-detail-header-publish-button):not(.playground-server-detail-header-publish-button):not(.playground-guardrails-publish-button):not(.playground-evaluations-publish-button).is-active,
       .playground-computer-detail-header-publish-button.playground-agents-detail-publish-split-control:not(.playground-agents-detail-version-selector-control):hover,
       .playground-computer-detail-header-publish-button.playground-agents-detail-publish-split-control:not(.playground-agents-detail-version-selector-control):focus-within,
-      .playground-computer-detail-header-publish-button.playground-agents-detail-publish-split-control:not(.playground-agents-detail-version-selector-control).is-active {
+      .playground-computer-detail-header-publish-button.playground-agents-detail-publish-split-control:not(.playground-agents-detail-version-selector-control).is-active,
+      .playground-server-detail-header-publish-button.playground-agents-detail-publish-split-control:not(.playground-agents-detail-version-selector-control):hover,
+      .playground-server-detail-header-publish-button.playground-agents-detail-publish-split-control:not(.playground-agents-detail-version-selector-control):focus-within,
+      .playground-server-detail-header-publish-button.playground-agents-detail-publish-split-control:not(.playground-agents-detail-version-selector-control).is-active {
         background: linear-gradient(to top, #082673, #1D59BE);
       }
 
@@ -62796,6 +62982,62 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           subjectTypes: ["database"],
         },
         {
+          id: "server_source_read",
+          ringId: "ring_1",
+          label: "View source",
+          description: "View source files, configuration, versions, and deployment metadata.",
+          subjectTypes: ["server"],
+        },
+        {
+          id: "server_invoke",
+          ringId: "ring_1",
+          label: "Invoke resource",
+          description: "Open a web app or invoke a function through its deployed endpoint.",
+          subjectTypes: ["server"],
+        },
+        {
+          id: "server_logs_read",
+          ringId: "ring_1",
+          label: "View usage and logs",
+          description: "View analytics, request logs, runtime output, and deployment history.",
+          subjectTypes: ["server"],
+        },
+        {
+          id: "server_source_write",
+          ringId: "ring_2",
+          label: "Edit source",
+          description: "Create, update, rename, or delete source files and configuration.",
+          subjectTypes: ["server"],
+        },
+        {
+          id: "server_connection_manage",
+          ringId: "ring_2",
+          label: "Manage connections",
+          description: "Connect or disconnect databases, auth, runtimes, secrets, and payments resources.",
+          subjectTypes: ["server"],
+        },
+        {
+          id: "server_deploy",
+          ringId: "ring_3",
+          label: "Publish deployments",
+          description: "Create versions, publish changes, roll back, or change public deployment settings.",
+          subjectTypes: ["server"],
+        },
+        {
+          id: "server_access_manage",
+          ringId: "ring_3",
+          label: "Manage access",
+          description: "Share this resource with teams and change their permission policies.",
+          subjectTypes: ["server"],
+        },
+        {
+          id: "server_delete",
+          ringId: "ring_3",
+          label: "Delete resource",
+          description: "Permanently delete this function or web app and its managed deployment.",
+          subjectTypes: ["server"],
+        },
+        {
           id: "managed_resource_mutation",
           ringId: "ring_2",
           label: "Change managed resources",
@@ -62999,6 +63241,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           || normalized === "team_role"
           || normalized === "organization_role"
           || normalized === "database"
+          || normalized === "server"
           || normalized === "human_user"
           ? normalized
           : fallback;
@@ -63248,6 +63491,57 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           .forEach((actionId) => applyActionAccess(actionId, "ask_for_permission"));
         ["database_document_delete", "database_schema_manage", "database_access_manage"]
           .forEach((actionId) => applyActionAccess(actionId, "no_access"));
+        return permissionSet;
+      }
+
+      function createPlaygroundServerTeamRolePermissionSet(roleId) {
+        const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
+        if (normalizedRoleId === "owner") {
+          return createPlaygroundFullAccessPermissionSet("server");
+        }
+        const permissionSet = createPlaygroundDefaultPermissionSet("server");
+        const applyRingAccess = (ringId, access) => {
+          permissionSet.rings[ringId] = {
+            ...(permissionSet.rings[ringId] || {}),
+            defaultAccess: normalizePlaygroundPermissionAccess(access, "ask_for_permission"),
+          };
+        };
+        const applyActionAccess = (actionId, access) => {
+          const actionDefinition = getPlaygroundPermissionActionDefinition(actionId);
+          permissionSet.actions[actionId] = {
+            ...(permissionSet.actions[actionId] || {}),
+            ringId: actionDefinition?.ringId || "ring_1",
+            access: normalizePlaygroundPermissionAccess(access, "ask_for_permission"),
+          };
+        };
+
+        if (normalizedRoleId === "admin") {
+          PLAYGROUND_PERMISSION_RING_IDS.forEach((ringId) => applyRingAccess(ringId, "full_access"));
+          PLAYGROUND_PERMISSION_ACTION_DEFINITIONS
+            .filter((action) => action.subjectTypes?.includes("server"))
+            .forEach((action) => applyActionAccess(action.id, "full_access"));
+          return permissionSet;
+        }
+
+        if (normalizedRoleId === "contributor") {
+          applyRingAccess("ring_1", "full_access");
+          applyRingAccess("ring_2", "full_access");
+          applyRingAccess("ring_3", "ask_for_permission");
+          ["server_source_read", "server_invoke", "server_logs_read", "server_source_write", "server_connection_manage"]
+            .forEach((actionId) => applyActionAccess(actionId, "full_access"));
+          applyActionAccess("server_deploy", "ask_for_permission");
+          applyActionAccess("server_access_manage", "no_access");
+          applyActionAccess("server_delete", "no_access");
+          return permissionSet;
+        }
+
+        applyRingAccess("ring_1", "read_only");
+        applyRingAccess("ring_2", "ask_for_permission");
+        applyRingAccess("ring_3", "no_access");
+        ["server_source_read", "server_logs_read"].forEach((actionId) => applyActionAccess(actionId, "read_only"));
+        applyActionAccess("server_invoke", "full_access");
+        ["server_source_write", "server_connection_manage"].forEach((actionId) => applyActionAccess(actionId, "ask_for_permission"));
+        ["server_deploy", "server_access_manage", "server_delete"].forEach((actionId) => applyActionAccess(actionId, "no_access"));
         return permissionSet;
       }
 
@@ -72544,9 +72838,17 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           .join("/");
       }
 
-      function buildPlaygroundServerAnalyticsUrl(backendUrl, serverId) {
+      function buildPlaygroundServerAnalyticsUrl(backendUrl, serverId, period = "day") {
         if (!backendUrl || !serverId) return "";
-        return backendUrl + "/servers/" + encodeURIComponent(serverId) + "/analytics";
+        const params = new URLSearchParams();
+        params.set("period", normalizePlaygroundEnvironmentHomeChartPeriod(period));
+        return backendUrl + "/servers/" + encodeURIComponent(serverId) + "/analytics?" + params.toString();
+      }
+
+      function buildPlaygroundServerAnalyticsStateKey(serverId, period = "day") {
+        const normalizedServerId = String(serverId || "").trim();
+        if (!normalizedServerId) return "";
+        return normalizedServerId + ":" + normalizePlaygroundEnvironmentHomeChartPeriod(period);
       }
 
       function buildPlaygroundServerBindingsUrl(backendUrl, serverId) {
@@ -72695,9 +72997,17 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           + "/documents/" + encodeURIComponent(documentId);
       }
 
-      function buildPlaygroundDatabaseAnalyticsUrl(backendUrl, databaseId) {
+      function buildPlaygroundDatabaseAnalyticsUrl(backendUrl, databaseId, period = "day") {
         if (!backendUrl || !databaseId) return "";
-        return backendUrl + "/databases/" + encodeURIComponent(databaseId) + "/analytics";
+	    const params = new URLSearchParams();
+	    params.set("period", normalizePlaygroundEnvironmentHomeChartPeriod(period));
+	    return backendUrl + "/databases/" + encodeURIComponent(databaseId) + "/analytics?" + params.toString();
+	  }
+
+	  function buildPlaygroundDatabaseAnalyticsStateKey(databaseId, period = "day") {
+	    const normalizedDatabaseId = String(databaseId || "").trim();
+	    if (!normalizedDatabaseId) return "";
+	    return normalizedDatabaseId + ":" + normalizePlaygroundEnvironmentHomeChartPeriod(period);
       }
 
       function canonicalizePlaygroundServerKind(kind) {
@@ -87769,6 +88079,13 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const environmentDescriptionTextareaRef = useRef(null);
         const databaseActionsPopoverRef = useRef(null);
         const databaseAccessToolbarRef = useRef(null);
+        const serverAccessToolbarRef = useRef(null);
+        const serverAccessActionMenuCloseTimerRef = useRef(null);
+        const serverOwnerPopoverRef = useRef(null);
+        const serverOwnerTransferModalCloseTimerRef = useRef(null);
+        const databaseOwnerPopoverRef = useRef(null);
+        const databaseOwnerTransferModalCloseTimerRef = useRef(null);
+        const databaseOwnerTransferModalFrameRef = useRef(null);
         const databaseAccessActionMenuCloseTimerRef = useRef(null);
         const databaseExportMenuRef = useRef(null);
         const databaseRenameInputRef = useRef(null);
@@ -87783,6 +88100,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const databasePermissionSaveQueuedRef = useRef(null);
         const databasePermissionSaveInFlightRef = useRef(false);
         const databaseWorkspaceTeamsRequestedRef = useRef(false);
+        const databaseOwnerTeamMembersRequestedRef = useRef(new Set());
+        const serverPermissionSaveTimerRef = useRef(null);
+        const serverPermissionSaveQueuedRef = useRef(null);
+        const serverPermissionSaveInFlightRef = useRef(false);
         const databaseListRequestRef = useRef({
           promise: null,
           requestId: 0,
@@ -87813,6 +88134,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const selectedDatabaseIdRef = useRef("");
         const selectedDatabaseCollectionIdRef = useRef("");
         const selectedDatabaseDocumentIdRef = useRef("");
+        const serverAnalyticsByIdRef = useRef({});
         const databaseAnalyticsByIdRef = useRef({});
         const databaseCollectionsByIdRef = useRef({});
         const databaseDocumentsByCollectionKeyRef = useRef({});
@@ -87948,6 +88270,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [databaseExporting, setDatabaseExporting] = useState(false);
         const [databaseExportMenuOpen, setDatabaseExportMenuOpen] = useState(false);
         const [isServerDescriptionEditing, setIsServerDescriptionEditing] = useState(false);
+        const [serverDescriptionHistory, setServerDescriptionHistory] = useState({ past: [], future: [] });
         const [isDatabaseDescriptionEditing, setIsDatabaseDescriptionEditing] = useState(false);
         const [databaseDescriptionHistory, setDatabaseDescriptionHistory] = useState({ past: [], future: [] });
         const [environmentDetailsCollapsed, setEnvironmentDetailsCollapsed] = useState(false);
@@ -87968,6 +88291,26 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const [environmentDetailChartTimescale, setEnvironmentDetailChartTimescale] = useState("day");
         const [environmentDetailTab, setEnvironmentDetailTab] = useState("general");
         const [serverDetailChartTimescale, setServerDetailChartTimescale] = useState("day");
+	        const [serverPermissionChartAnimationKey, setServerPermissionChartAnimationKey] = useState(0);
+	        const [serverPermissionTeamId, setServerPermissionTeamId] = useState("");
+	        const [serverPermissionRoleId, setServerPermissionRoleId] = useState("member");
+	        const [serverTeamMenuId, setServerTeamMenuId] = useState("");
+	        const [serverAccessSearchQuery, setServerAccessSearchQuery] = useState("");
+	        const [serverAccessFilter, setServerAccessFilter] = useState("all");
+	        const [serverAccessToolbarPopover, setServerAccessToolbarPopover] = useState("");
+	        const [serverAccessActionMenuState, setServerAccessActionMenuState] = useState(null);
+	        const [serverAccessActionMenuClosing, setServerAccessActionMenuClosing] = useState(false);
+	        const [serverAccessSort, setServerAccessSort] = useState("name");
+	        const [serverAccessSortDirection, setServerAccessSortDirection] = useState("asc");
+	        const [selectedServerAccessTeamIds, setSelectedServerAccessTeamIds] = useState(() => new Set());
+	        const [serverOwnerPopoverOpen, setServerOwnerPopoverOpen] = useState(false);
+	        const [serverOwnerTransferTarget, setServerOwnerTransferTarget] = useState(null);
+	        const [serverOwnerTransferModalClosing, setServerOwnerTransferModalClosing] = useState(false);
+	        const [serverTeamAccessState, setServerTeamAccessState] = useState({
+	          teamId: "",
+	          action: "",
+	          error: "",
+	        });
 	        const [databaseDetailChartTimescale, setDatabaseDetailChartTimescale] = useState("day");
 	        const [databaseQuickstartLanguage, setDatabaseQuickstartLanguage] = useState("javascript");
 	        const [databaseDetailTab, setDatabaseDetailTab] = useState("data");
@@ -87983,6 +88326,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	        const [databaseAccessSort, setDatabaseAccessSort] = useState("name");
 	        const [databaseAccessSortDirection, setDatabaseAccessSortDirection] = useState("asc");
 	        const [selectedDatabaseAccessTeamIds, setSelectedDatabaseAccessTeamIds] = useState(() => new Set());
+	        const [databaseOwnerPopoverOpen, setDatabaseOwnerPopoverOpen] = useState(false);
+	        const [databaseOwnerTeamMembersById, setDatabaseOwnerTeamMembersById] = useState({});
+	        const [databaseOwnerTransferTarget, setDatabaseOwnerTransferTarget] = useState(null);
+	        const [databaseOwnerTransferModalVisible, setDatabaseOwnerTransferModalVisible] = useState(false);
+	        const [databaseOwnerTransferModalClosing, setDatabaseOwnerTransferModalClosing] = useState(false);
 	        const [databaseTeamAccessState, setDatabaseTeamAccessState] = useState({
 	          teamId: "",
 	          action: "",
@@ -88154,7 +88502,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           error: "",
           rollingBackDeploymentId: "",
         });
-        const [serverDetailTab, setServerDetailTab] = useState("general");
+        const [serverDetailTab, setServerDetailTab] = useState("usage");
         const [serverInvokeSnippetTab, setServerInvokeSnippetTab] = useState("curl");
         const [copiedFunctionServiceUrl, setCopiedFunctionServiceUrl] = useState("");
         const [serverAnalyticsView, setServerAnalyticsView] = useState("editor");
@@ -89229,6 +89577,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }, [selectedDatabaseDocumentId]);
 
         useEffect(() => {
+          serverAnalyticsByIdRef.current = serverAnalyticsById;
+        }, [serverAnalyticsById]);
+
+        useEffect(() => {
           databaseAnalyticsByIdRef.current = databaseAnalyticsById;
         }, [databaseAnalyticsById]);
 
@@ -89312,7 +89664,12 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             window.clearTimeout(serverAutosaveTimerRef.current);
             serverAutosaveTimerRef.current = null;
           }
+          if (serverPermissionSaveTimerRef.current) {
+            window.clearTimeout(serverPermissionSaveTimerRef.current);
+            serverPermissionSaveTimerRef.current = null;
+          }
           serverAutosaveQueuedRef.current = null;
+          serverPermissionSaveQueuedRef.current = null;
           setServerActionsPopoverOpen(false);
           setServerPublishMenuOpen(false);
           setServerVersionsHeaderMenuOpen(false);
@@ -89329,6 +89686,19 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           setServerRenameValue("");
           setServerRenameError("");
           setServerDetailSelectPopover("");
+          setServerPermissionTeamId("");
+          setServerPermissionRoleId("member");
+          setServerTeamMenuId("");
+          setServerAccessSearchQuery("");
+          setServerAccessFilter("all");
+          setServerAccessToolbarPopover("");
+          setServerAccessActionMenuState(null);
+          setServerAccessActionMenuClosing(false);
+          setServerOwnerPopoverOpen(false);
+          setServerOwnerTransferTarget(null);
+          setServerOwnerTransferModalClosing(false);
+          setSelectedServerAccessTeamIds(new Set());
+          setServerTeamAccessState({ teamId: "", action: "", error: "" });
           setServerRuntimeState({
             error: "",
           });
@@ -89414,7 +89784,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             isSaving: false,
             wordWrap: true,
           });
-          setServerDetailTab("general");
+          setServerDetailTab("usage");
+          setServerDescriptionHistory({ past: [], future: [] });
           setServerAnalyticsView("editor");
           setServerLogsState({
             kind: "request",
@@ -90821,7 +91192,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           resourceMode,
         ]);
 
-        const loadServerDetails = useCallback(async (serverId) => {
+        const loadServerDetails = useCallback(async (serverId, options = {}) => {
           if (!serverId || serverId === PLAYGROUND_SERVER_DRAFT_ID) {
             return;
           }
@@ -90844,14 +91215,17 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
           setLoadingServerId(serverId);
           try {
-            const response = await fetch(backendUrl + "/servers/" + encodeURIComponent(serverId), {
-              method: "GET",
-              headers: requestHeaders,
-            });
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) {
-              throw new Error(data?.message || data?.error || "Failed to load server.");
-            }
+            const data = await fetchPlaygroundCachedDatabaseResourceJson(
+              backendUrl + "/servers/" + encodeURIComponent(serverId),
+              requestHeaders,
+              {
+                scopeKey: databaseListScopeKey + "|server-details",
+                ttlMs: PLAYGROUND_DATABASE_DETAIL_CACHE_TTL_MS,
+                force: options?.force === true,
+                staleWhileRevalidate: true,
+                priority: "low",
+              }
+            );
 
             const normalized = getPlaygroundServerResponseRecord(data);
             if (!normalized) {
@@ -90877,7 +91251,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           } finally {
             setLoadingServerId((current) => current === serverId ? "" : current);
           }
-        }, [backendUrl, requestHeaders, resourceTemplatePreviewServerRecordById]);
+        }, [backendUrl, databaseListScopeKey, requestHeaders, resourceTemplatePreviewServerRecordById]);
 
         const loadServerFiles = useCallback(async (serverId) => {
           if (!serverId || serverId === PLAYGROUND_SERVER_DRAFT_ID) {
@@ -91014,10 +91388,17 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (!normalizedServerId || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
             return null;
           }
+          const normalizedPeriod = normalizePlaygroundEnvironmentHomeChartPeriod(options?.period || "day");
+          const analyticsStateKey = buildPlaygroundServerAnalyticsStateKey(normalizedServerId, normalizedPeriod);
 
           if (resourceTemplatePreviewServerRecordById[normalizedServerId]) {
             const normalizedRecord = {
+              period: normalizedPeriod,
               summary: {
+                totalRequests: 0,
+                successRate: 0,
+                clientErrors: 0,
+                serverErrors: 0,
                 totalRequests24h: 0,
                 successRate24h: 0,
                 p95LatencyMs: 0,
@@ -91025,6 +91406,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 serverErrors24h: 0,
               },
               charts: {
+                traffic: [],
+                status: [],
                 traffic24h: [],
                 status24h: [],
               },
@@ -91034,38 +91417,183 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             };
             setServerAnalyticsById((current) => ({
               ...current,
-              [normalizedServerId]: normalizedRecord,
+              [analyticsStateKey]: normalizedRecord,
             }));
+            serverAnalyticsByIdRef.current = {
+              ...serverAnalyticsByIdRef.current,
+              [analyticsStateKey]: normalizedRecord,
+            };
             return normalizedRecord;
           }
 
           const force = options?.force === true;
-          if (!force && serverAnalyticsById[normalizedServerId]) {
-            return serverAnalyticsById[normalizedServerId];
+          if (!force && serverAnalyticsByIdRef.current[analyticsStateKey]) {
+            return serverAnalyticsByIdRef.current[analyticsStateKey];
           }
 
-          setLoadingServerAnalyticsId(normalizedServerId);
+          setLoadingServerAnalyticsId(analyticsStateKey);
           try {
-            const response = await fetch(
-              buildPlaygroundServerAnalyticsUrl(backendUrl, normalizedServerId),
-              {
-                method: "GET",
-                headers: requestHeaders,
+            let data = null;
+            try {
+              const overviewData = await fetchPlaygroundCachedDatabaseResourceJson(
+                backendUrl + "/servers/analytics/overview?period=" + encodeURIComponent(normalizedPeriod),
+                requestHeaders,
+                {
+                  scopeKey: databaseListScopeKey,
+                  ttlMs: PLAYGROUND_DATABASE_ANALYTICS_CACHE_TTL_MS,
+                  force,
+                  persist: true,
+                  staleWhileRevalidate: !force,
+                  priority: "high",
+                }
+              );
+              const overviewResources = Array.isArray(overviewData?.analytics?.resources)
+                ? overviewData.analytics.resources
+                : Array.isArray(overviewData?.resources)
+                  ? overviewData.resources
+                  : [];
+              const overviewResource = overviewResources.find((resource) => String(resource?.id || "") === normalizedServerId) || null;
+              if (overviewResource) {
+                const traffic = Array.isArray(overviewResource?.traffic)
+                  ? overviewResource.traffic
+                  : Array.isArray(overviewResource?.charts?.traffic)
+                    ? overviewResource.charts.traffic
+                    : Array.isArray(overviewResource?.charts?.traffic24h)
+                      ? overviewResource.charts.traffic24h
+                      : [];
+                const status = Array.isArray(overviewResource?.status)
+                  ? overviewResource.status
+                  : Array.isArray(overviewResource?.charts?.status)
+                    ? overviewResource.charts.status
+                    : traffic.map((bucket) => {
+                        const total = Math.max(0, Number(bucket?.total || 0));
+                        const clientErrors = Math.max(0, Number(bucket?.clientErrors || 0));
+                        const serverErrors = Math.max(0, Number(bucket?.serverErrors || 0));
+                        const success = Math.max(0, total - clientErrors - serverErrors);
+                        return {
+                          ...bucket,
+                          total,
+                          success,
+                          successRate: total > 0 ? Math.round((success / total) * 1000) / 10 : 0,
+                          clientErrors,
+                          serverErrors,
+                        };
+                      });
+                const trafficSummary = traffic.reduce((summary, bucket) => {
+                  summary.totalRequests += Math.max(0, Number(bucket?.total || 0));
+                  summary.clientErrors += Math.max(0, Number(bucket?.clientErrors || 0));
+                  summary.serverErrors += Math.max(0, Number(bucket?.serverErrors || 0));
+                  summary.p95LatencyMs = Math.max(summary.p95LatencyMs, Math.max(0, Number(bucket?.p95LatencyMs || 0)));
+                  return summary;
+                }, {
+                  totalRequests: 0,
+                  clientErrors: 0,
+                  serverErrors: 0,
+                  p95LatencyMs: 0,
+                });
+                const overviewSummary = overviewResource?.summary && typeof overviewResource.summary === "object"
+                  ? overviewResource.summary
+                  : {};
+                const totalRequests = Math.max(0, Number(
+                  overviewSummary.totalRequests
+                  ?? overviewSummary.totalRequests24h
+                  ?? overviewResource.totalRequests
+                  ?? trafficSummary.totalRequests
+                ) || 0);
+                const clientErrors = Math.max(0, Number(
+                  overviewSummary.clientErrors
+                  ?? overviewSummary.clientErrors24h
+                  ?? overviewResource.clientErrors
+                  ?? trafficSummary.clientErrors
+                ) || 0);
+                const serverErrors = Math.max(0, Number(
+                  overviewSummary.serverErrors
+                  ?? overviewSummary.serverErrors24h
+                  ?? overviewResource.serverErrors
+                  ?? trafficSummary.serverErrors
+                ) || 0);
+                const successfulRequests = Math.max(0, totalRequests - clientErrors - serverErrors);
+                const successRate = Number(
+                  overviewSummary.successRate
+                  ?? overviewSummary.successRate24h
+                  ?? overviewResource.successRate
+                  ?? (totalRequests > 0 ? (successfulRequests / totalRequests) * 100 : 0)
+                ) || 0;
+                const p95LatencyMs = Math.max(0, Number(
+                  overviewSummary.p95LatencyMs
+                  ?? overviewResource.p95LatencyMs
+                  ?? trafficSummary.p95LatencyMs
+                ) || 0);
+                data = {
+                  ...overviewResource,
+                  period: normalizedPeriod,
+                  summary: {
+                    ...overviewSummary,
+                    totalRequests,
+                    totalRequests24h: totalRequests,
+                    successRate,
+                    successRate24h: successRate,
+                    clientErrors,
+                    clientErrors24h: clientErrors,
+                    serverErrors,
+                    serverErrors24h: serverErrors,
+                    p95LatencyMs,
+                  },
+                  charts: {
+                    ...(overviewResource?.charts && typeof overviewResource.charts === "object" ? overviewResource.charts : {}),
+                    traffic,
+                    traffic24h: traffic,
+                    status,
+                    status24h: status,
+                  },
+                };
               }
-            );
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) {
-              throw new Error(data?.message || data?.error || "Failed to load analytics.");
+            } catch {
+              data = null;
+            }
+
+            if (!data) {
+              data = await fetchPlaygroundCachedDatabaseResourceJson(
+                buildPlaygroundServerAnalyticsUrl(backendUrl, normalizedServerId, normalizedPeriod),
+                requestHeaders,
+                {
+                  scopeKey: databaseListScopeKey + "|server-analytics",
+                  ttlMs: PLAYGROUND_DATABASE_ANALYTICS_CACHE_TTL_MS,
+                  force,
+                  priority: "low",
+                }
+              );
             }
 
             const normalizedRecord = {
               ...data,
+              period: normalizePlaygroundEnvironmentHomeChartPeriod(data?.period || normalizedPeriod),
+              summary: {
+                ...(data?.summary && typeof data.summary === "object" ? data.summary : {}),
+                totalRequests: Math.max(0, Number(data?.summary?.totalRequests ?? data?.summary?.totalRequests24h ?? 0) || 0),
+                successRate: Number(data?.summary?.successRate ?? data?.summary?.successRate24h ?? 0) || 0,
+                clientErrors: Math.max(0, Number(data?.summary?.clientErrors ?? data?.summary?.clientErrors24h ?? 0) || 0),
+                serverErrors: Math.max(0, Number(data?.summary?.serverErrors ?? data?.summary?.serverErrors24h ?? 0) || 0),
+              },
+              charts: {
+                ...(data?.charts && typeof data.charts === "object" ? data.charts : {}),
+                traffic: Array.isArray(data?.charts?.traffic)
+                  ? data.charts.traffic
+                  : (Array.isArray(data?.charts?.traffic24h) ? data.charts.traffic24h : []),
+                status: Array.isArray(data?.charts?.status)
+                  ? data.charts.status
+                  : (Array.isArray(data?.charts?.status24h) ? data.charts.status24h : []),
+              },
               loadedAt: new Date().toISOString(),
             };
             setServerAnalyticsById((current) => ({
               ...current,
-              [normalizedServerId]: normalizedRecord,
+              [analyticsStateKey]: normalizedRecord,
             }));
+            serverAnalyticsByIdRef.current = {
+              ...serverAnalyticsByIdRef.current,
+              [analyticsStateKey]: normalizedRecord,
+            };
             return normalizedRecord;
           } catch (error) {
             setServerLogsState((current) => ({
@@ -91074,9 +91602,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             }));
             return null;
           } finally {
-            setLoadingServerAnalyticsId((current) => current === normalizedServerId ? "" : current);
+            setLoadingServerAnalyticsId((current) => current === analyticsStateKey ? "" : current);
           }
-        }, [backendUrl, requestHeaders, resourceTemplatePreviewServerRecordById, serverAnalyticsById]);
+        }, [backendUrl, databaseListScopeKey, requestHeaders, resourceTemplatePreviewServerRecordById]);
 
         const loadServerAuthUsers = useCallback(async (serverId, options = {}) => {
           const normalizedServerId = String(serverId || "").trim();
@@ -91240,6 +91768,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (!normalizedDatabaseId || normalizedDatabaseId === PLAYGROUND_DATABASE_DRAFT_ID) {
             return null;
           }
+	      const normalizedPeriod = normalizePlaygroundEnvironmentHomeChartPeriod(options?.period);
+	      const analyticsStateKey = buildPlaygroundDatabaseAnalyticsStateKey(normalizedDatabaseId, normalizedPeriod);
 
           if (resourceTemplatePreviewDatabaseRecordById[normalizedDatabaseId]) {
             const collections = Array.isArray(resourceTemplatePreviewDatabaseCollectionsById[normalizedDatabaseId])
@@ -91247,34 +91777,40 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               : [];
             const totalDocuments = collections.reduce((sum, collection) => sum + Math.max(0, Number(collection?.documentCount || 0) || 0), 0);
             const normalizedRecord = {
+	          period: normalizedPeriod,
               summary: {
                 totalCollections: collections.length,
                 totalDocuments,
+	            reads: 0,
+	            writes: 0,
+	            deletes: 0,
                 reads24h: 0,
                 writes24h: 0,
                 deletes24h: 0,
               },
               charts: {
+	            operations: [],
+	            volume: [],
                 operations24h: [],
               },
               loadedAt: new Date().toISOString(),
             };
             setDatabaseAnalyticsById((current) => ({
               ...current,
-              [normalizedDatabaseId]: normalizedRecord,
+	          [analyticsStateKey]: normalizedRecord,
             }));
             return normalizedRecord;
           }
 
           const force = options?.force === true;
-          if (!force && databaseAnalyticsByIdRef.current[normalizedDatabaseId]) {
-            return databaseAnalyticsByIdRef.current[normalizedDatabaseId];
+	      if (!force && databaseAnalyticsByIdRef.current[analyticsStateKey]) {
+	        return databaseAnalyticsByIdRef.current[analyticsStateKey];
           }
 
-          setLoadingDatabaseAnalyticsId(normalizedDatabaseId);
+	      setLoadingDatabaseAnalyticsId(analyticsStateKey);
           try {
             const data = await fetchPlaygroundCachedDatabaseResourceJson(
-              buildPlaygroundDatabaseAnalyticsUrl(backendUrl, normalizedDatabaseId),
+	          buildPlaygroundDatabaseAnalyticsUrl(backendUrl, normalizedDatabaseId, normalizedPeriod),
               requestHeaders,
               {
                 scopeKey: databaseListScopeKey,
@@ -91312,16 +91848,26 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               : {};
             const normalizedRecord = {
               ...analyticsSource,
+	          period: normalizePlaygroundEnvironmentHomeChartPeriod(analyticsSource.period || normalizedPeriod),
               summary: {
                 ...summary,
                 totalCollections: Math.max(0, Number(summary.totalCollections ?? existingCollections.length) || 0),
                 totalDocuments: Math.max(0, Number(summary.totalDocuments ?? fallbackTotalDocuments) || 0),
+	            reads: Math.max(0, Number(summary.reads ?? summary.reads24h ?? 0) || 0),
+	            writes: Math.max(0, Number(summary.writes ?? summary.writes24h ?? 0) || 0),
+	            deletes: Math.max(0, Number(summary.deletes ?? summary.deletes24h ?? 0) || 0),
                 reads24h: Math.max(0, Number(summary.reads24h || 0) || 0),
                 writes24h: Math.max(0, Number(summary.writes24h || 0) || 0),
                 deletes24h: Math.max(0, Number(summary.deletes24h || 0) || 0),
               },
               charts: {
                 ...charts,
+	            operations: Array.isArray(charts.operations)
+	              ? charts.operations
+	              : (Array.isArray(charts.operations24h) ? charts.operations24h : []),
+	            volume: Array.isArray(charts.volume)
+	              ? charts.volume
+	              : (Array.isArray(charts.volume24h) ? charts.volume24h : []),
                 operations24h: Array.isArray(charts.operations24h) ? charts.operations24h : [],
                 volume24h: Array.isArray(charts.volume24h) ? charts.volume24h : [],
               },
@@ -91330,7 +91876,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
             setDatabaseAnalyticsById((current) => ({
               ...current,
-              [normalizedDatabaseId]: normalizedRecord,
+	          [analyticsStateKey]: normalizedRecord,
             }));
             setDatabaseSaveState((current) => current.error === "Database analytics response was empty."
               ? { ...current, error: "" }
@@ -91346,7 +91892,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             }
             return null;
           } finally {
-            setLoadingDatabaseAnalyticsId((current) => current === normalizedDatabaseId ? "" : current);
+	        setLoadingDatabaseAnalyticsId((current) => current === analyticsStateKey ? "" : current);
           }
         }, [backendUrl, databaseListScopeKey, requestHeaders, resourceTemplatePreviewDatabaseCollectionsById, resourceTemplatePreviewDatabaseRecordById]);
 
@@ -92739,21 +93285,23 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           resetServerEditorAuxiliaryState();
           setServerDetailsCollapsed(false);
           setDraftServer(seedServer ? normalizePlaygroundServerRecord(seedServer) : null);
-          void loadServerDetails(selectedServerId);
           const seedServerKind = canonicalizePlaygroundServerKind(seedServer?.kind);
-          if (!["auth", "agent_runtime", "voice_agent", "secrets", "payments"].includes(seedServerKind)) {
+          if (["function", "web_app"].includes(seedServerKind)) {
+            void loadServerAnalytics(selectedServerId, { period: serverDetailChartTimescale })
+              .finally(() => loadServerDetails(selectedServerId));
+          } else {
+            void loadServerDetails(selectedServerId);
+          }
+          if (!["auth", "agent_runtime", "voice_agent", "secrets", "payments", "function", "web_app"].includes(seedServerKind)) {
             void loadServerFiles(selectedServerId);
           }
           if (seedServerKind === "secrets") {
             void loadServerSecrets(selectedServerId);
           }
-          if (["function", "web_app"].includes(seedServerKind)) {
-            void loadServerContext(selectedServerId);
-            void loadServerDeployments(selectedServerId);
-          } else {
+          if (!["function", "web_app"].includes(seedServerKind)) {
             void loadServerBindings(selectedServerId);
           }
-        }, [loadServerBindings, loadServerContext, loadServerDeployments, loadServerDetails, loadServerFiles, loadServerSecrets, orderedServers, resourceMode, selectedServerId, serverDetailsById]);
+        }, [loadServerAnalytics, loadServerBindings, loadServerDetails, loadServerFiles, loadServerSecrets, orderedServers, resourceMode, selectedServerId, serverDetailChartTimescale, serverDetailsById]);
 
         useEffect(() => {
           if (resourceMode !== "servers") {
@@ -92820,31 +93368,21 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (["auth", "agent_runtime", "voice_agent", "secrets", "payments"].includes(canonicalizePlaygroundServerKind(activeServer.kind))) {
             return;
           }
-          if (!activeServer.cloudRunServiceName && !activeServer.serviceUrl) {
+          const normalizedKind = canonicalizePlaygroundServerKind(activeServer.kind);
+          const isSourceDeployableServer = ["web_app", "function"].includes(normalizedKind);
+          if (!isSourceDeployableServer && !activeServer.cloudRunServiceName && !activeServer.serviceUrl) {
             return;
           }
-          if (serverAnalyticsById[selectedServerId]) {
+          if (isSourceDeployableServer && serverDetailTab !== "usage") {
             return;
           }
-          void loadServerAnalytics(selectedServerId);
-        }, [draftServer, loadServerAnalytics, resourceMode, selectedServerId, selectedServerSnapshot, serverAnalyticsById]);
-
-        useEffect(() => {
-          if (resourceMode !== "servers") {
+          const analyticsPeriod = isSourceDeployableServer ? serverDetailChartTimescale : "day";
+          const analyticsStateKey = buildPlaygroundServerAnalyticsStateKey(selectedServerId, analyticsPeriod);
+          if (serverAnalyticsByIdRef.current[analyticsStateKey]) {
             return;
           }
-          if (!selectedServerId || selectedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
-            return;
-          }
-          const activeServer = draftServer?.id === selectedServerId ? draftServer : selectedServerSnapshot;
-          if (!["web_app", "function"].includes(canonicalizePlaygroundServerKind(activeServer?.kind))) {
-            return;
-          }
-          if (Array.isArray(serverDeploymentsById[selectedServerId])) {
-            return;
-          }
-          void loadServerDeployments(selectedServerId);
-        }, [draftServer, loadServerDeployments, resourceMode, selectedServerId, selectedServerSnapshot, serverDeploymentsById]);
+          void loadServerAnalytics(selectedServerId, { period: analyticsPeriod });
+        }, [draftServer, loadServerAnalytics, resourceMode, selectedServerId, selectedServerSnapshot, serverDetailChartTimescale, serverDetailTab]);
 
         useEffect(() => {
           if (resourceMode !== "servers" || serverAnalyticsView !== "analytics") {
@@ -93056,8 +93594,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           ) {
             return;
           }
-          void loadDatabaseAnalytics(selectedDatabaseId);
-        }, [databaseDetailTab, loadDatabaseAnalytics, resourceMode, selectedDatabaseId]);
+	      void loadDatabaseAnalytics(selectedDatabaseId, { period: databaseDetailChartTimescale });
+	    }, [databaseDetailChartTimescale, databaseDetailTab, loadDatabaseAnalytics, resourceMode, selectedDatabaseId]);
 
         useEffect(() => {
           if (
@@ -93082,6 +93620,24 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }, [databaseListScopeKey]);
 
         useEffect(() => {
+          databaseOwnerTeamMembersRequestedRef.current = new Set();
+          setDatabaseOwnerTeamMembersById({});
+          setDatabaseOwnerPopoverOpen(false);
+	      setDatabaseOwnerTransferTarget(null);
+	      setDatabaseOwnerTransferModalVisible(false);
+	      setDatabaseOwnerTransferModalClosing(false);
+        }, [selectedDatabaseId]);
+
+	    useEffect(() => () => {
+	      if (databaseOwnerTransferModalCloseTimerRef.current !== null && typeof window !== "undefined") {
+	        window.clearTimeout(databaseOwnerTransferModalCloseTimerRef.current);
+	      }
+	      if (databaseOwnerTransferModalFrameRef.current !== null && typeof window !== "undefined") {
+	        window.cancelAnimationFrame(databaseOwnerTransferModalFrameRef.current);
+	      }
+	    }, []);
+
+        useEffect(() => {
           if (
             databaseDetailTab !== "settings"
             || workspaceTeamsLoading
@@ -93101,6 +93657,39 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           workspaceTeamsLoading,
           workspaceTeamsRequiresPlan,
         ]);
+
+        useEffect(() => {
+          if (!databaseOwnerPopoverOpen || !draftDatabase?.id) return;
+          const missingTeamIds = getDatabaseSharedTeamIds(draftDatabase).filter((teamId) => (
+            !Object.prototype.hasOwnProperty.call(databaseOwnerTeamMembersById, teamId)
+            && !databaseOwnerTeamMembersRequestedRef.current.has(teamId)
+          ));
+          missingTeamIds.forEach((teamId) => {
+            databaseOwnerTeamMembersRequestedRef.current.add(teamId);
+            void loadDatabaseOwnerTeamMembers(teamId);
+          });
+        }, [databaseOwnerPopoverOpen, databaseOwnerTeamMembersById, draftDatabase]);
+
+        useEffect(() => {
+          if (!databaseOwnerPopoverOpen) return undefined;
+
+          function handleDatabaseOwnerPopoverPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || databaseOwnerPopoverRef.current?.contains(target)) return;
+            setDatabaseOwnerPopoverOpen(false);
+          }
+
+          function handleDatabaseOwnerPopoverEscape(event) {
+            if (event.key === "Escape") setDatabaseOwnerPopoverOpen(false);
+          }
+
+          document.addEventListener("mousedown", handleDatabaseOwnerPopoverPointerDown);
+          window.addEventListener("keydown", handleDatabaseOwnerPopoverEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleDatabaseOwnerPopoverPointerDown);
+            window.removeEventListener("keydown", handleDatabaseOwnerPopoverEscape);
+          };
+        }, [databaseOwnerPopoverOpen]);
 
         useEffect(() => {
           if (!databaseTeamMenuId) {
@@ -93149,9 +93738,69 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           };
         }, [databaseAccessToolbarPopover]);
 
+        useEffect(() => {
+          if (!serverTeamMenuId && !serverAccessToolbarPopover) return undefined;
+
+          function handleServerAccessPopupPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (target && serverAccessToolbarRef.current?.contains(target)) return;
+            setServerTeamMenuId("");
+            setServerAccessToolbarPopover("");
+          }
+
+          function handleServerAccessPopupEscape(event) {
+            if (event.key !== "Escape") return;
+            setServerTeamMenuId("");
+            setServerAccessToolbarPopover("");
+          }
+
+          document.addEventListener("mousedown", handleServerAccessPopupPointerDown);
+          window.addEventListener("keydown", handleServerAccessPopupEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleServerAccessPopupPointerDown);
+            window.removeEventListener("keydown", handleServerAccessPopupEscape);
+          };
+        }, [serverAccessToolbarPopover, serverTeamMenuId]);
+
+        useEffect(() => {
+          if (!serverOwnerPopoverOpen) return undefined;
+          function handleServerOwnerPointerDown(event) {
+            const target = event?.target instanceof Node ? event.target : null;
+            if (!target || serverOwnerPopoverRef.current?.contains(target)) return;
+            setServerOwnerPopoverOpen(false);
+          }
+          function handleServerOwnerEscape(event) {
+            if (event.key === "Escape") setServerOwnerPopoverOpen(false);
+          }
+          document.addEventListener("mousedown", handleServerOwnerPointerDown);
+          window.addEventListener("keydown", handleServerOwnerEscape);
+          return () => {
+            document.removeEventListener("mousedown", handleServerOwnerPointerDown);
+            window.removeEventListener("keydown", handleServerOwnerEscape);
+          };
+        }, [serverOwnerPopoverOpen]);
+
+        useEffect(() => {
+          if (!serverOwnerPopoverOpen || !draftServer?.id) return;
+          getServerSharedTeamIds(draftServer).forEach((teamId) => {
+            if (
+              Object.prototype.hasOwnProperty.call(databaseOwnerTeamMembersById, teamId)
+              || databaseOwnerTeamMembersRequestedRef.current.has(teamId)
+            ) return;
+            databaseOwnerTeamMembersRequestedRef.current.add(teamId);
+            void loadDatabaseOwnerTeamMembers(teamId);
+          });
+        }, [databaseOwnerTeamMembersById, draftServer, serverOwnerPopoverOpen]);
+
         useEffect(() => () => {
           if (databaseAccessActionMenuCloseTimerRef.current !== null && typeof window !== "undefined") {
             window.clearTimeout(databaseAccessActionMenuCloseTimerRef.current);
+          }
+          if (serverAccessActionMenuCloseTimerRef.current !== null && typeof window !== "undefined") {
+            window.clearTimeout(serverAccessActionMenuCloseTimerRef.current);
+          }
+          if (serverOwnerTransferModalCloseTimerRef.current !== null && typeof window !== "undefined") {
+            window.clearTimeout(serverOwnerTransferModalCloseTimerRef.current);
           }
         }, []);
 
@@ -94799,6 +95448,321 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           ].map((teamId) => String(teamId || "").trim()).filter(Boolean)));
         }
 
+        function getDatabaseOwnerIdentitySources(record) {
+          const source = record && typeof record === "object" && !Array.isArray(record) ? record : {};
+          const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
+            ? source.metadata
+            : {};
+          return [
+            source,
+            source.owner,
+            source.user,
+            source.profile,
+            source.account,
+            source.member,
+            source.identity,
+            metadata,
+            metadata.owner,
+            metadata.user,
+            metadata.profile,
+            metadata.account,
+            metadata.member,
+            metadata.identity,
+          ].filter((value) => value && typeof value === "object" && !Array.isArray(value));
+        }
+
+        function readDatabaseOwnerIdentityValue(record, keys = []) {
+          for (const source of getDatabaseOwnerIdentitySources(record)) {
+            for (const key of keys) {
+              const value = String(source?.[key] || "").trim();
+              if (value) return value;
+            }
+          }
+          return "";
+        }
+
+        function normalizeDatabaseOwnerIdentity(record, fallback = {}) {
+          const email = (readDatabaseOwnerIdentityValue(record, [
+            "email", "emailAddress", "email_address", "mail", "primaryEmail", "primary_email",
+          ]) || String(fallback.email || "")).trim().toLowerCase();
+          const userId = readDatabaseOwnerIdentityValue(record, [
+            "userId", "user_id", "uid", "localId", "local_id", "firebaseUid", "firebase_uid",
+            "ownerUserId", "owner_user_id",
+          ]) || String(fallback.userId || "").trim();
+          const id = readDatabaseOwnerIdentityValue(record, [
+            "id", "memberId", "member_id", "ownerId", "owner_id",
+          ]) || userId || email || String(fallback.id || "").trim();
+          const name = readDatabaseOwnerIdentityValue(record, [
+            "displayName", "display_name", "name", "fullName", "full_name", "memberName", "member_name",
+            "ownerName", "owner_name",
+          ]) || String(fallback.name || "").trim() || email || "Owner";
+          const rawAvatarUrl = readDatabaseOwnerIdentityValue(record, [
+            "photoURL", "photoUrl", "photo_url", "avatarUrl", "avatar_url", "avatar", "picture",
+            "imageUrl", "image_url", "ownerAvatarUrl", "owner_avatar_url",
+          ]) || String(fallback.avatarUrl || "").trim();
+          const avatarUrl = normalizeSessionPhotoUrl(rawAvatarUrl || "");
+          return {
+            type: "user",
+            id,
+            userId,
+            name,
+            email,
+            avatarUrl: canRenderAvatarImage(avatarUrl) ? avatarUrl : "",
+          };
+        }
+
+        function getDatabaseOwnerIdentityKey(identity) {
+          const normalizedIdentity = normalizeDatabaseOwnerIdentity(identity);
+          return String(normalizedIdentity.email || normalizedIdentity.userId || normalizedIdentity.id || "").trim().toLowerCase();
+        }
+
+        function getDatabaseOwnerIdentityKeys(record) {
+          const identity = normalizeDatabaseOwnerIdentity(record);
+          const keys = [identity.email, identity.userId, identity.id];
+          getDatabaseOwnerIdentitySources(record).forEach((source) => {
+            [
+              source.email,
+              source.emailAddress,
+              source.email_address,
+              source.userId,
+              source.user_id,
+              source.uid,
+              source.localId,
+              source.local_id,
+              source.id,
+              source.memberId,
+              source.member_id,
+            ].forEach((value) => keys.push(value));
+          });
+          return Array.from(new Set(
+            keys.map((value) => String(value || "").trim().toLowerCase()).filter(Boolean)
+          ));
+        }
+
+        function buildDatabaseOwnerProfileMap(payload) {
+          const profileMap = new Map();
+          const addProfile = (profile, explicitKey = "") => {
+            if (!profile || typeof profile !== "object" || Array.isArray(profile)) return;
+            const normalizedProfile = explicitKey ? { id: explicitKey, ...profile } : profile;
+            getDatabaseOwnerIdentityKeys(normalizedProfile).forEach((key) => profileMap.set(key, normalizedProfile));
+          };
+          const addProfiles = (value) => {
+            if (Array.isArray(value)) {
+              value.forEach((profile) => addProfile(profile));
+              return;
+            }
+            if (!value || typeof value !== "object") return;
+            if (getDatabaseOwnerIdentityKeys(value).length > 0) addProfile(value);
+            if (Array.isArray(value.data)) {
+              value.data.forEach((profile) => addProfile(profile));
+              return;
+            }
+            Object.entries(value).forEach(([key, profile]) => addProfile(profile, key));
+          };
+          [
+            payload,
+            payload?.profile,
+            payload?.user,
+            payload?.account,
+            payload?.profiles,
+            payload?.memberProfiles,
+            payload?.member_profiles,
+            payload?.users,
+            payload?.accounts,
+            payload?.data,
+            payload?.data?.profiles,
+            payload?.data?.memberProfiles,
+            payload?.data?.member_profiles,
+            payload?.data?.users,
+            payload?.data?.accounts,
+            payload?.included?.profiles,
+            payload?.included?.users,
+            payload?.included?.accounts,
+          ].forEach(addProfiles);
+          return profileMap;
+        }
+
+        function mergeDatabaseOwnerMemberProfiles(members, ...profilePayloads) {
+          const profileMap = new Map();
+          profilePayloads.forEach((payload) => {
+            buildDatabaseOwnerProfileMap(payload).forEach((profile, key) => profileMap.set(key, profile));
+          });
+          return (Array.isArray(members) ? members : []).map((member) => {
+            const matchingProfile = getDatabaseOwnerIdentityKeys(member)
+              .map((key) => profileMap.get(key))
+              .find(Boolean);
+            if (!matchingProfile) return member;
+            const mergedIdentity = normalizeDatabaseOwnerIdentity({
+              ...member,
+              profile: {
+                ...(member?.profile && typeof member.profile === "object" && !Array.isArray(member.profile) ? member.profile : {}),
+                ...matchingProfile,
+              },
+              user: {
+                ...(member?.user && typeof member.user === "object" && !Array.isArray(member.user) ? member.user : {}),
+                ...matchingProfile,
+              },
+            });
+            return {
+              ...member,
+              name: mergedIdentity.name,
+              displayName: mergedIdentity.name,
+              email: mergedIdentity.email,
+              photoURL: mergedIdentity.avatarUrl,
+              photoUrl: mergedIdentity.avatarUrl,
+              avatarUrl: mergedIdentity.avatarUrl,
+              profile: {
+                ...(member?.profile && typeof member.profile === "object" && !Array.isArray(member.profile) ? member.profile : {}),
+                ...matchingProfile,
+              },
+              user: {
+                ...(member?.user && typeof member.user === "object" && !Array.isArray(member.user) ? member.user : {}),
+                ...matchingProfile,
+              },
+            };
+          });
+        }
+
+        async function fetchDatabaseOwnerMemberProfilePayload(teamId, members = []) {
+          const normalizedTeamId = String(teamId || "").trim();
+          const memberPayload = Array.isArray(members) ? members : [];
+          try {
+            const { response, data } = await fetchJsonWithTimeout(backendUrl + "/team-member-profiles/lookup", {
+              method: "POST",
+              credentials: "include",
+              cache: "no-store",
+              headers: {
+                ...requestHeaders,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ teamId: normalizedTeamId, members: memberPayload }),
+            }, 8000);
+            const profiles = Array.isArray(data?.profiles) ? data.profiles : Array.isArray(data?.data) ? data.data : [];
+            if (response.ok && profiles.length > 0) return data;
+          } catch {}
+          for (const path of [
+            "/teams/" + encodeURIComponent(normalizedTeamId) + "/member-profiles",
+            "/teams/" + encodeURIComponent(normalizedTeamId) + "/members/profiles",
+          ]) {
+            try {
+              const { response, data } = await fetchJsonWithTimeout(backendUrl + path, {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+                headers: requestHeaders,
+              }, 5000);
+              if (response.ok) return data;
+            } catch {}
+          }
+          return null;
+        }
+
+        function isHumanDatabaseOwnerCandidate(record) {
+          const sources = getDatabaseOwnerIdentitySources(record);
+          const identityType = readDatabaseOwnerIdentityValue(record, [
+            "type", "identityType", "identity_type", "memberType", "member_type", "accountType", "account_type",
+          ]).toLowerCase();
+          const status = readDatabaseOwnerIdentityValue(record, ["status", "membershipStatus", "membership_status"]).toLowerCase();
+          if (["revoked", "removed", "disabled", "deleted"].includes(status)) return false;
+          if (["bot", "agent", "service", "service_account", "machine", "integration"].includes(identityType)) return false;
+          if (sources.some((source) => source.isBot === true || source.is_bot === true || source.bot === true || source.serviceAccount === true)) {
+            return false;
+          }
+          const identity = normalizeDatabaseOwnerIdentity(record);
+          return Boolean(identity.id || identity.userId || identity.email);
+        }
+
+        function getDatabaseOwnerIdentity(database) {
+          const metadata = getDatabaseMetadataRecord(database);
+          const fallbackIdentity = {
+            id: metadata.ownerId || metadata.owner_id || database?.userId || currentUserId || "",
+            userId: metadata.ownerUserId || metadata.owner_user_id || database?.userId || currentUserId || "",
+            name: metadata.ownerName || metadata.owner_name || currentUserName || "Owner",
+            email: metadata.ownerEmail || metadata.owner_email || currentUserEmail || "",
+            avatarUrl: metadata.ownerAvatarUrl || metadata.owner_avatar_url || currentUserAvatarUrl || "",
+          };
+          return normalizeDatabaseOwnerIdentity(metadata.owner || database?.owner || null, fallbackIdentity);
+        }
+
+        function isCurrentUserDatabaseOwner(database) {
+          const ownerKeys = new Set(getDatabaseOwnerIdentityKeys(getDatabaseOwnerIdentity(database)));
+          const viewerKeys = getDatabaseOwnerIdentityKeys({
+            id: currentUserId,
+            userId: currentUserId,
+            name: currentUserName,
+            email: currentUserEmail,
+            avatarUrl: currentUserAvatarUrl,
+          });
+          return viewerKeys.some((key) => ownerKeys.has(key));
+        }
+
+        function applyDatabaseOwnerIdentity(database, ownerIdentity) {
+          const normalizedDatabase = normalizePlaygroundDatabaseRecord(database);
+          const owner = normalizeDatabaseOwnerIdentity(ownerIdentity);
+          const metadata = {
+            ...getDatabaseMetadataRecord(normalizedDatabase),
+            owner,
+            ownerId: owner.id,
+            owner_id: owner.id,
+            ownerUserId: owner.userId,
+            owner_user_id: owner.userId,
+            ownerName: owner.name,
+            owner_name: owner.name,
+            ownerEmail: owner.email,
+            owner_email: owner.email,
+            ownerAvatarUrl: owner.avatarUrl,
+            owner_avatar_url: owner.avatarUrl,
+          };
+          return normalizePlaygroundDatabaseRecord({
+            ...normalizedDatabase,
+            metadata,
+          });
+        }
+
+        async function loadDatabaseOwnerTeamMembers(teamId) {
+          const normalizedTeamId = String(teamId || "").trim();
+          if (!normalizedTeamId) return;
+          try {
+            const { response, data } = await fetchJsonWithTimeout(
+              backendUrl + "/teams/" + encodeURIComponent(normalizedTeamId)
+                + "/members?includeProfiles=1&includeUsers=1&include=profile,user,account&expand=profile,user,account",
+              {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+                headers: requestHeaders,
+              },
+              15000
+            );
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load team members.");
+            }
+            const members = Array.isArray(data?.data)
+              ? data.data
+              : Array.isArray(data?.members)
+                ? data.members
+                : [];
+	            const initialMembers = mergeDatabaseOwnerMemberProfiles(members, data);
+            setDatabaseOwnerTeamMembersById((current) => ({
+              ...current,
+	              [normalizedTeamId]: initialMembers,
+            }));
+	            const profilePayload = await fetchDatabaseOwnerMemberProfilePayload(normalizedTeamId, members);
+	            if (profilePayload) {
+	              const enrichedMembers = mergeDatabaseOwnerMemberProfiles(members, data, profilePayload);
+	              setDatabaseOwnerTeamMembersById((current) => ({
+	                ...current,
+	                [normalizedTeamId]: enrichedMembers,
+	              }));
+	            }
+          } catch {
+            setDatabaseOwnerTeamMembersById((current) => ({
+              ...current,
+              [normalizedTeamId]: Array.isArray(current[normalizedTeamId]) ? current[normalizedTeamId] : [],
+            }));
+          }
+        }
+
         function getDatabaseTeamPermissionSets(database) {
           const metadata = getDatabaseMetadataRecord(database);
           return metadata.teamPermissionSets && typeof metadata.teamPermissionSets === "object" && !Array.isArray(metadata.teamPermissionSets)
@@ -95285,6 +96249,109 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           }
           return savedDatabase;
         }
+
+	    function openDatabaseOwnerTransferModal(ownerIdentity) {
+	      const target = normalizeDatabaseOwnerIdentity(ownerIdentity);
+	      if (!getDatabaseOwnerIdentityKey(target) || !isCurrentUserDatabaseOwner(draftDatabase)) return;
+	      if (databaseOwnerTransferModalCloseTimerRef.current !== null) {
+	        window.clearTimeout(databaseOwnerTransferModalCloseTimerRef.current);
+	        databaseOwnerTransferModalCloseTimerRef.current = null;
+	      }
+	      if (databaseOwnerTransferModalFrameRef.current !== null) {
+	        window.cancelAnimationFrame(databaseOwnerTransferModalFrameRef.current);
+	        databaseOwnerTransferModalFrameRef.current = null;
+	      }
+	      setDatabaseOwnerPopoverOpen(false);
+	      setDatabaseSaveState((current) => ({ ...current, error: "", message: "" }));
+	      setDatabaseOwnerTransferTarget(target);
+	      setDatabaseOwnerTransferModalClosing(false);
+	      setDatabaseOwnerTransferModalVisible(false);
+	      databaseOwnerTransferModalFrameRef.current = window.requestAnimationFrame(() => {
+	        databaseOwnerTransferModalFrameRef.current = window.requestAnimationFrame(() => {
+	          databaseOwnerTransferModalFrameRef.current = null;
+	          setDatabaseOwnerTransferModalVisible(true);
+	        });
+	      });
+	    }
+
+	    function closeDatabaseOwnerTransferModal(options = {}) {
+	      if (databaseSaveState.isSaving && options.force !== true) return;
+	      if (databaseOwnerTransferModalFrameRef.current !== null) {
+	        window.cancelAnimationFrame(databaseOwnerTransferModalFrameRef.current);
+	        databaseOwnerTransferModalFrameRef.current = null;
+	      }
+	      if (databaseOwnerTransferModalCloseTimerRef.current !== null) {
+	        window.clearTimeout(databaseOwnerTransferModalCloseTimerRef.current);
+	        databaseOwnerTransferModalCloseTimerRef.current = null;
+	      }
+	      if (options.force === true || typeof window === "undefined") {
+	        setDatabaseOwnerTransferModalVisible(false);
+	        setDatabaseOwnerTransferModalClosing(false);
+	        setDatabaseOwnerTransferTarget(null);
+	        return;
+	      }
+	      setDatabaseOwnerTransferModalVisible(false);
+	      setDatabaseOwnerTransferModalClosing(true);
+	      databaseOwnerTransferModalCloseTimerRef.current = window.setTimeout(() => {
+	        databaseOwnerTransferModalCloseTimerRef.current = null;
+	        setDatabaseOwnerTransferModalClosing(false);
+	        setDatabaseOwnerTransferTarget(null);
+	      }, 90);
+	    }
+
+        async function handleDatabaseOwnerSelect(ownerIdentity) {
+          const currentDatabase = normalizePlaygroundDatabaseRecord(draftDatabase);
+          if (!currentDatabase.id || currentDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID || isSelectedDatabaseTemplatePreview) {
+            return;
+          }
+	      if (!isCurrentUserDatabaseOwner(currentDatabase)) {
+	        setDatabaseSaveState({
+	          isSaving: false,
+	          error: "Only the current database owner can transfer ownership.",
+	          message: "",
+	        });
+	        return null;
+	      }
+	      const targetIdentityKey = getDatabaseOwnerIdentityKey(ownerIdentity);
+	      const targetIsAccessibleTeamMember = getDatabaseSharedTeamIds(currentDatabase).some((teamId) => (
+	        (Array.isArray(databaseOwnerTeamMembersById[teamId]) ? databaseOwnerTeamMembersById[teamId] : [])
+	          .filter(isHumanDatabaseOwnerCandidate)
+	          .some((member) => getDatabaseOwnerIdentityKey(member) === targetIdentityKey)
+	      ));
+	      if (!targetIdentityKey || !targetIsAccessibleTeamMember) {
+	        setDatabaseSaveState({
+	          isSaving: false,
+	          error: "The new owner must be a human member of a team with database access.",
+	          message: "",
+	        });
+	        return null;
+	      }
+          const nextDatabase = applyDatabaseOwnerIdentity(currentDatabase, ownerIdentity);
+          setDatabaseOwnerPopoverOpen(false);
+          setDatabaseSaveState({ isSaving: true, error: "", message: "" });
+          setDraftDatabase(nextDatabase);
+          upsertLocalDatabaseRecord(nextDatabase);
+          try {
+            const savedDatabase = await persistDatabaseTeamAccessRecord(nextDatabase);
+            setDatabaseSaveState({ isSaving: false, error: "", message: "Saved" });
+            return savedDatabase;
+          } catch (error) {
+            setDraftDatabase(currentDatabase);
+            upsertLocalDatabaseRecord(currentDatabase);
+            setDatabaseSaveState({
+              isSaving: false,
+              error: error instanceof Error ? error.message : "Failed to update database owner.",
+              message: "",
+            });
+            return null;
+          }
+        }
+
+	    async function handleDatabaseOwnerTransferConfirm() {
+	      if (!databaseOwnerTransferTarget || databaseSaveState.isSaving) return;
+	      const savedDatabase = await handleDatabaseOwnerSelect(databaseOwnerTransferTarget);
+	      if (savedDatabase) closeDatabaseOwnerTransferModal({ force: true });
+	    }
 
         async function findDatabaseTeamResourceShare(teamId, databaseId) {
           const { response, data } = await fetchJsonWithTimeout(
@@ -95815,6 +96882,527 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           }));
         }
 
+        function getServerAccessMetadataRecord(server) {
+          return server?.metadata && typeof server.metadata === "object" && !Array.isArray(server.metadata)
+            ? server.metadata
+            : {};
+        }
+
+        function getServerPermissionSet(server) {
+          return normalizePlaygroundPermissionSet(getServerAccessMetadataRecord(server).permissionSet, "server");
+        }
+
+        function getServerOwnerIdentity(server) {
+          const metadata = getServerAccessMetadataRecord(server);
+          return normalizeDatabaseOwnerIdentity(metadata.owner || server?.owner || null, {
+            id: metadata.ownerId || metadata.owner_id || server?.userId || currentUserId || "",
+            userId: metadata.ownerUserId || metadata.owner_user_id || server?.userId || currentUserId || "",
+            name: metadata.ownerName || metadata.owner_name || currentUserName || "Owner",
+            email: metadata.ownerEmail || metadata.owner_email || currentUserEmail || "",
+            avatarUrl: metadata.ownerAvatarUrl || metadata.owner_avatar_url || currentUserAvatarUrl || "",
+          });
+        }
+
+        function isCurrentUserServerOwner(server) {
+          const ownerKeys = new Set(getDatabaseOwnerIdentityKeys(getServerOwnerIdentity(server)));
+          return getDatabaseOwnerIdentityKeys({
+            id: currentUserId,
+            userId: currentUserId,
+            name: currentUserName,
+            email: currentUserEmail,
+            avatarUrl: currentUserAvatarUrl,
+          }).some((key) => ownerKeys.has(key));
+        }
+
+        function applyServerOwnerIdentity(server, ownerIdentity) {
+          const normalizedServer = normalizePlaygroundServerRecord(server);
+          const owner = normalizeDatabaseOwnerIdentity(ownerIdentity);
+          return normalizePlaygroundServerRecord({
+            ...normalizedServer,
+            metadata: {
+              ...getServerAccessMetadataRecord(normalizedServer),
+              owner,
+              ownerId: owner.id,
+              owner_id: owner.id,
+              ownerUserId: owner.userId,
+              owner_user_id: owner.userId,
+              ownerName: owner.name,
+              owner_name: owner.name,
+              ownerEmail: owner.email,
+              owner_email: owner.email,
+              ownerAvatarUrl: owner.avatarUrl,
+              owner_avatar_url: owner.avatarUrl,
+            },
+          });
+        }
+
+        function getServerSharedTeamIds(server) {
+          const metadata = getServerAccessMetadataRecord(server);
+          const permissionSets = metadata.teamPermissionSets && typeof metadata.teamPermissionSets === "object" && !Array.isArray(metadata.teamPermissionSets)
+            ? metadata.teamPermissionSets
+            : {};
+          const rolePermissionSets = metadata.teamRolePermissionSets && typeof metadata.teamRolePermissionSets === "object" && !Array.isArray(metadata.teamRolePermissionSets)
+            ? metadata.teamRolePermissionSets
+            : {};
+          return Array.from(new Set([
+            ...(Array.isArray(metadata.sharedTeamIds) ? metadata.sharedTeamIds : []),
+            ...(Array.isArray(metadata.teamAccessIds) ? metadata.teamAccessIds : []),
+            ...Object.keys(permissionSets),
+            ...Object.keys(rolePermissionSets),
+          ].map((teamId) => String(teamId || "").trim()).filter(Boolean)));
+        }
+
+        function getServerTeamPermissionSets(server) {
+          const value = getServerAccessMetadataRecord(server).teamPermissionSets;
+          return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+        }
+
+        function getServerTeamPermissionSet(server, teamId) {
+          const normalizedTeamId = String(teamId || "").trim();
+          return normalizePlaygroundPermissionSet(
+            getServerTeamPermissionSets(server)[normalizedTeamId] || createPlaygroundServerTeamRolePermissionSet("member"),
+            "server"
+          );
+        }
+
+        function getServerTeamRolePermissionSetsMap(server) {
+          const value = getServerAccessMetadataRecord(server).teamRolePermissionSets;
+          return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+        }
+
+        function getServerTeamRolePermissionSets(server, teamId) {
+          const normalizedTeamId = String(teamId || "").trim();
+          const configured = getServerTeamRolePermissionSetsMap(server)[normalizedTeamId];
+          const source = configured && typeof configured === "object" && !Array.isArray(configured) ? configured : {};
+          const legacyPermissionSet = getServerTeamPermissionSets(server)[normalizedTeamId];
+          return PLAYGROUND_TEAM_ROLE_DEFINITIONS.reduce((result, role) => {
+            result[role.id] = role.id === "owner"
+              ? createPlaygroundServerTeamRolePermissionSet(role.id)
+              : normalizePlaygroundPermissionSet(
+                  source[role.id] || legacyPermissionSet || createPlaygroundServerTeamRolePermissionSet(role.id),
+                  "server"
+                );
+            return result;
+          }, {});
+        }
+
+        function getServerTeamRolePermissionSet(server, teamId, roleId) {
+          return getServerTeamRolePermissionSets(server, teamId)[normalizePlaygroundTeamRoleId(roleId, "member")];
+        }
+
+        async function flushQueuedServerPermissionSave() {
+          if (serverPermissionSaveInFlightRef.current) return;
+          serverPermissionSaveInFlightRef.current = true;
+          try {
+            while (serverPermissionSaveQueuedRef.current) {
+              const serverToSave = normalizePlaygroundServerRecord(serverPermissionSaveQueuedRef.current);
+              serverPermissionSaveQueuedRef.current = null;
+              setServerSaveState({ isSaving: true, error: "", message: "" });
+              try {
+                const savedServer = await persistServerRecord(serverToSave);
+                if (!savedServer) throw new Error("Server permissions save failed.");
+                upsertLocalServerRecord(savedServer);
+                if (selectedServerIdRef.current === savedServer.id) setDraftServer(savedServer);
+              } catch (error) {
+                setServerSaveState({
+                  isSaving: false,
+                  error: error instanceof Error ? error.message : "Failed to save server permissions.",
+                  message: "",
+                });
+                return;
+              }
+            }
+            setServerSaveState({ isSaving: false, error: "", message: "Saved" });
+          } finally {
+            serverPermissionSaveInFlightRef.current = false;
+          }
+        }
+
+        function queueServerPermissionSave(server) {
+          if (!server?.id || server.id === PLAYGROUND_SERVER_DRAFT_ID || isSelectedServerTemplatePreview) return;
+          serverPermissionSaveQueuedRef.current = normalizePlaygroundServerRecord(server);
+          if (serverPermissionSaveTimerRef.current) window.clearTimeout(serverPermissionSaveTimerRef.current);
+          serverPermissionSaveTimerRef.current = window.setTimeout(() => {
+            serverPermissionSaveTimerRef.current = null;
+            void flushQueuedServerPermissionSave();
+          }, 500);
+        }
+
+        function updateServerPermissionSet(updater) {
+          if (isSelectedServerTemplatePreview) return;
+          const currentServer = normalizePlaygroundServerRecord(draftServer || selectedServerSnapshot || buildPlaygroundDefaultServerDraft());
+          const currentPermissionSet = getServerPermissionSet(currentServer);
+          const nextPermissionSet = normalizePlaygroundPermissionSet(
+            typeof updater === "function" ? updater(currentPermissionSet) : updater,
+            "server"
+          );
+          const nextServer = normalizePlaygroundServerRecord({
+            ...currentServer,
+            metadata: { ...getServerAccessMetadataRecord(currentServer), permissionSet: nextPermissionSet },
+          });
+          updateDraftServer(nextServer);
+          queueServerPermissionSave(nextServer);
+        }
+
+        function updateServerPermissionRingAccess(ringId, access) {
+          const normalizedRingId = normalizePlaygroundPermissionRingId(ringId, "");
+          if (!normalizedRingId) return;
+          updateServerPermissionSet((current) => ({
+            ...current,
+            subjectType: "server",
+            rings: {
+              ...(current.rings || createPlaygroundDefaultPermissionRings()),
+              [normalizedRingId]: {
+                ...(current.rings?.[normalizedRingId] || {}),
+                defaultAccess: normalizePlaygroundPermissionAccess(access),
+              },
+            },
+          }));
+        }
+
+        function updateServerPermissionActionRing(actionId, ringId) {
+          const definition = getPlaygroundPermissionActionDefinition(actionId);
+          if (!definition?.subjectTypes?.includes("server")) return;
+          updateServerPermissionSet((current) => ({
+            ...current,
+            subjectType: "server",
+            actions: {
+              ...(current.actions || createPlaygroundDefaultPermissionActions()),
+              [definition.id]: buildPlaygroundPermissionActionPolicy(
+                current,
+                definition,
+                current.actions?.[definition.id] || { ringId: definition.ringId },
+                getPlaygroundPermissionActionExplicitAccess(current, definition),
+                normalizePlaygroundPermissionRingId(ringId, definition.ringId)
+              ),
+            },
+          }));
+        }
+
+        function updateServerPermissionActionAccess(actionId, access) {
+          const definition = getPlaygroundPermissionActionDefinition(actionId);
+          if (!definition?.subjectTypes?.includes("server")) return;
+          updateServerPermissionSet((current) => ({
+            ...current,
+            subjectType: "server",
+            actions: {
+              ...(current.actions || createPlaygroundDefaultPermissionActions()),
+              [definition.id]: buildPlaygroundPermissionActionPolicy(
+                current,
+                definition,
+                current.actions?.[definition.id] || { ringId: definition.ringId },
+                String(access || "").trim() ? normalizePlaygroundPermissionAccess(access) : ""
+              ),
+            },
+          }));
+        }
+
+        function updateServerTeamRolePermissionSet(teamId, roleId, updater) {
+          const normalizedTeamId = String(teamId || "").trim();
+          const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
+          if (!normalizedTeamId || normalizedRoleId === "owner" || isSelectedServerTemplatePreview) return;
+          const currentServer = normalizePlaygroundServerRecord(draftServer || selectedServerSnapshot || buildPlaygroundDefaultServerDraft());
+          const roleSetsMap = getServerTeamRolePermissionSetsMap(currentServer);
+          const teamRoleSets = getServerTeamRolePermissionSets(currentServer, normalizedTeamId);
+          const currentPermissionSet = getServerTeamRolePermissionSet(currentServer, normalizedTeamId, normalizedRoleId);
+          const nextPermissionSet = normalizePlaygroundPermissionSet(
+            typeof updater === "function" ? updater(currentPermissionSet) : updater,
+            "server"
+          );
+          const nextServer = normalizePlaygroundServerRecord({
+            ...currentServer,
+            metadata: {
+              ...getServerAccessMetadataRecord(currentServer),
+              teamRolePermissionSets: {
+                ...roleSetsMap,
+                [normalizedTeamId]: { ...teamRoleSets, [normalizedRoleId]: nextPermissionSet },
+              },
+            },
+          });
+          updateDraftServer(nextServer);
+          queueServerPermissionSave(nextServer);
+        }
+
+        function updateServerTeamRolePermissionRingAccess(teamId, roleId, ringId, access) {
+          const normalizedRingId = normalizePlaygroundPermissionRingId(ringId, "");
+          if (!normalizedRingId) return;
+          updateServerTeamRolePermissionSet(teamId, roleId, (current) => ({
+            ...current,
+            subjectType: "server",
+            rings: {
+              ...(current.rings || createPlaygroundDefaultPermissionRings()),
+              [normalizedRingId]: {
+                ...(current.rings?.[normalizedRingId] || {}),
+                defaultAccess: normalizePlaygroundPermissionAccess(access),
+              },
+            },
+          }));
+        }
+
+        function updateServerTeamRolePermissionActionRing(teamId, roleId, actionId, ringId) {
+          const definition = getPlaygroundPermissionActionDefinition(actionId);
+          if (!definition?.subjectTypes?.includes("server")) return;
+          updateServerTeamRolePermissionSet(teamId, roleId, (current) => ({
+            ...current,
+            subjectType: "server",
+            actions: {
+              ...(current.actions || createPlaygroundDefaultPermissionActions()),
+              [definition.id]: buildPlaygroundPermissionActionPolicy(
+                current,
+                definition,
+                current.actions?.[definition.id] || { ringId: definition.ringId },
+                getPlaygroundPermissionActionExplicitAccess(current, definition),
+                normalizePlaygroundPermissionRingId(ringId, definition.ringId)
+              ),
+            },
+          }));
+        }
+
+        function updateServerTeamRolePermissionActionAccess(teamId, roleId, actionId, access) {
+          const definition = getPlaygroundPermissionActionDefinition(actionId);
+          if (!definition?.subjectTypes?.includes("server")) return;
+          updateServerTeamRolePermissionSet(teamId, roleId, (current) => ({
+            ...current,
+            subjectType: "server",
+            actions: {
+              ...(current.actions || createPlaygroundDefaultPermissionActions()),
+              [definition.id]: buildPlaygroundPermissionActionPolicy(
+                current,
+                definition,
+                current.actions?.[definition.id] || { ringId: definition.ringId },
+                String(access || "").trim() ? normalizePlaygroundPermissionAccess(access) : ""
+              ),
+            },
+          }));
+        }
+
+        function buildServerTeamAccessRecord(server, teamId, shouldInclude) {
+          const normalizedServer = normalizePlaygroundServerRecord(server);
+          const normalizedTeamId = String(teamId || "").trim();
+          const metadata = getServerAccessMetadataRecord(normalizedServer);
+          const permissionSets = { ...getServerTeamPermissionSets(normalizedServer) };
+          const rolePermissionSets = { ...getServerTeamRolePermissionSetsMap(normalizedServer) };
+          const teamIds = getServerSharedTeamIds(normalizedServer).filter((id) => id !== normalizedTeamId);
+          if (shouldInclude) {
+            teamIds.push(normalizedTeamId);
+            permissionSets[normalizedTeamId] = getServerTeamPermissionSet(normalizedServer, normalizedTeamId);
+            rolePermissionSets[normalizedTeamId] = getServerTeamRolePermissionSets(normalizedServer, normalizedTeamId);
+          } else {
+            delete permissionSets[normalizedTeamId];
+            delete rolePermissionSets[normalizedTeamId];
+          }
+          const uniqueTeamIds = Array.from(new Set(teamIds.filter(Boolean)));
+          return normalizePlaygroundServerRecord({
+            ...normalizedServer,
+            metadata: {
+              ...metadata,
+              sharedTeamIds: uniqueTeamIds,
+              teamAccessIds: uniqueTeamIds,
+              teamPermissionSets: permissionSets,
+              teamRolePermissionSets: rolePermissionSets,
+            },
+          });
+        }
+
+        async function persistServerTeamAccessRecord(server) {
+          const savedServer = await persistServerRecord(server);
+          if (!savedServer) throw new Error("Failed to save team access.");
+          upsertLocalServerRecord(savedServer);
+          if (selectedServerIdRef.current === savedServer.id) setDraftServer(savedServer);
+          return savedServer;
+        }
+
+        async function findServerTeamResourceShare(teamId, serverId) {
+          const { response, data } = await fetchJsonWithTimeout(
+            backendUrl + "/teams/" + encodeURIComponent(teamId) + "/resource-shares",
+            { method: "GET", credentials: "include", cache: "no-store", headers: requestHeaders },
+            8000
+          );
+          if (!response.ok) throw new Error(data?.message || data?.error || "Failed to load team access.");
+          const shares = Array.isArray(data?.data) ? data.data : Array.isArray(data?.shares) ? data.shares : [];
+          return shares.find((share) =>
+            String(share?.resourceType || share?.resource_type || "") === "server"
+            && String(share?.resourceId || share?.resource_id || "") === String(serverId || "")
+          ) || null;
+        }
+
+        async function upsertServerTeamResourceShare(team, server) {
+          const teamId = String(team?.id || "").trim();
+          const normalizedServer = normalizePlaygroundServerRecord(server);
+          if (!teamId || !normalizedServer.id || normalizedServer.id === PLAYGROUND_SERVER_DRAFT_ID) {
+            throw new Error("A saved resource and team are required to add access.");
+          }
+          const { response, data } = await fetchJsonWithTimeout(
+            backendUrl + "/teams/" + encodeURIComponent(teamId) + "/resource-shares",
+            {
+              method: "POST",
+              credentials: "include",
+              cache: "no-store",
+              headers: { ...requestHeaders, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                resourceType: "server",
+                resourceId: normalizedServer.id,
+                accessLevel: "manage",
+                metadata: {
+                  resourceType: "server",
+                  resourceKind: canonicalizePlaygroundServerKind(normalizedServer.kind),
+                  resourceName: normalizedServer.name || "Resource",
+                  sharedTeamId: teamId,
+                  sharedTeamName: String(team?.name || "").trim(),
+                  permissionSet: getServerTeamPermissionSet(normalizedServer, teamId),
+                  rolePermissionSets: getServerTeamRolePermissionSets(normalizedServer, teamId),
+                },
+              }),
+            },
+            8000
+          );
+          if (!response.ok) throw new Error(data?.message || data?.error || "Failed to share resource with team.");
+          return data?.data || data?.share || null;
+        }
+
+        async function handleAddServerTeamAccess(team) {
+          const teamId = String(team?.id || "").trim();
+          const currentServer = normalizePlaygroundServerRecord(draftServer);
+          if (!teamId || !currentServer.id || getServerSharedTeamIds(currentServer).includes(teamId)) return;
+          const nextServer = buildServerTeamAccessRecord(currentServer, teamId, true);
+          setServerTeamAccessState({ teamId, action: "adding", error: "" });
+          setDraftServer(nextServer);
+          try {
+            await upsertServerTeamResourceShare(team, nextServer);
+            await persistServerTeamAccessRecord(nextServer);
+            setServerTeamMenuId("");
+          } catch (error) {
+            setDraftServer(currentServer);
+            setServerTeamAccessState({ teamId: "", action: "", error: error instanceof Error ? error.message : "Failed to add team access." });
+            return;
+          }
+          setServerTeamAccessState({ teamId: "", action: "", error: "" });
+        }
+
+        async function handleRemoveServerTeamAccess(team) {
+          const teamId = String(team?.id || "").trim();
+          const currentServer = normalizePlaygroundServerRecord(draftServer);
+          if (!teamId || !currentServer.id || !getServerSharedTeamIds(currentServer).includes(teamId)) return;
+          const nextServer = buildServerTeamAccessRecord(currentServer, teamId, false);
+          setServerTeamAccessState({ teamId, action: "removing", error: "" });
+          try {
+            const share = await findServerTeamResourceShare(teamId, currentServer.id);
+            if (share?.id) {
+              const { response, data } = await fetchJsonWithTimeout(
+                backendUrl + "/teams/" + encodeURIComponent(teamId) + "/resource-shares/" + encodeURIComponent(share.id),
+                { method: "DELETE", credentials: "include", cache: "no-store", headers: requestHeaders },
+                8000
+              );
+              if (!response.ok) throw new Error(data?.message || data?.error || "Failed to remove team access.");
+            }
+            await persistServerTeamAccessRecord(nextServer);
+            setSelectedServerAccessTeamIds((current) => {
+              const next = new Set(current);
+              next.delete(teamId);
+              return next;
+            });
+            if (serverPermissionTeamId === teamId) setServerPermissionTeamId("");
+          } catch (error) {
+            setServerTeamAccessState({ teamId: "", action: "", error: error instanceof Error ? error.message : "Failed to remove team access." });
+            return;
+          }
+          setServerTeamAccessState({ teamId: "", action: "", error: "" });
+        }
+
+        async function handleRemoveServerTeamsAccess(teams) {
+          const requestedTeams = (Array.isArray(teams) ? teams : [teams])
+            .filter((team) => team?.id && String(team.id) !== "all-agents");
+          if (!requestedTeams.length) return;
+          const currentServer = normalizePlaygroundServerRecord(draftServer);
+          let nextServer = currentServer;
+          requestedTeams.forEach((team) => {
+            nextServer = buildServerTeamAccessRecord(nextServer, team.id, false);
+          });
+          setServerTeamAccessState({ teamId: "", action: "removing", error: "" });
+          try {
+            await Promise.all(requestedTeams.map(async (team) => {
+              const share = await findServerTeamResourceShare(team.id, currentServer.id);
+              if (!share?.id) return;
+              const { response, data } = await fetchJsonWithTimeout(
+                backendUrl + "/teams/" + encodeURIComponent(team.id) + "/resource-shares/" + encodeURIComponent(share.id),
+                { method: "DELETE", credentials: "include", cache: "no-store", headers: requestHeaders },
+                8000
+              );
+              if (!response.ok) throw new Error(data?.message || data?.error || "Failed to remove team access.");
+            }));
+            await persistServerTeamAccessRecord(nextServer);
+            setSelectedServerAccessTeamIds(new Set());
+            if (requestedTeams.some((team) => String(team.id) === String(serverPermissionTeamId))) {
+              setServerPermissionTeamId("");
+            }
+          } catch (error) {
+            setServerTeamAccessState({ teamId: "", action: "", error: error instanceof Error ? error.message : "Failed to remove team access." });
+            return;
+          }
+          setServerTeamAccessState({ teamId: "", action: "", error: "" });
+        }
+
+        function openServerOwnerTransferModal(ownerIdentity) {
+          const target = normalizeDatabaseOwnerIdentity(ownerIdentity);
+          if (!getDatabaseOwnerIdentityKey(target) || !isCurrentUserServerOwner(draftServer)) return;
+          if (serverOwnerTransferModalCloseTimerRef.current !== null) {
+            window.clearTimeout(serverOwnerTransferModalCloseTimerRef.current);
+            serverOwnerTransferModalCloseTimerRef.current = null;
+          }
+          setServerOwnerPopoverOpen(false);
+          setServerOwnerTransferModalClosing(false);
+          setServerOwnerTransferTarget(target);
+        }
+
+        function closeServerOwnerTransferModal(options = {}) {
+          if (!serverOwnerTransferTarget) return;
+          if (serverOwnerTransferModalCloseTimerRef.current !== null) {
+            window.clearTimeout(serverOwnerTransferModalCloseTimerRef.current);
+            serverOwnerTransferModalCloseTimerRef.current = null;
+          }
+          if (options.animate === false || typeof window === "undefined") {
+            setServerOwnerTransferModalClosing(false);
+            setServerOwnerTransferTarget(null);
+            return;
+          }
+          setServerOwnerTransferModalClosing(true);
+          serverOwnerTransferModalCloseTimerRef.current = window.setTimeout(() => {
+            serverOwnerTransferModalCloseTimerRef.current = null;
+            setServerOwnerTransferModalClosing(false);
+            setServerOwnerTransferTarget(null);
+          }, 90);
+        }
+
+        async function handleServerOwnerTransferConfirm() {
+          if (!serverOwnerTransferTarget || serverSaveState.isSaving) return;
+          const currentServer = normalizePlaygroundServerRecord(draftServer);
+          if (!isCurrentUserServerOwner(currentServer)) {
+            setServerSaveState({ isSaving: false, error: "Only the current owner can transfer ownership.", message: "" });
+            return;
+          }
+          const targetKey = getDatabaseOwnerIdentityKey(serverOwnerTransferTarget);
+          const targetHasAccess = getServerSharedTeamIds(currentServer).some((teamId) => (
+            (Array.isArray(databaseOwnerTeamMembersById[teamId]) ? databaseOwnerTeamMembersById[teamId] : [])
+              .filter(isHumanDatabaseOwnerCandidate)
+              .some((member) => getDatabaseOwnerIdentityKey(member) === targetKey)
+          ));
+          if (!targetHasAccess) {
+            setServerSaveState({ isSaving: false, error: "The new owner must be a human member of a team with access.", message: "" });
+            return;
+          }
+          const nextServer = applyServerOwnerIdentity(currentServer, serverOwnerTransferTarget);
+          setServerSaveState({ isSaving: true, error: "", message: "" });
+          setDraftServer(nextServer);
+          try {
+            await persistServerTeamAccessRecord(nextServer);
+            setServerSaveState({ isSaving: false, error: "", message: "Saved" });
+            closeServerOwnerTransferModal({ animate: false });
+          } catch (error) {
+            setDraftServer(currentServer);
+            setServerSaveState({ isSaving: false, error: error instanceof Error ? error.message : "Failed to transfer ownership.", message: "" });
+          }
+        }
+
         function updateServerAgentRuntimeField(field, value) {
           updateDraftServer((current) => {
             const normalized = normalizePlaygroundServerRecord(current || buildPlaygroundDefaultServerDraft());
@@ -95942,8 +97530,21 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           applyServerAgentRuntimeRunPromptSelection(edit.value, edit.selectionStart, edit.selectionEnd);
         }
 
-        function applyServerDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
-          updateServerField("description", nextValue);
+        function updateServerDescriptionValue(nextValue, { recordHistory = true } = {}) {
+          const normalizedNextValue = String(nextValue ?? "");
+          const previousValue = String(draftServer?.description || "");
+          if (normalizedNextValue === previousValue) return;
+          if (recordHistory) {
+            setServerDescriptionHistory((current) => ({
+              past: [...(Array.isArray(current.past) ? current.past : []), previousValue].slice(-80),
+              future: [],
+            }));
+          }
+          updateServerField("description", normalizedNextValue);
+        }
+
+        function applyServerDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart, options = {}) {
+          updateServerDescriptionValue(nextValue, options);
           window.requestAnimationFrame(() => {
             const textarea = serverDescriptionTextareaRef.current;
             if (!textarea) {
@@ -95956,6 +97557,30 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
             resizeEnvironmentDescriptionTextarea(textarea);
           });
+        }
+
+        function handleServerDescriptionUndo() {
+          const historyPast = Array.isArray(serverDescriptionHistory.past) ? serverDescriptionHistory.past : [];
+          if (!historyPast.length || isSelectedServerTemplatePreview) return;
+          const currentValue = String(draftServer?.description || "");
+          const previousValue = historyPast[historyPast.length - 1];
+          setServerDescriptionHistory((current) => ({
+            past: (Array.isArray(current.past) ? current.past : []).slice(0, -1),
+            future: [currentValue, ...(Array.isArray(current.future) ? current.future : [])].slice(0, 80),
+          }));
+          applyServerDescriptionSelection(previousValue, previousValue.length, previousValue.length, { recordHistory: false });
+        }
+
+        function handleServerDescriptionRedo() {
+          const historyFuture = Array.isArray(serverDescriptionHistory.future) ? serverDescriptionHistory.future : [];
+          if (!historyFuture.length || isSelectedServerTemplatePreview) return;
+          const currentValue = String(draftServer?.description || "");
+          const nextValue = historyFuture[0];
+          setServerDescriptionHistory((current) => ({
+            past: [...(Array.isArray(current.past) ? current.past : []), currentValue].slice(-80),
+            future: (Array.isArray(current.future) ? current.future : []).slice(1),
+          }));
+          applyServerDescriptionSelection(nextValue, nextValue.length, nextValue.length, { recordHistory: false });
         }
 
         function handleServerDescriptionFormat(formatType) {
@@ -95976,6 +97601,12 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "++");
           } else if (formatType === "list") {
             edit = buildEnvironmentDescriptionListEdit(value, selectionStart, selectionEnd);
+          } else if (formatType === "ordered-list") {
+            edit = buildEnvironmentDescriptionOrderedListEdit(value, selectionStart, selectionEnd);
+          } else if (formatType === "code") {
+            edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, String.fromCharCode(96));
+          } else if (formatType === "link") {
+            edit = buildEnvironmentDescriptionLinkEdit(value, selectionStart, selectionEnd);
           }
 
           if (!edit) {
@@ -97549,7 +99180,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               message: "",
             });
             void loadDatabaseCollections(savedDatabase.id, { force: true });
-            void loadDatabaseAnalytics(savedDatabase.id, { force: true });
+	          void loadDatabaseAnalytics(savedDatabase.id, { force: true, period: databaseDetailChartTimescale });
           } catch (error) {
             setDatabaseSaveState({
               isSaving: false,
@@ -97637,7 +99268,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               message: "",
             });
             closeDatabaseRenameDialog();
-            void loadDatabaseAnalytics(savedDatabase.id, { force: true });
+	          void loadDatabaseAnalytics(savedDatabase.id, { force: true, period: databaseDetailChartTimescale });
           } catch (error) {
             setDatabaseRenameError(error instanceof Error ? error.message : "Failed to rename database.");
             setDatabaseSaveState({
@@ -98191,7 +99822,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               throw new Error(data?.message || data?.error || "Failed to create collection.");
             }
             const collections = await loadDatabaseCollections(draftDatabase.id, { force: true });
-            void loadDatabaseAnalytics(draftDatabase.id, { force: true });
+	          void loadDatabaseAnalytics(draftDatabase.id, { force: true, period: databaseDetailChartTimescale });
             const createdCollectionId = data?.collection?.id || collections[0]?.id || "";
             if (createdCollectionId) {
               setSelectedDatabaseCollectionId(createdCollectionId);
@@ -98237,7 +99868,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               throw new Error(data?.message || data?.error || "Failed to delete collection.");
             }
             await loadDatabaseCollections(draftDatabase.id, { force: true });
-            void loadDatabaseAnalytics(draftDatabase.id, { force: true });
+	          void loadDatabaseAnalytics(draftDatabase.id, { force: true, period: databaseDetailChartTimescale });
             setSelectedDatabaseCollectionId("");
             setSelectedDatabaseDocumentId("");
           } catch (error) {
@@ -98313,7 +99944,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
             await loadDatabaseCollections(draftDatabase.id, { force: true });
             await loadDatabaseDocuments(draftDatabase.id, selectedDatabaseCollectionId, { force: true });
-            void loadDatabaseAnalytics(draftDatabase.id, { force: true });
+	          void loadDatabaseAnalytics(draftDatabase.id, { force: true, period: databaseDetailChartTimescale });
             closeDatabaseDocumentComposer();
             setSelectedDatabaseDocumentId(documentId);
             setDatabaseDocumentEditorState({
@@ -98599,7 +100230,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
             await loadDatabaseCollections(draftDatabase.id, { force: true });
             await loadDatabaseDocuments(draftDatabase.id, selectedDatabaseCollectionId, { force: true });
-            void loadDatabaseAnalytics(draftDatabase.id, { force: true });
+	          void loadDatabaseAnalytics(draftDatabase.id, { force: true, period: databaseDetailChartTimescale });
             const nextValue = formatPlaygroundDatabaseDocumentJson(parsedData);
             setDatabaseDocumentEditorState((current) => ({
               ...current,
@@ -98696,7 +100327,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
             await loadDatabaseCollections(draftDatabase.id, { force: true });
             await loadDatabaseDocuments(draftDatabase.id, selectedDatabaseCollectionId, { force: true });
-            void loadDatabaseAnalytics(draftDatabase.id, { force: true });
+	          void loadDatabaseAnalytics(draftDatabase.id, { force: true, period: databaseDetailChartTimescale });
             if (databaseDocumentEditorState.documentId === documentId) {
               setSelectedDatabaseDocumentId("");
               setDatabaseDocumentEditorState({
@@ -105510,8 +107141,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           const isSecretsServer = normalizedServerKind === "secrets";
           const isPaymentsServer = normalizedServerKind === "payments";
           const isServerTemplatePreview = isSelectedServerTemplatePreview || isPlaygroundResourceTemplatePreviewRecord(draftServer);
-	          const isTitlelessServerDescription = isSourceDeployableServer || isAuthServer || isSecretsServer || isPaymentsServer;
-          const shouldRenderTitlelessServerDescription = isTitlelessServerDescription && !isFunctionServer;
           const ServerPreviewEditorComponent = serverPreviewEditorModule?.default || null;
           const renderServerFactRow = (label, control) => React.createElement("div", { className: "playground-tasks-detail-fact", key: label },
             React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
@@ -105586,27 +107215,38 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               return formatter.format(date);
             });
           };
-          const activeServerAnalytics = draftServer.id ? serverAnalyticsById[draftServer.id] || null : null;
+          const normalizedServerDetailChartTimescale = normalizePlaygroundEnvironmentHomeChartPeriod(serverDetailChartTimescale);
+          const activeServerAnalyticsStateKey = buildPlaygroundServerAnalyticsStateKey(
+            draftServer.id,
+            normalizedServerDetailChartTimescale
+          );
+          const activeServerAnalytics = activeServerAnalyticsStateKey
+            ? serverAnalyticsById[activeServerAnalyticsStateKey] || null
+            : null;
           const activeServerAnalyticsSummary = activeServerAnalytics?.summary || null;
           const resolvedServerAnalyticsSummary = activeServerAnalyticsSummary || {
+            totalRequests: 0,
+            successRate: 0,
+            clientErrors: 0,
+            serverErrors: 0,
             totalRequests24h: 0,
             successRate24h: 0,
             p95LatencyMs: 0,
             clientErrors24h: 0,
             serverErrors24h: 0,
           };
-          const activeServerTrafficBuckets = Array.isArray(activeServerAnalytics?.charts?.traffic24h)
-            ? activeServerAnalytics.charts.traffic24h
+          const activeServerTrafficBuckets = Array.isArray(activeServerAnalytics?.charts?.traffic)
+            ? activeServerAnalytics.charts.traffic
             : [];
-          const activeServerStatusBuckets = Array.isArray(activeServerAnalytics?.charts?.status24h)
-            ? activeServerAnalytics.charts.status24h
+          const activeServerStatusBuckets = Array.isArray(activeServerAnalytics?.charts?.status)
+            ? activeServerAnalytics.charts.status
             : [];
           const zeroTelemetryLabels = buildZeroTelemetryHourLabels(8);
           const activeServerRecentRequests = Array.isArray(activeServerAnalytics?.recentRequests)
             ? activeServerAnalytics.recentRequests
             : [];
           const activeServerDeploymentRecord = activeServerAnalytics?.deployment || draftServer?.metadata?.lastDeployment || null;
-          const isServerAnalyticsLoading = loadingServerAnalyticsId === draftServer.id;
+          const isServerAnalyticsLoading = loadingServerAnalyticsId === activeServerAnalyticsStateKey;
           const activeServerLogs = currentServerLogs || {};
           const activeServerLogList = Array.isArray(activeServerLogs[serverLogsState.kind]) ? activeServerLogs[serverLogsState.kind] : [];
           const activeServerLogLoadingKey = draftServer.id ? draftServer.id + ":" + serverLogsState.kind : "";
@@ -105638,30 +107278,17 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           const activeServerStatusErrors = activeServerStatusBuckets.length > 0
             ? activeServerStatusBuckets.map((bucket) => Number(bucket?.clientErrors || 0) + Number(bucket?.serverErrors || 0))
             : zeroTelemetryLabels.map(() => 0);
-          const normalizedServerDetailChartTimescale = normalizePlaygroundEnvironmentHomeChartPeriod(serverDetailChartTimescale);
           const serverDetailActivityBuckets = buildPlaygroundEnvironmentHomeActivityBuckets(normalizedServerDetailChartTimescale);
           const readServerDetailRequestTimestampMs = (entry) => {
             const timestamp = Date.parse(String(entry?.timestamp || entry?.createdAt || entry?.updatedAt || ""));
             return Number.isFinite(timestamp) ? timestamp : null;
           };
-          const shouldUseServerDetailRequestBuckets = normalizedServerDetailChartTimescale !== "day" || activeServerRecentRequests.length > 0;
-          const resolvedServerDetailTrafficBuckets = shouldUseServerDetailRequestBuckets
-            ? serverDetailActivityBuckets.map((bucket) => ({
+          const resolvedServerDetailTrafficBuckets = activeServerTrafficBuckets.length > 0
+            ? activeServerTrafficBuckets
+            : serverDetailActivityBuckets.map((bucket) => ({
                 ...bucket,
-                total: activeServerRecentRequests.reduce((sum, entry) => {
-                  const timestampMs = readServerDetailRequestTimestampMs(entry);
-                  if (!Number.isFinite(timestampMs) || timestampMs < bucket.startMs || timestampMs >= bucket.endMs) {
-                    return sum;
-                  }
-                  return sum + 1;
-                }, 0),
-              }))
-            : activeServerTrafficBuckets.length > 0
-              ? activeServerTrafficBuckets
-              : serverDetailActivityBuckets.map((bucket) => ({
-                  ...bucket,
-                  total: 0,
-                }));
+                total: 0,
+              }));
           const serverDetailTrafficLabels = resolvedServerDetailTrafficBuckets.map((bucket) => bucket?.label || "");
           const serverDetailTrafficCounts = resolvedServerDetailTrafficBuckets.map((bucket) => Number(bucket?.total || 0));
           const readServerMetricNumber = (...values) => {
@@ -105744,11 +107371,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           };
           const serverDetailKpis = isSourceDeployableServer
             ? [
-                { id: "invocations", value: String(resolvedServerAnalyticsSummary.totalRequests24h || 0), label: "Invocations", Icon: Globe },
+                { id: "invocations", value: String(resolvedServerAnalyticsSummary.totalRequests ?? resolvedServerAnalyticsSummary.totalRequests24h ?? 0), label: isFunctionServer ? "Invocations" : "Requests", Icon: Globe },
                 { id: "memory", value: formatFunctionMemory(functionMemoryMb), label: "Memory", Icon: HardDrive },
                 { id: "cpu-time", value: formatPlaygroundServerLatency(functionCpuTimeMs), label: "CPU time", Icon: Cpu },
                 { id: "execution-time", value: formatPlaygroundServerLatency(resolvedServerAnalyticsSummary.p95LatencyMs), label: "Execution time", Icon: Clock },
-                { id: "errors", value: String(Number(resolvedServerAnalyticsSummary.clientErrors24h || 0) + Number(resolvedServerAnalyticsSummary.serverErrors24h || 0)), label: "Errors", Icon: X },
+                { id: "errors", value: String(Number(resolvedServerAnalyticsSummary.clientErrors ?? resolvedServerAnalyticsSummary.clientErrors24h ?? 0) + Number(resolvedServerAnalyticsSummary.serverErrors ?? resolvedServerAnalyticsSummary.serverErrors24h ?? 0)), label: "Errors", Icon: X },
               ]
             : [
                 { id: "requests", value: String(resolvedServerAnalyticsSummary.totalRequests24h || 0), label: "Requests (24h)", Icon: Globe },
@@ -105756,19 +107383,26 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 { id: "latency", value: formatPlaygroundServerLatency(resolvedServerAnalyticsSummary.p95LatencyMs), label: "P95 Latency", Icon: Clock },
                 { id: "errors", value: String(Number(resolvedServerAnalyticsSummary.clientErrors24h || 0) + Number(resolvedServerAnalyticsSummary.serverErrors24h || 0)), label: "4xx / 5xx", Icon: X },
               ];
-          const renderServerDetailTimescaleControl = () => React.createElement("div", { className: "playground-environments-home-comparison-timescale" },
-            React.createElement("select", {
-              className: "playground-environments-home-comparison-timescale-select",
-              value: normalizedServerDetailChartTimescale,
-              onChange: (event) => setServerDetailChartTimescale(String(event.target.value || "day")),
-              "aria-label": "Server detail chart timescale",
+          const renderServerDetailTimescaleControl = () => React.createElement("div", {
+              className: "playground-project-overview-progress-combo-ranges playground-database-detail-usage-ranges",
+              role: "group",
+              "aria-label": formatPlaygroundServerKindLabel(draftServer.kind) + " analytics time frame",
             },
-              React.createElement("option", { value: "day" }, "Daily"),
-              React.createElement("option", { value: "week" }, "Weekly"),
-              React.createElement("option", { value: "month" }, "Monthly")
+            [
+              { id: "day", label: "1D" },
+              { id: "week", label: "1W" },
+              { id: "month", label: "1M" },
+            ].map((option) => React.createElement("button", {
+                key: option.id,
+                type: "button",
+                className: "playground-project-overview-progress-combo-range"
+                  + (normalizedServerDetailChartTimescale === option.id ? " is-active" : ""),
+                onClick: () => setServerDetailChartTimescale(option.id),
+                "aria-pressed": normalizedServerDetailChartTimescale === option.id ? "true" : "false",
+              }, option.label)
             )
           );
-          const renderServerDetailRequestChart = () => renderHomeStackedUsageChartShared({
+          const renderServerDetailRequestChart = () => React.createElement(PlaygroundResourceOperationsChart, {
             ariaLabel: isSourceDeployableServer ? (isFunctionServer ? "Function invocations" : "Web app invocations") : "Server requests",
             labels: serverDetailTrafficLabels,
             series: [
@@ -105782,35 +107416,23 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             emptyText: isServerAnalyticsLoading
               ? (isSourceDeployableServer ? "Loading invocation data..." : "Loading request data...")
               : (isSourceDeployableServer ? "No invocation data yet" : "No request data yet"),
-            emptyContent: isServerAnalyticsLoading || !isSourceDeployableServer
-              ? null
-              : isFunctionServer
-                ? renderPlaygroundConfigureUsageEmptyState(
-                    "no-chats-yet.avif",
-                    "No invocations yet",
-                    "Invocations will appear here once this function receives live requests."
-                  )
-                : renderPlaygroundConfigureUsageEmptyState(
-                    "no-skills-usage.avif",
-                    "No web app traffic yet",
-                    "Traffic appears here once visitors open the deployed web app."
-                  ),
-            title: isSourceDeployableServer ? (isFunctionServer ? "Function Invocations" : "Web App Invocations") : "Server Requests",
-            tickFormatter: (value) => String(Math.round(Number(value) || 0)),
+            loadingLabel: isSourceDeployableServer ? "Loading invocation data" : "Loading request data",
             isLoading: isServerAnalyticsLoading && !activeServerAnalytics,
-            showLegend: false,
-            timescaleControl: renderServerDetailTimescaleControl(),
           });
           const renderServerDetailChartKpis = (items) => React.createElement("div", {
-              className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis playground-server-detail-chart-kpis",
-              style: { gridTemplateColumns: "repeat(" + Math.max(1, (Array.isArray(items) ? items.length : 0) || 4) + ", minmax(0, 1fr))" },
+              className: "playground-project-overview-progress-combo-metrics playground-server-detail-chart-kpis",
             },
-            (Array.isArray(items) ? items : []).map((item) =>
-              React.createElement("div", { key: item.id, className: "playground-project-overview-summary-kpi" },
-                React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
-                  React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, item.label)
+            (Array.isArray(items) ? items : []).map((item, index) =>
+              React.createElement("div", { key: item.id, className: "playground-project-overview-progress-combo-metric" },
+                React.createElement("div", { className: "playground-project-overview-progress-combo-metric-label" },
+                  React.createElement("span", {
+                    className: "playground-project-overview-progress-combo-metric-dot is-" + item.id,
+                    style: { background: ["#7effff", "rgb(143,196,255)", "rgb(103,80,255)", "#f7b955", "#f53b3a"][index % 5] },
+                    "aria-hidden": "true",
+                  }),
+                  React.createElement("span", null, item.label)
                 ),
-                React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, item.value)
+                React.createElement("div", { className: "playground-project-overview-progress-combo-metric-value" }, item.value)
               )
             )
           );
@@ -106434,40 +108056,41 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   )
           );
 
+          const canUndoServerDescription = Array.isArray(serverDescriptionHistory.past) && serverDescriptionHistory.past.length > 0;
+          const canRedoServerDescription = Array.isArray(serverDescriptionHistory.future) && serverDescriptionHistory.future.length > 0;
+          const renderServerDescriptionToolbarButton = (action) => React.createElement("button", {
+              key: action.id,
+              type: "button",
+              className: "playground-tasks-detail-format-button",
+              title: action.label,
+              "aria-label": action.label,
+              disabled: isServerTemplatePreview || Boolean(action.disabled),
+              onMouseDown: (event) => event.preventDefault(),
+              onClick: action.onClick || (() => handleServerDescriptionFormat(action.id)),
+            }, React.createElement(action.icon, {
+              width: 14,
+              height: 14,
+              strokeWidth: action.strokeWidth || 1.8,
+            }));
           const serverDescriptionFormatActions = React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+            renderServerDescriptionToolbarButton({ id: "undo", label: "Undo", icon: Undo2, disabled: !canUndoServerDescription, onClick: handleServerDescriptionUndo }),
+            renderServerDescriptionToolbarButton({ id: "redo", label: "Redo", icon: Redo2, disabled: !canRedoServerDescription, onClick: handleServerDescriptionRedo }),
+            React.createElement("span", { className: "playground-agents-detail-instructions-toolbar-divider", "aria-hidden": "true" }),
             [
-              {
-                id: "bold",
-                label: "Bold",
-                icon: Bold,
-              },
-              {
-                id: "italic",
-                label: "Italic",
-                icon: Italic,
-              },
-              {
-                id: "underline",
-                label: "Underline",
-                icon: Underline,
-              },
-              {
-                id: "list",
-                label: "List",
-                icon: List,
-              },
-            ].map((action) =>
-              React.createElement("button", {
-                key: action.id,
-                type: "button",
-                className: "playground-tasks-detail-format-button",
-                title: action.label,
-                "aria-label": action.label,
-                disabled: isServerTemplatePreview,
-                onMouseDown: (event) => event.preventDefault(),
-                onClick: () => handleServerDescriptionFormat(action.id),
-              }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
-            )
+              { id: "bold", label: "Bold", icon: Bold, strokeWidth: 2.7 },
+              { id: "italic", label: "Italic", icon: Italic },
+              { id: "underline", label: "Underline", icon: Underline },
+            ].map(renderServerDescriptionToolbarButton),
+            React.createElement("span", { className: "playground-agents-detail-instructions-toolbar-divider", "aria-hidden": "true" }),
+            [
+              { id: "list", label: "List", icon: List },
+              { id: "ordered-list", label: "Ordered list", icon: ListOrdered },
+            ].map(renderServerDescriptionToolbarButton),
+            React.createElement("span", { className: "playground-agents-detail-instructions-toolbar-divider", "aria-hidden": "true" }),
+            [
+              { id: "code", label: "Code", icon: CodeXml },
+              { id: "link", label: "Link", icon: Link2 },
+            ].map(renderServerDescriptionToolbarButton)
           );
           const serverDescriptionEditor = React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isServerDescriptionEditing ? " is-editing" : " is-preview") },
             !isServerDescriptionEditing
@@ -106499,7 +108122,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 if (isServerTemplatePreview) {
                   return;
                 }
-                updateServerField("description", event.target.value);
+                updateServerDescriptionValue(event.target.value);
                 resizeEnvironmentDescriptionTextarea(event.currentTarget);
               },
               onBlur: () => {
@@ -106510,26 +108133,15 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               },
             })
           );
-          const descriptionSection = React.createElement("section", {
-              className: "playground-environments-section playground-server-description-section" + (shouldRenderTitlelessServerDescription ? " is-titleless" : ""),
+          const descriptionSection = React.createElement("div", {
+              className: "playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section playground-database-description-section playground-server-settings-description-section",
               key: "server-description",
             },
-            React.createElement("div", { className: "playground-environments-section-body" },
-              React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description" },
-                shouldRenderTitlelessServerDescription
-                  ? React.createElement("div", { className: "playground-server-description-inline-row" },
-                      serverDescriptionEditor,
-                      serverDescriptionFormatActions
-                    )
-                  : React.createElement(React.Fragment, null,
-                      React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                        React.createElement("div", { className: "playground-tasks-detail-section-title playground-server-description-title" }, "Description"),
-                        serverDescriptionFormatActions
-                      ),
-                      serverDescriptionEditor
-                    )
-              )
-            )
+            React.createElement("div", { className: "playground-tasks-detail-section-header" },
+              React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+              serverDescriptionFormatActions
+            ),
+            serverDescriptionEditor
           );
 
 	          const isFunctionInvokeCapableServer = isFunctionServer || isAgentRuntimeServer;
@@ -106707,7 +108319,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   style: { minHeight: functionInvokeCodeHeight },
                 }, activeFunctionInvokeSnippet);
 	          const functionInvokeSection = isFunctionInvokeCapableServer
-	            ? React.createElement("section", { className: "playground-server-invoke-section playground-server-details-card" },
+	            ? React.createElement("section", {
+	                className: "playground-server-invoke-section playground-server-details-card"
+	                  + (isFunctionServer ? " playground-function-usage-invoke-section" : ""),
+	              },
 	                React.createElement("div", { className: "playground-server-invoke-title" }, "Invoke function"),
 	                React.createElement("div", { className: "playground-server-invoke-auth-note" },
 	                  React.createElement("div", { className: "playground-server-invoke-auth-copy" },
@@ -106847,10 +108462,54 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               )
             )
           );
+          const serverUsageTabContent = isSourceDeployableServer
+            ? React.createElement(React.Fragment, null,
+                React.createElement("div", { className: "playground-database-detail-usage-header-actions playground-server-detail-usage-header" },
+                  React.createElement("h2", { className: "playground-server-detail-usage-title" },
+                    isFunctionServer ? "Function Invocations" : "Web App Invocations"
+                  ),
+                  renderServerDetailTimescaleControl()
+                ),
+                React.createElement("div", {
+                    className: "playground-environments-home-metrics playground-develop-server-metrics playground-develop-server-kind-metrics playground-resource-type-overview-metrics playground-database-detail-usage-metrics playground-server-detail-usage-metrics",
+                  },
+                  React.createElement("section", {
+                      className: "playground-project-overview-progress-combo-card playground-agents-detail-progress-combo-card playground-evaluations-analytics-card playground-agents-overview-analytics-card playground-resource-type-overview-analytics-card playground-database-detail-usage-analytics-card playground-server-detail-usage-analytics-card",
+                    },
+                    renderServerDetailChartKpis(serverDetailKpis),
+                    React.createElement("div", { className: "playground-project-overview-progress-combo-chart" },
+                      React.createElement("div", { className: "playground-resource-type-overview-chart-card" },
+                        renderServerDetailRequestChart()
+                      )
+                    )
+                  )
+                ),
+                React.createElement("div", {
+                    className: "playground-server-detail-fact-rows playground-database-detail-usage-fact-rows"
+                      + (isWebAppServer ? " playground-web-app-usage-fact-rows" : ""),
+                  },
+                  renderServerFactRow("ID",
+                    React.createElement("span", {
+                      className: "playground-environments-editor-fact-value is-id",
+                      title: draftServer.id || "Unsaved server",
+                    }, draftServer.id || "Unsaved server")
+                  ),
+                  renderServerFactRow("Runtime",
+                    React.createElement("span", { className: "playground-environments-editor-fact-value" }, draftServer.runtime || "nodejs22")
+                  ),
+                  renderServerFactRow("Region",
+                    React.createElement("span", { className: "playground-environments-editor-fact-value" }, draftServer.region || "europe-west1")
+                  ),
+                  renderServerFactRow("Updated",
+                    React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundFileDate(draftServer.updatedAt))
+                  )
+                )
+              )
+            : factsSection;
 
           const activeCustomDomains = getPlaygroundServerCustomDomainStates(draftServer);
           const activeCustomDomain = activeCustomDomains[0] || null;
-          const isCustomDomainCapableServer = normalizedServerKind === "web_app";
+          const isCustomDomainCapableServer = isSourceDeployableServer;
           const customDomainSection = isCustomDomainCapableServer
             ? React.createElement("section", { className: "playground-server-custom-domain-section playground-server-details-card" },
                 React.createElement("div", { className: "playground-server-custom-domain-header" },
@@ -108339,19 +109998,21 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             );
           }
 
-          const normalizedServerDetailTab = isSourceDeployableServer && ["general", "code", "logs", "history"].includes(serverDetailTab)
+          const normalizedServerDetailTab = isSourceDeployableServer && ["usage", "code", "logs", "history", "settings"].includes(serverDetailTab)
             ? serverDetailTab
-            : "general";
-          const serverDetailTabs = isSourceDeployableServer
+            : "usage";
+	          const serverDetailTabs = isSourceDeployableServer
             ? React.createElement("div", { className: "playground-agents-overview-tabs playground-agents-detail-tabs playground-server-detail-tabs" },
                 React.createElement("div", { className: "playground-project-overview-chart-tabs" },
                   [
-                    { id: "general", label: "General" },
-                    { id: "code", label: "Code" },
-                    { id: "logs", label: "Logs" },
-                    { id: "history", label: "History" },
-                  ].map((tab) =>
-                    React.createElement("button", {
+                    { id: "usage", label: "Usage", Icon: ChartColumnIncreasing },
+                    { id: "code", label: "Code", Icon: Code2 },
+                    { id: "logs", label: "Logs", Icon: Terminal },
+                    { id: "history", label: "History", Icon: History },
+                    { id: "settings", label: "Settings", Icon: Settings },
+                  ].map((tab) => {
+                    const TabIcon = tab.Icon;
+                    return React.createElement("button", {
                         key: tab.id,
                         type: "button",
                         className: "playground-project-overview-chart-tab" + (normalizedServerDetailTab === tab.id ? " is-active" : ""),
@@ -108364,8 +110025,18 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                             void loadServerFiles(draftServer.id);
                           }
                           if (tab.id === "logs" && draftServer.id) {
-                            void loadServerAnalytics(draftServer.id, { force: true });
                             void loadServerLogs(draftServer.id, serverLogsState.kind);
+                          }
+                          if (tab.id === "usage" && draftServer.id) {
+                            void loadServerAnalytics(draftServer.id, { period: serverDetailChartTimescale });
+                          }
+                          if (tab.id === "settings") {
+                            if (draftServer.id) {
+                              void loadServerContext(draftServer.id);
+                            }
+                            if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) {
+                              onWorkspaceTeamsRequest({});
+                            }
                           }
                           if (tab.id === "history" && draftServer.id) {
                             void loadServerDeployments(draftServer.id);
@@ -108374,12 +110045,703 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                         "aria-pressed": normalizedServerDetailTab === tab.id ? "true" : "false",
                         "aria-label": tab.label,
                       },
-                      tab.label
-                    )
-                  )
+                      React.createElement(TabIcon, { className: "playground-agents-detail-tab-icon", strokeWidth: 1.7 }),
+                      React.createElement("span", null, tab.label)
+                    );
+                  })
                 )
               )
             : null;
+
+          const serverSharedTeamIds = getServerSharedTeamIds(draftServer);
+          const serverSharedTeamIdSet = new Set(serverSharedTeamIds);
+          const serverWorkspaceTeamById = new Map(normalizedEnvironmentWorkspaceTeams.map((team) => [String(team.id), team]));
+          const serverSharedTeams = serverSharedTeamIds.map((teamId) => {
+            const team = serverWorkspaceTeamById.get(String(teamId));
+            return team || { id: teamId, name: "Team", roleId: "member", createdAt: "" };
+          });
+          const availableServerAccessTeams = availableEnvironmentShareTeams.filter((team) => !serverSharedTeamIdSet.has(String(team.id)));
+          const normalizedServerAccessSearchQuery = String(serverAccessSearchQuery || "").trim().toLowerCase();
+          const visibleServerSharedTeams = serverSharedTeams
+            .filter((team) => {
+              if (normalizedServerAccessSearchQuery && !String(team.name || "").toLowerCase().includes(normalizedServerAccessSearchQuery)) return false;
+              if (serverAccessFilter === "managed") return ["owner", "admin"].includes(team.roleId);
+              return true;
+            })
+            .sort((left, right) => {
+              const direction = serverAccessSortDirection === "desc" ? -1 : 1;
+              if (serverAccessSort === "created") {
+                return direction * (new Date(left.createdAt || 0).getTime() - new Date(right.createdAt || 0).getTime());
+              }
+              if (serverAccessSort === "policy") {
+                return direction * String(left.roleId || "member").localeCompare(String(right.roleId || "member"));
+              }
+              return direction * String(left.name || "").localeCompare(String(right.name || ""));
+            });
+          const visibleServerSharedTeamIds = visibleServerSharedTeams.map((team) => String(team.id));
+          const allVisibleServerTeamsSelected = visibleServerSharedTeamIds.length > 0
+            && visibleServerSharedTeamIds.every((teamId) => selectedServerAccessTeamIds.has(teamId));
+          const someVisibleServerTeamsSelected = visibleServerSharedTeamIds.some((teamId) => selectedServerAccessTeamIds.has(teamId));
+          const selectedServerAccessTeams = serverSharedTeams.filter((team) => selectedServerAccessTeamIds.has(String(team.id)));
+          const allAgentsServerAccessTeam = {
+            id: "all-agents",
+            name: "All Agents",
+            roleId: "default",
+            createdAt: "",
+            locked: true,
+          };
+          const allAgentsServerAccessMenuOpen = serverAccessActionMenuState?.teams?.length === 1
+            && String(serverAccessActionMenuState.teams[0]?.id || "") === allAgentsServerAccessTeam.id;
+
+          function handleServerAccessColumnSort(sortKey) {
+            const normalizedSortKey = ["name", "policy", "created"].includes(sortKey) ? sortKey : "name";
+            setServerAccessSortDirection((currentDirection) => {
+              if (serverAccessSort !== normalizedSortKey) return "asc";
+              return currentDirection === "asc" ? "desc" : "asc";
+            });
+            setServerAccessSort(normalizedSortKey);
+          }
+
+          function renderServerAccessSortableHeader(label, sortKey) {
+            const isActive = serverAccessSort === sortKey;
+            const isAscending = isActive && serverAccessSortDirection === "asc";
+            const isDescending = isActive && serverAccessSortDirection === "desc";
+            const nextDirection = isAscending ? "descending" : "ascending";
+            return React.createElement("div", {
+                className: "playground-agents-overview-sortable-header" + (isActive ? " is-active" : ""),
+              },
+              React.createElement("span", { className: "playground-agents-overview-sortable-header-label" }, label),
+              React.createElement("button", {
+                  type: "button",
+                  className: "playground-agents-overview-column-sort-button"
+                    + (isActive ? " is-active" : "")
+                    + (isAscending ? " is-ascending" : "")
+                    + (isDescending ? " is-descending" : ""),
+                  title: "Sort " + label + " " + nextDirection,
+                  "aria-label": "Sort " + label + " " + nextDirection,
+                  "aria-pressed": isActive ? "true" : "false",
+                  onClick: (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    handleServerAccessColumnSort(sortKey);
+                  },
+                },
+                React.createElement("span", {
+                    className: "playground-agents-overview-sort-icon"
+                      + (isActive ? " is-active" : "")
+                      + (isAscending ? " is-ascending" : "")
+                      + (isDescending ? " is-descending" : ""),
+                    "aria-hidden": "true",
+                  },
+                  React.createElement(ChevronsUpDown, {
+                    className: "playground-agents-overview-sort-icon-layer is-top",
+                    width: 14,
+                    height: 14,
+                    strokeWidth: 1.8,
+                  }),
+                  React.createElement(ChevronsUpDown, {
+                    className: "playground-agents-overview-sort-icon-layer is-bottom",
+                    width: 14,
+                    height: 14,
+                    strokeWidth: 1.8,
+                  })
+                )
+              )
+            );
+          }
+
+          function toggleServerAccessTeamSelection(teamId) {
+            const normalizedTeamId = String(teamId || "");
+            setSelectedServerAccessTeamIds((current) => {
+              const next = new Set(current);
+              if (next.has(normalizedTeamId)) next.delete(normalizedTeamId);
+              else next.add(normalizedTeamId);
+              return next;
+            });
+          }
+
+          function toggleVisibleServerAccessTeamSelection() {
+            setSelectedServerAccessTeamIds((current) => {
+              const next = new Set(current);
+              const shouldSelect = !visibleServerSharedTeamIds.every((teamId) => next.has(teamId));
+              visibleServerSharedTeamIds.forEach((teamId) => {
+                if (shouldSelect) next.add(teamId);
+                else next.delete(teamId);
+              });
+              return next;
+            });
+          }
+
+          function clearServerAccessActionMenuCloseTimer() {
+            if (serverAccessActionMenuCloseTimerRef.current !== null && typeof window !== "undefined") {
+              window.clearTimeout(serverAccessActionMenuCloseTimerRef.current);
+              serverAccessActionMenuCloseTimerRef.current = null;
+            }
+          }
+
+          function closeServerAccessActionMenu(options = {}) {
+            if (!serverAccessActionMenuState) return;
+            clearServerAccessActionMenuCloseTimer();
+            if (options.animate === false || typeof window === "undefined") {
+              setServerAccessActionMenuClosing(false);
+              setServerAccessActionMenuState(null);
+              return;
+            }
+            setServerAccessActionMenuClosing(true);
+            serverAccessActionMenuCloseTimerRef.current = window.setTimeout(() => {
+              serverAccessActionMenuCloseTimerRef.current = null;
+              setServerAccessActionMenuClosing(false);
+              setServerAccessActionMenuState(null);
+            }, 90);
+          }
+
+          function openServerAccessActionMenu(event, teams, options = {}) {
+            event.preventDefault();
+            event.stopPropagation();
+            const normalizedTeams = (Array.isArray(teams) ? teams : [teams]).filter((team) => team?.id);
+            if (!normalizedTeams.length) return;
+            clearServerAccessActionMenuCloseTimer();
+            const menuWidth = 220;
+            const menuHeight = normalizedTeams.length === 1 ? 108 : 64;
+            const gutter = 12;
+            const viewportWidth = window.innerWidth || document.documentElement?.clientWidth || 0;
+            const viewportHeight = window.innerHeight || document.documentElement?.clientHeight || 0;
+            let left;
+            let top;
+            if (options.context) {
+              left = Number(event.clientX || 0);
+              top = Number(event.clientY || 0);
+            } else {
+              const rect = event.currentTarget.getBoundingClientRect();
+              left = rect.left - menuWidth - 8;
+              top = rect.top + rect.height / 2 - menuHeight / 2;
+            }
+            left = Math.max(gutter, Math.min(viewportWidth - menuWidth - gutter, left));
+            top = Math.max(gutter, Math.min(viewportHeight - menuHeight - gutter, top));
+            setServerAccessActionMenuClosing(false);
+            setServerAccessActionMenuState({ teams: normalizedTeams, left, top });
+          }
+
+          const serverAccessActionMenuContent = serverAccessActionMenuState
+            ? React.createElement("div", {
+                className: "sidebar-thread-popup-scrim",
+                style: { zIndex: 360 },
+                onClick: () => closeServerAccessActionMenu(),
+              },
+              React.createElement("div", {
+                  className: "playground-platform-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-toolbar-popup-shell-portal playground-agents-list-action-menu-shell is-open",
+                  style: {
+                    position: "fixed",
+                    top: serverAccessActionMenuState.top + "px",
+                    left: serverAccessActionMenuState.left + "px",
+                    right: "auto",
+                  },
+                  onClick: (event) => event.stopPropagation(),
+                },
+                React.createElement("div", {
+                    className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-database-access-action-menu"
+                      + (serverAccessActionMenuClosing ? " is-closing" : " playground-tasks-toolbar-popup-menu-animate-down-in"),
+                    role: "menu",
+                  },
+                  serverAccessActionMenuState.teams.length === 1
+                    ? React.createElement("button", {
+                        type: "button",
+                        className: "tb-popup-row",
+                        onClick: () => {
+                          const team = serverAccessActionMenuState.teams[0];
+                          closeServerAccessActionMenu({ animate: false });
+                          setServerPermissionRoleId("member");
+                          setServerPermissionTeamId(String(team.id));
+                        },
+                      },
+                        React.createElement(Settings, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.9 }),
+                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                          React.createElement("span", null, "Edit permissions")
+                        )
+                      )
+                    : null,
+                  serverAccessActionMenuState.teams.some((team) => !team.locked)
+                    ? React.createElement("button", {
+                        type: "button",
+                        className: "tb-popup-row",
+                        disabled: Boolean(serverTeamAccessState.action),
+                        onClick: () => {
+                          const teams = serverAccessActionMenuState.teams.filter((team) => !team.locked);
+                          closeServerAccessActionMenu({ animate: false });
+                          void handleRemoveServerTeamsAccess(teams);
+                        },
+                      },
+                        React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.9 }),
+                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                          React.createElement("span", null, serverAccessActionMenuState.teams.length > 1 ? "Remove team access" : "Remove from " + serverKindLabel.toLowerCase())
+                        )
+                      )
+                    : null
+                )
+              )
+            )
+            : null;
+          const serverAccessActionMenu = serverAccessActionMenuContent && typeof document !== "undefined" && document.body
+            ? createPortal(serverAccessActionMenuContent, document.body)
+            : serverAccessActionMenuContent;
+
+          const serverOwnerIdentity = getServerOwnerIdentity(draftServer);
+          const serverOwnerIdentityKey = getDatabaseOwnerIdentityKey(serverOwnerIdentity);
+          const serverOwnerCandidatesByKey = new Map();
+          serverSharedTeamIds.forEach((teamId) => {
+            const team = serverWorkspaceTeamById.get(String(teamId)) || { id: teamId, name: "Team" };
+            const members = Array.isArray(databaseOwnerTeamMembersById[teamId]) ? databaseOwnerTeamMembersById[teamId] : [];
+            members.filter(isHumanDatabaseOwnerCandidate).forEach((member) => {
+              const identity = normalizeDatabaseOwnerIdentity(member);
+              const key = getDatabaseOwnerIdentityKey(identity);
+              if (!key) return;
+              const existing = serverOwnerCandidatesByKey.get(key);
+              serverOwnerCandidatesByKey.set(key, {
+                ...(existing || {}),
+                ...identity,
+                teamNames: Array.from(new Set([...(existing?.teamNames || []), team.name].filter(Boolean))),
+              });
+            });
+          });
+          const serverOwnerCandidates = Array.from(serverOwnerCandidatesByKey.values()).sort((left, right) =>
+            String(left.name || left.email || "").localeCompare(String(right.name || right.email || ""), undefined, { sensitivity: "base" })
+          );
+          const serverOwnerMissingTeamIds = serverSharedTeamIds.filter((teamId) =>
+            !Object.prototype.hasOwnProperty.call(databaseOwnerTeamMembersById, teamId)
+          );
+          const serverOwnerLabel = String(serverOwnerIdentity.name || serverOwnerIdentity.email || "Owner").trim();
+          const serverOwnerSelectorRow = React.createElement("div", { className: "playground-database-access-owner-row" },
+            React.createElement("span", { className: "playground-database-access-owner-label" }, "Owner"),
+            renderPlaygroundPlatformPopup({
+              open: serverOwnerPopoverOpen,
+              shellRef: serverOwnerPopoverRef,
+              shellClassName: "playground-database-owner-popup-shell",
+              menuClassName: "playground-database-owner-menu playground-agents-detail-owner-menu",
+              trigger: React.createElement("button", {
+                type: "button",
+                className: "playground-database-owner-trigger",
+                disabled: !isCurrentUserServerOwner(draftServer) || serverSaveState.isSaving,
+                onClick: () => setServerOwnerPopoverOpen((value) => !value),
+                "aria-label": "Choose " + serverKindLabel.toLowerCase() + " owner",
+                "aria-expanded": serverOwnerPopoverOpen ? "true" : "false",
+              },
+                React.createElement("span", { className: "playground-team-member-cell" },
+                  React.createElement(AccountAvatar, {
+                    className: "playground-team-member-avatar",
+                    imageClassName: "playground-team-member-avatar-image",
+                    fallbackLabel: getAccountInitials(serverOwnerLabel),
+                    photoUrl: serverOwnerIdentity.avatarUrl || "",
+                  }),
+                  React.createElement("span", { className: "playground-team-member-copy" },
+                    React.createElement("span", { className: "playground-team-table-title" }, serverOwnerLabel)
+                  )
+                ),
+                React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+              ),
+              menuProps: { role: "menu", onClick: (event) => event.stopPropagation() },
+              children: serverSharedTeamIds.length === 0
+                ? React.createElement("div", { className: "playground-agents-detail-owner-menu-empty" }, "Grant a team access before choosing an owner.")
+                : serverOwnerMissingTeamIds.length > 0
+                  ? React.createElement("div", { className: "playground-agents-detail-owner-menu-empty" }, "Loading team members...")
+                  : serverOwnerCandidates.length
+                    ? serverOwnerCandidates.map((candidate) => {
+                        const key = getDatabaseOwnerIdentityKey(candidate);
+                        const selected = key === serverOwnerIdentityKey;
+                        const label = String(candidate.name || candidate.email || "Team member").trim();
+                        const detail = candidate.email && label.toLowerCase() !== candidate.email.toLowerCase()
+                          ? candidate.email
+                          : (candidate.teamNames || []).join(", ");
+                        return React.createElement("button", {
+                          key,
+                          type: "button",
+                          className: "tb-popup-row playground-agents-detail-owner-option" + (selected ? " is-selected" : ""),
+                          role: "menuitem",
+                          onClick: () => selected ? setServerOwnerPopoverOpen(false) : openServerOwnerTransferModal(candidate),
+                        },
+                          React.createElement(AccountAvatar, {
+                            className: "playground-agents-detail-owner-option-avatar",
+                            imageClassName: "playground-agents-detail-owner-option-avatar-image",
+                            fallbackLabel: getAccountInitials(label),
+                            photoUrl: candidate.avatarUrl || "",
+                          }),
+                          React.createElement("span", { className: "playground-agents-detail-owner-option-copy" },
+                            React.createElement("span", null, label),
+                            detail ? React.createElement("span", null, detail) : null
+                          ),
+                          selected ? React.createElement(Check, { width: 13, height: 13, strokeWidth: 1.8 }) : null
+                        );
+                      })
+                    : React.createElement("div", { className: "playground-agents-detail-owner-menu-empty" }, "No human team members are available."),
+            })
+          );
+          const serverOwnerTransferTargetLabel = String(serverOwnerTransferTarget?.name || serverOwnerTransferTarget?.email || "New owner").trim();
+          const serverOwnerTransferModalContent = serverOwnerTransferTarget
+            ? renderPlaygroundPlatformModal({
+                open: true,
+                visible: !serverOwnerTransferModalClosing,
+                closing: serverOwnerTransferModalClosing,
+                onClose: () => closeServerOwnerTransferModal(),
+                as: "form",
+                backdropClassName: "playground-tasks-project-issue-backdrop playground-database-owner-transfer-backdrop",
+                className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal playground-database-owner-transfer-modal",
+                ariaLabel: "Transfer " + serverKindLabel.toLowerCase() + " ownership",
+                surfaceProps: { onSubmit: (event) => { event.preventDefault(); void handleServerOwnerTransferConfirm(); } },
+                children: React.createElement(React.Fragment, null,
+                  React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                    React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                      React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" }, React.createElement(Shield, { width: 17, height: 17 })),
+                      React.createElement("div", { className: "playground-content-title playground-tasks-project-modal-name-input" }, "Transfer " + serverKindLabel + " Ownership")
+                    ),
+                    React.createElement("button", { type: "button", className: "playground-settings-icon-button playground-tasks-project-modal-close", onClick: () => closeServerOwnerTransferModal() }, React.createElement(X, { width: 16, height: 16 }))
+                  ),
+                  React.createElement("div", { className: "playground-database-owner-transfer-copy" },
+                    React.createElement("div", { className: "playground-database-owner-transfer-person" },
+                      React.createElement(AccountAvatar, {
+                        className: "playground-team-member-avatar",
+                        imageClassName: "playground-team-member-avatar-image",
+                        fallbackLabel: getAccountInitials(serverOwnerTransferTargetLabel),
+                        photoUrl: serverOwnerTransferTarget.avatarUrl || "",
+                      }),
+                      React.createElement("div", { className: "playground-database-owner-transfer-person-copy" },
+                        React.createElement("span", { className: "playground-database-owner-transfer-person-name" }, serverOwnerTransferTargetLabel),
+                        serverOwnerTransferTarget.email ? React.createElement("span", { className: "playground-database-owner-transfer-person-email" }, serverOwnerTransferTarget.email) : null
+                      )
+                    ),
+                    React.createElement("p", { className: "playground-database-owner-transfer-warning" },
+                      "This transfers ownership immediately. You will keep only the privileges granted through your team access and will no longer be able to change the owner."
+                    )
+                  ),
+                  serverSaveState.error ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, serverSaveState.error) : null,
+                  React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+                    React.createElement("button", { type: "button", className: "playground-environments-action-button", onClick: () => closeServerOwnerTransferModal(), disabled: serverSaveState.isSaving }, "Cancel"),
+                    React.createElement("button", { type: "submit", className: "playground-environments-action-button is-primary", disabled: serverSaveState.isSaving }, serverSaveState.isSaving ? "Transferring..." : "Transfer Owner")
+                  )
+                ),
+              })
+            : null;
+          const serverOwnerTransferModal = serverOwnerTransferModalContent && typeof document !== "undefined" && document.body
+            ? createPortal(serverOwnerTransferModalContent, document.body)
+            : serverOwnerTransferModalContent;
+
+          const serverPermissionTeam = serverPermissionTeamId && serverPermissionTeamId !== "all-agents"
+            ? serverWorkspaceTeamById.get(String(serverPermissionTeamId)) || serverSharedTeams.find((team) => String(team.id) === String(serverPermissionTeamId))
+            : null;
+          const selectedServerRoleDefinition = getPlaygroundTeamRoleDefinition(serverPermissionRoleId);
+          const selectedServerRolePermissionSet = serverPermissionTeam
+            ? getServerTeamRolePermissionSet(draftServer, serverPermissionTeam.id, selectedServerRoleDefinition.id)
+            : null;
+          const serverTeamRolePages = serverPermissionTeam
+            ? React.createElement("div", { className: "playground-team-role-pages playground-project-team-role-pages playground-database-team-role-pages" },
+                React.createElement("div", { className: "playground-team-role-list playground-project-team-role-list", role: "tablist", "aria-label": serverKindLabel + " team roles" },
+                  PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => React.createElement("button", {
+                    key: role.id,
+                    type: "button",
+                    role: "tab",
+                    className: "playground-team-role-card" + (selectedServerRoleDefinition.id === role.id ? " is-active" : ""),
+                    "aria-selected": selectedServerRoleDefinition.id === role.id ? "true" : "false",
+                    onClick: () => setServerPermissionRoleId(role.id),
+                  },
+                    React.createElement("span", { className: "playground-team-role-card-title" }, role.label),
+                    React.createElement("span", { className: "playground-team-role-card-description" }, role.description),
+                    React.createElement("span", { className: "playground-team-role-card-meta" }, serverKindLabel + " access")
+                  ))
+                ),
+                React.createElement("div", {
+                    className: "playground-team-role-permission-page playground-project-team-role-permission-page"
+                      + (selectedServerRoleDefinition.id === "owner" ? " is-read-only" : ""),
+                  },
+                  React.createElement("div", { className: "playground-team-role-permission-header playground-project-team-role-permission-header" },
+                    React.createElement("div", null,
+                      React.createElement("div", { className: "playground-team-role-permission-kicker" }, serverKindLabel + " role"),
+                      React.createElement("h2", { className: "playground-team-role-permission-title" }, selectedServerRoleDefinition.label),
+                      React.createElement("p", { className: "playground-team-role-permission-copy" },
+                        serverKindLabel + "-scoped permissions for " + selectedServerRoleDefinition.label.toLowerCase()
+                          + "s in " + (serverPermissionTeam.name || "this team") + "."
+                      )
+                    )
+                  ),
+                  renderPlaygroundPermissionPanel(selectedServerRolePermissionSet, {
+                    subjectType: "server",
+                    animationKey: serverPermissionChartAnimationKey,
+                    disabled: isSelectedServerTemplatePreview || selectedServerRoleDefinition.id === "owner",
+                    onRingAccessChange: (ringId, access) => updateServerTeamRolePermissionRingAccess(
+                      serverPermissionTeam.id,
+                      selectedServerRoleDefinition.id,
+                      ringId,
+                      access
+                    ),
+                    onActionRingChange: (actionId, ringId) => updateServerTeamRolePermissionActionRing(
+                      serverPermissionTeam.id,
+                      selectedServerRoleDefinition.id,
+                      actionId,
+                      ringId
+                    ),
+                    onActionAccessChange: (actionId, access) => updateServerTeamRolePermissionActionAccess(
+                      serverPermissionTeam.id,
+                      selectedServerRoleDefinition.id,
+                      actionId,
+                      access
+                    ),
+                  })
+                )
+              )
+            : null;
+          const serverSettingsPermissionContent = serverPermissionTeamId
+            ? React.createElement("section", {
+                className: "playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-permissions-section playground-project-teams-section playground-database-permissions-section playground-server-permissions-section",
+              },
+              React.createElement("div", { className: "playground-project-team-permissions-header" },
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-project-team-permissions-back",
+                  onClick: () => setServerPermissionTeamId(""),
+                },
+                  React.createElement(ArrowLeft, { width: 13, height: 13, strokeWidth: 1.9 }),
+                  React.createElement("span", null, "Settings")
+                ),
+                React.createElement("div", { className: "playground-project-team-permissions-title" },
+                  serverPermissionTeamId === "all-agents"
+                    ? "All Agents Permissions"
+                    : (serverPermissionTeam?.name || "Team") + " " + serverKindLabel + " Access"
+                )
+              ),
+              serverPermissionTeamId === "all-agents"
+                ? renderPlaygroundPermissionPanel(getServerPermissionSet(draftServer), {
+                    subjectType: "server",
+                    animationKey: serverPermissionChartAnimationKey,
+                    disabled: isSelectedServerTemplatePreview,
+                    onRingAccessChange: updateServerPermissionRingAccess,
+                    onActionRingChange: updateServerPermissionActionRing,
+                    onActionAccessChange: updateServerPermissionActionAccess,
+                  })
+                : serverTeamRolePages
+            )
+            : null;
+
+          const serverTeamAccessSection = React.createElement("section", {
+              className: "playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-teams-section playground-project-settings-root playground-database-settings-root",
+            },
+            React.createElement("div", { className: "playground-database-access-section-group" },
+              React.createElement("div", { className: "playground-database-access-section-header" },
+                React.createElement("h2", { className: "playground-project-teams-table-title playground-database-access-section-title" }, "Manage " + serverKindLabel + " Access"),
+                serverOwnerSelectorRow
+              ),
+              React.createElement("section", {
+                className: "playground-project-settings-access-section playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-database-access-table-section",
+              },
+              React.createElement("div", { className: "playground-agents-overview-sticky-table-header playground-database-access-sticky-table-header" },
+                React.createElement("div", { ref: serverAccessToolbarRef, className: "playground-plugins-search-row playground-resources-overview-search-row playground-develop-server-kind-table-toolbar playground-database-access-table-toolbar" },
+                  React.createElement("div", { className: "playground-develop-server-kind-table-controls" },
+                    React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell" },
+                      React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("input", {
+                        type: "search",
+                        value: serverAccessSearchQuery,
+                        onChange: (event) => setServerAccessSearchQuery(event.target.value),
+                        className: "playground-plugins-search",
+                        placeholder: "Search teams",
+                      })
+                    ),
+                    React.createElement("div", { className: "playground-plugins-toolbar-controls" },
+                      React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-files-control-button is-bare is-backlog-sort" + (serverAccessToolbarPopover === "sort" ? " is-active" : ""),
+                          onClick: () => setServerAccessToolbarPopover((value) => value === "sort" ? "" : "sort"),
+                        }, React.createElement(ArrowUpDown, { width: 14, height: 14 }), React.createElement("span", null, "Sort")),
+                        serverAccessToolbarPopover === "sort"
+                          ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                              [
+                                { id: "name-asc", label: "Name (A-Z)", sort: "name", direction: "asc" },
+                                { id: "name-desc", label: "Name (Z-A)", sort: "name", direction: "desc" },
+                                { id: "created-desc", label: "Recently Added", sort: "created", direction: "desc" },
+                              ].map((option) => {
+                                const selected = serverAccessSort === option.sort && serverAccessSortDirection === option.direction;
+                                return React.createElement("button", {
+                                  key: option.id,
+                                  type: "button",
+                                  className: "tb-popup-row tb-popup-row-select" + (selected ? " selected" : ""),
+                                  onClick: () => {
+                                    setServerAccessSort(option.sort);
+                                    setServerAccessSortDirection(option.direction);
+                                    setServerAccessToolbarPopover("");
+                                  },
+                                },
+                                  React.createElement("span", { className: "tb-popup-check-slot" }, selected ? React.createElement(Check, { width: 14, height: 14 }) : null),
+                                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, option.label))
+                                );
+                              })
+                            )
+                          : null
+                      ),
+                      React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-files-control-button is-bare is-backlog-filter" + (serverAccessToolbarPopover === "filter" || serverAccessFilter !== "all" ? " is-active" : ""),
+                          onClick: () => setServerAccessToolbarPopover((value) => value === "filter" ? "" : "filter"),
+                        }, React.createElement(SlidersHorizontal, { width: 14, height: 14 }), React.createElement("span", null, "Filter")),
+                        serverAccessToolbarPopover === "filter"
+                          ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                              [
+                                { id: "all", label: "All access", description: "Show every team access grant" },
+                                { id: "managed", label: "Managed teams", description: "Only teams you can manage" },
+                              ].map((option) => React.createElement("button", {
+                                key: option.id,
+                                type: "button",
+                                className: "tb-popup-row tb-popup-row-select" + (serverAccessFilter === option.id ? " selected" : ""),
+                                onClick: () => { setServerAccessFilter(option.id); setServerAccessToolbarPopover(""); },
+                              },
+                                React.createElement("span", { className: "tb-popup-check-slot" }, serverAccessFilter === option.id ? React.createElement(Check, { width: 14, height: 14 }) : null),
+                                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, option.label), React.createElement("span", null, option.description))
+                              ))
+                            )
+                          : null
+                      )
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-tasks-toolbar-popup-shell playground-project-teams-add-shell playground-database-team-menu-scope" + (serverTeamMenuId === "add-teams" ? " is-open" : "") },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-control-button playground-project-teams-add-button",
+                      disabled: workspaceTeamsLoading || Boolean(serverTeamAccessState.action),
+                      onClick: (event) => {
+                        event.stopPropagation();
+                        if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) onWorkspaceTeamsRequest({});
+                        setServerTeamMenuId((value) => value === "add-teams" ? "" : "add-teams");
+                      },
+                    }, React.createElement(Plus, { width: 14, height: 14 }), React.createElement("span", null, "Add Teams")),
+                    serverTeamMenuId === "add-teams"
+                      ? React.createElement("div", { className: "tb-popup-menu playground-platform-popup-menu playground-project-teams-menu" },
+                          availableServerAccessTeams.length
+                            ? availableServerAccessTeams.map((team) => React.createElement("button", {
+                                key: team.id,
+                                type: "button",
+                                className: "tb-popup-row playground-project-teams-menu-row",
+                                onClick: () => void handleAddServerTeamAccess(team),
+                              }, React.createElement(Users, { className: "tb-popup-icon", width: 14, height: 14 }), React.createElement("span", null, team.name)))
+                            : React.createElement("div", { className: "playground-project-teams-menu-empty" }, workspaceTeamsLoading ? "Loading teams..." : "All available teams have access.")
+                        )
+                      : null
+                  )
+                )
+              ),
+              React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table playground-database-access-table" },
+                React.createElement("div", { className: "playground-project-overview-thread-list" },
+                  React.createElement("div", { className: "playground-project-overview-threads-table-header playground-agents-overview-column-header playground-database-access-column-header" },
+                    React.createElement("div", null, React.createElement("button", {
+                      type: "button",
+                      className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox"
+                        + (allVisibleServerTeamsSelected ? " is-selected" : "")
+                        + (someVisibleServerTeamsSelected && !allVisibleServerTeamsSelected ? " is-partial" : ""),
+                      role: "checkbox",
+                      "aria-checked": allVisibleServerTeamsSelected ? "true" : (someVisibleServerTeamsSelected ? "mixed" : "false"),
+                      disabled: !visibleServerSharedTeamIds.length,
+                      onClick: toggleVisibleServerAccessTeamSelection,
+                    })),
+                    React.createElement("div", null, renderServerAccessSortableHeader("Team", "name")),
+                    React.createElement("div", null, renderServerAccessSortableHeader("Policy", "policy")),
+                    React.createElement("div", null, renderServerAccessSortableHeader("Created", "created")),
+                    React.createElement("div", null)
+                  ),
+                  React.createElement("div", {
+                    className: "playground-project-overview-threads-table-row" + (allAgentsServerAccessMenuOpen ? " is-menu-open" : ""),
+                    role: "button",
+                    tabIndex: 0,
+                    "aria-label": "Open All Agents " + serverKindLabel.toLowerCase() + " permissions",
+                    onClick: () => setServerPermissionTeamId("all-agents"),
+                    onContextMenu: (event) => openServerAccessActionMenu(event, allAgentsServerAccessTeam, { context: true }),
+                    onKeyDown: (event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        setServerPermissionTeamId("all-agents");
+                      }
+                    },
+                  },
+                    React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-agents-overview-select-checkbox",
+                        role: "checkbox",
+                        "aria-checked": "false",
+                        "aria-label": "All Agents is always included",
+                        disabled: true,
+                        onClick: (event) => event.stopPropagation(),
+                        onKeyDown: (event) => event.stopPropagation(),
+                      })
+                    ),
+                    React.createElement("div", { className: "playground-project-overview-thread-cell is-name" }, React.createElement("div", { className: "playground-agents-overview-name-title" }, "All Agents")),
+                    React.createElement("div", { className: "playground-project-overview-thread-cell is-model" }, "Default policy"),
+                    React.createElement("div", { className: "playground-project-overview-thread-cell is-date" }, "Default"),
+                    React.createElement("div", { className: "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-overview-table-action-button" + (allAgentsServerAccessMenuOpen ? " is-open" : ""),
+                        onClick: (event) => openServerAccessActionMenu(event, allAgentsServerAccessTeam),
+                        onContextMenu: (event) => openServerAccessActionMenu(event, allAgentsServerAccessTeam, { context: true }),
+                        onKeyDown: (event) => event.stopPropagation(),
+                        "aria-label": "All Agents actions",
+                        "aria-expanded": allAgentsServerAccessMenuOpen ? "true" : "false",
+                      }, React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 }))
+                    )
+                  ),
+                  visibleServerSharedTeams.map((team) => {
+                    const isSelected = selectedServerAccessTeamIds.has(String(team.id));
+                    const menuOpen = serverAccessActionMenuState?.teams?.length === 1
+                      && String(serverAccessActionMenuState.teams[0]?.id || "") === String(team.id || "");
+                    return React.createElement("div", {
+                      key: team.id,
+                      className: "playground-project-overview-threads-table-row"
+                        + (menuOpen ? " is-menu-open" : "")
+                        + (isSelected ? " is-selected" : ""),
+                      role: "button",
+                      tabIndex: 0,
+                      "aria-label": "Open " + team.name + " " + serverKindLabel.toLowerCase() + " permissions",
+                      onClick: () => { setServerPermissionRoleId("member"); setServerPermissionTeamId(String(team.id)); },
+                      onContextMenu: (event) => openServerAccessActionMenu(event, isSelected && selectedServerAccessTeams.length > 1 ? selectedServerAccessTeams : team, { context: true }),
+                      onKeyDown: (event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          setServerPermissionRoleId("member");
+                          setServerPermissionTeamId(String(team.id));
+                        }
+                      },
+                    },
+                      React.createElement("div", { className: "playground-project-overview-thread-cell is-select" }, React.createElement("button", {
+                        type: "button",
+                        className: "playground-agents-overview-select-checkbox" + (isSelected ? " is-selected" : ""),
+                        role: "checkbox",
+                        "aria-checked": isSelected ? "true" : "false",
+                        "aria-label": "Select " + team.name,
+                        onClick: (event) => { event.preventDefault(); event.stopPropagation(); toggleServerAccessTeamSelection(team.id); },
+                        onKeyDown: (event) => event.stopPropagation(),
+                      })),
+                      React.createElement("div", { className: "playground-project-overview-thread-cell is-name" }, React.createElement("div", { className: "playground-agents-overview-name-title" }, team.name)),
+                      React.createElement("div", { className: "playground-project-overview-thread-cell is-model" }, "Role policy"),
+                      React.createElement("div", { className: "playground-project-overview-thread-cell is-date" }, team.createdAt ? formatPlaygroundFileDate(team.createdAt) : "—"),
+                      React.createElement("div", { className: "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell" },
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-overview-table-action-button" + (menuOpen ? " is-open" : ""),
+                          onClick: (event) => openServerAccessActionMenu(event, isSelected && selectedServerAccessTeams.length > 1 ? selectedServerAccessTeams : team),
+                          onContextMenu: (event) => openServerAccessActionMenu(event, isSelected && selectedServerAccessTeams.length > 1 ? selectedServerAccessTeams : team, { context: true }),
+                          onKeyDown: (event) => event.stopPropagation(),
+                          "aria-label": "Team actions for " + team.name,
+                          "aria-expanded": menuOpen ? "true" : "false",
+                        }, React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 }))
+                      )
+                    );
+                  }),
+                  !visibleServerSharedTeams.length && normalizedServerAccessSearchQuery
+                    ? React.createElement("div", { className: "playground-plugins-empty playground-database-access-empty" }, "No matching team access found.")
+                    : null
+                )
+              ),
+              serverTeamAccessState.error ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverTeamAccessState.error) : null
+              )
+            ),
+            serverAccessActionMenu,
+            serverOwnerTransferModal
+          );
 	          const serverDangerSection = !isServerTemplatePreview && (isSourceDeployableServer || isAgentRuntimeServer || isPaymentsServer)
 	            ? React.createElement("section", { className: "playground-server-danger-section playground-server-details-card" },
                 React.createElement("div", { className: "playground-server-danger-copy-row" },
@@ -108406,14 +110768,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 }, "Delete " + serverKindLabel.toLowerCase())
               )
             : null;
-          const serverGeneralTabContent = React.createElement(React.Fragment, null,
+          const serverSettingsOverviewContent = React.createElement("div", { className: "playground-server-settings-tab" },
             descriptionSection,
-            factsSection,
-            functionInvokeSection,
             customDomainSection,
             connectionsSection,
-	            serverDangerSection
+            serverTeamAccessSection,
+            serverDangerSection
           );
+          const serverSettingsTabContent = serverSettingsPermissionContent || serverSettingsOverviewContent;
           const serverEditorTabContent = isSourceDeployableServer
             ? normalizedServerDetailTab === "logs"
               ? serverLogsPageContent
@@ -108421,7 +110783,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 ? renderServerDeploymentsSurface()
                 : normalizedServerDetailTab === "code"
                   ? sourceFilesSection
-                  : serverGeneralTabContent
+                  : normalizedServerDetailTab === "usage"
+                    ? React.createElement(React.Fragment, null, serverUsageTabContent, functionInvokeSection)
+                    : normalizedServerDetailTab === "settings"
+                      ? serverSettingsTabContent
+                      : serverUsageTabContent
             : React.createElement(React.Fragment, null,
                 factsSection,
                 functionInvokeSection,
@@ -110753,14 +113119,20 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           const selectedCollection = currentDatabaseCollection;
           const selectedDocument = currentDatabaseDocuments.find((document) => document.id === selectedDatabaseDocumentId) || null;
           const collectionStats = currentDatabaseCollections.reduce((sum, collection) => sum + Number(collection?.documentCount || 0), 0);
-          const activeDatabaseAnalytics = draftDatabase.id ? databaseAnalyticsById[draftDatabase.id] || null : null;
+	      const normalizedDatabaseDetailChartTimescale = normalizePlaygroundEnvironmentHomeChartPeriod(databaseDetailChartTimescale);
+	      const activeDatabaseAnalyticsStateKey = buildPlaygroundDatabaseAnalyticsStateKey(
+	        draftDatabase.id,
+	        normalizedDatabaseDetailChartTimescale
+	      );
+	      const activeDatabaseAnalytics = activeDatabaseAnalyticsStateKey
+	        ? databaseAnalyticsById[activeDatabaseAnalyticsStateKey] || null
+	        : null;
           const activeDatabaseAnalyticsSummary = activeDatabaseAnalytics?.summary || null;
-          const activeDatabaseOperationBuckets = Array.isArray(activeDatabaseAnalytics?.charts?.operations24h)
-            ? activeDatabaseAnalytics.charts.operations24h
-            : [];
-          const isDatabaseAnalyticsLoading = loadingDatabaseAnalyticsId === draftDatabase.id;
+	      const activeDatabaseOperationBuckets = Array.isArray(activeDatabaseAnalytics?.charts?.operations)
+	        ? activeDatabaseAnalytics.charts.operations
+	        : [];
+	      const isDatabaseAnalyticsLoading = loadingDatabaseAnalyticsId === activeDatabaseAnalyticsStateKey;
           const formatDatabaseTelemetryTotal = (value) => new Intl.NumberFormat("en-US").format(Math.max(0, Number(value || 0)) || 0);
-          const normalizedDatabaseDetailChartTimescale = normalizePlaygroundEnvironmentHomeChartPeriod(databaseDetailChartTimescale);
           const databaseDetailActivityBuckets = buildPlaygroundEnvironmentHomeActivityBuckets(normalizedDatabaseDetailChartTimescale);
           const readDatabaseDetailOperationTimestampMs = (entry) => {
             const timestamp = Date.parse(String(entry?.bucketStart || entry?.timestamp || entry?.createdAt || entry?.updatedAt || ""));
@@ -110806,14 +113178,15 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             },
             {
               id: "reads",
-              value: formatDatabaseTelemetryTotal(resolvedDatabaseAnalyticsSummary.reads24h || 0),
+	          value: formatDatabaseTelemetryTotal(resolvedDatabaseAnalyticsSummary.reads ?? resolvedDatabaseAnalyticsSummary.reads24h ?? 0),
               label: "Reads",
               Icon: Eye,
             },
             {
               id: "writes",
               value: formatDatabaseTelemetryTotal(
-                Number(resolvedDatabaseAnalyticsSummary.writes24h || 0) + Number(resolvedDatabaseAnalyticsSummary.deletes24h || 0)
+	            Number(resolvedDatabaseAnalyticsSummary.writes ?? resolvedDatabaseAnalyticsSummary.writes24h ?? 0)
+	              + Number(resolvedDatabaseAnalyticsSummary.deletes ?? resolvedDatabaseAnalyticsSummary.deletes24h ?? 0)
               ),
               label: "Writes / Deletes",
               Icon: SquarePen,
@@ -111890,6 +114263,40 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	          const databaseWorkspaceTeamById = new Map(
 	            normalizedEnvironmentWorkspaceTeams.map((team) => [team.id, team])
 	          );
+	          const databaseOwnerIdentity = getDatabaseOwnerIdentity(draftDatabase);
+	          const isCurrentDatabaseOwner = isCurrentUserDatabaseOwner(draftDatabase);
+	          const databaseOwnerIdentityKey = getDatabaseOwnerIdentityKey(databaseOwnerIdentity);
+	          const databaseOwnerCandidatesByKey = new Map();
+	          databaseSharedTeamIds.forEach((teamId) => {
+	            const team = databaseWorkspaceTeamById.get(teamId) || { id: teamId, name: "Team" };
+	            const members = Array.isArray(databaseOwnerTeamMembersById[teamId])
+	              ? databaseOwnerTeamMembersById[teamId]
+	              : [];
+	            members.filter(isHumanDatabaseOwnerCandidate).forEach((member) => {
+	              const identity = normalizeDatabaseOwnerIdentity(member);
+	              const identityKey = getDatabaseOwnerIdentityKey(identity);
+	              if (!identityKey) return;
+	              const existing = databaseOwnerCandidatesByKey.get(identityKey);
+	              const teamNames = Array.from(new Set([
+	                ...(Array.isArray(existing?.teamNames) ? existing.teamNames : []),
+	                String(team.name || "Team").trim(),
+	              ].filter(Boolean)));
+	              databaseOwnerCandidatesByKey.set(identityKey, {
+	                ...(existing || {}),
+	                ...identity,
+	                teamNames,
+	              });
+	            });
+	          });
+	          const databaseOwnerCandidates = Array.from(databaseOwnerCandidatesByKey.values()).sort((left, right) => (
+	            String(left?.name || left?.email || "").localeCompare(String(right?.name || right?.email || ""), undefined, {
+	              numeric: true,
+	              sensitivity: "base",
+	            })
+	          ));
+	          const databaseOwnerMissingTeamIds = databaseSharedTeamIds.filter((teamId) => (
+	            !Object.prototype.hasOwnProperty.call(databaseOwnerTeamMembersById, teamId)
+	          ));
 	          const databasePermissionTeams = [
 	            {
 	              id: "all_agents",
@@ -112213,6 +114620,175 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                      : "All teams already have access")
 	            );
 	          };
+	          const databaseOwnerLabel = String(databaseOwnerIdentity.name || databaseOwnerIdentity.email || "Owner").trim();
+	          const databaseOwnerDetail = databaseOwnerIdentity.email
+	            && databaseOwnerLabel.toLowerCase() !== databaseOwnerIdentity.email.toLowerCase()
+	              ? databaseOwnerIdentity.email
+	              : "";
+	          const databaseOwnerSelectorRow = React.createElement("div", {
+	              className: "playground-database-access-owner-row",
+	            },
+	            React.createElement("span", { className: "playground-database-access-owner-label" }, "Owner"),
+	            renderPlaygroundPlatformPopup({
+	              open: databaseOwnerPopoverOpen,
+	              shellRef: databaseOwnerPopoverRef,
+	              shellClassName: "playground-database-owner-popup-shell",
+	              menuClassName: "playground-database-owner-menu playground-agents-detail-owner-menu",
+	              trigger: React.createElement("button", {
+	                  type: "button",
+	                  className: "playground-database-owner-trigger",
+	                  disabled: !canManageDatabaseTeamAccess || !isCurrentDatabaseOwner || databaseSaveState.isSaving,
+	                  onClick: () => setDatabaseOwnerPopoverOpen((current) => !current),
+	                  "aria-label": "Choose database owner",
+	                  "aria-expanded": databaseOwnerPopoverOpen ? "true" : "false",
+	                  title: !isCurrentDatabaseOwner
+	                    ? "Only the current owner can transfer database ownership."
+	                    : (databaseOwnerDetail ? databaseOwnerLabel + " · " + databaseOwnerDetail : databaseOwnerLabel),
+	                },
+	                React.createElement("span", { className: "playground-team-member-cell" },
+	                  React.createElement(AccountAvatar, {
+	                    className: "playground-team-member-avatar",
+	                    imageClassName: "playground-team-member-avatar-image",
+	                    fallbackLabel: getAccountInitials(databaseOwnerLabel),
+	                    photoUrl: databaseOwnerIdentity.avatarUrl || "",
+	                  }),
+	                  React.createElement("span", { className: "playground-team-member-copy" },
+	                    React.createElement("span", { className: "playground-team-table-title" }, databaseOwnerLabel)
+	                  )
+	                ),
+	                React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+	              ),
+	              menuProps: {
+	                role: "menu",
+	                onClick: (event) => event.stopPropagation(),
+	              },
+	              children: databaseSharedTeamIds.length === 0
+	                ? React.createElement("div", { className: "playground-agents-detail-owner-menu-empty" },
+	                    "Grant a team access before choosing an owner."
+	                  )
+	                : databaseOwnerMissingTeamIds.length > 0
+	                  ? React.createElement("div", { className: "playground-agents-detail-owner-menu-empty" }, "Loading team members...")
+	                  : databaseOwnerCandidates.length > 0
+	                    ? databaseOwnerCandidates.map((candidate) => {
+	                        const candidateKey = getDatabaseOwnerIdentityKey(candidate);
+	                        const isSelected = candidateKey === databaseOwnerIdentityKey;
+	                        const candidateLabel = String(candidate.name || candidate.email || "Team member").trim();
+	                        const candidateDetail = candidate.email && candidateLabel.toLowerCase() !== candidate.email.toLowerCase()
+	                          ? candidate.email
+	                          : (Array.isArray(candidate.teamNames) ? candidate.teamNames.join(", ") : "");
+	                        return React.createElement("button", {
+	                            key: candidateKey,
+	                            type: "button",
+	                            className: "tb-popup-row playground-agents-detail-owner-option" + (isSelected ? " is-selected" : ""),
+	                            role: "menuitem",
+	                            onClick: () => {
+	                              if (isSelected) {
+	                                setDatabaseOwnerPopoverOpen(false);
+	                                return;
+	                              }
+	                              openDatabaseOwnerTransferModal(candidate);
+	                            },
+	                          },
+	                          React.createElement(AccountAvatar, {
+	                            className: "playground-agents-detail-owner-option-avatar",
+	                            imageClassName: "playground-agents-detail-owner-option-avatar-image",
+	                            fallbackLabel: getAccountInitials(candidateLabel),
+	                            photoUrl: candidate.avatarUrl || "",
+	                          }),
+	                          React.createElement("span", { className: "playground-agents-detail-owner-option-copy" },
+	                            React.createElement("span", null, candidateLabel),
+	                            candidateDetail ? React.createElement("span", null, candidateDetail) : null
+	                          ),
+	                          isSelected ? React.createElement(Check, { width: 13, height: 13, strokeWidth: 1.8 }) : null
+	                        );
+	                      })
+	                    : React.createElement("div", { className: "playground-agents-detail-owner-menu-empty" },
+	                        "No human team members are available."
+	                      ),
+	            })
+	          );
+	          const databaseOwnerTransferTargetLabel = String(
+	            databaseOwnerTransferTarget?.name || databaseOwnerTransferTarget?.email || "New owner"
+	          ).trim();
+	          const databaseOwnerTransferModalContent = databaseOwnerTransferTarget
+	            ? renderPlaygroundPlatformModal({
+	                open: true,
+	                visible: databaseOwnerTransferModalVisible,
+	                closing: databaseOwnerTransferModalClosing,
+	                onClose: () => closeDatabaseOwnerTransferModal(),
+	                as: "form",
+	                backdropClassName: "playground-tasks-project-issue-backdrop playground-database-owner-transfer-backdrop",
+	                className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal playground-database-owner-transfer-modal",
+	                ariaLabel: "Transfer database ownership",
+	                surfaceProps: {
+	                  onSubmit: (event) => {
+	                    event.preventDefault();
+	                    void handleDatabaseOwnerTransferConfirm();
+	                  },
+	                },
+	                children: React.createElement(React.Fragment, null,
+	                  React.createElement("div", { className: "playground-tasks-project-modal-top" },
+	                    React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+	                      React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
+	                        React.createElement(Shield, { width: 17, height: 17, strokeWidth: 1.8 })
+	                      ),
+	                      React.createElement("div", {
+	                        className: "playground-content-title playground-tasks-project-modal-name-input",
+	                      }, "Transfer Database Ownership")
+	                    ),
+	                    React.createElement("button", {
+	                      type: "button",
+	                      className: "playground-settings-icon-button playground-tasks-project-modal-close",
+	                      onClick: () => closeDatabaseOwnerTransferModal(),
+	                      disabled: databaseSaveState.isSaving,
+	                      title: "Close",
+	                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+	                  ),
+	                  React.createElement("div", { className: "playground-database-owner-transfer-copy" },
+	                    React.createElement("div", { className: "playground-database-owner-transfer-person" },
+	                      React.createElement(AccountAvatar, {
+	                        className: "playground-team-member-avatar",
+	                        imageClassName: "playground-team-member-avatar-image",
+	                        fallbackLabel: getAccountInitials(databaseOwnerTransferTargetLabel),
+	                        photoUrl: databaseOwnerTransferTarget.avatarUrl || "",
+	                      }),
+	                      React.createElement("div", { className: "playground-database-owner-transfer-person-copy" },
+	                        React.createElement("span", { className: "playground-database-owner-transfer-person-name" }, databaseOwnerTransferTargetLabel),
+	                        databaseOwnerTransferTarget.email
+	                          ? React.createElement("span", { className: "playground-database-owner-transfer-person-email" }, databaseOwnerTransferTarget.email)
+	                          : null
+	                      )
+	                    ),
+	                    React.createElement("p", { className: "playground-database-owner-transfer-warning" },
+	                      "This transfers ownership immediately. The new owner will be able to transfer ownership again. "
+	                        + "You will keep only the privileges granted through your team access and will no longer be able to change the owner."
+	                    )
+	                  ),
+	                  databaseSaveState.error
+	                    ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, databaseSaveState.error)
+	                    : null,
+	                  React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+	                    React.createElement("button", {
+	                      type: "button",
+	                      className: "playground-environments-action-button",
+	                      onClick: () => closeDatabaseOwnerTransferModal(),
+	                      disabled: databaseSaveState.isSaving,
+	                    }, "Cancel"),
+	                    React.createElement("button", {
+	                      type: "submit",
+	                      className: "playground-environments-action-button is-primary",
+	                      disabled: databaseSaveState.isSaving,
+	                    }, databaseSaveState.isSaving ? "Transferring..." : "Transfer Owner")
+	                  )
+	                ),
+	              })
+	            : null;
+	          const databaseOwnerTransferModal = databaseOwnerTransferModalContent
+	            && typeof createPortal === "function"
+	            && typeof document !== "undefined"
+	            && document.body
+	              ? createPortal(databaseOwnerTransferModalContent, document.body)
+	              : databaseOwnerTransferModalContent;
 	          const databaseTeamAccessSection = React.createElement("section", {
 	              className: "playground-project-settings-access-section playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-database-access-table-section",
 	            },
@@ -112449,10 +115025,16 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	              className: "playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-teams-section playground-project-settings-root playground-database-settings-root",
 	            },
 	            databaseDescriptionSection,
-	            React.createElement("h2", { className: "playground-project-teams-table-title playground-database-access-section-title" }, "Manage Database Access"),
-	            databaseTeamAccessSection,
+	            React.createElement("div", { className: "playground-database-access-section-group" },
+	              React.createElement("div", { className: "playground-database-access-section-header" },
+	                React.createElement("h2", { className: "playground-project-teams-table-title playground-database-access-section-title" }, "Manage Database Access"),
+	                databaseOwnerSelectorRow
+	              ),
+	              databaseTeamAccessSection
+	            ),
 	            databaseDangerSection,
-	            databaseAccessActionMenu
+	            databaseAccessActionMenu,
+	            databaseOwnerTransferModal
 	          );
 	          const selectedDatabaseRoleDefinition = getPlaygroundTeamRoleDefinition(databasePermissionRoleId);
 	          const selectedDatabaseRolePermissionSet = selectedDatabasePermissionTeam && selectedDatabasePermissionTeam.id !== "all_agents"
@@ -116789,6 +119371,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (isServersMode && selectedServerId) {
             const activeServer = draftServer?.id === selectedServerId ? draftServer : null;
             const normalizedServerId = String(activeServer?.id || "").trim();
+            const normalizedKind = canonicalizePlaygroundServerKind(activeServer?.kind);
+            const isSourceDeployableResource = ["function", "web_app"].includes(normalizedKind);
             if (!normalizedServerId || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
               return React.createElement("button", {
                 type: "button",
@@ -116796,16 +119380,17 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 title: "Server actions",
                 "aria-label": "Server actions",
                 disabled: true,
-              }, React.createElement(Settings2, { width: 16, height: 16, strokeWidth: 1.8 }));
+              }, React.createElement(isSourceDeployableResource ? Ellipsis : Settings2, { width: 16, height: 16, strokeWidth: 1.8 }));
             }
-            const normalizedKind = canonicalizePlaygroundServerKind(activeServer.kind);
             const isAuthResource = normalizedKind === "auth";
             const isAgentRuntimeResource = normalizedKind === "agent_runtime";
             const isVoiceAgentResource = normalizedKind === "voice_agent";
             const isSecretsResource = normalizedKind === "secrets";
             const isPaymentsResource = normalizedKind === "payments";
             return React.createElement("div", {
-                className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell",
+                className: "playground-files-toolbar-anchor"
+                  + (isSourceDeployableResource ? " playground-thread-nav-popup-shell" : "")
+                  + " playground-tasks-toolbar-popup-shell",
                 ref: serverActionsPopoverRef,
               },
               React.createElement("button", {
@@ -116813,17 +119398,37 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 className: normalizedButtonClassName + (serverActionsPopoverOpen ? " is-active" : ""),
                 title: "Server actions",
                 "aria-label": "Server actions",
+                "aria-haspopup": "menu",
                 "aria-expanded": serverActionsPopoverOpen ? "true" : "false",
                 onClick: () => setServerActionsPopoverOpen((current) => !current),
                 disabled: serverSaveState.isSaving || serverDeploymentState.isDeploying,
-              }, React.createElement(Settings2, { width: 16, height: 16, strokeWidth: 1.8 })),
+              }, React.createElement(isSourceDeployableResource ? Ellipsis : Settings2, { width: 16, height: 16, strokeWidth: 1.8 })),
               serverActionsPopoverOpen
                 ? React.createElement("div", {
-                    className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                    className: "tb-popup-menu playground-tasks-toolbar-popup-menu"
+                      + (isSourceDeployableResource ? " playground-thread-nav-popup-menu" : "")
+                      + " playground-tasks-toolbar-popup-menu-animate-down-in",
+                    role: "menu",
                     onClick: (event) => event.stopPropagation(),
                   },
+                    isSourceDeployableResource
+                      ? React.createElement(React.Fragment, null,
+                          React.createElement("div", { className: "tb-popup-row playground-thread-nav-popup-static-row" },
+                            React.createElement("span", { className: "tb-popup-check-slot", "aria-hidden": "true" }),
+                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                              React.createElement("span", null, (normalizedKind === "function" ? "Function" : "Web App") + " ID"),
+                              React.createElement("span", {
+                                className: "playground-thread-nav-popup-thread-id",
+                                title: normalizedServerId,
+                              }, normalizedServerId)
+                            )
+                          ),
+                          React.createElement("div", { className: "playground-thread-nav-popup-divider", "aria-hidden": "true" })
+                        )
+                      : null,
                     React.createElement("button", {
                       type: "button",
+                      role: "menuitem",
                       className: "tb-popup-row",
                       onClick: () => openServerRenameDialog(activeServer),
                     },
@@ -116835,6 +119440,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                     !isAuthResource && !isAgentRuntimeResource && !isVoiceAgentResource && !isSecretsResource && !isPaymentsResource
                       ? React.createElement("button", {
                           type: "button",
+                          role: "menuitem",
                           className: "tb-popup-row",
                           onClick: () => {
                             setServerActionsPopoverOpen(false);
@@ -116850,7 +119456,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                       : null,
                     React.createElement("button", {
                       type: "button",
-                      className: "tb-popup-row",
+                      role: "menuitem",
+                      className: "tb-popup-row" + (isSourceDeployableResource ? " playground-tasks-detail-menu-item-danger" : ""),
                       onClick: () => {
                         setServerActionsPopoverOpen(false);
                         void handleDeleteServer(normalizedServerId);
@@ -117791,11 +120398,15 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 onPointerEnter: () => {
                   if (item?.resourceType === "database") {
                     prefetchDatabaseBootstrap(item.id);
+                  } else if (["function", "web_app"].includes(canonicalizePlaygroundServerKind(item?.kind))) {
+                    void loadServerAnalytics(item.id, { period: "day" });
                   }
                 },
                 onFocus: () => {
                   if (item?.resourceType === "database") {
                     prefetchDatabaseBootstrap(item.id);
+                  } else if (["function", "web_app"].includes(canonicalizePlaygroundServerKind(item?.kind))) {
+                    void loadServerAnalytics(item.id, { period: "day" });
                   }
                 },
                 onKeyDown: (event) => {
@@ -197178,7 +199789,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
               || currentRoleId === "admin"
               || String(selectedOrganization?.ownerUserId || "") === String(sessionState.userId || "")
             );
-          const canInviteOrganization = canManageOrganization && String(selectedOrganization?.type || "").toLowerCase() !== "personal";
+          const canInviteOrganization = canManageOrganization;
           const renderEmpty = (text) => React.createElement("div", { className: "playground-team-empty" }, text);
           const renderOrganizationActionButton = (label, onClick, options = {}) => React.createElement("button", {
             type: "button",
@@ -198275,18 +200886,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                      : null
 	                  )
 	                ),
-		                String(selectedOrganization?.type || "").trim().toLowerCase() !== "personal"
+		                canInviteOrganization
 		                  ? React.createElement("button", {
 		                      type: "button",
 		                      className: "playground-top-nav-private-chat-button playground-agents-nav-create-button playground-agents-overview-toolbar-create-button",
 		                      onClick: () => {
-		                        if (!canInviteOrganization) {
-		                          return;
-		                        }
 		                        setOrganizationMemberToolbarPopover("");
 		                        setOrganizationPageInviteModalOpen(true);
 		                      },
-		                      disabled: !canInviteOrganization,
 		                      title: "Invite member",
 		                      "aria-label": "Invite member",
 		                    },

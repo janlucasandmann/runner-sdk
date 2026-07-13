@@ -433,9 +433,9 @@ export function normalizeRunnerThreadActivityGroup(raw: unknown, defaults: Runne
         ? { observerStatus: firstString(record, ["observerStatus", "observer_status"]) }
         : {}),
     },
-    createdAt: dateString(record, ["createdAt", "created_at"], defaults.createdAt),
-    updatedAt: nullableDateString(record, ["updatedAt", "updated_at"]),
-    sealedAt: nullableDateString(record, ["sealedAt", "sealed_at"]),
+    createdAt: dateString(record, ["createdAt", "created_at", "startedAt", "started_at", "openedAt", "opened_at"], defaults.createdAt),
+    updatedAt: nullableDateString(record, ["updatedAt", "updated_at", "completedAt", "completed_at", "endedAt", "ended_at"]),
+    sealedAt: nullableDateString(record, ["sealedAt", "sealed_at", "completedAt", "completed_at", "endedAt", "ended_at"]),
   };
 }
 
@@ -1027,6 +1027,7 @@ export function normalizeRunnerThreadTimelinePage(raw: unknown, defaults: Runner
 
   for (const rawGroup of readArray(record, ["activityGroups", "activity_groups", "groups"])) {
     const group = asRecord(rawGroup);
+    const groupMetrics = firstRecord(group, ["metrics", "usage"]);
     canonicalItems.push(normalizeRunnerThreadActivityGroup({
       ...group,
       threadId,
@@ -1034,7 +1035,11 @@ export function normalizeRunnerThreadTimelinePage(raw: unknown, defaults: Runner
       liveSummary: firstValue(group, ["summary", "liveSummary", "live_summary"]),
       highestPermissionRing: firstValue(group, ["highestRing", "highest_ring", "highestPermissionRing", "highest_permission_ring"]),
       eventIds: firstValue(group, ["evidenceEventIds", "evidence_event_ids", "eventIds", "event_ids"]),
-      metrics: { actionCount: firstNumber(group, ["actionCount", "action_count"], 0) },
+      metrics: {
+        ...groupMetrics,
+        actionCount: firstNumber(group, ["actionCount", "action_count"], firstNumber(groupMetrics, ["actionCount", "action_count"], 0)),
+        durationMs: firstNumber(group, ["durationMs", "duration_ms"], firstNumber(groupMetrics, ["durationMs", "duration_ms"], 0)),
+      },
       sequence: firstValue(group, ["startSequence", "start_sequence", "sequence"]) ?? 0,
     }, { threadId, runId: firstNullableString(group, ["runId", "run_id"]), sequence: 0 }));
   }

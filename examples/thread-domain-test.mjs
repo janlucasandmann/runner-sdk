@@ -337,6 +337,7 @@ const backendTimelineFixture = {
     endSequence: null,
     highestRing: 2,
     actionCount: 2,
+    durationMs: 7_250,
     evidenceEventIds: ["backend-event-1"],
     observerStatus: "active",
     revision: 3,
@@ -375,6 +376,7 @@ const backendGroup = backendPage.items.find((item) => item.kind === "activity_gr
 assert.equal(backendGroup.liveSummary, "Tracing the failed token refresh");
 assert.equal(backendGroup.status, "open");
 assert.equal(backendGroup.highestPermissionRing, 2);
+assert.equal(backendGroup.metrics.durationMs, 7_250, "compatibility activity groups preserve backend duration metrics");
 assert.deepEqual(backendGroup.eventIds, ["backend-event-1"]);
 assert.ok(backendGroup.actionIds.includes("legacy:log:command-1"));
 const backendDelivery = backendPage.items.find((item) => item.kind === "routing_receipt");
