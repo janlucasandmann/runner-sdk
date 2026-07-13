@@ -1486,8 +1486,7 @@ export const MODELS_PAGE_SCRIPT = String.raw`
         const normalizedSearchQuery = String(props.searchQuery || "").trim().toLowerCase();
         const providerFilter = String(props.providerFilter || "all").trim() || "all";
         const providerFilterOptions = getPlaygroundManagedModelsProviderFilterOptions(activeTab, sourceRows);
-        const sortOptions = getPlaygroundManagedModelsSortOptions(activeTab);
-        const normalizedSortDirection = String(props.sortDirection || "asc").trim().toLowerCase() === "desc" ? "desc" : "asc";
+	        const normalizedSortDirection = String(props.sortDirection || "asc").trim().toLowerCase() === "desc" ? "desc" : "asc";
         const filteredRows = sourceRows
           .filter((model) => model?.id && model?.label)
           .filter((model) => {
@@ -1528,9 +1527,6 @@ export const MODELS_PAGE_SCRIPT = String.raw`
         const visibleRows = sortPlaygroundManagedModels(activeTab, filteredRows, props.sort, normalizedSortDirection);
         const isAgentTab = activeTab === "agent";
         const isVideoTab = activeTab === "video";
-        const modelTableVariantClass = activeTab === "deep_research"
-          ? " is-deep-research-models"
-          : " is-" + activeTab + "-models";
         const capabilityLabel = isVideoTab ? "Max Duration" : isAgentTab ? "Intelligence" : "Mode";
         const scopeLabel = isAgentTab ? "Context" : activeTab === "image" ? "Quality" : activeTab === "video" ? "Resolutions" : "Scope";
         const speedLabel = isVideoTab ? "Input Modalities" : isAgentTab ? "Speed in TPS" : "Speed";
@@ -1654,272 +1650,164 @@ export const MODELS_PAGE_SCRIPT = String.raw`
           );
         };
 
-        const closeToolbarPopover = () => {
-          const openMenu = String(props.toolbarPopover || "").trim();
-          if (!openMenu) return;
-          if (typeof props.setToolbarPopoverClosing === "function") props.setToolbarPopoverClosing(openMenu);
-          props.setToolbarPopover("");
-          window.setTimeout(() => {
-            if (typeof props.setToolbarPopoverClosing === "function") props.setToolbarPopoverClosing("");
-          }, 160);
-        };
-        const toggleToolbarPopover = (menuId) => {
-          if (props.toolbarPopover === menuId) {
-            closeToolbarPopover();
-            return;
-          }
-          if (typeof props.setToolbarPopoverClosing === "function") props.setToolbarPopoverClosing("");
-          props.setToolbarPopover(menuId);
-        };
-        const setModelSort = (sortId, direction) => {
-          props.setSort(sortId);
-          if (typeof props.setSortDirection === "function") {
-            props.setSortDirection(String(direction || "asc").toLowerCase() === "desc" ? "desc" : "asc");
-          }
-        };
-        const handleColumnSort = (sortId) => {
-          const nextDirection = props.sort === sortId && normalizedSortDirection === "asc" ? "desc" : "asc";
-          setModelSort(sortId, nextDirection);
-          closeToolbarPopover();
-        };
-        const renderSortIcon = (sortId) => {
-          const isActive = props.sort === sortId;
-          return React.createElement("span", {
-              className: "playground-agents-overview-sort-icon"
-                + (isActive ? " is-active" : "")
-                + (isActive && normalizedSortDirection === "asc" ? " is-ascending" : "")
-                + (isActive && normalizedSortDirection === "desc" ? " is-descending" : ""),
-              "aria-hidden": "true",
-            },
-            React.createElement(ChevronsUpDown, { className: "playground-agents-overview-sort-icon-layer is-top", width: 14, height: 14, strokeWidth: 1.8 }),
-            React.createElement(ChevronsUpDown, { className: "playground-agents-overview-sort-icon-layer is-bottom", width: 14, height: 14, strokeWidth: 1.8 })
-          );
-        };
-        const renderSortableHeader = (label, sortId, className = "") => {
-          const isActive = props.sort === sortId;
-          const nextDirection = isActive && normalizedSortDirection === "asc" ? "descending" : "ascending";
-          return React.createElement("div", {
-              className: "playground-agents-overview-sortable-header" + (isActive ? " is-active" : "") + (className ? " " + className : ""),
-            },
-            React.createElement("span", { className: "playground-agents-overview-sortable-header-label" }, label),
-            React.createElement("button", {
-                type: "button",
-                className: "playground-agents-overview-column-sort-button"
-                  + (isActive ? " is-active" : "")
-                  + (isActive && normalizedSortDirection === "asc" ? " is-ascending" : "")
-                  + (isActive && normalizedSortDirection === "desc" ? " is-descending" : ""),
-                title: "Sort " + label + " " + nextDirection,
-                "aria-label": "Sort " + label + " " + nextDirection,
-                "aria-pressed": isActive ? "true" : "false",
-                onClick: (event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  handleColumnSort(sortId);
-                },
-              },
-              renderSortIcon(sortId)
-            )
-          );
-        };
-        const getToolbarMenuClassName = (menuId) =>
-          "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-models-overview-menu"
-          + (props.toolbarPopoverClosing === menuId ? " is-closing" : " playground-tasks-toolbar-popup-menu-animate-down-in");
-
-        const renderSortMenu = () => props.toolbarPopover === "sort" || props.toolbarPopoverClosing === "sort"
-          ? React.createElement("div", { className: getToolbarMenuClassName("sort") },
-              sortOptions.map((option) =>
-                React.createElement("button", {
-                    key: option.id,
-                    type: "button",
-                    className: "tb-popup-row tb-popup-row-select"
-                      + (props.sort === option.id && normalizedSortDirection === String(option.direction || "asc") ? " selected" : ""),
-                    onClick: () => {
-                      setModelSort(option.id, option.direction);
-                      closeToolbarPopover();
-                    },
-                  },
-                  React.createElement("span", { className: "tb-popup-check-slot" },
-                    props.sort === option.id && normalizedSortDirection === String(option.direction || "asc")
-                      ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                      : null
-                  ),
-                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                    React.createElement("span", null, option.label)
-                  )
-                )
-              )
-            )
-          : null;
-
-        const renderFilterMenu = () => props.toolbarPopover === "filter" || props.toolbarPopoverClosing === "filter"
-          ? React.createElement("div", { className: getToolbarMenuClassName("filter") },
-              providerFilterOptions.map((option) =>
-                React.createElement("button", {
-                    key: option.id,
-                    type: "button",
-                    className: "tb-popup-row tb-popup-row-select" + (providerFilter === option.id ? " selected" : ""),
-                    onClick: () => {
-                      props.setProviderFilter(option.id);
-                      closeToolbarPopover();
-                    },
-                  },
-                  React.createElement("span", { className: "tb-popup-check-slot" },
-                    providerFilter === option.id
-                      ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                      : null
-                  ),
-                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                    React.createElement("span", null, option.label)
-                  )
-                )
-              )
-            )
-          : null;
-
-        const renderModelRow = (model) => {
-          const providerLabel = getPlaygroundManagedModelProviderLabel(activeTab, model);
-          const pricingCells = isAgentTab ? getPlaygroundManagedAgentPricingCells(model) : null;
-          return React.createElement("div", {
-              key: activeTab + ":table:" + model.id,
-              className: "playground-project-overview-threads-table-row playground-models-overview-table-row"
-                + (isAgentTab ? " is-agent-pricing" : "")
-                + modelTableVariantClass
-                + (model.isPricingSubrow ? " is-pricing-subrow" : ""),
-            },
-            React.createElement("div", { className: "playground-project-overview-thread-cell playground-models-overview-cell is-name" },
-              React.createElement("div", { className: "playground-files-entry-main playground-models-entry-main" },
-                model.isPricingSubrow ? null : renderPlaygroundManagedModelProviderIcon(activeTab, model),
-                React.createElement("div", { className: "playground-files-entry-copy" },
-                  React.createElement("div", {
-                    className: "playground-files-entry-name",
-                    title: model.label || model.id,
-                  }, model.label || model.id)
-                )
-              )
-            ),
-            React.createElement("div", { className: "playground-project-overview-thread-cell playground-models-overview-cell" },
-              React.createElement("div", { className: "playground-models-entry-value is-strong", title: providerLabel }, providerLabel)
-            ),
-            React.createElement("div", { className: "playground-project-overview-thread-cell playground-models-overview-cell" },
-              React.createElement("div", { className: "playground-models-entry-value" }, getCapabilityValue(model))
-            ),
-            React.createElement("div", { className: "playground-project-overview-thread-cell playground-models-overview-cell" },
-              React.createElement("div", { className: "playground-models-entry-value", title: getScopeValue(model) }, getScopeValue(model))
-            ),
-            React.createElement("div", { className: "playground-project-overview-thread-cell playground-models-overview-cell" },
-              React.createElement("div", { className: "playground-models-entry-value", title: getSpeedValue(model) }, getSpeedValue(model))
-            ),
-            ...(isAgentTab
-              ? [
-                  React.createElement("div", { className: "playground-project-overview-thread-cell playground-models-overview-cell is-right" },
-                    React.createElement("div", { className: "playground-models-entry-value is-right is-strong is-price", title: pricingCells.input }, pricingCells.input)
-                  ),
-                  React.createElement("div", { className: "playground-project-overview-thread-cell playground-models-overview-cell is-right" },
-                    React.createElement("div", { className: "playground-models-entry-value is-right is-strong is-price", title: pricingCells.output }, pricingCells.output)
-                  ),
-                  React.createElement("div", { className: "playground-project-overview-thread-cell playground-models-overview-cell is-right" },
-                    React.createElement("div", { className: "playground-models-entry-value is-right is-strong is-price", title: pricingCells.cached }, pricingCells.cached)
-                  ),
-                ]
-              : [
-                  React.createElement("div", { className: "playground-project-overview-thread-cell playground-models-overview-cell is-right" },
-                    React.createElement("div", { className: "playground-models-entry-value is-right is-strong", title: getPricingValue(model) }, getPricingValue(model))
-                  ),
-                ])
-          );
-        };
-
-        const renderModelCard = (model) => {
-          const providerLabel = getPlaygroundManagedModelProviderLabel(activeTab, model);
-          const pricingValue = getPricingValue(model);
-          const pricingCells = isAgentTab ? getPlaygroundManagedAgentPricingCells(model) : null;
-          return React.createElement("div", {
-              key: activeTab + ":card:" + model.id,
-              className: "playground-files-grid-item playground-models-grid-item"
-                + (isAgentTab ? " is-agent-pricing" : "")
-                + (model.isPricingSubrow ? " is-pricing-subrow" : ""),
-            },
-            React.createElement("div", { className: "playground-models-grid-card-top" },
-              React.createElement("div", { className: "playground-models-grid-provider", title: providerLabel },
-                model.isPricingSubrow ? null : renderPlaygroundManagedModelProviderIcon(activeTab, model),
-                React.createElement("span", null, providerLabel)
-              ),
-              pricingValue
-                ? React.createElement("div", { className: "playground-models-grid-price", title: pricingValue }, pricingValue)
-                : null
-            ),
-            React.createElement("div", {
-              className: "playground-files-grid-item-name",
-              title: model.label || model.id,
-            }, model.label || model.id),
-            React.createElement("div", { className: "playground-models-grid-facts" },
-              React.createElement("div", { className: "playground-models-grid-fact" },
-                React.createElement("span", null, capabilityLabel),
-                React.createElement("span", null, getCapabilityValue(model))
-              ),
-              React.createElement("div", { className: "playground-models-grid-fact" },
-                React.createElement("span", null, scopeLabel),
-                React.createElement("span", { title: getScopeValue(model) }, getScopeValue(model))
-              ),
-              React.createElement("div", { className: "playground-models-grid-fact" },
-                React.createElement("span", null, speedLabel),
-                React.createElement("span", { title: getSpeedValue(model) }, getSpeedValue(model))
-              ),
-              ...(isAgentTab
-                ? [
-                    React.createElement("div", { className: "playground-models-grid-fact" },
-                      React.createElement("span", null, "Input / mTok"),
-                      React.createElement("span", { title: pricingCells.input }, pricingCells.input)
-                    ),
-                    React.createElement("div", { className: "playground-models-grid-fact" },
-                      React.createElement("span", null, "Output / mTok"),
-                      React.createElement("span", { title: pricingCells.output }, pricingCells.output)
-                    ),
-                    React.createElement("div", { className: "playground-models-grid-fact" },
-                      React.createElement("span", null, "Cached / mTok"),
-                      React.createElement("span", { title: pricingCells.cached }, pricingCells.cached)
-                    ),
-                  ]
-                : [])
-            )
-          );
-        };
-
-        const renderTableHead = () => {
-          return React.createElement("div", {
-              className: "playground-project-overview-threads-table-header playground-agents-overview-column-header playground-models-overview-column-header"
-                + (isAgentTab ? " is-agent-pricing" : "")
-                + modelTableVariantClass,
-              role: "row",
-            },
-              React.createElement("div", null, renderSortableHeader("Model", "name")),
-              React.createElement("div", null, renderSortableHeader("Provider", "provider")),
-              React.createElement("div", null, renderSortableHeader(capabilityLabel, isAgentTab ? "intelligence" : "capability")),
-              React.createElement("div", null, renderSortableHeader(scopeLabel, isAgentTab ? "context" : "scope")),
-              React.createElement("div", null, renderSortableHeader(speedLabel, "speed")),
-              ...(isAgentTab
-                ? [
-                    React.createElement("div", { className: "is-right" }, renderSortableHeader("Input / mTok", "cost-input")),
-                    React.createElement("div", { className: "is-right" }, renderSortableHeader("Output / mTok", "cost-output")),
-                    React.createElement("div", { className: "is-right" }, renderSortableHeader("Cached / mTok", "cost-cached")),
-                  ]
-                : [
-                    React.createElement("div", { className: "is-right" }, renderSortableHeader(pricingLabel, "cost")),
-                  ])
-          );
-        };
-
-        const renderModelsContent = () => {
-          if (visibleRows.length === 0) {
-            return React.createElement("div", { className: "playground-files-state" },
-              normalizedSearchQuery || providerFilter !== "all" ? "No matching models found." : "No models available."
-            );
-          }
-          return React.createElement("div", { className: "playground-files-entry-list playground-project-overview-thread-list playground-models-entry-list" },
-            renderTableHead(),
-            visibleRows.map(renderModelRow)
-          );
-        };
+	        const setModelSort = (sortId, direction) => {
+	          props.setSort(sortId);
+	          if (typeof props.setSortDirection === "function") {
+	            props.setSortDirection(String(direction || "asc").toLowerCase() === "desc" ? "desc" : "asc");
+	          }
+	        };
+	        const renderModelValue = (value, options = {}) => React.createElement("div", {
+	          className: "playground-models-entry-value"
+	            + (options.strong ? " is-strong" : "")
+	            + (options.price ? " is-price" : ""),
+	          title: typeof value === "string" ? value : "",
+	        }, value);
+	        const modelColumns = [
+	          {
+	            id: "name",
+	            header: "Model",
+	            accessor: (model) => model.label || model.id,
+	            sortable: true,
+	            width: "minmax(185px, 1.35fr)",
+	            cell: ({ row: model }) => React.createElement("div", { className: "playground-files-entry-main playground-models-entry-main" },
+	              model.isPricingSubrow ? null : renderPlaygroundManagedModelProviderIcon(activeTab, model),
+	              React.createElement("div", {
+	                className: "playground-files-entry-name",
+	                title: model.label || model.id,
+	              }, model.label || model.id)
+	            ),
+	          },
+	          {
+	            id: "provider",
+	            header: "Provider",
+	            accessor: (model) => getPlaygroundManagedModelProviderLabel(activeTab, model),
+	            sortable: true,
+	            width: "minmax(105px, 0.72fr)",
+	            cell: ({ row: model }) => renderModelValue(getPlaygroundManagedModelProviderLabel(activeTab, model), { strong: true }),
+	          },
+	          {
+	            id: isAgentTab ? "intelligence" : "capability",
+	            header: capabilityLabel,
+	            accessor: getCapabilityValue,
+	            sortable: true,
+	            width: "minmax(105px, 0.7fr)",
+	            hideBelow: 820,
+	            cell: ({ row: model }) => renderModelValue(getCapabilityValue(model)),
+	          },
+	          {
+	            id: isAgentTab ? "context" : "scope",
+	            header: scopeLabel,
+	            accessor: getScopeValue,
+	            sortable: true,
+	            width: "minmax(85px, 0.55fr)",
+	            hideBelow: 720,
+	            cell: ({ row: model }) => renderModelValue(getScopeValue(model)),
+	          },
+	          {
+	            id: "speed",
+	            header: speedLabel,
+	            accessor: getSpeedValue,
+	            sortable: true,
+	            width: "minmax(95px, 0.62fr)",
+	            hideBelow: 940,
+	            cell: ({ row: model }) => renderModelValue(getSpeedValue(model)),
+	          },
+	          ...(isAgentTab
+	            ? [
+	                {
+	                  id: "cost-input",
+	                  header: "Input / mTok",
+	                  accessor: (model) => getPlaygroundManagedAgentPricingCells(model).input,
+	                  sortable: true,
+	                  width: "minmax(100px, 0.58fr)",
+	                  align: "end",
+	                  cell: ({ row: model }) => renderModelValue(getPlaygroundManagedAgentPricingCells(model).input, { strong: true, price: true }),
+	                },
+	                {
+	                  id: "cost-output",
+	                  header: "Output / mTok",
+	                  accessor: (model) => getPlaygroundManagedAgentPricingCells(model).output,
+	                  sortable: true,
+	                  width: "minmax(105px, 0.6fr)",
+	                  align: "end",
+	                  hideBelow: 1040,
+	                  cell: ({ row: model }) => renderModelValue(getPlaygroundManagedAgentPricingCells(model).output, { strong: true, price: true }),
+	                },
+	                {
+	                  id: "cost-cached",
+	                  header: "Cached / mTok",
+	                  accessor: (model) => getPlaygroundManagedAgentPricingCells(model).cached,
+	                  sortable: true,
+	                  width: "minmax(105px, 0.6fr)",
+	                  align: "end",
+	                  hideBelow: 1180,
+	                  cell: ({ row: model }) => renderModelValue(getPlaygroundManagedAgentPricingCells(model).cached, { strong: true, price: true }),
+	                },
+	              ]
+	            : [
+	                {
+	                  id: "cost",
+	                  header: pricingLabel,
+	                  accessor: getPricingValue,
+	                  sortable: true,
+	                  width: "minmax(125px, 0.75fr)",
+	                  align: "end",
+	                  cell: ({ row: model }) => renderModelValue(getPricingValue(model), { strong: true }),
+	                },
+	              ]),
+	        ];
+	        const categorySwitch = React.createElement("div", {
+	            className: "content-mode-switch playground-agents-list-switch playground-models-overview-category-switch",
+	            role: "tablist",
+	            "aria-label": "Model categories",
+	          },
+	          getPlaygroundManagedModelsTabs().map((tab) => React.createElement("button", {
+	            key: tab.id,
+	            type: "button",
+	            role: "tab",
+	            className: "content-mode-button" + (activeTab === tab.id ? " is-active" : ""),
+	            "aria-selected": activeTab === tab.id ? "true" : "false",
+	            onClick: () => {
+	              props.setActiveTab(tab.id);
+	              props.setProviderFilter("all");
+	              setModelSort("provider", "asc");
+	            },
+	          }, tab.label))
+	        );
+	        const modelsDataTable = React.createElement(PlatformDataTable, {
+	          rows: visibleRows,
+	          columns: modelColumns,
+	          getRowId: (model) => activeTab + ":" + String(model.id || ""),
+	          ariaLabel: "Models",
+	          className: "playground-models-platform-data-table",
+	          surface: "plain",
+	          sorting: {
+	            value: { id: props.sort, direction: normalizedSortDirection },
+	            manual: true,
+	            onChange: (nextSorting) => {
+	              if (nextSorting) setModelSort(nextSorting.id, nextSorting.direction);
+	            },
+	          },
+	          toolbar: {
+	            search: {
+	              value: props.searchQuery,
+	              onChange: props.setSearchQuery,
+	              placeholder: "Search models",
+	              manual: true,
+	            },
+	            showSort: true,
+	            filters: [{
+	              id: "provider",
+	              label: "Provider",
+	              value: providerFilter,
+	              options: providerFilterOptions,
+	              onChange: props.setProviderFilter,
+	            }],
+	            trailing: categorySwitch,
+	          },
+	          getRowClassName: (model) => model.isPricingSubrow ? "is-pricing-subrow" : "",
+	          emptyState: normalizedSearchQuery || providerFilter !== "all" ? "No matching models found." : "No models available.",
+	        });
 
         const skillSettingsSection = skillSettingsMeta
           ? React.createElement("section", { className: "playground-models-skill-settings-section" },
@@ -1943,13 +1831,7 @@ export const MODELS_PAGE_SCRIPT = String.raw`
           : null;
         return React.createElement("div", { className: "playground-files-shell playground-models-shell" },
           React.createElement("section", { className: "playground-files-browser playground-models-browser" },
-            props.toolbarPopover || props.toolbarPopoverClosing
-              ? React.createElement("div", {
-                  className: "playground-files-search-backdrop",
-                  onClick: closeToolbarPopover,
-                })
-              : null,
-            React.createElement("div", { className: "playground-files-browser-header playground-models-browser-header" },
+	            React.createElement("div", { className: "playground-files-browser-header playground-models-browser-header" },
               React.createElement("div", { className: "playground-files-library-header playground-models-library-header" },
                 React.createElement("div", { className: "playground-files-library-title-row" },
                   React.createElement("h1", { className: "playground-files-library-title" }, "Models")
@@ -1961,105 +1843,13 @@ export const MODELS_PAGE_SCRIPT = String.raw`
               React.createElement("section", {
                   className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-team-overview-table-section playground-team-grid-table-section playground-models-overview-table-section",
                 },
-                visibleRows.length === 0
-                  ? React.createElement("div", {
-                      className: "playground-agents-overview-sticky-table-header playground-team-overview-sticky-table-header playground-models-overview-sticky-table-header",
-                    }, renderModelsToolbar())
-                  : null,
-                visibleRows.length === 0
-                  ? React.createElement("div", { className: "playground-plugins-empty" },
-                      normalizedSearchQuery || providerFilter !== "all" ? "No matching models found." : "No models available."
-                    )
-                  : React.createElement("div", {
-                      className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table playground-models-overview-table",
-                    },
-                    React.createElement("div", {
-                        className: "playground-agents-overview-sticky-table-header playground-team-overview-sticky-table-header playground-models-overview-sticky-table-header",
-                      }, renderModelsToolbar()),
-                    renderModelsContent()
-                  )
-              ),
-              skillSettingsSection
+	                modelsDataTable
+	              ),
+	              skillSettingsSection
             )
           )
         );
-
-        function renderModelsToolbar() {
-          return React.createElement("div", {
-              className: "playground-develop-server-kind-table-toolbar playground-team-overview-toolbar-row playground-models-overview-toolbar-row",
-              ref: props.toolbarRef,
-            },
-            React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell playground-models-overview-search-shell" },
-              React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-              React.createElement("input", {
-                type: "search",
-                value: props.searchQuery,
-                onChange: (event) => {
-                  props.setSearchQuery(event.target.value);
-                  if (props.toolbarPopover) closeToolbarPopover();
-                },
-                className: "playground-plugins-search",
-                placeholder: "Search models",
-                "aria-label": "Search models",
-              })
-            ),
-            React.createElement("div", { className: "playground-plugins-toolbar-controls playground-models-overview-controls" },
-              React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-files-control-button is-bare is-backlog-sort"
-                    + (props.toolbarPopover === "sort" || props.sort !== "provider" || normalizedSortDirection !== "asc" ? " is-active" : ""),
-                  onClick: () => toggleToolbarPopover("sort"),
-                  title: "Sort models",
-                  "aria-expanded": props.toolbarPopover === "sort" ? "true" : "false",
-                },
-                  React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("span", null, "Sort")
-                ),
-                renderSortMenu()
-              ),
-              React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-files-control-button is-bare is-backlog-filter"
-                    + (props.toolbarPopover === "filter" || providerFilter !== "all" ? " is-active" : ""),
-                  onClick: () => toggleToolbarPopover("filter"),
-                  title: "Filter models",
-                  "aria-expanded": props.toolbarPopover === "filter" ? "true" : "false",
-                },
-                  React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("span", null, "Filter")
-                ),
-                renderFilterMenu()
-              )
-            ),
-            React.createElement("div", { className: "playground-models-overview-category-row" },
-              React.createElement("div", {
-                  className: "content-mode-switch playground-agents-list-switch playground-models-overview-category-switch",
-                  role: "tablist",
-                  "aria-label": "Model categories",
-                },
-                    getPlaygroundManagedModelsTabs().map((tab) =>
-                      React.createElement("button", {
-                        key: tab.id,
-                        type: "button",
-                        role: "tab",
-                        className: "content-mode-button" + (activeTab === tab.id ? " is-active" : ""),
-                        "aria-selected": activeTab === tab.id ? "true" : "false",
-                        onClick: () => {
-                          props.setActiveTab(tab.id);
-                          props.setToolbarPopover("");
-                          if (typeof props.setToolbarPopoverClosing === "function") props.setToolbarPopoverClosing("");
-                          props.setProviderFilter("all");
-                          setModelSort("provider", "asc");
-                        },
-                      }, tab.label)
-                    )
-                  )
-            )
-          );
-        }
-      }
+	      }
 
       function renderPlaygroundModelsPage(props) {
         const activeTab = normalizePlaygroundManagedModelsTab(props.activeTab);

@@ -7385,83 +7385,6 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
               )
             );
           }
-          function renderRunRow(run) {
-            const dateLabel = formatPlaygroundEvaluationDate(run.completedAt || run.createdAt);
-            const status = String(run?.status || "").trim().toLowerCase();
-            const scoreLabel = status === "queued" || status === "running"
-              ? "running"
-              : formatPlaygroundEvaluationPercent(run.averageScore);
-            return React.createElement("div", {
-                key: run.id,
-                role: "button",
-                tabIndex: 0,
-                className: "playground-project-overview-threads-table-row",
-                onClick: () => openRunDetail(set.id, run.id),
-                onKeyDown: (event) => {
-                  if (event.key !== "Enter" && event.key !== " ") return;
-                  event.preventDefault();
-                  openRunDetail(set.id, run.id);
-                },
-              },
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-run" },
-                React.createElement("div", { className: "playground-plugin-row-title" }, run.label || "Run")
-              ),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-triggered-by" }, renderRunAgentCell(run, set)),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-environment" }, renderRunEnvironmentCell(run, set)),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-score" }, scoreLabel),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-source" }, String(run.totalCount || 0)),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-date", title: dateLabel }, dateLabel),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-actions" },
-                React.createElement("div", {
-                    className: "playground-tasks-toolbar-popup-shell",
-                    onClick: (event) => event.stopPropagation(),
-                  },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-project-overview-thread-menu-button" + (evaluationRunRowMenuId === run.id ? " is-active" : ""),
-                    "aria-label": "Evaluation run actions",
-                    "aria-expanded": evaluationRunRowMenuId === run.id ? "true" : "false",
-                    onClick: (event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      closeToolbarPopover();
-                      setEvaluationRunRowMenuId((current) => current === run.id ? "" : run.id);
-                    },
-                  }, React.createElement(EllipsisVertical, { width: 15, height: 15, strokeWidth: 1.8 })),
-                  evaluationRunRowMenuId === run.id
-                    ? React.createElement("div", {
-                        className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                        onClick: (event) => event.stopPropagation(),
-                      },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "tb-popup-row",
-                          onClick: () => {
-                            setEvaluationRunRowMenuId("");
-                            openEvaluationRunRenameDialog(set, run);
-                          },
-                        },
-                          React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                            React.createElement("span", null, "Rename")
-                          )
-                        ),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "tb-popup-row",
-                          onClick: () => handleDeleteEvaluationRun(set.id, run.id),
-                        },
-                          React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                            React.createElement("span", null, "Delete")
-                          )
-                        )
-                      )
-                    : null
-                )
-              )
-            );
-          }
           return React.createElement("section", {
               className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section",
             },
@@ -7552,24 +7475,64 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
                 React.createElement("span", null, "Show more")
               )
             ),
-            visibleRuns.length > 0
-              ? React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table" },
-                  React.createElement("div", { className: "playground-project-overview-threads-table-header" },
-                    React.createElement("div", null, "Run"),
-                    React.createElement("div", null, "Agent"),
-                    React.createElement("div", null, "Environment"),
-                    React.createElement("div", null, "Score"),
-                    React.createElement("div", null, "Cases"),
-                    React.createElement("div", null, "Date"),
-                    React.createElement("div", null)
-                  ),
-                  React.createElement("div", { className: "playground-project-overview-thread-list" },
-                    visibleRuns.map((run) => renderRunRow(run))
-                  )
-                )
-              : React.createElement("div", { className: "playground-tasks-secondary-copy" },
-                  runs.length > 0 && hasFilters ? "No matching evaluation runs." : "No runs yet."
-                )
+            React.createElement(PlatformDataTable, {
+              rows: visibleRuns,
+              getRowId: (run) => run.id,
+              ariaLabel: "Evaluation runs",
+              className: "playground-evaluation-runs-platform-table",
+              surface: "plain",
+              sticky: false,
+              emptyState: runs.length > 0 && hasFilters ? "No matching evaluation runs." : "No runs yet.",
+              columns: [
+                {
+                  id: "run",
+                  header: "Run",
+                  accessor: (run) => run.label || "Run",
+                  width: "minmax(170px, 1.5fr)",
+                  cell: ({ row: run }) => React.createElement("div", { className: "playground-plugin-row-title" }, run.label || "Run"),
+                },
+                {
+                  id: "agent",
+                  header: "Agent",
+                  accessor: getRunAgentLabel,
+                  width: "minmax(130px, 1fr)",
+                  cell: ({ row: run }) => renderRunAgentCell(run, set),
+                },
+                {
+                  id: "environment",
+                  header: "Environment",
+                  accessor: getRunEnvironmentLabel,
+                  width: "minmax(140px, 1.1fr)",
+                  hideBelow: 760,
+                  cell: ({ row: run }) => renderRunEnvironmentCell(run, set),
+                },
+                {
+                  id: "score",
+                  header: "Score",
+                  accessor: (run) => Number(run.averageScore || 0),
+                  width: "minmax(80px, 0.65fr)",
+                  cell: ({ row: run }) => {
+                    const status = String(run?.status || "").trim().toLowerCase();
+                    return status === "queued" || status === "running" ? "running" : formatPlaygroundEvaluationPercent(run.averageScore);
+                  },
+                },
+                { id: "cases", header: "Cases", accessor: (run) => Number(run.totalCount || 0), width: "minmax(70px, 0.55fr)", hideBelow: 680 },
+                {
+                  id: "date",
+                  header: "Date",
+                  accessor: getRunTimestamp,
+                  width: "minmax(110px, 0.9fr)",
+                  align: "end",
+                  cell: ({ row: run }) => formatPlaygroundEvaluationDate(run.completedAt || run.createdAt),
+                },
+              ],
+              onRowActivate: (run) => openRunDetail(set.id, run.id),
+              getRowAriaLabel: (run) => "Open evaluation run " + (run.label || "Run"),
+              getRowActions: (run) => [
+                { id: "rename", label: "Rename", icon: SquarePen, onSelect: () => openEvaluationRunRenameDialog(set, run) },
+                { id: "delete", label: "Delete", icon: Trash2, danger: true, separatorBefore: true, onSelect: () => handleDeleteEvaluationRun(set.id, run.id) },
+              ],
+            })
           );
         }
 
@@ -7869,81 +7832,42 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
               )
             );
           }
-          function renderCaseRow(caseItem) {
-            const displayStatus = getCaseDisplayStatus(caseItem);
-            const scoreLabel = getCaseScoreLabel(caseItem);
-            return React.createElement("div", {
-                key: caseItem.id,
-                role: "button",
-                tabIndex: 0,
-                className: "playground-evaluations-cases-row",
-                onClick: () => openCaseDetail(set.id, run.id, caseItem.id),
-                onKeyDown: (event) => {
-                  if (event.key !== "Enter" && event.key !== " ") return;
-                  event.preventDefault();
-                  openCaseDetail(set.id, run.id, caseItem.id);
-                },
+          const caseColumns = [
+            {
+              id: "thread",
+              header: "Thread",
+              accessor: (caseItem) => caseItem.threadId || "",
+              width: "minmax(160px, 1.2fr)",
+              cell: ({ row: caseItem }) => React.createElement("span", { title: caseItem.threadId || "" }, caseItem.threadId || "-"),
+            },
+            {
+              id: "evaluator",
+              header: "Evaluator",
+              accessor: (caseItem) => caseItem.evaluatorThreadId || "",
+              width: "minmax(160px, 1.2fr)",
+              hideBelow: 700,
+              cell: ({ row: caseItem }) => React.createElement("span", { title: caseItem.evaluatorThreadId || "" }, caseItem.evaluatorThreadId || "-"),
+            },
+            {
+              id: "score",
+              header: "Score",
+              accessor: (caseItem) => Number(caseItem.score || 0),
+              width: "minmax(72px, 0.45fr)",
+              cell: ({ row: caseItem }) => getCaseScoreLabel(caseItem),
+            },
+            {
+              id: "status",
+              header: "Status",
+              accessor: getCaseDisplayStatus,
+              width: "minmax(90px, 0.55fr)",
+              cell: ({ row: caseItem }) => {
+                const displayStatus = getCaseDisplayStatus(caseItem);
+                return React.createElement("span", {
+                  className: "playground-evaluations-status-pill" + (displayStatus === "failed" || displayStatus === "error" ? " is-failed" : ""),
+                }, displayStatus.replace(/_/g, " "));
               },
-              React.createElement("div", { className: "playground-evaluations-cases-cell is-thread", title: caseItem.threadId || "" }, caseItem.threadId || "-"),
-              React.createElement("div", { className: "playground-evaluations-cases-cell is-evaluator", title: caseItem.evaluatorThreadId || "" }, caseItem.evaluatorThreadId || "-"),
-              React.createElement("div", { className: "playground-evaluations-cases-cell is-score" }, scoreLabel),
-              React.createElement("div", { className: "playground-evaluations-cases-cell is-status" },
-                React.createElement("span", { className: "playground-evaluations-status-pill" + (displayStatus === "failed" || displayStatus === "error" ? " is-failed" : "") }, displayStatus.replace(/_/g, " "))
-              ),
-              React.createElement("div", { className: "playground-evaluations-cases-cell is-actions" },
-                React.createElement("div", {
-                    className: "playground-tasks-toolbar-popup-shell",
-                    onClick: (event) => event.stopPropagation(),
-                  },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-project-overview-thread-menu-button" + (evaluationCaseRowMenuId === caseItem.id ? " is-active" : ""),
-                    "aria-label": "Evaluation case actions",
-                    "aria-expanded": evaluationCaseRowMenuId === caseItem.id ? "true" : "false",
-                    onClick: (event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      closeCasesToolbarPopover();
-                      setEvaluationCaseRowMenuId((current) => current === caseItem.id ? "" : caseItem.id);
-                    },
-                  }, React.createElement(EllipsisVertical, { width: 15, height: 15, strokeWidth: 1.8 })),
-                  evaluationCaseRowMenuId === caseItem.id
-                    ? React.createElement("div", {
-                        className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                        onClick: (event) => event.stopPropagation(),
-                      },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "tb-popup-row",
-                          onClick: () => {
-                            setEvaluationCaseRowMenuId("");
-                            openCaseDetail(set.id, run.id, caseItem.id);
-                          },
-                        },
-                          React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                            React.createElement("span", null, "Rename")
-                          )
-                        ),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "tb-popup-row",
-                          onClick: () => {
-                            setEvaluationCaseRowMenuId("");
-                            deleteEvaluationRunCase(set.id, run.id, caseItem.id);
-                          },
-                        },
-                          React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                            React.createElement("span", null, "Delete")
-                          )
-                        )
-                      )
-                    : null
-                )
-              )
-            );
-          }
+            },
+          ];
           return React.createElement("section", {
               className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-evaluations-cases-section",
             },
@@ -8028,24 +7952,34 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
                 React.createElement("span", null, "Show more")
               )
             ),
-            visibleCaseRecords.length > 0
-              ? React.createElement("div", { className: "playground-evaluations-cases-table" },
-                  React.createElement("div", { className: "playground-evaluations-cases-table-inner" },
-                    React.createElement("div", { className: "playground-evaluations-cases-header" },
-                      React.createElement("div", { className: "playground-evaluations-cases-header-cell" }, "Thread"),
-                      React.createElement("div", { className: "playground-evaluations-cases-header-cell" }, "Evaluator"),
-                      React.createElement("div", { className: "playground-evaluations-cases-header-cell" }, "Score"),
-                      React.createElement("div", { className: "playground-evaluations-cases-header-cell" }, "Status"),
-                      React.createElement("div", { className: "playground-evaluations-cases-header-cell" }, null)
-                    ),
-                    React.createElement("div", { className: "playground-evaluations-cases-list" },
-                      visibleCaseRecords.map((record) => renderCaseRow(record.caseItem))
-                    )
-                  )
-                )
-              : React.createElement("div", { className: "playground-tasks-secondary-copy" },
-                  cases.length > 0 && hasFilters ? "No matching cases." : "No cases yet."
-                )
+            React.createElement(PlatformDataTable, {
+              rows: visibleCaseRecords.map((record) => record.caseItem),
+              columns: caseColumns,
+              getRowId: (caseItem) => caseItem.id,
+              ariaLabel: "Evaluation cases",
+              className: "playground-evaluation-cases-platform-table",
+              surface: "plain",
+              sticky: false,
+              emptyState: cases.length > 0 && hasFilters ? "No matching cases." : "No cases yet.",
+              getRowActions: (caseItem) => [
+                {
+                  id: "open",
+                  label: "Open",
+                  icon: SquarePen,
+                  onSelect: () => openCaseDetail(set.id, run.id, caseItem.id),
+                },
+                {
+                  id: "delete",
+                  label: "Delete",
+                  icon: Trash2,
+                  danger: true,
+                  separatorBefore: true,
+                  onSelect: () => deleteEvaluationRunCase(set.id, run.id, caseItem.id),
+                },
+              ],
+              getRowAriaLabel: (caseItem) => caseItem.threadId || "Evaluation case",
+              onRowActivate: (caseItem) => openCaseDetail(set.id, run.id, caseItem.id),
+            })
           );
         }
 
@@ -8462,7 +8396,9 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
             { id: "without-runs", label: "Without Runs", description: "Only show evaluations without runs" },
             { id: "empty", label: "Empty Dataset", description: "Only show evaluations with no cases" },
           ];
-          const sortMode = sortOptions.some((option) => option.id === evaluationSetsSortMode) ? evaluationSetsSortMode : "updated-desc";
+	          const sortMode = /^(?:name|evaluator|cases|creator|updated|created)-(?:asc|desc)$/.test(String(evaluationSetsSortMode || ""))
+	            ? String(evaluationSetsSortMode)
+	            : "updated-desc";
           const filterMode = filterOptions.some((option) => option.id === evaluationSetsFilterMode) ? evaluationSetsFilterMode : "all";
           const activeSortOption = sortOptions.find((option) => option.id === sortMode) || sortOptions[0];
           const activeFilterOption = filterOptions.find((option) => option.id === filterMode) || filterOptions[0];
@@ -8489,21 +8425,19 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
               ].join(" ").toLowerCase();
               return haystack.includes(query);
             })
-            .sort((left, right) => {
-              if (sortMode === "name-asc") {
-                return String(left?.name || "").localeCompare(String(right?.name || ""));
-              }
-              if (sortMode === "created-desc") {
-                return (Date.parse(String(right?.createdAt || "")) || 0) - (Date.parse(String(left?.createdAt || "")) || 0);
-              }
-              if (sortMode === "creator-asc") {
-                return getSetCreatorLabel(left).localeCompare(getSetCreatorLabel(right));
-              }
-              if (sortMode === "cases-desc") {
-                return (Array.isArray(right?.dataRows) ? right.dataRows.length : 0) - (Array.isArray(left?.dataRows) ? left.dataRows.length : 0);
-              }
-              return getSetTimestamp(right) - getSetTimestamp(left);
-            });
+	            .sort((left, right) => {
+	              const direction = String(sortMode || "").endsWith("-asc") ? 1 : -1;
+	              const sortKey = String(sortMode || "updated-desc").replace(/-(?:asc|desc)$/, "");
+	              let comparison = 0;
+	              if (sortKey === "name") comparison = String(left?.name || "").localeCompare(String(right?.name || ""));
+	              else if (sortKey === "evaluator") comparison = getPlaygroundEvaluationEvaluatorLabel(left?.evaluator, agentOptions).localeCompare(getPlaygroundEvaluationEvaluatorLabel(right?.evaluator, agentOptions));
+	              else if (sortKey === "creator") comparison = getSetCreatorLabel(left).localeCompare(getSetCreatorLabel(right));
+	              else if (sortKey === "cases") comparison = (Array.isArray(left?.dataRows) ? left.dataRows.length : 0) - (Array.isArray(right?.dataRows) ? right.dataRows.length : 0);
+	              else if (sortKey === "created") comparison = (Date.parse(String(left?.createdAt || "")) || 0) - (Date.parse(String(right?.createdAt || "")) || 0);
+	              else comparison = getSetTimestamp(left) - getSetTimestamp(right);
+	              if (comparison !== 0) return comparison * direction;
+	              return String(left?.name || "").localeCompare(String(right?.name || ""));
+	            });
           const visibleCount = Math.max(10, Number(evaluationSetsVisibleCount) || 10);
           const visibleSets = filteredSets.slice(0, visibleCount);
           const hasMoreSets = filteredSets.length > visibleSets.length;
@@ -8528,337 +8462,126 @@ export const PLAYGROUND_EVALUATIONS_SCRIPT = String.raw`
           const visibleEvaluationOverviewIds = visibleSets.map((set) => String(set?.id || "").trim()).filter(Boolean);
           const selectedVisibleEvaluationOverviewIds = visibleEvaluationOverviewIds.filter((setId) => selectedEvaluationOverviewIds.has(setId));
           const allVisibleEvaluationsSelected = visibleEvaluationOverviewIds.length > 0 && selectedVisibleEvaluationOverviewIds.length === visibleEvaluationOverviewIds.length;
-          const hasPartialVisibleEvaluationSelection = selectedVisibleEvaluationOverviewIds.length > 0 && !allVisibleEvaluationsSelected;
-          const toggleEvaluationOverviewSelection = (setId) => {
-            const normalizedSetId = String(setId || "").trim();
-            if (!normalizedSetId) return;
-            setSelectedEvaluationOverviewIds((current) => {
-              const next = new Set(current || []);
-              if (next.has(normalizedSetId)) {
-                next.delete(normalizedSetId);
-              } else {
-                next.add(normalizedSetId);
-              }
-              return next;
-            });
-          };
-          const toggleVisibleEvaluationOverviewSelection = () => {
-            if (visibleEvaluationOverviewIds.length === 0) return;
-            setSelectedEvaluationOverviewIds((current) => {
-              const next = new Set(current || []);
-              if (allVisibleEvaluationsSelected) {
-                visibleEvaluationOverviewIds.forEach((setId) => next.delete(setId));
-              } else {
-                visibleEvaluationOverviewIds.forEach((setId) => next.add(setId));
-              }
-              return next;
-            });
-          };
-          const evaluationOverviewSortMap = {
-            name: "name-asc",
-            evaluator: "name-asc",
-            cases: "cases-desc",
-            creator: "creator-asc",
-            updated: "updated-desc",
-          };
-          const renderEvaluationOverviewSortIcon = (sortKey) => {
-            const isActive = sortMode === (evaluationOverviewSortMap[sortKey] || sortKey);
-            const isDescending = isActive && (sortMode === "updated-desc" || sortMode === "cases-desc" || sortMode === "created-desc");
-            const isAscending = isActive && !isDescending;
-            return React.createElement("span", {
-                className: "playground-agents-overview-sort-icon"
-                  + (isActive ? " is-active" : "")
-                  + (isAscending ? " is-ascending" : "")
-                  + (isDescending ? " is-descending" : ""),
-                "aria-hidden": "true",
-              },
-              React.createElement(ChevronsUpDown, {
-                className: "playground-agents-overview-sort-icon-layer is-top",
-                width: 14,
-                height: 14,
-                strokeWidth: 1.8,
-              }),
-              React.createElement(ChevronsUpDown, {
-                className: "playground-agents-overview-sort-icon-layer is-bottom",
-                width: 14,
-                height: 14,
-                strokeWidth: 1.8,
-              })
-            );
-          };
-          const renderEvaluationOverviewSortableHeader = (label, sortKey) => {
-            const nextSortMode = evaluationOverviewSortMap[sortKey] || sortKey;
-            const isActive = sortMode === nextSortMode;
-            return React.createElement("div", { className: "playground-agents-overview-sortable-header" + (isActive ? " is-active" : "") },
-              React.createElement("span", { className: "playground-agents-overview-sortable-header-label" }, label),
-              React.createElement("button", {
-                type: "button",
-                className: "playground-agents-overview-column-sort-button"
-                  + (isActive ? " is-active" : "")
-                  + (isActive && (sortMode === "updated-desc" || sortMode === "cases-desc" || sortMode === "created-desc") ? " is-descending" : "")
-                  + (isActive && !(sortMode === "updated-desc" || sortMode === "cases-desc" || sortMode === "created-desc") ? " is-ascending" : ""),
-                title: "Sort " + label,
-                "aria-label": "Sort " + label,
-                "aria-pressed": isActive ? "true" : "false",
-                onClick: (event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  setEvaluationSetsSortMode(nextSortMode);
-                  setEvaluationSetsToolbarPopover("");
-                },
-              }, renderEvaluationOverviewSortIcon(sortKey))
-            );
-          };
-          const renderEvaluationOverviewColumnHeader = () => React.createElement("div", {
-              className: "playground-project-overview-threads-table-header playground-agents-overview-column-header playground-evaluations-overview-column-header",
-            },
-            React.createElement("div", null,
-              React.createElement("button", {
-                type: "button",
-                className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox"
-                  + (allVisibleEvaluationsSelected ? " is-selected" : "")
-                  + (hasPartialVisibleEvaluationSelection ? " is-partial" : ""),
-                role: "checkbox",
-                "aria-checked": allVisibleEvaluationsSelected ? "true" : (hasPartialVisibleEvaluationSelection ? "mixed" : "false"),
-                "aria-label": allVisibleEvaluationsSelected ? "Deselect all visible evaluations" : "Select all visible evaluations",
-                onClick: (event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  toggleVisibleEvaluationOverviewSelection();
-                },
-              })
-            ),
-            React.createElement("div", null, renderEvaluationOverviewSortableHeader("Evaluation", "name")),
-            React.createElement("div", null, renderEvaluationOverviewSortableHeader("Evaluator", "evaluator")),
-            React.createElement("div", null, renderEvaluationOverviewSortableHeader("Cases", "cases")),
-            React.createElement("div", null, renderEvaluationOverviewSortableHeader("Creator", "creator")),
-            React.createElement("div", null, renderEvaluationOverviewSortableHeader("Updated", "updated")),
-            React.createElement("div", null)
-          );
-          const renderEvaluationOverviewStickyTableHeader = (includeColumns = true) => React.createElement("div", {
-              className: "playground-agents-overview-sticky-table-header playground-team-overview-sticky-table-header playground-evaluations-overview-sticky-table-header",
-            },
-            React.createElement("div", {
-                className: "playground-develop-server-kind-table-toolbar playground-team-overview-toolbar-row playground-evaluations-overview-toolbar-row",
-              },
-              React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell playground-evaluations-overview-search-shell" },
-                React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("input", {
-                  type: "search",
-                  value: evaluationsSearchQuery || "",
-                  onChange: (event) => {
-                    if (typeof setEvaluationsSearchQuery === "function") setEvaluationsSearchQuery(event.target.value);
-                    setEvaluationSetsVisibleCount(10);
-                  },
-                  className: "playground-plugins-search",
-                  placeholder: "Search evaluations",
-                  "aria-label": "Search evaluations",
-                })
-              ),
-              React.createElement("div", { className: "playground-plugins-toolbar-controls playground-evaluations-overview-controls" },
-                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-control-button is-bare is-backlog-sort" + (evaluationSetsToolbarPopover === "sort" || sortMode !== "updated-desc" ? " is-active" : ""),
-                    onClick: () => {
-                      setEvaluationSetRowMenuId("");
-                      setEvaluationSetsToolbarPopover((current) => current === "sort" ? "" : "sort");
-                    },
-                    title: activeSortOption.label,
-                  },
-                    React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Sort")
-                  ),
-                  evaluationSetsToolbarPopover === "sort"
-                    ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                        sortOptions.map((option) => renderToolbarOption({
-                          option,
-                          active: sortMode === option.id,
-                          onClick: () => {
-                            setEvaluationSetsSortMode(option.id);
-                            setEvaluationSetsVisibleCount(10);
-                            closeToolbarPopover();
-                          },
-                        }))
-                      )
-                    : null
-                ),
-                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-control-button is-bare is-backlog-filter" + (evaluationSetsToolbarPopover === "filter" || filterMode !== "all" ? " is-active" : ""),
-                    onClick: () => {
-                      setEvaluationSetRowMenuId("");
-                      setEvaluationSetsToolbarPopover((current) => current === "filter" ? "" : "filter");
-                    },
-                    title: activeFilterOption.label,
-                  },
-                    React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Filter")
-                  ),
-                  evaluationSetsToolbarPopover === "filter"
-                    ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                        filterOptions.map((option) => renderToolbarOption({
-                          option,
-                          active: filterMode === option.id,
-                          onClick: () => {
-                            setEvaluationSetsFilterMode(option.id);
-                            setEvaluationSetsVisibleCount(10);
-                            closeToolbarPopover();
-                          },
-                        }))
-                      )
-                    : null
-                )
-              ),
-              React.createElement("button", {
-                type: "button",
-                className: "playground-top-nav-private-chat-button playground-agents-nav-create-button playground-agents-overview-toolbar-create-button playground-evaluations-overview-create-button",
-                onClick: openEvaluationCreateModal,
-              },
-                React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("span", null, "Evaluation")
-              )
-            ),
-            includeColumns ? renderEvaluationOverviewColumnHeader() : null
-          );
-          function renderEvaluationSetRow(set) {
-            const dateLabel = formatPlaygroundEvaluationDate(set.updatedAt || set.createdAt);
-            const setId = String(set?.id || "").trim();
-            const isEvaluationSelected = selectedEvaluationOverviewIds.has(setId);
-            return React.createElement("div", {
-                key: setId,
-                role: "button",
-                tabIndex: 0,
-                className: "playground-project-overview-threads-table-row",
-                onClick: () => openSetDetail(set.id),
-                onKeyDown: (event) => {
-                  if (event.key !== "Enter" && event.key !== " ") return;
-                  event.preventDefault();
-                  openSetDetail(set.id);
-                },
-              },
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-agents-overview-select-checkbox" + (isEvaluationSelected ? " is-selected" : ""),
-                  role: "checkbox",
-                  "aria-checked": isEvaluationSelected ? "true" : "false",
-                  "aria-label": "Select " + (set.name || "evaluation"),
-                  onClick: (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    toggleEvaluationOverviewSelection(setId);
-                  },
-                  onKeyDown: (event) => event.stopPropagation(),
-                })
-              ),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-name", title: set.description || set.name || "" },
-                React.createElement("div", { className: "playground-plugin-row-title" }, set.name || "Untitled Evaluation")
-              ),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-model" },
-                renderEvaluationSetEvaluatorCell(set)
-              ),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-source" }, String(set.dataRows.length)),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-creator" },
-                renderEvaluationSetCreatorCell(set)
-              ),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-date", title: dateLabel }, dateLabel),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell playground-tasks-toolbar-popup-shell playground-evaluations-overview-action-shell" },
-                React.createElement("div", {
-                    className: "playground-tasks-toolbar-popup-shell",
-                    onClick: (event) => event.stopPropagation(),
-                  },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-overview-table-action-button" + (evaluationSetRowMenuId === set.id ? " is-open" : ""),
-                    "aria-label": "Evaluation actions",
-                    "aria-expanded": evaluationSetRowMenuId === set.id ? "true" : "false",
-                    onClick: (event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      setEvaluationSetsToolbarPopover("");
-                      setEvaluationSetRowMenuId((current) => current === set.id ? "" : set.id);
-                    },
-                  }, React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 })),
-                  evaluationSetRowMenuId === set.id
-                    ? React.createElement("div", {
-                        className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                        onClick: (event) => event.stopPropagation(),
-                      },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "tb-popup-row",
-                          onClick: () => {
-                            setEvaluationSetRowMenuId("");
-                            openEvaluationRenameDialog(set);
-                          },
-                        },
-                          React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                            React.createElement("span", null, "Rename")
-                          )
-                        ),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "tb-popup-row",
-                          disabled: getEvaluationRunnableCaseCount(set) === 0,
-                          onClick: () => {
-                            setEvaluationSetRowMenuId("");
-                            openRunEvaluationModal(set.id);
-                          },
-                        },
-                          React.createElement(Play, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                            React.createElement("span", null, "Run")
-                          )
-                        ),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "tb-popup-row",
-                          onClick: () => {
-                            setEvaluationSetRowMenuId("");
-                            handleDeleteEvaluation(set.id);
-                          },
-                        },
-                          React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                            React.createElement("span", null, "Delete")
-                          )
-                        )
-                      )
-                    : null
-                )
-              )
-            );
-          }
-          return React.createElement("div", { className: "playground-plugins-page playground-guardrails-layout playground-evaluations-overview-layout playground-team-overview-page playground-agents-overview-page playground-evaluations-overview-shell is-develop-configure-page" },
+	          const evaluationOverviewSortId = String(sortMode || "updated-desc").replace(/-(?:asc|desc)$/, "");
+	          const evaluationOverviewSortDirection = String(sortMode || "").endsWith("-asc") ? "asc" : "desc";
+	          const evaluationOverviewColumns = [
+	            {
+	              id: "name",
+	              header: "Evaluation",
+	              accessor: (set) => set?.name || "",
+	              sortable: true,
+	              width: "minmax(220px, 1.35fr)",
+	              cell: ({ row: set }) => React.createElement("div", { className: "playground-plugin-row-title", title: set.description || set.name || "" }, set.name || "Untitled Evaluation"),
+	            },
+	            {
+	              id: "evaluator",
+	              header: "Evaluator",
+	              accessor: (set) => getPlaygroundEvaluationEvaluatorLabel(set?.evaluator, agentOptions),
+	              sortable: true,
+	              width: "minmax(155px, 0.82fr)",
+	              cell: ({ row: set }) => renderEvaluationSetEvaluatorCell(set),
+	            },
+	            {
+	              id: "cases",
+	              header: "Cases",
+	              accessor: (set) => Array.isArray(set?.dataRows) ? set.dataRows.length : 0,
+	              sortable: true,
+	              sortDescFirst: true,
+	              width: "minmax(80px, 0.42fr)",
+	              align: "end",
+	              cell: ({ row: set }) => String(Array.isArray(set?.dataRows) ? set.dataRows.length : 0),
+	            },
+	            {
+	              id: "creator",
+	              header: "Creator",
+	              accessor: getSetCreatorLabel,
+	              sortable: true,
+	              width: "minmax(150px, 0.78fr)",
+	              hideBelow: 840,
+	              cell: ({ row: set }) => renderEvaluationSetCreatorCell(set),
+	            },
+	            {
+	              id: "updated",
+	              header: "Updated",
+	              accessor: getSetTimestamp,
+	              sortable: true,
+	              sortDescFirst: true,
+	              width: "minmax(120px, 0.62fr)",
+	              align: "end",
+	              hideBelow: 1020,
+	              cell: ({ row: set }) => {
+	                const dateLabel = formatPlaygroundEvaluationDate(set.updatedAt || set.createdAt);
+	                return React.createElement("div", { className: "playground-agents-overview-table-value is-right", title: dateLabel }, dateLabel);
+	              },
+	            },
+	          ];
+	          const getEvaluationOverviewActions = (set) => [
+	            { id: "rename", label: "Rename", icon: SquarePen, onSelect: () => openEvaluationRenameDialog(set) },
+	            { id: "run", label: "Run", icon: Play, disabled: getEvaluationRunnableCaseCount(set) === 0, onSelect: () => openRunEvaluationModal(set.id) },
+	            { id: "delete", label: "Delete", icon: Trash2, danger: true, separatorBefore: true, onSelect: () => handleDeleteEvaluation(set.id) },
+	          ];
+	          const evaluationsOverviewEmptyState = normalizedSets.length === 0
+	            ? React.createElement("div", { className: "playground-guardrails-empty" },
+	                React.createElement("div", { className: "playground-guardrails-empty-icon" }, React.createElement(ChartColumnIncreasing, { width: 18, height: 18, strokeWidth: 1.8 })),
+	                React.createElement("div", { className: "playground-guardrails-empty-title" }, "No evaluations yet"),
+	                React.createElement("button", {
+	                  type: "button",
+	                  className: "playground-files-library-new-button playground-guardrails-empty-button",
+	                  onClick: openEvaluationCreateModal,
+	                }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }), "New Evaluation")
+	              )
+	            : (hasFilters ? "No matching evaluations." : "No evaluations yet.");
+	          const evaluationsOverviewDataTable = React.createElement(PlatformDataTable, {
+	            rows: visibleSets,
+	            columns: evaluationOverviewColumns,
+	            getRowId: (set) => String(set?.id || ""),
+	            ariaLabel: "Evaluations",
+	            className: "playground-evaluations-platform-data-table",
+	            surface: "plain",
+	            sorting: {
+	              value: { id: evaluationOverviewSortId, direction: evaluationOverviewSortDirection },
+	              manual: true,
+	              onChange: (nextSorting) => {
+	                if (!nextSorting) return;
+	                setEvaluationSetsSortMode(nextSorting.id + "-" + nextSorting.direction);
+	                setEvaluationSetsVisibleCount(10);
+	                setEvaluationSetsToolbarPopover("");
+	              },
+	            },
+	            selection: {
+	              enabled: true,
+	              value: selectedEvaluationOverviewIds,
+	              onChange: ({ selectedIds }) => setSelectedEvaluationOverviewIds(new Set(selectedIds)),
+	              ariaLabel: (set) => "Select " + (set?.name || "evaluation"),
+	            },
+	            toolbar: {
+	              search: {
+	                value: evaluationsSearchQuery || "",
+	                onChange: (value) => {
+	                  if (typeof setEvaluationsSearchQuery === "function") setEvaluationsSearchQuery(value);
+	                  setEvaluationSetsVisibleCount(10);
+	                },
+	                placeholder: "Search evaluations",
+	                manual: true,
+	              },
+	              showSort: true,
+	              filters: [{ id: "runs", label: "Runs", value: filterMode, options: filterOptions, onChange: (value) => { setEvaluationSetsFilterMode(value); setEvaluationSetsVisibleCount(10); } }],
+	              primaryAction: { label: "Evaluation", icon: Plus, onClick: openEvaluationCreateModal },
+	            },
+	            getRowActions: getEvaluationOverviewActions,
+	            getRowAriaLabel: (set) => set?.name || "Evaluation",
+	            onRowActivate: (set) => openSetDetail(set.id),
+	            emptyState: evaluationsOverviewEmptyState,
+	            footer: hasMoreSets
+	              ? React.createElement("button", { type: "button", className: "playground-files-control-button is-bare", onClick: () => setEvaluationSetsVisibleCount((current) => current + 10) }, "Show more")
+	              : null,
+	          });
+	          return React.createElement("div", { className: "playground-plugins-page playground-guardrails-layout playground-evaluations-overview-layout playground-team-overview-page playground-agents-overview-page playground-evaluations-overview-shell is-develop-configure-page" },
             React.createElement("section", {
                 className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-team-overview-table-section playground-team-grid-table-section playground-evaluations-overview-section",
               },
-              visibleSets.length === 0 ? renderEvaluationOverviewStickyTableHeader(false) : null,
-              visibleSets.length > 0
-                ? React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table playground-evaluations-overview-table" },
-                    renderEvaluationOverviewStickyTableHeader(false),
-                    React.createElement("div", { className: "playground-project-overview-thread-list" },
-                      renderEvaluationOverviewColumnHeader(),
-                      visibleSets.map((set) => renderEvaluationSetRow(set))
-                    )
-                  )
-                : normalizedSets.length === 0
-                  ? React.createElement("div", { className: "playground-guardrails-empty" },
-                      React.createElement("div", { className: "playground-guardrails-empty-icon" }, React.createElement(ChartColumnIncreasing, { width: 18, height: 18, strokeWidth: 1.8 })),
-                      React.createElement("div", { className: "playground-guardrails-empty-title" }, "No evaluations yet"),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-library-new-button playground-guardrails-empty-button",
-                        onClick: openEvaluationCreateModal,
-                      }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }), "New Evaluation")
-                    )
-                  : React.createElement("div", { className: "playground-tasks-secondary-copy" },
-                      hasFilters ? "No matching evaluations." : "No evaluations yet."
-                    )
-            )
+	              evaluationsOverviewDataTable
+	            )
           );
         }
 

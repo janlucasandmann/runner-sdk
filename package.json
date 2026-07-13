@@ -18,6 +18,13 @@
     },
     "./react/styles.css": {
       "default": "./dist/react/runner-chat.css"
+    },
+    "./platform-ui/data-table": {
+      "types": "./dist/platform-ui/data-table/index.d.ts",
+      "default": "./dist/platform-ui/data-table/index.js"
+    },
+    "./platform-ui/data-table/styles.css": {
+      "default": "./dist/platform-ui/data-table/data-table.css"
     }
   },
   "files": [
@@ -26,7 +33,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "node ./scripts/runner-chat-assets.mjs prepare && tsc -p tsconfig.json && node ./scripts/runner-chat-assets.mjs copy",
+    "build": "npm run platform-table-invariants && node ./scripts/runner-chat-assets.mjs prepare && tsc -p tsconfig.json && node ./scripts/runner-chat-assets.mjs copy",
     "clean": "rm -rf dist",
     "history-smoke": "npm run build && node ./examples/history-api-test.mjs",
     "metronome-runtime-test": "node ./examples/metronome-dynamic-content-runtime-test.mjs",
@@ -35,6 +42,8 @@
     "thread-proxy-test": "node ./examples/demo-thread-v2-proxy-test.mjs",
     "thread-preview": "npm run build && node ./examples/thread-ui-preview.mjs",
     "realtime-metronome-test": "npm run build && node ./examples/realtime-metronome-adapters-test.mjs",
+    "platform-table-invariants": "node ./scripts/platform-table-invariants.mjs",
+    "platform-table-test": "npm run platform-table-invariants && vitest run src/platform-ui/data-table",
     "smoke": "npm run build && node ./examples/smoke-test.mjs",
     "demo": "npm run build && node ./examples/demo-server.mjs"
   },
@@ -50,6 +59,7 @@
     "@git-diff-view/file": "^0.1.3",
     "@git-diff-view/react": "^0.1.3",
     "@monaco-editor/react": "^4.7.0",
+    "@tanstack/react-table": "^8.21.3",
     "chart.js": "^4.5.1",
     "docx-preview": "^0.3.7",
     "dompurify": "^3.3.3",
@@ -65,8 +75,12 @@
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/react": "^19.0.12",
-    "typescript": "^5.9.2"
+    "jsdom": "^26.1.0",
+    "typescript": "^5.9.2",
+    "vitest": "^4.1.10"
   },
   "engines": {
     "node": ">=18.17"

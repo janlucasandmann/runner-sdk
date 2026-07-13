@@ -221,6 +221,7 @@ const html = `<!doctype html>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://unpkg.com/react-big-calendar@1.19.4/lib/css/react-big-calendar.css" />
     <link rel="stylesheet" href="https://esm.sh/@xyflow/react@12.8.4/dist/style.css" />
+    <link rel="stylesheet" href="/dist/platform-ui/data-table/data-table.css" />
     <style>
       :root {
         --bg-0: #000000;
@@ -909,46 +910,74 @@ const html = `<!doctype html>
       }
 
       .sidebar-workspace-menu {
+        --playground-top-nav-popup-border: var(--tb-task-input-border, var(--tb-runner-input-border, linear-gradient(-10deg, rgba(200, 200, 200, 0.25), rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.375))));
         position: absolute;
         top: calc(100% + 6px);
         left: 0;
         width: 100%;
-        padding: 8px;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 14px;
-        background: #323232;
-        box-shadow: 0 18px 44px rgba(0, 0, 0, 0.45);
-        backdrop-filter: blur(30px);
-        -webkit-backdrop-filter: blur(30px);
+        padding: 4px 0;
+        overflow: hidden;
+        border: 0;
+        border-radius: 25px;
+        background: rgba(30, 30, 30, 0.5);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
         z-index: 120;
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 0;
         box-sizing: border-box;
-        animation: sidebar-workspace-menu-in 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
+        transform-origin: top left;
+      }
+
+      .sidebar-workspace-menu::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-top-nav-popup-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .sidebar-workspace-menu.account-menu-animate-up-in,
+      .sidebar-workspace-menu.account-menu-animate-up-out {
+        transform-origin: top left;
       }
 
       .sidebar-workspace-option {
         width: 100%;
-        min-height: 34px;
-        padding: 5px 9px;
+        padding: 12px 16px;
         border: 0;
-        border-radius: 10px;
         background: transparent;
-        color: rgba(255, 255, 255, 0.9);
+        color: white;
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
         text-align: left;
         cursor: pointer;
         box-sizing: border-box;
-        transition: background-color 160ms ease, color 160ms ease;
+        transition: background-color 160ms ease;
       }
 
       .sidebar-workspace-option:hover,
       .sidebar-workspace-option.is-active {
-        background: rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.1);
         color: #fff;
+      }
+
+      .sidebar-workspace-menu .sidebar-workspace-icon-shell,
+      .sidebar-workspace-menu .sidebar-workspace-icon {
+        width: 16px;
+        height: 16px;
       }
 
       .sidebar-workspace-option-copy {
@@ -960,9 +989,9 @@ const html = `<!doctype html>
       }
 
       .sidebar-workspace-option-label {
-        font-size: 13px;
+        font-size: 14px;
         font-weight: 500;
-        line-height: 1.1;
+        line-height: 1.2;
       }
 
       .sidebar-workspace-option-description {
@@ -973,21 +1002,10 @@ const html = `<!doctype html>
       }
 
       .sidebar-workspace-option-check {
-        width: 14px;
-        height: 14px;
+        width: 16px;
+        height: 16px;
         color: rgba(255, 255, 255, 0.76);
         flex: 0 0 auto;
-      }
-
-      @keyframes sidebar-workspace-menu-in {
-        from {
-          opacity: 0;
-          transform: translateY(-4px) scale(0.98);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0) scale(1);
-        }
       }
 
       .sidebar-search-trigger {
@@ -29605,6 +29623,19 @@ ${PLAYGROUND_EVALUATIONS_CSS}
 	        line-height: 1.1;
 	      }
 
+	      .playground-server-detail-title-row {
+	        min-width: 0;
+	        width: 100%;
+	        display: flex;
+	        align-items: center;
+	        gap: 6px;
+	      }
+
+	      .playground-server-detail-title-row .playground-environments-editor-title-input {
+	        flex: 1 1 auto;
+	        min-width: 0;
+	      }
+
 	      .playground-server-detail-navbar .playground-server-function-title-input {
 	        margin-bottom: 6px;
 	      }
@@ -46485,7 +46516,7 @@ ${METRONOME_PAGE_CSS}
 		        isolation: isolate;
 		        gap: 0;
 		        margin-bottom: 24px;
-		        padding: 0 18px 18px;
+		        padding: 0 5px 18px;
 		        border: 1px solid rgba(255, 255, 255, 0.1);
 		        border-radius: 10px;
 		        overflow: visible;
@@ -46931,7 +46962,7 @@ ${METRONOME_PAGE_CSS}
 		        z-index: 3;
 		        gap: 0;
 		        margin-bottom: 24px;
-		        padding: 0 18px 6px;
+		        padding: 0 5px 5px;
 		        border: 1px solid rgba(255, 255, 255, 0.075);
 		        border-radius: 15px;
 		        overflow: visible !important;
@@ -48476,17 +48507,27 @@ ${METRONOME_PAGE_CSS}
       }
 
       .playground-agents-detail-overview-layout.is-sidebar-collapsed {
-        grid-template-columns: minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1fr) minmax(0, 0px);
+        column-gap: 0;
       }
 
       .playground-agents-detail-overview-layout.is-sidebar-collapsed > .playground-agents-detail-sidebar {
-        display: none;
+        opacity: 0;
+        transform: translateX(18px);
+        visibility: hidden;
+        pointer-events: none;
+        transition-delay: 0s, 0s, 180ms;
       }
 
       .playground-agents-detail-overview-main.playground-project-overview-main {
         gap: 20px;
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
+      }
+
+      .playground-agents-detail-overview-main.playground-project-overview-main.is-permissions-tab {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
       }
 
       .playground-agents-detail-chart-surface.playground-project-overview-chart-surface {
@@ -48836,6 +48877,13 @@ ${METRONOME_PAGE_CSS}
       .playground-agents-detail-instructions-section.is-header-stuck .playground-tasks-detail-section-header {
         border-top-left-radius: 0;
         border-top-right-radius: 0;
+      }
+
+      .playground-tasks-detail-section-header.is-static-transparent {
+        position: static !important;
+        top: auto !important;
+        z-index: auto !important;
+        background: transparent !important;
       }
 
       .playground-agents-detail-instructions-section .playground-tasks-detail-description-editor {
@@ -50147,6 +50195,9 @@ ${METRONOME_PAGE_CSS}
         grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
         align-items: center;
         column-gap: 42px;
+        transition:
+          grid-template-columns 260ms cubic-bezier(0.16, 1, 0.3, 1),
+          column-gap 260ms cubic-bezier(0.16, 1, 0.3, 1);
       }
 
       .playground-agents-detail-overview-layout.is-sidebar-collapsed > .playground-agents-detail-top-controls {
@@ -55654,6 +55705,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
           "remark-gfm": "https://esm.sh/remark-gfm@4.0.1?bundle",
           "unist-util-visit": "https://esm.sh/unist-util-visit@5.0.0",
           "chart.js/auto": "https://esm.sh/chart.js@4.5.1/auto?bundle",
+          "@tanstack/react-table": "https://esm.sh/@tanstack/react-table@8.21.3?bundle&external=react",
           "pptx-preview": "https://esm.sh/pptx-preview@1.0.7?bundle",
           "jszip": "https://esm.sh/jszip@3.10.1?bundle",
           "xlsx": "/vendor/xlsx/xlsx.mjs"
@@ -55697,10 +55749,31 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
 	      import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, LibraryBig, Lightbulb, Link2, List, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Underline, Undo2, Unlink, User, UserRound, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
 	      import { RunnerClient } from "/dist/index.js";
 	      import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
+	      import { PlatformDataTable } from "/dist/platform-ui/data-table/index.js";
 	      import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
 
 	      function getPlaygroundSafeIconComponent(Icon, fallbackIcon = Circle) {
 	        return typeof Icon === "function" || (Icon && typeof Icon === "object") ? Icon : fallbackIcon;
+	      }
+
+	      function PlaygroundDetailSectionHeader({
+	        title,
+	        children = null,
+	        presentation = "default",
+	        className = "",
+	      }) {
+	        const normalizedPresentation = presentation === "static-transparent"
+	          ? "static-transparent"
+	          : "default";
+	        return React.createElement("div", {
+	            className: "playground-tasks-detail-section-header"
+	              + (normalizedPresentation === "static-transparent" ? " is-static-transparent" : "")
+	              + (className ? " " + className : ""),
+	            "data-header-presentation": normalizedPresentation,
+	          },
+	          React.createElement("div", { className: "playground-tasks-detail-section-title" }, title),
+	          children
+	        );
 	      }
 
 	      const PLAYGROUND_RESOLVED_EN_US_LOCALE = enUSLocale.enUS || enUSLocale.default || enUSLocale;
@@ -55735,10 +55808,9 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         getRowMenuId,
         renderIcon,
         renderCreator,
-        renderSource,
+	        renderSource,
 	        renderOwner,
-	        renderRowMenu,
-	        renderRowMenuInline = true,
+	        getRowActions,
 	        renderNewMenu,
 	        renderEmptyContent,
 	        onNewButtonClick,
@@ -55796,87 +55868,11 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
 	        const visibleSelectionIds = selectionEnabled
 	          ? visibleRows.map((row) => getResourceSelectionId(row)).filter(Boolean)
 	          : [];
-	        const selectedVisibleSelectionIds = visibleSelectionIds.filter((selectionId) => selectedResourceRowIds.has(selectionId));
-	        const allVisibleRowsSelected = visibleSelectionIds.length > 0 && selectedVisibleSelectionIds.length === visibleSelectionIds.length;
-	        const hasPartialVisibleSelection = selectedVisibleSelectionIds.length > 0 && !allVisibleRowsSelected;
-	        const resourceRowColumnClassName = (selectionEnabled ? " has-selection-column" : "") + (hasSourceColumn ? " has-source-column" : "") + (hasOwnerColumn ? " has-owner-column" : "");
-	        const handleToggleResourceRowSelection = (event, row) => {
-	          event.preventDefault();
-	          event.stopPropagation();
-	          const selectionId = getResourceSelectionId(row);
-	          if (selectionId && typeof onToggleRowSelection === "function") {
-	            onToggleRowSelection(selectionId, row);
-	          }
-	        };
-		        const handleToggleVisibleSelection = (event) => {
-		          event.preventDefault();
-		          event.stopPropagation();
-		          if (typeof onToggleVisibleSelection === "function") {
-		            onToggleVisibleSelection(visibleSelectionIds, !allVisibleRowsSelected);
-		          }
-		        };
-		        const activeSortKey = String(sortKey || "").trim();
-		        const activeSortDirection = String(sortDirection || "").toLowerCase() === "desc" ? "desc" : "asc";
-		        const sortableColumnSet = new Set((Array.isArray(sortableColumns) ? sortableColumns : [])
-		          .map((columnKey) => String(columnKey || "").trim())
-		          .filter(Boolean));
-		        const renderResourceSortIcon = (columnKey) => {
-		          const normalizedColumnKey = String(columnKey || "").trim();
-		          const isActive = Boolean(normalizedColumnKey && activeSortKey === normalizedColumnKey);
-		          const isDescending = isActive && activeSortDirection === "desc";
-		          const isAscending = isActive && !isDescending;
-		          return React.createElement("span", {
-		              className: "playground-agents-overview-sort-icon"
-		                + (isActive ? " is-active" : "")
-		                + (isAscending ? " is-ascending" : "")
-		                + (isDescending ? " is-descending" : ""),
-		              "aria-hidden": "true",
-		            },
-		            React.createElement(ChevronsUpDown, {
-		              className: "playground-agents-overview-sort-icon-layer is-top",
-		              width: 14,
-		              height: 14,
-		              strokeWidth: 1.8,
-		            }),
-		            React.createElement(ChevronsUpDown, {
-		              className: "playground-agents-overview-sort-icon-layer is-bottom",
-		              width: 14,
-		              height: 14,
-		              strokeWidth: 1.8,
-		            })
-		          );
-		        };
-		        const renderResourceHeaderCell = (label, columnKey) => {
-		          const normalizedColumnKey = String(columnKey || "").trim();
-		          const sortable = Boolean(normalizedColumnKey && sortableColumnSet.has(normalizedColumnKey) && typeof onSortChange === "function");
-		          if (!sortable) {
-		            return label;
-		          }
-		          const isActive = activeSortKey === normalizedColumnKey;
-		          const nextDirection = isActive && activeSortDirection === "asc" ? "descending" : "ascending";
-		          return React.createElement("div", {
-		              className: "playground-agents-overview-sortable-header" + (isActive ? " is-active" : ""),
-		            },
-		            React.createElement("span", { className: "playground-agents-overview-sortable-header-label" }, label),
-		            React.createElement("button", {
-		                type: "button",
-		                className: "playground-agents-overview-column-sort-button"
-		                  + (isActive ? " is-active" : "")
-		                  + (isActive && activeSortDirection === "asc" ? " is-ascending" : "")
-		                  + (isActive && activeSortDirection === "desc" ? " is-descending" : ""),
-		                title: "Sort " + label + " " + nextDirection,
-		                "aria-label": "Sort " + label + " " + nextDirection,
-		                "aria-pressed": isActive ? "true" : "false",
-		                onClick: (event) => {
-		                  event.preventDefault();
-		                  event.stopPropagation();
-		                  onSortChange(normalizedColumnKey);
-		                },
-		              },
-			              renderResourceSortIcon(normalizedColumnKey)
-			                )
-		          );
-		        };
+	        const activeSortKey = String(sortKey || "").trim();
+	        const activeSortDirection = String(sortDirection || "").toLowerCase() === "desc" ? "desc" : "asc";
+	        const sortableColumnSet = new Set((Array.isArray(sortableColumns) ? sortableColumns : [])
+	          .map((columnKey) => String(columnKey || "").trim())
+	          .filter(Boolean));
 
         const setToolbarPopover = (nextValue) => {
           if (typeof onToolbarPopoverChange === "function") {
@@ -56044,69 +56040,16 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
               })
             );
 	          }
-	          return React.createElement(React.Fragment, null,
-	            React.createElement("div", { className: "playground-project-resources-row is-header" + resourceRowColumnClassName },
-	              selectionEnabled
-	                ? React.createElement("div", null,
-	                    React.createElement("button", {
-	                      type: "button",
-	                      className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox"
-	                        + (allVisibleRowsSelected ? " is-selected" : "")
-	                        + (hasPartialVisibleSelection ? " is-partial" : ""),
-	                      role: "checkbox",
-	                      "aria-checked": allVisibleRowsSelected ? "true" : (hasPartialVisibleSelection ? "mixed" : "false"),
-	                      "aria-label": allVisibleRowsSelected ? "Deselect all visible resources" : "Select all visible resources",
-	                      onClick: handleToggleVisibleSelection,
-	                    })
-	                  )
-	                : null,
-		              React.createElement("div", null, renderResourceHeaderCell(primaryHeader, "resource")),
-		              React.createElement("div", null, renderResourceHeaderCell(secondaryHeader, "access")),
-	              hasSourceColumn
-	                ? React.createElement("div", null, renderResourceHeaderCell(sourceHeader, "source"))
-	                : null,
-	              React.createElement("div", null, renderResourceHeaderCell(tertiaryHeader, "updated")),
-	              hasOwnerColumn
-	                ? React.createElement("div", null, renderResourceHeaderCell(ownerHeader, "owner"))
-	                : null,
-              React.createElement("div", null, "")
-            ),
-            visibleRows.map((row) => {
-              const meta = getMeta(row) || defaultTypeMeta;
-              const rowMenuId = getMenuId(row);
-	              const rowMenuOpen = Boolean(rowMenuId && (menuId === rowMenuId || activeRowMenuId === rowMenuId));
-	              return React.createElement("div", {
-	                  key: row?.key || row?.id || row?.title,
-	                  role: "button",
-	                  tabIndex: 0,
-	                  className: "playground-project-resources-row" + resourceRowColumnClassName + (rowMenuOpen ? " is-menu-open" : ""),
-	                  onClick: () => openRow(row),
-		                  onContextMenu: (event) => {
-		                    if (typeof onRowContextMenu === "function") {
-		                      onRowContextMenu(event, row);
-		                    }
-		                  },
-		                  onKeyDown: (event) => {
-	                    if (event.key === "Enter" || event.key === " ") {
-	                      event.preventDefault();
-	                      openRow(row);
-	                    }
-	                  },
-	                },
-	                selectionEnabled
-	                  ? React.createElement("div", { className: "playground-project-resources-cell is-select" },
-	                      React.createElement("button", {
-	                        type: "button",
-	                        className: "playground-agents-overview-select-checkbox" + (selectedResourceRowIds.has(getResourceSelectionId(row)) ? " is-selected" : ""),
-	                        role: "checkbox",
-	                        "aria-checked": selectedResourceRowIds.has(getResourceSelectionId(row)) ? "true" : "false",
-	                        "aria-label": "Select " + (row?.title || "resource"),
-	                        onClick: (event) => handleToggleResourceRowSelection(event, row),
-	                        onKeyDown: (event) => event.stopPropagation(),
-	                      })
-	                    )
-	                  : null,
-	                React.createElement("div", { className: "playground-project-resource-title-cell" },
+          const listColumns = [
+            {
+              id: "resource",
+              header: primaryHeader,
+              accessor: (row) => row?.title || "Untitled resource",
+              sortable: sortableColumnSet.has("resource"),
+              width: "minmax(220px, 1.45fr)",
+              cell: ({ row }) => {
+                const meta = getMeta(row) || defaultTypeMeta;
+                return React.createElement("div", { className: "playground-project-resource-title-cell" },
                   renderSharedIcon(row, meta),
                   React.createElement("span", { className: "playground-project-resource-title-copy" },
                     React.createElement("span", { className: "playground-project-resource-title-main" }, row?.title || "Untitled resource"),
@@ -56114,54 +56057,95 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
                       ? React.createElement("span", { className: "playground-project-resource-title-sub" }, row.subtitle)
                       : null
                   )
-                ),
-                React.createElement("div", getMetaCellProps("playground-project-resources-cell"),
-                  renderSecondaryCell(row)
-                ),
-                hasSourceColumn
-                  ? React.createElement("div", getMetaCellProps("playground-project-resources-cell"),
-                    renderSourceCell(row)
-                  )
-                  : null,
-                React.createElement("div", { className: "playground-project-resources-cell" }, row?.updatedLabel || "-"),
-                hasOwnerColumn
-                  ? React.createElement("div", getMetaCellProps("playground-project-resources-cell"),
-                    renderOwnerCell(row)
-                  )
-                  : null,
-                React.createElement("div", { className: "playground-project-resources-row-action" },
-	                  typeof renderRowMenu === "function"
-	                    ? React.createElement("div", {
-	                        className: "playground-tasks-toolbar-popup-shell playground-project-resources-action-shell" + (rowMenuOpen ? " is-open" : ""),
-	                      },
-	                      React.createElement("button", {
-	                        type: "button",
-	                        className: "playground-project-resources-action-button playground-overview-table-action-button",
-	                        onClick: (event) => {
-	                          event.preventDefault();
-	                          event.stopPropagation();
-	                          setToolbarPopover("");
-	                          if (typeof onRowActionMenuOpen === "function") {
-	                            onRowActionMenuOpen(event, row, { openLeft: true });
-	                          } else if (typeof onMenuIdChange === "function") {
-	                            onMenuIdChange((current) => current === rowMenuId ? "" : rowMenuId);
-	                          }
-	                        },
-			                        onContextMenu: (event) => {
-			                          if (typeof onRowContextMenu === "function") {
-			                            onRowContextMenu(event, row);
-			                          }
-			                        },
-	                        "aria-label": "Resource actions for " + (row?.title || "resource"),
-	                        "aria-expanded": rowMenuOpen ? "true" : "false",
-	                      }, React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })),
-	                      renderRowMenuInline === false ? null : renderRowMenu(row)
-	                    )
-                    : null
-                )
-              );
-            })
-          );
+                );
+              },
+            },
+            {
+              id: "access",
+              header: secondaryHeader,
+              accessor: (row) => row?.secondaryLabel || row?.accessLabel || "",
+              sortable: sortableColumnSet.has("access"),
+              width: "minmax(120px, 0.78fr)",
+              cell: ({ row }) => renderSecondaryCell(row),
+            },
+            ...(hasSourceColumn ? [{
+              id: "source",
+              header: sourceHeader,
+              accessor: (row) => row?.sourceLabel || "",
+              sortable: sortableColumnSet.has("source"),
+              width: "minmax(135px, 0.82fr)",
+              hideBelow: 820,
+              cell: ({ row }) => renderSourceCell(row),
+            }] : []),
+            {
+              id: "updated",
+              header: tertiaryHeader,
+              accessor: (row) => row?.updatedAt || row?.updatedLabel || "",
+              sortable: sortableColumnSet.has("updated"),
+              sortDescFirst: true,
+              width: "minmax(120px, 0.72fr)",
+              hideBelow: 680,
+              cell: ({ row }) => row?.updatedLabel || "-",
+            },
+            ...(hasOwnerColumn ? [{
+              id: "owner",
+              header: ownerHeader,
+              accessor: (row) => row?.ownerLabel || "",
+              sortable: sortableColumnSet.has("owner"),
+              width: "minmax(135px, 0.85fr)",
+              hideBelow: 940,
+              cell: ({ row }) => renderOwnerCell(row),
+            }] : []),
+          ];
+          return React.createElement(PlatformDataTable, {
+            rows: visibleRows,
+            columns: listColumns,
+            getRowId: getResourceSelectionId,
+            ariaLabel: searchAriaLabel,
+            className: "playground-shared-resources-platform-data-table",
+            surface: "plain",
+            sticky: false,
+            sorting: activeSortKey ? {
+              value: { id: activeSortKey, direction: activeSortDirection },
+              manual: true,
+              onChange: (next) => {
+                if (next && typeof onSortChange === "function") onSortChange(next.id, next.direction);
+              },
+            } : undefined,
+            selection: selectionEnabled ? {
+              enabled: true,
+              value: selectedResourceRowIds,
+              ariaLabel: (row) => "Select " + (row?.title || "resource"),
+              onChange: ({ selectedIds, reason }) => {
+                if (reason === "visible" && typeof onToggleVisibleSelection === "function") {
+                  const selectVisible = visibleSelectionIds.some((id) => selectedIds.has(id));
+                  onToggleVisibleSelection(visibleSelectionIds, selectVisible);
+                  return;
+                }
+                if (typeof onToggleRowSelection !== "function") return;
+                const changedIds = new Set([...selectedResourceRowIds, ...selectedIds]);
+                changedIds.forEach((selectionId) => {
+                  if (selectedResourceRowIds.has(selectionId) === selectedIds.has(selectionId)) return;
+                  const row = visibleRows.find((candidate) => getResourceSelectionId(candidate) === selectionId);
+                  onToggleRowSelection(selectionId, row);
+                });
+              },
+            } : undefined,
+            onRowActivate: typeof onRowOpen === "function" ? openRow : undefined,
+	          getRowActions: typeof getRowActions === "function" ? getRowActions : undefined,
+	          onRowActionTrigger: typeof onRowActionMenuOpen === "function"
+	            ? (event, row) => {
+	                setToolbarPopover("");
+	                onRowActionMenuOpen(event, row, { openLeft: true });
+	              }
+	            : undefined,
+	          isRowActionOpen: typeof onRowActionMenuOpen === "function"
+	            ? (row) => Boolean(activeRowMenuId && getMenuId(row) === activeRowMenuId)
+	            : undefined,
+            onRowContextMenu: typeof onRowContextMenu === "function" ? onRowContextMenu : undefined,
+            emptyState: renderEmptyRows(),
+            noResultsState: noMatchesLabel,
+          });
         };
 
         return React.createElement("div", { className: "playground-project-overview-resources-home" },
@@ -59766,208 +59750,125 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
         );
       }
 
-      function renderPlaygroundThreadOverviewRow(thread, options = {}) {
-        const { safeThread, displayThreadTitle } = typeof getSidebarThreadTitleParts === "function"
-          ? getSidebarThreadTitleParts(thread)
-          : {
-              safeThread: thread,
-              displayThreadTitle: thread?.title || "Untitled thread",
-            };
-        const threadId = String(safeThread?.id || thread?.id || "").trim();
-        const useAgentsOverviewTable = Boolean(options.useAgentsOverviewTable);
-        const selectedThreadIds = options.selectedIds instanceof Set
-          ? options.selectedIds
-          : new Set(Array.isArray(options.selectedIds) ? options.selectedIds.map((id) => String(id || "").trim()).filter(Boolean) : []);
-        const isThreadSelected = Boolean(threadId && selectedThreadIds.has(threadId));
-        const isThreadActionOpen = Boolean(
-          typeof options.isActionOpen === "function"
-            ? options.isActionOpen(threadId, safeThread, thread)
-            : false
-        );
-        const sourceLabel = String(
-          typeof options.getSourceLabel === "function"
-            ? options.getSourceLabel(thread, safeThread)
-            : ""
-        ).trim() || "Chat";
-        const environmentLabel = String(
-          typeof options.getEnvironmentLabel === "function"
-            ? options.getEnvironmentLabel(thread, safeThread)
-            : ""
-        ).trim() || "Workspace";
-        const triggeredByLabel = String(
-          typeof options.getTriggeredByLabel === "function"
-            ? options.getTriggeredByLabel(thread, safeThread)
-            : ""
-        ).trim() || "-";
-        const triggeredByAvatarUrl = typeof options.getTriggeredByAvatarUrl === "function"
-          ? options.getTriggeredByAvatarUrl(thread, safeThread)
-          : "";
-        const threadDateLabel = String(
-          typeof options.getDateLabel === "function"
-            ? options.getDateLabel(thread, safeThread)
-            : (
-                typeof formatThreadSearchTimestamp === "function"
-                  ? formatThreadSearchTimestamp(typeof resolveThreadSortTimestamp === "function" ? resolveThreadSortTimestamp(safeThread) : (safeThread?.updatedAt || safeThread?.createdAt || ""))
-                  : ""
-              )
-        ).trim() || "—";
-        const openThread = () => {
-          if (!threadId || typeof options.onOpenThread !== "function") {
-            return;
-          }
-          options.onOpenThread(threadId, safeThread, thread);
-        };
-        const openThreadActions = (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          if (!threadId) {
-            return;
-          }
-          if (typeof options.onThreadActions === "function") {
-            options.onThreadActions(event, threadId, safeThread, thread);
-            return;
-          }
-          openThread();
-        };
-        const toggleThreadSelection = (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          if (!threadId || typeof options.onToggleSelection !== "function") {
-            return;
-          }
-          options.onToggleSelection(threadId, safeThread, thread);
-        };
-
-        return React.createElement("div", {
-            key: threadId || displayThreadTitle,
-            className: "playground-project-overview-threads-table-row"
-              + (isThreadSelected ? " is-selected" : ""),
-            role: "button",
-            tabIndex: 0,
-            onClick: openThread,
-            onContextMenu: threadId ? openThreadActions : undefined,
-            onKeyDown: (event) => {
-              if ((event.key === "Enter" || event.key === " ") && threadId) {
-                event.preventDefault();
-                openThread();
-              }
-            },
-          },
-          useAgentsOverviewTable
-            ? React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-agents-overview-select-checkbox" + (isThreadSelected ? " is-selected" : ""),
-                  role: "checkbox",
-                  "aria-checked": isThreadSelected ? "true" : "false",
-                  "aria-label": (isThreadSelected ? "Deselect " : "Select ") + (displayThreadTitle || "thread"),
-                  onClick: toggleThreadSelection,
-                  onKeyDown: (event) => event.stopPropagation(),
-                })
-              )
-            : null,
-          React.createElement("div", { className: "playground-project-overview-thread-cell" + (useAgentsOverviewTable ? " is-name" : "") },
-            React.createElement("div", { className: "playground-plugin-row-title" }, displayThreadTitle || "Untitled thread")
-          ),
-          React.createElement("div", {
-            className: "playground-project-overview-thread-cell is-source",
-            title: sourceLabel,
-          }, sourceLabel),
-          React.createElement("div", {
-            className: "playground-project-overview-thread-cell is-environment",
-            title: environmentLabel,
-          }, environmentLabel),
-          React.createElement("div", {
-            className: "playground-project-overview-thread-cell is-triggered-by",
-            title: triggeredByLabel,
-          },
-            triggeredByLabel && triggeredByLabel !== "-"
-              ? React.createElement("span", { className: "playground-agents-detail-thread-triggered-by" },
-                  renderPlaygroundThreadOverviewPersonAvatar(triggeredByLabel, triggeredByAvatarUrl),
-                  React.createElement("span", { className: "playground-agents-detail-thread-triggered-by-label" }, triggeredByLabel)
-                )
-              : "-"
-          ),
-          React.createElement("div", {
-            className: "playground-project-overview-thread-cell is-date",
-            title: threadDateLabel,
-          }, threadDateLabel),
-          React.createElement("div", {
-            className: "playground-project-overview-thread-cell is-actions"
-              + (useAgentsOverviewTable ? " playground-overview-table-action-cell" : ""),
-          },
-            threadId
-              ? React.createElement("button", {
-                  type: "button",
-                  className: useAgentsOverviewTable
-                    ? "playground-overview-table-action-button" + (isThreadActionOpen ? " is-open" : "")
-                    : "playground-project-overview-thread-menu-button",
-                  "aria-label": "Thread actions",
-                  "aria-expanded": isThreadActionOpen ? "true" : "false",
-                  onClick: openThreadActions,
-                  onContextMenu: openThreadActions,
-                }, useAgentsOverviewTable
-                    ? React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 })
-                    : React.createElement(Ellipsis, { width: 15, height: 15, strokeWidth: 1.8 }))
-              : null
-          )
-        );
-      }
 
       function renderPlaygroundThreadOverviewTable({
         threads = [],
         rowOptions = {},
       } = {}) {
         const safeThreads = Array.isArray(threads) ? threads : [];
-        const useAgentsOverviewTable = Boolean(rowOptions.useAgentsOverviewTable);
         const selectable = Boolean(rowOptions.selectable);
-        const allVisibleSelected = Boolean(rowOptions.allVisibleSelected);
-        const partialSelection = Boolean(rowOptions.partialSelection);
-        const tableClassName = "playground-project-overview-threads-table"
-          + (useAgentsOverviewTable ? " playground-evaluations-runs-table playground-agents-overview-list-table playground-thread-overview-list-table" : "");
-        const headerClassName = "playground-project-overview-threads-table-header"
-          + (useAgentsOverviewTable ? " playground-agents-overview-column-header playground-thread-overview-column-header" : "");
-        const headerNode = React.createElement("div", { className: headerClassName },
-            selectable
-              ? React.createElement("div", null,
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox"
-                      + (allVisibleSelected ? " is-selected" : "")
-                      + (partialSelection ? " is-partial" : ""),
-                    role: "checkbox",
-                    "aria-checked": allVisibleSelected ? "true" : (partialSelection ? "mixed" : "false"),
-                    "aria-label": allVisibleSelected ? "Deselect all visible threads" : "Select all visible threads",
-                    onClick: (event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      if (typeof rowOptions.onToggleVisibleSelection === "function") {
-                        rowOptions.onToggleVisibleSelection();
-                      }
-                    },
-                  })
-                )
-              : null,
-            React.createElement("div", null, "Title"),
-            React.createElement("div", null, "Source"),
-            React.createElement("div", null, "Environment"),
-            React.createElement("div", null, "Triggered by"),
-            React.createElement("div", null, "Date"),
-            React.createElement("div", null)
-          );
-        const rowNodes = safeThreads.map((thread) => renderPlaygroundThreadOverviewRow(thread, rowOptions));
-        if (useAgentsOverviewTable) {
-          return React.createElement("div", { className: tableClassName },
-            rowOptions.toolbarContent || null,
-            React.createElement("div", { className: "playground-project-overview-thread-list" },
-              headerNode,
-              rowNodes
-            )
-          );
-        }
-        return React.createElement("div", { className: tableClassName },
-          headerNode,
-          React.createElement("div", { className: "playground-project-overview-thread-list" }, rowNodes)
+        const selectedIds = rowOptions.selectedIds instanceof Set
+          ? rowOptions.selectedIds
+          : new Set(Array.isArray(rowOptions.selectedIds) ? rowOptions.selectedIds.map((id) => String(id || "").trim()).filter(Boolean) : []);
+        const readThreadContext = (thread) => {
+          const titleParts = typeof getSidebarThreadTitleParts === "function"
+            ? getSidebarThreadTitleParts(thread)
+            : { safeThread: thread, displayThreadTitle: thread?.title || "Untitled thread" };
+          return {
+            safeThread: titleParts.safeThread || thread,
+            displayThreadTitle: titleParts.displayThreadTitle || "Untitled thread",
+            threadId: String(titleParts.safeThread?.id || thread?.id || "").trim(),
+          };
+        };
+        const triggerThreadActions = (event, thread) => {
+          const { safeThread, threadId } = readThreadContext(thread);
+          if (!threadId) return;
+          if (typeof rowOptions.onThreadActions === "function") {
+            rowOptions.onThreadActions(event, threadId, safeThread, thread);
+            return;
+          }
+          if (typeof rowOptions.onOpenThread === "function") rowOptions.onOpenThread(threadId, safeThread, thread);
+        };
+        const dataTable = React.createElement(PlatformDataTable, {
+          rows: safeThreads,
+          getRowId: (thread) => readThreadContext(thread).threadId,
+          ariaLabel: "Threads",
+          className: "playground-thread-overview-platform-table",
+          surface: "plain",
+          sticky: false,
+          columns: [
+            {
+              id: "title",
+              header: "Title",
+              accessor: (thread) => readThreadContext(thread).displayThreadTitle,
+              width: "minmax(180px, 1.7fr)",
+              cell: ({ row: thread }) => React.createElement("div", { className: "playground-plugin-row-title" }, readThreadContext(thread).displayThreadTitle),
+            },
+            {
+              id: "source",
+              header: "Source",
+              accessor: (thread) => String(typeof rowOptions.getSourceLabel === "function" ? rowOptions.getSourceLabel(thread, readThreadContext(thread).safeThread) : "").trim() || "Chat",
+              width: "minmax(90px, 0.8fr)",
+            },
+            {
+              id: "environment",
+              header: "Environment",
+              accessor: (thread) => String(typeof rowOptions.getEnvironmentLabel === "function" ? rowOptions.getEnvironmentLabel(thread, readThreadContext(thread).safeThread) : "").trim() || "Workspace",
+              width: "minmax(110px, 1fr)",
+              hideBelow: 720,
+            },
+            {
+              id: "triggered-by",
+              header: "Triggered by",
+              accessor: (thread) => String(typeof rowOptions.getTriggeredByLabel === "function" ? rowOptions.getTriggeredByLabel(thread, readThreadContext(thread).safeThread) : "").trim() || "-",
+              width: "minmax(120px, 1fr)",
+              hideBelow: 900,
+              cell: ({ row: thread }) => {
+                const safeThread = readThreadContext(thread).safeThread;
+                const label = String(typeof rowOptions.getTriggeredByLabel === "function" ? rowOptions.getTriggeredByLabel(thread, safeThread) : "").trim() || "-";
+                const avatarUrl = typeof rowOptions.getTriggeredByAvatarUrl === "function" ? rowOptions.getTriggeredByAvatarUrl(thread, safeThread) : "";
+                return label !== "-"
+                  ? React.createElement("span", { className: "playground-agents-detail-thread-triggered-by" },
+                      renderPlaygroundThreadOverviewPersonAvatar(label, avatarUrl),
+                      React.createElement("span", { className: "playground-agents-detail-thread-triggered-by-label" }, label)
+                    )
+                  : "-";
+              },
+            },
+            {
+              id: "date",
+              header: "Date",
+              accessor: (thread) => String(typeof rowOptions.getDateLabel === "function"
+                ? rowOptions.getDateLabel(thread, readThreadContext(thread).safeThread)
+                : (typeof formatThreadSearchTimestamp === "function"
+                    ? formatThreadSearchTimestamp(typeof resolveThreadSortTimestamp === "function" ? resolveThreadSortTimestamp(readThreadContext(thread).safeThread) : (thread?.updatedAt || thread?.createdAt || ""))
+                    : "")
+              ).trim() || "—",
+              width: "minmax(100px, 0.85fr)",
+              align: "end",
+            },
+          ],
+          selection: selectable ? {
+            enabled: true,
+            value: selectedIds,
+            ariaLabel: (thread) => "Select " + readThreadContext(thread).displayThreadTitle,
+            onChange: ({ selectedIds: nextIds, reason }) => {
+              if (reason === "visible") {
+                rowOptions.onToggleVisibleSelection?.();
+                return;
+              }
+              const changedId = Array.from(new Set([...selectedIds, ...nextIds])).find((id) => selectedIds.has(id) !== nextIds.has(id));
+              if (changedId) {
+                const changedThread = safeThreads.find((thread) => readThreadContext(thread).threadId === changedId);
+                rowOptions.onToggleSelection?.(changedId, readThreadContext(changedThread).safeThread, changedThread);
+              }
+            },
+          } : undefined,
+          onRowActivate: (thread) => {
+            const { safeThread, threadId } = readThreadContext(thread);
+            if (threadId && typeof rowOptions.onOpenThread === "function") rowOptions.onOpenThread(threadId, safeThread, thread);
+          },
+          onRowActionTrigger: triggerThreadActions,
+          onRowContextMenu: (event, thread) => {
+            event.preventDefault();
+            triggerThreadActions(event, thread);
+          },
+          isRowActionOpen: (thread) => Boolean(typeof rowOptions.isActionOpen === "function" && rowOptions.isActionOpen(readThreadContext(thread).threadId, readThreadContext(thread).safeThread, thread)),
+          getRowAriaLabel: (thread) => "Open thread " + readThreadContext(thread).displayThreadTitle,
+        });
+        return React.createElement("div", { className: "playground-thread-overview-table-shell" },
+          rowOptions.toolbarContent || null,
+          dataTable
         );
       }
 
@@ -64368,6 +64269,9 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
                   ),
               React.createElement("div", { className: "playground-agents-permission-actions" },
                 ringActions.map((action) => {
+                  const actionPresentation = handlers.actionPresentation?.[action.id] || null;
+                  const actionLabel = String(actionPresentation?.label || action.label);
+                  const actionDescription = String(actionPresentation?.description || action.description);
                   const actionPolicy = normalizedPermissionSet.actions?.[action.id] || {};
                   const actionRingId = getPlaygroundPermissionActionRingId(normalizedPermissionSet, action);
                   const inheritedAccess = getPlaygroundPermissionRingAccess(normalizedPermissionSet, actionRingId);
@@ -64376,18 +64280,18 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
                   return React.createElement("div", { className: "playground-agents-permission-action-row", key: action.id },
                     React.createElement("div", { className: "playground-agents-permission-copy" },
                       React.createElement("div", { className: "playground-agents-permission-title" },
-                        action.label,
+                        actionLabel,
                         explicitAccess
                           ? React.createElement("span", { className: "playground-agents-permission-action-badge" }, "Override")
                           : null
                       ),
-                      React.createElement("div", { className: "playground-agents-permission-description" }, action.description)
+                      React.createElement("div", { className: "playground-agents-permission-description" }, actionDescription)
                     ),
                     React.createElement("div", { className: "playground-agents-permission-options" },
                       renderPlaygroundPermissionRingSelect({
                         value: actionRingId,
                         onChange: (nextRingId) => onActionRingChange?.(action.id, nextRingId),
-                        ariaLabel: action.label + " ring",
+                        ariaLabel: actionLabel + " ring",
                         disabled: isDisabled || !onActionRingChange,
                       }),
                       renderPlaygroundPermissionAccessSelect({
@@ -64395,7 +64299,7 @@ ${PLATFORM_UI_PRIMITIVES_CSS}
                         inheritedAccess,
                         includeInherit: true,
                         onChange: (nextAccess) => onActionAccessChange?.(action.id, nextAccess),
-                        ariaLabel: action.label + " permissions",
+                        ariaLabel: actionLabel + " permissions",
                         disabled: isDisabled || !onActionAccessChange,
                       })
                     )
@@ -88078,15 +87982,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         const environmentRenameInputRef = useRef(null);
         const environmentDescriptionTextareaRef = useRef(null);
         const databaseActionsPopoverRef = useRef(null);
-        const databaseAccessToolbarRef = useRef(null);
-        const serverAccessToolbarRef = useRef(null);
-        const serverAccessActionMenuCloseTimerRef = useRef(null);
         const serverOwnerPopoverRef = useRef(null);
         const serverOwnerTransferModalCloseTimerRef = useRef(null);
         const databaseOwnerPopoverRef = useRef(null);
         const databaseOwnerTransferModalCloseTimerRef = useRef(null);
         const databaseOwnerTransferModalFrameRef = useRef(null);
-        const databaseAccessActionMenuCloseTimerRef = useRef(null);
         const databaseExportMenuRef = useRef(null);
         const databaseRenameInputRef = useRef(null);
         const agentRuntimeSkillsActionsRef = useRef(null);
@@ -88297,9 +88197,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	        const [serverTeamMenuId, setServerTeamMenuId] = useState("");
 	        const [serverAccessSearchQuery, setServerAccessSearchQuery] = useState("");
 	        const [serverAccessFilter, setServerAccessFilter] = useState("all");
-	        const [serverAccessToolbarPopover, setServerAccessToolbarPopover] = useState("");
-	        const [serverAccessActionMenuState, setServerAccessActionMenuState] = useState(null);
-	        const [serverAccessActionMenuClosing, setServerAccessActionMenuClosing] = useState(false);
 	        const [serverAccessSort, setServerAccessSort] = useState("name");
 	        const [serverAccessSortDirection, setServerAccessSortDirection] = useState("asc");
 	        const [selectedServerAccessTeamIds, setSelectedServerAccessTeamIds] = useState(() => new Set());
@@ -88320,9 +88217,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	        const [databaseTeamMenuId, setDatabaseTeamMenuId] = useState("");
 	        const [databaseAccessSearchQuery, setDatabaseAccessSearchQuery] = useState("");
 	        const [databaseAccessFilter, setDatabaseAccessFilter] = useState("all");
-	        const [databaseAccessToolbarPopover, setDatabaseAccessToolbarPopover] = useState("");
-	        const [databaseAccessActionMenuState, setDatabaseAccessActionMenuState] = useState(null);
-	        const [databaseAccessActionMenuClosing, setDatabaseAccessActionMenuClosing] = useState(false);
 	        const [databaseAccessSort, setDatabaseAccessSort] = useState("name");
 	        const [databaseAccessSortDirection, setDatabaseAccessSortDirection] = useState("asc");
 	        const [selectedDatabaseAccessTeamIds, setSelectedDatabaseAccessTeamIds] = useState(() => new Set());
@@ -88338,7 +88232,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	        });
 	        const [authDetailTab, setAuthDetailTab] = useState("users");
 	        const [secretsDetailTab, setSecretsDetailTab] = useState("secrets");
-	        const [agentRuntimeDetailTab, setAgentRuntimeDetailTab] = useState("general");
+	        const [agentRuntimeDetailTab, setAgentRuntimeDetailTab] = useState("usage");
         const [environmentActionsPopoverOpen, setEnvironmentActionsPopoverOpen] = useState(false);
         const [environmentPublishMenuOpen, setEnvironmentPublishMenuOpen] = useState(false);
         const [environmentVersionSelectorMenuOpen, setEnvironmentVersionSelectorMenuOpen] = useState(false);
@@ -89691,9 +89585,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           setServerTeamMenuId("");
           setServerAccessSearchQuery("");
           setServerAccessFilter("all");
-          setServerAccessToolbarPopover("");
-          setServerAccessActionMenuState(null);
-          setServerAccessActionMenuClosing(false);
           setServerOwnerPopoverOpen(false);
           setServerOwnerTransferTarget(null);
           setServerOwnerTransferModalClosing(false);
@@ -89733,7 +89624,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	          });
 	          setAuthDetailTab("users");
 	          setSecretsDetailTab("secrets");
-		          setAgentRuntimeDetailTab("general");
+		          setAgentRuntimeDetailTab("usage");
 	          setServerRuntimePreviewState({
             open: false,
             target: "",
@@ -90207,9 +90098,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	      setDatabaseAccessSortDirection("asc");
 	      setDatabaseAccessSearchQuery("");
 	      setDatabaseAccessFilter("all");
-	      setDatabaseAccessToolbarPopover("");
-	      setDatabaseAccessActionMenuState(null);
-	      setDatabaseAccessActionMenuClosing(false);
 	      setSelectedDatabaseAccessTeamIds(new Set());
           setDatabaseTeamAccessState({
             teamId: "",
@@ -93286,7 +93174,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           setServerDetailsCollapsed(false);
           setDraftServer(seedServer ? normalizePlaygroundServerRecord(seedServer) : null);
           const seedServerKind = canonicalizePlaygroundServerKind(seedServer?.kind);
-          if (["function", "web_app"].includes(seedServerKind)) {
+          if (["function", "web_app", "auth", "agent_runtime", "secrets", "payments"].includes(seedServerKind)) {
             void loadServerAnalytics(selectedServerId, { period: serverDetailChartTimescale })
               .finally(() => loadServerDetails(selectedServerId));
           } else {
@@ -93295,13 +93183,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (!["auth", "agent_runtime", "voice_agent", "secrets", "payments", "function", "web_app"].includes(seedServerKind)) {
             void loadServerFiles(selectedServerId);
           }
-          if (seedServerKind === "secrets") {
-            void loadServerSecrets(selectedServerId);
-          }
-          if (!["function", "web_app"].includes(seedServerKind)) {
+          if (!["function", "web_app", "auth", "agent_runtime", "secrets", "payments"].includes(seedServerKind)) {
             void loadServerBindings(selectedServerId);
           }
-        }, [loadServerAnalytics, loadServerBindings, loadServerDetails, loadServerFiles, loadServerSecrets, orderedServers, resourceMode, selectedServerId, serverDetailChartTimescale, serverDetailsById]);
+        }, [loadServerAnalytics, loadServerBindings, loadServerDetails, loadServerFiles, orderedServers, resourceMode, selectedServerId, serverDetailChartTimescale, serverDetailsById]);
 
         useEffect(() => {
           if (resourceMode !== "servers") {
@@ -93314,11 +93199,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (!activeServer?.id || canonicalizePlaygroundServerKind(activeServer.kind) !== "auth") {
             return;
           }
+          if (authDetailTab !== "users") {
+            return;
+          }
           if (serverAuthUsersById[selectedServerId]?.users) {
             return;
           }
           void loadServerAuthUsers(selectedServerId);
-        }, [draftServer, loadServerAuthUsers, resourceMode, selectedServerId, selectedServerSnapshot, serverAuthUsersById]);
+        }, [authDetailTab, draftServer, loadServerAuthUsers, resourceMode, selectedServerId, selectedServerSnapshot, serverAuthUsersById]);
 
         useEffect(() => {
           if (resourceMode !== "servers") {
@@ -93331,11 +93219,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (!activeServer?.id || canonicalizePlaygroundServerKind(activeServer.kind) !== "secrets") {
             return;
           }
+          if (secretsDetailTab !== "secrets") {
+            return;
+          }
           if (Array.isArray(serverSecretsById[selectedServerId])) {
             return;
           }
           void loadServerSecrets(selectedServerId);
-        }, [draftServer, loadServerSecrets, resourceMode, selectedServerId, selectedServerSnapshot, serverSecretsById]);
+        }, [draftServer, loadServerSecrets, resourceMode, secretsDetailTab, selectedServerId, selectedServerSnapshot, serverSecretsById]);
 
         useEffect(() => {
           if (resourceMode !== "servers") {
@@ -93348,11 +93239,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (!activeServer?.id || canonicalizePlaygroundServerKind(activeServer.kind) !== "agent_runtime") {
             return;
           }
+          if (agentRuntimeDetailTab !== "threads") {
+            return;
+          }
           if (Array.isArray(serverAgentRuntimeRunsById[selectedServerId])) {
             return;
           }
           void loadServerAgentRuntimeRuns(selectedServerId);
-        }, [draftServer, loadServerAgentRuntimeRuns, resourceMode, selectedServerId, selectedServerSnapshot, serverAgentRuntimeRunsById]);
+        }, [agentRuntimeDetailTab, draftServer, loadServerAgentRuntimeRuns, resourceMode, selectedServerId, selectedServerSnapshot, serverAgentRuntimeRunsById]);
 
         useEffect(() => {
           if (resourceMode !== "servers") {
@@ -93365,24 +93259,37 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           if (!activeServer?.id) {
             return;
           }
-          if (["auth", "agent_runtime", "voice_agent", "secrets", "payments"].includes(canonicalizePlaygroundServerKind(activeServer.kind))) {
+          if (canonicalizePlaygroundServerKind(activeServer.kind) === "voice_agent") {
             return;
           }
           const normalizedKind = canonicalizePlaygroundServerKind(activeServer.kind);
           const isSourceDeployableServer = ["web_app", "function"].includes(normalizedKind);
-          if (!isSourceDeployableServer && !activeServer.cloudRunServiceName && !activeServer.serviceUrl) {
+          const isOperationalDetailServer = ["web_app", "function", "auth", "agent_runtime", "secrets", "payments"].includes(normalizedKind);
+          if (!isOperationalDetailServer && !activeServer.cloudRunServiceName && !activeServer.serviceUrl) {
             return;
           }
           if (isSourceDeployableServer && serverDetailTab !== "usage") {
             return;
           }
-          const analyticsPeriod = isSourceDeployableServer ? serverDetailChartTimescale : "day";
+          if (normalizedKind === "auth" && authDetailTab !== "usage") {
+            return;
+          }
+          if (normalizedKind === "secrets" && secretsDetailTab !== "usage") {
+            return;
+          }
+          if (normalizedKind === "agent_runtime" && agentRuntimeDetailTab !== "usage") {
+            return;
+          }
+          if (normalizedKind === "payments" && serverDetailTab !== "usage") {
+            return;
+          }
+          const analyticsPeriod = isOperationalDetailServer ? serverDetailChartTimescale : "day";
           const analyticsStateKey = buildPlaygroundServerAnalyticsStateKey(selectedServerId, analyticsPeriod);
           if (serverAnalyticsByIdRef.current[analyticsStateKey]) {
             return;
           }
           void loadServerAnalytics(selectedServerId, { period: analyticsPeriod });
-        }, [draftServer, loadServerAnalytics, resourceMode, selectedServerId, selectedServerSnapshot, serverDetailChartTimescale, serverDetailTab]);
+        }, [agentRuntimeDetailTab, authDetailTab, draftServer, loadServerAnalytics, resourceMode, secretsDetailTab, selectedServerId, selectedServerSnapshot, serverDetailChartTimescale, serverDetailTab]);
 
         useEffect(() => {
           if (resourceMode !== "servers" || serverAnalyticsView !== "analytics") {
@@ -93718,40 +93625,16 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }, [databaseTeamMenuId]);
 
         useEffect(() => {
-          if (!databaseAccessToolbarPopover) return undefined;
-
-          function handleDatabaseAccessToolbarPointerDown(event) {
-            const target = event?.target instanceof Node ? event.target : null;
-            if (!target || databaseAccessToolbarRef.current?.contains(target)) return;
-            setDatabaseAccessToolbarPopover("");
-          }
-
-          function handleDatabaseAccessToolbarEscape(event) {
-            if (event.key === "Escape") setDatabaseAccessToolbarPopover("");
-          }
-
-          document.addEventListener("mousedown", handleDatabaseAccessToolbarPointerDown);
-          window.addEventListener("keydown", handleDatabaseAccessToolbarEscape);
-          return () => {
-            document.removeEventListener("mousedown", handleDatabaseAccessToolbarPointerDown);
-            window.removeEventListener("keydown", handleDatabaseAccessToolbarEscape);
-          };
-        }, [databaseAccessToolbarPopover]);
-
-        useEffect(() => {
-          if (!serverTeamMenuId && !serverAccessToolbarPopover) return undefined;
+          if (!serverTeamMenuId) return undefined;
 
           function handleServerAccessPopupPointerDown(event) {
-            const target = event?.target instanceof Node ? event.target : null;
-            if (target && serverAccessToolbarRef.current?.contains(target)) return;
-            setServerTeamMenuId("");
-            setServerAccessToolbarPopover("");
+            const target = event?.target instanceof Element ? event.target : null;
+            if (!target?.closest(".playground-database-team-menu-scope")) setServerTeamMenuId("");
           }
 
           function handleServerAccessPopupEscape(event) {
             if (event.key !== "Escape") return;
             setServerTeamMenuId("");
-            setServerAccessToolbarPopover("");
           }
 
           document.addEventListener("mousedown", handleServerAccessPopupPointerDown);
@@ -93760,7 +93643,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             document.removeEventListener("mousedown", handleServerAccessPopupPointerDown);
             window.removeEventListener("keydown", handleServerAccessPopupEscape);
           };
-        }, [serverAccessToolbarPopover, serverTeamMenuId]);
+        }, [serverTeamMenuId]);
 
         useEffect(() => {
           if (!serverOwnerPopoverOpen) return undefined;
@@ -93793,12 +93676,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
         }, [databaseOwnerTeamMembersById, draftServer, serverOwnerPopoverOpen]);
 
         useEffect(() => () => {
-          if (databaseAccessActionMenuCloseTimerRef.current !== null && typeof window !== "undefined") {
-            window.clearTimeout(databaseAccessActionMenuCloseTimerRef.current);
-          }
-          if (serverAccessActionMenuCloseTimerRef.current !== null && typeof window !== "undefined") {
-            window.clearTimeout(serverAccessActionMenuCloseTimerRef.current);
-          }
           if (serverOwnerTransferModalCloseTimerRef.current !== null && typeof window !== "undefined") {
             window.clearTimeout(serverOwnerTransferModalCloseTimerRef.current);
           }
@@ -95379,6 +95256,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           setSearchPopupQuery("");
           setServerActionsPopoverOpen(false);
           setServerResourceActionMenuState(null);
+          setServerDetailTab("usage");
+          setAuthDetailTab("users");
+	          setSecretsDetailTab("secrets");
+          setAgentRuntimeDetailTab("usage");
           setServerBindingState({
             savingKey: "",
             error: "",
@@ -107140,6 +107021,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           const isAgentRuntimeServer = normalizedServerKind === "agent_runtime";
           const isSecretsServer = normalizedServerKind === "secrets";
           const isPaymentsServer = normalizedServerKind === "payments";
+          const isOperationalDetailServer = isSourceDeployableServer || isAuthServer || isAgentRuntimeServer || isSecretsServer || isPaymentsServer;
           const isServerTemplatePreview = isSelectedServerTemplatePreview || isPlaygroundResourceTemplatePreviewRecord(draftServer);
           const ServerPreviewEditorComponent = serverPreviewEditorModule?.default || null;
           const renderServerFactRow = (label, control) => React.createElement("div", { className: "playground-tasks-detail-fact", key: label },
@@ -107369,6 +107251,72 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             }
             return String(Math.round(numeric)) + " MB";
           };
+          const serverUsageMetricConfig = isFunctionServer
+            ? { title: "Function Invocations", metricLabel: "Invocations", emptyLabel: "invocation" }
+            : isWebAppServer
+              ? { title: "Web App Invocations", metricLabel: "Requests", emptyLabel: "request" }
+              : isAuthServer
+                ? { title: "Authentication Events", metricLabel: "Events", emptyLabel: "authentication event" }
+                : isSecretsServer
+                  ? { title: "Secret Accesses", metricLabel: "Accesses", emptyLabel: "secret access" }
+                  : isPaymentsServer
+                    ? { title: "Payment Activity", metricLabel: "Checkout Sessions", emptyLabel: "payment event" }
+                    : isAgentRuntimeServer
+                      ? { title: "Agent Runtime Runs", metricLabel: "Runs", emptyLabel: "runtime run" }
+                      : { title: "Resource Activity", metricLabel: "Requests", emptyLabel: "request" };
+          const serverPermissionResourceNoun = formatPlaygroundServerKindLabel(draftServer.kind).toLowerCase();
+          const serverPermissionInvokeLabel = isAuthServer
+            ? "Authenticate users"
+            : isSecretsServer
+              ? "Access secrets"
+              : isPaymentsServer
+                ? "Create checkout sessions"
+                : isAgentRuntimeServer
+                  ? "Run agents"
+                  : "Invoke resource";
+          const serverPermissionManageLabel = isAuthServer
+            ? "Manage authentication"
+            : isSecretsServer
+              ? "Manage secrets"
+              : isPaymentsServer
+                ? "Manage payments"
+                : isAgentRuntimeServer
+                  ? "Configure runtime"
+                  : "Edit source";
+          const serverPermissionActionPresentation = isSourceDeployableServer ? null : {
+            server_source_read: {
+              label: "View configuration",
+              description: "View this " + serverPermissionResourceNoun + " configuration, status, and metadata.",
+            },
+            server_invoke: {
+              label: serverPermissionInvokeLabel,
+              description: "Use the managed capabilities exposed by this " + serverPermissionResourceNoun + ".",
+            },
+            server_logs_read: {
+              label: "View usage and activity",
+              description: "View analytics, activity history, and operational status for this " + serverPermissionResourceNoun + ".",
+            },
+            server_source_write: {
+              label: serverPermissionManageLabel,
+              description: "Change the managed configuration and operational settings for this " + serverPermissionResourceNoun + ".",
+            },
+            server_connection_manage: {
+              label: "Manage connections",
+              description: "Connect or disconnect this " + serverPermissionResourceNoun + " from other managed resources.",
+            },
+            server_deploy: {
+              label: "Publish changes",
+              description: "Publish versioned configuration changes for this " + serverPermissionResourceNoun + ".",
+            },
+            server_access_manage: {
+              label: "Manage access",
+              description: "Share this " + serverPermissionResourceNoun + " and change team permission policies.",
+            },
+            server_delete: {
+              label: "Delete resource",
+              description: "Permanently delete this " + serverPermissionResourceNoun + " and its managed data.",
+            },
+          };
           const serverDetailKpis = isSourceDeployableServer
             ? [
                 { id: "invocations", value: String(resolvedServerAnalyticsSummary.totalRequests ?? resolvedServerAnalyticsSummary.totalRequests24h ?? 0), label: isFunctionServer ? "Invocations" : "Requests", Icon: Globe },
@@ -107378,7 +107326,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 { id: "errors", value: String(Number(resolvedServerAnalyticsSummary.clientErrors ?? resolvedServerAnalyticsSummary.clientErrors24h ?? 0) + Number(resolvedServerAnalyticsSummary.serverErrors ?? resolvedServerAnalyticsSummary.serverErrors24h ?? 0)), label: "Errors", Icon: X },
               ]
             : [
-                { id: "requests", value: String(resolvedServerAnalyticsSummary.totalRequests24h || 0), label: "Requests (24h)", Icon: Globe },
+                { id: "requests", value: String(resolvedServerAnalyticsSummary.totalRequests ?? resolvedServerAnalyticsSummary.totalRequests24h ?? 0), label: serverUsageMetricConfig.metricLabel, Icon: Globe },
                 { id: "success-rate", value: formatPlaygroundServerRate(resolvedServerAnalyticsSummary.successRate24h), label: "Success Rate", Icon: Check },
                 { id: "latency", value: formatPlaygroundServerLatency(resolvedServerAnalyticsSummary.p95LatencyMs), label: "P95 Latency", Icon: Clock },
                 { id: "errors", value: String(Number(resolvedServerAnalyticsSummary.clientErrors24h || 0) + Number(resolvedServerAnalyticsSummary.serverErrors24h || 0)), label: "4xx / 5xx", Icon: X },
@@ -107403,20 +107351,20 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             )
           );
           const renderServerDetailRequestChart = () => React.createElement(PlaygroundResourceOperationsChart, {
-            ariaLabel: isSourceDeployableServer ? (isFunctionServer ? "Function invocations" : "Web app invocations") : "Server requests",
+            ariaLabel: serverUsageMetricConfig.title,
             labels: serverDetailTrafficLabels,
             series: [
               {
                 id: "server-requests",
-                label: isSourceDeployableServer ? "Invocations" : "Requests",
+                label: serverUsageMetricConfig.metricLabel,
                 color: "rgb(143,196,255)",
                 values: serverDetailTrafficCounts,
               },
             ],
             emptyText: isServerAnalyticsLoading
-              ? (isSourceDeployableServer ? "Loading invocation data..." : "Loading request data...")
-              : (isSourceDeployableServer ? "No invocation data yet" : "No request data yet"),
-            loadingLabel: isSourceDeployableServer ? "Loading invocation data" : "Loading request data",
+              ? "Loading " + serverUsageMetricConfig.emptyLabel + " data..."
+              : "No " + serverUsageMetricConfig.emptyLabel + " data yet",
+            loadingLabel: "Loading " + serverUsageMetricConfig.emptyLabel + " data",
             isLoading: isServerAnalyticsLoading && !activeServerAnalytics,
           });
           const renderServerDetailChartKpis = (items) => React.createElement("div", {
@@ -107648,77 +107596,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           const toggleServerLogExpansion = (rowKey) => {
             setExpandedServerLogKey((current) => current === rowKey ? "" : rowKey);
           };
-          const renderServerLogRow = (entry, kind) => {
-            const normalizedKind = String(kind || "request");
-            const rowKey = buildServerLogRowKey(entry, normalizedKind);
-            const isExpanded = expandedServerLogKey === rowKey;
-            const rowProps = {
-              className: "playground-servers-logs-table-row" + (isExpanded ? " is-expanded" : ""),
-              onClick: () => toggleServerLogExpansion(rowKey),
-              onKeyDown: (event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  toggleServerLogExpansion(rowKey);
-                }
-              },
-              tabIndex: 0,
-              "aria-expanded": isExpanded ? "true" : "false",
-            };
-            const detailRow = isExpanded
-              ? React.createElement("tr", {
-                  className: "playground-servers-logs-table-detail-row",
-                },
-                  React.createElement("td", { colSpan: normalizedKind === "request" ? 5 : 4 },
-                    renderServerLogDetailContent(entry, normalizedKind)
-                  )
-                )
-              : null;
-            if (normalizedKind === "request") {
-              return React.createElement(React.Fragment, { key: rowKey },
-                React.createElement("tr", rowProps,
-                  React.createElement("td", null,
-                    renderServerLogStatusPill(formatPlaygroundServerRequestStatus(entry?.status), getServerLogStatusTone(entry, normalizedKind))
-                  ),
-                  React.createElement("td", null,
-                    React.createElement("div", { className: "playground-agents-overview-table-value" }, String(entry?.method || "GET"))
-                  ),
-                  React.createElement("td", null,
-                    React.createElement("div", { className: "playground-agents-overview-table-value playground-servers-logs-table-message", title: String(entry?.path || "/") }, String(entry?.path || "/"))
-                  ),
-                  React.createElement("td", { className: "is-right" },
-                    React.createElement("div", { className: "playground-agents-overview-table-value is-right" }, formatPlaygroundServerLatency(entry?.latencyMs))
-                  ),
-                  React.createElement("td", { className: "is-right" },
-                    React.createElement("div", { className: "playground-agents-overview-table-value is-right" }, formatPlaygroundFileDate(entry?.timestamp))
-                  )
-                ),
-                detailRow
-              );
-            }
-            const statusLabel = normalizedKind === "deployment" ? String(entry?.stream || "deploy") : String(entry?.severity || "INFO");
-            const messageText = String(entry?.message || "");
-            return React.createElement(React.Fragment, { key: rowKey },
-              React.createElement("tr", rowProps,
-                React.createElement("td", null,
-                  renderServerLogStatusPill(statusLabel, getServerLogStatusTone(entry, normalizedKind))
-                ),
-                React.createElement("td", null,
-                  React.createElement("div", { className: "playground-agents-overview-table-value" }, formatPlaygroundServerLogKindLabel(normalizedKind))
-                ),
-                React.createElement("td", null,
-                  React.createElement("div", { className: "playground-agents-overview-table-value playground-servers-logs-table-message", title: messageText }, messageText || "—")
-                ),
-                React.createElement("td", { className: "is-right" },
-                  React.createElement("div", { className: "playground-agents-overview-table-value is-right" }, formatPlaygroundFileDate(entry?.timestamp))
-                )
-              ),
-              detailRow
-            );
-          };
-          const serverLogsSortOptions = [
-            { id: "newest", label: "Newest first" },
-            { id: "oldest", label: "Oldest first" },
-          ];
           const readServerLogTimestampMs = (entry) => {
             const timestamp = Date.parse(String(entry?.timestamp || entry?.createdAt || entry?.updatedAt || ""));
             return Number.isFinite(timestamp) ? timestamp : 0;
@@ -107832,229 +107709,246 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               serverDeploymentHistoryState.error
                 ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverDeploymentHistoryState.error)
                 : null,
-              isServerDeploymentsLoading && sortedDeployments.length === 0
-                ? React.createElement("div", { className: "playground-files-state playground-servers-logs-loading-state" },
-                    React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
-                  )
-                : sortedDeployments.length > 0
-                  ? React.createElement("div", { className: "playground-agents-overview-table-shell playground-servers-logs-table-shell" },
-                      React.createElement("table", { className: "playground-agents-overview-table playground-servers-logs-table playground-servers-deployments-table" },
-                        React.createElement("thead", null,
-                          React.createElement("tr", null,
-                            React.createElement("th", null, "Status"),
-                            React.createElement("th", null, "Revision"),
-                            React.createElement("th", null, "Runtime"),
-                            React.createElement("th", null, "Source"),
-                            React.createElement("th", { className: "is-right" }, "Time"),
-                            React.createElement("th", { className: "is-right" }, "Action")
-                          )
-                        ),
-                        React.createElement("tbody", null,
-                          sortedDeployments.map((deployment) => {
-                            const deploymentId = String(deployment?.id || "").trim();
-                            const revision = String(deployment?.revision || "").trim();
-                            const isActiveDeployment = Boolean(
-                              (activeDeploymentId && deploymentId && activeDeploymentId === deploymentId)
-                              || (activeRevision && revision && activeRevision === revision)
-                            );
-                            const canRollback = !isActiveDeployment
-                              && Boolean(deploymentId)
-                              && Boolean(revision)
-                              && !["failed", "error"].includes(String(deployment?.outcome || "").trim().toLowerCase());
-                            const isRollingBack = serverDeploymentHistoryState.rollingBackDeploymentId === deploymentId;
-                            return React.createElement("tr", {
-                                key: deploymentId || revision || deployment?.at,
-                                className: "playground-servers-logs-table-row",
-                              },
-                              React.createElement("td", null,
-                                renderServerLogStatusPill(formatServerDeploymentOutcomeLabel(deployment?.outcome), getServerDeploymentOutcomeTone(deployment))
-                              ),
-                              React.createElement("td", null,
-                                React.createElement("div", {
-                                  className: "playground-agents-overview-table-value playground-servers-logs-table-message",
-                                  title: revision || "No revision",
-                                }, revision || "—")
-                              ),
-                              React.createElement("td", null,
-                                React.createElement("div", { className: "playground-agents-overview-table-value" }, deployment?.runtime || "—")
-                              ),
-                              React.createElement("td", null,
-                                React.createElement("div", {
-                                  className: "playground-agents-overview-table-value playground-servers-logs-table-message",
-                                  title: deployment?.sourcePath || deployment?.sourceEnvironmentId || "",
-                                }, deployment?.sourcePath || deployment?.sourceEnvironmentId || "—")
-                              ),
-                              React.createElement("td", { className: "is-right" },
-                                React.createElement("div", { className: "playground-agents-overview-table-value is-right" }, formatPlaygroundFileDate(deployment?.at))
-                              ),
-                              React.createElement("td", { className: "is-right" },
-                                isActiveDeployment
-                                  ? React.createElement("div", { className: "playground-agents-overview-table-value is-right" }, "Active")
-                                  : canRollback
-                                    ? React.createElement("button", {
-                                        type: "button",
-                                        className: "playground-environments-action-button",
-                                        onClick: () => void handleRollbackServerDeployment(deployment),
-                                        disabled: isRollingBack,
-                                      },
-                                        isRollingBack
-                                          ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
-                                          : React.createElement(RotateCcw, { width: 14, height: 14, strokeWidth: 1.8 }),
-                                        React.createElement("span", null, isRollingBack ? "Rolling back" : "Rollback")
-                                      )
-                                    : React.createElement("div", { className: "playground-agents-overview-table-value is-right" }, "—")
-                              )
-                            );
-                          })
-                        )
-                      )
-                    )
-                  : React.createElement("div", { className: "playground-files-state" }, "No deployments yet.")
+              React.createElement(PlatformDataTable, {
+                rows: sortedDeployments,
+                getRowId: (deployment) => String(deployment?.id || deployment?.revision || deployment?.at || deployment?.createdAt || "deployment"),
+                ariaLabel: "Server deployments",
+                className: "playground-servers-deployments-platform-table",
+                surface: "plain",
+                sticky: false,
+                loading: isServerDeploymentsLoading && sortedDeployments.length === 0,
+                emptyState: "No deployments yet.",
+                columns: [
+                  {
+                    id: "status",
+                    header: "Status",
+                    width: "minmax(90px, 0.75fr)",
+                    cell: ({ row: deployment }) => renderServerLogStatusPill(
+                      formatServerDeploymentOutcomeLabel(deployment?.outcome),
+                      getServerDeploymentOutcomeTone(deployment)
+                    ),
+                  },
+                  {
+                    id: "revision",
+                    header: "Revision",
+                    accessor: (deployment) => deployment?.revision || "",
+                    width: "minmax(120px, 1fr)",
+                    cell: ({ row: deployment }) => React.createElement("div", {
+                      className: "playground-agents-overview-table-value playground-servers-logs-table-message",
+                      title: String(deployment?.revision || "No revision"),
+                    }, deployment?.revision || "—"),
+                  },
+                  {
+                    id: "runtime",
+                    header: "Runtime",
+                    accessor: (deployment) => deployment?.runtime || "",
+                    width: "minmax(100px, 0.8fr)",
+                    cell: ({ row: deployment }) => React.createElement("div", { className: "playground-agents-overview-table-value" }, deployment?.runtime || "—"),
+                  },
+                  {
+                    id: "source",
+                    header: "Source",
+                    accessor: (deployment) => deployment?.sourcePath || deployment?.sourceEnvironmentId || "",
+                    width: "minmax(150px, 1.35fr)",
+                    hideBelow: 760,
+                    cell: ({ row: deployment }) => React.createElement("div", {
+                      className: "playground-agents-overview-table-value playground-servers-logs-table-message",
+                      title: String(deployment?.sourcePath || deployment?.sourceEnvironmentId || ""),
+                    }, deployment?.sourcePath || deployment?.sourceEnvironmentId || "—"),
+                  },
+                  {
+                    id: "time",
+                    header: "Time",
+                    accessor: (deployment) => readServerDeploymentTimestampMs(deployment),
+                    width: "minmax(110px, 0.85fr)",
+                    align: "end",
+                    cell: ({ row: deployment }) => formatPlaygroundFileDate(deployment?.at),
+                  },
+                  {
+                    id: "action",
+                    header: "Action",
+                    width: "minmax(110px, 0.8fr)",
+                    align: "end",
+                    cell: ({ row: deployment }) => {
+                      const deploymentId = String(deployment?.id || "").trim();
+                      const revision = String(deployment?.revision || "").trim();
+                      const isActiveDeployment = Boolean(
+                        (activeDeploymentId && deploymentId && activeDeploymentId === deploymentId)
+                        || (activeRevision && revision && activeRevision === revision)
+                      );
+                      const canRollback = !isActiveDeployment
+                        && Boolean(deploymentId)
+                        && Boolean(revision)
+                        && !["failed", "error"].includes(String(deployment?.outcome || "").trim().toLowerCase());
+                      const isRollingBack = serverDeploymentHistoryState.rollingBackDeploymentId === deploymentId;
+                      if (isActiveDeployment) return "Active";
+                      if (!canRollback) return "—";
+                      return React.createElement("button", {
+                        type: "button",
+                        className: "playground-environments-action-button",
+                        onClick: () => void handleRollbackServerDeployment(deployment),
+                        disabled: isRollingBack,
+                      },
+                        isRollingBack
+                          ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
+                          : React.createElement(RotateCcw, { width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement("span", null, isRollingBack ? "Rolling back" : "Rollback")
+                      );
+                    },
+                  },
+                ],
+              })
             );
           };
-          const renderServerLogsSurface = () => React.createElement("div", {
-              className: "playground-environments-editor-surface playground-servers-analytics-logs-surface",
-            },
-            React.createElement("div", {
-                className: "playground-plugins-search-row playground-resources-overview-search-row playground-servers-logs-search-row",
-                ref: serverLogsToolbarRef,
+          const renderServerLogsSurface = () => {
+            const isRequestLog = serverLogsState.kind === "request";
+            const serverLogColumns = isRequestLog
+              ? [
+                  {
+                    id: "status",
+                    header: "Status",
+                    width: "minmax(90px, 0.75fr)",
+                    cell: ({ row: entry }) => renderServerLogStatusPill(
+                      formatPlaygroundServerRequestStatus(entry?.status),
+                      getServerLogStatusTone(entry, "request")
+                    ),
+                  },
+                  { id: "method", header: "Method", accessor: (entry) => entry?.method || "GET", width: "minmax(80px, 0.65fr)" },
+                  {
+                    id: "path",
+                    header: "Path",
+                    accessor: (entry) => entry?.path || "/",
+                    width: "minmax(180px, 2fr)",
+                    cell: ({ row: entry }) => React.createElement("div", {
+                      className: "playground-agents-overview-table-value playground-servers-logs-table-message",
+                      title: String(entry?.path || "/"),
+                    }, String(entry?.path || "/")),
+                  },
+                  {
+                    id: "latency",
+                    header: "Latency",
+                    accessor: (entry) => Number(entry?.latencyMs || 0),
+                    width: "minmax(90px, 0.75fr)",
+                    align: "end",
+                    cell: ({ row: entry }) => formatPlaygroundServerLatency(entry?.latencyMs),
+                  },
+                  {
+                    id: "time",
+                    header: "Time",
+                    accessor: (entry) => readServerLogTimestampMs(entry),
+                    sortable: true,
+                    sortDescFirst: true,
+                    width: "minmax(110px, 0.9fr)",
+                    align: "end",
+                    cell: ({ row: entry }) => formatPlaygroundFileDate(entry?.timestamp),
+                  },
+                ]
+              : [
+                  {
+                    id: "status",
+                    header: "Status",
+                    width: "minmax(90px, 0.75fr)",
+                    cell: ({ row: entry }) => renderServerLogStatusPill(
+                      serverLogsState.kind === "deployment" ? String(entry?.stream || "deploy") : String(entry?.severity || "INFO"),
+                      getServerLogStatusTone(entry, serverLogsState.kind)
+                    ),
+                  },
+                  {
+                    id: "type",
+                    header: "Type",
+                    accessor: () => formatPlaygroundServerLogKindLabel(serverLogsState.kind),
+                    width: "minmax(100px, 0.8fr)",
+                  },
+                  {
+                    id: "message",
+                    header: "Message",
+                    accessor: (entry) => entry?.message || "",
+                    width: "minmax(200px, 2.5fr)",
+                    cell: ({ row: entry }) => React.createElement("div", {
+                      className: "playground-agents-overview-table-value playground-servers-logs-table-message",
+                      title: String(entry?.message || ""),
+                    }, entry?.message || "—"),
+                  },
+                  {
+                    id: "time",
+                    header: "Time",
+                    accessor: (entry) => readServerLogTimestampMs(entry),
+                    sortable: true,
+                    sortDescFirst: true,
+                    width: "minmax(110px, 0.9fr)",
+                    align: "end",
+                    cell: ({ row: entry }) => formatPlaygroundFileDate(entry?.timestamp),
+                  },
+                ];
+            return React.createElement("div", {
+                className: "playground-environments-editor-surface playground-servers-analytics-logs-surface",
               },
-              React.createElement("div", { className: "playground-plugins-search-shell" },
-                React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("input", {
-                  type: "search",
-                  value: serverLogsSearchQuery,
-                  onChange: (event) => {
-                    setServerLogsSearchQuery(event.target.value);
+              React.createElement(PlatformDataTable, {
+                rows: visibleServerLogList,
+                columns: serverLogColumns,
+                getRowId: (entry) => buildServerLogRowKey(entry, serverLogsState.kind),
+                ariaLabel: formatPlaygroundServerLogKindLabel(serverLogsState.kind) + " logs",
+                className: "playground-servers-logs-platform-table",
+                surface: "plain",
+                sticky: false,
+                loading: isServerLogsLoading,
+                error: serverLogsState.error || null,
+                emptyState: normalizedServerLogsSearchQuery
+                  ? "No matching logs found."
+                  : "No " + formatPlaygroundServerLogKindLabel(serverLogsState.kind).toLowerCase() + " logs yet.",
+                sorting: {
+                  value: { id: "time", direction: serverLogsSort === "oldest" ? "asc" : "desc" },
+                  manual: true,
+                  onChange: (next) => {
+                    setServerLogsSort(next?.direction === "asc" ? "oldest" : "newest");
                     setExpandedServerLogKey("");
                   },
-                  className: "playground-plugins-search",
-                  placeholder: "Search logs",
-                })
-              ),
-              React.createElement("div", { className: "playground-plugins-toolbar-controls" },
-                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-control-button is-bare is-backlog-sort" + (serverLogsToolbarPopover === "sort" || serverLogsSort !== "newest" ? " is-active" : ""),
-                    onClick: () => setServerLogsToolbarPopover((current) => current === "sort" ? "" : "sort"),
+                },
+                toolbar: {
+                  search: {
+                    value: serverLogsSearchQuery,
+                    manual: true,
+                    placeholder: "Search logs",
+                    onChange: (value) => {
+                      setServerLogsSearchQuery(value);
+                      setExpandedServerLogKey("");
+                    },
                   },
-                    React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Sort")
-                  ),
-                  serverLogsToolbarPopover === "sort"
-                    ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                        serverLogsSortOptions.map((option) =>
-                          React.createElement("button", {
-                              key: option.id,
-                              type: "button",
-                              className: "tb-popup-row tb-popup-row-select" + (serverLogsSort === option.id ? " selected" : ""),
-                              onClick: () => {
-                                setServerLogsSort(option.id);
-                                setServerLogsToolbarPopover("");
-                                setExpandedServerLogKey("");
-                              },
-                            },
-                            React.createElement("span", { className: "tb-popup-check-slot" },
-                              serverLogsSort === option.id
-                                ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                : null
-                            ),
-                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, option.label)
-                            )
-                          )
-                        )
-                      )
-                    : null
+                  showSort: true,
+                  filters: [{
+                    id: "kind",
+                    label: "Log type",
+                    value: serverLogsState.kind,
+                    onChange: selectServerLogKind,
+                    options: serverAnalyticsLogKinds.map((option) => ({
+                      id: option.id,
+                      label: option.label,
+                      description: option.description,
+                    })),
+                  }],
+                },
+                onRowActivate: (entry) => toggleServerLogExpansion(buildServerLogRowKey(entry, serverLogsState.kind)),
+                getRowClassName: (entry) => "playground-servers-logs-table-row" + (
+                  expandedServerLogKey === buildServerLogRowKey(entry, serverLogsState.kind) ? " is-expanded" : ""
                 ),
-                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-control-button is-bare is-backlog-filter" + (serverLogsToolbarPopover === "filter" || serverLogsState.kind !== "request" ? " is-active" : ""),
-                    onClick: () => setServerLogsToolbarPopover((current) => current === "filter" ? "" : "filter"),
-                  },
-                    React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Filter: " + formatPlaygroundServerLogKindLabel(serverLogsState.kind))
-                  ),
-                  serverLogsToolbarPopover === "filter"
-                    ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                        serverAnalyticsLogKinds.map((option) =>
-                          React.createElement("button", {
-                              key: option.id,
-                              type: "button",
-                              className: "tb-popup-row tb-popup-row-select" + (serverLogsState.kind === option.id ? " selected" : ""),
-                              onClick: () => selectServerLogKind(option.id),
-                            },
-                            React.createElement("span", { className: "tb-popup-check-slot" },
-                              serverLogsState.kind === option.id
-                                ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                : null
-                            ),
-                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, option.label),
-                              React.createElement("span", null, option.description)
-                            )
-                          )
-                        )
+                getRowAriaLabel: (entry) => "Inspect log " + buildServerLogRowKey(entry, serverLogsState.kind),
+                isRowExpanded: (entry) => expandedServerLogKey === buildServerLogRowKey(entry, serverLogsState.kind),
+                renderExpandedRow: ({ row: entry }) => renderServerLogDetailContent(entry, serverLogsState.kind),
+                footer: hasMoreServerLogs
+                  ? React.createElement("div", { className: "playground-servers-logs-load-more-row" },
+                      React.createElement("button", {
+                        type: "button",
+                        className: "playground-environments-action-button",
+                        onClick: handleLoadMoreServerLogs,
+                      },
+                        React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement("span", null, "Load 20 more")
                       )
-                    : null
-                )
-              )
-            ),
-            serverLogsState.error
-              ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverLogsState.error)
-              : null,
-            isServerLogsLoading
-              ? React.createElement("div", { className: "playground-files-state playground-servers-logs-loading-state" },
-                  React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
-                )
-              : displayedServerLogList.length > 0
-                ? React.createElement("div", { className: "playground-agents-overview-table-shell playground-servers-logs-table-shell" },
-                    React.createElement(React.Fragment, null,
-                      React.createElement("table", { className: "playground-agents-overview-table playground-servers-logs-table" },
-                        serverLogsState.kind === "request"
-                          ? React.createElement("thead", null,
-                              React.createElement("tr", null,
-                                React.createElement("th", null, "Status"),
-                                React.createElement("th", null, "Method"),
-                                React.createElement("th", null, "Path"),
-                                React.createElement("th", { className: "is-right" }, "Latency"),
-                                React.createElement("th", { className: "is-right" }, "Time")
-                              )
-                            )
-                          : React.createElement("thead", null,
-                              React.createElement("tr", null,
-                                React.createElement("th", null, "Status"),
-                                React.createElement("th", null, "Type"),
-                                React.createElement("th", null, "Message"),
-                                React.createElement("th", { className: "is-right" }, "Time")
-                              )
-                            ),
-                        React.createElement("tbody", null,
-                          visibleServerLogList.map((entry) => renderServerLogRow(entry, serverLogsState.kind))
-                        )
-                      ),
-                      hasMoreServerLogs
-                        ? React.createElement("div", { className: "playground-servers-logs-load-more-row" },
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-environments-action-button",
-                              onClick: handleLoadMoreServerLogs,
-                            },
-                              React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                              React.createElement("span", null, "Load 20 more")
-                            )
-                          )
-                        : null
                     )
-                  )
-                : React.createElement("div", { className: "playground-files-state" },
-                    normalizedServerLogsSearchQuery
-                      ? "No matching logs found."
-                      : "No " + formatPlaygroundServerLogKindLabel(serverLogsState.kind).toLowerCase() + " logs yet."
-                  )
-          );
+                  : null,
+              })
+            );
+          };
 
           const canUndoServerDescription = Array.isArray(serverDescriptionHistory.past) && serverDescriptionHistory.past.length > 0;
           const canRedoServerDescription = Array.isArray(serverDescriptionHistory.future) && serverDescriptionHistory.future.length > 0;
@@ -108462,11 +108356,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               )
             )
           );
-          const serverUsageTabContent = isSourceDeployableServer
+          const serverUsageTabContent = isOperationalDetailServer
             ? React.createElement(React.Fragment, null,
                 React.createElement("div", { className: "playground-database-detail-usage-header-actions playground-server-detail-usage-header" },
                   React.createElement("h2", { className: "playground-server-detail-usage-title" },
-                    isFunctionServer ? "Function Invocations" : "Web App Invocations"
+                    serverUsageMetricConfig.title
                   ),
                   renderServerDetailTimescaleControl()
                 ),
@@ -109933,14 +109827,36 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	          const serverResourceDetailBackButton = embeddedInResources && isServersMode && normalizedEmbeddedServerKind
 	            ? React.createElement("button", {
 	                type: "button",
-	                className: "playground-resource-detail-back-button",
+	                className: "playground-resource-detail-back-button playground-database-navbar-back-button",
 	                onClick: showEnvironmentsHome,
+	                title: "Back to " + formatPlaygroundServerKindPluralLabel(normalizedEmbeddedServerKind),
 	                "aria-label": "Back to " + formatPlaygroundServerKindPluralLabel(normalizedEmbeddedServerKind),
-	              },
-	                React.createElement(ArrowLeft, { width: 12, height: 12, strokeWidth: 1.8 }),
-	                React.createElement("span", null, "Back")
-	              )
+	              }, "\u2190")
 	            : null;
+	          const renderServerResourceDetailTitleRow = ({
+	            className = "",
+	            placeholder = "Server",
+	            ariaLabel = "Server name",
+	            readOnly = false,
+	          } = {}) => React.createElement("div", { className: "playground-server-detail-title-row" },
+	            serverResourceDetailBackButton,
+	            React.createElement("input", {
+	              type: "text",
+	              className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input" + className,
+	              value: draftServer.name || "",
+	              placeholder,
+	              "aria-label": ariaLabel,
+	              title: draftServer.name || placeholder,
+	              readOnly,
+	              "aria-readonly": readOnly ? "true" : "false",
+	              onChange: (event) => updateServerField("name", event.target.value),
+	              onBlur: () => {
+	                if (!readOnly) {
+	                  void commitDraftServerIfDirty();
+	                }
+	              },
+	            })
+	          );
 
 	          if (!isSourceDeployableServer && !isAuthServer && !isAgentRuntimeServer && !isSecretsServer && serverAnalyticsView === "analytics") {
             return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: serverDetailMainRef },
@@ -110078,11 +109994,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               }
               return direction * String(left.name || "").localeCompare(String(right.name || ""));
             });
-          const visibleServerSharedTeamIds = visibleServerSharedTeams.map((team) => String(team.id));
-          const allVisibleServerTeamsSelected = visibleServerSharedTeamIds.length > 0
-            && visibleServerSharedTeamIds.every((teamId) => selectedServerAccessTeamIds.has(teamId));
-          const someVisibleServerTeamsSelected = visibleServerSharedTeamIds.some((teamId) => selectedServerAccessTeamIds.has(teamId));
-          const selectedServerAccessTeams = serverSharedTeams.filter((team) => selectedServerAccessTeamIds.has(String(team.id)));
           const allAgentsServerAccessTeam = {
             id: "all-agents",
             name: "All Agents",
@@ -110090,200 +110001,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             createdAt: "",
             locked: true,
           };
-          const allAgentsServerAccessMenuOpen = serverAccessActionMenuState?.teams?.length === 1
-            && String(serverAccessActionMenuState.teams[0]?.id || "") === allAgentsServerAccessTeam.id;
 
-          function handleServerAccessColumnSort(sortKey) {
-            const normalizedSortKey = ["name", "policy", "created"].includes(sortKey) ? sortKey : "name";
-            setServerAccessSortDirection((currentDirection) => {
-              if (serverAccessSort !== normalizedSortKey) return "asc";
-              return currentDirection === "asc" ? "desc" : "asc";
-            });
-            setServerAccessSort(normalizedSortKey);
-          }
 
-          function renderServerAccessSortableHeader(label, sortKey) {
-            const isActive = serverAccessSort === sortKey;
-            const isAscending = isActive && serverAccessSortDirection === "asc";
-            const isDescending = isActive && serverAccessSortDirection === "desc";
-            const nextDirection = isAscending ? "descending" : "ascending";
-            return React.createElement("div", {
-                className: "playground-agents-overview-sortable-header" + (isActive ? " is-active" : ""),
-              },
-              React.createElement("span", { className: "playground-agents-overview-sortable-header-label" }, label),
-              React.createElement("button", {
-                  type: "button",
-                  className: "playground-agents-overview-column-sort-button"
-                    + (isActive ? " is-active" : "")
-                    + (isAscending ? " is-ascending" : "")
-                    + (isDescending ? " is-descending" : ""),
-                  title: "Sort " + label + " " + nextDirection,
-                  "aria-label": "Sort " + label + " " + nextDirection,
-                  "aria-pressed": isActive ? "true" : "false",
-                  onClick: (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    handleServerAccessColumnSort(sortKey);
-                  },
-                },
-                React.createElement("span", {
-                    className: "playground-agents-overview-sort-icon"
-                      + (isActive ? " is-active" : "")
-                      + (isAscending ? " is-ascending" : "")
-                      + (isDescending ? " is-descending" : ""),
-                    "aria-hidden": "true",
-                  },
-                  React.createElement(ChevronsUpDown, {
-                    className: "playground-agents-overview-sort-icon-layer is-top",
-                    width: 14,
-                    height: 14,
-                    strokeWidth: 1.8,
-                  }),
-                  React.createElement(ChevronsUpDown, {
-                    className: "playground-agents-overview-sort-icon-layer is-bottom",
-                    width: 14,
-                    height: 14,
-                    strokeWidth: 1.8,
-                  })
-                )
-              )
-            );
-          }
 
-          function toggleServerAccessTeamSelection(teamId) {
-            const normalizedTeamId = String(teamId || "");
-            setSelectedServerAccessTeamIds((current) => {
-              const next = new Set(current);
-              if (next.has(normalizedTeamId)) next.delete(normalizedTeamId);
-              else next.add(normalizedTeamId);
-              return next;
-            });
-          }
 
-          function toggleVisibleServerAccessTeamSelection() {
-            setSelectedServerAccessTeamIds((current) => {
-              const next = new Set(current);
-              const shouldSelect = !visibleServerSharedTeamIds.every((teamId) => next.has(teamId));
-              visibleServerSharedTeamIds.forEach((teamId) => {
-                if (shouldSelect) next.add(teamId);
-                else next.delete(teamId);
-              });
-              return next;
-            });
-          }
 
-          function clearServerAccessActionMenuCloseTimer() {
-            if (serverAccessActionMenuCloseTimerRef.current !== null && typeof window !== "undefined") {
-              window.clearTimeout(serverAccessActionMenuCloseTimerRef.current);
-              serverAccessActionMenuCloseTimerRef.current = null;
-            }
-          }
 
-          function closeServerAccessActionMenu(options = {}) {
-            if (!serverAccessActionMenuState) return;
-            clearServerAccessActionMenuCloseTimer();
-            if (options.animate === false || typeof window === "undefined") {
-              setServerAccessActionMenuClosing(false);
-              setServerAccessActionMenuState(null);
-              return;
-            }
-            setServerAccessActionMenuClosing(true);
-            serverAccessActionMenuCloseTimerRef.current = window.setTimeout(() => {
-              serverAccessActionMenuCloseTimerRef.current = null;
-              setServerAccessActionMenuClosing(false);
-              setServerAccessActionMenuState(null);
-            }, 90);
-          }
 
-          function openServerAccessActionMenu(event, teams, options = {}) {
-            event.preventDefault();
-            event.stopPropagation();
-            const normalizedTeams = (Array.isArray(teams) ? teams : [teams]).filter((team) => team?.id);
-            if (!normalizedTeams.length) return;
-            clearServerAccessActionMenuCloseTimer();
-            const menuWidth = 220;
-            const menuHeight = normalizedTeams.length === 1 ? 108 : 64;
-            const gutter = 12;
-            const viewportWidth = window.innerWidth || document.documentElement?.clientWidth || 0;
-            const viewportHeight = window.innerHeight || document.documentElement?.clientHeight || 0;
-            let left;
-            let top;
-            if (options.context) {
-              left = Number(event.clientX || 0);
-              top = Number(event.clientY || 0);
-            } else {
-              const rect = event.currentTarget.getBoundingClientRect();
-              left = rect.left - menuWidth - 8;
-              top = rect.top + rect.height / 2 - menuHeight / 2;
-            }
-            left = Math.max(gutter, Math.min(viewportWidth - menuWidth - gutter, left));
-            top = Math.max(gutter, Math.min(viewportHeight - menuHeight - gutter, top));
-            setServerAccessActionMenuClosing(false);
-            setServerAccessActionMenuState({ teams: normalizedTeams, left, top });
-          }
 
-          const serverAccessActionMenuContent = serverAccessActionMenuState
-            ? React.createElement("div", {
-                className: "sidebar-thread-popup-scrim",
-                style: { zIndex: 360 },
-                onClick: () => closeServerAccessActionMenu(),
-              },
-              React.createElement("div", {
-                  className: "playground-platform-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-toolbar-popup-shell-portal playground-agents-list-action-menu-shell is-open",
-                  style: {
-                    position: "fixed",
-                    top: serverAccessActionMenuState.top + "px",
-                    left: serverAccessActionMenuState.left + "px",
-                    right: "auto",
-                  },
-                  onClick: (event) => event.stopPropagation(),
-                },
-                React.createElement("div", {
-                    className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-database-access-action-menu"
-                      + (serverAccessActionMenuClosing ? " is-closing" : " playground-tasks-toolbar-popup-menu-animate-down-in"),
-                    role: "menu",
-                  },
-                  serverAccessActionMenuState.teams.length === 1
-                    ? React.createElement("button", {
-                        type: "button",
-                        className: "tb-popup-row",
-                        onClick: () => {
-                          const team = serverAccessActionMenuState.teams[0];
-                          closeServerAccessActionMenu({ animate: false });
-                          setServerPermissionRoleId("member");
-                          setServerPermissionTeamId(String(team.id));
-                        },
-                      },
-                        React.createElement(Settings, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.9 }),
-                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                          React.createElement("span", null, "Edit permissions")
-                        )
-                      )
-                    : null,
-                  serverAccessActionMenuState.teams.some((team) => !team.locked)
-                    ? React.createElement("button", {
-                        type: "button",
-                        className: "tb-popup-row",
-                        disabled: Boolean(serverTeamAccessState.action),
-                        onClick: () => {
-                          const teams = serverAccessActionMenuState.teams.filter((team) => !team.locked);
-                          closeServerAccessActionMenu({ animate: false });
-                          void handleRemoveServerTeamsAccess(teams);
-                        },
-                      },
-                        React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.9 }),
-                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                          React.createElement("span", null, serverAccessActionMenuState.teams.length > 1 ? "Remove team access" : "Remove from " + serverKindLabel.toLowerCase())
-                        )
-                      )
-                    : null
-                )
-              )
-            )
-            : null;
-          const serverAccessActionMenu = serverAccessActionMenuContent && typeof document !== "undefined" && document.body
-            ? createPortal(serverAccessActionMenuContent, document.body)
-            : serverAccessActionMenuContent;
 
           const serverOwnerIdentity = getServerOwnerIdentity(draftServer);
           const serverOwnerIdentityKey = getDatabaseOwnerIdentityKey(serverOwnerIdentity);
@@ -110462,6 +110187,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   ),
                   renderPlaygroundPermissionPanel(selectedServerRolePermissionSet, {
                     subjectType: "server",
+                    actionPresentation: serverPermissionActionPresentation,
                     animationKey: serverPermissionChartAnimationKey,
                     disabled: isSelectedServerTemplatePreview || selectedServerRoleDefinition.id === "owner",
                     onRingAccessChange: (ringId, access) => updateServerTeamRolePermissionRingAccess(
@@ -110508,6 +110234,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               serverPermissionTeamId === "all-agents"
                 ? renderPlaygroundPermissionPanel(getServerPermissionSet(draftServer), {
                     subjectType: "server",
+                    actionPresentation: serverPermissionActionPresentation,
                     animationKey: serverPermissionChartAnimationKey,
                     disabled: isSelectedServerTemplatePreview,
                     onRingAccessChange: updateServerPermissionRingAccess,
@@ -110518,7 +110245,61 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             )
             : null;
 
-          const serverTeamAccessSection = React.createElement("section", {
+          const serverAddTeamsControl = React.createElement("div", {
+              className: "playground-tasks-toolbar-popup-shell playground-project-teams-add-shell playground-database-team-menu-scope" + (serverTeamMenuId === "add-teams" ? " is-open" : ""),
+            },
+            React.createElement("button", {
+              type: "button",
+              className: "playground-files-control-button playground-project-teams-add-button",
+              disabled: workspaceTeamsLoading || Boolean(serverTeamAccessState.action),
+              onClick: (event) => {
+                event.stopPropagation();
+                if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) onWorkspaceTeamsRequest({});
+                setServerTeamMenuId((value) => value === "add-teams" ? "" : "add-teams");
+              },
+            }, React.createElement(Plus, { width: 14, height: 14 }), React.createElement("span", null, "Add Teams")),
+            serverTeamMenuId === "add-teams"
+              ? React.createElement("div", { className: "tb-popup-menu playground-platform-popup-menu playground-project-teams-menu" },
+                  availableServerAccessTeams.length
+                    ? availableServerAccessTeams.map((team) => React.createElement("button", {
+                        key: team.id,
+                        type: "button",
+                        className: "tb-popup-row playground-project-teams-menu-row",
+                        onClick: () => void handleAddServerTeamAccess(team),
+                      }, React.createElement(Users, { className: "tb-popup-icon", width: 14, height: 14 }), React.createElement("span", null, team.name)))
+                    : React.createElement("div", { className: "playground-project-teams-menu-empty" }, workspaceTeamsLoading ? "Loading teams..." : "All available teams have access.")
+                )
+              : null
+          );
+          const serverAccessColumns = [
+            {
+              id: "name",
+              header: "Team",
+              accessor: (team) => team.name || "Untitled team",
+              sortable: true,
+              width: "minmax(220px, 1.45fr)",
+              cell: ({ row: team }) => React.createElement("div", { className: "playground-agents-overview-name-title" }, team.name),
+            },
+            {
+              id: "policy",
+              header: "Policy",
+              accessor: (team) => team.locked ? "Default policy" : "Role policy",
+              sortable: true,
+              width: "minmax(150px, 0.9fr)",
+              cell: ({ row: team }) => team.locked ? "Default policy" : "Role policy",
+            },
+            {
+              id: "created",
+              header: "Created",
+              accessor: (team) => Date.parse(String(team.createdAt || "")) || 0,
+              sortable: true,
+              sortDescFirst: true,
+              width: "minmax(120px, 0.7fr)",
+              align: "end",
+              cell: ({ row: team }) => team.locked ? "Default" : (team.createdAt ? formatPlaygroundFileDate(team.createdAt) : "—"),
+            },
+          ];
+          const serverTeamAccessPlatformSection = React.createElement("section", {
               className: "playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-teams-section playground-project-settings-root playground-database-settings-root",
             },
             React.createElement("div", { className: "playground-database-access-section-group" },
@@ -110527,222 +110308,82 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 serverOwnerSelectorRow
               ),
               React.createElement("section", {
-                className: "playground-project-settings-access-section playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-database-access-table-section",
-              },
-              React.createElement("div", { className: "playground-agents-overview-sticky-table-header playground-database-access-sticky-table-header" },
-                React.createElement("div", { ref: serverAccessToolbarRef, className: "playground-plugins-search-row playground-resources-overview-search-row playground-develop-server-kind-table-toolbar playground-database-access-table-toolbar" },
-                  React.createElement("div", { className: "playground-develop-server-kind-table-controls" },
-                    React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell" },
-                      React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("input", {
-                        type: "search",
-                        value: serverAccessSearchQuery,
-                        onChange: (event) => setServerAccessSearchQuery(event.target.value),
-                        className: "playground-plugins-search",
-                        placeholder: "Search teams",
-                      })
-                    ),
-                    React.createElement("div", { className: "playground-plugins-toolbar-controls" },
-                      React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-files-control-button is-bare is-backlog-sort" + (serverAccessToolbarPopover === "sort" ? " is-active" : ""),
-                          onClick: () => setServerAccessToolbarPopover((value) => value === "sort" ? "" : "sort"),
-                        }, React.createElement(ArrowUpDown, { width: 14, height: 14 }), React.createElement("span", null, "Sort")),
-                        serverAccessToolbarPopover === "sort"
-                          ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                              [
-                                { id: "name-asc", label: "Name (A-Z)", sort: "name", direction: "asc" },
-                                { id: "name-desc", label: "Name (Z-A)", sort: "name", direction: "desc" },
-                                { id: "created-desc", label: "Recently Added", sort: "created", direction: "desc" },
-                              ].map((option) => {
-                                const selected = serverAccessSort === option.sort && serverAccessSortDirection === option.direction;
-                                return React.createElement("button", {
-                                  key: option.id,
-                                  type: "button",
-                                  className: "tb-popup-row tb-popup-row-select" + (selected ? " selected" : ""),
-                                  onClick: () => {
-                                    setServerAccessSort(option.sort);
-                                    setServerAccessSortDirection(option.direction);
-                                    setServerAccessToolbarPopover("");
-                                  },
-                                },
-                                  React.createElement("span", { className: "tb-popup-check-slot" }, selected ? React.createElement(Check, { width: 14, height: 14 }) : null),
-                                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, option.label))
-                                );
-                              })
-                            )
-                          : null
-                      ),
-                      React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-files-control-button is-bare is-backlog-filter" + (serverAccessToolbarPopover === "filter" || serverAccessFilter !== "all" ? " is-active" : ""),
-                          onClick: () => setServerAccessToolbarPopover((value) => value === "filter" ? "" : "filter"),
-                        }, React.createElement(SlidersHorizontal, { width: 14, height: 14 }), React.createElement("span", null, "Filter")),
-                        serverAccessToolbarPopover === "filter"
-                          ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                              [
-                                { id: "all", label: "All access", description: "Show every team access grant" },
-                                { id: "managed", label: "Managed teams", description: "Only teams you can manage" },
-                              ].map((option) => React.createElement("button", {
-                                key: option.id,
-                                type: "button",
-                                className: "tb-popup-row tb-popup-row-select" + (serverAccessFilter === option.id ? " selected" : ""),
-                                onClick: () => { setServerAccessFilter(option.id); setServerAccessToolbarPopover(""); },
-                              },
-                                React.createElement("span", { className: "tb-popup-check-slot" }, serverAccessFilter === option.id ? React.createElement(Check, { width: 14, height: 14 }) : null),
-                                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, option.label), React.createElement("span", null, option.description))
-                              ))
-                            )
-                          : null
-                      )
-                    )
-                  ),
-                  React.createElement("div", { className: "playground-tasks-toolbar-popup-shell playground-project-teams-add-shell playground-database-team-menu-scope" + (serverTeamMenuId === "add-teams" ? " is-open" : "") },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-control-button playground-project-teams-add-button",
-                      disabled: workspaceTeamsLoading || Boolean(serverTeamAccessState.action),
-                      onClick: (event) => {
-                        event.stopPropagation();
-                        if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) onWorkspaceTeamsRequest({});
-                        setServerTeamMenuId((value) => value === "add-teams" ? "" : "add-teams");
-                      },
-                    }, React.createElement(Plus, { width: 14, height: 14 }), React.createElement("span", null, "Add Teams")),
-                    serverTeamMenuId === "add-teams"
-                      ? React.createElement("div", { className: "tb-popup-menu playground-platform-popup-menu playground-project-teams-menu" },
-                          availableServerAccessTeams.length
-                            ? availableServerAccessTeams.map((team) => React.createElement("button", {
-                                key: team.id,
-                                type: "button",
-                                className: "tb-popup-row playground-project-teams-menu-row",
-                                onClick: () => void handleAddServerTeamAccess(team),
-                              }, React.createElement(Users, { className: "tb-popup-icon", width: 14, height: 14 }), React.createElement("span", null, team.name)))
-                            : React.createElement("div", { className: "playground-project-teams-menu-empty" }, workspaceTeamsLoading ? "Loading teams..." : "All available teams have access.")
-                        )
-                      : null
-                  )
-                )
-              ),
-              React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table playground-database-access-table" },
-                React.createElement("div", { className: "playground-project-overview-thread-list" },
-                  React.createElement("div", { className: "playground-project-overview-threads-table-header playground-agents-overview-column-header playground-database-access-column-header" },
-                    React.createElement("div", null, React.createElement("button", {
-                      type: "button",
-                      className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox"
-                        + (allVisibleServerTeamsSelected ? " is-selected" : "")
-                        + (someVisibleServerTeamsSelected && !allVisibleServerTeamsSelected ? " is-partial" : ""),
-                      role: "checkbox",
-                      "aria-checked": allVisibleServerTeamsSelected ? "true" : (someVisibleServerTeamsSelected ? "mixed" : "false"),
-                      disabled: !visibleServerSharedTeamIds.length,
-                      onClick: toggleVisibleServerAccessTeamSelection,
-                    })),
-                    React.createElement("div", null, renderServerAccessSortableHeader("Team", "name")),
-                    React.createElement("div", null, renderServerAccessSortableHeader("Policy", "policy")),
-                    React.createElement("div", null, renderServerAccessSortableHeader("Created", "created")),
-                    React.createElement("div", null)
-                  ),
-                  React.createElement("div", {
-                    className: "playground-project-overview-threads-table-row" + (allAgentsServerAccessMenuOpen ? " is-menu-open" : ""),
-                    role: "button",
-                    tabIndex: 0,
-                    "aria-label": "Open All Agents " + serverKindLabel.toLowerCase() + " permissions",
-                    onClick: () => setServerPermissionTeamId("all-agents"),
-                    onContextMenu: (event) => openServerAccessActionMenu(event, allAgentsServerAccessTeam, { context: true }),
-                    onKeyDown: (event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        setServerPermissionTeamId("all-agents");
-                      }
+                  className: "playground-project-settings-access-section playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-database-access-table-section",
+                },
+                React.createElement(PlatformDataTable, {
+                  rows: [allAgentsServerAccessTeam, ...visibleServerSharedTeams],
+                  columns: serverAccessColumns,
+                  getRowId: (team) => String(team.id || ""),
+                  ariaLabel: serverKindLabel + " team access",
+                  className: "playground-server-access-platform-data-table",
+                  sorting: {
+                    value: { id: serverAccessSort, direction: serverAccessSortDirection === "desc" ? "desc" : "asc" },
+                    manual: true,
+                    onChange: (next) => {
+                      if (!next) return;
+                      setServerAccessSort(next.id);
+                      setServerAccessSortDirection(next.direction);
                     },
                   },
-                    React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-agents-overview-select-checkbox",
-                        role: "checkbox",
-                        "aria-checked": "false",
-                        "aria-label": "All Agents is always included",
-                        disabled: true,
-                        onClick: (event) => event.stopPropagation(),
-                        onKeyDown: (event) => event.stopPropagation(),
-                      })
-                    ),
-                    React.createElement("div", { className: "playground-project-overview-thread-cell is-name" }, React.createElement("div", { className: "playground-agents-overview-name-title" }, "All Agents")),
-                    React.createElement("div", { className: "playground-project-overview-thread-cell is-model" }, "Default policy"),
-                    React.createElement("div", { className: "playground-project-overview-thread-cell is-date" }, "Default"),
-                    React.createElement("div", { className: "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-overview-table-action-button" + (allAgentsServerAccessMenuOpen ? " is-open" : ""),
-                        onClick: (event) => openServerAccessActionMenu(event, allAgentsServerAccessTeam),
-                        onContextMenu: (event) => openServerAccessActionMenu(event, allAgentsServerAccessTeam, { context: true }),
-                        onKeyDown: (event) => event.stopPropagation(),
-                        "aria-label": "All Agents actions",
-                        "aria-expanded": allAgentsServerAccessMenuOpen ? "true" : "false",
-                      }, React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 }))
-                    )
-                  ),
-                  visibleServerSharedTeams.map((team) => {
-                    const isSelected = selectedServerAccessTeamIds.has(String(team.id));
-                    const menuOpen = serverAccessActionMenuState?.teams?.length === 1
-                      && String(serverAccessActionMenuState.teams[0]?.id || "") === String(team.id || "");
-                    return React.createElement("div", {
-                      key: team.id,
-                      className: "playground-project-overview-threads-table-row"
-                        + (menuOpen ? " is-menu-open" : "")
-                        + (isSelected ? " is-selected" : ""),
-                      role: "button",
-                      tabIndex: 0,
-                      "aria-label": "Open " + team.name + " " + serverKindLabel.toLowerCase() + " permissions",
-                      onClick: () => { setServerPermissionRoleId("member"); setServerPermissionTeamId(String(team.id)); },
-                      onContextMenu: (event) => openServerAccessActionMenu(event, isSelected && selectedServerAccessTeams.length > 1 ? selectedServerAccessTeams : team, { context: true }),
-                      onKeyDown: (event) => {
-                        if (event.key === "Enter" || event.key === " ") {
-                          event.preventDefault();
-                          setServerPermissionRoleId("member");
-                          setServerPermissionTeamId(String(team.id));
-                        }
+                  selection: {
+                    enabled: true,
+                    value: selectedServerAccessTeamIds,
+                    isRowSelectable: (team) => !team.locked,
+                    ariaLabel: (team) => team.locked ? "All Agents is always included" : "Select " + team.name,
+                    onChange: ({ selectedIds }) => setSelectedServerAccessTeamIds(new Set(selectedIds)),
+                  },
+                  toolbar: {
+                    search: {
+                      value: serverAccessSearchQuery,
+                      onChange: setServerAccessSearchQuery,
+                      placeholder: "Search teams",
+                      manual: true,
+                    },
+                    filters: [{
+                      id: "server-access-kind",
+                      label: "Filter",
+                      value: serverAccessFilter,
+                      onChange: setServerAccessFilter,
+                      options: [
+                        { id: "all", label: "All access", description: "Show every team access grant" },
+                        { id: "managed", label: "Managed teams", description: "Only teams you can manage" },
+                      ],
+                    }],
+                    showSort: true,
+                    trailing: serverAddTeamsControl,
+                  },
+                  onRowActivate: (team) => {
+                    setServerPermissionRoleId("member");
+                    setServerPermissionTeamId(String(team.id));
+                  },
+                  getRowActions: (team) => [
+                    {
+                      id: "edit-permissions",
+                      label: "Edit permissions",
+                      icon: Settings,
+                      onSelect: () => {
+                        setServerPermissionRoleId("member");
+                        setServerPermissionTeamId(String(team.id));
                       },
                     },
-                      React.createElement("div", { className: "playground-project-overview-thread-cell is-select" }, React.createElement("button", {
-                        type: "button",
-                        className: "playground-agents-overview-select-checkbox" + (isSelected ? " is-selected" : ""),
-                        role: "checkbox",
-                        "aria-checked": isSelected ? "true" : "false",
-                        "aria-label": "Select " + team.name,
-                        onClick: (event) => { event.preventDefault(); event.stopPropagation(); toggleServerAccessTeamSelection(team.id); },
-                        onKeyDown: (event) => event.stopPropagation(),
-                      })),
-                      React.createElement("div", { className: "playground-project-overview-thread-cell is-name" }, React.createElement("div", { className: "playground-agents-overview-name-title" }, team.name)),
-                      React.createElement("div", { className: "playground-project-overview-thread-cell is-model" }, "Role policy"),
-                      React.createElement("div", { className: "playground-project-overview-thread-cell is-date" }, team.createdAt ? formatPlaygroundFileDate(team.createdAt) : "—"),
-                      React.createElement("div", { className: "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-overview-table-action-button" + (menuOpen ? " is-open" : ""),
-                          onClick: (event) => openServerAccessActionMenu(event, isSelected && selectedServerAccessTeams.length > 1 ? selectedServerAccessTeams : team),
-                          onContextMenu: (event) => openServerAccessActionMenu(event, isSelected && selectedServerAccessTeams.length > 1 ? selectedServerAccessTeams : team, { context: true }),
-                          onKeyDown: (event) => event.stopPropagation(),
-                          "aria-label": "Team actions for " + team.name,
-                          "aria-expanded": menuOpen ? "true" : "false",
-                        }, React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 }))
-                      )
-                    );
-                  }),
-                  !visibleServerSharedTeams.length && normalizedServerAccessSearchQuery
-                    ? React.createElement("div", { className: "playground-plugins-empty playground-database-access-empty" }, "No matching team access found.")
-                    : null
-                )
-              ),
-              serverTeamAccessState.error ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverTeamAccessState.error) : null
+                    ...(!team.locked ? [{
+                      id: "remove",
+                      label: "Remove team access",
+                      icon: Trash2,
+                      danger: true,
+                      disabled: Boolean(serverTeamAccessState.action),
+                      onSelect: ({ rows }) => void handleRemoveServerTeamsAccess(rows.filter((row) => !row.locked)),
+                    }] : []),
+                  ],
+                  error: serverTeamAccessState.error || null,
+                  emptyState: "No team access configured.",
+                  noResultsState: "No matching team access found.",
+                })
               )
-            ),
-            serverAccessActionMenu,
-            serverOwnerTransferModal
+            )
           );
-	          const serverDangerSection = !isServerTemplatePreview && (isSourceDeployableServer || isAgentRuntimeServer || isPaymentsServer)
+
+	          const serverDangerSection = !isServerTemplatePreview && isOperationalDetailServer
 	            ? React.createElement("section", { className: "playground-server-danger-section playground-server-details-card" },
                 React.createElement("div", { className: "playground-server-danger-copy-row" },
                   React.createElement("span", { className: "playground-server-danger-icon", "aria-hidden": "true" },
@@ -110772,7 +110413,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             descriptionSection,
             customDomainSection,
             connectionsSection,
-            serverTeamAccessSection,
+            serverTeamAccessPlatformSection,
             serverDangerSection
           );
           const serverSettingsTabContent = serverSettingsPermissionContent || serverSettingsOverviewContent;
@@ -111030,23 +110671,12 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	          const serverMainTopbar = React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-server-detail-navbar" + (isSourceDeployableServer ? " is-function-detail-navbar" : "") },
 	            React.createElement("div", { className: "playground-environments-editor-navbar-title" },
 	              React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
-	                isSourceDeployableServer ? null : serverResourceDetailBackButton,
-	                React.createElement("input", {
-	                  type: "text",
-	                  className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input" + (isSourceDeployableServer ? " playground-server-function-title-input" : ""),
-                  value: draftServer.name || "",
-                  placeholder: "Server",
-                  "aria-label": "Server name",
-                  title: draftServer.name || "Server",
-                  readOnly: isServerTemplatePreview,
-                  "aria-readonly": isServerTemplatePreview ? "true" : "false",
-                  onChange: (event) => updateServerField("name", event.target.value),
-                  onBlur: () => {
-                    if (!isServerTemplatePreview) {
-                      void commitDraftServerIfDirty();
-                    }
-                  },
-                }),
+	                renderServerResourceDetailTitleRow({
+	                  className: isSourceDeployableServer ? " playground-server-function-title-input" : "",
+	                  placeholder: serverKindLabel,
+	                  ariaLabel: serverKindLabel + " name",
+	                  readOnly: isServerTemplatePreview,
+	                }),
                 isSourceDeployableServer && functionDeployedServiceUrl
                   ? React.createElement("div", { className: "playground-server-service-url-row" },
                       React.createElement("span", {
@@ -111202,6 +110832,45 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               )
             );
 
+            const normalizedPaymentsDetailTab = ["usage", "settings"].includes(serverDetailTab) ? serverDetailTab : "usage";
+            const paymentsDetailTabs = React.createElement("div", { className: "playground-agents-overview-tabs playground-agents-detail-tabs playground-server-detail-tabs" },
+              React.createElement("div", { className: "playground-project-overview-chart-tabs" },
+                [
+                  { id: "usage", label: "Usage", Icon: ChartColumnIncreasing },
+                  { id: "settings", label: "Settings", Icon: Settings },
+                ].map((tab) => React.createElement("button", {
+                    key: tab.id,
+                    type: "button",
+                    className: "playground-project-overview-chart-tab" + (normalizedPaymentsDetailTab === tab.id ? " is-active" : ""),
+                    onClick: () => {
+                      setServerDetailTab(tab.id);
+                      if (tab.id === "usage" && draftServer.id) {
+                        void loadServerAnalytics(draftServer.id, { period: serverDetailChartTimescale });
+                      }
+                      if (tab.id === "settings") {
+                        if (draftServer.id) void loadServerContext(draftServer.id);
+                        if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) onWorkspaceTeamsRequest({});
+                      }
+                    },
+                    "aria-pressed": normalizedPaymentsDetailTab === tab.id ? "true" : "false",
+                    "aria-label": tab.label,
+                  },
+                  React.createElement(tab.Icon, { className: "playground-agents-detail-tab-icon", strokeWidth: 1.7 }),
+                  React.createElement("span", null, tab.label)
+                ))
+              )
+            );
+            const paymentsSettingsContent = serverSettingsPermissionContent || React.createElement("div", { className: "playground-server-settings-tab" },
+              descriptionSection,
+              paymentsRuntimeSection,
+              connectionsSection,
+              serverTeamAccessPlatformSection,
+              serverDangerSection
+            );
+            const paymentsTabContent = normalizedPaymentsDetailTab === "settings"
+              ? paymentsSettingsContent
+              : React.createElement(React.Fragment, null, serverUsageTabContent, paymentsDetailsSection);
+
             return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: serverDetailMainRef },
               serverMainTopbar,
               React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
@@ -111212,11 +110881,8 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   serverSaveState.message
                     ? React.createElement("div", { className: "playground-environments-success playground-environments-editor-notice" }, serverSaveState.message)
                     : null,
-                  descriptionSection,
-                  paymentsDetailsSection,
-                  connectionsSection,
-                  paymentsRuntimeSection,
-                  serverDangerSection
+                  paymentsDetailTabs,
+                  paymentsTabContent
                 )
               )
             );
@@ -111397,132 +111063,125 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               : null;
 	            const secretsSurface = React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts playground-server-details-card playground-auth-users-surface" },
 	              React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-                    React.createElement("div", { className: "playground-auth-users-toolbar" },
-                      React.createElement("label", { className: "playground-auth-users-search" },
-                        React.createElement(Search, { className: "playground-auth-users-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("input", {
-                          type: "text",
-                          className: "playground-auth-users-search-input",
-                          value: serverSecretsSearchQuery,
-                          onChange: (event) => setServerSecretsSearchQuery(event.target.value),
-                          placeholder: "Search secrets by name or description",
-                        })
-                      ),
-                      React.createElement("div", { className: "playground-auth-users-toolbar-actions" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-server-detail-docs-tab",
-                          onClick: () => openServerSecretComposer(null),
-                          disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
-                        },
-                          React.createElement(Plus, { className: "playground-server-detail-docs-tab-icon", width: 12, height: 12, strokeWidth: 1.8 }),
-                          React.createElement("span", null, "Add Secret")
-                        )
-                      )
-                    ),
-                    serverSecretsState.error
-                      ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverSecretsState.error)
-                      : null,
-                    secretsLoading
-                      ? React.createElement("div", { className: "playground-files-state" },
-                          React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
-                        )
-                      : filteredServerSecrets.length > 0
-                        ? React.createElement("div", { className: "playground-auth-users-table-shell" },
-                            React.createElement("table", { className: "playground-auth-users-table is-secrets-table" },
-                              React.createElement("colgroup", null,
-                                React.createElement("col", { className: "playground-secrets-table-col-name" }),
-                                React.createElement("col", { className: "playground-secrets-table-col-value" }),
-                                React.createElement("col", { className: "playground-secrets-table-col-updated" }),
-                                React.createElement("col", { className: "playground-secrets-table-col-accessed" }),
-                                React.createElement("col", { className: "playground-secrets-table-col-actions" })
-                              ),
-                              React.createElement("thead", null,
-                                React.createElement("tr", null,
-                                  React.createElement("th", null, "Name"),
-                                  React.createElement("th", null, "Value"),
-                                  React.createElement("th", null, "Updated"),
-                                  React.createElement("th", null, "Last Accessed"),
-                                  React.createElement("th", { className: "is-actions", "aria-label": "Actions" }, "")
-                                )
-                              ),
-                              React.createElement("tbody", null,
-                                filteredServerSecrets.map((secret) =>
-                                  React.createElement("tr", {
-                                    key: secret.id || secret.name,
-                                    className: "is-clickable",
-                                    role: "button",
-                                    tabIndex: 0,
-                                    onClick: () => openServerSecretComposer(secret),
-                                    onKeyDown: (event) => {
-                                      if (event.key === "Enter" || event.key === " ") {
-                                        event.preventDefault();
-                                        openServerSecretComposer(secret);
-                                      }
-                                    },
-                                    title: "Edit secret",
-                                  },
-                                    React.createElement("td", { className: "playground-auth-users-cell is-identifier is-secret-name", title: secret.description ? (secret.name + " - " + secret.description) : secret.name },
-                                      React.createElement("div", { className: "playground-auth-users-secret-name-title" }, secret.name),
-                                      secret.description
-                                        ? React.createElement("div", { className: "playground-auth-users-secret-description", title: secret.description }, secret.description)
-                                        : null
-                                    ),
-                                    React.createElement("td", { className: "playground-auth-users-cell is-uid", title: "Secret values are encrypted and masked in the control plane." }, secret.maskedValue || "••••••••"),
-                                    React.createElement("td", { className: "playground-auth-users-cell" }, formatPlaygroundExactDate(secret.updatedAt)),
-                                    React.createElement("td", { className: "playground-auth-users-cell" }, secret.lastAccessedAt ? formatPlaygroundExactDate(secret.lastAccessedAt) : "Never"),
-                                    React.createElement("td", { className: "playground-auth-users-cell is-actions" },
-                                      React.createElement("div", { className: "playground-auth-users-actions" },
-                                        React.createElement("button", {
-                                          type: "button",
-                                          className: "playground-auth-users-refresh-button",
-                                          onClick: (event) => {
-                                            event.stopPropagation();
-                                            void handleDeleteServerSecret(secret);
-                                          },
-                                          onKeyDown: (event) => event.stopPropagation(),
-                                          title: "Delete secret",
-                                          "aria-label": "Delete secret " + String(secret.name || ""),
-                                        }, React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }))
-                                      )
-                                    )
-                                  )
-                                )
-                              )
-                            )
-                          )
-                        : serverSecretsSearchQuery.trim()
-                          ? React.createElement("div", { className: "playground-files-state" }, "No matching secrets found.")
-                          : React.createElement("div", { className: "playground-files-state playground-auth-users-empty-state" },
-                              React.createElement("img", {
-                                className: "playground-auth-users-empty-state-image",
-                                src: "/img/empty-state/no-secrets-yet.avif",
-                                alt: "",
-                                "aria-hidden": "true",
-                                draggable: "false",
-                              }),
-                              React.createElement("div", { className: "playground-auth-users-empty-state-title" }, "Add your first secret"),
-                              React.createElement("div", { className: "playground-auth-users-empty-state-copy" }, "Secrets store encrypted values that agents and resources can use securely.")
-                            )
-                  )
+                  React.createElement(PlatformDataTable, {
+                    rows: filteredServerSecrets,
+                    getRowId: (secret) => String(secret.id || secret.name),
+                    ariaLabel: "Server secrets",
+                    className: "playground-server-secrets-platform-table",
+                    surface: "plain",
+                    sticky: false,
+                    loading: secretsLoading,
+                    error: serverSecretsState.error || null,
+                    emptyState: serverSecretsSearchQuery.trim()
+                      ? "No matching secrets found."
+                      : React.createElement("div", { className: "playground-files-state playground-auth-users-empty-state" },
+                          React.createElement("img", {
+                            className: "playground-auth-users-empty-state-image",
+                            src: "/img/empty-state/no-secrets-yet.avif",
+                            alt: "",
+                            "aria-hidden": "true",
+                            draggable: "false",
+                          }),
+                          React.createElement("div", { className: "playground-auth-users-empty-state-title" }, "Add your first secret"),
+                          React.createElement("div", { className: "playground-auth-users-empty-state-copy" }, "Secrets store encrypted values that agents and resources can use securely.")
+                        ),
+                    toolbar: {
+                      search: {
+                        value: serverSecretsSearchQuery,
+                        manual: true,
+                        onChange: setServerSecretsSearchQuery,
+                        placeholder: "Search secrets by name or description",
+                      },
+                      primaryAction: {
+                        label: "Add Secret",
+                        icon: Plus,
+                        onClick: () => openServerSecretComposer(null),
+                        disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                      },
+                    },
+                    columns: [
+                      {
+                        id: "name",
+                        header: "Name",
+                        accessor: (secret) => secret.name || "",
+                        width: "minmax(180px, 1.5fr)",
+                        cell: ({ row: secret }) => React.createElement("div", {
+                            className: "playground-auth-users-cell is-identifier is-secret-name",
+                            title: secret.description ? (secret.name + " - " + secret.description) : secret.name,
+                          },
+                          React.createElement("div", { className: "playground-auth-users-secret-name-title" }, secret.name),
+                          secret.description
+                            ? React.createElement("div", { className: "playground-auth-users-secret-description", title: secret.description }, secret.description)
+                            : null
+                        ),
+                      },
+                      {
+                        id: "value",
+                        header: "Value",
+                        accessor: (secret) => secret.maskedValue || "",
+                        width: "minmax(120px, 1fr)",
+                        cell: ({ row: secret }) => React.createElement("span", {
+                          className: "playground-auth-users-cell is-uid",
+                          title: "Secret values are encrypted and masked in the control plane.",
+                        }, secret.maskedValue || "••••••••"),
+                      },
+                      {
+                        id: "updated",
+                        header: "Updated",
+                        accessor: (secret) => secret.updatedAt || "",
+                        width: "minmax(120px, 1fr)",
+                        hideBelow: 720,
+                        cell: ({ row: secret }) => formatPlaygroundExactDate(secret.updatedAt),
+                      },
+                      {
+                        id: "accessed",
+                        header: "Last Accessed",
+                        accessor: (secret) => secret.lastAccessedAt || "",
+                        width: "minmax(130px, 1fr)",
+                        hideBelow: 900,
+                        cell: ({ row: secret }) => secret.lastAccessedAt ? formatPlaygroundExactDate(secret.lastAccessedAt) : "Never",
+                      },
+                    ],
+                    onRowActivate: openServerSecretComposer,
+                    getRowAriaLabel: (secret) => "Edit secret " + String(secret.name || ""),
+                    getRowActions: (secret) => [{
+                      id: "delete",
+                      label: "Delete",
+                      icon: Trash2,
+                      danger: true,
+                      onSelect: () => handleDeleteServerSecret(secret),
+                    }],
+                  })
+                )
             );
 
-	            const normalizedSecretsDetailTab = ["secrets", "general"].includes(secretsDetailTab) ? secretsDetailTab : "secrets";
+	            const normalizedSecretsDetailTab = ["secrets", "usage", "settings"].includes(secretsDetailTab) ? secretsDetailTab : "secrets";
 	            const secretsDetailTabs = React.createElement("div", { className: "playground-agents-overview-tabs playground-agents-detail-tabs playground-server-detail-tabs" },
 	              React.createElement("div", { className: "playground-project-overview-chart-tabs" },
 	                [
-	                  { id: "secrets", label: "Secrets" },
-	                  { id: "general", label: "General" },
+	                  { id: "secrets", label: "Secrets", Icon: Key },
+	                  { id: "usage", label: "Usage", Icon: ChartColumnIncreasing },
+	                  { id: "settings", label: "Settings", Icon: Settings },
 	                ].map((tab) =>
 	                  React.createElement("button", {
 	                      key: tab.id,
 	                      type: "button",
 	                      className: "playground-project-overview-chart-tab" + (normalizedSecretsDetailTab === tab.id ? " is-active" : ""),
-	                      onClick: () => setSecretsDetailTab(tab.id),
+	                      onClick: () => {
+	                        setSecretsDetailTab(tab.id);
+	                        if (tab.id === "usage" && draftServer.id) {
+	                          void loadServerAnalytics(draftServer.id, { period: serverDetailChartTimescale });
+	                        }
+	                        if (tab.id === "settings") {
+	                          if (draftServer.id) void loadServerContext(draftServer.id);
+	                          if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) onWorkspaceTeamsRequest({});
+	                        }
+	                      },
 	                      "aria-pressed": normalizedSecretsDetailTab === tab.id ? "true" : "false",
 	                      "aria-label": tab.label,
 	                    },
-	                    tab.label
+	                    React.createElement(tab.Icon, { className: "playground-agents-detail-tab-icon", strokeWidth: 1.7 }),
+	                    React.createElement("span", null, tab.label)
 	                  )
 	                )
 	              )
@@ -111537,13 +111196,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                "."
 	              )
 	            );
-	            const secretsGeneralTabContent = React.createElement(React.Fragment, null,
-	              descriptionSection,
-	              secretsDetailsSection
-	            );
 	            const secretsEditorTabContent = normalizedSecretsDetailTab === "secrets"
 	              ? secretsTabContent
-	              : secretsGeneralTabContent;
+	              : normalizedSecretsDetailTab === "settings"
+	                ? serverSettingsTabContent
+	                : serverUsageTabContent;
 	            const secretsDocumentationUrl = ${JSON.stringify(aiosOrigin)} + "/developers/libraries/secrets";
 	            const secretsEditorMainClassName = "playground-environments-editor-main playground-tasks-detail-main" + (
 	              normalizedSecretsDetailTab === "secrets" ? " is-secrets-tab" : ""
@@ -111557,31 +111214,15 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	            const secretsMainTopbar = React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-server-detail-navbar is-secrets-detail-navbar" },
 	              React.createElement("div", { className: "playground-environments-editor-navbar-title" },
 	                React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
-	                  React.createElement("input", {
-	                    type: "text",
-	                    className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input playground-secrets-title-input",
-	                    value: draftServer.name || "",
+	                  renderServerResourceDetailTitleRow({
+	                    className: " playground-secrets-title-input",
 	                    placeholder: "Secrets",
-	                    "aria-label": "Secrets name",
-	                    title: draftServer.name || "Secrets",
-	                    onChange: (event) => updateServerField("name", event.target.value),
-		                    onBlur: () => {
-		                      void commitDraftServerIfDirty();
-		                    },
-			                  })
-		                )
+	                    ariaLabel: "Secrets name",
+	                  })
+	                )
 	              ),
 	              React.createElement("div", { className: "playground-content-nav-center" }),
-	              React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" },
-	                React.createElement("button", {
-	                  type: "button",
-	                  className: "playground-environments-action-button",
-	                  onClick: () => window.open(secretsDocumentationUrl, "_blank", "noopener,noreferrer"),
-	                },
-	                  React.createElement(BookOpen, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                  React.createElement("span", null, "Docs")
-	                )
-	              )
+	              React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" })
 	            );
 
 	            return React.createElement(React.Fragment, null,
@@ -112364,112 +112005,115 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
 	            const agentRuntimeRunsSurface = React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts playground-server-details-card playground-auth-users-surface" },
 	              React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-	                React.createElement("div", { className: "playground-auth-users-toolbar" },
-                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Threads"),
-                    React.createElement("div", { className: "playground-auth-users-toolbar-actions" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-auth-users-add-button",
-                        onClick: openAgentRuntimeRunComposer,
-                        disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
-                      },
-                        React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("span", null, "New Thread")
-                      ),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-auth-users-refresh-button",
-                        style: { marginLeft: "10px" },
-                        onClick: () => {
-                          if (draftServer.id) {
-                            void loadServerAgentRuntimeRuns(draftServer.id, { force: true });
-                          }
-                        },
-                        disabled: agentRuntimeRunsLoading || !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
-                        title: "Refresh threads",
-                      }, React.createElement(RefreshCw, { width: 14, height: 14, strokeWidth: 1.8 }))
-                    )
-                  ),
-                  serverAgentRuntimeRunsState.error
-                    ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverAgentRuntimeRunsState.error)
-                    : null,
                   serverAgentRuntimeRunsState.message
                     ? React.createElement("div", { className: "playground-environments-editor-notice" }, serverAgentRuntimeRunsState.message)
                     : null,
-                  agentRuntimeRunsLoading
-                    ? React.createElement("div", { className: "playground-files-state" },
-                        React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
-                      )
-                    : agentRuntimeRuns.length > 0
-                      ? React.createElement("div", { className: "playground-auth-users-table-shell" },
-                          React.createElement("table", { className: "playground-auth-users-table" },
-                            React.createElement("thead", null,
-                              React.createElement("tr", null,
-                                React.createElement("th", null, "Prompt"),
-                                React.createElement("th", null, "Status"),
-                                React.createElement("th", null, "Mode"),
-                                React.createElement("th", null, "Started"),
-                                React.createElement("th", null, "Thread"),
-                                React.createElement("th", null, "")
-                              )
-                            ),
-                            React.createElement("tbody", null,
-                              agentRuntimeRuns.map((run) =>
-                                React.createElement("tr", { key: run.id || run.threadId || Math.random() },
-                                  React.createElement("td", { className: "playground-auth-users-cell is-identifier", title: run.title || run.input || "Untitled run" },
-                                    String(run.title || run.input || "Untitled run")
-                                  ),
-                                  React.createElement("td", { className: "playground-auth-users-cell" }, String(run.status || "unknown")),
-                                  React.createElement("td", { className: "playground-auth-users-cell" }, String(run.mode || "async")),
-                                  React.createElement("td", { className: "playground-auth-users-cell" }, formatPlaygroundFileDate(run.createdAt)),
-                                  React.createElement("td", { className: "playground-auth-users-cell is-uid", title: run.threadId || "—" }, run.threadId || "—"),
-                                  React.createElement("td", { className: "playground-auth-users-cell" },
-                                    run.status === "running" || run.status === "queued"
-                                      ? React.createElement("button", {
-                                          type: "button",
-                                          className: "playground-auth-users-refresh-button",
-                                          onClick: () => {
-                                            void cancelServerAgentRuntimeRun(draftServer.id, run.id);
-                                          },
-                                          title: "Cancel run",
-                                        }, React.createElement(X, { width: 14, height: 14, strokeWidth: 1.8 }))
-                                      : null
-                                  )
-                                )
-                              )
-                            )
-                          )
-                        )
-	                      : React.createElement("div", { className: "playground-files-state playground-agent-runtime-empty-state" },
-                          React.createElement("img", {
-                            className: "playground-agent-runtime-empty-state-image",
-                            src: "/img/empty-state/no-chats-yet.avif",
-                            alt: "",
-                            "aria-hidden": "true",
-                            draggable: "false",
-                          }),
-                          React.createElement("span", null, "No threads yet.")
-                        )
+                  React.createElement(PlatformDataTable, {
+                    rows: agentRuntimeRuns,
+                    getRowId: (run) => String(run.id || run.threadId || run.createdAt || "thread"),
+                    ariaLabel: "Agent runtime threads",
+                    className: "playground-agent-runtime-platform-table",
+                    surface: "plain",
+                    sticky: false,
+                    loading: agentRuntimeRunsLoading,
+                    error: serverAgentRuntimeRunsState.error || null,
+                    emptyState: React.createElement("div", { className: "playground-files-state playground-agent-runtime-empty-state" },
+                      React.createElement("img", {
+                        className: "playground-agent-runtime-empty-state-image",
+                        src: "/img/empty-state/no-chats-yet.avif",
+                        alt: "",
+                        "aria-hidden": "true",
+                        draggable: "false",
+                      }),
+                      React.createElement("span", null, "No threads yet.")
+                    ),
+                    toolbar: {
+                      leading: React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Threads"),
+                      trailing: React.createElement("button", {
+                        type: "button",
+                        className: "playground-auth-users-refresh-button",
+                        onClick: () => {
+                          if (draftServer.id) void loadServerAgentRuntimeRuns(draftServer.id, { force: true });
+                        },
+                        disabled: agentRuntimeRunsLoading || !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                        title: "Refresh threads",
+                        "aria-label": "Refresh threads",
+                      }, React.createElement(RefreshCw, { width: 14, height: 14, strokeWidth: 1.8 })),
+                      primaryAction: {
+                        label: "New Thread",
+                        icon: Plus,
+                        onClick: openAgentRuntimeRunComposer,
+                        disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                      },
+                    },
+                    columns: [
+                      {
+                        id: "prompt",
+                        header: "Prompt",
+                        accessor: (run) => run.title || run.input || "Untitled run",
+                        width: "minmax(200px, 2fr)",
+                        cell: ({ row: run }) => React.createElement("span", {
+                          className: "playground-auth-users-cell is-identifier",
+                          title: run.title || run.input || "Untitled run",
+                        }, String(run.title || run.input || "Untitled run")),
+                      },
+                      { id: "status", header: "Status", accessor: (run) => String(run.status || "unknown"), width: "minmax(90px, 0.8fr)" },
+                      { id: "mode", header: "Mode", accessor: (run) => String(run.mode || "async"), width: "minmax(80px, 0.7fr)", hideBelow: 700 },
+                      {
+                        id: "started",
+                        header: "Started",
+                        accessor: (run) => run.createdAt || "",
+                        width: "minmax(110px, 0.9fr)",
+                        cell: ({ row: run }) => formatPlaygroundFileDate(run.createdAt),
+                      },
+                      {
+                        id: "thread",
+                        header: "Thread",
+                        accessor: (run) => run.threadId || "",
+                        width: "minmax(130px, 1.1fr)",
+                        hideBelow: 900,
+                        cell: ({ row: run }) => React.createElement("span", { className: "playground-auth-users-cell is-uid", title: run.threadId || "—" }, run.threadId || "—"),
+                      },
+                    ],
+                    getRowActions: (run) => [{
+                      id: "cancel",
+                      label: "Cancel run",
+                      icon: X,
+                      hidden: run.status !== "running" && run.status !== "queued",
+                      danger: true,
+                      onSelect: () => cancelServerAgentRuntimeRun(draftServer.id, run.id),
+                    }],
+                  })
 	                )
 	            );
 
-	            const normalizedAgentRuntimeDetailTab = ["general", "settings", "threads"].includes(agentRuntimeDetailTab) ? agentRuntimeDetailTab : "general";
+	            const normalizedAgentRuntimeDetailTab = ["usage", "settings", "threads"].includes(agentRuntimeDetailTab) ? agentRuntimeDetailTab : "usage";
 	            const agentRuntimeDetailTabs = React.createElement("div", { className: "playground-agents-overview-tabs playground-agents-detail-tabs playground-server-detail-tabs" },
 	              React.createElement("div", { className: "playground-project-overview-chart-tabs" },
 	                [
-	                  { id: "general", label: "General" },
-	                  { id: "settings", label: "Settings" },
-	                  { id: "threads", label: "Threads" },
+	                  { id: "usage", label: "Usage", Icon: ChartColumnIncreasing },
+	                  { id: "threads", label: "Threads", Icon: MessageSquare },
+	                  { id: "settings", label: "Settings", Icon: Settings },
 	                ].map((tab) =>
 	                  React.createElement("button", {
 	                      key: tab.id,
 	                      type: "button",
 	                      className: "playground-project-overview-chart-tab" + (normalizedAgentRuntimeDetailTab === tab.id ? " is-active" : ""),
-	                      onClick: () => setAgentRuntimeDetailTab(tab.id),
+	                      onClick: () => {
+	                        setAgentRuntimeDetailTab(tab.id);
+	                        if (tab.id === "usage" && draftServer.id) {
+	                          void loadServerAnalytics(draftServer.id, { period: serverDetailChartTimescale });
+	                        }
+	                        if (tab.id === "settings") {
+	                          if (draftServer.id) void loadServerContext(draftServer.id);
+	                          if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) onWorkspaceTeamsRequest({});
+	                        }
+	                      },
 	                      "aria-pressed": normalizedAgentRuntimeDetailTab === tab.id ? "true" : "false",
 	                      "aria-label": tab.label,
 	                    },
-	                    tab.label
+	                    React.createElement(tab.Icon, { className: "playground-agents-detail-tab-icon", strokeWidth: 1.7 }),
+	                    React.createElement("span", null, tab.label)
 	                  )
 	                )
 	              )
@@ -112484,21 +112128,22 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                "."
 	              )
 	            );
-		            const agentRuntimeGeneralTabContent = React.createElement(React.Fragment, null,
-		              descriptionSection,
-		              agentRuntimeDetailsSection,
-		              functionInvokeSection,
-		              connectionsSection,
-		              serverDangerSection
+		            const agentRuntimeUsageTabContent = React.createElement(React.Fragment, null,
+		              serverUsageTabContent,
+		              functionInvokeSection
 		            );
-		            const agentRuntimeSettingsTabContent = React.createElement(React.Fragment, null,
-		              agentRuntimeSettingsSection
+		            const agentRuntimeSettingsTabContent = serverSettingsPermissionContent || React.createElement("div", { className: "playground-server-settings-tab" },
+		              descriptionSection,
+		              agentRuntimeSettingsSection,
+		              connectionsSection,
+		              serverTeamAccessPlatformSection,
+		              serverDangerSection
 		            );
 		            const agentRuntimeEditorTabContent = normalizedAgentRuntimeDetailTab === "threads"
 		              ? agentRuntimeThreadsTabContent
 		              : normalizedAgentRuntimeDetailTab === "settings"
 		                ? agentRuntimeSettingsTabContent
-		              : agentRuntimeGeneralTabContent;
+		              : agentRuntimeUsageTabContent;
 	            const agentRuntimeDocumentationUrl = ${JSON.stringify(aiosOrigin)} + "/developers/libraries/agent-runtimes";
 	            const agentRuntimeEditorMainClassName = "playground-environments-editor-main playground-tasks-detail-main" + (
 	              normalizedAgentRuntimeDetailTab === "threads" ? " is-agent-runtime-threads-tab" : ""
@@ -112512,18 +112157,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	            const agentRuntimeMainTopbar = React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-server-detail-navbar is-agent-runtime-detail-navbar" },
 	              React.createElement("div", { className: "playground-environments-editor-navbar-title" },
 	                React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
-		                  React.createElement("input", {
-		                    type: "text",
-		                    className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input playground-agent-runtime-title-input",
-		                    value: draftServer.name || "",
-		                    placeholder: "Agent Runtime",
-		                    "aria-label": "Agent runtime name",
-		                    title: draftServer.name || "Agent Runtime",
-		                    onChange: (event) => updateServerField("name", event.target.value),
-		                    onBlur: () => {
-		                      void commitDraftServerIfDirty();
-		                    },
-		                  }),
+	                  renderServerResourceDetailTitleRow({
+	                    className: " playground-agent-runtime-title-input",
+	                    placeholder: "Agent Runtime",
+	                    ariaLabel: "Agent runtime name",
+	                  }),
 		                  functionDeployedServiceUrl
 		                    ? React.createElement("div", { className: "playground-server-service-url-row" },
 		                        React.createElement("span", {
@@ -112557,16 +112195,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 		                )
 	              ),
 	              React.createElement("div", { className: "playground-content-nav-center" }),
-	              React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" },
-	                React.createElement("button", {
-	                  type: "button",
-	                  className: "playground-environments-action-button",
-	                  onClick: () => window.open(agentRuntimeDocumentationUrl, "_blank", "noopener,noreferrer"),
-	                },
-	                  React.createElement(BookOpen, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                  React.createElement("span", null, "Docs")
-	                )
-	              )
+	              React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" })
 	            );
 
 	            return React.createElement(React.Fragment, null,
@@ -112786,102 +112415,121 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 
             const authUsersSurface = React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts playground-server-details-card playground-auth-users-surface" },
               React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-                React.createElement("div", { className: "playground-auth-users-toolbar" },
-                  React.createElement("label", { className: "playground-auth-users-search" },
-                    React.createElement(Search, { className: "playground-auth-users-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("input", {
-                      type: "text",
-                      className: "playground-auth-users-search-input",
+                React.createElement(PlatformDataTable, {
+                  rows: filteredServerAuthUsers,
+                  getRowId: (user) => String(user.uid || getPlaygroundAuthUserIdentifier(user)),
+                  ariaLabel: "Authentication users",
+                  className: "playground-auth-users-platform-table",
+                  surface: "plain",
+                  sticky: false,
+                  loading: authUsersLoading,
+                  error: serverAuthUsersState.error || null,
+                  emptyState: serverAuthSearchQuery.trim()
+                    ? "No matching users found."
+                    : React.createElement("div", { className: "playground-files-state playground-auth-users-empty-state" },
+                        React.createElement("img", {
+                          className: "playground-auth-users-empty-state-image",
+                          src: "/img/empty-state/no-users-yet.avif",
+                          alt: "",
+                          "aria-hidden": "true",
+                          draggable: "false",
+                        }),
+                        React.createElement("div", { className: "playground-auth-users-empty-state-title" }, "Add your first user"),
+                        React.createElement("div", { className: "playground-auth-users-empty-state-copy" }, "Authentication resources manage sign-in identities and access for your app.")
+                      ),
+                  toolbar: {
+                    search: {
                       value: serverAuthSearchQuery,
-                      onChange: (event) => setServerAuthSearchQuery(event.target.value),
+                      manual: true,
+                      onChange: setServerAuthSearchQuery,
                       placeholder: "Search by email address, phone number, or user UID",
-                    })
-                  ),
-                  React.createElement("div", { className: "playground-auth-users-toolbar-actions" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-server-detail-docs-tab",
+                    },
+                    primaryAction: {
+                      label: "Add User",
+                      icon: Plus,
                       onClick: openServerAuthUserComposer,
                       disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
                     },
-                      React.createElement(Plus, { className: "playground-server-detail-docs-tab-icon", width: 12, height: 12, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Add User")
-                    )
-                  )
-                ),
-                serverAuthUsersState.error
-                  ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverAuthUsersState.error)
-                  : null,
-                authUsersLoading
-                  ? React.createElement("div", { className: "playground-files-state" },
-                      React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
-                    )
-                  : filteredServerAuthUsers.length > 0
-                    ? React.createElement("div", { className: "playground-auth-users-table-shell" },
-                        React.createElement("table", { className: "playground-auth-users-table" },
-                          React.createElement("thead", null,
-                            React.createElement("tr", null,
-                              React.createElement("th", null, "Identifier"),
-                              React.createElement("th", null, "Provider"),
-                              React.createElement("th", null, "Created"),
-                              React.createElement("th", null, "Signed In"),
-                              React.createElement("th", null, "User UID")
-                            )
-                          ),
-                          React.createElement("tbody", null,
-                            filteredServerAuthUsers.map((user) => {
-                              const providerIds = Array.isArray(user?.providers) && user.providers.length > 0 ? user.providers : (user?.email ? ["password"] : []);
-                              return React.createElement("tr", { key: user.uid || getPlaygroundAuthUserIdentifier(user) },
-                                React.createElement("td", { className: "playground-auth-users-cell is-identifier", title: getPlaygroundAuthUserIdentifier(user) },
-                                  getPlaygroundAuthUserIdentifier(user)
-                                ),
-                                React.createElement("td", { className: "playground-auth-users-cell" },
-                                  React.createElement("div", { className: "playground-auth-users-provider-list" },
-                                    providerIds.slice(0, 2).map((providerId) => renderAuthProviderPill(providerId)),
-                                    providerIds.length > 2
-                                      ? React.createElement("span", { className: "playground-auth-users-provider-more" }, "+" + String(providerIds.length - 2))
-                                      : null
-                                  )
-                                ),
-                                React.createElement("td", { className: "playground-auth-users-cell" }, formatPlaygroundExactDate(user?.createdAt)),
-                                React.createElement("td", { className: "playground-auth-users-cell" }, formatPlaygroundExactDate(user?.lastLoginAt)),
-                                React.createElement("td", { className: "playground-auth-users-cell is-uid", title: user?.uid || "—" }, user?.uid || "—")
-                              );
-                            })
-                          )
-                        )
-                      )
-                    : serverAuthSearchQuery.trim()
-                      ? React.createElement("div", { className: "playground-files-state" }, "No matching users found.")
-                      : React.createElement("div", { className: "playground-files-state playground-auth-users-empty-state" },
-                          React.createElement("img", {
-                            className: "playground-auth-users-empty-state-image",
-                            src: "/img/empty-state/no-users-yet.avif",
-                            alt: "",
-                            "aria-hidden": "true",
-                            draggable: "false",
-                          }),
-                          React.createElement("div", { className: "playground-auth-users-empty-state-title" }, "Add your first user"),
-                          React.createElement("div", { className: "playground-auth-users-empty-state-copy" }, "Authentication resources manage sign-in identities and access for your app.")
-                        )
+                  },
+                  columns: [
+                    {
+                      id: "identifier",
+                      header: "Identifier",
+                      accessor: getPlaygroundAuthUserIdentifier,
+                      width: "minmax(180px, 1.5fr)",
+                      cell: ({ row: user }) => React.createElement("span", {
+                        className: "playground-auth-users-cell is-identifier",
+                        title: getPlaygroundAuthUserIdentifier(user),
+                      }, getPlaygroundAuthUserIdentifier(user)),
+                    },
+                    {
+                      id: "provider",
+                      header: "Provider",
+                      width: "minmax(130px, 1fr)",
+                      cell: ({ row: user }) => {
+                        const providerIds = Array.isArray(user?.providers) && user.providers.length > 0 ? user.providers : (user?.email ? ["password"] : []);
+                        return React.createElement("div", { className: "playground-auth-users-provider-list" },
+                          providerIds.slice(0, 2).map((providerId) => renderAuthProviderPill(providerId)),
+                          providerIds.length > 2
+                            ? React.createElement("span", { className: "playground-auth-users-provider-more" }, "+" + String(providerIds.length - 2))
+                            : null
+                        );
+                      },
+                    },
+                    {
+                      id: "created",
+                      header: "Created",
+                      accessor: (user) => user?.createdAt || "",
+                      width: "minmax(120px, 1fr)",
+                      cell: ({ row: user }) => formatPlaygroundExactDate(user?.createdAt),
+                    },
+                    {
+                      id: "signed-in",
+                      header: "Signed In",
+                      accessor: (user) => user?.lastLoginAt || "",
+                      width: "minmax(120px, 1fr)",
+                      hideBelow: 780,
+                      cell: ({ row: user }) => formatPlaygroundExactDate(user?.lastLoginAt),
+                    },
+                    {
+                      id: "uid",
+                      header: "User UID",
+                      accessor: (user) => user?.uid || "",
+                      width: "minmax(140px, 1.2fr)",
+                      hideBelow: 940,
+                      cell: ({ row: user }) => React.createElement("span", { className: "playground-auth-users-cell is-uid", title: user?.uid || "—" }, user?.uid || "—"),
+                    },
+                  ],
+                })
               )
             );
-            const normalizedAuthDetailTab = ["users", "general"].includes(authDetailTab) ? authDetailTab : "users";
+            const normalizedAuthDetailTab = ["users", "usage", "settings"].includes(authDetailTab) ? authDetailTab : "users";
             const authDetailTabs = React.createElement("div", { className: "playground-agents-overview-tabs playground-agents-detail-tabs playground-server-detail-tabs" },
               React.createElement("div", { className: "playground-project-overview-chart-tabs" },
                 [
-                  { id: "users", label: "Users" },
-                  { id: "general", label: "General" },
+                  { id: "users", label: "Users", Icon: Users },
+                  { id: "usage", label: "Usage", Icon: ChartColumnIncreasing },
+                  { id: "settings", label: "Settings", Icon: Settings },
                 ].map((tab) =>
                   React.createElement("button", {
                       key: tab.id,
                       type: "button",
                       className: "playground-project-overview-chart-tab" + (normalizedAuthDetailTab === tab.id ? " is-active" : ""),
-                      onClick: () => setAuthDetailTab(tab.id),
+                      onClick: () => {
+                        setAuthDetailTab(tab.id);
+                        if (tab.id === "usage" && draftServer.id) {
+                          void loadServerAnalytics(draftServer.id, { period: serverDetailChartTimescale });
+                        }
+                        if (tab.id === "settings") {
+                          if (draftServer.id) void loadServerContext(draftServer.id);
+                          if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) onWorkspaceTeamsRequest({});
+                        }
+                      },
                       "aria-pressed": normalizedAuthDetailTab === tab.id ? "true" : "false",
                       "aria-label": tab.label,
                     },
-                    tab.label
+                    React.createElement(tab.Icon, { className: "playground-agents-detail-tab-icon", strokeWidth: 1.7 }),
+                    React.createElement("span", null, tab.label)
                   )
                 )
               )
@@ -112896,13 +112544,11 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 "."
               )
             );
-            const authGeneralTabContent = React.createElement(React.Fragment, null,
-              descriptionSection,
-              authDetailsSection
-            );
             const authEditorTabContent = normalizedAuthDetailTab === "users"
               ? authUsersTabContent
-              : authGeneralTabContent;
+              : normalizedAuthDetailTab === "settings"
+                ? serverSettingsTabContent
+                : serverUsageTabContent;
             const authDocumentationUrl = ${JSON.stringify(aiosOrigin)} + "/developers/libraries/authentication";
             const authEditorMainClassName = "playground-environments-editor-main playground-tasks-detail-main" + (
               normalizedAuthDetailTab === "users" ? " is-auth-users-tab" : ""
@@ -112916,31 +112562,15 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             const authMainTopbar = React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-server-detail-navbar is-auth-detail-navbar" },
               React.createElement("div", { className: "playground-environments-editor-navbar-title" },
                 React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
-                  React.createElement("input", {
-                    type: "text",
-                    className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input playground-auth-title-input",
-                    value: draftServer.name || "",
+                  renderServerResourceDetailTitleRow({
+                    className: " playground-auth-title-input",
                     placeholder: "Authentication",
-                    "aria-label": "Authentication name",
-                    title: draftServer.name || "Authentication",
-                    onChange: (event) => updateServerField("name", event.target.value),
-                    onBlur: () => {
-                      void commitDraftServerIfDirty();
-                    },
+                    ariaLabel: "Authentication name",
                   })
                 )
               ),
               React.createElement("div", { className: "playground-content-nav-center" }),
-              React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-environments-action-button",
-                  onClick: () => window.open(authDocumentationUrl, "_blank", "noopener,noreferrer"),
-                },
-                  React.createElement(BookOpen, { width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("span", null, "Docs")
-                )
-              )
+              React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" })
             );
 
             return React.createElement("div", { className: authEditorMainClassName, ref: serverDetailMainRef },
@@ -114355,95 +113985,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	            }
 	            return normalizedDatabaseAccessSortDirection === "desc" ? -comparison : comparison;
 	          });
-	          const visibleDatabasePermissionTeamIds = visibleDatabasePermissionTeams
-	            .filter((team) => !team.locked)
-	            .map((team) => String(team?.id || "").trim())
-	            .filter(Boolean);
-	          const selectedVisibleDatabasePermissionTeamIds = visibleDatabasePermissionTeamIds
-	            .filter((teamId) => selectedDatabaseAccessTeamIds.has(teamId));
-	          const allVisibleDatabasePermissionTeamsSelected = visibleDatabasePermissionTeamIds.length > 0
-	            && selectedVisibleDatabasePermissionTeamIds.length === visibleDatabasePermissionTeamIds.length;
-	          const hasPartialVisibleDatabasePermissionTeamSelection = selectedVisibleDatabasePermissionTeamIds.length > 0
-	            && !allVisibleDatabasePermissionTeamsSelected;
-	          const toggleDatabaseAccessTeamSelection = (teamId) => {
-	            const normalizedTeamId = String(teamId || "").trim();
-	            if (!normalizedTeamId) return;
-	            setSelectedDatabaseAccessTeamIds((current) => {
-	              const next = new Set(current || []);
-	              if (next.has(normalizedTeamId)) next.delete(normalizedTeamId);
-	              else next.add(normalizedTeamId);
-	              return next;
-	            });
-	          };
-	          const toggleVisibleDatabaseAccessTeamSelection = () => {
-	            setSelectedDatabaseAccessTeamIds((current) => {
-	              const next = new Set(current || []);
-	              visibleDatabasePermissionTeamIds.forEach((teamId) => {
-	                if (allVisibleDatabasePermissionTeamsSelected) next.delete(teamId);
-	                else next.add(teamId);
-	              });
-	              return next;
-	            });
-	          };
-	          const handleDatabaseAccessColumnSort = (sortKey) => {
-	            const normalizedSortKey = ["name", "policy", "created"].includes(sortKey) ? sortKey : "name";
-	            setDatabaseAccessSortDirection((currentDirection) => {
-	              if (databaseAccessSort !== normalizedSortKey) return "asc";
-	              return currentDirection === "asc" ? "desc" : "asc";
-	            });
-	            setDatabaseAccessSort(normalizedSortKey);
-	          };
-	          const renderDatabaseAccessSortIcon = (sortKey) => {
-	            const isActive = databaseAccessSort === sortKey;
-	            const isAscending = isActive && normalizedDatabaseAccessSortDirection === "asc";
-	            const isDescending = isActive && normalizedDatabaseAccessSortDirection === "desc";
-	            return React.createElement("span", {
-	                className: "playground-agents-overview-sort-icon"
-	                  + (isActive ? " is-active" : "")
-	                  + (isAscending ? " is-ascending" : "")
-	                  + (isDescending ? " is-descending" : ""),
-	                "aria-hidden": "true",
-	              },
-	              React.createElement(ChevronsUpDown, {
-	                className: "playground-agents-overview-sort-icon-layer is-top",
-	                width: 14,
-	                height: 14,
-	                strokeWidth: 1.8,
-	              }),
-	              React.createElement(ChevronsUpDown, {
-	                className: "playground-agents-overview-sort-icon-layer is-bottom",
-	                width: 14,
-	                height: 14,
-	                strokeWidth: 1.8,
-	              })
-	            );
-	          };
-	          const renderDatabaseAccessSortableHeader = (label, sortKey) => {
-	            const isActive = databaseAccessSort === sortKey;
-	            const nextDirection = isActive && normalizedDatabaseAccessSortDirection === "asc" ? "descending" : "ascending";
-	            return React.createElement("div", {
-	                className: "playground-agents-overview-sortable-header" + (isActive ? " is-active" : ""),
-	              },
-	              React.createElement("span", { className: "playground-agents-overview-sortable-header-label" }, label),
-	              React.createElement("button", {
-	                  type: "button",
-	                  className: "playground-agents-overview-column-sort-button"
-	                    + (isActive ? " is-active" : "")
-	                    + (isActive && normalizedDatabaseAccessSortDirection === "asc" ? " is-ascending" : "")
-	                    + (isActive && normalizedDatabaseAccessSortDirection === "desc" ? " is-descending" : ""),
-	                  title: "Sort " + label + " " + nextDirection,
-	                  "aria-label": "Sort " + label + " " + nextDirection,
-	                  "aria-pressed": isActive ? "true" : "false",
-	                  onClick: (event) => {
-	                    event.preventDefault();
-	                    event.stopPropagation();
-	                    handleDatabaseAccessColumnSort(sortKey);
-	                  },
-	                },
-	                renderDatabaseAccessSortIcon(sortKey)
-	              )
-	            );
-	          };
 	          const databaseAddableTeams = availableEnvironmentShareTeams.filter((team) => !databaseSharedTeamIdSet.has(team.id));
 	          const selectedDatabasePermissionTeam = databasePermissionTeams.find((team) =>
 	            String(team.id) === String(databasePermissionTeamId || "")
@@ -114453,12 +113994,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	            && draftDatabase.id
 	            && draftDatabase.id !== PLAYGROUND_DATABASE_DRAFT_ID
 	          );
-	          const databaseAccessSortOptions = [
-	            { id: "name-asc", label: "Name (A-Z)", sort: "name", direction: "asc" },
-	            { id: "name-desc", label: "Name (Z-A)", sort: "name", direction: "desc" },
-	            { id: "created-desc", label: "Recently Added", sort: "created", direction: "desc" },
-	            { id: "policy-asc", label: "Policy", sort: "policy", direction: "asc" },
-	          ];
 	          const databaseAccessFilterOptions = [
 	            { id: "all", label: "All access", description: "Show default and team access" },
 	            { id: "teams", label: "Teams", description: "Only show team access grants" },
@@ -114472,122 +114007,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	              return String(value || "");
 	            }
 	          };
-	          const closeDatabaseAccessActionMenu = (options = {}) => {
-	            if (!databaseAccessActionMenuState) return;
-	            if (databaseAccessActionMenuCloseTimerRef.current !== null && typeof window !== "undefined") {
-	              window.clearTimeout(databaseAccessActionMenuCloseTimerRef.current);
-	              databaseAccessActionMenuCloseTimerRef.current = null;
-	            }
-	            if (options.animate === false || typeof window === "undefined") {
-	              setDatabaseAccessActionMenuClosing(false);
-	              setDatabaseAccessActionMenuState(null);
-	              return;
-	            }
-	            setDatabaseAccessActionMenuClosing(true);
-	            databaseAccessActionMenuCloseTimerRef.current = window.setTimeout(() => {
-	              databaseAccessActionMenuCloseTimerRef.current = null;
-	              setDatabaseAccessActionMenuClosing(false);
-	              setDatabaseAccessActionMenuState(null);
-	            }, 90);
-	          };
-	          const openDatabaseAccessActionMenu = (event, teams, options = {}) => {
-	            const targets = (Array.isArray(teams) ? teams : [teams]).filter(Boolean);
-	            if (!targets.length) return;
-	            event.preventDefault();
-	            event.stopPropagation();
-	            const menuWidth = 220;
-	            const menuHeight = targets.length > 1 ? 54 : 104;
-	            const gutter = 12;
-	            const viewportWidth = window.innerWidth || document.documentElement?.clientWidth || 0;
-	            const viewportHeight = window.innerHeight || document.documentElement?.clientHeight || 0;
-	            let left;
-	            let top;
-	            if (options.context) {
-	              left = Number(event.clientX || 0);
-	              top = Number(event.clientY || 0);
-	            } else {
-	              const rect = event.currentTarget.getBoundingClientRect();
-	              left = rect.left - menuWidth - 8;
-	              top = rect.top + rect.height / 2 - menuHeight / 2;
-	            }
-	            left = Math.max(gutter, Math.min(viewportWidth - menuWidth - gutter, left));
-	            top = Math.max(gutter, Math.min(viewportHeight - menuHeight - gutter, top));
-	            if (databaseAccessActionMenuCloseTimerRef.current !== null) {
-	              window.clearTimeout(databaseAccessActionMenuCloseTimerRef.current);
-	              databaseAccessActionMenuCloseTimerRef.current = null;
-	            }
-	            setDatabaseTeamMenuId("");
-	            setDatabaseAccessActionMenuClosing(false);
-	            setDatabaseAccessActionMenuState({ teams: targets, left, top });
-	          };
-	          const selectedRemovableDatabaseTeams = databasePermissionTeams.filter((team) =>
-	            !team.locked && selectedDatabaseAccessTeamIds.has(String(team.id || ""))
-	          );
-	          const databaseAccessActionMenuContent = databaseAccessActionMenuState
-	            ? React.createElement("div", {
-	                className: "sidebar-thread-popup-scrim",
-	                style: { zIndex: 360 },
-	                onClick: () => closeDatabaseAccessActionMenu(),
-	              },
-	                React.createElement("div", {
-	                    className: "playground-platform-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-toolbar-popup-shell-portal playground-agents-list-action-menu-shell is-open",
-	                    style: {
-	                      position: "fixed",
-	                      top: databaseAccessActionMenuState.top + "px",
-	                      left: databaseAccessActionMenuState.left + "px",
-	                      right: "auto",
-	                    },
-	                    onClick: (event) => event.stopPropagation(),
-	                  },
-	                  React.createElement("div", {
-	                      className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-database-access-action-menu"
-	                        + (databaseAccessActionMenuClosing ? " is-closing" : " playground-tasks-toolbar-popup-menu-animate-down-in"),
-	                      role: "menu",
-	                    },
-	                    databaseAccessActionMenuState.teams.length === 1 && typeof onOpenTeamPage === "function" && !databaseAccessActionMenuState.teams[0].locked
-	                      ? React.createElement("button", {
-	                          type: "button",
-	                          role: "menuitem",
-	                          className: "tb-popup-row",
-	                          onClick: () => {
-	                            const teamId = databaseAccessActionMenuState.teams[0].id;
-	                            closeDatabaseAccessActionMenu({ animate: false });
-	                            onOpenTeamPage(teamId);
-	                          },
-	                        },
-	                          React.createElement(ExternalLink, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-	                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, "View team"))
-	                        )
-	                      : null,
-	                    databaseAccessActionMenuState.teams.some((team) => !team.locked)
-	                      ? React.createElement("button", {
-	                          type: "button",
-	                          role: "menuitem",
-	                          className: "tb-popup-row is-danger",
-	                          disabled: databaseSaveState.isSaving || Boolean(databaseTeamAccessState.action),
-	                          onClick: () => {
-	                            const targets = databaseAccessActionMenuState.teams.filter((team) => !team.locked);
-	                            closeDatabaseAccessActionMenu({ animate: false });
-	                            if (targets.length > 1) void handleRemoveDatabaseTeamAccessBulk(targets);
-	                            else if (targets[0]) void handleRemoveDatabaseTeamAccess(targets[0]);
-	                          },
-	                        },
-	                          React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-	                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-	                            React.createElement("span", null, databaseAccessActionMenuState.teams.length > 1 ? "Remove team access" : "Remove from database")
-	                          )
-	                        )
-	                      : React.createElement("button", { type: "button", className: "tb-popup-row", disabled: true },
-	                          React.createElement(Shield, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-	                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, "Default agent access"))
-	                        )
-	                  )
-	                )
-	              )
-	            : null;
-	          const databaseAccessActionMenu = databaseAccessActionMenuContent && typeof document !== "undefined" && document.body
-	            ? createPortal(databaseAccessActionMenuContent, document.body)
-	            : databaseAccessActionMenuContent;
 	          const renderAddDatabaseTeamsMenu = () => {
 	            if (databaseTeamMenuId !== "add-teams") {
 	              return null;
@@ -114789,237 +114208,133 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	            && document.body
 	              ? createPortal(databaseOwnerTransferModalContent, document.body)
 	              : databaseOwnerTransferModalContent;
-	          const databaseTeamAccessSection = React.createElement("section", {
+	          const databaseAddTeamsControl = canManageDatabaseTeamAccess
+	            ? React.createElement("div", {
+	                className: "playground-tasks-toolbar-popup-shell playground-project-teams-add-shell playground-database-team-menu-scope" + (databaseTeamMenuId === "add-teams" ? " is-open" : ""),
+	              },
+	              React.createElement("button", {
+	                type: "button",
+	                className: "playground-files-control-button playground-project-teams-add-button",
+	                disabled: workspaceTeamsLoading || databaseSaveState.isSaving || Boolean(databaseTeamAccessState.action),
+	                onClick: (event) => {
+	                  event.stopPropagation();
+	                  if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) onWorkspaceTeamsRequest({});
+	                  setDatabaseTeamMenuId((current) => current === "add-teams" ? "" : "add-teams");
+	                },
+	              },
+	                React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                React.createElement("span", null, "Add Teams")
+	              ),
+	              renderAddDatabaseTeamsMenu()
+	            )
+	            : null;
+	          const databaseAccessColumns = [
+	            {
+	              id: "name",
+	              header: "Team",
+	              accessor: (team) => team.name || "Untitled team",
+	              sortable: true,
+	              width: "minmax(220px, 1.45fr)",
+	              cell: ({ row: team }) => React.createElement("div", { className: "playground-agents-overview-name-cell" },
+	                React.createElement("div", { className: "playground-agents-overview-name-copy" },
+	                  React.createElement("div", { className: "playground-agents-overview-name-title" }, team.name)
+	                )
+	              ),
+	            },
+	            {
+	              id: "policy",
+	              header: "Policy",
+	              accessor: (team) => team.permission || "",
+	              sortable: true,
+	              width: "minmax(150px, 0.9fr)",
+	              cell: ({ row: team }) => React.createElement("div", { className: "playground-agents-overview-table-value" }, team.permission),
+	            },
+	            {
+	              id: "created",
+	              header: "Created",
+	              accessor: (team) => Date.parse(String(team.createdAt || "")) || 0,
+	              sortable: true,
+	              sortDescFirst: true,
+	              width: "minmax(120px, 0.7fr)",
+	              align: "end",
+	              cell: ({ row: team }) => React.createElement("div", { className: "playground-agents-overview-table-value" }, team.locked ? "Default" : (formatDatabaseTeamCreatedDate(team.createdAt) || "—")),
+	            },
+	          ];
+	          const databaseTeamAccessPlatformSection = React.createElement("section", {
 	              className: "playground-project-settings-access-section playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-database-access-table-section",
 	            },
-	            React.createElement("div", { className: "playground-agents-overview-sticky-table-header playground-database-access-sticky-table-header" },
-	              React.createElement("div", {
-	                  ref: databaseAccessToolbarRef,
-	                  className: "playground-plugins-search-row playground-resources-overview-search-row playground-develop-server-kind-table-toolbar playground-database-access-table-toolbar",
+	            React.createElement(PlatformDataTable, {
+	              rows: visibleDatabasePermissionTeams,
+	              columns: databaseAccessColumns,
+	              getRowId: (team) => String(team.id || ""),
+	              ariaLabel: "Database team access",
+	              className: "playground-database-access-platform-data-table",
+	              sorting: {
+	                value: { id: databaseAccessSort, direction: normalizedDatabaseAccessSortDirection },
+	                manual: true,
+	                onChange: (next) => {
+	                  if (!next) return;
+	                  setDatabaseAccessSort(next.id);
+	                  setDatabaseAccessSortDirection(next.direction);
 	                },
-	                React.createElement("div", { className: "playground-develop-server-kind-table-controls" },
-	                  React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell" },
-	                    React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-	                    React.createElement("input", {
-	                      type: "search",
-	                      value: databaseAccessSearchQuery,
-	                      onChange: (event) => setDatabaseAccessSearchQuery(event.target.value),
-	                      className: "playground-plugins-search",
-	                      placeholder: "Search teams",
-	                    })
-	                  ),
-	                  React.createElement("div", { className: "playground-plugins-toolbar-controls" },
-	                    React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
-	                      React.createElement("button", {
-	                        type: "button",
-	                        className: "playground-files-control-button is-bare is-backlog-sort" + (databaseAccessToolbarPopover === "sort" ? " is-active" : ""),
-	                        onClick: () => setDatabaseAccessToolbarPopover((current) => current === "sort" ? "" : "sort"),
-	                      },
-	                        React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                        React.createElement("span", null, "Sort")
-	                      ),
-	                      databaseAccessToolbarPopover === "sort"
-	                        ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-	                            databaseAccessSortOptions.map((option) => {
-	                              const isSelected = databaseAccessSort === option.sort && normalizedDatabaseAccessSortDirection === option.direction;
-	                              return React.createElement("button", {
-	                                  key: option.id,
-	                                  type: "button",
-	                                  className: "tb-popup-row tb-popup-row-select" + (isSelected ? " selected" : ""),
-	                                  onClick: () => {
-	                                    setDatabaseAccessSort(option.sort);
-	                                    setDatabaseAccessSortDirection(option.direction);
-	                                    setDatabaseAccessToolbarPopover("");
-	                                  },
-	                                },
-	                                React.createElement("span", { className: "tb-popup-check-slot" }, isSelected
-	                                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-	                                  : null),
-	                                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, option.label))
-	                              );
-	                            })
-	                          )
-	                        : null
-	                    ),
-	                    React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
-	                      React.createElement("button", {
-	                        type: "button",
-	                        className: "playground-files-control-button is-bare is-backlog-filter" + (databaseAccessToolbarPopover === "filter" || databaseAccessFilter !== "all" ? " is-active" : ""),
-	                        onClick: () => setDatabaseAccessToolbarPopover((current) => current === "filter" ? "" : "filter"),
-	                      },
-	                        React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                        React.createElement("span", null, "Filter")
-	                      ),
-	                      databaseAccessToolbarPopover === "filter"
-	                        ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-	                            databaseAccessFilterOptions.map((option) => React.createElement("button", {
-	                                key: option.id,
-	                                type: "button",
-	                                className: "tb-popup-row tb-popup-row-select" + (databaseAccessFilter === option.id ? " selected" : ""),
-	                                onClick: () => {
-	                                  setDatabaseAccessFilter(option.id);
-	                                  setDatabaseAccessToolbarPopover("");
-	                                },
-	                              },
-	                              React.createElement("span", { className: "tb-popup-check-slot" }, databaseAccessFilter === option.id
-	                                ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-	                                : null),
-	                              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-	                                React.createElement("span", null, option.label),
-	                                React.createElement("span", null, option.description)
-	                              )
-	                            ))
-	                          )
-	                        : null
-	                    )
-	                  )
-	                ),
-	                canManageDatabaseTeamAccess
-	                  ? React.createElement("div", {
-	                      className: "playground-tasks-toolbar-popup-shell playground-project-teams-add-shell playground-database-team-menu-scope" + (databaseTeamMenuId === "add-teams" ? " is-open" : ""),
-	                    },
-	                      React.createElement("button", {
-	                        type: "button",
-	                        className: "playground-files-control-button playground-project-teams-add-button",
-	                        disabled: workspaceTeamsLoading || databaseSaveState.isSaving || Boolean(databaseTeamAccessState.action),
-	                        onClick: (event) => {
-	                          event.stopPropagation();
-	                          if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) onWorkspaceTeamsRequest({});
-	                          setDatabaseTeamMenuId((current) => current === "add-teams" ? "" : "add-teams");
-	                        },
-	                      },
-	                        React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                        React.createElement("span", null, "Add Teams")
-	                      ),
-	                      renderAddDatabaseTeamsMenu()
-	                    )
-	                  : null
-	              )
-	            ),
-	            React.createElement("div", {
-	                  className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table playground-database-access-table",
+	              },
+	              selection: {
+	                enabled: true,
+	                value: selectedDatabaseAccessTeamIds,
+	                isRowSelectable: (team) => !team.locked,
+	                ariaLabel: (team) => team.locked ? "All Agents is always included" : "Select " + team.name,
+	                onChange: ({ selectedIds }) => setSelectedDatabaseAccessTeamIds(new Set(selectedIds)),
+	              },
+	              toolbar: {
+	                search: {
+	                  value: databaseAccessSearchQuery,
+	                  onChange: setDatabaseAccessSearchQuery,
+	                  placeholder: "Search teams",
+	                  manual: true,
 	                },
-	                React.createElement("div", { className: "playground-project-overview-thread-list" },
-	                  React.createElement("div", {
-	                      className: "playground-project-overview-threads-table-header playground-agents-overview-column-header playground-database-access-column-header",
-	                    },
-	                    React.createElement("div", null,
-	                      React.createElement("button", {
-	                        type: "button",
-	                        className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox"
-	                          + (allVisibleDatabasePermissionTeamsSelected ? " is-selected" : "")
-	                          + (hasPartialVisibleDatabasePermissionTeamSelection ? " is-partial" : ""),
-	                        role: "checkbox",
-	                        "aria-checked": allVisibleDatabasePermissionTeamsSelected
-	                          ? "true"
-	                          : (hasPartialVisibleDatabasePermissionTeamSelection ? "mixed" : "false"),
-	                        "aria-label": allVisibleDatabasePermissionTeamsSelected ? "Deselect all teams" : "Select all teams",
-	                        disabled: visibleDatabasePermissionTeamIds.length === 0,
-	                        onClick: (event) => {
-	                          event.preventDefault();
-	                          event.stopPropagation();
-	                          toggleVisibleDatabaseAccessTeamSelection();
-	                        },
-	                      })
-	                    ),
-	                    React.createElement("div", null, renderDatabaseAccessSortableHeader("Team", "name")),
-	                    React.createElement("div", null, renderDatabaseAccessSortableHeader("Policy", "policy")),
-	                    React.createElement("div", null, renderDatabaseAccessSortableHeader("Created", "created")),
-	                    React.createElement("div", null)
-	                  ),
-	                  visibleDatabasePermissionTeams.length
-	                    ? visibleDatabasePermissionTeams.map((team) => {
-	                    const menuOpen = databaseAccessActionMenuState?.teams?.length === 1
-	                      && String(databaseAccessActionMenuState.teams[0]?.id || "") === String(team.id || "");
-	                    const isSelected = selectedDatabaseAccessTeamIds.has(String(team.id || ""));
-	                    return React.createElement("div", {
-	                        key: team.id,
-	                        tabIndex: 0,
-	                        role: "button",
-	                        className: "playground-project-overview-threads-table-row"
-	                          + (menuOpen ? " is-menu-open" : "")
-	                          + (isSelected ? " is-selected" : ""),
-	                        "aria-label": "Open " + team.name + " database permissions",
-	                        onContextMenu: (event) => {
-	                          if (isSelected && selectedRemovableDatabaseTeams.length > 1) {
-	                            openDatabaseAccessActionMenu(event, selectedRemovableDatabaseTeams, { context: true });
-	                            return;
-	                          }
-	                          openDatabaseAccessActionMenu(event, team, { context: true });
-	                        },
-	                        onClick: () => {
-	                          setDatabaseTeamMenuId("");
-	                          closeDatabaseAccessActionMenu({ animate: false });
-	                          setDatabasePermissionRoleId("member");
-	                          setDatabasePermissionTeamId(team.id);
-	                        },
-	                        onKeyDown: (event) => {
-	                          if (event.key === "Enter" || event.key === " ") {
-	                            event.preventDefault();
-	                            setDatabasePermissionRoleId("member");
-	                            setDatabasePermissionTeamId(team.id);
-	                          }
-	                        },
+	                filters: [{
+	                  id: "database-access-kind",
+	                  label: "Filter",
+	                  value: databaseAccessFilter,
+	                  onChange: setDatabaseAccessFilter,
+	                  options: databaseAccessFilterOptions,
+	                }],
+	                showSort: true,
+	                trailing: databaseAddTeamsControl,
+	              },
+	              onRowActivate: (team) => {
+	                setDatabaseTeamMenuId("");
+	                setDatabasePermissionRoleId("member");
+	                setDatabasePermissionTeamId(team.id);
+	              },
+	              getRowActions: (team) => team.locked
+	                ? []
+	                : [
+	                    ...(typeof onOpenTeamPage === "function" ? [{
+	                      id: "view-team",
+	                      label: "View team",
+	                      icon: ExternalLink,
+	                      onSelect: () => onOpenTeamPage(team.id),
+	                    }] : []),
+	                    {
+	                      id: "remove",
+	                      label: "Remove team access",
+	                      icon: Trash2,
+	                      danger: true,
+	                      disabled: databaseSaveState.isSaving || Boolean(databaseTeamAccessState.action),
+	                      onSelect: ({ rows }) => {
+	                        const targets = rows.filter((row) => !row.locked);
+	                        if (targets.length > 1) void handleRemoveDatabaseTeamAccessBulk(targets);
+	                        else if (targets[0]) void handleRemoveDatabaseTeamAccess(targets[0]);
 	                      },
-	                      React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
-	                        React.createElement("button", {
-	                          type: "button",
-	                          className: "playground-agents-overview-select-checkbox" + (isSelected ? " is-selected" : ""),
-	                          role: "checkbox",
-	                          "aria-checked": isSelected ? "true" : "false",
-	                          "aria-label": "Select " + team.name,
-	                          disabled: team.locked,
-	                          onClick: (event) => {
-	                            event.preventDefault();
-	                            event.stopPropagation();
-	                            toggleDatabaseAccessTeamSelection(team.id);
-	                          },
-	                          onKeyDown: (event) => event.stopPropagation(),
-	                        })
-	                      ),
-	                      React.createElement("div", { className: "playground-project-overview-thread-cell is-name" },
-	                        React.createElement("div", { className: "playground-agents-overview-name-cell" },
-	                          React.createElement("div", { className: "playground-agents-overview-name-copy" },
-	                            React.createElement("div", { className: "playground-agents-overview-name-title" }, team.name)
-	                          )
-	                        )
-	                      ),
-	                      React.createElement("div", { className: "playground-project-overview-thread-cell is-model" },
-	                        React.createElement("div", { className: "playground-agents-overview-table-value" }, team.permission)
-	                      ),
-	                      React.createElement("div", { className: "playground-project-overview-thread-cell is-date" },
-	                        React.createElement("div", { className: "playground-agents-overview-table-value" }, team.locked ? "Default" : (formatDatabaseTeamCreatedDate(team.createdAt) || "—"))
-	                      ),
-	                      React.createElement("div", { className: "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell" },
-	                          React.createElement("button", {
-	                            type: "button",
-	                            className: "playground-overview-table-action-button" + (menuOpen ? " is-open" : ""),
-	                            onClick: (event) => openDatabaseAccessActionMenu(
-	                              event,
-	                              isSelected && selectedRemovableDatabaseTeams.length > 1 ? selectedRemovableDatabaseTeams : team
-	                            ),
-	                            onContextMenu: (event) => openDatabaseAccessActionMenu(
-	                              event,
-	                              isSelected && selectedRemovableDatabaseTeams.length > 1 ? selectedRemovableDatabaseTeams : team,
-	                              { context: true }
-	                            ),
-	                            onKeyDown: (event) => event.stopPropagation(),
-	                            "aria-label": "Team actions for " + team.name,
-	                            "aria-expanded": menuOpen ? "true" : "false",
-	                          }, React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 }))
-	                      )
-	                    );
-	                  })
-	                    : React.createElement("div", { className: "playground-plugins-empty playground-database-access-empty" },
-	                        normalizedDatabaseAccessSearchQuery || databaseAccessFilter !== "all"
-	                          ? "No matching team access found."
-	                          : "No team access configured."
-	                      )
-	                )
-	            ),
-	            databaseTeamAccessState.error
-	              ? React.createElement("div", { className: "playground-environments-error" }, databaseTeamAccessState.error)
-	              : null
+	                    },
+	                  ],
+	              error: databaseTeamAccessState.error || null,
+	              emptyState: normalizedDatabaseAccessSearchQuery || databaseAccessFilter !== "all"
+	                ? "No matching team access found."
+	                : "No team access configured.",
+	              noResultsState: "No matching team access found.",
+	            })
 	          );
 	          const databaseSettingsOverviewContent = React.createElement("section", {
 	              className: "playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-teams-section playground-project-settings-root playground-database-settings-root",
@@ -115030,10 +114345,9 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	                React.createElement("h2", { className: "playground-project-teams-table-title playground-database-access-section-title" }, "Manage Database Access"),
 	                databaseOwnerSelectorRow
 	              ),
-	              databaseTeamAccessSection
+	              databaseTeamAccessPlatformSection
 	            ),
 	            databaseDangerSection,
-	            databaseAccessActionMenu,
 	            databaseOwnerTransferModal
 	          );
 	          const selectedDatabaseRoleDefinition = getPlaygroundTeamRoleDefinition(databasePermissionRoleId);
@@ -119373,6 +118687,21 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             const normalizedServerId = String(activeServer?.id || "").trim();
             const normalizedKind = canonicalizePlaygroundServerKind(activeServer?.kind);
             const isSourceDeployableResource = ["function", "web_app"].includes(normalizedKind);
+            const isManagedDetailResource = ["function", "web_app", "auth", "agent_runtime", "secrets", "payments"].includes(normalizedKind);
+            const serverResourceLabel = formatPlaygroundServerKindLabel(normalizedKind);
+            const serverDocumentationPath = normalizedKind === "auth"
+              ? "/developers/libraries/authentication"
+              : normalizedKind === "agent_runtime"
+                ? "/developers/libraries/agent-runtimes"
+                : normalizedKind === "secrets"
+                  ? "/developers/libraries/secrets"
+                  : normalizedKind === "payments"
+                    ? "/developers/libraries/payments"
+                    : normalizedKind === "function"
+                      ? "/developers/libraries/functions"
+                      : normalizedKind === "web_app"
+                        ? "/developers/libraries/web-apps"
+                        : "";
             if (!normalizedServerId || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
               return React.createElement("button", {
                 type: "button",
@@ -119380,16 +118709,16 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 title: "Server actions",
                 "aria-label": "Server actions",
                 disabled: true,
-              }, React.createElement(isSourceDeployableResource ? Ellipsis : Settings2, { width: 16, height: 16, strokeWidth: 1.8 }));
+              }, React.createElement(isManagedDetailResource ? Ellipsis : Settings2, { width: 16, height: 16, strokeWidth: 1.8 }));
             }
             const isAuthResource = normalizedKind === "auth";
             const isAgentRuntimeResource = normalizedKind === "agent_runtime";
             const isVoiceAgentResource = normalizedKind === "voice_agent";
             const isSecretsResource = normalizedKind === "secrets";
             const isPaymentsResource = normalizedKind === "payments";
-            return React.createElement("div", {
+              return React.createElement("div", {
                 className: "playground-files-toolbar-anchor"
-                  + (isSourceDeployableResource ? " playground-thread-nav-popup-shell" : "")
+                  + (isManagedDetailResource ? " playground-thread-nav-popup-shell" : "")
                   + " playground-tasks-toolbar-popup-shell",
                 ref: serverActionsPopoverRef,
               },
@@ -119402,21 +118731,21 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 "aria-expanded": serverActionsPopoverOpen ? "true" : "false",
                 onClick: () => setServerActionsPopoverOpen((current) => !current),
                 disabled: serverSaveState.isSaving || serverDeploymentState.isDeploying,
-              }, React.createElement(isSourceDeployableResource ? Ellipsis : Settings2, { width: 16, height: 16, strokeWidth: 1.8 })),
+              }, React.createElement(isManagedDetailResource ? Ellipsis : Settings2, { width: 16, height: 16, strokeWidth: 1.8 })),
               serverActionsPopoverOpen
                 ? React.createElement("div", {
                     className: "tb-popup-menu playground-tasks-toolbar-popup-menu"
-                      + (isSourceDeployableResource ? " playground-thread-nav-popup-menu" : "")
+                      + (isManagedDetailResource ? " playground-thread-nav-popup-menu" : "")
                       + " playground-tasks-toolbar-popup-menu-animate-down-in",
                     role: "menu",
                     onClick: (event) => event.stopPropagation(),
                   },
-                    isSourceDeployableResource
+                    isManagedDetailResource
                       ? React.createElement(React.Fragment, null,
                           React.createElement("div", { className: "tb-popup-row playground-thread-nav-popup-static-row" },
                             React.createElement("span", { className: "tb-popup-check-slot", "aria-hidden": "true" }),
                             React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, (normalizedKind === "function" ? "Function" : "Web App") + " ID"),
+                              React.createElement("span", null, serverResourceLabel + " ID"),
                               React.createElement("span", {
                                 className: "playground-thread-nav-popup-thread-id",
                                 title: normalizedServerId,
@@ -119424,6 +118753,22 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                             )
                           ),
                           React.createElement("div", { className: "playground-thread-nav-popup-divider", "aria-hidden": "true" })
+                        )
+                      : null,
+                    serverDocumentationPath
+                      ? React.createElement("button", {
+                          type: "button",
+                          role: "menuitem",
+                          className: "tb-popup-row",
+                          onClick: () => {
+                            setServerActionsPopoverOpen(false);
+                            window.open(${JSON.stringify(aiosOrigin)} + serverDocumentationPath, "_blank", "noopener,noreferrer");
+                          },
+                        },
+                          React.createElement(BookOpen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                            React.createElement("span", null, "Documentation")
+                          )
                         )
                       : null,
                     React.createElement("button", {
@@ -119457,7 +118802,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                     React.createElement("button", {
                       type: "button",
                       role: "menuitem",
-                      className: "tb-popup-row" + (isSourceDeployableResource ? " playground-tasks-detail-menu-item-danger" : ""),
+                      className: "tb-popup-row" + (isManagedDetailResource ? " playground-tasks-detail-menu-item-danger" : ""),
                       onClick: () => {
                         setServerActionsPopoverOpen(false);
                         void handleDeleteServer(normalizedServerId);
@@ -119817,34 +119162,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             : [];
           const selectedVisibleOverviewComputerIds = visibleOverviewComputerIds.filter((computerId) => selectedOverviewComputerIds.has(computerId));
           const allVisibleOverviewComputersSelected = visibleOverviewComputerIds.length > 0 && selectedVisibleOverviewComputerIds.length === visibleOverviewComputerIds.length;
-          const hasPartialVisibleOverviewComputerSelection = selectedVisibleOverviewComputerIds.length > 0 && !allVisibleOverviewComputersSelected;
-          const toggleOverviewComputerSelection = (computerId) => {
-            const normalizedComputerId = String(computerId || "").trim();
-            if (!normalizedComputerId) return;
-            setSelectedOverviewComputerIds((current) => {
-              const next = new Set(current || []);
-              if (next.has(normalizedComputerId)) {
-                next.delete(normalizedComputerId);
-              } else {
-                next.add(normalizedComputerId);
-              }
-              return next;
-            });
-          };
-          const toggleVisibleOverviewComputerSelection = () => {
-            if (visibleOverviewComputerIds.length === 0) {
-              return;
-            }
-            setSelectedOverviewComputerIds((current) => {
-              const next = new Set(current || []);
-              if (allVisibleOverviewComputersSelected) {
-                visibleOverviewComputerIds.forEach((computerId) => next.delete(computerId));
-              } else {
-                visibleOverviewComputerIds.forEach((computerId) => next.add(computerId));
-              }
-              return next;
-            });
-          };
           const getOverviewServerResourceSelectionId = (item) => {
             const resourceId = String(item?.id || "").trim();
             if (!resourceId) {
@@ -119857,51 +119174,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             : [];
           const selectedVisibleOverviewServerResourceIds = visibleOverviewServerResourceIds.filter((resourceId) => selectedOverviewServerResourceIds.has(resourceId));
           const allVisibleOverviewServerResourcesSelected = visibleOverviewServerResourceIds.length > 0 && selectedVisibleOverviewServerResourceIds.length === visibleOverviewServerResourceIds.length;
-          const hasPartialVisibleOverviewServerResourceSelection = selectedVisibleOverviewServerResourceIds.length > 0 && !allVisibleOverviewServerResourcesSelected;
-          const toggleOverviewServerResourceSelection = (resourceSelectionId) => {
-            const normalizedResourceSelectionId = String(resourceSelectionId || "").trim();
-            if (!normalizedResourceSelectionId) return;
-            setSelectedOverviewServerResourceIds((current) => {
-              const next = new Set(current || []);
-              if (next.has(normalizedResourceSelectionId)) {
-                next.delete(normalizedResourceSelectionId);
-              } else {
-                next.add(normalizedResourceSelectionId);
-              }
-              return next;
-            });
-          };
-          const toggleVisibleOverviewServerResourceSelection = () => {
-            if (visibleOverviewServerResourceIds.length === 0) {
-              return;
-            }
-            setSelectedOverviewServerResourceIds((current) => {
-              const next = new Set(current || []);
-              if (allVisibleOverviewServerResourcesSelected) {
-                visibleOverviewServerResourceIds.forEach((resourceId) => next.delete(resourceId));
-              } else {
-                visibleOverviewServerResourceIds.forEach((resourceId) => next.add(resourceId));
-              }
-              return next;
-            });
-          };
           const overviewTitle = isServersMode ? (embeddedServerKindPluralLabel || "Servers") : "Computers";
-          const overviewTableColumns = isServersMode
-            ? [
-                { id: "name", label: "Name", width: "38%" },
-                { id: "type", label: "Type", width: "160px" },
-                { id: "published", label: "Published", width: "120px" },
-                { id: "created", label: "Created", width: "140px", align: "right" },
-                { id: "last-used", label: "Last used", width: "140px", align: "right" },
-                { id: "actions", label: "", width: "64px", align: "action" },
-              ]
-            : [
-                { id: "name", label: "Name", width: "48%" },
-                { id: "size", label: "Size", width: "160px" },
-                { id: "created", label: "Created", width: "150px", align: "right" },
-                { id: "last-used", label: "Last used", width: "150px", align: "right" },
-                { id: "actions", label: "", width: "64px", align: "action" },
-              ];
           const renderOverviewResourceIcon = (item) => {
             if (!isServersMode) {
               return React.createElement(HardDrive, { width: 17, height: 17, strokeWidth: 1.8 });
@@ -120003,6 +119276,85 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           const renderVoiceAgentsOverviewSection = () => {
             const hasVoiceAgentRows = filteredVoiceAgentRecords.length > 0;
             const shouldShowVoiceLoading = voiceAgentsLoading && !hasVoiceAgentRows;
+            const getVoiceAgentRowContext = (record) => {
+              const agent = record.agent || {};
+              const agentId = String(agent.id || "").trim();
+              const draft = voiceAgentDraftsById[agentId] || buildPlaygroundVoiceAgentDraft(record);
+              const phoneRecord = record.phoneNumber || null;
+              const hasPhoneNumber = Boolean(String(phoneRecord?.phoneNumber || "").trim());
+              return {
+                agent,
+                agentId,
+                draft,
+                phoneRecord,
+                hasPhoneNumber,
+                phoneStatus: String(phoneRecord?.status || (hasPhoneNumber ? "active" : "")).trim(),
+                isSaving: voiceAgentsState.savingAgentId === agentId,
+                isProvisioning: voiceAgentsState.provisioningAgentId === agentId,
+                isDisabling: voiceAgentsState.disablingAgentId === agentId,
+                isTesting: voiceAgentsState.testingAgentId === agentId,
+              };
+            };
+            const renderVoiceAgentExpandedControls = (record) => {
+              const { agentId, draft, hasPhoneNumber, isProvisioning, isDisabling } = getVoiceAgentRowContext(record);
+              return React.createElement("div", { className: "playground-settings-detail-stack", style: { gap: 10 } },
+                React.createElement("div", { style: { display: "grid", gridTemplateColumns: "minmax(0, 1fr) 180px", gap: 12, alignItems: "start" } },
+                  React.createElement("label", { className: "playground-settings-field" },
+                    React.createElement("span", { className: "playground-settings-label" }, "Voice instructions"),
+                    React.createElement("textarea", {
+                      className: "playground-settings-textarea",
+                      rows: 3,
+                      value: draft.voiceInstructions,
+                      onChange: (event) => updateVoiceAgentDraft(agentId, { voiceInstructions: event.target.value }),
+                      placeholder: "Use the agent instructions",
+                    })
+                  ),
+                  React.createElement("label", { className: "playground-settings-field" },
+                    React.createElement("span", { className: "playground-settings-label" }, "Language hint"),
+                    React.createElement("input", {
+                      type: "text",
+                      className: "playground-settings-input",
+                      value: draft.voiceLanguageHint,
+                      onChange: (event) => updateVoiceAgentDraft(agentId, { voiceLanguageHint: event.target.value }),
+                      placeholder: "en",
+                    })
+                  )
+                ),
+                React.createElement("div", { className: "playground-auth-users-toolbar-actions" },
+                  hasPhoneNumber
+                    ? React.createElement("button", {
+                        type: "button",
+                        className: "playground-server-detail-docs-tab",
+                        onClick: () => void disableVoiceAgentPhoneNumber(agentId),
+                        disabled: isDisabling,
+                      },
+                        isDisabling
+                          ? React.createElement(Loader2, { className: "playground-server-detail-docs-tab-icon playground-files-state-loader", width: 12, height: 12, strokeWidth: 1.8 })
+                          : React.createElement(Trash2, { className: "playground-server-detail-docs-tab-icon", width: 12, height: 12, strokeWidth: 1.8 }),
+                        React.createElement("span", null, isDisabling ? "Disabling..." : "Disable Number")
+                      )
+                    : React.createElement("button", {
+                        type: "button",
+                        className: "playground-server-detail-docs-tab",
+                        onClick: async () => {
+                          const savedRecord = await saveVoiceAgentConfig(agentId);
+                          if (savedRecord) await provisionVoiceAgentPhoneNumber(agentId);
+                        },
+                        disabled: isProvisioning || !isPlaygroundVoiceAgentPhoneEnabled(draft.voiceMode),
+                        title: isPlaygroundVoiceAgentPhoneEnabled(draft.voiceMode) ? "Provision phone number" : "Enable phone voice mode first",
+                      },
+                        isProvisioning
+                          ? React.createElement(Loader2, { className: "playground-server-detail-docs-tab-icon playground-files-state-loader", width: 12, height: 12, strokeWidth: 1.8 })
+                          : React.createElement(Webhook, { className: "playground-server-detail-docs-tab-icon", width: 12, height: 12, strokeWidth: 1.8 }),
+                        React.createElement("span", null, isProvisioning ? "Provisioning..." : "Provision Number")
+                      ),
+                  React.createElement("span", { className: "playground-agents-model-access" + (normalizePlaygroundVoiceAgentMode(draft.voiceMode) === "off" ? " is-locked" : " is-available") },
+                    getVoiceAgentModeLabel(draft.voiceMode)
+                  )
+                ),
+                renderVoiceAgentSessionResult(agentId)
+              );
+            };
             return React.createElement("section", {
                 className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-overview-list-section playground-team-grid-table-section playground-resources-overview-section playground-develop-resource-overview-table-section is-servers-overview is-develop-server-kind-list",
               },
@@ -120040,510 +119392,179 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
               voiceAgentsState.message
                 ? React.createElement("div", { className: "playground-environments-success playground-environments-editor-notice" }, voiceAgentsState.message)
                 : null,
-              shouldShowVoiceLoading
-                ? React.createElement("div", { className: "playground-plugins-empty playground-resources-overview-loading" },
-                    React.createElement(Loader2, { className: "playground-files-state-loader", width: 16, height: 16, strokeWidth: 1.75 }),
-                    React.createElement("span", null, "Loading voice agents")
-                  )
-                : hasVoiceAgentRows
-                  ? React.createElement("div", { className: "playground-auth-users-table-shell" },
-                      React.createElement("table", { className: "playground-auth-users-table" },
-                        React.createElement("colgroup", null,
-                          React.createElement("col", { style: { width: "22%" } }),
-                          React.createElement("col", { style: { width: "130px" } }),
-                          React.createElement("col", { style: { width: "150px" } }),
-                          React.createElement("col", { style: { width: "210px" } }),
-                          React.createElement("col", { style: { width: "190px" } }),
-                          React.createElement("col", { style: { width: "130px" } })
+              React.createElement(PlatformDataTable, {
+                rows: filteredVoiceAgentRecords,
+                getRowId: (record) => String(record?.agent?.id || ""),
+                ariaLabel: "Voice agent configuration",
+                className: "playground-voice-agents-platform-table",
+                surface: "plain",
+                sticky: false,
+                loading: shouldShowVoiceLoading,
+                error: voiceAgentsState.error || null,
+                emptyState: normalizedResourcesSearchQuery
+                  ? "No matching voice agents found."
+                  : "No agents are available for voice configuration.",
+                columns: [
+                  {
+                    id: "agent",
+                    header: "Agent",
+                    accessor: (record) => record?.agent?.name || "Untitled Agent",
+                    width: "minmax(190px, 1.5fr)",
+                    cell: ({ row: record }) => {
+                      const { agent } = getVoiceAgentRowContext(record);
+                      return React.createElement("div", { className: "playground-resources-overview-name-cell" },
+                        React.createElement("span", { className: "playground-resources-overview-table-icon", "aria-hidden": "true" },
+                          React.createElement(Mic, { width: 17, height: 17, strokeWidth: 1.8 })
                         ),
-                        React.createElement("thead", null,
-                          React.createElement("tr", null,
-                            React.createElement("th", null, "Agent"),
-                            React.createElement("th", null, "Mode"),
-                            React.createElement("th", null, "Voice"),
-                            React.createElement("th", null, "Model"),
-                            React.createElement("th", null, "Phone"),
-                            React.createElement("th", { className: "is-actions" }, "")
-                          )
-                        ),
-                        React.createElement("tbody", null,
-                          filteredVoiceAgentRecords.map((record) => {
-                            const agent = record.agent || {};
-                            const agentId = String(agent.id || "").trim();
-                            const draft = voiceAgentDraftsById[agentId] || buildPlaygroundVoiceAgentDraft(record);
-                            const phoneRecord = record.phoneNumber || null;
-                            const isSaving = voiceAgentsState.savingAgentId === agentId;
-                            const isProvisioning = voiceAgentsState.provisioningAgentId === agentId;
-                            const isDisabling = voiceAgentsState.disablingAgentId === agentId;
-                            const isTesting = voiceAgentsState.testingAgentId === agentId;
-                            const hasPhoneNumber = Boolean(String(phoneRecord?.phoneNumber || "").trim());
-                            const phoneStatus = String(phoneRecord?.status || (hasPhoneNumber ? "active" : "")).trim();
-                            return React.createElement(React.Fragment, { key: agentId },
-                              React.createElement("tr", null,
-                                React.createElement("td", { className: "playground-auth-users-cell is-identifier" },
-                                  React.createElement("div", { className: "playground-resources-overview-name-cell" },
-                                    React.createElement("span", { className: "playground-resources-overview-table-icon", "aria-hidden": "true" },
-                                      React.createElement(Mic, { width: 17, height: 17, strokeWidth: 1.8 })
-                                    ),
-                                    React.createElement("div", { className: "playground-resources-overview-name-copy" },
-                                      React.createElement("div", { className: "playground-resources-overview-name-title" }, agent.name || "Untitled Agent"),
-                                      React.createElement("div", {
-                                        className: "playground-resources-overview-name-description",
-                                        title: agent.description || agent.id || "",
-                                      }, agent.description || agent.id || "Agent")
-                                    )
-                                  )
-                                ),
-                                React.createElement("td", { className: "playground-auth-users-cell" },
-                                  React.createElement("select", {
-                                    className: "playground-settings-select",
-                                    value: normalizePlaygroundVoiceAgentMode(draft.voiceMode),
-                                    onChange: (event) => updateVoiceAgentDraft(agentId, { voiceMode: event.target.value }),
-                                    "aria-label": "Voice mode for " + (agent.name || agentId),
-                                  },
-                                    PLAYGROUND_VOICE_AGENT_MODE_OPTIONS.map((option) =>
-                                      React.createElement("option", { key: option.id, value: option.id }, option.label)
-                                    )
-                                  )
-                                ),
-                                React.createElement("td", { className: "playground-auth-users-cell" },
-                                  React.createElement("input", {
-                                    type: "text",
-                                    className: "playground-settings-input",
-                                    value: draft.voiceId,
-                                    onChange: (event) => updateVoiceAgentDraft(agentId, { voiceId: event.target.value }),
-                                    placeholder: "eve",
-                                    "aria-label": "Voice id for " + (agent.name || agentId),
-                                  })
-                                ),
-                                React.createElement("td", { className: "playground-auth-users-cell" },
-                                  React.createElement("select", {
-                                    className: "playground-settings-select",
-                                    value: draft.voiceModel,
-                                    onChange: (event) => updateVoiceAgentDraft(agentId, { voiceModel: event.target.value }),
-                                    "aria-label": "Voice model for " + (agent.name || agentId),
-                                  },
-                                    PLAYGROUND_VOICE_AGENT_MODEL_OPTIONS.map((option) =>
-                                      React.createElement("option", { key: option.id, value: option.id }, option.label)
-                                    )
-                                  )
-                                ),
-                                React.createElement("td", { className: "playground-auth-users-cell" },
-                                  hasPhoneNumber
-                                    ? React.createElement("div", { className: "playground-agents-overview-model-copy" },
-                                        React.createElement("div", { className: "playground-agents-overview-name-title" }, phoneRecord.phoneNumber),
-                                        React.createElement("div", { className: "playground-agents-overview-name-description" }, phoneStatus || "active")
-                                      )
-                                    : React.createElement("span", { className: "playground-agents-model-access is-locked" }, "No number")
-                                ),
-                                React.createElement("td", { className: "playground-auth-users-cell is-actions" },
-                                  React.createElement("div", { className: "playground-auth-users-actions" },
-                                    React.createElement("button", {
-                                      type: "button",
-                                      className: "playground-auth-users-refresh-button",
-                                      onClick: () => void saveVoiceAgentConfig(agentId),
-                                      disabled: isSaving,
-                                      title: "Save voice configuration",
-                                      "aria-label": "Save voice configuration for " + (agent.name || agentId),
-                                    }, isSaving
-                                      ? React.createElement(Loader2, { className: "playground-files-state-loader", width: 14, height: 14, strokeWidth: 1.8 })
-                                      : React.createElement(Save, { width: 14, height: 14, strokeWidth: 1.8 })
-                                    ),
-                                    React.createElement("button", {
-                                      type: "button",
-                                      className: "playground-auth-users-refresh-button",
-                                      onClick: async () => {
-                                        const savedRecord = await saveVoiceAgentConfig(agentId);
-                                        if (savedRecord) {
-                                          await createVoiceAgentTestSession(agentId);
-                                        }
-                                      },
-                                      disabled: isTesting || !isPlaygroundVoiceAgentWebEnabled(draft.voiceMode),
-                                      title: isPlaygroundVoiceAgentWebEnabled(draft.voiceMode) ? "Create web voice session" : "Enable web voice mode first",
-                                      "aria-label": "Create web voice session for " + (agent.name || agentId),
-                                    }, isTesting
-                                      ? React.createElement(Loader2, { className: "playground-files-state-loader", width: 14, height: 14, strokeWidth: 1.8 })
-                                      : React.createElement(MessageSquare, { width: 14, height: 14, strokeWidth: 1.8 })
-                                    )
-                                  )
-                                )
-                              ),
-                              React.createElement("tr", null,
-                                React.createElement("td", { className: "playground-auth-users-cell" }),
-                                React.createElement("td", { className: "playground-auth-users-cell", colSpan: 5 },
-                                  React.createElement("div", { className: "playground-settings-detail-stack", style: { gap: 10 } },
-                                    React.createElement("div", { style: { display: "grid", gridTemplateColumns: "minmax(0, 1fr) 180px", gap: 12, alignItems: "start" } },
-                                      React.createElement("label", { className: "playground-settings-field" },
-                                        React.createElement("span", { className: "playground-settings-label" }, "Voice instructions"),
-                                        React.createElement("textarea", {
-                                          className: "playground-settings-textarea",
-                                          rows: 3,
-                                          value: draft.voiceInstructions,
-                                          onChange: (event) => updateVoiceAgentDraft(agentId, { voiceInstructions: event.target.value }),
-                                          placeholder: "Use the agent instructions",
-                                        })
-                                      ),
-                                      React.createElement("label", { className: "playground-settings-field" },
-                                        React.createElement("span", { className: "playground-settings-label" }, "Language hint"),
-                                        React.createElement("input", {
-                                          type: "text",
-                                          className: "playground-settings-input",
-                                          value: draft.voiceLanguageHint,
-                                          onChange: (event) => updateVoiceAgentDraft(agentId, { voiceLanguageHint: event.target.value }),
-                                          placeholder: "en",
-                                        })
-                                      )
-                                    ),
-                                    React.createElement("div", { className: "playground-auth-users-toolbar-actions" },
-                                      hasPhoneNumber
-                                        ? React.createElement("button", {
-                                            type: "button",
-                                            className: "playground-server-detail-docs-tab",
-                                            onClick: () => void disableVoiceAgentPhoneNumber(agentId),
-                                            disabled: isDisabling,
-                                          },
-                                            isDisabling
-                                              ? React.createElement(Loader2, { className: "playground-server-detail-docs-tab-icon playground-files-state-loader", width: 12, height: 12, strokeWidth: 1.8 })
-                                              : React.createElement(Trash2, { className: "playground-server-detail-docs-tab-icon", width: 12, height: 12, strokeWidth: 1.8 }),
-                                            React.createElement("span", null, isDisabling ? "Disabling..." : "Disable Number")
-                                          )
-                                        : React.createElement("button", {
-                                            type: "button",
-                                            className: "playground-server-detail-docs-tab",
-                                            onClick: async () => {
-                                              const savedRecord = await saveVoiceAgentConfig(agentId);
-                                              if (savedRecord) {
-                                                await provisionVoiceAgentPhoneNumber(agentId);
-                                              }
-                                            },
-                                            disabled: isProvisioning || !isPlaygroundVoiceAgentPhoneEnabled(draft.voiceMode),
-                                            title: isPlaygroundVoiceAgentPhoneEnabled(draft.voiceMode) ? "Provision phone number" : "Enable phone voice mode first",
-                                          },
-                                            isProvisioning
-                                              ? React.createElement(Loader2, { className: "playground-server-detail-docs-tab-icon playground-files-state-loader", width: 12, height: 12, strokeWidth: 1.8 })
-                                              : React.createElement(Webhook, { className: "playground-server-detail-docs-tab-icon", width: 12, height: 12, strokeWidth: 1.8 }),
-                                            React.createElement("span", null, isProvisioning ? "Provisioning..." : "Provision Number")
-                                          ),
-                                      React.createElement("span", { className: "playground-agents-model-access" + (normalizePlaygroundVoiceAgentMode(draft.voiceMode) === "off" ? " is-locked" : " is-available") },
-                                        getVoiceAgentModeLabel(draft.voiceMode)
-                                      )
-                                    ),
-                                    renderVoiceAgentSessionResult(agentId)
-                                  )
-                                )
-                              )
-                            );
-                          })
+                        React.createElement("div", { className: "playground-resources-overview-name-copy" },
+                          React.createElement("div", { className: "playground-resources-overview-name-title" }, agent.name || "Untitled Agent"),
+                          React.createElement("div", {
+                            className: "playground-resources-overview-name-description",
+                            title: agent.description || agent.id || "",
+                          }, agent.description || agent.id || "Agent")
                         )
-                      )
-                    )
-                  : React.createElement("div", { className: "playground-plugins-empty" },
-                      normalizedResourcesSearchQuery
-                        ? "No matching voice agents found."
-                        : "No agents are available for voice configuration."
-                    )
-            );
-          };
-          const renderOverviewResourceActionCell = (item, elementTag = "td", options = {}) => {
-            const normalizedOverviewComputerId = String(item?.id || "").trim();
-            const isMenuOpen = isServersMode
-              ? (
-                  serverResourceActionMenuState?.resourceId === item.id
-                  && serverResourceActionMenuState?.resourceType === (item.resourceType === "database" ? "database" : "server")
-                )
-              : (
-                  environmentListActionMenuState?.environmentId === item.id
-                  || (
-                    normalizedOverviewComputerId
-                    && environmentBulkActionMenuState
-                    && Array.isArray(environmentBulkActionMenuState.environmentIds)
-                    && environmentBulkActionMenuState.environmentIds.includes(normalizedOverviewComputerId)
-                  )
-                );
-            const Tag = elementTag || "td";
-            const className = Tag === "td"
-              ? "playground-overview-table-action-cell"
-              : "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell";
-            return React.createElement(Tag, { className },
-              React.createElement("button", {
-                type: "button",
-                className: "playground-overview-table-action-button" + (isMenuOpen ? " is-open" : ""),
-                onClick: (event) => {
-                  if (isServersMode) {
-                    openServerResourceActionMenu(event, item, options);
-                  } else if (normalizedOverviewComputerId && selectedOverviewComputerIds.has(normalizedOverviewComputerId) && selectedOverviewComputerIds.size > 1) {
-                    openEnvironmentBulkActionMenu(event, Array.from(selectedOverviewComputerIds || []), options);
-                  } else {
-                    openEnvironmentListActionMenu(event, item, options);
-                  }
-                },
-                onContextMenu: (event) => {
-                  if (isServersMode) {
-                    openServerResourceActionMenu(event, item, { context: true });
-                  } else if (normalizedOverviewComputerId && selectedOverviewComputerIds.has(normalizedOverviewComputerId) && selectedOverviewComputerIds.size > 1) {
-                    openEnvironmentBulkActionMenu(event, Array.from(selectedOverviewComputerIds || []), { context: true });
-                  } else {
-                    openEnvironmentListActionMenu(event, item, { context: true });
-                  }
-                },
-                onKeyDown: (event) => event.stopPropagation(),
-                "aria-label": (isServersMode ? "Server" : "Computer") + " actions",
-                "aria-expanded": isMenuOpen ? "true" : "false",
-              },
-                React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 })
-              )
-            );
-          };
-          const renderComputerOverviewGridRow = (item) => {
-            const profile = getPlaygroundEnvironmentComputeProfileConfig(item?.computeProfile);
-            const createdAt = getOverviewResourceCreatedAt(item);
-            const lastUsedAt = getOverviewResourceLastUsedAt(item);
-            const itemName = item?.name || "Untitled Computer";
-            const normalizedComputerId = String(item?.id || "").trim();
-            const isOverviewComputerSelected = selectedOverviewComputerIds.has(normalizedComputerId);
-            const openComputerOverviewActionMenu = (event, options = {}) => {
-              if (isOverviewComputerSelected && selectedOverviewComputerIds.size > 1) {
-                openEnvironmentBulkActionMenu(event, Array.from(selectedOverviewComputerIds || []), options);
-                return;
-              }
-              openEnvironmentListActionMenu(event, item, options);
-            };
-            return React.createElement("div", {
-                key: item.id,
-                tabIndex: 0,
-                role: "button",
-                className: "playground-project-overview-threads-table-row",
-                "aria-label": "Open " + itemName,
-                onClick: () => openOverviewResourceItem(item),
-                onContextMenu: (event) => openComputerOverviewActionMenu(event, { context: true }),
-                onKeyDown: (event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    openOverviewResourceItem(item);
-                  }
-                },
-              },
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-agents-overview-select-checkbox" + (isOverviewComputerSelected ? " is-selected" : ""),
-                  role: "checkbox",
-                  "aria-checked": isOverviewComputerSelected ? "true" : "false",
-                  "aria-label": "Select " + itemName,
-                  onClick: (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    toggleOverviewComputerSelection(normalizedComputerId);
+                      );
+                    },
                   },
-                  onKeyDown: (event) => event.stopPropagation(),
-                })
-              ),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-name" }, renderOverviewResourceNameCell(item)),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-profile" },
-                React.createElement("div", { className: "playground-agents-overview-table-value" }, profile?.label || "Standard")
-              ),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-date" }, renderOverviewDateCell(createdAt)),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-date" }, renderOverviewDateCell(lastUsedAt, "Never")),
-              renderOverviewResourceActionCell(item, "div", { openLeft: true })
-            );
-          };
-          const renderComputerOverviewRow = (item) => {
-            const profile = getPlaygroundEnvironmentComputeProfileConfig(item?.computeProfile);
-            const createdAt = getOverviewResourceCreatedAt(item);
-            const lastUsedAt = getOverviewResourceLastUsedAt(item);
-            const itemName = item?.name || "Untitled Computer";
-            const normalizedComputerId = String(item?.id || "").trim();
-            const isOverviewComputerSelected = selectedOverviewComputerIds.has(normalizedComputerId);
-            const openComputerOverviewActionMenu = (event, options = {}) => {
-              if (isOverviewComputerSelected && selectedOverviewComputerIds.size > 1) {
-                openEnvironmentBulkActionMenu(event, Array.from(selectedOverviewComputerIds || []), options);
-                return;
-              }
-              openEnvironmentListActionMenu(event, item, options);
-            };
-            return React.createElement("tr", {
-                key: item.id,
-                tabIndex: 0,
-                role: "button",
-                "aria-label": "Open " + itemName,
-                onClick: () => openOverviewResourceItem(item),
-                onContextMenu: (event) => openComputerOverviewActionMenu(event, { context: true }),
-                onKeyDown: (event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    openOverviewResourceItem(item);
-                  }
-                },
-              },
-              React.createElement("td", null, renderOverviewResourceNameCell(item)),
-              React.createElement("td", null,
-                React.createElement("div", { className: "playground-agents-overview-table-value" }, profile?.label || "Standard")
-              ),
-              React.createElement("td", null, renderOverviewDateCell(createdAt)),
-              React.createElement("td", null, renderOverviewDateCell(lastUsedAt, "Never")),
-              renderOverviewResourceActionCell(item)
-            );
-          };
-          const renderServerOverviewRow = (item) => {
-            const createdAt = getOverviewResourceCreatedAt(item);
-            const lastUsedAt = getOverviewResourceLastUsedAt(item);
-            const itemName = item?.name || "Untitled Server";
-            const isPublished = isOverviewResourcePublished(item);
-            return React.createElement("tr", {
-                key: item.id,
-                tabIndex: 0,
-                role: "button",
-                "aria-label": "Open " + itemName,
-                onClick: () => openOverviewResourceItem(item),
-                onPointerEnter: () => {
-                  if (item?.resourceType === "database") {
-                    prefetchDatabaseBootstrap(item.id);
-                  } else if (["function", "web_app"].includes(canonicalizePlaygroundServerKind(item?.kind))) {
-                    void loadServerAnalytics(item.id, { period: "day" });
-                  }
-                },
-                onFocus: () => {
-                  if (item?.resourceType === "database") {
-                    prefetchDatabaseBootstrap(item.id);
-                  } else if (["function", "web_app"].includes(canonicalizePlaygroundServerKind(item?.kind))) {
-                    void loadServerAnalytics(item.id, { period: "day" });
-                  }
-                },
-                onKeyDown: (event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    openOverviewResourceItem(item);
-                  }
-                },
-              },
-              React.createElement("td", null, renderOverviewResourceNameCell(item)),
-              React.createElement("td", null,
-                React.createElement("div", { className: "playground-agents-overview-table-value" }, getEmbeddedServerKindLabel(item))
-              ),
-              React.createElement("td", null,
-                React.createElement("div", { className: "playground-agents-overview-table-value playground-resources-overview-published" + (isPublished ? " is-yes" : "") }, isPublished ? "Yes" : "No")
-              ),
-              React.createElement("td", null, renderOverviewDateCell(createdAt)),
-              React.createElement("td", null, renderOverviewDateCell(lastUsedAt, "Never")),
-              renderOverviewResourceActionCell(item)
-            );
-          };
-          const renderServerOverviewGridRow = (item) => {
-            const createdAt = getOverviewResourceCreatedAt(item);
-            const lastUsedAt = getOverviewResourceLastUsedAt(item);
-            const itemName = item?.name || "Untitled Server";
-            const isPublished = isOverviewResourcePublished(item);
-            const resourceSelectionId = getOverviewServerResourceSelectionId(item);
-            const isOverviewServerResourceSelected = resourceSelectionId && selectedOverviewServerResourceIds.has(resourceSelectionId);
-            return React.createElement("div", {
-                key: resourceSelectionId || item.id,
-                tabIndex: 0,
-                role: "button",
-                className: "playground-project-overview-threads-table-row",
-                "aria-label": "Open " + itemName,
-                onClick: () => openOverviewResourceItem(item),
-                onContextMenu: (event) => openServerResourceActionMenu(event, item, { context: true }),
-                onKeyDown: (event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    openOverviewResourceItem(item);
-                  }
-                },
-              },
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-agents-overview-select-checkbox" + (isOverviewServerResourceSelected ? " is-selected" : ""),
-                  role: "checkbox",
-                  "aria-checked": isOverviewServerResourceSelected ? "true" : "false",
-                  "aria-label": "Select " + itemName,
-                  onClick: (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    toggleOverviewServerResourceSelection(resourceSelectionId);
+                  {
+                    id: "mode",
+                    header: "Mode",
+                    width: "minmax(110px, 0.85fr)",
+                    cell: ({ row: record }) => {
+                      const { agent, agentId, draft } = getVoiceAgentRowContext(record);
+                      return React.createElement("select", {
+                        className: "playground-settings-select",
+                        value: normalizePlaygroundVoiceAgentMode(draft.voiceMode),
+                        onChange: (event) => updateVoiceAgentDraft(agentId, { voiceMode: event.target.value }),
+                        "aria-label": "Voice mode for " + (agent.name || agentId),
+                      }, PLAYGROUND_VOICE_AGENT_MODE_OPTIONS.map((option) =>
+                        React.createElement("option", { key: option.id, value: option.id }, option.label)
+                      ));
+                    },
                   },
-                  onKeyDown: (event) => event.stopPropagation(),
-                })
-              ),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-name" }, renderOverviewResourceNameCell(item)),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-type" },
-                React.createElement("div", { className: "playground-agents-overview-table-value" }, getEmbeddedServerKindLabel(item))
-              ),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-status" },
-                React.createElement("div", { className: "playground-agents-overview-table-value playground-resources-overview-published" + (isPublished ? " is-yes" : "") }, isPublished ? "Yes" : "No")
-              ),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-date" }, renderOverviewDateCell(createdAt)),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-date" }, renderOverviewDateCell(lastUsedAt, "Never")),
-              renderOverviewResourceActionCell(item, "div", { openLeft: true })
+                  {
+                    id: "voice",
+                    header: "Voice",
+                    width: "minmax(120px, 0.95fr)",
+                    cell: ({ row: record }) => {
+                      const { agent, agentId, draft } = getVoiceAgentRowContext(record);
+                      return React.createElement("input", {
+                        type: "text",
+                        className: "playground-settings-input",
+                        value: draft.voiceId,
+                        onChange: (event) => updateVoiceAgentDraft(agentId, { voiceId: event.target.value }),
+                        placeholder: "eve",
+                        "aria-label": "Voice id for " + (agent.name || agentId),
+                      });
+                    },
+                  },
+                  {
+                    id: "model",
+                    header: "Model",
+                    width: "minmax(170px, 1.25fr)",
+                    hideBelow: 760,
+                    cell: ({ row: record }) => {
+                      const { agent, agentId, draft } = getVoiceAgentRowContext(record);
+                      return React.createElement("select", {
+                        className: "playground-settings-select",
+                        value: draft.voiceModel,
+                        onChange: (event) => updateVoiceAgentDraft(agentId, { voiceModel: event.target.value }),
+                        "aria-label": "Voice model for " + (agent.name || agentId),
+                      }, PLAYGROUND_VOICE_AGENT_MODEL_OPTIONS.map((option) =>
+                        React.createElement("option", { key: option.id, value: option.id }, option.label)
+                      ));
+                    },
+                  },
+                  {
+                    id: "phone",
+                    header: "Phone",
+                    width: "minmax(150px, 1.1fr)",
+                    hideBelow: 940,
+                    cell: ({ row: record }) => {
+                      const { phoneRecord, hasPhoneNumber, phoneStatus } = getVoiceAgentRowContext(record);
+                      return hasPhoneNumber
+                        ? React.createElement("div", { className: "playground-agents-overview-model-copy" },
+                            React.createElement("div", { className: "playground-agents-overview-name-title" }, phoneRecord.phoneNumber),
+                            React.createElement("div", { className: "playground-agents-overview-name-description" }, phoneStatus || "active")
+                          )
+                        : React.createElement("span", { className: "playground-agents-model-access is-locked" }, "No number");
+                    },
+                  },
+                ],
+                getRowActions: (record) => {
+                  const { agent, agentId, draft, isSaving, isTesting } = getVoiceAgentRowContext(record);
+                  return [
+                    {
+                      id: "save",
+                      label: isSaving ? "Saving..." : "Save configuration",
+                      icon: isSaving ? Loader2 : Save,
+                      disabled: isSaving,
+                      onSelect: () => saveVoiceAgentConfig(agentId),
+                    },
+                    {
+                      id: "test",
+                      label: isTesting ? "Creating session..." : "Create web voice session",
+                      icon: isTesting ? Loader2 : MessageSquare,
+                      disabled: isTesting || !isPlaygroundVoiceAgentWebEnabled(draft.voiceMode),
+                      onSelect: async () => {
+                        const savedRecord = await saveVoiceAgentConfig(agentId);
+                        if (savedRecord) await createVoiceAgentTestSession(agentId);
+                      },
+                    },
+                  ];
+                },
+                getRowAriaLabel: (record) => "Configure voice for " + (record?.agent?.name || record?.agent?.id || "agent"),
+                isRowExpanded: () => true,
+                renderExpandedRow: ({ row: record }) => renderVoiceAgentExpandedControls(record),
+              })
             );
           };
           const renderComputerProfilesTable = () => (
-            React.createElement("div", { className: "playground-agents-overview-table-shell is-static" },
-              React.createElement("table", { className: "playground-agents-overview-table" },
-                React.createElement("colgroup", null,
-                  React.createElement("col", { style: { width: "38%" } }),
-                  React.createElement("col", { style: { width: "17%" } }),
-                  React.createElement("col", { style: { width: "110px" } }),
-                  React.createElement("col", { style: { width: "120px" } }),
-                  React.createElement("col", { style: { width: "140px" } }),
-                  React.createElement("col", { style: { width: "120px" } })
-                ),
-                React.createElement("thead", null,
-                  React.createElement("tr", null,
-                    React.createElement("th", null, "Profile"),
-                    React.createElement("th", null, "Resources"),
-                    React.createElement("th", null, "GUI"),
-                    React.createElement("th", null, "Office Apps"),
-                    React.createElement("th", { className: "is-right" }, "USD / min"),
-                    React.createElement("th", { className: "is-right" }, "USD / hr")
-                  )
-                ),
-                React.createElement("tbody", null,
-                  PLAYGROUND_ENVIRONMENT_COMPUTE_PROFILES.map((profile) =>
-                    React.createElement("tr", { key: profile.id },
-                      React.createElement("td", null,
-                        React.createElement("div", { className: "playground-agents-overview-model-cell" },
-                          React.createElement("span", { className: "playground-agents-model-provider-icon-shell playground-agents-overview-table-model-icon", "aria-hidden": "true" },
-                            profile.guiEnabled
-                              ? React.createElement(Monitor, { width: 16, height: 16, strokeWidth: 1.8 })
-                              : React.createElement(HardDrive, { width: 16, height: 16, strokeWidth: 1.8 })
-                          ),
-                          React.createElement("div", { className: "playground-agents-overview-model-copy" },
-                            React.createElement("div", {
-                              className: "playground-agents-overview-name-title",
-                              title: profile.label,
-                            }, profile.label),
-                            React.createElement("div", {
-                              className: "playground-agents-overview-name-description",
-                              title: profile.description,
-                            }, profile.description)
-                          )
-                        )
-                      ),
-                      React.createElement("td", null,
-                        React.createElement("div", { className: "playground-agents-overview-table-value" }, formatPlaygroundEnvironmentProfileResources(profile))
-                      ),
-                      React.createElement("td", null,
-                        React.createElement("div", { className: "playground-agents-overview-table-value" },
-                          React.createElement("span", { className: "playground-agents-model-access" + (profile.guiEnabled ? " is-available" : " is-locked") }, profile.guiEnabled ? "Enabled" : "CLI")
-                        )
-                      ),
-                      React.createElement("td", null,
-                        React.createElement("div", { className: "playground-agents-overview-table-value" },
-                          React.createElement("span", { className: "playground-agents-model-access" + (profile.id === "desktop" ? " is-available" : " is-locked") }, profile.id === "desktop" ? "Optional" : "Unavailable")
-                        )
-                      ),
-                      React.createElement("td", null,
-                        React.createElement("div", { className: "playground-agents-overview-table-value is-right" }, formatPlaygroundEnvironmentProfileRate(profile))
-                      ),
-                      React.createElement("td", null,
-                        React.createElement("div", { className: "playground-agents-overview-table-value is-right" }, formatPlaygroundEnvironmentProfileHourlyPrice(profile))
-                      )
+            React.createElement(PlatformDataTable, {
+              rows: PLAYGROUND_ENVIRONMENT_COMPUTE_PROFILES,
+              getRowId: (profile) => profile.id,
+              ariaLabel: "Computer profiles",
+              className: "playground-computer-profiles-platform-table",
+              surface: "plain",
+              sticky: false,
+              columns: [
+                {
+                  id: "profile",
+                  header: "Profile",
+                  accessor: (profile) => profile.label,
+                  width: "minmax(210px, 2fr)",
+                  cell: ({ row: profile }) => React.createElement("div", { className: "playground-agents-overview-model-cell" },
+                    React.createElement("span", { className: "playground-agents-model-provider-icon-shell playground-agents-overview-table-model-icon", "aria-hidden": "true" },
+                      profile.guiEnabled
+                        ? React.createElement(Monitor, { width: 16, height: 16, strokeWidth: 1.8 })
+                        : React.createElement(HardDrive, { width: 16, height: 16, strokeWidth: 1.8 })
+                    ),
+                    React.createElement("div", { className: "playground-agents-overview-model-copy" },
+                      React.createElement("div", { className: "playground-agents-overview-name-title", title: profile.label }, profile.label),
+                      React.createElement("div", { className: "playground-agents-overview-name-description", title: profile.description }, profile.description)
                     )
-                  )
-                )
-              )
-            )
+                  ),
+                },
+                { id: "resources", header: "Resources", accessor: formatPlaygroundEnvironmentProfileResources, width: "minmax(120px, 1fr)" },
+                {
+                  id: "gui",
+                  header: "GUI",
+                  accessor: (profile) => profile.guiEnabled ? "Enabled" : "CLI",
+                  width: "minmax(80px, 0.7fr)",
+                  cell: ({ row: profile }) => React.createElement("span", { className: "playground-agents-model-access" + (profile.guiEnabled ? " is-available" : " is-locked") }, profile.guiEnabled ? "Enabled" : "CLI"),
+                },
+                {
+                  id: "office",
+                  header: "Office Apps",
+                  accessor: (profile) => profile.id === "desktop" ? "Optional" : "Unavailable",
+                  width: "minmax(100px, 0.85fr)",
+                  hideBelow: 760,
+                  cell: ({ row: profile }) => React.createElement("span", { className: "playground-agents-model-access" + (profile.id === "desktop" ? " is-available" : " is-locked") }, profile.id === "desktop" ? "Optional" : "Unavailable"),
+                },
+                { id: "minute", header: "USD / min", accessor: formatPlaygroundEnvironmentProfileRate, width: "minmax(100px, 0.8fr)", align: "end" },
+                { id: "hour", header: "USD / hr", accessor: formatPlaygroundEnvironmentProfileHourlyPrice, width: "minmax(100px, 0.8fr)", align: "end" },
+              ],
+            })
           );
           const renderServerTypesTable = () => {
             const serverTypes = [
@@ -120618,61 +119639,40 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 managed: true,
               },
             ];
-            return React.createElement("div", { className: "playground-agents-overview-table-shell is-static" },
-              React.createElement("table", { className: "playground-agents-overview-table" },
-                React.createElement("colgroup", null,
-                  React.createElement("col", { style: { width: "38%" } }),
-                  React.createElement("col", { style: { width: "17%" } }),
-                  React.createElement("col", { style: { width: "17%" } }),
-                  React.createElement("col", { style: { width: "16%" } }),
-                  React.createElement("col", { style: { width: "120px" } })
-                ),
-                React.createElement("thead", null,
-                  React.createElement("tr", null,
-                    React.createElement("th", null, "Type"),
-                    React.createElement("th", null, "Runtime"),
-                    React.createElement("th", null, "Deployment"),
-                    React.createElement("th", null, "Interface"),
-                    React.createElement("th", { className: "is-right" }, "Managed")
-                  )
-                ),
-                React.createElement("tbody", null,
-                  serverTypes.map((type) =>
-                    React.createElement("tr", { key: type.id },
-                      React.createElement("td", null,
-                        React.createElement("div", { className: "playground-agents-overview-model-cell" },
-                          React.createElement("span", { className: "playground-agents-model-provider-icon-shell playground-agents-overview-table-model-icon", "aria-hidden": "true" }, type.renderIcon()),
-                          React.createElement("div", { className: "playground-agents-overview-model-copy" },
-                            React.createElement("div", {
-                              className: "playground-agents-overview-name-title",
-                              title: type.label,
-                            }, type.label),
-                            React.createElement("div", {
-                              className: "playground-agents-overview-name-description",
-                              title: type.description,
-                            }, type.description)
-                          )
-                        )
-                      ),
-                      React.createElement("td", null,
-                        React.createElement("div", { className: "playground-agents-overview-table-value" }, type.runtime)
-                      ),
-                      React.createElement("td", null,
-                        React.createElement("div", { className: "playground-agents-overview-table-value" }, type.deployment)
-                      ),
-                      React.createElement("td", null,
-                        React.createElement("div", { className: "playground-agents-overview-table-value" }, type.interfaceLabel)
-                      ),
-                      React.createElement("td", null,
-                        React.createElement("div", { className: "playground-agents-overview-table-value is-right" },
-                          React.createElement("span", { className: "playground-agents-model-access" + (type.managed ? " is-available" : " is-locked") }, type.managed ? "Yes" : "No")
-                        )
-                      )
+            return React.createElement(PlatformDataTable, {
+              rows: serverTypes,
+              getRowId: (type) => type.id,
+              ariaLabel: "Server resource types",
+              className: "playground-server-types-platform-table",
+              surface: "plain",
+              sticky: false,
+              columns: [
+                {
+                  id: "type",
+                  header: "Type",
+                  accessor: (type) => type.label,
+                  width: "minmax(220px, 2fr)",
+                  cell: ({ row: type }) => React.createElement("div", { className: "playground-agents-overview-model-cell" },
+                    React.createElement("span", { className: "playground-agents-model-provider-icon-shell playground-agents-overview-table-model-icon", "aria-hidden": "true" }, type.renderIcon()),
+                    React.createElement("div", { className: "playground-agents-overview-model-copy" },
+                      React.createElement("div", { className: "playground-agents-overview-name-title", title: type.label }, type.label),
+                      React.createElement("div", { className: "playground-agents-overview-name-description", title: type.description }, type.description)
                     )
-                  )
-                )
-              )
-            );
+                  ),
+                },
+                { id: "runtime", header: "Runtime", accessor: (type) => type.runtime, width: "minmax(110px, 1fr)" },
+                { id: "deployment", header: "Deployment", accessor: (type) => type.deployment, width: "minmax(110px, 1fr)" },
+                { id: "interface", header: "Interface", accessor: (type) => type.interfaceLabel, width: "minmax(100px, 0.9fr)", hideBelow: 760 },
+                {
+                  id: "managed",
+                  header: "Managed",
+                  accessor: (type) => type.managed ? "Yes" : "No",
+                  width: "minmax(90px, 0.7fr)",
+                  align: "end",
+                  cell: ({ row: type }) => React.createElement("span", { className: "playground-agents-model-access" + (type.managed ? " is-available" : " is-locked") }, type.managed ? "Yes" : "No"),
+                },
+              ],
+            });
           };
           const renderServerResourceSettingsSection = () => {
             const canEditResourceLimit = Boolean(canConfigureResourceBilling && typeof onResourceBillingPreferencesChange === "function");
@@ -120815,7 +119815,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	            && isOverviewResourceListLoading
 	            && !normalizedResourcesSearchQuery
 	            && resourcesOverviewFilter === "all";
-		          const overviewResourceLoadingLabel = isServersMode ? currentServerResourcesLabel.toLowerCase() : "computers";
 			          const developConfigureResourcesLabel = isServersMode ? currentServerResourcesLabel : "Computers";
 			          const computerOverviewCreateButton = !isServersMode
 			            ? React.createElement("button", {
@@ -120847,274 +119846,187 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 			                React.createElement("span", null, "New " + (embeddedServerKindLabel || "Server"))
 			              )
 			            : null;
-			          const overviewSearchSortFilterRow = React.createElement("div", {
-			              className: "playground-plugins-search-row playground-resources-overview-search-row playground-develop-server-kind-table-toolbar"
-			                + (!isServersMode ? " playground-computers-overview-toolbar-row" : "")
-			                + (isDevelopServerKindOverview ? " playground-develop-resource-overview-toolbar-row" : ""),
-			              ref: resourcesOverviewToolbarRef,
-			            },
-			            isServersMode && !isDevelopServerKindOverview
-			              ? React.createElement("h2", { className: "playground-develop-server-metrics-title playground-develop-server-kind-table-title" }, "All " + developConfigureResourcesLabel)
-			              : null,
-			            React.createElement("div", { className: "playground-develop-server-kind-table-controls" },
-			              React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell" },
-			                React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-			                React.createElement("input", {
-			                  type: "search",
-			                  value: searchPopupQuery,
-			                  onChange: (event) => setSearchPopupQuery(event.target.value),
-			                  className: "playground-plugins-search",
-			                  placeholder: "Search " + developConfigureResourcesLabel.toLowerCase(),
-			                })
-			              ),
-			              React.createElement("div", { className: "playground-plugins-toolbar-controls" },
-			              React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
-			                React.createElement("button", {
-			                  type: "button",
-		                  className: "playground-files-control-button is-bare is-backlog-sort" + (resourcesOverviewToolbarPopover === "sort" || resourcesOverviewSort !== "name" || normalizedResourcesOverviewSortDirection !== "asc" ? " is-active" : ""),
-		                  onClick: () => setResourcesOverviewToolbarPopover((current) => current === "sort" ? "" : "sort"),
-		                },
-		                  React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-		                  React.createElement("span", null, "Sort")
-		                ),
-		                resourcesOverviewToolbarPopover === "sort"
-		                  ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-computers-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-		                      resourcesOverviewSortOptions.map((option) =>
-		                        React.createElement("button", {
-		                            key: option.id,
-		                            type: "button",
-		                            className: "tb-popup-row tb-popup-row-select" + (resourcesOverviewSort === (option.sortKey || option.id) && normalizedResourcesOverviewSortDirection === normalizeResourcesOverviewSortDirection(option.direction) ? " selected" : ""),
-		                            onClick: () => {
-		                              setResourcesOverviewSort(option.sortKey || option.id);
-		                              setResourcesOverviewSortDirection(normalizeResourcesOverviewSortDirection(option.direction));
-		                              setResourcesOverviewToolbarPopover("");
-		                            },
-		                          },
-		                          React.createElement("span", { className: "tb-popup-check-slot" },
-		                            resourcesOverviewSort === (option.sortKey || option.id) && normalizedResourcesOverviewSortDirection === normalizeResourcesOverviewSortDirection(option.direction)
-		                              ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-		                              : null
-		                          ),
-		                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-		                            React.createElement("span", null, option.label)
-		                          )
-		                        )
-		                      )
-		                    )
-		                  : null
-		              ),
-		              React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
-		                React.createElement("button", {
-		                  type: "button",
-		                  className: "playground-files-control-button is-bare is-backlog-filter" + (resourcesOverviewToolbarPopover === "filter" || resourcesOverviewFilter !== "all" ? " is-active" : ""),
-		                  onClick: () => setResourcesOverviewToolbarPopover((current) => current === "filter" ? "" : "filter"),
-		                },
-		                  React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-		                  React.createElement("span", null, "Filter")
-		                ),
-		                resourcesOverviewToolbarPopover === "filter"
-		                  ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-computers-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-		                      resourcesOverviewFilterOptions.map((option) =>
-		                        React.createElement("button", {
-		                            key: option.id,
-		                            type: "button",
-		                            className: "tb-popup-row tb-popup-row-select" + (resourcesOverviewFilter === option.id ? " selected" : ""),
-		                            onClick: () => {
-		                              setResourcesOverviewFilter(option.id);
-		                              setResourcesOverviewToolbarPopover("");
-		                            },
-		                          },
-		                          React.createElement("span", { className: "tb-popup-check-slot" },
-		                            resourcesOverviewFilter === option.id
-		                              ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-		                              : null
-		                          ),
-		                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-		                            React.createElement("span", null, option.label),
-		                            React.createElement("span", null, option.description)
-		                          )
-		                        )
-		                      )
-		                    )
-			                  : null
-				              )
-			            )
-			            ),
-			            !isServersMode ? computerOverviewCreateButton : (isDevelopServerKindOverview ? serverOverviewCreateButton : null)
-			          );
-			          const handleComputersOverviewColumnSort = (sortKey) => {
-			            const normalizedSortKey = String(sortKey || "name").trim() || "name";
-			            setResourcesOverviewToolbarPopover("");
-			            setResourcesOverviewSortDirection((currentDirection) => {
-			              if (resourcesOverviewSort !== normalizedSortKey) {
-			                return "asc";
-			              }
-			              return normalizeResourcesOverviewSortDirection(currentDirection) === "asc" ? "desc" : "asc";
-			            });
-			            setResourcesOverviewSort(normalizedSortKey);
-			          };
-			          const renderComputersOverviewSortIcon = (sortKey) => {
-			            const isActive = resourcesOverviewSort === sortKey;
-			            const isDescending = isActive && normalizedResourcesOverviewSortDirection === "desc";
-			            const isAscending = isActive && !isDescending;
-			            return React.createElement("span", {
-			                className: "playground-agents-overview-sort-icon"
-			                  + (isActive ? " is-active" : "")
-			                  + (isAscending ? " is-ascending" : "")
-			                  + (isDescending ? " is-descending" : ""),
-			                "aria-hidden": "true",
-			              },
-			              React.createElement(ChevronsUpDown, {
-			                className: "playground-agents-overview-sort-icon-layer is-top",
-			                width: 14,
-			                height: 14,
-			                strokeWidth: 1.8,
-			              }),
-			              React.createElement(ChevronsUpDown, {
-			                className: "playground-agents-overview-sort-icon-layer is-bottom",
-			                width: 14,
-			                height: 14,
-			                strokeWidth: 1.8,
-			              })
-			            );
-			          };
-			          const renderComputersOverviewSortableHeader = (label, sortKey) => {
-			            const isActive = resourcesOverviewSort === sortKey;
-			            const nextDirection = isActive && normalizedResourcesOverviewSortDirection === "asc" ? "descending" : "ascending";
-			            return React.createElement("div", { className: "playground-agents-overview-sortable-header" + (isActive ? " is-active" : "") },
-			              React.createElement("span", { className: "playground-agents-overview-sortable-header-label" }, label),
-			              React.createElement("button", {
-			                  type: "button",
-			                  className: "playground-agents-overview-column-sort-button"
-			                    + (isActive ? " is-active" : "")
-			                    + (isActive && normalizedResourcesOverviewSortDirection === "asc" ? " is-ascending" : "")
-			                    + (isActive && normalizedResourcesOverviewSortDirection === "desc" ? " is-descending" : ""),
-			                  title: "Sort " + label + " " + nextDirection,
-			                  "aria-label": "Sort " + label + " " + nextDirection,
-			                  "aria-pressed": isActive ? "true" : "false",
-			                  onClick: (event) => {
-			                    event.preventDefault();
-			                    event.stopPropagation();
-			                    handleComputersOverviewColumnSort(sortKey);
-			                  },
-			                },
-			                renderComputersOverviewSortIcon(sortKey)
-			              )
-			            );
-			          };
-			          const renderComputersOverviewTableColumnHeader = () => React.createElement("div", { className: "playground-project-overview-threads-table-header playground-computers-overview-column-header" },
-			                  React.createElement("div", null,
-			                    React.createElement("button", {
-			                      type: "button",
-			                      className: "playground-agents-overview-select-checkbox playground-computers-overview-select-all-checkbox"
-			                        + (allVisibleOverviewComputersSelected ? " is-selected" : "")
-			                        + (hasPartialVisibleOverviewComputerSelection ? " is-partial" : ""),
-			                      role: "checkbox",
-			                      "aria-checked": allVisibleOverviewComputersSelected ? "true" : (hasPartialVisibleOverviewComputerSelection ? "mixed" : "false"),
-			                      "aria-label": allVisibleOverviewComputersSelected ? "Deselect all visible computers" : "Select all visible computers",
-			                      onClick: (event) => {
-			                        event.preventDefault();
-			                        event.stopPropagation();
-			                        toggleVisibleOverviewComputerSelection();
-			                      },
-			                    })
-			                  ),
-			                  React.createElement("div", null, renderComputersOverviewSortableHeader("Name", "name")),
-			                  React.createElement("div", null, renderComputersOverviewSortableHeader("Computer Profile", "profile")),
-			                  React.createElement("div", null, renderComputersOverviewSortableHeader("Created", "created")),
-			                  React.createElement("div", null, renderComputersOverviewSortableHeader("Last used", "lastUsed")),
-			                  React.createElement("div", null)
-			                );
-			          const renderComputersOverviewStickyTableHeader = () => React.createElement("div", { className: "playground-computers-overview-sticky-table-header" },
-			            overviewSearchSortFilterRow
-			          );
-		          const renderServerOverviewTableColumnHeader = () => React.createElement("div", {
-		              className: "playground-project-overview-threads-table-header playground-develop-resource-overview-column-header"
-		                + (normalizedEmbeddedServerKind === "database" ? " is-database" : ""),
+		          const overviewResourceColumns = [
+		            {
+		              id: "name",
+		              header: "Name",
+		              accessor: getOverviewResourceDisplayName,
+		              sortable: true,
+		              width: "minmax(220px, 1.5fr)",
+		              cell: ({ row }) => renderOverviewResourceNameCell(row),
 		            },
-			                  React.createElement("div", null,
-			                    React.createElement("button", {
-			                      type: "button",
-			                      className: "playground-agents-overview-select-checkbox playground-develop-resource-overview-select-all-checkbox"
-			                        + (allVisibleOverviewServerResourcesSelected ? " is-selected" : "")
-			                        + (hasPartialVisibleOverviewServerResourceSelection ? " is-partial" : ""),
-			                      role: "checkbox",
-			                      "aria-checked": allVisibleOverviewServerResourcesSelected ? "true" : (hasPartialVisibleOverviewServerResourceSelection ? "mixed" : "false"),
-			                      "aria-label": allVisibleOverviewServerResourcesSelected ? "Deselect all visible resources" : "Select all visible resources",
-			                      onClick: (event) => {
-			                        event.preventDefault();
-			                        event.stopPropagation();
-			                        toggleVisibleOverviewServerResourceSelection();
-			                      },
-			                    })
-			                  ),
-			                  React.createElement("div", null, renderComputersOverviewSortableHeader("Name", "name")),
-			                  React.createElement("div", null, renderComputersOverviewSortableHeader("Type", "type")),
-			                  React.createElement("div", null, renderComputersOverviewSortableHeader("Published", "published")),
-			                  React.createElement("div", null, renderComputersOverviewSortableHeader("Created", "created")),
-			                  React.createElement("div", null, renderComputersOverviewSortableHeader("Last used", "lastUsed")),
-			                  React.createElement("div", null)
-			                );
-			          const renderServerOverviewStickyTableHeader = () => React.createElement("div", { className: "playground-develop-resource-overview-sticky-table-header playground-agents-overview-sticky-table-header" },
-			            overviewSearchSortFilterRow
-			          );
-		          const overviewResourceTable = overviewItems.length === 0
-		            ? React.createElement(React.Fragment, null,
-		                isDevelopServerKindOverview ? renderServerOverviewStickyTableHeader() : (!isServersMode && isDevelopConfigureOverview ? renderComputersOverviewStickyTableHeader() : null),
-		                shouldShowOverviewResourceLoading
-		                  ? React.createElement("div", { className: "playground-plugins-empty playground-resources-overview-loading" },
-		                      React.createElement(Loader2, { className: "playground-files-state-loader", width: 16, height: 16, strokeWidth: 1.75 }),
-		                      React.createElement("span", null, "Loading " + overviewResourceLoadingLabel)
-		                    )
-		                  : React.createElement("div", { className: "playground-plugins-empty" },
-		                      normalizedResourcesSearchQuery || resourcesOverviewFilter !== "all"
-		                        ? (isServersMode ? "No matching " + currentServerResourcesLabel.toLowerCase() + " found." : "No matching computers found.")
-		                        : (isServersMode ? "No " + currentServerResourcesLabel.toLowerCase() + " available." : "No computers available.")
-		                    )
-		              )
-		            : !isServersMode
-		              ? React.createElement(React.Fragment, null,
-		                  isDevelopConfigureOverview ? renderComputersOverviewStickyTableHeader() : null,
-		                  React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-computers-overview-list-table" },
-		                    !isDevelopConfigureOverview ? renderComputersOverviewTableColumnHeader() : null,
-		                    React.createElement("div", { className: "playground-project-overview-thread-list" },
-		                      isDevelopConfigureOverview ? renderComputersOverviewTableColumnHeader() : null,
-		                      overviewItems.map((item) => renderComputerOverviewGridRow(item))
-		                    )
-		                  )
-		                )
-		              : isDevelopServerKindOverview
-		                ? React.createElement(React.Fragment, null,
-		                    renderServerOverviewStickyTableHeader(),
-		                    React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-develop-resource-overview-list-table" },
-		                      React.createElement("div", { className: "playground-project-overview-thread-list" },
-		                        renderServerOverviewTableColumnHeader(),
-		                        overviewItems.map((item) => renderServerOverviewGridRow(item))
-		                      )
-		                    )
-		                  )
-		              : React.createElement("div", { className: "playground-resources-overview-table-shell" },
-		                  React.createElement("table", { className: "playground-resources-overview-table" },
-		                    React.createElement("colgroup", null,
-		                      overviewTableColumns.map((column) =>
-		                        React.createElement("col", { key: column.id, style: { width: column.width } })
-		                      )
-		                    ),
-		                    React.createElement("thead", null,
-		                      React.createElement("tr", null,
-		                        overviewTableColumns.map((column) =>
-		                          React.createElement("th", {
-		                            key: column.id,
-		                            className: column.align === "right" ? "is-right" : column.align === "action" ? "is-action" : "",
-		                          }, column.label)
-		                        )
-		                      )
-		                    ),
-		                    React.createElement("tbody", null,
-		                      overviewItems.map((item) => renderServerOverviewRow(item))
-		                    )
-			                  )
-			                );
+		            ...(isServersMode
+		              ? [
+		                  {
+		                    id: "type",
+		                    header: "Type",
+		                    accessor: getEmbeddedServerKindLabel,
+		                    sortable: true,
+		                    width: "minmax(125px, 0.65fr)",
+		                    hideBelow: 760,
+		                    cell: ({ row }) => React.createElement("div", { className: "playground-agents-overview-table-value" }, getEmbeddedServerKindLabel(row)),
+		                  },
+		                  {
+		                    id: "published",
+		                    header: "Published",
+		                    accessor: (row) => isOverviewResourcePublished(row) ? 1 : 0,
+		                    sortable: true,
+		                    width: "minmax(105px, 0.5fr)",
+		                    hideBelow: 900,
+		                    cell: ({ row }) => {
+		                      const published = isOverviewResourcePublished(row);
+		                      return React.createElement("div", {
+		                        className: "playground-agents-overview-table-value playground-resources-overview-published" + (published ? " is-yes" : ""),
+		                      }, published ? "Yes" : "No");
+		                    },
+		                  },
+		                ]
+		              : [{
+		                  id: "profile",
+		                  header: "Computer Profile",
+		                  accessor: getOverviewResourceProfileLabel,
+		                  sortable: true,
+		                  width: "minmax(150px, 0.75fr)",
+		                  hideBelow: 720,
+		                  cell: ({ row }) => React.createElement("div", { className: "playground-agents-overview-table-value" }, getOverviewResourceProfileLabel(row)),
+		                }]),
+		            {
+		              id: "created",
+		              header: "Created",
+		              accessor: (row) => getOverviewResourceTimestamp(getOverviewResourceCreatedAt(row)),
+		              sortable: true,
+		              sortDescFirst: true,
+		              width: "minmax(120px, 0.6fr)",
+		              align: "end",
+		              hideBelow: 860,
+		              cell: ({ row }) => renderOverviewDateCell(getOverviewResourceCreatedAt(row)),
+		            },
+		            {
+		              id: "lastUsed",
+		              header: "Last used",
+		              accessor: (row) => getOverviewResourceTimestamp(getOverviewResourceLastUsedAt(row)),
+		              sortable: true,
+		              sortDescFirst: true,
+		              width: "minmax(120px, 0.6fr)",
+		              align: "end",
+		              hideBelow: 1040,
+		              cell: ({ row }) => renderOverviewDateCell(getOverviewResourceLastUsedAt(row), "Never"),
+		            },
+		          ];
+		          const getOverviewResourceActions = (item, actionState) => {
+		            if (!isServersMode) {
+		              const targets = Array.isArray(actionState?.targetRows) && actionState.targetRows.length ? actionState.targetRows : [item];
+		              const mutableTargets = targets.filter((target) => !target?.isDefault && !target?.isSystem);
+		              const bulkMode = targets.length > 1;
+		              const isProtected = Boolean(item?.isSystem || item?.isDefault);
+		              const isDeleting = saveState.isSaving && item?.id === selectedEnvironmentId;
+		              const isCopying = fileEnvironmentMutationState.action === "fork" && fileEnvironmentMutationState.environmentId === item?.id;
+		              const isSharing = environmentShareTeamState.action === "share";
+		              if (bulkMode) {
+		                return [
+		                  {
+		                    id: "share-team",
+		                    label: "Share selected with Team",
+		                    icon: UsersRound,
+		                    disabled: saveState.isSaving || isSharing || mutableTargets.length === 0,
+		                    onSelect: () => openEnvironmentShareTeamModal(null, { environmentIds: mutableTargets.map((target) => target.id) }),
+		                  },
+		                  {
+		                    id: "delete",
+		                    label: "Delete selected",
+		                    icon: Trash2,
+		                    danger: true,
+		                    separatorBefore: true,
+		                    disabled: saveState.isSaving || isSharing || mutableTargets.length === 0,
+		                    onSelect: () => void handleDeleteEnvironments(mutableTargets),
+		                  },
+		                ];
+		              }
+		              return [
+		                { id: "rename", label: "Rename", icon: SquarePen, disabled: isProtected || isDeleting || isCopying || isSharing, onSelect: () => openEnvironmentRenameDialog(item) },
+		                { id: "share-team", label: "Share with Team", icon: UsersRound, disabled: isProtected || isDeleting || isCopying || isSharing, onSelect: () => openEnvironmentShareTeamModal(item) },
+		                { id: "copy", label: isCopying ? "Copying..." : "Copy", icon: Copy, disabled: isDeleting || isCopying || isSharing, onSelect: () => void handleCopyEnvironmentFromMenu(item) },
+		                { id: "delete", label: isDeleting ? "Deleting..." : "Delete", icon: Trash2, danger: true, separatorBefore: true, disabled: isProtected || isDeleting || isCopying || isSharing, onSelect: () => void handleDeleteEnvironment(item.id) },
+		              ];
+		            }
+		            const isDatabaseResource = item?.resourceType === "database";
+		            const isDraft = item?.id === PLAYGROUND_SERVER_DRAFT_ID || item?.id === PLAYGROUND_DATABASE_DRAFT_ID;
+		            const isSaving = isDatabaseResource ? databaseSaveState.isSaving : serverSaveState.isSaving;
+		            const isDeleting = isSaving && (isDatabaseResource ? selectedDatabaseId === item?.id : selectedServerId === item?.id);
+		            return [
+		              {
+		                id: "rename",
+		                label: "Rename",
+		                icon: SquarePen,
+		                disabled: isDraft || isSaving,
+		                onSelect: () => isDatabaseResource ? openDatabaseRenameDialog(item) : openServerRenameDialog(item),
+		              },
+		              { id: "copy", label: "Copy", icon: Copy, disabled: isSaving, onSelect: () => openServerResourceCopyComposer(item) },
+		              {
+		                id: "delete",
+		                label: isDeleting ? "Deleting..." : "Delete",
+		                icon: Trash2,
+		                danger: true,
+		                separatorBefore: true,
+		                disabled: isDraft || isSaving,
+		                onSelect: () => isDatabaseResource ? void handleDeleteDatabase(item.id) : void handleDeleteServer(item.id),
+		              },
+		            ];
+		          };
+		          const prefetchOverviewResource = (item) => {
+		            if (!isServersMode) return;
+		            if (item?.resourceType === "database") {
+		              prefetchDatabaseBootstrap(item.id);
+		            } else if (["function", "web_app", "auth", "agent_runtime", "secrets", "payments"].includes(canonicalizePlaygroundServerKind(item?.kind))) {
+		              void loadServerAnalytics(item.id, { period: "day" });
+		            }
+		          };
+		          const overviewResourceTable = React.createElement(PlatformDataTable, {
+		            rows: overviewItems,
+		            columns: overviewResourceColumns,
+		            getRowId: (item) => isServersMode ? getOverviewServerResourceSelectionId(item) : String(item?.id || ""),
+		            ariaLabel: overviewTitle,
+		            className: "playground-resource-overview-platform-data-table",
+		            surface: "plain",
+		            sorting: {
+		              value: { id: resourcesOverviewSort, direction: normalizedResourcesOverviewSortDirection },
+		              manual: true,
+		              onChange: (nextSorting) => {
+		                if (!nextSorting) return;
+		                setResourcesOverviewSort(nextSorting.id);
+		                setResourcesOverviewSortDirection(nextSorting.direction);
+		                setResourcesOverviewToolbarPopover("");
+		              },
+		            },
+		            selection: {
+		              enabled: true,
+		              value: isServersMode ? selectedOverviewServerResourceIds : selectedOverviewComputerIds,
+		              onChange: ({ selectedIds }) => {
+		                if (isServersMode) setSelectedOverviewServerResourceIds(new Set(selectedIds));
+		                else setSelectedOverviewComputerIds(new Set(selectedIds));
+		              },
+		              ariaLabel: (item) => "Select " + getOverviewResourceDisplayName(item),
+		            },
+		            toolbar: isDevelopConfigureOverview ? {
+		              search: { value: searchPopupQuery, onChange: setSearchPopupQuery, placeholder: isServersMode ? "Search resources" : "Search computers", manual: true },
+		              showSort: true,
+		              filters: [{ id: "status", label: "Status", value: resourcesOverviewFilter, options: resourcesOverviewFilterOptions, onChange: setResourcesOverviewFilter }],
+		              primaryAction: !isServersMode
+		                ? { label: "New Computer", icon: Plus, onClick: handleCreateEnvironment }
+		                : isDevelopServerKindOverview
+		                  ? { label: "New " + (embeddedServerKindLabel || "Resource"), icon: Plus, onClick: () => handleCreateServer(normalizedEmbeddedServerKind) }
+		                  : undefined,
+		            } : undefined,
+		            getRowActions: getOverviewResourceActions,
+		            getRowAriaLabel: getOverviewResourceDisplayName,
+		            onRowActivate: openOverviewResourceItem,
+		            onRowPointerEnter: prefetchOverviewResource,
+		            onRowFocus: prefetchOverviewResource,
+		            loading: shouldShowOverviewResourceLoading,
+		            emptyState: normalizedResourcesSearchQuery || resourcesOverviewFilter !== "all"
+		              ? (isServersMode ? "No matching " + currentServerResourcesLabel.toLowerCase() + " found." : "No matching computers found.")
+		              : (isServersMode ? "No " + currentServerResourcesLabel.toLowerCase() + " available." : "No computers available."),
+		          });
 			          if (isDevelopConfigureOverview && activeResourcesOverviewHomeTab === "general" && normalizedEmbeddedServerKind === "voice_agent") {
 			            return renderVoiceAgentsOverviewSection();
 			          }
@@ -121123,7 +120035,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 		              className: isServersMode
 		                ? "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-overview-list-section playground-team-grid-table-section playground-resources-overview-section playground-develop-resource-overview-table-section is-servers-overview is-develop-server-kind-list"
 		                : "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-resources-overview-section is-computers-overview is-develop-server-kind-list playground-computers-overview-list-section",
-		            }, isServersMode && !isDevelopServerKindOverview ? overviewSearchSortFilterRow : null, overviewResourceTable);
+		            }, overviewResourceTable);
 		          }
 	          return React.createElement("section", { className: "playground-plugins-section playground-resources-overview-section " + (isServersMode ? "is-servers-overview" : "is-computers-overview") },
             activeResourcesOverviewHomeTab === "settings"
@@ -122259,9 +121171,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           getAgentActionTargetsByIds(Array.from(selectedOverviewAgentIds || []))
         ), [selectedOverviewAgentIds, allKnownAgents, agentDetailsById, orderedAgents, draftAgent]);
 
-        const selectedOverviewSingleAgentRecords = useMemo(() => (
-          selectedOverviewAgentRecords.filter((agent) => !isPlaygroundTeamAgent(agent))
-        ), [selectedOverviewAgentRecords]);
 
         const availableAgentSquads = useMemo(() => (
           allKnownAgents
@@ -125667,10 +124576,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           return () => window.cancelAnimationFrame(frameId);
         }, [isHomeViewActive, selectedAgentId]);
 
+        const agentInstructionsHeaderPresentation = isPlaygroundDefaultAgentConfigurationLocked(draftAgent)
+          ? "static-transparent"
+          : "default";
+
         useEffect(() => {
           const sectionNode = agentInstructionsSectionRef.current;
           const currentAgentDetailTab = agentDetailTab === "threads" ? "insights" : agentDetailTab;
-          if (!sectionNode || currentAgentDetailTab !== "general") {
+          if (agentInstructionsHeaderPresentation === "static-transparent" || !sectionNode || currentAgentDetailTab !== "general") {
             setAgentInstructionsHeaderStuck(false);
             return undefined;
           }
@@ -125714,7 +124627,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             eventTarget.removeEventListener("scroll", scheduleUpdate);
             window.removeEventListener("resize", scheduleUpdate);
           };
-        }, [agentDetailTab, selectedAgentId, draftAgent?.id, isHomeViewActive]);
+        }, [agentDetailTab, selectedAgentId, draftAgent?.id, isHomeViewActive, agentInstructionsHeaderPresentation]);
 
         useEffect(() => {
           if (!normalizedFocusedAgentSelectionToken || !normalizedFocusedAgentId) {
@@ -125825,22 +124738,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           }, 90);
         }
 
-        function toggleAgentsOverviewToolbarPopover(popoverId) {
-          clearAgentsOverviewToolbarPopoverCloseTimer();
-          setAgentsOverviewToolbarPopoverClosing("");
-          if (agentsOverviewToolbarPopover === popoverId) {
-            setAgentsOverviewToolbarPopover("");
-            setAgentsOverviewToolbarPopoverClosing(popoverId);
-            if (typeof window !== "undefined") {
-              agentsOverviewToolbarPopoverCloseTimerRef.current = window.setTimeout(() => {
-                agentsOverviewToolbarPopoverCloseTimerRef.current = null;
-                setAgentsOverviewToolbarPopoverClosing("");
-              }, 90);
-            }
-            return;
-          }
-          setAgentsOverviewToolbarPopover(popoverId);
-        }
 
         useEffect(() => {
           if (!agentsOverviewToolbarPopover) return undefined;
@@ -128591,115 +127488,96 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 )
               )
             ),
-            agentsHomeThreadsError
-              ? React.createElement("div", { className: "playground-plugins-empty" }, agentsHomeThreadsError)
-              : visibleThreads.length === 0
-                ? React.createElement("div", { className: "playground-plugins-empty" },
-                    agentsHomeThreadsLoading ? "Loading traces..." : (normalizedQuery ? "No matching traces found." : "No thread traces yet.")
+            React.createElement(PlatformDataTable, {
+              rows: displayedThreads,
+              getRowId: (thread) => String(thread?.id || ""),
+              ariaLabel: "Agent thread traces",
+              className: "playground-agents-observability-platform-table",
+              surface: "plain",
+              sticky: false,
+              loading: agentsHomeThreadsLoading && displayedThreads.length === 0,
+              error: agentsHomeThreadsError || null,
+              emptyState: normalizedQuery ? "No matching traces found." : "No thread traces yet.",
+              columns: [
+                {
+                  id: "trace",
+                  header: "Trace",
+                  accessor: (thread) => getSidebarThreadTitleParts(thread).displayThreadTitle || thread.title || "Untitled thread",
+                  width: "minmax(220px, 2fr)",
+                  cell: ({ row: thread }) => {
+                    const threadId = String(thread?.id || "").trim();
+                    const title = getSidebarThreadTitleParts(thread).displayThreadTitle || thread.title || "Untitled thread";
+                    return React.createElement("div", { className: "playground-agents-overview-name-copy" },
+                      React.createElement("div", { className: "playground-agents-overview-name-title", title }, title),
+                      React.createElement("div", { className: "playground-agents-overview-name-description", title: threadId }, threadId)
+                    );
+                  },
+                },
+                {
+                  id: "agent",
+                  header: "Agent",
+                  accessor: (thread) => getAgentsObservabilityAgentLabel(thread, agentsById),
+                  width: "minmax(120px, 1fr)",
+                },
+                {
+                  id: "status",
+                  header: "Status",
+                  accessor: (thread) => thread.status || "",
+                  width: "minmax(90px, 0.75fr)",
+                  cell: ({ row: thread }) => renderAgentsObservabilityStatusBadge(thread.status),
+                },
+                {
+                  id: "started",
+                  header: "Started",
+                  accessor: getAgentsObservabilityThreadTimestamp,
+                  width: "minmax(110px, 0.9fr)",
+                  align: "end",
+                  cell: ({ row: thread }) => {
+                    const startedAt = thread.startedAt || thread.createdAt || "";
+                    return React.createElement("span", { title: startedAt ? new Date(startedAt).toLocaleString() : "" }, startedAt ? formatPlaygroundFileDate(startedAt) : "-");
+                  },
+                },
+                {
+                  id: "duration",
+                  header: "Duration",
+                  accessor: (thread) => getAgentsObservabilityThreadDurationMs(thread) || 0,
+                  width: "minmax(90px, 0.75fr)",
+                  align: "end",
+                  hideBelow: 760,
+                  cell: ({ row: thread }) => {
+                    const durationMs = getAgentsObservabilityThreadDurationMs(thread);
+                    return durationMs == null ? "-" : formatPlaygroundExecutionDuration(durationMs);
+                  },
+                },
+                {
+                  id: "compute",
+                  header: "Compute",
+                  accessor: (thread) => readSettingsComputeTokens(thread, "totalCT", "totalCost"),
+                  width: "minmax(90px, 0.75fr)",
+                  align: "end",
+                  cell: ({ row: thread }) => formatSettingsComputeTokens(readSettingsComputeTokens(thread, "totalCT", "totalCost")),
+                },
+              ],
+              onRowActivate: (thread) => handleAgentsHomeThreadOpen(String(thread?.id || "").trim(), {
+                contentMode: "trace",
+                threadRecord: thread,
+              }),
+              getRowAriaLabel: (thread) => "Open trace " + (getSidebarThreadTitleParts(thread).displayThreadTitle || thread.title || "Untitled thread"),
+              footer: remainingThreadCount > 0
+                ? React.createElement("div", { className: "playground-agents-observability-load-more-row" },
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-agents-observability-load-more-button",
+                      onClick: () => setAgentsObservabilityVisibleThreadLimit((current) => (
+                        Math.max(agentsObservabilityPageSize, Number(current || agentsObservabilityPageSize)) + agentsObservabilityPageSize
+                      )),
+                    },
+                      React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, remainingThreadCount > agentsObservabilityPageSize ? "Load 20 more" : "Load " + remainingThreadCount + " more")
+                    )
                   )
-                : React.createElement(React.Fragment, null,
-                    React.createElement("div", { className: "playground-agents-overview-table-shell playground-agents-observability-table-shell" },
-                      React.createElement("table", { className: "playground-agents-overview-table" },
-                        React.createElement("colgroup", null,
-                          React.createElement("col", { style: { width: "35%" } }),
-                          React.createElement("col", { style: { width: "18%" } }),
-                          React.createElement("col", { style: { width: "120px" } }),
-                          React.createElement("col", { style: { width: "130px" } }),
-                          React.createElement("col", { style: { width: "110px" } }),
-                          React.createElement("col", { style: { width: "110px" } })
-                        ),
-                        React.createElement("thead", null,
-                          React.createElement("tr", null,
-                            React.createElement("th", null, "Trace"),
-                            React.createElement("th", null, "Agent"),
-                            React.createElement("th", null, "Status"),
-                            React.createElement("th", { className: "is-right" }, "Started"),
-                            React.createElement("th", { className: "is-right" }, "Duration"),
-                            React.createElement("th", { className: "is-right" }, "Compute")
-                          )
-                        ),
-                        React.createElement("tbody", null,
-                          displayedThreads.map((thread) => {
-                            const threadId = String(thread?.id || "").trim();
-                            const titleParts = getSidebarThreadTitleParts(thread);
-                            const title = titleParts.displayThreadTitle || thread.title || "Untitled thread";
-                            const startedAt = thread.startedAt || thread.createdAt || "";
-                            const durationMs = getAgentsObservabilityThreadDurationMs(thread);
-                            const openRow = () => {
-                              handleAgentsHomeThreadOpen(threadId, {
-                                contentMode: "trace",
-                                threadRecord: thread,
-                              });
-                            };
-
-                            return React.createElement("tr", {
-                                key: threadId,
-                                tabIndex: 0,
-                                role: "button",
-                                "aria-label": "Open trace " + title,
-                                onClick: openRow,
-                                onKeyDown: (event) => {
-                                  if (event.key === "Enter" || event.key === " ") {
-                                    event.preventDefault();
-                                    openRow();
-                                  }
-                                },
-                              },
-                                React.createElement("td", null,
-                                  React.createElement("div", { className: "playground-agents-overview-name-copy" },
-                                    React.createElement("div", {
-                                      className: "playground-agents-overview-name-title",
-                                      title,
-                                    }, title),
-                                    React.createElement("div", {
-                                      className: "playground-agents-overview-name-description",
-                                      title: threadId,
-                                    }, threadId)
-                                  )
-                                ),
-                                React.createElement("td", null,
-                                  React.createElement("div", {
-                                    className: "playground-agents-overview-table-value",
-                                    title: getAgentsObservabilityAgentLabel(thread, agentsById),
-                                  }, getAgentsObservabilityAgentLabel(thread, agentsById))
-                                ),
-                                React.createElement("td", null, renderAgentsObservabilityStatusBadge(thread.status)),
-                                React.createElement("td", null,
-                                  React.createElement("div", {
-                                    className: "playground-agents-overview-table-value is-right",
-                                    title: startedAt ? new Date(startedAt).toLocaleString() : "",
-                                  }, startedAt ? formatPlaygroundFileDate(startedAt) : "-")
-                                ),
-                                React.createElement("td", null,
-                                  React.createElement("div", { className: "playground-agents-overview-table-value is-right" },
-                                    durationMs == null ? "-" : formatPlaygroundExecutionDuration(durationMs)
-                                  )
-                                ),
-                                React.createElement("td", null,
-                                  React.createElement("div", { className: "playground-agents-overview-table-value is-right" },
-                                    formatSettingsComputeTokens(readSettingsComputeTokens(thread, "totalCT", "totalCost"))
-                                  )
-                                )
-                            );
-                          })
-                        )
-                      )
-                    ),
-                    remainingThreadCount > 0
-                      ? React.createElement("div", { className: "playground-agents-observability-load-more-row" },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-agents-observability-load-more-button",
-                            onClick: () => setAgentsObservabilityVisibleThreadLimit((current) => (
-                              Math.max(agentsObservabilityPageSize, Number(current || agentsObservabilityPageSize)) + agentsObservabilityPageSize
-                            )),
-                          },
-                            React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("span", null, remainingThreadCount > agentsObservabilityPageSize ? "Load 20 more" : "Load " + remainingThreadCount + " more")
-                          )
-                        )
-                      : null
-                  )
+                : null,
+            })
           );
         }
 
@@ -128856,160 +127734,100 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 React.createElement("h3", { className: "playground-plugins-section-title" }, "Models")
               )
             ),
-            React.createElement("div", { className: "playground-plugins-search-row playground-agents-overview-search-row", ref: agentsModelsToolbarRef },
-              React.createElement("div", { className: "playground-plugins-search-shell" },
-                React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("input", {
-                  type: "search",
+            React.createElement(PlatformDataTable, {
+              rows: visibleModels,
+              getRowId: (model) => model.id,
+              ariaLabel: "Available agent models",
+              className: "playground-agent-models-platform-table",
+              surface: "plain",
+              sticky: false,
+              emptyState: normalizedModelsSearchQuery || agentsModelsProviderFilter !== "all" ? "No matching models found." : "No models available.",
+              sorting: { defaultValue: { id: "provider", direction: "asc" } },
+              toolbar: {
+                search: {
                   value: agentsModelsSearchQuery,
-                  onChange: (event) => setAgentsModelsSearchQuery(event.target.value),
-                  className: "playground-plugins-search",
+                  manual: true,
+                  onChange: setAgentsModelsSearchQuery,
                   placeholder: "Search models",
-                })
-              ),
-              React.createElement("div", { className: "playground-plugins-toolbar-controls" },
-                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-control-button is-bare is-backlog-sort" + (agentsModelsToolbarPopover === "sort" || agentsModelsSort !== "provider" ? " is-active" : ""),
-                    onClick: () => setAgentsModelsToolbarPopover((current) => current === "sort" ? "" : "sort"),
-                  },
-                    React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Sort")
-                  ),
-                  agentsModelsToolbarPopover === "sort"
-                    ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                        sortOptions.map((option) =>
-                          React.createElement("button", {
-                              key: option.id,
-                              type: "button",
-                              className: "tb-popup-row tb-popup-row-select" + (agentsModelsSort === option.id ? " selected" : ""),
-                              onClick: () => {
-                                setAgentsModelsSort(option.id);
-                                setAgentsModelsToolbarPopover("");
-                              },
-                            },
-                            React.createElement("span", { className: "tb-popup-check-slot" },
-                              agentsModelsSort === option.id
-                                ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                : null
-                            ),
-                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, option.label)
-                            )
-                          )
-                        )
-                      )
-                    : null
-                ),
-                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-control-button is-bare is-backlog-filter" + (agentsModelsToolbarPopover === "filter" || agentsModelsProviderFilter !== "all" ? " is-active" : ""),
-                    onClick: () => setAgentsModelsToolbarPopover((current) => current === "filter" ? "" : "filter"),
-                  },
-                    React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Filter")
-                  ),
-                  agentsModelsToolbarPopover === "filter"
-                    ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                        providerFilterOptions.map((option) =>
-                          React.createElement("button", {
-                              key: option.id,
-                              type: "button",
-                              className: "tb-popup-row tb-popup-row-select" + (agentsModelsProviderFilter === option.id ? " selected" : ""),
-                              onClick: () => {
-                                setAgentsModelsProviderFilter(option.id);
-                                setAgentsModelsToolbarPopover("");
-                              },
-                            },
-                            React.createElement("span", { className: "tb-popup-check-slot" },
-                              agentsModelsProviderFilter === option.id
-                                ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                : null
-                            ),
-                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, option.label)
-                            )
-                          )
-                        )
-                      )
-                    : null
-                )
-              )
-            ),
-            visibleModels.length === 0
-              ? React.createElement("div", { className: "playground-plugins-empty" },
-                  normalizedModelsSearchQuery || agentsModelsProviderFilter !== "all" ? "No matching models found." : "No models available."
-                )
-              : React.createElement("div", { className: "playground-agents-overview-table-shell is-static" },
-                  React.createElement("table", { className: "playground-agents-overview-table" },
-                    React.createElement("colgroup", null,
-                      React.createElement("col", { style: { width: "34%" } }),
-                      React.createElement("col", { style: { width: "16%" } }),
-                      React.createElement("col", { style: { width: "12%" } }),
-                      React.createElement("col", { style: { width: "12%" } }),
-                      React.createElement("col", { style: { width: "12%" } }),
-                      React.createElement("col", { style: { width: "14%" } }),
-                      React.createElement("col", { style: { width: "110px" } })
-                    ),
-                    React.createElement("thead", null,
-                      React.createElement("tr", null,
-                        React.createElement("th", null, "Model"),
-                        React.createElement("th", null, "Provider"),
-                        React.createElement("th", null, "Intelligence"),
-                        React.createElement("th", null, "Context"),
-                        React.createElement("th", null, "Speed"),
-                        React.createElement("th", { className: "is-right" }, "Cost / mTok"),
-                        React.createElement("th", { className: "is-right" }, "Access")
-                      )
-                    ),
-                    React.createElement("tbody", null,
-                      visibleModels.map((model) => {
-                        const providerKey = getPlaygroundAgentModelProviderFilterKey(model);
-                        const providerLabel = providerKey === "custom" ? "Custom" : getPlaygroundAgentModelProviderLabel(model);
-                        const accessLabel = model.locked ? "Plan required" : "Available";
-                        return React.createElement("tr", { key: model.id },
-                          React.createElement("td", null,
-                            React.createElement("div", { className: "playground-agents-overview-model-cell" },
-                              renderModelProviderIcon(model),
-                              React.createElement("div", { className: "playground-agents-overview-model-copy" },
-                                React.createElement("div", {
-                                  className: "playground-agents-overview-name-title",
-                                  title: model.label || model.id,
-                                }, model.label || model.id),
-                                React.createElement("div", {
-                                  className: "playground-agents-overview-name-description",
-                                  title: model.description || model.id,
-                                }, model.description || model.id)
-                              )
-                            )
-                          ),
-                          React.createElement("td", null,
-                            React.createElement("div", { className: "playground-agents-overview-table-value" }, providerLabel)
-                          ),
-                          React.createElement("td", null,
-                            React.createElement("div", { className: "playground-agents-overview-table-value" }, renderModelIntelligence(model))
-                          ),
-                          React.createElement("td", null,
-                            React.createElement("div", { className: "playground-agents-overview-table-value" }, model.contextWindow || "Custom")
-                          ),
-                          React.createElement("td", null,
-                            React.createElement("div", { className: "playground-agents-overview-table-value" }, model.speed || "Custom")
-                          ),
-                          React.createElement("td", null,
-                            React.createElement("div", { className: "playground-agents-overview-table-value is-right" }, formatPlaygroundAgentModelComputeTokenCost(model.id))
-                          ),
-                          React.createElement("td", null,
-                            React.createElement("div", { className: "playground-agents-overview-table-value is-right" },
-                              React.createElement("span", { className: "playground-agents-model-access" + (model.locked ? " is-locked" : " is-available") }, accessLabel)
-                            )
-                          )
-                        );
-                      })
+                },
+                showSort: true,
+                filters: [{
+                  id: "provider",
+                  label: "Provider",
+                  value: agentsModelsProviderFilter,
+                  onChange: setAgentsModelsProviderFilter,
+                  options: providerFilterOptions,
+                }],
+              },
+              columns: [
+                {
+                  id: "model",
+                  header: "Model",
+                  accessor: (model) => model.label || model.id,
+                  sortable: true,
+                  width: "minmax(220px, 2fr)",
+                  cell: ({ row: model }) => React.createElement("div", { className: "playground-agents-overview-model-cell" },
+                    renderModelProviderIcon(model),
+                    React.createElement("div", { className: "playground-agents-overview-model-copy" },
+                      React.createElement("div", { className: "playground-agents-overview-name-title", title: model.label || model.id }, model.label || model.id),
+                      React.createElement("div", { className: "playground-agents-overview-name-description", title: model.description || model.id }, model.description || model.id)
                     )
-                  )
-                )
+                  ),
+                },
+                {
+                  id: "provider",
+                  header: "Provider",
+                  accessor: (model) => getPlaygroundAgentModelProviderFilterKey(model) === "custom" ? "Custom" : getPlaygroundAgentModelProviderLabel(model),
+                  sortable: true,
+                  width: "minmax(100px, 0.9fr)",
+                },
+                {
+                  id: "intelligence",
+                  header: "Intelligence",
+                  accessor: (model) => getPlaygroundAgentIntelligenceLevel(model?.intelligence || model?.intelligenceLabel || ""),
+                  sortable: true,
+                  sortDescFirst: true,
+                  width: "minmax(100px, 0.9fr)",
+                  cell: ({ row: model }) => renderModelIntelligence(model),
+                },
+                {
+                  id: "context",
+                  header: "Context",
+                  accessor: readModelContextValue,
+                  sortable: true,
+                  sortDescFirst: true,
+                  width: "minmax(90px, 0.75fr)",
+                  cell: ({ row: model }) => model.contextWindow || "Custom",
+                },
+                {
+                  id: "speed",
+                  header: "Speed",
+                  accessor: readModelSpeedRank,
+                  sortable: true,
+                  sortDescFirst: true,
+                  width: "minmax(90px, 0.75fr)",
+                  hideBelow: 760,
+                  cell: ({ row: model }) => model.speed || "Custom",
+                },
+                {
+                  id: "cost",
+                  header: "Cost / mTok",
+                  accessor: (model) => getPlaygroundAgentModelWeightedCost(model?.id) || Number.POSITIVE_INFINITY,
+                  sortable: true,
+                  width: "minmax(100px, 0.85fr)",
+                  align: "end",
+                  cell: ({ row: model }) => formatPlaygroundAgentModelComputeTokenCost(model.id),
+                },
+                {
+                  id: "access",
+                  header: "Access",
+                  accessor: (model) => model.locked ? "Plan required" : "Available",
+                  width: "minmax(100px, 0.85fr)",
+                  align: "end",
+                  cell: ({ row: model }) => React.createElement("span", { className: "playground-agents-model-access" + (model.locked ? " is-locked" : " is-available") }, model.locked ? "Plan required" : "Available"),
+                },
+              ],
+            })
           );
         }
 
@@ -129754,24 +128572,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           });
         }
 
-        function openAgentBulkActionMenu(event, agentIds = []) {
-          const selectedIds = Array.isArray(agentIds)
-            ? agentIds.map((agentId) => String(agentId || "").trim()).filter(Boolean)
-            : [];
-          if (selectedIds.length < 2) {
-            return;
-          }
-          event.preventDefault();
-          event.stopPropagation();
-          const position = getAgentOverviewContextMenuPosition(event, 164);
-          clearAgentBulkActionMenuCloseTimer();
-          closeAgentListActionMenu({ animate: false });
-          setAgentBulkActionMenuClosing(false);
-          setAgentBulkActionMenuState({
-            agentIds: selectedIds,
-            ...position,
-          });
-        }
 
         function closeAgentRenameDialog() {
           setAgentRenameState(null);
@@ -135383,58 +134183,61 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             );
           }
           function renderAgentGuardrailTable() {
-            return React.createElement("div", { className: "playground-project-overview-threads-table playground-agents-detail-guardrails-table" },
-              React.createElement("div", { className: "playground-project-overview-threads-table-header" },
-                React.createElement("div", null, "Name"),
-                React.createElement("div", null, "Prompts"),
-                React.createElement("div", null, "Description"),
-                React.createElement("div", null, "Updated"),
-                React.createElement("div", null)
-              ),
-              React.createElement("div", { className: "playground-project-overview-thread-list" },
-                visibleAgentGuardrailSets.map((set) => {
-                  const promptCount = Array.isArray(set.prompts) ? set.prompts.length : 0;
-                  const promptLabel = promptCount + " " + (promptCount === 1 ? "prompt" : "prompts");
-                  const dateLabel = formatAgentGuardrailDate(set.updatedAt || set.createdAt);
-                  const description = String(set.description || "").trim() || "—";
-                  return React.createElement("div", {
-                      key: set.id,
-                      className: "playground-project-overview-threads-table-row playground-agents-detail-guardrail-table-row",
-                    },
-                    React.createElement("div", { className: "playground-project-overview-thread-cell" },
-                      React.createElement("div", { className: "playground-agents-detail-guardrail-resource-title" },
-                        React.createElement("span", { className: "playground-agents-detail-guardrail-icon", "aria-hidden": "true" },
-                          React.createElement(Shield, { width: 10, height: 10, strokeWidth: 1.8 })
-                        ),
-                        React.createElement("div", { className: "playground-plugin-row-title" }, set.name || "Untitled Guardrail Set")
-                      )
+            return React.createElement(PlatformDataTable, {
+              rows: visibleAgentGuardrailSets,
+              getRowId: (set) => set.id,
+              ariaLabel: "Agent guardrails",
+              className: "playground-agent-guardrails-platform-table",
+              surface: "plain",
+              sticky: false,
+              columns: [
+                {
+                  id: "name",
+                  header: "Name",
+                  accessor: (set) => set.name || "Untitled Guardrail Set",
+                  width: "minmax(180px, 1.5fr)",
+                  cell: ({ row: set }) => React.createElement("div", { className: "playground-agents-detail-guardrail-resource-title" },
+                    React.createElement("span", { className: "playground-agents-detail-guardrail-icon", "aria-hidden": "true" },
+                      React.createElement(Shield, { width: 10, height: 10, strokeWidth: 1.8 })
                     ),
-                    React.createElement("div", {
-                      className: "playground-project-overview-thread-cell is-prompts",
-                      title: promptLabel,
-                    }, promptLabel),
-                    React.createElement("div", {
-                      className: "playground-project-overview-thread-cell is-description",
-                      title: description,
-                    }, description),
-                    React.createElement("div", {
-                      className: "playground-project-overview-thread-cell is-date",
-                      title: dateLabel,
-                    }, dateLabel),
-                    React.createElement("div", { className: "playground-project-overview-thread-cell is-actions" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-project-overview-thread-menu-button",
-                        onClick: () => toggleAgentGuardrailSet(set.id),
-                        disabled: Boolean(isDefaultAgentConfigurationLocked),
-                        "aria-label": "Remove guardrail",
-                        title: "Remove guardrail",
-                      }, React.createElement(X, { width: 15, height: 15, strokeWidth: 1.8 }))
-                    )
-                  );
-                })
-              )
-            );
+                    React.createElement("div", { className: "playground-plugin-row-title" }, set.name || "Untitled Guardrail Set")
+                  ),
+                },
+                {
+                  id: "prompts",
+                  header: "Prompts",
+                  accessor: (set) => Array.isArray(set.prompts) ? set.prompts.length : 0,
+                  width: "minmax(80px, 0.65fr)",
+                  cell: ({ row: set }) => {
+                    const count = Array.isArray(set.prompts) ? set.prompts.length : 0;
+                    return count + " " + (count === 1 ? "prompt" : "prompts");
+                  },
+                },
+                {
+                  id: "description",
+                  header: "Description",
+                  accessor: (set) => String(set.description || "").trim() || "—",
+                  width: "minmax(180px, 1.5fr)",
+                  hideBelow: 720,
+                },
+                {
+                  id: "updated",
+                  header: "Updated",
+                  accessor: (set) => set.updatedAt || set.createdAt || "",
+                  width: "minmax(100px, 0.8fr)",
+                  align: "end",
+                  cell: ({ row: set }) => formatAgentGuardrailDate(set.updatedAt || set.createdAt),
+                },
+              ],
+              getRowActions: (set) => [{
+                id: "remove",
+                label: "Remove guardrail",
+                icon: X,
+                danger: true,
+                disabled: Boolean(isDefaultAgentConfigurationLocked),
+                onSelect: () => toggleAgentGuardrailSet(set.id),
+              }],
+            });
           }
           const agentGuardrailsSection = React.createElement("section", {
               className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-guardrails-section",
@@ -136760,56 +135563,51 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                   React.createElement("span", null, "Run Evaluation")
                 )
               ),
-              filteredAgentEvaluationRows.length > 0
-                ? React.createElement("div", { className: "playground-project-overview-threads-table" },
-                    React.createElement("div", { className: "playground-project-overview-threads-table-header" },
-                      React.createElement("div", null, "Evaluation"),
-                      React.createElement("div", null, "Score"),
-                      React.createElement("div", null, "Version"),
-                      React.createElement("div", null, "Runs"),
-                      React.createElement("div", null, "Updated"),
-                      React.createElement("div", null)
-                    ),
-                    React.createElement("div", { className: "playground-project-overview-thread-list" },
-                      filteredAgentEvaluationRows.map((row) =>
-                        React.createElement("div", {
-                            key: row.set.id,
-                            className: "playground-project-overview-threads-table-row",
-                            role: "button",
-                            tabIndex: 0,
-                            onClick: () => setAgentDetailEvaluationSelectedSetId(row.set.id),
-                            onKeyDown: (event) => {
-                              if (event.key === "Enter" || event.key === " ") {
-                                event.preventDefault();
-                                setAgentDetailEvaluationSelectedSetId(row.set.id);
-                              }
-                            },
-                          },
-                          React.createElement("div", { className: "playground-project-overview-thread-cell" },
-                            React.createElement("div", { className: "playground-plugin-row-title" }, row.set.name || "Untitled Evaluation")
-                          ),
-                          React.createElement("div", { className: "playground-project-overview-thread-cell" },
-                            React.createElement("span", { className: "playground-agents-detail-evaluation-score" },
-                              row.latestRun ? formatAgentEvaluationPercent(row.latestRun.averageScore) : "-"
-                            )
-                          ),
-                          React.createElement("div", { className: "playground-project-overview-thread-cell" },
-                            React.createElement("span", { className: "playground-agents-detail-evaluation-version" }, getAgentEvaluationVersionLabel(row.latestRun))
-                          ),
-                          React.createElement("div", { className: "playground-project-overview-thread-cell" }, String(row.runs.length)),
-                          React.createElement("div", { className: "playground-project-overview-thread-cell" }, formatAgentEvaluationDate(row.latestRun?.completedAt || row.latestRun?.createdAt || row.set.updatedAt)),
-                          React.createElement("div", { className: "playground-project-overview-thread-cell is-actions" },
-                            React.createElement(ChevronRight, { width: 15, height: 15, strokeWidth: 1.8 })
-                          )
-                        )
-                      )
-                    )
-                  )
-                : React.createElement("div", { className: "playground-tasks-secondary-copy" },
-                    normalizedAgentEvaluationSearch
-                      ? "No matching evaluations for this agent."
-                      : "No evaluations have been run for this agent yet."
-                  )
+              React.createElement(PlatformDataTable, {
+                rows: filteredAgentEvaluationRows,
+                getRowId: (row) => row.set.id,
+                ariaLabel: "Agent evaluations",
+                className: "playground-agent-evaluations-platform-table",
+                surface: "plain",
+                sticky: false,
+                emptyState: normalizedAgentEvaluationSearch
+                  ? "No matching evaluations for this agent."
+                  : "No evaluations have been run for this agent yet.",
+                columns: [
+                  {
+                    id: "evaluation",
+                    header: "Evaluation",
+                    accessor: (row) => row.set.name || "Untitled Evaluation",
+                    width: "minmax(180px, 1.5fr)",
+                    cell: ({ row }) => React.createElement("div", { className: "playground-plugin-row-title" }, row.set.name || "Untitled Evaluation"),
+                  },
+                  {
+                    id: "score",
+                    header: "Score",
+                    accessor: (row) => Number(row.latestRun?.averageScore || 0),
+                    width: "minmax(80px, 0.65fr)",
+                    cell: ({ row }) => React.createElement("span", { className: "playground-agents-detail-evaluation-score" }, row.latestRun ? formatAgentEvaluationPercent(row.latestRun.averageScore) : "-"),
+                  },
+                  {
+                    id: "version",
+                    header: "Version",
+                    accessor: (row) => getAgentEvaluationVersionLabel(row.latestRun),
+                    width: "minmax(100px, 0.8fr)",
+                    cell: ({ row }) => React.createElement("span", { className: "playground-agents-detail-evaluation-version" }, getAgentEvaluationVersionLabel(row.latestRun)),
+                  },
+                  { id: "runs", header: "Runs", accessor: (row) => row.runs.length, width: "minmax(70px, 0.55fr)", hideBelow: 700 },
+                  {
+                    id: "updated",
+                    header: "Updated",
+                    accessor: (row) => row.latestRun?.completedAt || row.latestRun?.createdAt || row.set.updatedAt || "",
+                    width: "minmax(110px, 0.9fr)",
+                    align: "end",
+                    cell: ({ row }) => formatAgentEvaluationDate(row.latestRun?.completedAt || row.latestRun?.createdAt || row.set.updatedAt),
+                  },
+                ],
+                onRowActivate: (row) => setAgentDetailEvaluationSelectedSetId(row.set.id),
+                getRowAriaLabel: (row) => "Open evaluation " + (row.set.name || "Untitled Evaluation"),
+              })
             );
           }
           function renderAgentEvaluationDetailSection(row) {
@@ -136899,37 +135697,41 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                     React.createElement("h3", { className: "playground-plugins-section-title" }, "Runs by Version")
                   )
                 ),
-                latestRunsByVersion.length > 0
-                  ? React.createElement("div", { className: "playground-project-overview-threads-table" },
-                      React.createElement("div", { className: "playground-project-overview-threads-table-header" },
-                        React.createElement("div", null, "Version"),
-                        React.createElement("div", null, "Score"),
-                        React.createElement("div", null, "Status"),
-                        React.createElement("div", null, "Environment"),
-                        React.createElement("div", null, "Updated"),
-                        React.createElement("div", null)
-                      ),
-                      React.createElement("div", { className: "playground-project-overview-thread-list" },
-                        latestRunsByVersion.map((run) =>
-                          React.createElement("div", {
-                              key: run.id,
-                              className: "playground-project-overview-threads-table-row",
-                            },
-                            React.createElement("div", { className: "playground-project-overview-thread-cell" },
-                              React.createElement("span", { className: "playground-agents-detail-evaluation-version" }, getAgentEvaluationVersionLabel(run))
-                            ),
-                            React.createElement("div", { className: "playground-project-overview-thread-cell" },
-                              React.createElement("span", { className: "playground-agents-detail-evaluation-score" }, formatAgentEvaluationPercent(run.averageScore))
-                            ),
-                            React.createElement("div", { className: "playground-project-overview-thread-cell" }, renderAgentEvaluationStatusBadge(run)),
-                            React.createElement("div", { className: "playground-project-overview-thread-cell" }, renderAgentEvaluationEnvironment(run)),
-                            React.createElement("div", { className: "playground-project-overview-thread-cell" }, formatAgentEvaluationDate(run.completedAt || run.createdAt)),
-                            React.createElement("div", { className: "playground-project-overview-thread-cell is-actions" })
-                          )
-                        )
-                      )
-                    )
-                  : React.createElement("div", { className: "playground-tasks-secondary-copy" }, "No runs for this evaluation yet.")
+                React.createElement(PlatformDataTable, {
+                  rows: latestRunsByVersion,
+                  getRowId: (run) => run.id,
+                  ariaLabel: "Evaluation runs by agent version",
+                  className: "playground-agent-evaluation-runs-platform-table",
+                  surface: "plain",
+                  sticky: false,
+                  emptyState: "No runs for this evaluation yet.",
+                  columns: [
+                    {
+                      id: "version",
+                      header: "Version",
+                      accessor: getAgentEvaluationVersionLabel,
+                      width: "minmax(120px, 1fr)",
+                      cell: ({ row: run }) => React.createElement("span", { className: "playground-agents-detail-evaluation-version" }, getAgentEvaluationVersionLabel(run)),
+                    },
+                    {
+                      id: "score",
+                      header: "Score",
+                      accessor: (run) => Number(run.averageScore || 0),
+                      width: "minmax(80px, 0.65fr)",
+                      cell: ({ row: run }) => React.createElement("span", { className: "playground-agents-detail-evaluation-score" }, formatAgentEvaluationPercent(run.averageScore)),
+                    },
+                    { id: "status", header: "Status", accessor: (run) => run.status || "", width: "minmax(100px, 0.8fr)", cell: ({ row: run }) => renderAgentEvaluationStatusBadge(run) },
+                    { id: "environment", header: "Environment", accessor: getAgentEvaluationEnvironmentLabel, width: "minmax(130px, 1.1fr)", hideBelow: 760, cell: ({ row: run }) => renderAgentEvaluationEnvironment(run) },
+                    {
+                      id: "updated",
+                      header: "Updated",
+                      accessor: (run) => run.completedAt || run.createdAt || "",
+                      width: "minmax(110px, 0.9fr)",
+                      align: "end",
+                      cell: ({ row: run }) => formatAgentEvaluationDate(run.completedAt || run.createdAt),
+                    },
+                  ],
+                })
               )
             );
           }
@@ -137059,10 +135861,12 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           const instructionsSection = React.createElement("div", {
               ref: agentInstructionsSectionRef,
               className: "playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section"
-                + (agentInstructionsHeaderStuck ? " is-header-stuck" : ""),
+                + (agentInstructionsHeaderStuck && agentInstructionsHeaderPresentation !== "static-transparent" ? " is-header-stuck" : ""),
             },
-            React.createElement("div", { className: "playground-tasks-detail-section-header" },
-              React.createElement("div", { className: "playground-tasks-detail-section-title" }, isTeamAgent ? "Squad Instructions" : "Instructions"),
+            React.createElement(PlaygroundDetailSectionHeader, {
+                title: isTeamAgent ? "Squad Instructions" : "Instructions",
+                presentation: agentInstructionsHeaderPresentation,
+              },
               isDefaultAgentConfigurationLocked
                 ? null
                 : React.createElement("div", { className: "playground-tasks-detail-format-actions" },
@@ -137177,7 +135981,10 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             },
             agentDetailTabs,
             agentDetailTopControls,
-            React.createElement("div", { className: "playground-project-overview-main playground-agents-detail-overview-main" },
+            React.createElement("div", {
+                className: "playground-project-overview-main playground-agents-detail-overview-main"
+                  + (normalizedAgentDetailTab === "permissions" ? " is-permissions-tab" : ""),
+              },
               agentDetailActiveSection
             ),
             agentPropertiesSidebar
@@ -138018,10 +136825,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                 : "Only show user-created agents",
             },
           ];
-          const agentsOverviewSortOptions = [
-            { id: "name", label: "Name (A-Z)", sortKey: "name", direction: "asc" },
-            { id: "updated", label: "Recently Updated", sortKey: "updated", direction: "desc" },
-          ];
           const normalizedOverviewSearchQuery = String(searchPopupQuery || "").trim().toLowerCase();
           const filteredOverviewAgents = displayAgents
             .filter((agent) => {
@@ -138236,252 +137039,231 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           const visibleOverviewAgentIds = visibleOverviewAgents.map((agent) => String(agent?.id || "").trim()).filter(Boolean);
           const selectedVisibleOverviewAgentIds = visibleOverviewAgentIds.filter((agentId) => selectedOverviewAgentIds.has(agentId));
           const allVisibleOverviewAgentsSelected = visibleOverviewAgentIds.length > 0 && selectedVisibleOverviewAgentIds.length === visibleOverviewAgentIds.length;
-          const hasPartialVisibleOverviewSelection = selectedVisibleOverviewAgentIds.length > 0 && !allVisibleOverviewAgentsSelected;
           const isDevelopConfigureAgentsOverview = embeddedInResources;
           const agentsOverviewEntityLabel = agentListMode === "teams" ? "Squads" : "Agents";
-          const toggleOverviewAgentSelection = (agentId) => {
-            const normalizedAgentId = String(agentId || "").trim();
-            if (!normalizedAgentId) return;
-            setSelectedOverviewAgentIds((current) => {
-              const next = new Set(current || []);
-              if (next.has(normalizedAgentId)) {
-                next.delete(normalizedAgentId);
-              } else {
-                next.add(normalizedAgentId);
-              }
-              return next;
-            });
-          };
-          const toggleVisibleOverviewAgentSelection = () => {
-            if (visibleOverviewAgentIds.length === 0) {
-              return;
-            }
-            setSelectedOverviewAgentIds((current) => {
-              const next = new Set(current || []);
-              if (allVisibleOverviewAgentsSelected) {
-                visibleOverviewAgentIds.forEach((agentId) => next.delete(agentId));
-              } else {
-                visibleOverviewAgentIds.forEach((agentId) => next.add(agentId));
-              }
-              return next;
-            });
-          };
-          const handleAgentsOverviewColumnSort = (sortKey) => {
-            const normalizedSortKey = String(sortKey || "name").trim() || "name";
-            setAgentsOverviewToolbarPopover("");
-            setAgentsOverviewToolbarPopoverClosing("");
-            setAgentsOverviewSortDirection((currentDirection) => {
-              if (agentsOverviewSort !== normalizedSortKey) {
-                return "asc";
-              }
-              return normalizeAgentsOverviewSortDirection(currentDirection) === "asc" ? "desc" : "asc";
-            });
-            setAgentsOverviewSort(normalizedSortKey);
-          };
-          const renderAgentsOverviewSortIcon = (sortKey) => {
-            const isActive = agentsOverviewSort === sortKey;
-            const isDescending = isActive && normalizedAgentsOverviewSortDirection === "desc";
-            const isAscending = isActive && !isDescending;
-            return React.createElement("span", {
-                className: "playground-agents-overview-sort-icon"
-                  + (isActive ? " is-active" : "")
-                  + (isAscending ? " is-ascending" : "")
-                  + (isDescending ? " is-descending" : ""),
-                "aria-hidden": "true",
-              },
-              React.createElement(ChevronsUpDown, {
-                className: "playground-agents-overview-sort-icon-layer is-top",
-                width: 14,
-                height: 14,
-                strokeWidth: 1.8,
-              }),
-              React.createElement(ChevronsUpDown, {
-                className: "playground-agents-overview-sort-icon-layer is-bottom",
-                width: 14,
-                height: 14,
-                strokeWidth: 1.8,
-              })
-            );
-          };
-          const renderAgentsOverviewSortableHeader = (label, sortKey) => {
-            const isActive = agentsOverviewSort === sortKey;
-            const nextDirection = isActive && normalizedAgentsOverviewSortDirection === "asc" ? "descending" : "ascending";
-            return React.createElement("div", { className: "playground-agents-overview-sortable-header" + (isActive ? " is-active" : "") },
-              React.createElement("span", { className: "playground-agents-overview-sortable-header-label" }, label),
-              React.createElement("button", {
-                  type: "button",
-                  className: "playground-agents-overview-column-sort-button"
-                    + (isActive ? " is-active" : "")
-                    + (isActive && normalizedAgentsOverviewSortDirection === "asc" ? " is-ascending" : "")
-                    + (isActive && normalizedAgentsOverviewSortDirection === "desc" ? " is-descending" : ""),
-                  title: "Sort " + label + " " + nextDirection,
-                  "aria-label": "Sort " + label + " " + nextDirection,
-                  "aria-pressed": isActive ? "true" : "false",
-                  onClick: (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    handleAgentsOverviewColumnSort(sortKey);
-                  },
-                },
-                renderAgentsOverviewSortIcon(sortKey)
-              )
-            );
-          };
-          const renderAgentsOverviewTableColumnHeader = () => React.createElement("div", { className: "playground-project-overview-threads-table-header playground-agents-overview-column-header" },
-            React.createElement("div", null,
-              React.createElement("button", {
-                type: "button",
-                className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox"
-                  + (allVisibleOverviewAgentsSelected ? " is-selected" : "")
-                  + (hasPartialVisibleOverviewSelection ? " is-partial" : ""),
-                role: "checkbox",
-                "aria-checked": allVisibleOverviewAgentsSelected ? "true" : (hasPartialVisibleOverviewSelection ? "mixed" : "false"),
-                "aria-label": allVisibleOverviewAgentsSelected ? "Deselect all visible agents" : "Select all visible agents",
-                onClick: (event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  toggleVisibleOverviewAgentSelection();
-                },
-              })
-            ),
-            React.createElement("div", null, renderAgentsOverviewSortableHeader("Name", "name")),
-            React.createElement("div", null, renderAgentsOverviewSortableHeader("Model", "model")),
-            React.createElement("div", null, renderAgentsOverviewSortableHeader("Creator", "creator")),
-            React.createElement("div", null, renderAgentsOverviewSortableHeader("Last used", "lastUsed")),
-            React.createElement("div", null)
-          );
-          const getAgentsOverviewToolbarMenuClassName = (menuId) =>
-            "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu"
-            + (agentsOverviewToolbarPopoverClosing === menuId ? " is-closing" : " playground-tasks-toolbar-popup-menu-animate-down-in");
-          const renderAgentsOverviewStickyTableHeader = (includeColumns = true) => React.createElement("div", { className: "playground-agents-overview-sticky-table-header" },
-            React.createElement("div", {
-                className: "playground-plugins-search-row playground-agents-overview-search-row" + (isDevelopConfigureAgentsOverview ? " playground-develop-server-kind-table-toolbar" : ""),
-                ref: agentsOverviewToolbarRef,
-              },
-              React.createElement("div", {
-                  className: isDevelopConfigureAgentsOverview ? "playground-develop-server-kind-table-controls" : "playground-agents-overview-table-controls",
-                },
-              React.createElement("div", { className: "playground-plugins-search-shell" + (isDevelopConfigureAgentsOverview ? " playground-develop-server-kind-search-shell" : "") },
-                React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("input", {
-                  type: "search",
-                  value: searchPopupQuery,
-                  onChange: (event) => setSearchPopupQuery(event.target.value),
-                  className: "playground-plugins-search",
-                  placeholder: agentListMode === "teams" ? "Search squads" : "Search agents",
-                })
-              ),
-              React.createElement("div", { className: "playground-plugins-toolbar-controls" },
-                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-control-button is-bare is-backlog-sort" + (agentsOverviewToolbarPopover === "sort" || agentsOverviewSort !== "name" || normalizedAgentsOverviewSortDirection !== "asc" ? " is-active" : ""),
-                    onClick: () => toggleAgentsOverviewToolbarPopover("sort"),
-                  },
-                    React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Sort")
-                  ),
-                  agentsOverviewToolbarPopover === "sort" || agentsOverviewToolbarPopoverClosing === "sort"
-                    ? React.createElement("div", { className: getAgentsOverviewToolbarMenuClassName("sort") },
-                        agentsOverviewSortOptions.map((option) =>
-                          React.createElement("button", {
-                              key: option.id,
-                              type: "button",
-                              className: "tb-popup-row tb-popup-row-select" + (agentsOverviewSort === (option.sortKey || option.id) && normalizedAgentsOverviewSortDirection === normalizeAgentsOverviewSortDirection(option.direction) ? " selected" : ""),
-                              onClick: () => {
-                                setAgentsOverviewSort(option.sortKey || option.id);
-                                setAgentsOverviewSortDirection(normalizeAgentsOverviewSortDirection(option.direction));
-                                closeAgentsOverviewToolbarPopover();
-                              },
-                            },
-                            React.createElement("span", { className: "tb-popup-check-slot" },
-                              agentsOverviewSort === (option.sortKey || option.id) && normalizedAgentsOverviewSortDirection === normalizeAgentsOverviewSortDirection(option.direction)
-                                ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                : null
-                            ),
-                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, option.label)
-                            )
-                          )
-                        )
-                      )
-                    : null
-                ),
-                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-control-button is-bare is-backlog-filter" + (agentsOverviewToolbarPopover === "filter" || agentsOverviewFilter !== "all" ? " is-active" : ""),
-                    onClick: () => toggleAgentsOverviewToolbarPopover("filter"),
-                  },
-                    React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Filter")
-                  ),
-                  agentsOverviewToolbarPopover === "filter" || agentsOverviewToolbarPopoverClosing === "filter"
-                    ? React.createElement("div", { className: getAgentsOverviewToolbarMenuClassName("filter") },
-                        agentsOverviewFilterOptions.map((option) =>
-                          React.createElement("button", {
-                              key: option.id,
-                              type: "button",
-                              className: "tb-popup-row tb-popup-row-select" + (agentsOverviewFilter === option.id ? " selected" : ""),
-                              onClick: () => {
-                                setAgentsOverviewFilter(option.id);
-                                closeAgentsOverviewToolbarPopover();
-                              },
-                            },
-                            React.createElement("span", { className: "tb-popup-check-slot" },
-                              agentsOverviewFilter === option.id
-                                ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                : null
-                            ),
-                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, option.label),
-                              React.createElement("span", null, option.description)
-                            )
-                          )
-                        )
-                      )
-                    : null
-                )
-              ),
-              React.createElement("div", { className: "playground-agents-list-switch-row playground-plugins-toolbar-switch" },
-                React.createElement("div", { className: "content-mode-switch playground-agents-list-switch" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "content-mode-button" + (agentListMode === "agents" ? " is-active" : ""),
-                    onClick: () => handleAgentListModeChange("agents"),
-                    "aria-pressed": agentListMode === "agents",
-                  }, "Agents"),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "content-mode-button" + (agentListMode === "teams" ? " is-active" : ""),
-                    onClick: () => handleAgentListModeChange("teams"),
-                    "aria-pressed": agentListMode === "teams",
-                  }, "Squads")
-                ),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-top-nav-private-chat-button playground-agents-nav-create-button playground-agents-overview-toolbar-create-button",
-                  onClick: () => {
-                    setAgentsOverviewToolbarPopover("");
-                    if (agentListMode === "teams") {
-                      handleCreateTeam();
-                    } else {
-                      handleCreateAgent();
-                    }
-                  },
-                  title: agentListMode === "teams" ? "Create squad" : "Create agent",
-                  "aria-label": agentListMode === "teams" ? "Create squad" : "Create agent",
-                  },
-                    React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("span", null, agentListMode === "teams" ? "New Squad" : "New Agent")
-                )
-              )
-              )
-            ),
-            includeColumns
-              ? renderAgentsOverviewTableColumnHeader()
-              : null
-          );
+
+	          const agentsOverviewColumns = [
+	            {
+	              id: "name",
+	              header: "Name",
+	              accessor: getAgentOverviewDisplayName,
+	              sortable: true,
+	              width: "minmax(220px, 1.35fr)",
+	              cell: ({ row: agent }) => {
+	                const isTeamListItem = agent?.agentType === "team" || isPlaygroundTeamAgent(agent);
+	                const agentName = getAgentOverviewDisplayName(agent);
+	                return React.createElement("div", { className: "playground-agents-overview-name-cell" },
+	                  isTeamListItem
+	                    ? React.createElement("span", { className: "playground-agents-overview-table-avatar is-team", "aria-hidden": "true" },
+	                        React.createElement(Layers, { width: 17, height: 17, strokeWidth: 1.8 })
+	                      )
+	                    : renderAgentListAvatar(agent, "playground-agents-overview-table-avatar"),
+	                  React.createElement("div", { className: "playground-agents-overview-name-copy" },
+	                    React.createElement("div", { className: "playground-agents-overview-name-title" }, agentName)
+	                  )
+	                );
+	              },
+	            },
+	            {
+	              id: "model",
+	              header: "Model",
+	              accessor: getAgentOverviewModelLabel,
+	              sortable: true,
+	              width: "minmax(220px, 1fr)",
+	              hideBelow: 760,
+	              cell: ({ row: agent }) => {
+	                const modelMeta = getPlaygroundAgentModelMeta(agent?.model || "claude-haiku-4-5", resolvedAgentModelOptions);
+	                return React.createElement("div", { className: "playground-agents-overview-model-cell" },
+	                  renderOverviewModelProviderIcon(modelMeta),
+	                  React.createElement("div", { className: "playground-agents-overview-model-copy" },
+	                    React.createElement("div", {
+	                      className: "playground-agents-overview-model-name",
+	                      title: modelMeta?.label || modelMeta?.id || "",
+	                    }, modelMeta?.label || modelMeta?.id || "Selected model")
+	                  )
+	                );
+	              },
+	            },
+	            {
+	              id: "creator",
+	              header: "Creator",
+	              accessor: getAgentOverviewCreatorLabel,
+	              sortable: true,
+	              width: "minmax(180px, 0.82fr)",
+	              hideBelow: 940,
+	              cell: ({ row: agent }) => renderAgentOverviewCreatorCell(agent),
+	            },
+	            {
+	              id: "lastUsed",
+	              header: "Last used",
+	              accessor: getAgentOverviewLastUsedTimestamp,
+	              sortable: true,
+	              width: "minmax(100px, 0.42fr)",
+	              align: "end",
+	              cell: ({ row: agent }) => {
+	                const lastUsedAt = getOverviewAgentLastUsedAt(agent);
+	                const lastUsedLabel = lastUsedAt
+	                  ? formatPlaygroundFileDate(lastUsedAt)
+	                  : (agentsHomeThreadsLoading ? "Loading..." : "Never");
+	                return React.createElement("div", {
+	                  className: "playground-agents-overview-table-value is-right",
+	                  title: lastUsedAt ? formatPlaygroundExactDate(lastUsedAt) : "",
+	                }, lastUsedLabel);
+	              },
+	            },
+	          ];
+	          const agentsOverviewToolbarSwitch = React.createElement("div", {
+	              className: "content-mode-switch playground-agents-list-switch",
+	              role: "group",
+	              "aria-label": "Agent type",
+	            },
+	            React.createElement("button", {
+	              type: "button",
+	              className: "content-mode-button" + (agentListMode === "agents" ? " is-active" : ""),
+	              onClick: () => handleAgentListModeChange("agents"),
+	              "aria-pressed": agentListMode === "agents" ? "true" : "false",
+	            }, "Agents"),
+	            React.createElement("button", {
+	              type: "button",
+	              className: "content-mode-button" + (agentListMode === "teams" ? " is-active" : ""),
+	              onClick: () => handleAgentListModeChange("teams"),
+	              "aria-pressed": agentListMode === "teams" ? "true" : "false",
+	            }, "Squads")
+	          );
+	          const getAgentsOverviewRowActions = (agent, actionState) => {
+	            const targets = Array.isArray(actionState?.targetRows) && actionState.targetRows.length
+	              ? actionState.targetRows
+	              : [agent];
+	            const bulkMode = targets.length > 1;
+	            const targetIds = targets.map((target) => String(target?.id || "").trim()).filter(Boolean);
+	            const singleAgentTargets = targets.filter((target) => !isPlaygroundTeamAgent(target));
+	            const deletableTargets = targets.filter((target) => !(target?.isDefault || target?.isSystem));
+	            if (bulkMode) {
+	              return [
+	                {
+	                  id: "share-team",
+	                  label: "Share selected with Team",
+	                  icon: UsersRound,
+	                  disabled: saveState.isSaving || targetIds.length === 0,
+	                  onSelect: () => openAgentSendToTeamModal(null, { agentIds: targetIds }),
+	                },
+	                {
+	                  id: "add-squad",
+	                  label: "Add selected to Agent Squad",
+	                  icon: Layers,
+	                  disabled: saveState.isSaving || singleAgentTargets.length === 0,
+	                  onSelect: () => openAgentAddToSquadModal(null, { agentIds: singleAgentTargets.map((target) => target.id) }),
+	                },
+	                {
+	                  id: "delete",
+	                  label: saveState.isSaving ? "Deleting..." : "Delete selected",
+	                  icon: Trash2,
+	                  danger: true,
+	                  separatorBefore: true,
+	                  disabled: saveState.isSaving || deletableTargets.length === 0,
+	                  onSelect: () => void handleDeleteAgents(deletableTargets),
+	                },
+	              ];
+	            }
+	            const targetIsTeam = isPlaygroundTeamAgent(agent);
+	            const isProtected = Boolean(agent?.isDefault || agent?.isSystem);
+	            const isDeleting = saveState.isSaving && agent?.id === selectedAgentId;
+	            return [
+	              {
+	                id: "rename",
+	                label: "Rename",
+	                icon: SquarePen,
+	                disabled: isProtected || saveState.isSaving,
+	                onSelect: () => openAgentRenameDialog(agent),
+	              },
+	              {
+	                id: "share-team",
+	                label: "Share with Team",
+	                icon: UsersRound,
+	                disabled: saveState.isSaving || !agent?.id || agent.id === PLAYGROUND_AGENT_DRAFT_ID,
+	                onSelect: () => openAgentSendToTeamModal(agent),
+	              },
+	              {
+	                id: "add-squad",
+	                label: "Add to Agent Squad",
+	                icon: Layers,
+	                disabled: saveState.isSaving || targetIsTeam || !agent?.id || agent.id === PLAYGROUND_AGENT_DRAFT_ID,
+	                onSelect: () => openAgentAddToSquadModal(agent),
+	              },
+	              {
+	                id: "copy",
+	                label: "Copy",
+	                icon: Copy,
+	                disabled: saveState.isSaving,
+	                onSelect: () => openAgentCopyComposer(agent),
+	              },
+	              {
+	                id: "delete",
+	                label: isDeleting ? "Deleting..." : "Delete",
+	                icon: Trash2,
+	                danger: true,
+	                separatorBefore: true,
+	                disabled: isProtected || isDeleting || saveState.isSaving,
+	                onSelect: () => void handleDeleteAgent(agent.id),
+	              },
+	            ];
+	          };
+	          const agentsOverviewDataTable = React.createElement(PlatformDataTable, {
+	            rows: visibleOverviewAgents,
+	            columns: agentsOverviewColumns,
+	            getRowId: (agent) => String(agent?.id || "").trim(),
+	            ariaLabel: agentsOverviewEntityLabel,
+	            className: "playground-agents-platform-data-table",
+	            surface: "plain",
+	            sorting: {
+	              value: { id: agentsOverviewSort, direction: normalizedAgentsOverviewSortDirection },
+	              manual: true,
+	              onChange: (nextSorting) => {
+	                if (!nextSorting) return;
+	                setAgentsOverviewSort(nextSorting.id);
+	                setAgentsOverviewSortDirection(nextSorting.direction);
+	                setAgentsOverviewToolbarPopover("");
+	                setAgentsOverviewToolbarPopoverClosing("");
+	              },
+	            },
+	            selection: {
+	              enabled: true,
+	              value: selectedOverviewAgentIds,
+	              onChange: ({ selectedIds: nextSelectedIds }) => setSelectedOverviewAgentIds(new Set(nextSelectedIds)),
+	              ariaLabel: (agent) => "Select " + getAgentOverviewDisplayName(agent),
+	            },
+	            toolbar: {
+	              search: {
+	                value: searchPopupQuery,
+	                onChange: setSearchPopupQuery,
+	                placeholder: agentListMode === "teams" ? "Search squads" : "Search agents",
+	                manual: true,
+	              },
+	              showSort: true,
+	              filters: [{
+	                id: "agent-type",
+	                label: "Type",
+	                value: agentsOverviewFilter,
+	                options: agentsOverviewFilterOptions,
+	                onChange: setAgentsOverviewFilter,
+	              }],
+	              trailing: agentsOverviewToolbarSwitch,
+	              primaryAction: {
+	                label: agentListMode === "teams" ? "New Squad" : "New Agent",
+	                icon: Plus,
+	                onClick: agentListMode === "teams" ? handleCreateTeam : handleCreateAgent,
+	              },
+	            },
+	            getRowActions: getAgentsOverviewRowActions,
+	            getRowAriaLabel: getAgentOverviewDisplayName,
+	            onRowActivate: (agent) => {
+	              setAgentsOverviewToolbarPopover("");
+	              handleAgentSelect(agent.id);
+	            },
+	            emptyState: normalizedOverviewSearchQuery
+	              ? (agentListMode === "teams" ? "No matching squads found." : "No matching agents found.")
+	              : (agentListMode === "teams" ? "No squads available." : "No agents available."),
+	          });
 
           return React.createElement("section", {
               className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section" + (isDevelopConfigureAgentsOverview ? " playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section" : ""),
@@ -138508,116 +137290,7 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
                       )
                     : null
                 ),
-            visibleOverviewAgents.length === 0 ? renderAgentsOverviewStickyTableHeader(false) : null,
-            visibleOverviewAgents.length === 0
-              ? React.createElement("div", { className: "playground-plugins-empty" },
-                  normalizedOverviewSearchQuery
-                    ? (agentListMode === "teams" ? "No matching squads found." : "No matching agents found.")
-                    : (agentListMode === "teams" ? "No squads available." : "No agents available.")
-                )
-              : React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table" },
-                  renderAgentsOverviewStickyTableHeader(false),
-                  React.createElement("div", { className: "playground-project-overview-thread-list" },
-                    renderAgentsOverviewTableColumnHeader(),
-                    visibleOverviewAgents.map((agent) => {
-                      const isTeamListItem = agent?.agentType === "team" || isPlaygroundTeamAgent(agent);
-                      const modelMeta = getPlaygroundAgentModelMeta(agent?.model || "claude-haiku-4-5", resolvedAgentModelOptions);
-                      const agentName = agent.id === PLAYGROUND_AGENT_DRAFT_ID
-                        ? (draftAgent?.name || (draftAgent?.agentType === "team" ? "New Squad" : "New Agent"))
-                        : (agent.name || "Untitled Agent");
-                      const lastUsedAt = getOverviewAgentLastUsedAt(agent);
-                      const lastUsedLabel = lastUsedAt
-                        ? formatPlaygroundFileDate(lastUsedAt)
-                        : (agentsHomeThreadsLoading ? "Loading..." : "Never");
-                      const openAgent = () => {
-                        setAgentsOverviewToolbarPopover("");
-                        handleAgentSelect(agent.id);
-                      };
-                      const isMenuOpen = agentListActionMenuState?.agentId === agent.id;
-                      const isOverviewAgentSelected = selectedOverviewAgentIds.has(String(agent.id || "").trim());
-                      return React.createElement("div", {
-                          key: agent.id,
-                          tabIndex: 0,
-                          role: "button",
-                          className: "playground-project-overview-threads-table-row",
-                          "aria-label": "Open " + agentName,
-                          onClick: openAgent,
-                          onContextMenu: (event) => {
-                            if (isOverviewAgentSelected && selectedOverviewAgentIds.size > 1) {
-                              openAgentBulkActionMenu(event, Array.from(selectedOverviewAgentIds || []));
-                              return;
-                            }
-                            openAgentListActionMenu(event, agent, { context: true });
-                          },
-                          onKeyDown: (event) => {
-                            if (event.key === "Enter" || event.key === " ") {
-                              event.preventDefault();
-                              openAgent();
-                            }
-                          },
-                        },
-                        React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-agents-overview-select-checkbox" + (isOverviewAgentSelected ? " is-selected" : ""),
-                            role: "checkbox",
-                            "aria-checked": isOverviewAgentSelected ? "true" : "false",
-                            "aria-label": "Select " + agentName,
-                            onClick: (event) => {
-                              event.preventDefault();
-                              event.stopPropagation();
-                              toggleOverviewAgentSelection(agent.id);
-                            },
-                            onKeyDown: (event) => event.stopPropagation(),
-                          })
-                        ),
-                        React.createElement("div", { className: "playground-project-overview-thread-cell is-name" },
-                          React.createElement("div", { className: "playground-agents-overview-name-cell" },
-                            isTeamListItem
-                              ? React.createElement("span", { className: "playground-agents-overview-table-avatar is-team", "aria-hidden": "true" },
-                                  React.createElement(Layers, { width: 17, height: 17, strokeWidth: 1.8 })
-                                )
-                              : renderAgentListAvatar(agent, "playground-agents-overview-table-avatar"),
-                            React.createElement("div", { className: "playground-agents-overview-name-copy" },
-                              React.createElement("div", { className: "playground-agents-overview-name-title" }, agentName)
-                            )
-                          )
-                        ),
-                        React.createElement("div", { className: "playground-project-overview-thread-cell is-model" },
-                          React.createElement("div", { className: "playground-agents-overview-model-cell" },
-                            renderOverviewModelProviderIcon(modelMeta),
-                            React.createElement("div", { className: "playground-agents-overview-model-copy" },
-                              React.createElement("div", {
-                                className: "playground-agents-overview-model-name",
-                                title: modelMeta?.label || modelMeta?.id || "",
-                              }, modelMeta?.label || modelMeta?.id || "Selected model")
-                            )
-                          )
-                        ),
-                        React.createElement("div", { className: "playground-project-overview-thread-cell is-creator" }, renderAgentOverviewCreatorCell(agent)),
-                        React.createElement("div", {
-                          className: "playground-project-overview-thread-cell is-date",
-                          title: lastUsedAt ? formatPlaygroundExactDate(lastUsedAt) : "",
-                        },
-                          React.createElement("div", { className: "playground-agents-overview-table-value" }, lastUsedLabel)
-                        ),
-                        React.createElement("div", { className: "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell" },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-overview-table-action-button" + (isMenuOpen ? " is-open" : ""),
-                            onClick: (event) => openAgentListActionMenu(event, agent, { openLeft: true }),
-                            onContextMenu: (event) => openAgentListActionMenu(event, agent, { context: true }),
-                            onKeyDown: (event) => event.stopPropagation(),
-                            "aria-label": "Agent actions",
-                            "aria-expanded": isMenuOpen ? "true" : "false",
-                          },
-                            React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 })
-                          )
-                        )
-                      );
-                    })
-                  )
-                )
+	            agentsOverviewDataTable
           );
         }
 
@@ -142859,12 +141532,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
             { id: "active", label: "Active", description: "Only show skills currently enabled" },
             { id: "disabled", label: "Disabled", description: "Only show disabled skills" },
           ];
-	          const skillsOverviewSortOptions = [
-	            { id: "updated", label: "Recently Updated", sortKey: "updated", direction: "desc" },
-	            { id: "name", label: "Name (A-Z)", sortKey: "name", direction: "asc" },
-	            { id: "status", label: "Status", sortKey: "status", direction: "asc" },
-	            { id: "type", label: "Type", sortKey: "type", direction: "asc" },
-	          ];
 
           function renderSkillHeroPill(skill, className) {
             if (!skill) {
@@ -142882,7 +141549,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	          const visibleSkillOverviewIds = sortedOverviewSkills.map((skill) => String(skill?.id || "").trim()).filter(Boolean);
 	          const selectedVisibleSkillOverviewIds = visibleSkillOverviewIds.filter((skillId) => selectedSkillsOverviewIds.has(skillId));
 	          const allVisibleSkillsSelected = visibleSkillOverviewIds.length > 0 && selectedVisibleSkillOverviewIds.length === visibleSkillOverviewIds.length;
-	          const hasPartialVisibleSkillsSelection = selectedVisibleSkillOverviewIds.length > 0 && !allVisibleSkillsSelected;
 	          const toggleSkillOverviewSelection = (skillId) => {
 	            const normalizedSkillId = String(skillId || "").trim();
 	            if (!normalizedSkillId) return;
@@ -142896,142 +141562,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	              return next;
 	            });
 	          };
-	          const toggleVisibleSkillOverviewSelection = () => {
-	            if (visibleSkillOverviewIds.length === 0) return;
-	            setSelectedSkillsOverviewIds((current) => {
-	              const next = new Set(current || []);
-	              if (allVisibleSkillsSelected) {
-	                visibleSkillOverviewIds.forEach((skillId) => next.delete(skillId));
-	              } else {
-	                visibleSkillOverviewIds.forEach((skillId) => next.add(skillId));
-	              }
-	              return next;
-	            });
-	          };
 	          const normalizeSkillsOverviewSortDirection = (direction) => direction === "desc" ? "desc" : "asc";
 	          const normalizedSkillsOverviewSortDirection = normalizeSkillsOverviewSortDirection(skillsOverviewSortDirection);
-	          const handleSkillsOverviewColumnSort = (sortKey) => {
-	            const normalizedSortKey = String(sortKey || "name").trim() || "name";
-	            setSkillsOverviewToolbarPopover("");
-	            setSkillsOverviewSortDirection((currentDirection) => {
-	              if (skillsOverviewSort !== normalizedSortKey) {
-	                return normalizedSortKey === "updated" ? "desc" : "asc";
-	              }
-	              return normalizeSkillsOverviewSortDirection(currentDirection) === "asc" ? "desc" : "asc";
-	            });
-	            setSkillsOverviewSort(normalizedSortKey);
-	          };
-	          const renderSkillsOverviewSortIcon = (sortKey) => {
-	            const isActive = skillsOverviewSort === sortKey;
-	            const isDescending = isActive && normalizedSkillsOverviewSortDirection === "desc";
-	            const isAscending = isActive && !isDescending;
-	            return React.createElement("span", {
-	                className: "playground-agents-overview-sort-icon"
-	                  + (isActive ? " is-active" : "")
-	                  + (isAscending ? " is-ascending" : "")
-	                  + (isDescending ? " is-descending" : ""),
-	                "aria-hidden": "true",
-	              },
-	              React.createElement(ChevronsUpDown, {
-	                className: "playground-agents-overview-sort-icon-layer is-top",
-	                width: 14,
-	                height: 14,
-	                strokeWidth: 1.8,
-	              }),
-	              React.createElement(ChevronsUpDown, {
-	                className: "playground-agents-overview-sort-icon-layer is-bottom",
-	                width: 14,
-	                height: 14,
-	                strokeWidth: 1.8,
-	              })
-	            );
-	          };
-	          const renderSkillsOverviewSortableHeader = (label, sortKey) => {
-	            const isActive = skillsOverviewSort === sortKey;
-	            const nextDirection = isActive && normalizedSkillsOverviewSortDirection === "asc" ? "descending" : "ascending";
-	            return React.createElement("div", { className: "playground-agents-overview-sortable-header" + (isActive ? " is-active" : "") },
-	              React.createElement("span", { className: "playground-agents-overview-sortable-header-label" }, label),
-	              React.createElement("button", {
-	                type: "button",
-	                className: "playground-agents-overview-column-sort-button"
-	                  + (isActive ? " is-active" : "")
-	                  + (isActive && normalizedSkillsOverviewSortDirection === "asc" ? " is-ascending" : "")
-	                  + (isActive && normalizedSkillsOverviewSortDirection === "desc" ? " is-descending" : ""),
-	                title: "Sort " + label + " " + nextDirection,
-	                "aria-label": "Sort " + label + " " + nextDirection,
-	                "aria-pressed": isActive ? "true" : "false",
-	                onClick: (event) => {
-	                  event.preventDefault();
-	                  event.stopPropagation();
-	                  handleSkillsOverviewColumnSort(sortKey);
-	                },
-	              }, renderSkillsOverviewSortIcon(sortKey))
-	            );
-	          };
 	          const renderSkillsOverviewStatusLabel = (skill) => {
 	            const isActive = skill?.isActive !== false;
 	            return React.createElement("span", {
 	              className: "playground-tags-overview-status-label " + (isActive ? "is-connected" : "is-not-connected"),
 	            }, isActive ? "Active" : "Disabled");
 	          };
-	          const renderSkillsOverviewToolbarMenu = (menuId, options) => React.createElement("div", {
-	              className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-	            },
-	            options.map((option) => {
-	              const optionSortKey = option.sortKey || option.id;
-	              const optionDirection = normalizeSkillsOverviewSortDirection(option.direction || (optionSortKey === "updated" ? "desc" : "asc"));
-	              const selected = menuId === "sort"
-	                ? skillsOverviewSort === optionSortKey && normalizedSkillsOverviewSortDirection === optionDirection
-	                : skillsOverviewStatusFilter === option.id;
-	              return React.createElement("button", {
-	                  key: option.id,
-	                  type: "button",
-	                  className: "tb-popup-row tb-popup-row-select" + (selected ? " selected" : ""),
-	                  onClick: () => {
-	                    if (menuId === "sort") {
-	                      setSkillsOverviewSort(optionSortKey);
-	                      setSkillsOverviewSortDirection(optionDirection);
-	                    } else {
-	                      setSkillsOverviewStatusFilter(option.id);
-	                    }
-	                    setSkillsOverviewToolbarPopover("");
-	                  },
-	                },
-	                React.createElement("span", { className: "tb-popup-check-slot" },
-	                  selected ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 }) : null
-	                ),
-	                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-	                  React.createElement("span", null, option.label),
-	                  option.description ? React.createElement("span", null, option.description) : null
-	                )
-	              );
-	            })
-	          );
-	          const renderSkillsOverviewColumnHeader = () => React.createElement("div", {
-	              className: "playground-project-overview-threads-table-header playground-agents-overview-column-header playground-skills-overview-column-header",
-	            },
-	            React.createElement("div", null,
-	              React.createElement("button", {
-	                type: "button",
-	                className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox"
-	                  + (allVisibleSkillsSelected ? " is-selected" : "")
-	                  + (hasPartialVisibleSkillsSelection ? " is-partial" : ""),
-	                role: "checkbox",
-	                "aria-checked": allVisibleSkillsSelected ? "true" : (hasPartialVisibleSkillsSelection ? "mixed" : "false"),
-	                "aria-label": allVisibleSkillsSelected ? "Deselect all visible skills" : "Select all visible skills",
-	                onClick: (event) => {
-	                  event.preventDefault();
-	                  event.stopPropagation();
-	                  toggleVisibleSkillOverviewSelection();
-	                },
-	              })
-	            ),
-	            React.createElement("div", null, renderSkillsOverviewSortableHeader("Name", "name")),
-	            React.createElement("div", null, renderSkillsOverviewSortableHeader("Status", "status")),
-	            React.createElement("div", null, renderSkillsOverviewSortableHeader("Type", "type")),
-	            React.createElement("div", null, renderSkillsOverviewSortableHeader("Updated", "updated")),
-	            React.createElement("div", null)
-	          );
 	          const renderSkillsOverviewModeSwitch = () => React.createElement("div", { className: "playground-agents-list-switch-row playground-skills-overview-switch-row playground-skills-overview-toolbar-switch" },
 	            React.createElement("div", { className: "content-mode-switch playground-agents-list-switch playground-skills-overview-switch" },
 	              React.createElement("button", {
@@ -143048,143 +141586,101 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
 	              }, "Custom")
 	            )
 	          );
-	          const renderSkillsOverviewStickyTableHeader = (includeColumns = true) => React.createElement("div", {
-	              className: "playground-agents-overview-sticky-table-header playground-team-overview-sticky-table-header playground-skills-overview-sticky-table-header",
-	            },
-	            React.createElement("div", {
-	                className: "playground-develop-server-kind-table-toolbar playground-team-overview-toolbar-row playground-skills-overview-toolbar-row",
-	                ref: skillsOverviewToolbarRef,
-	              },
-	              React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell playground-skills-overview-search-shell" },
-	                React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-	                React.createElement("input", {
-	                  type: "search",
-	                  value: skillsOverviewSearchQuery,
-	                  onChange: (event) => setSkillsOverviewSearchQuery(event.target.value),
-	                  className: "playground-plugins-search",
-	                  placeholder: "Search skills",
-	                })
-	              ),
-	              React.createElement("div", { className: "playground-plugins-toolbar-controls playground-skills-overview-controls" },
-	                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-skills-overview-sort-shell" },
-	                  React.createElement("button", {
-	                    type: "button",
-	                    className: "playground-files-control-button is-bare is-backlog-sort" + (skillsOverviewToolbarPopover === "sort" || skillsOverviewSort !== "updated" || normalizedSkillsOverviewSortDirection !== "desc" ? " is-active" : ""),
-	                    onClick: () => setSkillsOverviewToolbarPopover((current) => current === "sort" ? "" : "sort"),
-	                  },
-	                    React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                    React.createElement("span", null, "Sort")
-	                  ),
-	                  skillsOverviewToolbarPopover === "sort"
-	                    ? renderSkillsOverviewToolbarMenu("sort", skillsOverviewSortOptions)
-	                    : null
-	                ),
-	                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-skills-overview-filter-shell" },
-	                  React.createElement("button", {
-	                    type: "button",
-	                    className: "playground-files-control-button is-bare is-backlog-filter" + (skillsOverviewToolbarPopover === "filter" || skillsOverviewStatusFilter !== "all" ? " is-active" : ""),
-	                    onClick: () => setSkillsOverviewToolbarPopover((current) => current === "filter" ? "" : "filter"),
-	                  },
-	                    React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                    React.createElement("span", null, "Filter")
-	                  ),
-	                  skillsOverviewToolbarPopover === "filter"
-	                    ? renderSkillsOverviewToolbarMenu("filter", skillsOverviewFilterOptions)
-	                    : null
-	                )
-	              ),
-	              renderSkillsOverviewModeSwitch()
-	            ),
-	            includeColumns ? renderSkillsOverviewColumnHeader() : null
-	          );
 	          const getSkillOverviewUpdatedLabel = (skill) =>
 	            formatRelativeThreadTime(skill?.updatedAt || skill?.createdAt) || (skill?.isCustom ? "Recently" : "System");
-	          function renderSkillOverviewItem(skill) {
-	            const skillId = String(skill?.id || "").trim();
-	            const skillName = String(skill?.name || skill?.id || "Skill").trim();
-	            const isSelected = selectedSkillsOverviewIds.has(skillId);
-	            const menuOpen = skillListActionMenuState?.skillId === skillId;
-	            return React.createElement("div", {
-	                key: skillId || skillName,
-	                tabIndex: 0,
-	                role: "button",
-	                className: "playground-project-overview-threads-table-row playground-skills-overview-table-row",
-	                "aria-label": "Open " + skillName,
-	                onClick: () => handleSkillSelect(skillId),
-	                onContextMenu: (event) => openSkillListActionMenu(event, skill, { context: true }),
-	                onKeyDown: (event) => {
-	                  if (event.key === "Enter" || event.key === " ") {
-	                    event.preventDefault();
-	                    handleSkillSelect(skillId);
-	                  }
-	                },
-	              },
-	              React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
-	                React.createElement("button", {
-	                  type: "button",
-	                  className: "playground-agents-overview-select-checkbox" + (isSelected ? " is-selected" : ""),
-	                  role: "checkbox",
-	                  "aria-checked": isSelected ? "true" : "false",
-	                  "aria-label": "Select " + skillName,
-	                  onClick: (event) => {
-	                    event.preventDefault();
-	                    event.stopPropagation();
-	                    toggleSkillOverviewSelection(skillId);
-	                  },
-	                  onKeyDown: (event) => event.stopPropagation(),
-	                })
-	              ),
-	              React.createElement("div", { className: "playground-project-overview-thread-cell is-name" },
-	                React.createElement("div", { className: "playground-agents-overview-name-cell playground-skills-overview-name-cell" },
-	                  React.createElement("div", { className: "playground-plugin-row-logo-shell playground-skills-overview-logo-shell" },
-	                    renderSkillIcon(skill, "playground-environments-list-item-icon")
-	                  ),
-	                  React.createElement("div", { className: "playground-agents-overview-name-copy" },
-	                    React.createElement("div", { className: "playground-agents-overview-name-title" }, skillName)
-	                  )
-	                )
-	              ),
-	              React.createElement("div", { className: "playground-project-overview-thread-cell is-model" },
-	                renderSkillsOverviewStatusLabel(skill)
-	              ),
-	              React.createElement("div", { className: "playground-project-overview-thread-cell is-creator" },
-	                React.createElement("div", { className: "playground-agents-overview-table-value" }, skill?.isCustom ? "Custom" : "System")
-	              ),
-	              React.createElement("div", { className: "playground-project-overview-thread-cell is-date" },
-	                React.createElement("div", { className: "playground-agents-overview-table-value" }, getSkillOverviewUpdatedLabel(skill))
-	              ),
-	              React.createElement("div", { className: "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell playground-tasks-toolbar-popup-shell playground-skills-overview-action-shell" },
-	                React.createElement("button", {
-	                  type: "button",
-	                  className: "playground-overview-table-action-button" + (menuOpen ? " is-open" : ""),
-	                  onClick: (event) => openSkillListActionMenu(event, skill),
-	                  onKeyDown: (event) => event.stopPropagation(),
-	                  "aria-label": "Skill actions",
-	                  "aria-expanded": menuOpen ? "true" : "false",
-	                },
-	                  React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 })
-	                )
-	              )
-	            );
-	          }
-	          const renderSkillsOverviewTableSection = () => React.createElement("section", {
-	              className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-team-overview-table-section playground-team-grid-table-section playground-skills-overview-table-section",
-	            },
-	            sortedOverviewSkills.length === 0 ? renderSkillsOverviewStickyTableHeader(false) : null,
-	            sortedOverviewSkills.length === 0
-	              ? React.createElement("div", { className: "playground-plugins-empty" },
-	                  normalizedSkillsOverviewQuery
-	                    ? (skillListMode === "custom" ? "No custom skills match your search." : "No system skills match your search.")
-	                    : (skillListMode === "custom" ? "No custom skills yet." : "No system skills available.")
-	                )
-	              : React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table" },
-	                  renderSkillsOverviewStickyTableHeader(false),
-	                  React.createElement("div", { className: "playground-project-overview-thread-list" },
-	                    renderSkillsOverviewColumnHeader(),
-	                    sortedOverviewSkills.map((skill) => renderSkillOverviewItem(skill))
-	                  )
-	                )
-	          );
+		          const skillsOverviewColumns = [
+		            {
+		              id: "name",
+		              header: "Name",
+		              accessor: (skill) => skill?.name || skill?.id || "",
+		              sortable: true,
+		              width: "minmax(220px, 1.35fr)",
+		              cell: ({ row: skill }) => React.createElement("div", { className: "playground-agents-overview-name-cell playground-skills-overview-name-cell" },
+		                React.createElement("div", { className: "playground-plugin-row-logo-shell playground-skills-overview-logo-shell" },
+		                  renderSkillIcon(skill, "playground-environments-list-item-icon")
+		                ),
+		                React.createElement("div", { className: "playground-agents-overview-name-title" }, skill?.name || skill?.id || "Skill")
+		              ),
+		            },
+		            {
+		              id: "status",
+		              header: "Status",
+		              accessor: (skill) => skill?.isActive === false ? "Disabled" : "Active",
+		              sortable: true,
+		              width: "minmax(110px, 0.58fr)",
+		              cell: ({ row: skill }) => renderSkillsOverviewStatusLabel(skill),
+		            },
+		            {
+		              id: "type",
+		              header: "Type",
+		              accessor: (skill) => skill?.isCustom ? "Custom" : "System",
+		              sortable: true,
+		              width: "minmax(105px, 0.55fr)",
+		              hideBelow: 760,
+		              cell: ({ row: skill }) => React.createElement("div", { className: "playground-agents-overview-table-value" }, skill?.isCustom ? "Custom" : "System"),
+		            },
+		            {
+		              id: "updated",
+		              header: "Updated",
+		              accessor: (skill) => Date.parse(String(skill?.updatedAt || skill?.createdAt || "")) || 0,
+		              sortable: true,
+		              sortDescFirst: true,
+		              width: "minmax(120px, 0.62fr)",
+		              align: "end",
+		              hideBelow: 900,
+		              cell: ({ row: skill }) => React.createElement("div", { className: "playground-agents-overview-table-value is-right" }, getSkillOverviewUpdatedLabel(skill)),
+		            },
+		          ];
+		          const getSkillsOverviewActions = (skill) => {
+		            const isDeleting = skillSaveState.isSaving && selectedSkillId === skill?.id;
+		            return [
+		              { id: "open", label: "Open", icon: ChevronRight, onSelect: () => handleSkillSelect(skill.id) },
+		              { id: "edit", label: "Edit", icon: SquarePen, hidden: !skill?.isCustom, disabled: skillSaveState.isSaving, onSelect: () => openSkillEditDialog(skill) },
+		              { id: "rename", label: "Rename", icon: SquarePen, hidden: !skill?.isCustom, disabled: skillSaveState.isSaving, onSelect: () => openSkillRenameDialog(skill) },
+		              { id: "delete", label: isDeleting ? "Deleting..." : "Delete", icon: Trash2, hidden: !skill?.isCustom, danger: true, separatorBefore: true, disabled: isDeleting || skillSaveState.isSaving, onSelect: () => void handleDeleteSelectedSkill(skill) },
+		            ];
+		          };
+		          const skillsOverviewDataTable = React.createElement(PlatformDataTable, {
+		            rows: sortedOverviewSkills,
+		            columns: skillsOverviewColumns,
+		            getRowId: (skill) => String(skill?.id || ""),
+		            ariaLabel: "Skills",
+		            className: "playground-skills-platform-data-table",
+		            surface: "plain",
+		            sorting: {
+		              value: { id: skillsOverviewSort, direction: normalizedSkillsOverviewSortDirection },
+		              manual: true,
+		              onChange: (nextSorting) => {
+		                if (!nextSorting) return;
+		                setSkillsOverviewSort(nextSorting.id);
+		                setSkillsOverviewSortDirection(nextSorting.direction);
+		                setSkillsOverviewToolbarPopover("");
+		              },
+		            },
+		            selection: {
+		              enabled: true,
+		              value: selectedSkillsOverviewIds,
+		              onChange: ({ selectedIds }) => setSelectedSkillsOverviewIds(new Set(selectedIds)),
+		              ariaLabel: (skill) => "Select " + (skill?.name || skill?.id || "skill"),
+		            },
+		            toolbar: {
+		              search: { value: skillsOverviewSearchQuery, onChange: setSkillsOverviewSearchQuery, placeholder: "Search skills", manual: true },
+		              showSort: true,
+		              filters: [{ id: "status", label: "Status", value: skillsOverviewStatusFilter, options: skillsOverviewFilterOptions, onChange: setSkillsOverviewStatusFilter }],
+		              trailing: renderSkillsOverviewModeSwitch(),
+		            },
+		            getRowActions: getSkillsOverviewActions,
+		            getRowAriaLabel: (skill) => skill?.name || skill?.id || "Skill",
+		            onRowActivate: (skill) => handleSkillSelect(skill.id),
+		            emptyState: normalizedSkillsOverviewQuery
+		              ? (skillListMode === "custom" ? "No custom skills match your search." : "No system skills match your search.")
+		              : (skillListMode === "custom" ? "No custom skills yet." : "No system skills available."),
+		          });
+		          const renderSkillsOverviewTableSection = () => React.createElement("section", {
+		              className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-team-overview-table-section playground-team-grid-table-section playground-skills-overview-table-section",
+		            },
+		            skillsOverviewDataTable
+		          );
 
           return React.createElement("section", { className: "playground-environments-detail playground-plugins-detail playground-skills-page" },
             skillsOverviewTopNavActions,
@@ -145471,306 +143967,14 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           };
         }, [projectOverviewFileMenuState]);
 
-        function openProjectOverviewFileMenu(event, row) {
-          event.preventDefault();
-          event.stopPropagation();
-
-          const rect = event.currentTarget.getBoundingClientRect();
-          const menuWidth = 224;
-          const menuHeight = 224;
-          const openUpward = rect.bottom + menuHeight > window.innerHeight - 12 && rect.top - menuHeight >= 12;
-          const top = openUpward
-            ? Math.max(12, rect.top - menuHeight - 8)
-            : Math.min(window.innerHeight - menuHeight - 12, rect.bottom + 8);
-          const left = Math.min(
-            Math.max(12, rect.right - menuWidth),
-            Math.max(12, window.innerWidth - menuWidth - 12),
-          );
-
-          setProjectOverviewFileMenuState({
-            row,
-            top,
-            left,
-          });
-          setProjectOverviewFileMutationState((current) => ({
-            ...current,
-            error: "",
-          }));
-        }
 
         function closeProjectOverviewFileMenu() {
           setProjectOverviewFileMenuState(null);
         }
 
-        function navigateProjectOverviewFileToFiles(row) {
-          const normalizedProjectId = String(
-            selectedProjectId
-            || selectedProject?.id
-            || projectAttachmentHostRecord?.id
-            || row?.projectId
-            || ""
-          ).trim();
-          const normalizedProjectName = String(
-            selectedProject?.name
-            || projectAttachmentHostRecord?.name
-            || ""
-          ).trim();
-          const normalizedEnvironmentId = String(
-            row?.environmentId
-            || selectedProject?.defaultEnvironmentId
-            || projectAttachmentHostRecord?.defaultEnvironmentId
-            || activeProjectAttachmentEnvironmentId
-            || ""
-          ).trim();
-          const normalizedPath = normalizeHistoryPath(row?.path || "");
-          if (!normalizedPath) {
-            return;
-          }
-          if (typeof onOpenFilesPage === "function") {
-            onOpenFilesPage({
-              token: Date.now().toString(36) + Math.random().toString(36).slice(2),
-              projectId: normalizedProjectId,
-              projectName: normalizedProjectName,
-              environmentId: normalizedEnvironmentId,
-              path: normalizedPath,
-              isFolder: false,
-            });
-          }
-          closeProjectOverviewFileMenu();
-        }
 
-        async function handleProjectOverviewFileRename(row) {
-          const normalizedEnvironmentId = String(
-            row?.environmentId
-            || selectedProject?.defaultEnvironmentId
-            || activeProjectAttachmentEnvironmentId
-            || ""
-          ).trim();
-          const normalizedPath = normalizeHistoryPath(row?.path || "");
-          if (!normalizedEnvironmentId || !normalizedPath) {
-            window.alert("This file cannot be renamed because no project environment is available.");
-            return;
-          }
 
-          const currentName = getHistoryPathName(normalizedPath) || String(row?.title || "").trim() || "file";
-          const currentNameParts = splitPlaygroundProtectedFilename(currentName, false);
-          const rawNextBasename = window.prompt(
-            currentNameParts.extension ? "Rename file (extension is preserved)" : "Rename file",
-            currentNameParts.basename || currentName
-          );
-          if (rawNextBasename === null) {
-            return;
-          }
-          const nextName = buildPlaygroundProtectedFilename(currentName, rawNextBasename, false);
-          if (!nextName || nextName === currentName) {
-            return;
-          }
 
-          const parentPath = getPlaygroundEntryParentPath(normalizedPath);
-          const destPath = normalizeHistoryPath([parentPath, nextName].filter(Boolean).join("/"));
-          if (!destPath || destPath === normalizedPath) {
-            return;
-          }
-
-          closeProjectOverviewFileMenu();
-          setProjectOverviewFileMutationState({
-            rowId: row.id,
-            action: "rename",
-            error: "",
-          });
-
-          try {
-            const response = await fetch(
-              backendUrl + "/environments/" + encodeURIComponent(normalizedEnvironmentId) + "/files/move",
-              {
-                method: "POST",
-                headers: {
-                  ...requestHeaders,
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  sourcePath: normalizedPath,
-                  destPath,
-                }),
-              }
-            );
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) {
-              throw new Error(data?.message || data?.error || "Failed to rename file.");
-            }
-
-            setProjectOverviewFileActivityReloadNonce((current) => current + 1);
-          } catch (error) {
-            setProjectOverviewFileMutationState({
-              rowId: row.id,
-              action: "",
-              error: error instanceof Error ? error.message : "Failed to rename file.",
-            });
-            return;
-          }
-
-          setProjectOverviewFileMutationState({
-            rowId: "",
-            action: "",
-            error: "",
-          });
-        }
-
-        async function handleProjectOverviewFileDelete(row) {
-          const normalizedEnvironmentId = String(
-            row?.environmentId
-            || selectedProject?.defaultEnvironmentId
-            || activeProjectAttachmentEnvironmentId
-            || ""
-          ).trim();
-          const normalizedPath = normalizeHistoryPath(row?.path || "");
-          if (!normalizedEnvironmentId || !normalizedPath) {
-            window.alert("This file cannot be deleted because no project environment is available.");
-            return;
-          }
-
-          const fileName = getHistoryPathName(normalizedPath) || String(row?.title || "").trim() || "file";
-          if (!window.confirm('Delete "' + fileName + '" from this project environment?')) {
-            return;
-          }
-
-          closeProjectOverviewFileMenu();
-          setProjectOverviewFileMutationState({
-            rowId: row.id,
-            action: "delete",
-            error: "",
-          });
-
-          try {
-            const encodedPath = normalizedPath
-              .split("/")
-              .filter(Boolean)
-              .map((segment) => encodeURIComponent(segment))
-              .join("/");
-            const response = await fetch(
-              backendUrl + "/environments/" + encodeURIComponent(normalizedEnvironmentId) + "/files/" + encodedPath,
-              {
-                method: "DELETE",
-                headers: requestHeaders,
-              }
-            );
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok && response.status !== 404) {
-              throw new Error(data?.message || data?.error || "Failed to delete file.");
-            }
-
-            const suppressedFileKey = getProjectOverviewFileActivityKey(
-              selectedProjectId,
-              normalizedEnvironmentId,
-              normalizedPath
-            );
-            const nextDeletedFileKeys = suppressedFileKey
-              ? normalizeProjectOverviewDeletedFileKeys(selectedProjectOverviewDeletedFileKeys, [suppressedFileKey])
-              : selectedProjectOverviewDeletedFileKeys;
-            if (suppressedFileKey) {
-              setProjectOverviewSuppressedFileKeys(nextDeletedFileKeys);
-            }
-
-            const projectAttachments = normalizePlaygroundTaskAttachmentList(selectedProject?.attachments);
-            const remainingProjectAttachments = projectAttachments.filter((attachment) => {
-              const attachmentEnvironmentId = String(attachment?.environmentId || "").trim();
-              const attachmentPath = normalizeHistoryPath(attachment?.sourcePath || attachment?.workspacePath || "");
-              return !(attachmentEnvironmentId === normalizedEnvironmentId && attachmentPath === normalizedPath);
-            });
-            if (selectedProjectId && remainingProjectAttachments.length !== projectAttachments.length) {
-              await persistProjectMissionControlRecord(selectedProjectId, buildMissionControlRecordForSave(), {
-                projectOverrides: {
-                  attachments: remainingProjectAttachments,
-                },
-                metadataOverrides: {
-                  projectOverviewDeletedFileKeys: nextDeletedFileKeys,
-                },
-                quiet: true,
-                successMessage: "",
-              });
-            } else if (selectedProjectId && suppressedFileKey) {
-              await persistProjectMissionControlRecord(selectedProjectId, buildMissionControlRecordForSave(), {
-                metadataOverrides: {
-                  projectOverviewDeletedFileKeys: nextDeletedFileKeys,
-                },
-                quiet: true,
-                successMessage: "",
-              });
-            }
-
-            setProjectOverviewFileActivityState((current) => ({
-              ...current,
-              items: (Array.isArray(current?.items) ? current.items : []).filter((item) => {
-                if (row?.id && item?.id === row.id) {
-                  return false;
-                }
-                const itemEnvironmentId = String(item?.environmentId || "").trim();
-                const itemPath = normalizeHistoryPath(item?.path || "");
-                return !(itemEnvironmentId === normalizedEnvironmentId && itemPath === normalizedPath);
-              }),
-            }));
-          } catch (error) {
-            setProjectOverviewFileMutationState({
-              rowId: row.id,
-              action: "",
-              error: error instanceof Error ? error.message : "Failed to delete file.",
-            });
-            return;
-          }
-
-          setProjectOverviewFileMutationState({
-            rowId: "",
-            action: "",
-            error: "",
-          });
-        }
-
-        async function handleProjectOverviewFileRevert(row) {
-          const normalizedThreadId = String(row?.threadId || "").trim();
-          const normalizedStepId = String(row?.stepId || "").trim();
-          const normalizedRevertTargetStepId = String(row?.revertTargetStepId || "").trim();
-          if (!normalizedThreadId || !normalizedStepId || !normalizedRevertTargetStepId) {
-            window.alert("This change cannot be reverted.");
-            return;
-          }
-
-          closeProjectOverviewFileMenu();
-          setProjectOverviewFileMutationState({
-            rowId: row.id,
-            action: "revert",
-            error: "",
-          });
-
-          try {
-            await projectOverviewHistoryClient.revertThreadToStep({
-              backendUrl,
-              threadId: normalizedThreadId,
-              stepId: normalizedRevertTargetStepId,
-              headers: requestHeaders,
-              historyActionType: "revert",
-              revertedChangeStepId: normalizedStepId,
-              revertedFilePath: row.path || undefined,
-              revertedFileName: row.title || undefined,
-            });
-            setProjectOverviewFileActivityReloadNonce((current) => current + 1);
-            if (typeof refreshThreads === "function") {
-              await Promise.resolve(refreshThreads(undefined, normalizedThreadId));
-            }
-          } catch (error) {
-            setProjectOverviewFileMutationState({
-              rowId: row.id,
-              action: "",
-              error: error instanceof Error ? error.message : "Failed to revert file changes.",
-            });
-            return;
-          }
-
-          setProjectOverviewFileMutationState({
-            rowId: "",
-            action: "",
-            error: "",
-          });
-        }
 
         const fetchProjectCustomSkills = useCallback(async function fetchProjectCustomSkills() {
           const normalizeSkills = (items) => (items || [])
@@ -165667,71 +163871,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           );
         }
 
-        function renderProjectListRow(project, index) {
-          const summary = getProjectListSummary(project);
-          const blueprint = getProjectListBlueprint(project);
-          const iconConfig = getPlaygroundProjectIconConfig(project?.icon || blueprint.iconId || "rocket");
-          const ProjectIcon = iconConfig.icon || Rocket;
-          const lead = getProjectListLead(project);
-          const targetDateLabel = getProjectListTargetDateLabel(project);
-          const priorityLevel = getProjectListPriorityLevel(project);
-          const totalTasks = Math.max(0, Number(summary.tasksCount) || 0);
-          const openTasks = Math.max(0, Math.min(totalTasks, Number(summary.openTasksCount) || 0));
-          const completedTasks = Math.max(0, totalTasks - openTasks);
-          const statusPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-          const healthLabel = statusPercent >= 100 ? "Complete" : "On track";
-          const healthMeta = formatRelativeThreadTime(project?.updatedAt || project?.createdAt) || "now";
-          const projectName = String(project?.name || "").trim() || "Untitled project";
-
-          return React.createElement("button", {
-              key: project?.id || projectName || index,
-              type: "button",
-              className: "playground-projects-list-row",
-              style: { "--project-blueprint-accent": blueprint.color || "#66A6FF" },
-              onClick: () => project?.id && handleSelectProject(project.id),
-            },
-            React.createElement("div", { className: "playground-projects-list-name-cell" },
-              React.createElement("span", {
-                className: "playground-projects-list-checkbox",
-                onClick: (event) => event.stopPropagation(),
-                "aria-hidden": "true",
-              }),
-              React.createElement(ProjectIcon, { className: "playground-projects-list-project-icon", strokeWidth: 1.8 }),
-              React.createElement("span", { className: "playground-projects-list-project-main" },
-                React.createElement("span", { className: "playground-projects-list-project-title" }, projectName),
-                React.createElement("span", { className: "playground-projects-list-project-type" },
-                  React.createElement("span", { className: "playground-projects-list-project-type-dot", "aria-hidden": "true" }),
-                  React.createElement("span", null, blueprint.shortTitle || blueprint.title || "Project")
-                )
-              )
-            ),
-            React.createElement("div", { className: "playground-projects-list-health" },
-              React.createElement("span", { className: "playground-projects-list-health-icon", "aria-hidden": "true" },
-                React.createElement(Check, { width: 12, height: 12, strokeWidth: 2 })
-              ),
-              React.createElement("span", { className: "playground-projects-list-health-label" }, healthLabel),
-              React.createElement("span", { className: "playground-projects-list-health-meta" }, "- " + healthMeta)
-            ),
-            renderProjectListPriority(priorityLevel),
-            React.createElement("div", { className: "playground-projects-list-lead" }, renderProjectListLeadAvatar(lead)),
-            React.createElement("div", { className: "playground-projects-list-target" },
-              targetDateLabel
-                ? React.createElement(React.Fragment, null,
-                    React.createElement(CalendarIcon, { strokeWidth: 1.8 }),
-                    React.createElement("span", null, targetDateLabel)
-                  )
-                : React.createElement(React.Fragment, null,
-                    React.createElement(CalendarIcon, { strokeWidth: 1.8 }),
-                    React.createElement("span", { className: "playground-projects-list-muted" }, "No target")
-                  )
-            ),
-            React.createElement("div", { className: "playground-projects-list-issues" }, String(totalTasks)),
-            React.createElement("div", { className: "playground-projects-list-status" },
-              React.createElement("span", { className: "playground-projects-list-status-ring", "aria-hidden": "true" }),
-              React.createElement("span", null, statusPercent + "%")
-            )
-          );
-        }
 
         function renderProjectsListEmptyState() {
           return React.createElement("div", { className: "playground-projects-list-empty" },
@@ -165865,26 +164004,6 @@ ${PLATFORM_UI_PRIMITIVES_SCRIPT}
           );
         }
 
-        function renderProjectsListTable() {
-          return React.createElement("div", { className: "playground-projects-list-shell" },
-            React.createElement("div", { className: "playground-projects-list-table" },
-              React.createElement("div", { className: "playground-projects-list-header" },
-                React.createElement("div", { className: "playground-projects-list-col-name" }, "Name"),
-                React.createElement("div", { className: "playground-projects-list-col-health" }, "Health"),
-                React.createElement("div", { className: "playground-projects-list-col-priority" }, "Priority"),
-                React.createElement("div", { className: "playground-projects-list-col-lead" }, "Lead"),
-                React.createElement("div", { className: "playground-projects-list-col-target" }, "Target date"),
-                React.createElement("div", { className: "playground-projects-list-col-issues" }, "Issues"),
-                React.createElement("div", { className: "playground-projects-list-col-status" }, "Status")
-              ),
-              React.createElement("div", { className: "playground-projects-list-body" },
-                filteredProjects.length > 0
-                  ? filteredProjects.map((project, index) => renderProjectListRow(project, index))
-                  : renderNoMatchingProjectsState()
-              )
-            )
-          );
-        }
 
         function renderNoMatchingProjectsState() {
           return React.createElement("div", { className: "playground-tasks-empty" },
@@ -174217,6 +172336,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [pluginsOverviewCategory, setPluginsOverviewCategory] = useState("all");
         const [pluginsOverviewFilter, setPluginsOverviewFilter] = useState("all");
         const [pluginsOverviewSort, setPluginsOverviewSort] = useState("name");
+	        const [pluginsOverviewSortDirection, setPluginsOverviewSortDirection] = useState("asc");
         const [pluginsOverviewToolbarPopover, setPluginsOverviewToolbarPopover] = useState("");
         const [selectedTagOverviewIds, setSelectedTagOverviewIds] = useState(() => new Set());
         const [tagOverviewActionMenuState, setTagOverviewActionMenuState] = useState(null);
@@ -174277,6 +172397,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [guardrailsBackendSyncState, setGuardrailsBackendSyncState] = useState({ status: "idle", error: "" });
         const [guardrailsSearchQuery, setGuardrailsSearchQuery] = useState("");
         const [guardrailsSort, setGuardrailsSort] = useState("updated");
+	        const [guardrailsSortDirection, setGuardrailsSortDirection] = useState("desc");
         const [guardrailsSetFilter, setGuardrailsSetFilter] = useState("all");
         const [guardrailsPageMode, setGuardrailsPageMode] = useState("overview");
         const [guardrailsToolbarPopover, setGuardrailsToolbarPopover] = useState("");
@@ -175585,6 +173706,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
         }
         const [sidebarWorkspaceMode, setSidebarWorkspaceMode] = useState(initialSidebarWorkspaceMode);
         const [sidebarWorkspaceMenuOpen, setSidebarWorkspaceMenuOpen] = useState(false);
+        const [renderedSidebarWorkspaceMenu, setRenderedSidebarWorkspaceMenu] = useState(false);
+        const [sidebarWorkspaceMenuPhase, setSidebarWorkspaceMenuPhase] = useState("idle");
         const [selectedPluginId, setSelectedPluginId] = useState("");
         const [toolsSkillsHeaderState, setToolsSkillsHeaderState] = useState({
           mode: "overview",
@@ -175668,6 +173791,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
         const [settingsTriggersSuccess, setSettingsTriggersSuccess] = useState("");
         const pluginsNavActionsRef = useRef(null);
         const sidebarWorkspaceMenuRef = useRef(null);
+        const sidebarWorkspaceMenuAnimationTimerRef = useRef(null);
         const resourceTemplateHeroCount = (() => {
           const templates = Array.isArray(PLAYGROUND_RESOURCE_TEMPLATE_DATA) ? PLAYGROUND_RESOURCE_TEMPLATE_DATA : [];
           const featuredTemplates = templates.filter((template) => template.featured);
@@ -175702,6 +173826,41 @@ ${PROJECT_OVERVIEW_SCRIPT}
           document.addEventListener("mousedown", handlePluginsOverviewToolbarPopoverPointerDown);
           return () => document.removeEventListener("mousedown", handlePluginsOverviewToolbarPopoverPointerDown);
         }, [pluginsOverviewToolbarPopover]);
+        useEffect(() => {
+          if (sidebarWorkspaceMenuAnimationTimerRef.current !== null) {
+            window.clearTimeout(sidebarWorkspaceMenuAnimationTimerRef.current);
+            sidebarWorkspaceMenuAnimationTimerRef.current = null;
+          }
+
+          if (sidebarWorkspaceMenuOpen) {
+            setRenderedSidebarWorkspaceMenu(true);
+            setSidebarWorkspaceMenuPhase("enter");
+            sidebarWorkspaceMenuAnimationTimerRef.current = window.setTimeout(() => {
+              setSidebarWorkspaceMenuPhase("idle");
+              sidebarWorkspaceMenuAnimationTimerRef.current = null;
+            }, 180);
+            return;
+          }
+
+          if (!renderedSidebarWorkspaceMenu) {
+            setSidebarWorkspaceMenuPhase("idle");
+            return;
+          }
+
+          setSidebarWorkspaceMenuPhase("exit");
+          sidebarWorkspaceMenuAnimationTimerRef.current = window.setTimeout(() => {
+            setRenderedSidebarWorkspaceMenu(false);
+            setSidebarWorkspaceMenuPhase("idle");
+            sidebarWorkspaceMenuAnimationTimerRef.current = null;
+          }, 180);
+        }, [renderedSidebarWorkspaceMenu, sidebarWorkspaceMenuOpen]);
+        useEffect(() => {
+          return () => {
+            if (sidebarWorkspaceMenuAnimationTimerRef.current !== null) {
+              window.clearTimeout(sidebarWorkspaceMenuAnimationTimerRef.current);
+            }
+          };
+        }, []);
         useEffect(() => {
           if (!sidebarWorkspaceMenuOpen) {
             return undefined;
@@ -195417,10 +193576,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
             { id: "connected", label: "Connected", description: "Only show " + (isTagsView ? "tags" : "plugins") + " currently linked to this account" },
             { id: "disconnected", label: "Not Connected", description: "Only show " + (isTagsView ? "tags" : "plugins") + " that still need setup" },
           ];
-          const pluginsOverviewSortOptions = [
-            { id: "name", label: "Name (A-Z)" },
-            { id: "connected", label: "Connected First" },
-          ];
           const normalizedQuery = String(pluginsSearchQuery || "").trim().toLowerCase();
           const filteredPlugins = pluginsCatalog.filter((plugin) => {
             const pluginCategoryKey = String(plugin?.category || "").trim().toLowerCase() === "channels"
@@ -195443,12 +193598,15 @@ ${PROJECT_OVERVIEW_SCRIPT}
               .toLowerCase()
               .includes(normalizedQuery);
           });
-          const sortedPlugins = filteredPlugins.slice().sort((left, right) => {
-            if (pluginsOverviewSort === "connected" && Boolean(left?.connected) !== Boolean(right?.connected)) {
-              return left?.connected ? -1 : 1;
-            }
-            return String(left?.label || "").localeCompare(String(right?.label || ""));
-          });
+	          const sortedPlugins = filteredPlugins.slice().sort((left, right) => {
+	            let comparison = 0;
+	            if (pluginsOverviewSort === "connected" && Boolean(left?.connected) !== Boolean(right?.connected)) {
+	              comparison = left?.connected ? -1 : 1;
+	            } else {
+	              comparison = String(left?.label || "").localeCompare(String(right?.label || ""));
+	            }
+	            return pluginsOverviewSortDirection === "desc" ? -comparison : comparison;
+	          });
           const selectedPlugin = pluginsCatalog.find((plugin) => plugin.id === selectedPluginId) || null;
           const featuredPlugins = isTagsView
             ? [
@@ -195531,34 +193689,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
 		          const visibleTagOverviewIds = sortedPlugins.map((plugin) => String(plugin?.id || "").trim()).filter(Boolean);
 	          const selectedVisibleTagOverviewIds = visibleTagOverviewIds.filter((pluginId) => selectedTagOverviewIds.has(pluginId));
 	          const allVisibleTagsSelected = visibleTagOverviewIds.length > 0 && selectedVisibleTagOverviewIds.length === visibleTagOverviewIds.length;
-	          const hasPartialVisibleTagSelection = selectedVisibleTagOverviewIds.length > 0 && !allVisibleTagsSelected;
-	          const toggleTagOverviewSelection = (pluginId) => {
-	            const normalizedPluginId = String(pluginId || "").trim();
-	            if (!normalizedPluginId) return;
-	            setSelectedTagOverviewIds((current) => {
-	              const next = new Set(current || []);
-	              if (next.has(normalizedPluginId)) {
-	                next.delete(normalizedPluginId);
-	              } else {
-	                next.add(normalizedPluginId);
-	              }
-	              return next;
-	            });
-	          };
-	          const toggleVisibleTagOverviewSelection = () => {
-	            if (visibleTagOverviewIds.length === 0) {
-	              return;
-	            }
-	            setSelectedTagOverviewIds((current) => {
-	              const next = new Set(current || []);
-	              if (allVisibleTagsSelected) {
-	                visibleTagOverviewIds.forEach((pluginId) => next.delete(pluginId));
-	              } else {
-	                visibleTagOverviewIds.forEach((pluginId) => next.add(pluginId));
-	              }
-	              return next;
-	            });
-	          };
 		          const getTagOverviewStatusLabel = (plugin) => plugin?.connected ? "Connected" : "Not Connected";
 		          const renderTagOverviewStatusLabel = (plugin) => {
 		            const isConnected = Boolean(plugin?.connected);
@@ -195603,106 +193733,12 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	            }
 	            return menuStyle;
 	          };
-	          const openTagsOverviewActionMenu = (event, plugin, options = {}) => {
-	            const pluginId = String(plugin?.id || "").trim();
-	            if (!pluginId) {
-	              return;
-	            }
-	            event.preventDefault();
-	            event.stopPropagation();
-	            const position = options?.context
-	              ? getTagsOverviewContextMenuPosition(event, 112)
-	              : getSideActionMenuPosition(event, 112, 220);
-	            if (!options?.context && tagOverviewActionMenuState?.pluginId === pluginId) {
-	              closeTagsOverviewActionMenu();
-	              return;
-	            }
-	            setPluginsOverviewToolbarPopover("");
-	            setTagOverviewActionMenuState({
-	              pluginId,
-	              plugin,
-	              ...position,
-	            });
-	          };
 	          const openDevelopWebhooksFromTagsOverview = () => {
 	            setPluginsOverviewToolbarPopover("");
 	            closeTagsOverviewActionMenu();
 	            setSelectedPluginId("");
 	            openDevelopHome({ section: "webhooks" });
 	          };
-	          const handleTagsOverviewColumnSort = (sortKey) => {
-	            closeTagsOverviewActionMenu();
-	            setPluginsOverviewToolbarPopover("");
-	            setPluginsOverviewSort(sortKey === "status" ? "connected" : "name");
-	          };
-	          const renderTagsOverviewSortIcon = (sortKey) => {
-	            const isActive = (sortKey === "status" && pluginsOverviewSort === "connected")
-	              || (sortKey === "name" && pluginsOverviewSort === "name");
-	            return React.createElement("span", {
-	                className: "playground-agents-overview-sort-icon" + (isActive ? " is-active is-ascending" : ""),
-	                "aria-hidden": "true",
-	              },
-	              React.createElement(ChevronsUpDown, {
-	                className: "playground-agents-overview-sort-icon-layer is-top",
-	                width: 14,
-	                height: 14,
-	                strokeWidth: 1.8,
-	              }),
-	              React.createElement(ChevronsUpDown, {
-	                className: "playground-agents-overview-sort-icon-layer is-bottom",
-	                width: 14,
-	                height: 14,
-	                strokeWidth: 1.8,
-	              })
-	            );
-	          };
-	          const renderTagsOverviewSortableHeader = (label, sortKey) => {
-	            const isActive = (sortKey === "status" && pluginsOverviewSort === "connected")
-	              || (sortKey === "name" && pluginsOverviewSort === "name");
-	            return React.createElement("div", { className: "playground-agents-overview-sortable-header" + (isActive ? " is-active" : "") },
-	              React.createElement("span", { className: "playground-agents-overview-sortable-header-label" }, label),
-	              React.createElement("button", {
-	                type: "button",
-	                className: "playground-agents-overview-column-sort-button" + (isActive ? " is-active is-ascending" : ""),
-	                title: "Sort " + label,
-	                "aria-label": "Sort " + label,
-	                "aria-pressed": isActive ? "true" : "false",
-	                onClick: (event) => {
-	                  event.preventDefault();
-	                  event.stopPropagation();
-	                  handleTagsOverviewColumnSort(sortKey);
-	                },
-	              }, renderTagsOverviewSortIcon(sortKey))
-	            );
-	          };
-		          const renderTagsOverviewToolbarMenu = (menuId, options) => React.createElement("div", {
-		              className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-		            },
-	            options.map((option) => {
-	              const selected = menuId === "sort" ? pluginsOverviewSort === option.id : pluginsOverviewFilter === option.id;
-	              return React.createElement("button", {
-	                  key: option.id,
-	                  type: "button",
-	                  className: "tb-popup-row tb-popup-row-select" + (selected ? " selected" : ""),
-	                  onClick: () => {
-	                    if (menuId === "sort") {
-	                      setPluginsOverviewSort(option.id);
-	                    } else {
-	                      setPluginsOverviewFilter(option.id);
-	                    }
-	                    setPluginsOverviewToolbarPopover("");
-	                  },
-	                },
-	                React.createElement("span", { className: "tb-popup-check-slot" },
-	                  selected ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 }) : null
-	                ),
-	                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-	                  React.createElement("span", null, option.label),
-	                  option.description ? React.createElement("span", null, option.description) : null
-	                )
-		              );
-		            })
-		          );
 		          const renderPluginsOverviewCategorySwitch = () => isTagsView
 		            ? React.createElement("button", {
 		                type: "button",
@@ -195736,230 +193772,97 @@ ${PROJECT_OVERVIEW_SCRIPT}
 		                  }, "Integration")
 		                )
 		              );
-		          const renderTagsOverviewColumnHeader = () => React.createElement("div", {
-		              className: "playground-project-overview-threads-table-header playground-agents-overview-column-header playground-tags-overview-column-header" + (isTagsView ? "" : " playground-plugins-overview-column-header"),
-		            },
-	            React.createElement("div", null,
-	              React.createElement("button", {
-	                type: "button",
-	                className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox"
-	                  + (allVisibleTagsSelected ? " is-selected" : "")
-	                  + (hasPartialVisibleTagSelection ? " is-partial" : ""),
-	                role: "checkbox",
-	                "aria-checked": allVisibleTagsSelected ? "true" : (hasPartialVisibleTagSelection ? "mixed" : "false"),
-		                "aria-label": allVisibleTagsSelected
-		                  ? "Deselect all visible " + (isTagsView ? "tags" : "plugins")
-		                  : "Select all visible " + (isTagsView ? "tags" : "plugins"),
-	                onClick: (event) => {
-	                  event.preventDefault();
-	                  event.stopPropagation();
-	                  toggleVisibleTagOverviewSelection();
-	                },
-	              })
-	            ),
-	            React.createElement("div", null, renderTagsOverviewSortableHeader("Name", "name")),
-	            React.createElement("div", null, renderTagsOverviewSortableHeader("Status", "status")),
-	            React.createElement("div", null, "Connected Identity"),
-	            React.createElement("div", null, "Provider"),
-	            React.createElement("div", null)
-	          );
-	          const renderTagsOverviewStickyTableHeader = (includeColumns = true) => React.createElement("div", {
-	              className: "playground-agents-overview-sticky-table-header playground-team-overview-sticky-table-header playground-tags-overview-sticky-table-header",
-	            },
-	            React.createElement("div", {
-	                className: "playground-develop-server-kind-table-toolbar playground-team-overview-toolbar-row playground-tags-overview-toolbar-row",
-	                ref: pluginsOverviewToolbarRef,
-	              },
-	              React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell" },
-	                React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-		              React.createElement("input", {
-		                  type: "search",
-		                  value: pluginsSearchQuery,
-		                  onChange: (event) => setPluginsSearchQuery(event.target.value),
-		                  className: "playground-plugins-search",
-		                  placeholder: "Search " + (isTagsView ? "tags" : "plugins"),
-		                })
-	              ),
-	              React.createElement("div", { className: "playground-plugins-toolbar-controls" },
-	                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
-		                  React.createElement("button", {
-		                    type: "button",
-		                    className: "playground-files-control-button is-bare is-backlog-sort" + (pluginsOverviewToolbarPopover === "sort" || pluginsOverviewSort !== "name" ? " is-active" : ""),
-		                    onClick: () => {
-		                      closeTagsOverviewActionMenu();
-		                      setPluginsOverviewToolbarPopover((current) => current === "sort" ? "" : "sort");
-		                    },
-		                  },
-	                    React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                    React.createElement("span", null, "Sort")
-	                  ),
-	                  pluginsOverviewToolbarPopover === "sort"
-	                    ? renderTagsOverviewToolbarMenu("sort", pluginsOverviewSortOptions)
-	                    : null
-	                ),
-	                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
-		                  React.createElement("button", {
-		                    type: "button",
-		                    className: "playground-files-control-button is-bare is-backlog-filter" + (pluginsOverviewToolbarPopover === "filter" || pluginsOverviewFilter !== "all" ? " is-active" : ""),
-		                    onClick: () => {
-		                      closeTagsOverviewActionMenu();
-		                      setPluginsOverviewToolbarPopover((current) => current === "filter" ? "" : "filter");
-		                    },
-		                  },
-	                    React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                    React.createElement("span", null, "Filter")
-	                  ),
-	                  pluginsOverviewToolbarPopover === "filter"
-	                    ? renderTagsOverviewToolbarMenu("filter", pluginsOverviewFilterOptions)
-	                    : null
-	                )
-		              ),
-			              renderPluginsOverviewCategorySwitch()
-			            ),
-	            includeColumns ? renderTagsOverviewColumnHeader() : null
-	          );
-	          const renderTagsOverviewActionMenuPortal = () => {
-	            if (!tagOverviewActionMenuState) {
-	              return null;
-	            }
-	            const plugin = tagOverviewActionMenuState.plugin || null;
-	            const pluginId = String(plugin?.id || tagOverviewActionMenuState.pluginId || "").trim();
-	            const preferredAction = Array.isArray(plugin?.actions) ? plugin.actions[0] : null;
-	            const menuElement = React.createElement("div", {
-	                className: "sidebar-thread-popup-scrim",
-	                style: { zIndex: 9000 },
-	                onClick: closeTagsOverviewActionMenu,
-	              },
-	              React.createElement("div", {
-	                className: "playground-platform-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-toolbar-popup-shell-portal playground-agents-list-action-menu-shell is-open",
-	                style: getTagsOverviewActionMenuStyle(tagOverviewActionMenuState),
-	                onClick: (event) => event.stopPropagation(),
-	              },
-	                React.createElement("div", {
-	                    className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-	                    role: "menu",
-	                  },
-	                  React.createElement("button", {
-	                    type: "button",
-	                    role: "menuitem",
-	                    className: "tb-popup-row",
-	                    onClick: () => {
-	                      closeTagsOverviewActionMenu();
-	                      setSelectedPluginId(pluginId);
-	                    },
-	                  },
-	                    React.createElement(ChevronRight, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-	                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, "Open"))
-	                  ),
-	                  preferredAction ? React.createElement("button", {
-	                    type: "button",
-	                    role: "menuitem",
-	                    className: "tb-popup-row" + (preferredAction.tone === "destructive" ? " is-danger" : ""),
-	                    onClick: () => {
-	                      closeTagsOverviewActionMenu();
-	                      preferredAction.onClick();
-	                    },
-	                  },
-	                    preferredAction.tone === "destructive"
-	                      ? React.createElement(Unlink, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 })
-	                      : React.createElement(Link2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-	                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, preferredAction.label))
-	                  ) : null
-	                )
-	              )
-	            );
-	            return typeof createPortal === "function" && typeof document !== "undefined" && document.body
-	              ? createPortal(menuElement, document.body)
-	              : menuElement;
-	          };
-		          const renderTagsOverviewTableSection = () => React.createElement("section", {
-	              className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-team-overview-table-section playground-team-grid-table-section " + (isTagsView ? "playground-tags-overview-table-section" : "playground-plugins-overview-table-section"),
-		            },
-		            renderTagsOverviewActionMenuPortal(),
-		            sortedPlugins.length === 0 ? renderTagsOverviewStickyTableHeader(false) : null,
-		            sortedPlugins.length === 0
-		              ? React.createElement("div", { className: "playground-plugins-empty" }, "No " + (isTagsView ? "tags" : "plugins") + " match your search.")
-		              : React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table" },
-	                  renderTagsOverviewStickyTableHeader(false),
-	                  React.createElement("div", { className: "playground-project-overview-thread-list" },
-	                    renderTagsOverviewColumnHeader(),
-	                    sortedPlugins.map((plugin) => {
-		                      const pluginId = String(plugin?.id || "").trim();
-			                      const pluginName = String(plugin?.label || (isTagsView ? "Tag" : "Plugin")).trim();
-		                      const isTagSelected = selectedTagOverviewIds.has(pluginId);
-		                      const menuOpen = tagOverviewActionMenuState?.pluginId === pluginId;
-		                      return React.createElement("div", {
-	                          key: pluginId || pluginName,
-	                          tabIndex: 0,
-	                          role: "button",
-	                          className: "playground-project-overview-threads-table-row",
-		                          "aria-label": "Open " + pluginName,
-		                          onClick: () => {
-		                            closeTagsOverviewActionMenu();
-		                            setPluginsOverviewToolbarPopover("");
-		                            setSelectedPluginId(pluginId);
-		                          },
-		                          onContextMenu: (event) => {
-		                            openTagsOverviewActionMenu(event, plugin, { context: true });
-		                          },
-	                          onKeyDown: (event) => {
-	                            if (event.key === "Enter" || event.key === " ") {
-	                              event.preventDefault();
-	                              setSelectedPluginId(pluginId);
-	                            }
-	                          },
-	                        },
-	                        React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
-	                          React.createElement("button", {
-	                            type: "button",
-	                            className: "playground-agents-overview-select-checkbox" + (isTagSelected ? " is-selected" : ""),
-	                            role: "checkbox",
-	                            "aria-checked": isTagSelected ? "true" : "false",
-		                            "aria-label": "Select " + pluginName,
-	                            onClick: (event) => {
-	                              event.preventDefault();
-	                              event.stopPropagation();
-	                              toggleTagOverviewSelection(pluginId);
-	                            },
-	                            onKeyDown: (event) => event.stopPropagation(),
-	                          })
-	                        ),
-	                        React.createElement("div", { className: "playground-project-overview-thread-cell is-name" },
-		                          React.createElement("div", { className: "playground-agents-overview-name-cell playground-tags-overview-name-cell" + (isTagsView ? "" : " playground-plugins-overview-name-cell") },
-		                            React.createElement("div", { className: "playground-plugin-row-logo-shell playground-tags-overview-logo-shell" + (isTagsView ? "" : " playground-plugins-overview-logo-shell") }, renderPluginRowLogo(plugin)),
-	                            React.createElement("div", { className: "playground-agents-overview-name-copy" },
-	                              React.createElement("div", { className: "playground-agents-overview-name-title" }, pluginName)
-	                            )
-	                          )
-	                        ),
-		                        React.createElement("div", { className: "playground-project-overview-thread-cell is-model" },
-		                          renderTagOverviewStatusLabel(plugin)
-		                        ),
-	                        React.createElement("div", { className: "playground-project-overview-thread-cell is-creator" },
-	                          React.createElement("div", { className: "playground-agents-overview-table-value" }, getTagOverviewIdentityLabel(plugin))
-	                        ),
-	                        React.createElement("div", { className: "playground-project-overview-thread-cell is-date" },
-	                          React.createElement("div", { className: "playground-agents-overview-table-value" }, getTagOverviewProviderLabel(plugin))
-	                        ),
-	                        React.createElement("div", { className: "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell playground-tasks-toolbar-popup-shell playground-tags-overview-action-shell" },
-	                          React.createElement("button", {
-	                            type: "button",
-		                            className: "playground-overview-table-action-button" + (menuOpen ? " is-open" : ""),
-		                            onClick: (event) => {
-		                              openTagsOverviewActionMenu(event, plugin);
-		                            },
-	                            onKeyDown: (event) => event.stopPropagation(),
-		                            "aria-label": (isTagsView ? "Tag" : "Plugin") + " actions",
-	                            "aria-expanded": menuOpen ? "true" : "false",
-	                          },
-	                            React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 })
-		                          )
-		                        )
-	                      );
-	                    })
-	                  )
-	                )
-	          );
+			          const pluginOverviewColumns = [
+			            {
+			              id: "name",
+			              header: "Name",
+			              accessor: (plugin) => plugin?.label || plugin?.id || "",
+			              sortable: true,
+			              width: "minmax(220px, 1.25fr)",
+			              cell: ({ row: plugin }) => React.createElement("div", { className: "playground-agents-overview-name-cell playground-tags-overview-name-cell" + (isTagsView ? "" : " playground-plugins-overview-name-cell") },
+			                React.createElement("div", { className: "playground-plugin-row-logo-shell playground-tags-overview-logo-shell" + (isTagsView ? "" : " playground-plugins-overview-logo-shell") }, renderPluginRowLogo(plugin)),
+			                React.createElement("div", { className: "playground-agents-overview-name-title" }, plugin?.label || (isTagsView ? "Tag" : "Plugin"))
+			              ),
+			            },
+			            {
+			              id: "connected",
+			              header: "Status",
+			              accessor: (plugin) => plugin?.connected ? 1 : 0,
+			              sortable: true,
+			              width: "minmax(125px, 0.62fr)",
+			              cell: ({ row: plugin }) => renderTagOverviewStatusLabel(plugin),
+			            },
+			            {
+			              id: "identity",
+			              header: "Connected Identity",
+			              accessor: getTagOverviewIdentityLabel,
+			              width: "minmax(170px, 0.9fr)",
+			              hideBelow: 760,
+			              cell: ({ row: plugin }) => React.createElement("div", { className: "playground-agents-overview-table-value" }, getTagOverviewIdentityLabel(plugin)),
+			            },
+			            {
+			              id: "provider",
+			              header: "Provider",
+			              accessor: getTagOverviewProviderLabel,
+			              width: "minmax(120px, 0.62fr)",
+			              hideBelow: 960,
+			              cell: ({ row: plugin }) => React.createElement("div", { className: "playground-agents-overview-table-value" }, getTagOverviewProviderLabel(plugin)),
+			            },
+			          ];
+			          const getPluginOverviewActions = (plugin) => {
+			            const preferredAction = Array.isArray(plugin?.actions) ? plugin.actions[0] : null;
+			            return [
+			              { id: "open", label: "Open", icon: ChevronRight, onSelect: () => setSelectedPluginId(plugin.id) },
+			              preferredAction ? {
+			                id: "connection",
+			                label: preferredAction.label,
+			                icon: preferredAction.tone === "destructive" ? Unlink : Link2,
+			                danger: preferredAction.tone === "destructive",
+			                separatorBefore: true,
+			                onSelect: () => preferredAction.onClick(),
+			              } : null,
+			            ].filter(Boolean);
+			          };
+			          const pluginsOverviewDataTable = React.createElement(PlatformDataTable, {
+			            rows: sortedPlugins,
+			            columns: pluginOverviewColumns,
+			            getRowId: (plugin) => String(plugin?.id || ""),
+			            ariaLabel: isTagsView ? "Tags" : "Plugins",
+			            className: "playground-plugins-platform-data-table",
+			            surface: "plain",
+			            sorting: {
+			              value: { id: pluginsOverviewSort, direction: pluginsOverviewSortDirection === "desc" ? "desc" : "asc" },
+			              manual: true,
+			              onChange: (nextSorting) => {
+			                if (!nextSorting) return;
+			                setPluginsOverviewSort(nextSorting.id);
+			                setPluginsOverviewSortDirection(nextSorting.direction);
+			                setPluginsOverviewToolbarPopover("");
+			              },
+			            },
+			            selection: {
+			              enabled: true,
+			              value: selectedTagOverviewIds,
+			              onChange: ({ selectedIds }) => setSelectedTagOverviewIds(new Set(selectedIds)),
+			              ariaLabel: (plugin) => "Select " + (plugin?.label || plugin?.id || (isTagsView ? "tag" : "plugin")),
+			            },
+			            toolbar: {
+			              search: { value: pluginsSearchQuery, onChange: setPluginsSearchQuery, placeholder: "Search " + (isTagsView ? "tags" : "plugins"), manual: true },
+			              showSort: true,
+			              filters: [{ id: "connection", label: "Status", value: pluginsOverviewFilter, options: pluginsOverviewFilterOptions, onChange: setPluginsOverviewFilter }],
+			              trailing: isTagsView ? undefined : renderPluginsOverviewCategorySwitch(),
+			              primaryAction: isTagsView ? { label: "New Custom Tag", icon: Plus, onClick: openDevelopWebhooksFromTagsOverview } : undefined,
+			            },
+			            getRowActions: getPluginOverviewActions,
+			            getRowAriaLabel: (plugin) => plugin?.label || plugin?.id || (isTagsView ? "Tag" : "Plugin"),
+			            onRowActivate: (plugin) => setSelectedPluginId(plugin.id),
+			            emptyState: "No " + (isTagsView ? "tags" : "plugins") + " match your search.",
+			          });
+			          const renderTagsOverviewTableSection = () => React.createElement("section", {
+		              className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-team-overview-table-section playground-team-grid-table-section " + (isTagsView ? "playground-tags-overview-table-section" : "playground-plugins-overview-table-section"),
+			            },
+			            pluginsOverviewDataTable
+		          );
 
 	          if (selectedPlugin) {
             const pluginHeaderButtonClass = "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button playground-develop-server-metrics-add-button playground-plugin-detail-connect-button";
@@ -197672,71 +195575,63 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 ),
                 React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll is-plans" },
                   React.createElement("div", { className: "playground-settings-records-shell" },
-                    settingsInvoicesLoading
-                      ? React.createElement("div", { className: "playground-settings-records-loading" },
-                          renderSettingsDotLoader(9),
-                          React.createElement("span", { className: "playground-settings-records-loading-copy" }, "Loading invoices...")
-                        )
-                      : React.createElement("div", { className: "playground-settings-records-table-wrap" },
-                          React.createElement("table", { className: "playground-settings-records-table" },
-                            React.createElement("thead", null,
-                              React.createElement("tr", { className: "playground-settings-records-table-head-row" },
-                                React.createElement("th", null, "Date"),
-                                React.createElement("th", null, "Description"),
-                                React.createElement("th", null, "Status"),
-                                React.createElement("th", { className: "is-right" }, "Amount"),
-                                React.createElement("th", { className: "is-right" }, "Invoice")
-                              )
-                            ),
-                            React.createElement("tbody", null,
-                              settingsInvoices.map((invoice) => {
-                                const invoiceStatusClass = invoice.status === "paid"
-                                  ? " is-success"
-                                  : invoice.refunded
-                                    ? " is-warning"
-                                    : "";
-                                const billingReason = formatSettingsBillingReason(invoice.billingReason);
-
-                                return React.createElement("tr", { key: invoice.id },
-                                  React.createElement("td", { className: "is-muted" },
-                                    new Date(invoice.createdAt).toLocaleDateString("en-US", {
-                                      year: "numeric",
-                                      month: "short",
-                                      day: "numeric",
-                                    })
-                                  ),
-                                  React.createElement("td", null,
-                                    React.createElement("div", { className: "playground-settings-records-description-title" }, invoice.variantName || invoice.productName || "Subscription invoice"),
-                                    billingReason
-                                      ? React.createElement("div", { className: "playground-settings-records-description-copy" }, billingReason)
-                                      : null
-                                  ),
-                                  React.createElement("td", null,
-                                    React.createElement("span", {
-                                      className: "playground-settings-records-status-badge" + invoiceStatusClass,
-                                    }, invoice.refunded ? "Refunded" : (invoice.statusFormatted || invoice.status || "Unknown"))
-                                  ),
-                                  React.createElement("td", { className: "is-right playground-settings-records-amount" }, invoice.totalFormatted || formatSettingsCurrency((Number(invoice.total) || 0) / 100)),
-                                  React.createElement("td", { className: "is-right" },
-                                    invoice.invoiceUrl
-                                      ? React.createElement("a", {
-                                          href: invoice.invoiceUrl,
-                                          target: "_blank",
-                                          rel: "noopener noreferrer",
-                                          className: "playground-settings-records-link",
-                                        }, "View")
-                                      : null
-                                  )
-                                );
-                              }),
-                              settingsInvoices.length === 0
-                                ? React.createElement("tr", { className: "playground-settings-records-empty-row" },
-                                    React.createElement("td", { colSpan: 5 }, "No invoices yet. Invoices will appear here when you subscribe to a plan.")
-                                  )
-                                : null
-                            )
-                          )
-                        )
+                    React.createElement(PlatformDataTable, {
+                      rows: settingsInvoices,
+                      getRowId: (invoice) => invoice.id,
+                      ariaLabel: "Billing records",
+                      className: "playground-settings-records-platform-table",
+                      surface: "plain",
+                      loading: settingsInvoicesLoading,
+                      emptyState: "No invoices yet. Invoices will appear here when you subscribe to a plan.",
+                      columns: [
+                        {
+                          id: "date",
+                          header: "Date",
+                          accessor: (invoice) => invoice.createdAt || "",
+                          width: "minmax(110px, 0.9fr)",
+                          cell: ({ row: invoice }) => new Date(invoice.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
+                        },
+                        {
+                          id: "description",
+                          header: "Description",
+                          accessor: (invoice) => invoice.variantName || invoice.productName || "Subscription invoice",
+                          width: "minmax(220px, 2fr)",
+                          cell: ({ row: invoice }) => {
+                            const billingReason = formatSettingsBillingReason(invoice.billingReason);
+                            return React.createElement("div", null,
+                              React.createElement("div", { className: "playground-settings-records-description-title" }, invoice.variantName || invoice.productName || "Subscription invoice"),
+                              billingReason ? React.createElement("div", { className: "playground-settings-records-description-copy" }, billingReason) : null
+                            );
+                          },
+                        },
+                        {
+                          id: "status",
+                          header: "Status",
+                          accessor: (invoice) => invoice.refunded ? "Refunded" : (invoice.statusFormatted || invoice.status || "Unknown"),
+                          width: "minmax(100px, 0.8fr)",
+                          cell: ({ row: invoice }) => React.createElement("span", {
+                            className: "playground-settings-records-status-badge" + (invoice.status === "paid" ? " is-success" : invoice.refunded ? " is-warning" : ""),
+                          }, invoice.refunded ? "Refunded" : (invoice.statusFormatted || invoice.status || "Unknown")),
+                        },
+                        {
+                          id: "amount",
+                          header: "Amount",
+                          accessor: (invoice) => Number(invoice.total || 0),
+                          width: "minmax(100px, 0.8fr)",
+                          align: "end",
+                          cell: ({ row: invoice }) => React.createElement("span", { className: "playground-settings-records-amount" }, invoice.totalFormatted || formatSettingsCurrency((Number(invoice.total) || 0) / 100)),
+                        },
+                        {
+                          id: "invoice",
+                          header: "Invoice",
+                          width: "minmax(80px, 0.6fr)",
+                          align: "end",
+                          cell: ({ row: invoice }) => invoice.invoiceUrl
+                            ? React.createElement("a", { href: invoice.invoiceUrl, target: "_blank", rel: "noopener noreferrer", className: "playground-settings-records-link" }, "View")
+                            : null,
+                        },
+                      ],
+                    })
                   )
                 )
               );
@@ -198212,39 +196107,37 @@ ${PROJECT_OVERVIEW_SCRIPT}
                               React.createElement("div", { className: "playground-settings-usage-card-title" }, "Consumers")
                             )
                           ),
-                          settingsUsageLoading
-                            ? React.createElement("div", { className: "playground-settings-loading-state" },
-                                React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
-                              )
-                            : React.createElement("div", { className: "playground-settings-usage-resource-table-shell" },
-                                React.createElement("table", { className: "playground-settings-usage-resource-table" },
-                                  React.createElement("thead", null,
-                                    React.createElement("tr", null,
-                                      React.createElement("th", null, "Resource"),
-                                      React.createElement("th", null, "Type"),
-                                      React.createElement("th", { className: "is-numeric" }, "Cost")
-                                    )
-                                  ),
-                                  React.createElement("tbody", null,
-                                    resourceUsageRows.length === 0
-                                      ? React.createElement("tr", { className: "playground-settings-usage-resource-empty-row" },
-                                          React.createElement("td", { colSpan: 3 }, "No measured usage in this period.")
-                                        )
-                                      : resourceUsageRows.map((item) =>
-                                          React.createElement("tr", { key: item.id },
-                                            React.createElement("td", { className: "playground-settings-usage-resource-name-cell" },
-                                              React.createElement("span", { className: "playground-settings-usage-resource-name" }, item.name || "Unknown"),
-                                              item.resourceId
-                                                ? React.createElement("span", { className: "playground-settings-usage-resource-meta" }, item.resourceId)
-                                                : null
-                                            ),
-                                            React.createElement("td", { className: "playground-settings-usage-resource-type-cell" }, item.displayKind),
-                                            React.createElement("td", { className: "playground-settings-usage-resource-ct-cell" }, formatSettingsComputeTokens(item.totalCT))
-                                          )
-                                        )
-                                  )
-                                )
-                              )
+                          React.createElement(PlatformDataTable, {
+                            rows: resourceUsageRows,
+                            getRowId: (item) => String(item.id),
+                            ariaLabel: "Usage consumers",
+                            className: "playground-settings-usage-platform-table",
+                            surface: "plain",
+                            sticky: false,
+                            loading: settingsUsageLoading,
+                            emptyState: "No measured usage in this period.",
+                            columns: [
+                              {
+                                id: "resource",
+                                header: "Resource",
+                                accessor: (item) => item.name || "Unknown",
+                                width: "minmax(220px, 2fr)",
+                                cell: ({ row: item }) => React.createElement("div", { className: "playground-settings-usage-resource-name-cell" },
+                                  React.createElement("span", { className: "playground-settings-usage-resource-name" }, item.name || "Unknown"),
+                                  item.resourceId ? React.createElement("span", { className: "playground-settings-usage-resource-meta" }, item.resourceId) : null
+                                ),
+                              },
+                              { id: "type", header: "Type", accessor: (item) => item.displayKind, width: "minmax(120px, 1fr)" },
+                              {
+                                id: "cost",
+                                header: "Cost",
+                                accessor: (item) => Number(item.totalCT || 0),
+                                width: "minmax(100px, 0.8fr)",
+                                align: "end",
+                                cell: ({ row: item }) => formatSettingsComputeTokens(item.totalCT),
+                              },
+                            ],
+                          })
                         )
                       );
                 })()
@@ -199136,68 +197029,82 @@ ${PROJECT_OVERVIEW_SCRIPT}
             }
             case "api": {
               const visibleApiKeys = settingsApiKeys.filter((apiKeyRecord) => apiKeyRecord?.isActive !== false);
-              const apiKeysListContent = settingsApiKeysLoading
-                ? React.createElement("div", { className: "playground-settings-loading-state" },
-                    React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
-                  )
-                : visibleApiKeys.length === 0
-                  ? renderSettingsEmptyState(Code, "No API keys yet", "Create an API key to start using the computer-agents API")
-                  : React.createElement("div", { className: "playground-settings-api-keys-table" },
-                      React.createElement("div", { className: "playground-settings-api-keys-table-header" },
-                        React.createElement("div", null, "Name"),
-                        React.createElement("div", null, "Secret key"),
-                        React.createElement("div", null, "Created"),
-                        React.createElement("div", null, "Last used"),
-                        React.createElement("div", null, "Created by"),
-                        React.createElement("div", null, "Permissions"),
-                        React.createElement("div", null)
-                      ),
-                      visibleApiKeys.map((apiKeyRecord) => {
-                        const canRevoke = apiKeyRecord?.canRevoke !== false && apiKeyRecord?.isActive;
-                        const keyPreview = String(apiKeyRecord?.keyPrefix || "key") + "••••";
-                        const createdByLabel = typeof apiKeyRecord?.createdByLabel === "string" && apiKeyRecord.createdByLabel
-                          ? apiKeyRecord.createdByLabel
-                          : typeof apiKeyRecord?.metadata?.userEmail === "string" && apiKeyRecord.metadata.userEmail
-                            ? apiKeyRecord.metadata.userEmail
-                            : typeof apiKeyRecord?.metadata?.createdBy === "string" && apiKeyRecord.metadata.createdBy
-                              ? apiKeyRecord.metadata.createdBy
-                              : "—";
-
-                        return React.createElement("div", {
-                            key: apiKeyRecord.id,
-                            className: "playground-settings-api-keys-table-row",
-                          },
-                          React.createElement("div", { className: "playground-settings-api-keys-cell is-name" },
-                            React.createElement("div", { className: "playground-settings-api-keys-name-row" },
-                              React.createElement("span", { className: "playground-settings-api-keys-name" }, apiKeyRecord.name || "API Key"),
-                              apiKeyRecord?.isCurrentDefault
-                                ? React.createElement("span", { className: "playground-settings-api-keys-pill" }, "standard")
-                                : null
-                            )
-                          ),
-                          React.createElement("div", { className: "playground-settings-api-keys-cell is-secret" }, keyPreview),
-                          React.createElement("div", { className: "playground-settings-api-keys-cell is-date" }, formatSettingsDate(apiKeyRecord.createdAt)),
-                          React.createElement("div", { className: "playground-settings-api-keys-cell is-date" }, apiKeyRecord?.lastUsedAt ? formatSettingsDate(apiKeyRecord.lastUsedAt) : "Never"),
-                          React.createElement("div", { className: "playground-settings-api-keys-cell is-created-by" }, createdByLabel),
-                          React.createElement("div", { className: "playground-settings-api-keys-cell is-permissions" }, getSettingsApiKeyScopeLabel(apiKeyRecord.permissions)),
-                          React.createElement("div", { className: "playground-settings-api-keys-actions" },
-                            canRevoke
-                              ? React.createElement("button", {
-                                  type: "button",
-                                  className: "playground-settings-api-keys-action-button",
-                                  disabled: settingsRevokingKeyId === apiKeyRecord.id,
-                                  title: "Revoke key",
-                                  onClick: () => {
-                                    void handleSettingsRevokeApiKey(apiKeyRecord.id);
-                                  },
-                                }, settingsRevokingKeyId === apiKeyRecord.id
-                                  ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-settings-records-spinner" })
-                                  : React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }))
-                              : React.createElement("span", { className: "playground-settings-api-keys-cell", style: { color: "rgba(255,255,255,0.35)" } }, "—")
-                          )
-                        );
-                      })
-                    );
+              const getSettingsApiKeyCreatorLabel = (apiKeyRecord) => typeof apiKeyRecord?.createdByLabel === "string" && apiKeyRecord.createdByLabel
+                ? apiKeyRecord.createdByLabel
+                : typeof apiKeyRecord?.metadata?.userEmail === "string" && apiKeyRecord.metadata.userEmail
+                  ? apiKeyRecord.metadata.userEmail
+                  : typeof apiKeyRecord?.metadata?.createdBy === "string" && apiKeyRecord.metadata.createdBy
+                    ? apiKeyRecord.metadata.createdBy
+                    : "—";
+              const apiKeysListContent = React.createElement(PlatformDataTable, {
+                rows: visibleApiKeys,
+                getRowId: (apiKeyRecord) => String(apiKeyRecord.id),
+                ariaLabel: "API keys",
+                className: "playground-settings-api-keys-platform-table",
+                surface: "plain",
+                sticky: false,
+                loading: settingsApiKeysLoading,
+                emptyState: renderSettingsEmptyState(Code, "No API keys yet", "Create an API key to start using the computer-agents API"),
+                columns: [
+                  {
+                    id: "name",
+                    header: "Name",
+                    accessor: (apiKeyRecord) => apiKeyRecord.name || "API Key",
+                    width: "minmax(160px, 1fr)",
+                    cell: ({ row: apiKeyRecord }) => React.createElement("div", { className: "playground-settings-api-keys-name-row" },
+                      React.createElement("span", { className: "playground-settings-api-keys-name" }, apiKeyRecord.name || "API Key"),
+                      apiKeyRecord?.isCurrentDefault
+                        ? React.createElement("span", { className: "playground-settings-api-keys-pill" }, "standard")
+                        : null
+                    ),
+                  },
+                  {
+                    id: "secret",
+                    header: "Secret key",
+                    accessor: (apiKeyRecord) => String(apiKeyRecord?.keyPrefix || "key") + "••••",
+                    width: "minmax(120px, 0.72fr)",
+                  },
+                  {
+                    id: "created",
+                    header: "Created",
+                    accessor: (apiKeyRecord) => Date.parse(String(apiKeyRecord.createdAt || "")) || 0,
+                    width: "minmax(100px, 0.62fr)",
+                    cell: ({ row: apiKeyRecord }) => formatSettingsDate(apiKeyRecord.createdAt),
+                  },
+                  {
+                    id: "last-used",
+                    header: "Last used",
+                    accessor: (apiKeyRecord) => Date.parse(String(apiKeyRecord.lastUsedAt || "")) || 0,
+                    width: "minmax(100px, 0.62fr)",
+                    hideBelow: 820,
+                    cell: ({ row: apiKeyRecord }) => apiKeyRecord?.lastUsedAt ? formatSettingsDate(apiKeyRecord.lastUsedAt) : "Never",
+                  },
+                  {
+                    id: "created-by",
+                    header: "Created by",
+                    accessor: getSettingsApiKeyCreatorLabel,
+                    width: "minmax(130px, 0.8fr)",
+                    hideBelow: 980,
+                  },
+                  {
+                    id: "permissions",
+                    header: "Permissions",
+                    accessor: (apiKeyRecord) => getSettingsApiKeyScopeLabel(apiKeyRecord.permissions),
+                    width: "minmax(120px, 0.72fr)",
+                    hideBelow: 680,
+                  },
+                ],
+                getRowActions: (apiKeyRecord) => apiKeyRecord?.canRevoke !== false && apiKeyRecord?.isActive
+                  ? [{
+                      id: "revoke",
+                      label: settingsRevokingKeyId === apiKeyRecord.id ? "Revoking" : "Revoke key",
+                      icon: settingsRevokingKeyId === apiKeyRecord.id ? Loader2 : Trash2,
+                      danger: true,
+                      disabled: settingsRevokingKeyId === apiKeyRecord.id,
+                      onSelect: () => void handleSettingsRevokeApiKey(apiKeyRecord.id),
+                    }]
+                  : [],
+              });
 
               const apiKeyDialogContent = settingsApiKeyDialogOpen
                 ? React.createElement("div", {
@@ -200225,304 +198132,109 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	          const visibleOverviewOrganizationIds = visibleOverviewOrganizations.map((organization) => String(organization?.id || "").trim()).filter(Boolean);
 	          const selectedVisibleOrganizationOverviewIds = visibleOverviewOrganizationIds.filter((organizationId) => selectedOrganizationOverviewIds.has(organizationId));
 	          const allVisibleOrganizationsSelected = visibleOverviewOrganizationIds.length > 0 && selectedVisibleOrganizationOverviewIds.length === visibleOverviewOrganizationIds.length;
-	          const hasPartialVisibleOrganizationSelection = selectedVisibleOrganizationOverviewIds.length > 0 && !allVisibleOrganizationsSelected;
-	          const toggleOrganizationOverviewSelection = (organizationId) => {
-	            const normalizedOrganizationId = String(organizationId || "").trim();
-	            if (!normalizedOrganizationId) return;
-	            setSelectedOrganizationOverviewIds((current) => {
-	              const next = new Set(current || []);
-	              if (next.has(normalizedOrganizationId)) {
-	                next.delete(normalizedOrganizationId);
-	              } else {
-	                next.add(normalizedOrganizationId);
-	              }
-	              return next;
-	            });
-	          };
-	          const toggleVisibleOrganizationOverviewSelection = () => {
-	            if (visibleOverviewOrganizationIds.length === 0) {
-	              return;
-	            }
-	            setSelectedOrganizationOverviewIds((current) => {
-	              const next = new Set(current || []);
-	              if (allVisibleOrganizationsSelected) {
-	                visibleOverviewOrganizationIds.forEach((organizationId) => next.delete(organizationId));
-	              } else {
-	                visibleOverviewOrganizationIds.forEach((organizationId) => next.add(organizationId));
-	              }
-	              return next;
-	            });
-	          };
-	          const organizationOverviewSortOptions = [
-	            { id: "name", label: "Name (A-Z)", sortKey: "name", direction: "asc" },
-	            { id: "created", label: "Recently Created", sortKey: "created", direction: "desc" },
-	          ];
 	          const organizationOverviewFilterOptions = [
 	            { id: "all", label: "All Organizations", description: "Show every organization workspace" },
 	            { id: "current", label: "Current Organization", description: "Only show the active workspace" },
 	            { id: "company", label: "Company Organizations", description: "Only show shared company workspaces" },
 	            { id: "personal", label: "Personal Organization", description: "Only show the personal workspace" },
 	          ];
-	          const renderOrganizationSortIcon = (sortKey, activeSort, activeDirection) => {
-	            const isActive = activeSort === sortKey;
-	            const normalizedDirection = normalizeOrganizationTableSortDirection(activeDirection);
-	            const isDescending = isActive && normalizedDirection === "desc";
-	            const isAscending = isActive && !isDescending;
-	            return React.createElement("span", {
-	                className: "playground-agents-overview-sort-icon"
-	                  + (isActive ? " is-active" : "")
-	                  + (isAscending ? " is-ascending" : "")
-	                  + (isDescending ? " is-descending" : ""),
-	                "aria-hidden": "true",
-	              },
-	              React.createElement(ChevronsUpDown, {
-	                className: "playground-agents-overview-sort-icon-layer is-top",
-	                width: 14,
-	                height: 14,
-	                strokeWidth: 1.8,
-	              }),
-	              React.createElement(ChevronsUpDown, {
-	                className: "playground-agents-overview-sort-icon-layer is-bottom",
-	                width: 14,
-	                height: 14,
-	                strokeWidth: 1.8,
-	              })
-	            );
-	          };
-	          const renderOrganizationSortableHeader = (label, sortKey, activeSort, activeDirection, onSort) => {
-	            const normalizedDirection = normalizeOrganizationTableSortDirection(activeDirection);
-	            const isActive = activeSort === sortKey;
-	            const nextDirection = isActive && normalizedDirection === "asc" ? "descending" : "ascending";
-	            return React.createElement("div", { className: "playground-agents-overview-sortable-header" + (isActive ? " is-active" : "") },
-	              React.createElement("span", { className: "playground-agents-overview-sortable-header-label" }, label),
-	              React.createElement("button", {
-	                  type: "button",
-	                  className: "playground-agents-overview-column-sort-button"
-	                    + (isActive ? " is-active" : "")
-	                    + (isActive && normalizedDirection === "asc" ? " is-ascending" : "")
-	                    + (isActive && normalizedDirection === "desc" ? " is-descending" : ""),
-	                  title: "Sort " + label + " " + nextDirection,
-	                  "aria-label": "Sort " + label + " " + nextDirection,
-	                  "aria-pressed": isActive ? "true" : "false",
-	                  onClick: (event) => {
-	                    event.preventDefault();
-	                    event.stopPropagation();
-	                    onSort(sortKey);
-	                  },
-	                },
-	                renderOrganizationSortIcon(sortKey, activeSort, normalizedDirection)
-	              )
-	            );
-	          };
-	          const renderOrganizationToolbarMenu = ({
-	            menuId,
-	            options,
-	            activeValue,
-	            activeSort,
-	            activeDirection,
-	            setActiveValue,
-	            setActiveSort,
-	            setActiveDirection,
-	            close,
-	          }) => {
-	            const isSort = menuId === "sort";
-	            const normalizedDirection = normalizeOrganizationTableSortDirection(activeDirection);
-	            return React.createElement("div", {
-	                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-	              },
-	              options.map((option) => {
-	                const optionValue = option.sortKey || option.id;
-	                const optionDirection = normalizeOrganizationTableSortDirection(option.direction);
-	                const selected = isSort
-	                  ? activeSort === optionValue && normalizedDirection === optionDirection
-	                  : activeValue === option.id;
-	                return React.createElement("button", {
-	                    key: option.id,
-	                    type: "button",
-	                    className: "tb-popup-row tb-popup-row-select" + (selected ? " selected" : ""),
-	                    onClick: () => {
-	                      if (isSort) {
-	                        setActiveSort(optionValue);
-	                        setActiveDirection(optionDirection);
-	                      } else {
-	                        setActiveValue(option.id);
-	                      }
-	                      close();
-	                    },
-	                  },
-	                  React.createElement("span", { className: "tb-popup-check-slot" },
-	                    selected ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 }) : null
-	                  ),
-	                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-	                    React.createElement("span", null, option.label),
-	                    option.description ? React.createElement("span", null, option.description) : null
-	                  )
-	                );
-	              })
-	            );
-	          };
-	          const handleOrganizationOverviewColumnSort = (sortKey) => {
-	            const normalizedSortKey = String(sortKey || "name").trim() || "name";
-	            setOrganizationOverviewToolbarPopover("");
-	            setOrganizationOverviewSortDirection((currentDirection) => {
-	              if (organizationOverviewSort !== normalizedSortKey) {
-	                return normalizedSortKey === "created" ? "desc" : "asc";
-	              }
-	              return normalizeOrganizationTableSortDirection(currentDirection) === "asc" ? "desc" : "asc";
-	            });
-	            setOrganizationOverviewSort(normalizedSortKey);
-	          };
-	          const renderOrganizationOverviewColumnHeader = () => React.createElement("div", { className: "playground-project-overview-threads-table-header playground-agents-overview-column-header playground-team-overview-column-header playground-organization-overview-column-header" },
-	            React.createElement("div", null,
-	              React.createElement("button", {
-	                type: "button",
-	                className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox"
-	                  + (allVisibleOrganizationsSelected ? " is-selected" : "")
-	                  + (hasPartialVisibleOrganizationSelection ? " is-partial" : ""),
-	                role: "checkbox",
-	                "aria-checked": allVisibleOrganizationsSelected ? "true" : (hasPartialVisibleOrganizationSelection ? "mixed" : "false"),
-	                "aria-label": allVisibleOrganizationsSelected ? "Deselect all visible organizations" : "Select all visible organizations",
-	                onClick: (event) => {
-	                  event.preventDefault();
-	                  event.stopPropagation();
-	                  toggleVisibleOrganizationOverviewSelection();
-	                },
-	              })
-	            ),
-	            React.createElement("div", null, renderOrganizationSortableHeader("Name", "name", organizationOverviewSort, normalizedOrganizationOverviewSortDirection, handleOrganizationOverviewColumnSort)),
-	            React.createElement("div", null, renderOrganizationSortableHeader("Role", "role", organizationOverviewSort, normalizedOrganizationOverviewSortDirection, handleOrganizationOverviewColumnSort)),
-	            React.createElement("div", null, renderOrganizationSortableHeader("Type", "type", organizationOverviewSort, normalizedOrganizationOverviewSortDirection, handleOrganizationOverviewColumnSort)),
-	            React.createElement("div", null, renderOrganizationSortableHeader("Status", "status", organizationOverviewSort, normalizedOrganizationOverviewSortDirection, handleOrganizationOverviewColumnSort)),
-	            React.createElement("div", null)
-	          );
-	          const renderOrganizationOverviewStickyTableHeader = (includeColumns = true) => React.createElement("div", { className: "playground-agents-overview-sticky-table-header playground-team-overview-sticky-table-header playground-organization-overview-sticky-table-header" },
-	            React.createElement("div", {
-	                className: "playground-develop-server-kind-table-toolbar playground-team-overview-toolbar-row playground-organization-overview-toolbar-row",
-	                ref: organizationOverviewToolbarRef,
-	              },
-	              React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell" },
-	                React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-	                React.createElement("input", {
-	                  type: "search",
-	                  value: organizationOverviewSearchQuery,
-	                  onChange: (event) => setOrganizationOverviewSearchQuery(event.target.value),
-	                  className: "playground-plugins-search",
-	                  placeholder: "Search organizations",
-	                })
-	              ),
-	              React.createElement("div", { className: "playground-plugins-toolbar-controls" },
-	                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
-	                  React.createElement("button", {
-	                    type: "button",
-	                    className: "playground-files-control-button is-bare is-backlog-sort" + (organizationOverviewToolbarPopover === "sort" || organizationOverviewSort !== "name" || normalizedOrganizationOverviewSortDirection !== "asc" ? " is-active" : ""),
-	                    onClick: () => setOrganizationOverviewToolbarPopover((current) => current === "sort" ? "" : "sort"),
-	                  },
-	                    React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                    React.createElement("span", null, "Sort")
-	                  ),
-	                  organizationOverviewToolbarPopover === "sort"
-	                    ? renderOrganizationToolbarMenu({
-	                        menuId: "sort",
-	                        options: organizationOverviewSortOptions,
-	                        activeSort: organizationOverviewSort,
-	                        activeDirection: normalizedOrganizationOverviewSortDirection,
-	                        setActiveSort: setOrganizationOverviewSort,
-	                        setActiveDirection: setOrganizationOverviewSortDirection,
-	                        close: () => setOrganizationOverviewToolbarPopover(""),
-	                      })
-	                    : null
-	                ),
-	                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
-	                  React.createElement("button", {
-	                    type: "button",
-	                    className: "playground-files-control-button is-bare is-backlog-filter" + (organizationOverviewToolbarPopover === "filter" || organizationOverviewFilter !== "all" ? " is-active" : ""),
-	                    onClick: () => setOrganizationOverviewToolbarPopover((current) => current === "filter" ? "" : "filter"),
-	                  },
-	                    React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                    React.createElement("span", null, "Filter")
-	                  ),
-	                  organizationOverviewToolbarPopover === "filter"
-	                    ? renderOrganizationToolbarMenu({
-	                        menuId: "filter",
-	                        options: organizationOverviewFilterOptions,
-	                        activeValue: organizationOverviewFilter,
-	                        activeSort: organizationOverviewSort,
-	                        activeDirection: normalizedOrganizationOverviewSortDirection,
-	                        setActiveValue: setOrganizationOverviewFilter,
-	                        setActiveSort: setOrganizationOverviewSort,
-	                        setActiveDirection: setOrganizationOverviewSortDirection,
-	                        close: () => setOrganizationOverviewToolbarPopover(""),
-	                      })
-	                    : null
-	                )
-	              ),
-	              React.createElement("button", {
-	                type: "button",
-	                className: "playground-top-nav-private-chat-button playground-agents-nav-create-button playground-agents-overview-toolbar-create-button",
-	                onClick: () => {
-	                  setOrganizationOverviewToolbarPopover("");
-	                  setOrganizationPageCreateModalOpen(true);
-	                },
-	                title: "Create organization",
-	                "aria-label": "Create organization",
-	              },
-	                React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                React.createElement("span", null, "New Organization")
-	              )
-	            ),
-	            includeColumns ? renderOrganizationOverviewColumnHeader() : null
-	          );
-	          const renderOrganizationOverviewRowMenu = (organization) => {
-	            const organizationId = String(organization?.id || "").trim();
-	            if (!organizationId || organizationOverviewMenuId !== organizationId) {
-	              return null;
-	            }
-	            const isActive = isOrganizationPageActiveOrganization(organization);
-	            const roleId = normalizeOrganizationRoleId(organization?.role || organization?.membership?.role, "member");
-	            const canRename = roleId === "owner"
-	              || roleId === "admin"
-	              || String(organization?.ownerUserId || organization?.ownerId || "") === String(sessionState.userId || "");
-	            return React.createElement("div", {
-	                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-	              },
-	              React.createElement("button", {
-	                type: "button",
-	                className: "tb-popup-row",
-	                onClick: () => {
-	                  setOrganizationOverviewMenuId("");
-	                  openOrganizationDetail(organizationId);
-	                },
-	              },
-	                React.createElement(ChevronRight, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-	                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, "Open"))
-	              ),
-	              isActive ? null : React.createElement("button", {
-	                type: "button",
-	                className: "tb-popup-row",
-	                onClick: () => {
-	                  setOrganizationOverviewMenuId("");
-	                  setActiveOrganizationFromRecord(organization);
-	                },
-	              },
-	                React.createElement(Check, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-	                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, "Set active"))
-	              ),
-	              canRename ? React.createElement("button", {
-	                type: "button",
-	                className: "tb-popup-row",
-	                onClick: () => {
-	                  setOrganizationOverviewMenuId("");
-	                  setOrganizationPageSelectedOrganizationId(organizationId);
-	                  setOrganizationPageRenameName(organization?.name || "");
-	                  setOrganizationPageRenameModalOpen(true);
-	                },
-	              },
-	                React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-	                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, "Rename"))
-	              ) : null
-	            );
-	          };
-	          const renderOverview = () => React.createElement("div", { className: "playground-team-overview-page playground-agents-overview-page playground-organization-overview-page is-develop-configure-page" },
+		          const organizationOverviewColumns = [
+		            {
+		              id: "name",
+		              header: "Name",
+		              accessor: getOrganizationOverviewDisplayName,
+		              sortable: true,
+		              width: "minmax(220px, 1.35fr)",
+		              cell: ({ row: organization }) => React.createElement("div", { className: "playground-agents-overview-name-title" }, getOrganizationOverviewDisplayName(organization)),
+		            },
+		            {
+		              id: "role",
+		              header: "Role",
+		              accessor: getOrganizationOverviewRoleLabel,
+		              sortable: true,
+		              width: "minmax(105px, 0.58fr)",
+		              cell: ({ row: organization }) => React.createElement("div", { className: "playground-agents-overview-table-value" }, getOrganizationOverviewRoleLabel(organization)),
+		            },
+		            {
+		              id: "type",
+		              header: "Type",
+		              accessor: getOrganizationOverviewTypeLabel,
+		              sortable: true,
+		              width: "minmax(120px, 0.62fr)",
+		              hideBelow: 760,
+		              cell: ({ row: organization }) => React.createElement("div", { className: "playground-agents-overview-table-value" }, getOrganizationOverviewTypeLabel(organization)),
+		            },
+		            {
+		              id: "status",
+		              header: "Status",
+		              accessor: getOrganizationOverviewStatusLabel,
+		              sortable: true,
+		              width: "minmax(110px, 0.56fr)",
+		              hideBelow: 900,
+		              cell: ({ row: organization }) => React.createElement("div", { className: "playground-agents-overview-table-value" }, getOrganizationOverviewStatusLabel(organization)),
+		            },
+		          ];
+		          const getOrganizationOverviewActions = (organization) => {
+		            const organizationId = String(organization?.id || "").trim();
+		            const isActive = isOrganizationPageActiveOrganization(organization);
+		            const roleId = normalizeOrganizationRoleId(organization?.role || organization?.membership?.role, "member");
+		            const canRename = roleId === "owner"
+		              || roleId === "admin"
+		              || String(organization?.ownerUserId || organization?.ownerId || "") === String(sessionState.userId || "");
+		            return [
+		              { id: "open", label: "Open", icon: ChevronRight, onSelect: () => openOrganizationDetail(organizationId) },
+		              { id: "activate", label: "Set active", icon: Check, hidden: isActive, onSelect: () => setActiveOrganizationFromRecord(organization) },
+		              {
+		                id: "rename",
+		                label: "Rename",
+		                icon: SquarePen,
+		                hidden: !canRename,
+		                onSelect: () => {
+		                  setOrganizationPageSelectedOrganizationId(organizationId);
+		                  setOrganizationPageRenameName(organization?.name || "");
+		                  setOrganizationPageRenameModalOpen(true);
+		                },
+		              },
+		            ];
+		          };
+		          const organizationOverviewDataTable = React.createElement(PlatformDataTable, {
+		            rows: visibleOverviewOrganizations,
+		            columns: organizationOverviewColumns,
+		            getRowId: (organization) => String(organization?.id || ""),
+		            ariaLabel: "Organizations",
+		            className: "playground-organizations-platform-data-table",
+		            surface: "plain",
+		            sorting: {
+		              value: { id: organizationOverviewSort, direction: normalizedOrganizationOverviewSortDirection },
+		              manual: true,
+		              onChange: (nextSorting) => {
+		                if (!nextSorting) return;
+		                setOrganizationOverviewSort(nextSorting.id);
+		                setOrganizationOverviewSortDirection(nextSorting.direction);
+		                setOrganizationOverviewToolbarPopover("");
+		              },
+		            },
+		            selection: {
+		              enabled: true,
+		              value: selectedOrganizationOverviewIds,
+		              onChange: ({ selectedIds }) => setSelectedOrganizationOverviewIds(new Set(selectedIds)),
+		              ariaLabel: (organization) => "Select " + getOrganizationOverviewDisplayName(organization),
+		            },
+		            toolbar: {
+		              search: { value: organizationOverviewSearchQuery, onChange: setOrganizationOverviewSearchQuery, placeholder: "Search organizations", manual: true },
+		              showSort: true,
+		              filters: [{ id: "type", label: "Type", value: organizationOverviewFilter, options: organizationOverviewFilterOptions, onChange: setOrganizationOverviewFilter }],
+		              primaryAction: { label: "New Organization", icon: Plus, onClick: () => setOrganizationPageCreateModalOpen(true) },
+		            },
+		            getRowActions: getOrganizationOverviewActions,
+		            getRowAriaLabel: getOrganizationOverviewDisplayName,
+		            onRowActivate: (organization) => openOrganizationDetail(organization.id),
+		            loading: organizationPageLoading && visibleOverviewOrganizations.length === 0,
+		            emptyState: normalizedOrganizationOverviewSearchQuery || organizationOverviewFilter !== "all"
+		              ? "No matching organizations found."
+		              : "No organizations yet.",
+		          });
+		          const renderOverview = () => React.createElement("div", { className: "playground-team-overview-page playground-agents-overview-page playground-organization-overview-page is-develop-configure-page" },
 	            React.createElement("div", { className: "playground-environments-home-content playground-team-overview-content playground-organization-overview-content" },
 	              React.createElement("section", { className: "playground-environments-home-hero playground-develop-server-kind-hero playground-agents-configure-hero playground-team-overview-hero playground-organization-overview-hero" },
 	                React.createElement("div", { className: "playground-organization-overview-hero-intro" },
@@ -200545,90 +198257,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	                React.createElement("section", {
 	                    className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-team-overview-table-section playground-organization-overview-table-section",
 	                  },
-	                  visibleOverviewOrganizations.length === 0 ? renderOrganizationOverviewStickyTableHeader(false) : null,
-	                  visibleOverviewOrganizations.length === 0
-	                    ? React.createElement("div", { className: "playground-plugins-empty" },
-	                        normalizedOrganizationOverviewSearchQuery || organizationOverviewFilter !== "all"
-	                          ? "No matching organizations found."
-	                          : (organizationPageLoading ? "Loading organizations..." : "No organizations yet.")
-	                      )
-	                    : React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table" },
-	                        renderOrganizationOverviewStickyTableHeader(false),
-	                        React.createElement("div", { className: "playground-project-overview-thread-list" },
-	                          renderOrganizationOverviewColumnHeader(),
-	                          visibleOverviewOrganizations.map((organization) => {
-	                            const organizationId = String(organization?.id || "").trim();
-	                            const organizationName = getOrganizationOverviewDisplayName(organization);
-	                            const isOverviewOrganizationSelected = selectedOrganizationOverviewIds.has(organizationId);
-	                            const isActive = isOrganizationPageActiveOrganization(organization);
-	                            return React.createElement("div", {
-	                                key: organizationId || organizationName,
-	                                tabIndex: 0,
-	                                role: "button",
-	                                className: "playground-project-overview-threads-table-row",
-	                                "aria-label": "Open " + organizationName,
-	                                onClick: () => openOrganizationDetail(organizationId),
-	                                onKeyDown: (event) => {
-	                                  if (event.key === "Enter" || event.key === " ") {
-	                                    event.preventDefault();
-	                                    openOrganizationDetail(organizationId);
-	                                  }
-	                                },
-	                              },
-	                              React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
-	                                React.createElement("button", {
-	                                  type: "button",
-	                                  className: "playground-agents-overview-select-checkbox" + (isOverviewOrganizationSelected ? " is-selected" : ""),
-	                                  role: "checkbox",
-	                                  "aria-checked": isOverviewOrganizationSelected ? "true" : "false",
-	                                  "aria-label": "Select " + organizationName,
-	                                  onClick: (event) => {
-	                                    event.preventDefault();
-	                                    event.stopPropagation();
-	                                    toggleOrganizationOverviewSelection(organizationId);
-	                                  },
-	                                  onKeyDown: (event) => event.stopPropagation(),
-	                                })
-	                              ),
-	                              React.createElement("div", { className: "playground-project-overview-thread-cell is-name" },
-	                                React.createElement("div", { className: "playground-agents-overview-name-cell" },
-	                                  React.createElement("div", { className: "playground-agents-overview-name-copy" },
-	                                    React.createElement("div", { className: "playground-agents-overview-name-title" }, organizationName)
-	                                  )
-	                                )
-	                              ),
-	                              React.createElement("div", { className: "playground-project-overview-thread-cell is-model" },
-	                                React.createElement("div", { className: "playground-agents-overview-table-value" }, getOrganizationOverviewRoleLabel(organization))
-	                              ),
-	                              React.createElement("div", { className: "playground-project-overview-thread-cell is-creator" },
-	                                React.createElement("div", { className: "playground-agents-overview-table-value" }, getOrganizationOverviewTypeLabel(organization))
-	                              ),
-	                              React.createElement("div", { className: "playground-project-overview-thread-cell is-date" },
-	                                React.createElement("div", { className: "playground-agents-overview-table-value" }, isActive ? "Current" : "Available")
-	                              ),
-	                              React.createElement("div", { className: "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell playground-tasks-toolbar-popup-shell playground-organization-overview-action-shell" },
-	                                React.createElement("button", {
-	                                  type: "button",
-	                                  className: "playground-overview-table-action-button" + (organizationOverviewMenuId === organizationId ? " is-open" : ""),
-	                                  onClick: (event) => {
-	                                    event.preventDefault();
-	                                    event.stopPropagation();
-	                                    setOrganizationOverviewToolbarPopover("");
-	                                    setOrganizationOverviewMenuId((current) => current === organizationId ? "" : organizationId);
-	                                  },
-	                                  onKeyDown: (event) => event.stopPropagation(),
-	                                  "aria-label": "Organization actions",
-	                                  "aria-expanded": organizationOverviewMenuId === organizationId ? "true" : "false",
-	                                },
-	                                  React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 })
-	                                ),
-	                                renderOrganizationOverviewRowMenu(organization)
-	                              )
-	                            );
-	                          })
-	                        )
-	                      )
-	                )
+		                  organizationOverviewDataTable
+		                )
 	              )
 	            ),
 	            renderOrganizationCreateModal(),
@@ -200748,304 +198378,124 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	              .filter(Boolean);
 	            const selectedVisibleOrganizationMemberIds = visibleOrganizationMemberSelectionIds.filter((memberId) => selectedOrganizationMemberIds.has(memberId));
 	            const allVisibleOrganizationMembersSelected = visibleOrganizationMemberSelectionIds.length > 0 && selectedVisibleOrganizationMemberIds.length === visibleOrganizationMemberSelectionIds.length;
-	            const hasPartialVisibleOrganizationMemberSelection = selectedVisibleOrganizationMemberIds.length > 0 && !allVisibleOrganizationMembersSelected;
-	            const toggleOrganizationMemberSelection = (memberId) => {
-	              const normalizedMemberId = String(memberId || "").trim();
-	              if (!normalizedMemberId) return;
-	              setSelectedOrganizationMemberIds((current) => {
-	                const next = new Set(current || []);
-	                if (next.has(normalizedMemberId)) {
-	                  next.delete(normalizedMemberId);
-	                } else {
-	                  next.add(normalizedMemberId);
-	                }
-	                return next;
-	              });
-	            };
-	            const toggleVisibleOrganizationMemberSelection = () => {
-	              if (visibleOrganizationMemberSelectionIds.length === 0) {
-	                return;
-	              }
-	              setSelectedOrganizationMemberIds((current) => {
-	                const next = new Set(current || []);
-	                if (allVisibleOrganizationMembersSelected) {
-	                  visibleOrganizationMemberSelectionIds.forEach((memberId) => next.delete(memberId));
-	                } else {
-	                  visibleOrganizationMemberSelectionIds.forEach((memberId) => next.add(memberId));
-	                }
-	                return next;
-	              });
-	            };
-	            const organizationMemberSortOptions = [
-	              { id: "user", label: "User (A-Z)", sortKey: "user", direction: "asc" },
-	              { id: "role", label: "Role", sortKey: "role", direction: "asc" },
-	              { id: "status", label: "Status", sortKey: "status", direction: "asc" },
-	              { id: "joined", label: "Recently Joined", sortKey: "joined", direction: "desc" },
-	            ];
 	            const organizationMemberFilterOptions = [
 	              { id: "all", label: "All Members", description: "Show members and pending invites" },
 	              { id: "active", label: "Active Members", description: "Only show active organization members" },
 	              { id: "pending", label: "Pending Invites", description: "Only show pending invitations" },
 	            ];
-	            const handleOrganizationMemberColumnSort = (sortKey) => {
-	              const normalizedSortKey = String(sortKey || "user").trim() || "user";
-	              setOrganizationMemberToolbarPopover("");
-	              setOrganizationMemberSortDirection((currentDirection) => {
-	                if (organizationMemberSort !== normalizedSortKey) {
-	                  return normalizedSortKey === "joined" ? "desc" : "asc";
-	                }
-	                return normalizeOrganizationTableSortDirection(currentDirection) === "asc" ? "desc" : "asc";
-	              });
-	              setOrganizationMemberSort(normalizedSortKey);
-	            };
-	            const renderOrganizationMembersTableColumnHeader = () => React.createElement("div", {
-	                className: "playground-project-overview-threads-table-header playground-agents-overview-column-header playground-team-members-column-header playground-organization-members-column-header",
-	              },
-	              React.createElement("div", null,
-	                React.createElement("button", {
-	                  type: "button",
-	                  className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox"
-	                    + (allVisibleOrganizationMembersSelected ? " is-selected" : "")
-	                    + (hasPartialVisibleOrganizationMemberSelection ? " is-partial" : ""),
-	                  role: "checkbox",
-	                  "aria-checked": allVisibleOrganizationMembersSelected ? "true" : (hasPartialVisibleOrganizationMemberSelection ? "mixed" : "false"),
-	                  "aria-label": allVisibleOrganizationMembersSelected ? "Deselect all visible members" : "Select all visible members",
-	                  onClick: (event) => {
-	                    event.preventDefault();
-	                    event.stopPropagation();
-	                    toggleVisibleOrganizationMemberSelection();
-	                  },
-	                })
-	              ),
-	              React.createElement("div", null, renderOrganizationSortableHeader("User", "user", organizationMemberSort, normalizedOrganizationMemberSortDirection, handleOrganizationMemberColumnSort)),
-	              React.createElement("div", null, renderOrganizationSortableHeader("Role", "role", organizationMemberSort, normalizedOrganizationMemberSortDirection, handleOrganizationMemberColumnSort)),
-	              React.createElement("div", null, renderOrganizationSortableHeader("Status", "status", organizationMemberSort, normalizedOrganizationMemberSortDirection, handleOrganizationMemberColumnSort)),
-	              React.createElement("div", null, renderOrganizationSortableHeader("Joined", "joined", organizationMemberSort, normalizedOrganizationMemberSortDirection, handleOrganizationMemberColumnSort)),
-	              React.createElement("div", null)
-	            );
-	            const renderOrganizationMembersStickyTableHeader = () => React.createElement("div", {
-	                className: "playground-agents-overview-sticky-table-header playground-team-members-sticky-table-header playground-organization-members-sticky-table-header",
-	              },
-	              React.createElement("div", {
-	                  className: "playground-develop-server-kind-table-toolbar playground-team-members-table-toolbar playground-team-members-toolbar-row playground-organization-members-toolbar-row",
-	                  ref: organizationMemberToolbarRef,
-	                },
-	                React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell" },
-	                  React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-	                  React.createElement("input", {
-	                    type: "search",
-	                    value: organizationMemberSearchQuery,
-	                    onChange: (event) => setOrganizationMemberSearchQuery(event.target.value),
-	                    className: "playground-plugins-search",
-	                    placeholder: "Search members",
-	                  })
-	                ),
-	                React.createElement("div", { className: "playground-plugins-toolbar-controls" },
-	                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
-	                    React.createElement("button", {
-	                      type: "button",
-	                      className: "playground-files-control-button is-bare is-backlog-sort" + (organizationMemberToolbarPopover === "sort" || organizationMemberSort !== "user" || normalizedOrganizationMemberSortDirection !== "asc" ? " is-active" : ""),
-	                      onClick: () => setOrganizationMemberToolbarPopover((current) => current === "sort" ? "" : "sort"),
-	                    },
-	                      React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                      React.createElement("span", null, "Sort")
-	                    ),
-	                    organizationMemberToolbarPopover === "sort"
-	                      ? renderOrganizationToolbarMenu({
-	                          menuId: "sort",
-	                          options: organizationMemberSortOptions,
-	                          activeSort: organizationMemberSort,
-	                          activeDirection: normalizedOrganizationMemberSortDirection,
-	                          setActiveSort: setOrganizationMemberSort,
-	                          setActiveDirection: setOrganizationMemberSortDirection,
-	                          close: () => setOrganizationMemberToolbarPopover(""),
-	                        })
-	                      : null
-	                  ),
-	                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
-	                    React.createElement("button", {
-	                      type: "button",
-	                      className: "playground-files-control-button is-bare is-backlog-filter" + (organizationMemberToolbarPopover === "filter" || organizationMemberFilter !== "all" ? " is-active" : ""),
-	                      onClick: () => setOrganizationMemberToolbarPopover((current) => current === "filter" ? "" : "filter"),
-	                    },
-	                      React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                      React.createElement("span", null, "Filter")
-	                    ),
-	                    organizationMemberToolbarPopover === "filter"
-	                      ? renderOrganizationToolbarMenu({
-	                          menuId: "filter",
-	                          options: organizationMemberFilterOptions,
-	                          activeValue: organizationMemberFilter,
-	                          activeSort: organizationMemberSort,
-	                          activeDirection: normalizedOrganizationMemberSortDirection,
-	                          setActiveValue: setOrganizationMemberFilter,
-	                          setActiveSort: setOrganizationMemberSort,
-	                          setActiveDirection: setOrganizationMemberSortDirection,
-	                          close: () => setOrganizationMemberToolbarPopover(""),
-	                        })
-	                      : null
-	                  )
-	                ),
-		                canInviteOrganization
-		                  ? React.createElement("button", {
-		                      type: "button",
-		                      className: "playground-top-nav-private-chat-button playground-agents-nav-create-button playground-agents-overview-toolbar-create-button",
-		                      onClick: () => {
-		                        setOrganizationMemberToolbarPopover("");
-		                        setOrganizationPageInviteModalOpen(true);
-		                      },
-		                      title: "Invite member",
-		                      "aria-label": "Invite member",
-		                    },
-	                    React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                    React.createElement("span", null, "Invite Member")
-	                  )
-	                  : null
-	              )
-	            );
-	            const renderOrganizationMemberRowMenu = (row) => {
-	              const menuId = getOrganizationMemberSelectionId(row);
-	              if (!menuId || organizationMemberMenuId !== menuId || !canManageOrganization) {
-	                return null;
-	              }
-	              const isInvitation = row?.kind === "invitation";
-	              const item = row?.item || {};
-	              const isOwner = !isInvitation && (
-	                normalizeOrganizationRoleId(item.role, "member") === "owner"
-	                || String(item.userId || item.user_id || "").trim() === String(selectedOrganization?.ownerUserId || "").trim()
-	              );
-	              if (isOwner) {
-	                return null;
-	              }
-	              const actionId = isInvitation
-	                ? "revoke-organization-invite:" + row.id
-	                : "organization-member-remove:" + row.id;
-	              return React.createElement("div", {
-	                  className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-	                },
-	                React.createElement("button", {
-	                  type: "button",
-	                  className: "tb-popup-row is-danger",
-	                  disabled: organizationPageActionId === actionId,
-	                  onClick: () => {
-	                    setOrganizationMemberMenuId("");
-	                    if (isInvitation) {
-	                      handleRevokeOrganizationInvitation(row.id);
-	                    } else {
-	                      handleRemoveOrganizationMember(row.id);
-	                    }
-	                  },
-	                },
-	                  React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-	                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-	                    React.createElement("span", null,
-	                      organizationPageActionId === actionId
-	                        ? (isInvitation ? "Revoking..." : "Removing...")
-	                        : (isInvitation ? "Revoke" : "Remove member")
-	                    )
-	                  )
-	                )
-	              );
-	            };
-	            return React.createElement("div", { className: "playground-team-detail-panel" },
-	              React.createElement("section", {
+		            const organizationMemberColumns = [
+		              {
+		                id: "user",
+		                header: "User",
+		                accessor: getOrganizationMemberDisplayName,
+		                sortable: true,
+		                width: "minmax(230px, 1.25fr)",
+		                cell: ({ row }) => row.kind === "invitation" ? renderInvitationIdentity(row.item || {}) : renderMemberIdentity(row.item || {}),
+		              },
+		              {
+		                id: "role",
+		                header: "Role",
+		                accessor: getOrganizationMemberRoleLabel,
+		                sortable: true,
+		                width: "minmax(130px, 0.7fr)",
+		                cell: ({ row }) => {
+		                  const isInvitation = row.kind === "invitation";
+		                  const item = row.item || {};
+		                  const displayName = getOrganizationMemberDisplayName(row);
+		                  const isOwner = !isInvitation && (
+		                    normalizeOrganizationRoleId(item.role, "member") === "owner"
+		                    || String(item.userId || item.user_id || "").trim() === String(selectedOrganization?.ownerUserId || "").trim()
+		                  );
+		                  return !isInvitation && canManageOrganization && !isOwner
+		                    ? renderOrganizationRoleSelect({
+		                        variant: "member-row",
+		                        value: item.role,
+		                        onChange: (event) => handleUpdateOrganizationMemberRole(item.id, event.target.value),
+		                        disabled: organizationPageActionId === "organization-member-role:" + item.id,
+		                        "aria-label": "Role for " + displayName,
+		                      })
+		                    : React.createElement("span", { className: "playground-team-badge playground-team-role-label" }, getOrganizationMemberRoleLabel(row));
+		                },
+		              },
+		              {
+		                id: "status",
+		                header: "Status",
+		                accessor: getOrganizationMemberStatusLabel,
+		                sortable: true,
+		                width: "minmax(105px, 0.55fr)",
+		                hideBelow: 720,
+		                cell: ({ row }) => React.createElement("div", { className: "playground-agents-overview-table-value" }, getOrganizationMemberStatusLabel(row)),
+		              },
+		              {
+		                id: "joined",
+		                header: "Joined",
+		                accessor: getOrganizationMemberJoinedTimestamp,
+		                sortable: true,
+		                sortDescFirst: true,
+		                width: "minmax(120px, 0.6fr)",
+		                align: "end",
+		                hideBelow: 900,
+		                cell: ({ row }) => React.createElement("div", { className: "playground-agents-overview-table-value is-right" }, getOrganizationMemberJoinedLabel(row)),
+		              },
+		            ];
+		            const getOrganizationMemberActions = (row) => {
+		              if (!canManageOrganization) return [];
+		              const isInvitation = row?.kind === "invitation";
+		              const item = row?.item || {};
+		              const isOwner = !isInvitation && (
+		                normalizeOrganizationRoleId(item.role, "member") === "owner"
+		                || String(item.userId || item.user_id || "").trim() === String(selectedOrganization?.ownerUserId || "").trim()
+		              );
+		              if (isOwner) return [];
+		              const actionId = isInvitation ? "revoke-organization-invite:" + row.id : "organization-member-remove:" + row.id;
+		              return [{
+		                id: "remove",
+		                label: organizationPageActionId === actionId ? (isInvitation ? "Revoking..." : "Removing...") : (isInvitation ? "Revoke" : "Remove member"),
+		                icon: Trash2,
+		                danger: true,
+		                disabled: organizationPageActionId === actionId,
+		                onSelect: () => isInvitation ? handleRevokeOrganizationInvitation(row.id) : handleRemoveOrganizationMember(row.id),
+		              }];
+		            };
+		            const organizationMembersDataTable = React.createElement(PlatformDataTable, {
+		              rows: visibleOrganizationMemberRows,
+		              columns: organizationMemberColumns,
+		              getRowId: getOrganizationMemberSelectionId,
+		              ariaLabel: "Organization members",
+		              className: "playground-organization-members-platform-data-table",
+		              surface: "plain",
+		              sorting: {
+		                value: { id: organizationMemberSort, direction: normalizedOrganizationMemberSortDirection },
+		                manual: true,
+		                onChange: (nextSorting) => {
+		                  if (!nextSorting) return;
+		                  setOrganizationMemberSort(nextSorting.id);
+		                  setOrganizationMemberSortDirection(nextSorting.direction);
+		                  setOrganizationMemberToolbarPopover("");
+		                },
+		              },
+		              selection: {
+		                enabled: true,
+		                value: selectedOrganizationMemberIds,
+		                onChange: ({ selectedIds }) => setSelectedOrganizationMemberIds(new Set(selectedIds)),
+		                ariaLabel: (row) => "Select " + getOrganizationMemberDisplayName(row),
+		              },
+		              toolbar: {
+		                search: { value: organizationMemberSearchQuery, onChange: setOrganizationMemberSearchQuery, placeholder: "Search members", manual: true },
+		                showSort: true,
+		                filters: [{ id: "status", label: "Status", value: organizationMemberFilter, options: organizationMemberFilterOptions, onChange: setOrganizationMemberFilter }],
+		                primaryAction: canInviteOrganization ? { label: "Invite Member", icon: Plus, onClick: () => setOrganizationPageInviteModalOpen(true) } : undefined,
+		              },
+		              getRowActions: getOrganizationMemberActions,
+		              loading: organizationPageLoading && rows.length === 0,
+		              emptyState: normalizedOrganizationMemberSearchQuery || organizationMemberFilter !== "all" ? "No matching members found." : "No organization members yet.",
+		            });
+		            return React.createElement("div", { className: "playground-team-detail-panel" },
+		              React.createElement("section", {
 	                  className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-team-grid-table-section playground-team-members-table-section playground-organization-members-table-section",
 	                },
-	                renderOrganizationMembersStickyTableHeader(),
-	                visibleOrganizationMemberRows.length > 0
-	                  ? React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table" },
-	                      React.createElement("div", { className: "playground-project-overview-thread-list" },
-	                        renderOrganizationMembersTableColumnHeader(),
-	                        visibleOrganizationMemberRows.map((row) => {
-	                          const isInvitation = row.kind === "invitation";
-	                          const item = row.item || {};
-	                          const displayName = getOrganizationMemberDisplayName(row);
-	                          const detail = getOrganizationMemberDetail(row);
-	                          const joinedLabel = getOrganizationMemberJoinedLabel(row);
-	                          const memberSelectionId = getOrganizationMemberSelectionId(row);
-	                          const isOrganizationMemberSelected = selectedOrganizationMemberIds.has(memberSelectionId);
-	                          const menuOpen = organizationMemberMenuId === memberSelectionId;
-	                          const isOwner = !isInvitation && (
-	                            normalizeOrganizationRoleId(item.role, "member") === "owner"
-	                            || String(item.userId || item.user_id || "").trim() === String(selectedOrganization?.ownerUserId || "").trim()
-	                          );
-	                          return React.createElement("div", {
-	                              key: row.kind + ":" + row.id,
-	                              className: "playground-project-overview-threads-table-row",
-	                              onContextMenu: (event) => {
-	                                if (canManageOrganization && !isOwner) {
-	                                  event.preventDefault();
-	                                  setOrganizationMemberToolbarPopover("");
-	                                  setOrganizationMemberMenuId(memberSelectionId);
-	                                }
-	                              },
-	                            },
-	                            React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
-	                              React.createElement("button", {
-	                                type: "button",
-	                                className: "playground-agents-overview-select-checkbox" + (isOrganizationMemberSelected ? " is-selected" : ""),
-	                                role: "checkbox",
-	                                "aria-checked": isOrganizationMemberSelected ? "true" : "false",
-	                                "aria-label": "Select " + displayName,
-	                                onClick: (event) => {
-	                                  event.preventDefault();
-	                                  event.stopPropagation();
-	                                  toggleOrganizationMemberSelection(memberSelectionId);
-	                                },
-	                              })
-	                            ),
-	                            React.createElement("div", { className: "playground-project-overview-thread-cell is-name" },
-	                              isInvitation
-	                                ? renderInvitationIdentity(item)
-	                                : renderMemberIdentity(item)
-	                            ),
-	                            React.createElement("div", { className: "playground-project-overview-thread-cell is-model" },
-	                              !isInvitation && canManageOrganization && !isOwner
-	                                ? renderOrganizationRoleSelect({
-	                                    variant: "member-row",
-	                                    value: item.role,
-	                                    onChange: (event) => handleUpdateOrganizationMemberRole(item.id, event.target.value),
-	                                    disabled: organizationPageActionId === "organization-member-role:" + item.id,
-	                                    "aria-label": "Role for " + displayName,
-	                                  })
-	                                : React.createElement("span", { className: "playground-team-badge playground-team-role-label" }, getOrganizationMemberRoleLabel(row))
-	                            ),
-	                            React.createElement("div", { className: "playground-project-overview-thread-cell is-status" },
-	                              React.createElement("div", { className: "playground-agents-overview-table-value" }, getOrganizationMemberStatusLabel(row))
-	                            ),
-	                            React.createElement("div", { className: "playground-project-overview-thread-cell is-date" },
-	                              React.createElement("div", { className: "playground-agents-overview-table-value" }, joinedLabel)
-	                            ),
-	                            React.createElement("div", { className: "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell playground-tasks-toolbar-popup-shell playground-organization-member-action-shell" },
-	                              canManageOrganization && !isOwner
-	                                ? React.createElement(React.Fragment, null,
-	                                    React.createElement("button", {
-	                                      type: "button",
-	                                      className: "playground-overview-table-action-button playground-team-member-action-button" + (menuOpen ? " is-open" : ""),
-	                                      onClick: (event) => {
-	                                        event.preventDefault();
-	                                        event.stopPropagation();
-	                                        setOrganizationMemberToolbarPopover("");
-	                                        setOrganizationMemberMenuId((current) => current === memberSelectionId ? "" : memberSelectionId);
-	                                      },
-	                                      onKeyDown: (event) => event.stopPropagation(),
-	                                      "aria-label": "Organization member actions for " + displayName,
-	                                      "aria-expanded": menuOpen ? "true" : "false",
-	                                    }, React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 })),
-	                                    renderOrganizationMemberRowMenu(row)
-	                                  )
-	                                : null
-	                            )
-	                          );
-	                        })
-	                      )
-	                    )
-	                  : React.createElement("div", { className: "playground-plugins-empty" },
-	                      organizationPageLoading
-	                        ? "Loading members..."
-	                        : (normalizedOrganizationMemberSearchQuery || organizationMemberFilter !== "all" ? "No matching members found." : "No organization members yet.")
-	                    )
-	              )
+		                organizationMembersDataTable
+		              )
 	            );
 	          };
 
@@ -202301,256 +199751,104 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const visibleOverviewTeamIds = visibleOverviewTeams.map((team) => String(team?.id || "").trim()).filter(Boolean);
           const selectedVisibleTeamOverviewIds = visibleOverviewTeamIds.filter((teamId) => selectedTeamOverviewIds.has(teamId));
           const allVisibleTeamsSelected = visibleOverviewTeamIds.length > 0 && selectedVisibleTeamOverviewIds.length === visibleOverviewTeamIds.length;
-          const hasPartialVisibleTeamSelection = selectedVisibleTeamOverviewIds.length > 0 && !allVisibleTeamsSelected;
-          const toggleTeamOverviewSelection = (teamId) => {
-            const normalizedTeamId = String(teamId || "").trim();
-            if (!normalizedTeamId) return;
-            setSelectedTeamOverviewIds((current) => {
-              const next = new Set(current || []);
-              if (next.has(normalizedTeamId)) {
-                next.delete(normalizedTeamId);
-              } else {
-                next.add(normalizedTeamId);
-              }
-              return next;
-            });
-          };
-          const toggleVisibleTeamOverviewSelection = () => {
-            if (visibleOverviewTeamIds.length === 0) {
-              return;
-            }
-            setSelectedTeamOverviewIds((current) => {
-              const next = new Set(current || []);
-              if (allVisibleTeamsSelected) {
-                visibleOverviewTeamIds.forEach((teamId) => next.delete(teamId));
-              } else {
-                visibleOverviewTeamIds.forEach((teamId) => next.add(teamId));
-              }
-              return next;
-            });
-          };
-          const teamOverviewSortOptions = [
-            { id: "name", label: "Name (A-Z)", sortKey: "name", direction: "asc" },
-            { id: "created", label: "Recently Created", sortKey: "created", direction: "desc" },
-          ];
           const teamOverviewFilterOptions = [
             { id: "all", label: "All Teams", description: "Show every team workspace" },
             { id: "owned", label: "Owned by You", description: "Only show teams you own" },
             { id: "member", label: "Member Teams", description: "Only show teams where you are a member" },
           ];
-          const handleTeamOverviewColumnSort = (sortKey) => {
-            const normalizedSortKey = String(sortKey || "name").trim() || "name";
-            setTeamOverviewToolbarPopover("");
-            setTeamOverviewSortDirection((currentDirection) => {
-              if (teamOverviewSort !== normalizedSortKey) {
-                return "asc";
-              }
-              return normalizeTeamOverviewSortDirection(currentDirection) === "asc" ? "desc" : "asc";
-            });
-            setTeamOverviewSort(normalizedSortKey);
-          };
-          const renderTeamOverviewSortIcon = (sortKey) => {
-            const isActive = teamOverviewSort === sortKey;
-            const isDescending = isActive && normalizedTeamOverviewSortDirection === "desc";
-            const isAscending = isActive && !isDescending;
-            return React.createElement("span", {
-                className: "playground-agents-overview-sort-icon"
-                  + (isActive ? " is-active" : "")
-                  + (isAscending ? " is-ascending" : "")
-                  + (isDescending ? " is-descending" : ""),
-                "aria-hidden": "true",
-              },
-              React.createElement(ChevronsUpDown, {
-                className: "playground-agents-overview-sort-icon-layer is-top",
-                width: 14,
-                height: 14,
-                strokeWidth: 1.8,
-              }),
-              React.createElement(ChevronsUpDown, {
-                className: "playground-agents-overview-sort-icon-layer is-bottom",
-                width: 14,
-                height: 14,
-                strokeWidth: 1.8,
-              })
-            );
-          };
-          const renderTeamOverviewSortableHeader = (label, sortKey) => {
-            const isActive = teamOverviewSort === sortKey;
-            const nextDirection = isActive && normalizedTeamOverviewSortDirection === "asc" ? "descending" : "ascending";
-            return React.createElement("div", { className: "playground-agents-overview-sortable-header" + (isActive ? " is-active" : "") },
-              React.createElement("span", { className: "playground-agents-overview-sortable-header-label" }, label),
-              React.createElement("button", {
-                  type: "button",
-                  className: "playground-agents-overview-column-sort-button"
-                    + (isActive ? " is-active" : "")
-                    + (isActive && normalizedTeamOverviewSortDirection === "asc" ? " is-ascending" : "")
-                    + (isActive && normalizedTeamOverviewSortDirection === "desc" ? " is-descending" : ""),
-                  title: "Sort " + label + " " + nextDirection,
-                  "aria-label": "Sort " + label + " " + nextDirection,
-                  "aria-pressed": isActive ? "true" : "false",
-                  onClick: (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    handleTeamOverviewColumnSort(sortKey);
-                  },
-                },
-                renderTeamOverviewSortIcon(sortKey)
-              )
-            );
-          };
-          const renderTeamOverviewColumnHeader = () => React.createElement("div", { className: "playground-project-overview-threads-table-header playground-agents-overview-column-header playground-team-overview-column-header playground-organization-overview-column-header" },
-            React.createElement("div", null,
-              React.createElement("button", {
-                type: "button",
-                className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox"
-                  + (allVisibleTeamsSelected ? " is-selected" : "")
-                  + (hasPartialVisibleTeamSelection ? " is-partial" : ""),
-                role: "checkbox",
-                "aria-checked": allVisibleTeamsSelected ? "true" : (hasPartialVisibleTeamSelection ? "mixed" : "false"),
-                "aria-label": allVisibleTeamsSelected ? "Deselect all visible teams" : "Select all visible teams",
-                onClick: (event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  toggleVisibleTeamOverviewSelection();
-                },
-              })
-            ),
-            React.createElement("div", null, renderTeamOverviewSortableHeader("Name", "name")),
-            React.createElement("div", null, renderTeamOverviewSortableHeader("Role", "role")),
-            React.createElement("div", null, renderTeamOverviewSortableHeader("Owner", "owner")),
-            React.createElement("div", null, renderTeamOverviewSortableHeader("Created", "created")),
-            React.createElement("div", null)
-          );
-          const renderTeamOverviewToolbarMenu = (menuId, options, activeValue, setActiveValue) => {
-            const isSort = menuId === "sort";
-            return React.createElement("div", {
-                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-              },
-              options.map((option) => {
-                const optionValue = option.sortKey || option.id;
-                const optionDirection = normalizeTeamOverviewSortDirection(option.direction);
-                const selected = isSort
-                  ? teamOverviewSort === optionValue && normalizedTeamOverviewSortDirection === optionDirection
-                  : activeValue === option.id;
-                return React.createElement("button", {
-                    key: option.id,
-                    type: "button",
-                    className: "tb-popup-row tb-popup-row-select" + (selected ? " selected" : ""),
-                    onClick: () => {
-                      if (isSort) {
-                        setTeamOverviewSort(optionValue);
-                        setTeamOverviewSortDirection(optionDirection);
-                      } else {
-                        setActiveValue(option.id);
-                      }
-                      setTeamOverviewToolbarPopover("");
-                    },
-                  },
-                  React.createElement("span", { className: "tb-popup-check-slot" },
-                    selected ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 }) : null
-                  ),
-                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                    React.createElement("span", null, option.label),
-                    option.description ? React.createElement("span", null, option.description) : null
-                  )
-                );
-              })
-            );
-          };
-          const renderTeamOverviewStickyTableHeader = (includeColumns = true) => React.createElement("div", { className: "playground-agents-overview-sticky-table-header playground-team-overview-sticky-table-header playground-organization-overview-sticky-table-header" },
-            React.createElement("div", {
-                className: "playground-develop-server-kind-table-toolbar playground-team-overview-toolbar-row playground-organization-overview-toolbar-row",
-                ref: teamOverviewToolbarRef,
-              },
-              React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell" },
-                React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("input", {
-                  type: "search",
-                  value: teamOverviewSearchQuery,
-                  onChange: (event) => setTeamOverviewSearchQuery(event.target.value),
-                  className: "playground-plugins-search",
-                  placeholder: "Search teams",
-                })
-              ),
-              React.createElement("div", { className: "playground-plugins-toolbar-controls" },
-                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-control-button is-bare is-backlog-sort" + (teamOverviewToolbarPopover === "sort" || teamOverviewSort !== "name" || normalizedTeamOverviewSortDirection !== "asc" ? " is-active" : ""),
-                    onClick: () => setTeamOverviewToolbarPopover((current) => current === "sort" ? "" : "sort"),
-                  },
-                    React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Sort")
-                  ),
-                  teamOverviewToolbarPopover === "sort"
-                    ? renderTeamOverviewToolbarMenu("sort", teamOverviewSortOptions, teamOverviewSort, setTeamOverviewSort)
-                    : null
-                ),
-                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-control-button is-bare is-backlog-filter" + (teamOverviewToolbarPopover === "filter" || teamOverviewFilter !== "all" ? " is-active" : ""),
-                    onClick: () => setTeamOverviewToolbarPopover((current) => current === "filter" ? "" : "filter"),
-                  },
-                    React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Filter")
-                  ),
-                  teamOverviewToolbarPopover === "filter"
-                    ? renderTeamOverviewToolbarMenu("filter", teamOverviewFilterOptions, teamOverviewFilter, setTeamOverviewFilter)
-                    : null
-                )
-              ),
-              React.createElement("button", {
-                type: "button",
-                className: "playground-top-nav-private-chat-button playground-agents-nav-create-button playground-agents-overview-toolbar-create-button",
-                onClick: () => {
-                  setTeamOverviewToolbarPopover("");
-                  setTeamPageCreateModalOpen(true);
-                },
-                title: "Create team",
-                "aria-label": "Create team",
-              },
-                React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("span", null, "New Team")
-              )
-            ),
-            includeColumns ? renderTeamOverviewColumnHeader() : null
-          );
-          const renderTeamOverviewRowMenu = (team) => {
-            const menuId = String(team?.id || "");
-            if (!menuId || teamOverviewMenuId !== menuId) {
-              return null;
-            }
-            return React.createElement("div", {
-                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-              },
-              React.createElement("button", {
-                type: "button",
-                className: "tb-popup-row",
-                onClick: () => {
-                  setTeamOverviewMenuId("");
-                  openTeamDetail(team.id);
-                },
-              },
-                React.createElement(ChevronRight, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, "Open"))
-              ),
-              React.createElement("button", {
-                type: "button",
-                className: "tb-popup-row",
-                onClick: () => {
-                  setTeamOverviewMenuId("");
-                  setTeamPageSelectedTeamId(String(team?.id || ""));
-                  setTeamPageRenameName(team?.name || "");
-                  setTeamPageRenameModalOpen(true);
-                },
-              },
-                React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" }, React.createElement("span", null, "Rename"))
-              )
-            );
-          };
-          const renderTeamOverview = () => React.createElement("div", { className: "playground-team-overview-page playground-agents-overview-page playground-organization-overview-page is-develop-configure-page" },
+	          const teamOverviewColumns = [
+	            {
+	              id: "name",
+	              header: "Name",
+	              accessor: getTeamOverviewDisplayName,
+	              sortable: true,
+	              width: "minmax(220px, 1.35fr)",
+	              cell: ({ row: team }) => React.createElement("div", { className: "playground-agents-overview-name-title" }, getTeamOverviewDisplayName(team)),
+	            },
+	            {
+	              id: "role",
+	              header: "Role",
+	              accessor: getTeamOverviewRoleLabel,
+	              sortable: true,
+	              width: "minmax(105px, 0.55fr)",
+	              cell: ({ row: team }) => React.createElement("div", { className: "playground-agents-overview-table-value" }, getTeamOverviewRoleLabel(team)),
+	            },
+	            {
+	              id: "owner",
+	              header: "Owner",
+	              accessor: getTeamOverviewOwnerLabel,
+	              sortable: true,
+	              width: "minmax(170px, 0.85fr)",
+	              hideBelow: 760,
+	              cell: ({ row: team }) => React.createElement("div", { className: "playground-agents-overview-table-value" }, getTeamOverviewOwnerLabel(team)),
+	            },
+	            {
+	              id: "created",
+	              header: "Created",
+	              accessor: getTeamOverviewCreatedTimestamp,
+	              sortable: true,
+	              sortDescFirst: true,
+	              width: "minmax(120px, 0.6fr)",
+	              align: "end",
+	              hideBelow: 900,
+	              cell: ({ row: team }) => {
+	                const createdAt = team?.createdAt || team?.created_at || "";
+	                return React.createElement("div", {
+	                  className: "playground-agents-overview-table-value is-right",
+	                  title: createdAt ? formatPlaygroundExactDate(createdAt) : "",
+	                }, formatDate(createdAt) || "-");
+	              },
+	            },
+	          ];
+	          const getTeamOverviewActions = (team) => [
+	            { id: "open", label: "Open", icon: ChevronRight, onSelect: () => openTeamDetail(team.id) },
+	            {
+	              id: "rename",
+	              label: "Rename",
+	              icon: SquarePen,
+	              onSelect: () => {
+	                setTeamPageSelectedTeamId(String(team?.id || ""));
+	                setTeamPageRenameName(team?.name || "");
+	                setTeamPageRenameModalOpen(true);
+	              },
+	            },
+	          ];
+	          const teamOverviewDataTable = React.createElement(PlatformDataTable, {
+	            rows: visibleOverviewTeams,
+	            columns: teamOverviewColumns,
+	            getRowId: (team) => String(team?.id || ""),
+	            ariaLabel: "Teams",
+	            className: "playground-teams-platform-data-table",
+	            surface: "plain",
+	            sorting: {
+	              value: { id: teamOverviewSort, direction: normalizedTeamOverviewSortDirection },
+	              manual: true,
+	              onChange: (nextSorting) => {
+	                if (!nextSorting) return;
+	                setTeamOverviewSort(nextSorting.id);
+	                setTeamOverviewSortDirection(nextSorting.direction);
+	                setTeamOverviewToolbarPopover("");
+	              },
+	            },
+	            selection: {
+	              enabled: true,
+	              value: selectedTeamOverviewIds,
+	              onChange: ({ selectedIds }) => setSelectedTeamOverviewIds(new Set(selectedIds)),
+	              ariaLabel: (team) => "Select " + getTeamOverviewDisplayName(team),
+	            },
+	            toolbar: {
+	              search: { value: teamOverviewSearchQuery, onChange: setTeamOverviewSearchQuery, placeholder: "Search teams", manual: true },
+	              showSort: true,
+	              filters: [{ id: "ownership", label: "Ownership", value: teamOverviewFilter, options: teamOverviewFilterOptions, onChange: setTeamOverviewFilter }],
+	              primaryAction: { label: "New Team", icon: Plus, onClick: () => setTeamPageCreateModalOpen(true) },
+	            },
+	            getRowActions: getTeamOverviewActions,
+	            getRowAriaLabel: getTeamOverviewDisplayName,
+	            onRowActivate: (team) => openTeamDetail(team.id),
+	            loading: teamPageLoading && visibleOverviewTeams.length === 0,
+	            emptyState: normalizedTeamOverviewSearchQuery ? "No matching teams found." : "No teams yet.",
+	          });
+	          const renderTeamOverview = () => React.createElement("div", { className: "playground-team-overview-page playground-agents-overview-page playground-organization-overview-page is-develop-configure-page" },
             React.createElement("div", { className: "playground-environments-home-content playground-team-overview-content playground-organization-overview-content" },
               React.createElement("section", { className: "playground-environments-home-hero playground-develop-server-kind-hero playground-agents-configure-hero playground-team-overview-hero playground-organization-overview-hero" },
                 React.createElement("div", { className: "playground-organization-overview-hero-intro" },
@@ -202573,93 +199871,8 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 React.createElement("section", {
                     className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-team-overview-table-section playground-organization-overview-table-section",
                   },
-                  visibleOverviewTeams.length === 0 ? renderTeamOverviewStickyTableHeader(false) : null,
-                  visibleOverviewTeams.length === 0
-                    ? React.createElement("div", { className: "playground-plugins-empty" },
-                        normalizedTeamOverviewSearchQuery
-                          ? "No matching teams found."
-                          : (teamPageLoading ? "Loading teams..." : "No teams yet.")
-                      )
-                    : React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table" },
-                        renderTeamOverviewStickyTableHeader(false),
-                        React.createElement("div", { className: "playground-project-overview-thread-list" },
-                          renderTeamOverviewColumnHeader(),
-                          visibleOverviewTeams.map((team) => {
-                            const teamId = String(team?.id || "");
-                            const teamName = getTeamOverviewDisplayName(team);
-                            const isOverviewTeamSelected = selectedTeamOverviewIds.has(teamId);
-                            const createdAt = team?.createdAt || team?.created_at || "";
-                            return React.createElement("div", {
-                                key: teamId || teamName,
-                                tabIndex: 0,
-                                role: "button",
-                                className: "playground-project-overview-threads-table-row",
-                                "aria-label": "Open " + teamName,
-                                onClick: () => openTeamDetail(team.id),
-                                onKeyDown: (event) => {
-                                  if (event.key === "Enter" || event.key === " ") {
-                                    event.preventDefault();
-                                    openTeamDetail(team.id);
-                                  }
-                                },
-                              },
-                              React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
-                                React.createElement("button", {
-                                  type: "button",
-                                  className: "playground-agents-overview-select-checkbox" + (isOverviewTeamSelected ? " is-selected" : ""),
-                                  role: "checkbox",
-                                  "aria-checked": isOverviewTeamSelected ? "true" : "false",
-                                  "aria-label": "Select " + teamName,
-                                  onClick: (event) => {
-                                    event.preventDefault();
-                                    event.stopPropagation();
-                                    toggleTeamOverviewSelection(teamId);
-                                  },
-                                  onKeyDown: (event) => event.stopPropagation(),
-                                })
-                              ),
-                              React.createElement("div", { className: "playground-project-overview-thread-cell is-name" },
-                                React.createElement("div", { className: "playground-agents-overview-name-cell" },
-                                  React.createElement("div", { className: "playground-agents-overview-name-copy" },
-                                    React.createElement("div", { className: "playground-agents-overview-name-title" }, teamName)
-                                  )
-                                )
-                              ),
-                              React.createElement("div", { className: "playground-project-overview-thread-cell is-model" },
-                                React.createElement("div", { className: "playground-agents-overview-table-value" }, getTeamOverviewRoleLabel(team))
-                              ),
-                              React.createElement("div", { className: "playground-project-overview-thread-cell is-creator" },
-                                React.createElement("div", { className: "playground-agents-overview-table-value" }, getTeamOverviewOwnerLabel(team))
-                              ),
-                              React.createElement("div", {
-                                className: "playground-project-overview-thread-cell is-date",
-                                title: createdAt ? formatPlaygroundExactDate(createdAt) : "",
-                              },
-                                React.createElement("div", { className: "playground-agents-overview-table-value" }, formatDate(createdAt) || "—")
-                              ),
-                              React.createElement("div", { className: "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell playground-tasks-toolbar-popup-shell playground-team-overview-action-shell" },
-                                React.createElement("button", {
-                                  type: "button",
-                                  className: "playground-overview-table-action-button" + (teamOverviewMenuId === teamId ? " is-open" : ""),
-                                  onClick: (event) => {
-                                    event.preventDefault();
-                                    event.stopPropagation();
-                                    setTeamOverviewToolbarPopover("");
-                                    setTeamOverviewMenuId((current) => current === teamId ? "" : teamId);
-                                  },
-                                  onKeyDown: (event) => event.stopPropagation(),
-                                  "aria-label": "Team actions",
-                                  "aria-expanded": teamOverviewMenuId === teamId ? "true" : "false",
-                                },
-                                  React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 })
-                                ),
-                                renderTeamOverviewRowMenu(team)
-                              )
-                            );
-                          })
-                        )
-                      )
-                )
+	                  teamOverviewDataTable
+	                )
               )
             ),
             renderCreateTeamModal()
@@ -202881,34 +200094,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	            .filter(Boolean);
 	          const selectedVisibleTeamPageMemberIds = visibleTeamMemberSelectionIds.filter((memberId) => selectedTeamPageMemberIds.has(memberId));
 	          const allVisibleTeamMembersSelected = visibleTeamMemberSelectionIds.length > 0 && selectedVisibleTeamPageMemberIds.length === visibleTeamMemberSelectionIds.length;
-	          const hasPartialVisibleTeamMemberSelection = selectedVisibleTeamPageMemberIds.length > 0 && !allVisibleTeamMembersSelected;
-	          const toggleTeamPageMemberSelection = (memberId) => {
-	            const normalizedMemberId = String(memberId || "").trim();
-	            if (!normalizedMemberId) return;
-	            setSelectedTeamPageMemberIds((current) => {
-	              const next = new Set(current || []);
-	              if (next.has(normalizedMemberId)) {
-	                next.delete(normalizedMemberId);
-	              } else {
-	                next.add(normalizedMemberId);
-	              }
-	              return next;
-	            });
-	          };
-	          const toggleVisibleTeamPageMemberSelection = () => {
-	            if (visibleTeamMemberSelectionIds.length === 0) {
-	              return;
-	            }
-	            setSelectedTeamPageMemberIds((current) => {
-	              const next = new Set(current || []);
-	              if (allVisibleTeamMembersSelected) {
-	                visibleTeamMemberSelectionIds.forEach((memberId) => next.delete(memberId));
-	              } else {
-	                visibleTeamMemberSelectionIds.forEach((memberId) => next.add(memberId));
-	              }
-	              return next;
-	            });
-	          };
 	          const getTeamMemberAvatarUrl = (item, isInvitation = false) => {
 	            if (isInvitation) {
 	              return "";
@@ -203046,42 +200231,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	            });
 	            return true;
 	          }
-	          function openTeamPageMemberActionMenu(event, row, options = {}) {
-	            const menuId = getTeamMemberMenuId(row);
-	            if (!menuId) {
-	              return;
-	            }
-	            event.preventDefault();
-	            event.stopPropagation();
-	            const memberSelectionId = getTeamMemberSelectionId(row);
-	            if (
-	              options?.context
-	              && memberSelectionId
-	              && selectedTeamPageMemberIds.has(memberSelectionId)
-	              && selectedTeamPageMemberIds.size > 1
-	            ) {
-	              openTeamPageMemberBulkActionMenu(event, Array.from(selectedTeamPageMemberIds || []));
-	              return;
-	            }
-		            const position = options?.context
-		              ? getTeamMemberContextMenuPosition(event, 96)
-		              : getSideActionMenuPosition(event, 96, 220);
-	            if (!options?.context && teamPageMemberActionMenuState?.menuId === menuId && !teamPageMemberActionMenuClosing) {
-	              closeTeamPageMemberActionMenu();
-	              return;
-	            }
-	            clearTeamPageMemberActionMenuCloseTimer();
-	            closeTeamPageMemberBulkActionMenu({ animate: false });
-	            setTeamPageMemberMenuId("");
-	            setTeamPageResourceMenuId("");
-	            setTeamPageResourceToolbarPopover("");
-	            setTeamPageMemberActionMenuClosing(false);
-	            setTeamPageMemberActionMenuState({
-	              menuId,
-	              row,
-	              ...position,
-	            });
-	          }
 	          async function handleRemoveTeamMemberRows(rows = []) {
 	            const targets = (Array.isArray(rows) ? rows : []).filter(canRemoveTeamMemberRow);
 	            if (!targets.length) {
@@ -203139,101 +200288,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	              setTeamPageActionId("");
 	            }
 	          }
-	          const renderTeamMemberActionMenuPortal = () => {
-	            if (!teamPageMemberActionMenuState) {
-	              return null;
-	            }
-	            const row = teamPageMemberActionMenuState.row || null;
-	            const rowId = getTeamMemberActionId(row);
-	            const isInvitation = row?.kind === "invitation";
-	            const actionId = isInvitation ? "revoke:" + rowId : "member-remove:" + rowId;
-	            const isRemoving = teamPageActionId === actionId || teamPageActionId === "member-bulk-remove";
-	            const canRemoveRow = canRemoveTeamMemberRow(row);
-	            const menuElement = React.createElement("div", {
-	                className: "sidebar-thread-popup-scrim",
-	                style: { zIndex: 360 },
-	                onClick: closeTeamPageMemberActionMenu,
-	              },
-	              React.createElement("div", {
-	                className: "playground-platform-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-toolbar-popup-shell-portal playground-agents-list-action-menu-shell is-open",
-	                style: getTeamMemberActionMenuStyle(teamPageMemberActionMenuState),
-	                onClick: (event) => event.stopPropagation(),
-	              },
-	                React.createElement("div", {
-	                  className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu" + (teamPageMemberActionMenuClosing ? " is-closing" : " playground-tasks-toolbar-popup-menu-animate-down-in"),
-	                  role: "menu",
-	                },
-	                  React.createElement("button", {
-	                    type: "button",
-	                    role: "menuitem",
-	                    className: "tb-popup-row is-danger",
-	                    disabled: !canRemoveRow || isRemoving,
-	                    onClick: () => {
-	                      closeTeamPageMemberActionMenu({ animate: false });
-	                      if (isInvitation) {
-	                        handleRevokeTeamInvitation(rowId);
-	                      } else {
-	                        handleRemoveTeamMember(rowId);
-	                      }
-	                    },
-	                  },
-	                    React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-	                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-	                      React.createElement("span", null, isRemoving ? "Removing..." : (isInvitation ? "Revoke invitation" : "Remove user"))
-	                    )
-	                  )
-	                )
-	              )
-	            );
-	            return typeof createPortal === "function" && typeof document !== "undefined" && document.body
-	              ? createPortal(menuElement, document.body)
-	              : menuElement;
-	          };
-	          const renderTeamMemberBulkActionMenuPortal = () => {
-	            if (!teamPageMemberBulkActionMenuState) {
-	              return null;
-	            }
-	            const targets = getTeamMemberActionTargetsByIds(teamPageMemberBulkActionMenuState.memberIds);
-	            if (targets.length < 2) {
-	              return null;
-	            }
-	            const removableTargets = targets.filter(canRemoveTeamMemberRow);
-	            const isRemoving = teamPageActionId === "member-bulk-remove";
-	            const menuElement = React.createElement("div", {
-	                className: "sidebar-thread-popup-scrim",
-	                style: { zIndex: 360 },
-	                onClick: closeTeamPageMemberBulkActionMenu,
-	              },
-	              React.createElement("div", {
-	                className: "playground-platform-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-toolbar-popup-shell-portal playground-agents-list-action-menu-shell is-open",
-	                style: getTeamMemberActionMenuStyle(teamPageMemberBulkActionMenuState),
-	                onClick: (event) => event.stopPropagation(),
-	              },
-	                React.createElement("div", {
-	                  className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu" + (teamPageMemberBulkActionMenuClosing ? " is-closing" : " playground-tasks-toolbar-popup-menu-animate-down-in"),
-	                  role: "menu",
-	                },
-	                  React.createElement("button", {
-	                    type: "button",
-	                    role: "menuitem",
-	                    className: "tb-popup-row is-danger",
-	                    disabled: isRemoving || removableTargets.length === 0,
-	                    onClick: () => {
-	                      void handleRemoveTeamMemberRows(removableTargets);
-	                    },
-	                  },
-	                    React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-	                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-	                      React.createElement("span", null, isRemoving ? "Removing..." : "Remove selected")
-	                    )
-	                  )
-	                )
-	              )
-	            );
-	            return typeof createPortal === "function" && typeof document !== "undefined" && document.body
-	              ? createPortal(menuElement, document.body)
-	              : menuElement;
-	          };
           const renderTeamMemberIdentityCell = (item, displayName, detail, isInvitation) =>
             React.createElement("div", { className: "playground-team-member-cell" },
               renderAccountAvatar(
@@ -203248,295 +200302,167 @@ ${PROJECT_OVERVIEW_SCRIPT}
               )
             );
 
-	          const teamPageMemberSortOptions = [
-	            { id: "user", label: "User (A-Z)", sortKey: "user", direction: "asc" },
-	            { id: "role", label: "Role", sortKey: "role", direction: "asc" },
-	            { id: "status", label: "Status", sortKey: "status", direction: "asc" },
-	            { id: "joined", label: "Recently Joined", sortKey: "joined", direction: "desc" },
-	          ];
 	          const teamPageMemberFilterOptions = [
 	            { id: "all", label: "All Members", description: "Show members and pending invites" },
 	            { id: "active", label: "Active Members", description: "Only show active team members" },
 	            { id: "pending", label: "Pending Invites", description: "Only show pending invitations" },
 	          ];
-	          const handleTeamMembersColumnSort = (sortKey) => {
-	            const normalizedSortKey = String(sortKey || "user").trim() || "user";
-	            setTeamPageMemberToolbarPopover("");
-	            setTeamPageMemberSortDirection((currentDirection) => {
-	              if (teamPageMemberSort !== normalizedSortKey) {
-	                return normalizedSortKey === "joined" ? "desc" : "asc";
-	              }
-	              return normalizeTeamOverviewSortDirection(currentDirection) === "asc" ? "desc" : "asc";
-	            });
-	            setTeamPageMemberSort(normalizedSortKey);
-	          };
-	          const renderTeamMembersSortIcon = (sortKey) => {
-	            const isActive = teamPageMemberSort === sortKey;
-	            const isDescending = isActive && normalizedTeamPageMemberSortDirection === "desc";
-	            const isAscending = isActive && !isDescending;
-	            return React.createElement("span", {
-	                className: "playground-agents-overview-sort-icon"
-	                  + (isActive ? " is-active" : "")
-	                  + (isAscending ? " is-ascending" : "")
-	                  + (isDescending ? " is-descending" : ""),
-	                "aria-hidden": "true",
-	              },
-	              React.createElement(ChevronsUpDown, {
-	                className: "playground-agents-overview-sort-icon-layer is-top",
-	                width: 14,
-	                height: 14,
-	                strokeWidth: 1.8,
-	              }),
-	              React.createElement(ChevronsUpDown, {
-	                className: "playground-agents-overview-sort-icon-layer is-bottom",
-	                width: 14,
-	                height: 14,
-	                strokeWidth: 1.8,
-	              })
-	            );
-	          };
-	          const renderTeamMembersSortableHeader = (label, sortKey) => {
-	            const isActive = teamPageMemberSort === sortKey;
-	            const nextDirection = isActive && normalizedTeamPageMemberSortDirection === "asc" ? "descending" : "ascending";
-	            return React.createElement("div", { className: "playground-agents-overview-sortable-header" + (isActive ? " is-active" : "") },
-	              React.createElement("span", { className: "playground-agents-overview-sortable-header-label" }, label),
-	              React.createElement("button", {
-	                  type: "button",
-	                  className: "playground-agents-overview-column-sort-button"
-	                    + (isActive ? " is-active" : "")
-	                    + (isActive && normalizedTeamPageMemberSortDirection === "asc" ? " is-ascending" : "")
-	                    + (isActive && normalizedTeamPageMemberSortDirection === "desc" ? " is-descending" : ""),
-	                  title: "Sort " + label + " " + nextDirection,
-	                  "aria-label": "Sort " + label + " " + nextDirection,
-	                  "aria-pressed": isActive ? "true" : "false",
-	                  onClick: (event) => {
-	                    event.preventDefault();
-	                    event.stopPropagation();
-	                    handleTeamMembersColumnSort(sortKey);
-	                  },
-	                },
-	                renderTeamMembersSortIcon(sortKey)
-	              )
-	            );
-	          };
-	          const renderTeamMembersTableColumnHeader = () => React.createElement("div", {
-	              className: "playground-project-overview-threads-table-header playground-agents-overview-column-header playground-team-members-column-header",
-	            },
-	            React.createElement("div", null,
-	              React.createElement("button", {
-	                type: "button",
-	                className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox"
-	                  + (allVisibleTeamMembersSelected ? " is-selected" : "")
-	                  + (hasPartialVisibleTeamMemberSelection ? " is-partial" : ""),
-	                role: "checkbox",
-	                "aria-checked": allVisibleTeamMembersSelected ? "true" : (hasPartialVisibleTeamMemberSelection ? "mixed" : "false"),
-	                "aria-label": allVisibleTeamMembersSelected ? "Deselect all visible members" : "Select all visible members",
-	                onClick: (event) => {
-	                  event.preventDefault();
-	                  event.stopPropagation();
-	                  toggleVisibleTeamPageMemberSelection();
-	                },
-	              })
-	            ),
-	            React.createElement("div", null, renderTeamMembersSortableHeader("User", "user")),
-	            React.createElement("div", null, renderTeamMembersSortableHeader("Role", "role")),
-	            React.createElement("div", null, renderTeamMembersSortableHeader("Status", "status")),
-	            React.createElement("div", null, renderTeamMembersSortableHeader("Joined", "joined")),
-	            React.createElement("div", null)
-	          );
-	          const renderTeamMembersToolbarMenu = (menuId, options, activeValue, setActiveValue) => {
-	            const isSort = menuId === "sort";
-	            return React.createElement("div", {
-	                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-	              },
-	              options.map((option) => {
-	                const optionValue = option.sortKey || option.id;
-	                const optionDirection = normalizeTeamOverviewSortDirection(option.direction);
-	                const selected = isSort
-	                  ? teamPageMemberSort === optionValue && normalizedTeamPageMemberSortDirection === optionDirection
-	                  : activeValue === option.id;
-	                return React.createElement("button", {
-	                    key: option.id,
-	                    type: "button",
-	                    className: "tb-popup-row tb-popup-row-select" + (selected ? " selected" : ""),
-	                    onClick: () => {
-	                      if (isSort) {
-	                        setTeamPageMemberSort(optionValue);
-	                        setTeamPageMemberSortDirection(optionDirection);
-	                      } else {
-	                        setActiveValue(option.id);
-	                      }
-	                      setTeamPageMemberToolbarPopover("");
-	                    },
-	                  },
-	                  React.createElement("span", { className: "tb-popup-check-slot" },
-	                    selected ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 }) : null
-	                  ),
-	                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-	                    React.createElement("span", null, option.label),
-	                    option.description ? React.createElement("span", null, option.description) : null
-	                  )
+
+
+	          const teamMembersDataTableColumns = [
+	            {
+	              id: "user",
+	              header: "User",
+	              accessor: getTeamMemberRowDisplayName,
+	              sortable: true,
+	              width: "minmax(220px, 1.2fr)",
+	              cell: ({ row }) => {
+	                const item = row.item || {};
+	                return renderTeamMemberIdentityCell(
+	                  item,
+	                  getTeamMemberRowDisplayName(row),
+	                  getTeamMemberRowDetail(row),
+	                  row.kind === "invitation"
 	                );
-	              })
-	            );
-	          };
-
-	          const renderTeamMembersStickyTableHeader = () => React.createElement("div", {
-	              className: "playground-agents-overview-sticky-table-header playground-team-members-sticky-table-header",
-	            },
-	            React.createElement("div", {
-	                className: "playground-develop-server-kind-table-toolbar playground-team-members-table-toolbar playground-team-members-toolbar-row",
-	                ref: teamPageMemberToolbarRef,
 	              },
-	              React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell" },
-	                React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-	                React.createElement("input", {
-	                  type: "search",
-	                  value: teamPageMemberSearchQuery,
-	                  onChange: (event) => setTeamPageMemberSearchQuery(event.target.value),
-	                  className: "playground-plugins-search",
-	                  placeholder: "Search members",
-	                })
-	              ),
-	              React.createElement("div", { className: "playground-plugins-toolbar-controls" },
-	                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
-	                  React.createElement("button", {
-	                    type: "button",
-	                    className: "playground-files-control-button is-bare is-backlog-sort" + (teamPageMemberToolbarPopover === "sort" || teamPageMemberSort !== "user" || normalizedTeamPageMemberSortDirection !== "asc" ? " is-active" : ""),
-	                    onClick: () => setTeamPageMemberToolbarPopover((current) => current === "sort" ? "" : "sort"),
-	                  },
-	                    React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                    React.createElement("span", null, "Sort")
-	                  ),
-	                  teamPageMemberToolbarPopover === "sort"
-	                    ? renderTeamMembersToolbarMenu("sort", teamPageMemberSortOptions, teamPageMemberSort, setTeamPageMemberSort)
-	                    : null
-	                ),
-	                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
-	                  React.createElement("button", {
-	                    type: "button",
-	                    className: "playground-files-control-button is-bare is-backlog-filter" + (teamPageMemberToolbarPopover === "filter" || teamPageMemberFilter !== "all" ? " is-active" : ""),
-	                    onClick: () => setTeamPageMemberToolbarPopover((current) => current === "filter" ? "" : "filter"),
-	                  },
-	                    React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                    React.createElement("span", null, "Filter")
-	                  ),
-	                  teamPageMemberToolbarPopover === "filter"
-	                    ? renderTeamMembersToolbarMenu("filter", teamPageMemberFilterOptions, teamPageMemberFilter, setTeamPageMemberFilter)
-	                    : null
-	                )
-	              ),
-	              canManageTeam
-	                ? React.createElement("button", {
-	                    type: "button",
-	                    className: "playground-top-nav-private-chat-button playground-agents-nav-create-button playground-agents-overview-toolbar-create-button",
-	                    onClick: () => {
-	                      setTeamPageMemberToolbarPopover("");
-	                      setTeamPageInviteModalOpen(true);
-	                    },
-	                    title: "Invite member",
-	                    "aria-label": "Invite member",
-	                  },
-	                    React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                    React.createElement("span", null, "Invite Member")
-	                  )
-	                : null
-	            )
-	          );
+	            },
+	            {
+	              id: "role",
+	              header: "Role",
+	              accessor: getTeamMemberRoleLabel,
+	              sortable: true,
+	              width: "minmax(130px, 0.72fr)",
+	              cell: ({ row }) => {
+	                const item = row.item || {};
+	                const isInvitation = row.kind === "invitation";
+	                const isOwner = isTeamOwnerMember(item, isInvitation);
+	                const isProtectedMember = isOwner || isCurrentTeamMemberRow(item, isInvitation);
+	                return isOwner
+	                  ? React.createElement("span", { className: "playground-team-badge playground-team-role-label" }, "Owner")
+	                  : !isInvitation && canManageTeam && !isProtectedMember
+	                    ? renderRoleSelect({
+	                        value: item.role || "create",
+	                        onChange: (event) => handleUpdateTeamMemberRole(item.id, event.target.value),
+	                        disabled: teamPageActionId === "member-role:" + item.id,
+	                        variant: "member-row",
+	                      })
+	                    : React.createElement("span", { className: "playground-team-badge playground-team-role-label" }, formatRole(item.role));
+	              },
+	            },
+	            {
+	              id: "status",
+	              header: "Status",
+	              accessor: getTeamMemberStatusLabel,
+	              sortable: true,
+	              width: "minmax(110px, 0.58fr)",
+	              hideBelow: 720,
+	              cell: ({ row }) => React.createElement("div", { className: "playground-agents-overview-table-value" }, getTeamMemberStatusLabel(row)),
+	            },
+	            {
+	              id: "joined",
+	              header: "Joined",
+	              accessor: getTeamMemberJoinedTimestamp,
+	              sortable: true,
+	              sortDescFirst: true,
+	              width: "minmax(120px, 0.58fr)",
+	              align: "end",
+	              hideBelow: 900,
+	              cell: ({ row }) => React.createElement("div", { className: "playground-agents-overview-table-value is-right" }, getTeamMemberJoinedLabel(row)),
+	            },
+	          ];
+	          const getTeamMemberDataTableActions = (row, actionState) => {
+	            const targets = Array.isArray(actionState?.targetRows) && actionState.targetRows.length
+	              ? actionState.targetRows
+	              : [row];
+	            const removableTargets = targets.filter(canRemoveTeamMemberRow);
+	            const bulkMode = targets.length > 1;
+	            if (bulkMode) {
+	              return [{
+	                id: "remove-selected",
+	                label: teamPageActionId === "member-bulk-remove" ? "Removing..." : "Remove selected",
+	                icon: Trash2,
+	                danger: true,
+	                disabled: teamPageActionId === "member-bulk-remove" || removableTargets.length === 0,
+	                onSelect: () => void handleRemoveTeamMemberRows(removableTargets),
+	              }];
+	            }
+	            if (!canRemoveTeamMemberRow(row)) {
+	              return [];
+	            }
+	            const rowId = getTeamMemberActionId(row);
+	            const isInvitation = row.kind === "invitation";
+	            const actionId = isInvitation ? "revoke:" + rowId : "member-remove:" + rowId;
+	            const isRemoving = teamPageActionId === actionId || teamPageActionId === "member-bulk-remove";
+	            return [{
+	              id: "remove",
+	              label: isRemoving ? "Removing..." : (isInvitation ? "Revoke invitation" : "Remove user"),
+	              icon: Trash2,
+	              danger: true,
+	              disabled: isRemoving,
+	              onSelect: () => {
+	                if (isInvitation) handleRevokeTeamInvitation(rowId);
+	                else handleRemoveTeamMember(rowId);
+	              },
+	            }];
+	          };
+	          const teamMembersDataTable = React.createElement(PlatformDataTable, {
+	            rows: visibleTeamMemberRows,
+	            columns: teamMembersDataTableColumns,
+	            getRowId: getTeamMemberSelectionId,
+	            ariaLabel: "Team members",
+	            className: "playground-team-members-platform-data-table",
+	            surface: "plain",
+	            sorting: {
+	              value: { id: teamPageMemberSort, direction: normalizedTeamPageMemberSortDirection },
+	              manual: true,
+	              onChange: (nextSorting) => {
+	                if (!nextSorting) return;
+	                setTeamPageMemberSort(nextSorting.id);
+	                setTeamPageMemberSortDirection(nextSorting.direction);
+	                setTeamPageMemberToolbarPopover("");
+	              },
+	            },
+	            selection: {
+	              enabled: true,
+	              value: selectedTeamPageMemberIds,
+	              onChange: ({ selectedIds: nextSelectedIds }) => setSelectedTeamPageMemberIds(new Set(nextSelectedIds)),
+	              ariaLabel: (row) => "Select " + getTeamMemberRowDisplayName(row),
+	            },
+	            toolbar: {
+	              search: {
+	                value: teamPageMemberSearchQuery,
+	                onChange: setTeamPageMemberSearchQuery,
+	                placeholder: "Search members",
+	                manual: true,
+	              },
+	              showSort: true,
+	              filters: [{
+	                id: "member-status",
+	                label: "Status",
+	                value: teamPageMemberFilter,
+	                options: teamPageMemberFilterOptions,
+	                onChange: setTeamPageMemberFilter,
+	              }],
+	              primaryAction: canManageTeam ? {
+	                label: "Invite Member",
+	                icon: Plus,
+	                onClick: () => setTeamPageInviteModalOpen(true),
+	              } : undefined,
+	            },
+	            getRowActions: getTeamMemberDataTableActions,
+	            getRowAriaLabel: getTeamMemberRowDisplayName,
+	            loading: teamPageLoading && memberRows.length === 0,
+	            emptyState: normalizedTeamPageMemberSearchQuery || teamPageMemberFilter !== "all"
+	              ? "No matching members found."
+	              : "No members yet.",
+	          });
 
-          const renderMembersTab = () => React.createElement("div", { className: "playground-team-detail-panel" },
+	          const renderMembersTab = () => React.createElement("div", { className: "playground-team-detail-panel" },
             React.createElement("section", {
                 className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-team-grid-table-section playground-team-members-table-section",
               },
-              renderTeamMembersStickyTableHeader(),
-	              visibleTeamMemberRows.length > 0
-	                ? React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table" },
-	                    React.createElement("div", { className: "playground-project-overview-thread-list" },
-	                      renderTeamMembersTableColumnHeader(),
-	                      visibleTeamMemberRows.map((row) => {
-                        const item = row.item || {};
-                        const isInvitation = row.kind === "invitation";
-                        const displayName = getTeamMemberRowDisplayName(row);
-		                        const detail = getTeamMemberRowDetail(row);
-		                        const joinedLabel = getTeamMemberJoinedLabel(row);
-		                        const isOwner = isTeamOwnerMember(item, isInvitation);
-		                        const isProtectedMember = isOwner || isCurrentTeamMemberRow(item, isInvitation);
-		                        const canRemoveRow = canRemoveTeamMemberRow(row);
-		                        const menuId = getTeamMemberMenuId(row);
-		                        const menuOpen = teamPageMemberActionMenuState?.menuId === menuId;
-		                        const memberSelectionId = getTeamMemberSelectionId(row);
-		                        const isTeamMemberSelected = selectedTeamPageMemberIds.has(memberSelectionId);
-		                        return React.createElement("div", {
-		                            key: row.kind + ":" + row.id,
-		                            className: "playground-project-overview-threads-table-row",
-		                            onContextMenu: (event) => {
-		                              if (isTeamMemberSelected && selectedTeamPageMemberIds.size > 1) {
-		                                openTeamPageMemberBulkActionMenu(event, Array.from(selectedTeamPageMemberIds || []));
-		                                return;
-		                              }
-		                              openTeamPageMemberActionMenu(event, row, { context: true });
-		                            },
-		                          },
-	                          React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
-	                            React.createElement("button", {
-	                              type: "button",
-	                              className: "playground-agents-overview-select-checkbox" + (isTeamMemberSelected ? " is-selected" : ""),
-	                              role: "checkbox",
-	                              "aria-checked": isTeamMemberSelected ? "true" : "false",
-	                              "aria-label": "Select " + displayName,
-	                              onClick: (event) => {
-	                                event.preventDefault();
-	                                event.stopPropagation();
-	                                toggleTeamPageMemberSelection(memberSelectionId);
-	                              },
-	                            })
-	                          ),
-	                          React.createElement("div", { className: "playground-project-overview-thread-cell is-name" },
-	                            renderTeamMemberIdentityCell(item, displayName, detail, isInvitation)
-	                          ),
-                          React.createElement("div", { className: "playground-project-overview-thread-cell is-model" },
-                            isOwner
-                              ? React.createElement("span", { className: "playground-team-badge playground-team-role-label" }, "Owner")
-                              : !isInvitation && canManageTeam && !isProtectedMember
-	                                ? renderRoleSelect({
-	                                    value: item.role || "create",
-	                                    onChange: (event) => handleUpdateTeamMemberRole(item.id, event.target.value),
-	                                    disabled: teamPageActionId === "member-role:" + item.id,
-	                                    variant: "member-row",
-	                                  })
-                                : React.createElement("span", { className: "playground-team-badge playground-team-role-label" }, formatRole(item.role))
-                          ),
-                          React.createElement("div", { className: "playground-project-overview-thread-cell is-status" },
-                            React.createElement("div", { className: "playground-agents-overview-table-value" }, isInvitation ? (item.status || "pending") : (item.status || "active"))
-                          ),
-                          React.createElement("div", { className: "playground-project-overview-thread-cell is-date" },
-                            React.createElement("div", { className: "playground-agents-overview-table-value" }, joinedLabel)
-                          ),
-                          React.createElement("div", { className: "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell" },
-		                            canRemoveRow
-		                              ? React.createElement("button", {
-		                                  type: "button",
-		                                  className: "playground-overview-table-action-button playground-team-member-action-button" + (menuOpen ? " is-open" : ""),
-		                                  onClick: (event) => openTeamPageMemberActionMenu(event, row, { openLeft: true }),
-		                                  onContextMenu: (event) => openTeamPageMemberActionMenu(event, row, { context: true }),
-		                                  onKeyDown: (event) => event.stopPropagation(),
-		                                  "aria-label": "Team member actions for " + displayName,
-		                                  "aria-expanded": menuOpen ? "true" : "false",
-		                                }, React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 }))
-		                              : null
-		                          )
-		                        );
-                      })
-                    )
-		                  )
-		                : React.createElement("div", { className: "playground-plugins-empty" },
-		                    teamPageLoading
-		                      ? "Loading members..."
-		                      : (normalizedTeamPageMemberSearchQuery || teamPageMemberFilter !== "all" ? "No matching members found." : "No members yet.")
-		                  )
+	              teamMembersDataTable
 	            ),
-	            renderTeamMemberActionMenuPortal(),
-	            renderTeamMemberBulkActionMenuPortal()
 	          );
 
           const getTeamResourceTypeMeta = (resourceType) => {
@@ -205038,8 +201964,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
               renderCreator: renderTeamResourceAccess,
               renderSource: renderTeamResourceSource,
 	              renderOwner: renderTeamResourceOwner,
-	              renderRowMenu: renderTeamResourceRowMenu,
-	              renderRowMenuInline: false,
 	              renderNewMenu: renderTeamResourceNewMenu,
               onNewButtonClick: () => openTeamShareResourceModal(),
               onRowOpen: openTeamResourceRow,
@@ -205060,7 +201984,14 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	              getSelectionId: getTeamResourceSelectionId,
 		              onToggleRowSelection: toggleTeamPageResourceSelection,
 		              onToggleVisibleSelection: toggleVisibleTeamPageResourceSelection,
-		              onRowActionMenuOpen: openTeamPageResourceActionMenu,
+	              onRowActionMenuOpen: (event, row, options = {}) => {
+	                const selectionId = getTeamResourceSelectionId(row);
+	                if (selectionId && selectedTeamPageResourceIds.has(selectionId) && selectedTeamPageResourceIds.size > 1) {
+	                  openTeamPageResourceBulkActionMenu(event, Array.from(selectedTeamPageResourceIds || []));
+	                  return;
+	                }
+	                openTeamPageResourceActionMenu(event, row, options);
+	              },
 		              onRowContextMenu: (event, row) => {
 		                const selectionId = getTeamResourceSelectionId(row);
 		                if (selectionId && selectedTeamPageResourceIds.has(selectionId) && selectedTeamPageResourceIds.size > 1) {
@@ -211990,53 +208921,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
           }
         }
 
-        function renderNotificationsPageToolbarMenu(kind) {
-          if (notificationsPageToolbarPopover !== kind) {
-            return null;
-          }
-          const filterOptions = [
-            { id: "all", label: "All notifications" },
-            { id: "unread", label: "Unread" },
-            { id: "read", label: "Read" },
-            { id: "permission", label: "Permission requests" },
-            { id: "tasks", label: "Tasks" },
-            { id: "team", label: "Teams" },
-            { id: "organization", label: "Organizations" },
-            { id: "product", label: "Product" },
-          ];
-          const sortOptions = [
-            { id: "newest", label: "Newest first" },
-            { id: "oldest", label: "Oldest first" },
-            { id: "type", label: "Type" },
-          ];
-          const options = kind === "sort" ? sortOptions : filterOptions;
-          const currentValue = kind === "sort" ? notificationsPageSort : notificationsPageFilter;
-          return React.createElement("div", {
-              className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-notifications-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-              onClick: (event) => event.stopPropagation(),
-            },
-            options.map((option) =>
-              React.createElement("button", {
-                  key: option.id,
-                  type: "button",
-                  className: "tb-popup-row tb-popup-row-select" + (currentValue === option.id ? " selected" : ""),
-                  onClick: () => {
-                    if (kind === "sort") {
-                      setNotificationsPageSort(option.id);
-                    } else {
-                      setNotificationsPageFilter(option.id);
-                    }
-                    setNotificationsPageToolbarPopover("");
-                  },
-                },
-                React.createElement("span", { className: "tb-popup-check-slot" },
-                  currentValue === option.id ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.9 }) : null
-                ),
-                React.createElement("span", null, option.label)
-              )
-            )
-          );
-        }
 
         function renderConfigureNotificationsSection() {
           const hasNoNotifications = allNotificationPageItems.length === 0;
@@ -212044,6 +208928,150 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const emptyDescription = hasNoNotifications
             ? "Notifications come from agent activity, permission requests, team invitations, and product updates."
             : "Try adjusting your search or filter settings.";
+
+          const notificationColumns = [
+            {
+              id: "notification",
+              header: "Notification",
+              accessor: (item) => item.label || item.kindLabel || "Notification",
+              sortable: true,
+              width: "minmax(280px, 1.8fr)",
+              cell: ({ row: item }) => {
+                const Icon = getNotificationPageIcon(item);
+                return React.createElement("div", { className: "playground-notifications-table-main" },
+                  React.createElement("span", { className: "playground-notifications-table-icon-shell", "aria-hidden": "true" },
+                    React.createElement(Icon, { className: "playground-notifications-table-icon", strokeWidth: 1.8 })
+                  ),
+                  React.createElement("span", { className: "playground-notifications-table-copy" },
+                    React.createElement("span", { className: "playground-agents-overview-name-title playground-notifications-table-title" }, item.label || item.kindLabel || "Notification"),
+                    React.createElement("span", { className: "playground-agents-overview-name-description playground-notifications-table-meta" }, item.text || item.meta || "Open notification")
+                  )
+                );
+              },
+            },
+            {
+              id: "type",
+              header: "Type",
+              accessor: (item) => item.kindLabel || "Notification",
+              sortable: true,
+              width: "minmax(130px, 0.75fr)",
+              hideBelow: 780,
+              cell: ({ row: item }) => React.createElement("div", { className: "playground-agents-overview-table-value" }, item.kindLabel || "Notification"),
+            },
+            {
+              id: "status",
+              header: "Status",
+              accessor: (item) => item.statusLabel || (item.unread ? "Unread" : "Read"),
+              sortable: true,
+              width: "minmax(120px, 0.65fr)",
+              hideBelow: 620,
+              cell: ({ row: item }) => React.createElement("span", { className: "playground-notifications-status-pill" + (item.unread ? " is-unread" : "") }, item.statusLabel || (item.unread ? "Unread" : "Read")),
+            },
+            {
+              id: "time",
+              header: "Time",
+              accessor: (item) => {
+                const timestamp = Date.parse(item.createdAt || "");
+                return Number.isFinite(timestamp) ? timestamp : 0;
+              },
+              sortable: true,
+              sortDescFirst: true,
+              width: "minmax(130px, 0.7fr)",
+              align: "end",
+              cell: ({ row: item }) => React.createElement("div", { className: "playground-agents-overview-table-value" }, item.createdAt ? formatThreadSearchTimestamp(item.createdAt) : "—"),
+            },
+          ];
+          const notificationSort = notificationsPageSort === "oldest"
+            ? { id: "time", direction: "asc" }
+            : notificationsPageSort === "type"
+              ? { id: "type", direction: "asc" }
+              : { id: "time", direction: "desc" };
+          const canOpenNotification = (item) => item.kind === "permission"
+            || item.kind === "human_task"
+            || item.kind === "team_invitation"
+            || item.kind === "organization_invitation"
+            || item.kind === "email_verification";
+          const notificationFilters = [{
+            id: "notification-kind",
+            label: "Filter",
+            value: notificationsPageFilter,
+            onChange: setNotificationsPageFilter,
+            options: [
+              { id: "all", label: "All notifications" },
+              { id: "unread", label: "Unread" },
+              { id: "read", label: "Read" },
+              { id: "permission", label: "Permission requests" },
+              { id: "tasks", label: "Tasks" },
+              { id: "team", label: "Teams" },
+              { id: "organization", label: "Organizations" },
+              { id: "product", label: "Product" },
+            ],
+          }];
+          const notificationsTable = React.createElement(PlatformDataTable, {
+            rows: visibleNotificationPageItems,
+            columns: notificationColumns,
+            getRowId: (item) => item.kind + ":" + item.id,
+            ariaLabel: "Notifications",
+            className: "playground-notifications-platform-data-table",
+            sorting: {
+              value: notificationSort,
+              manual: true,
+              onChange: (next) => {
+                if (!next) {
+                  setNotificationsPageSort("newest");
+                } else if (next.id === "type") {
+                  setNotificationsPageSort("type");
+                } else {
+                  setNotificationsPageSort(next.direction === "asc" ? "oldest" : "newest");
+                }
+              },
+            },
+            toolbar: {
+              search: {
+                value: notificationsPageSearchQuery,
+                onChange: setNotificationsPageSearchQuery,
+                placeholder: "Search notifications",
+                manual: true,
+              },
+              filters: notificationFilters,
+              showSort: true,
+              primaryAction: {
+                label: "Mark all read",
+                icon: Check,
+                onClick: handleMarkAllNotificationsRead,
+                disabled: notificationItems.length === 0,
+              },
+            },
+            onRowActivate: (item) => {
+              if (canOpenNotification(item)) handleOpenNotificationPageItem(item);
+            },
+            isRowDisabled: (item) => !canOpenNotification(item),
+            getRowActions: (item) => {
+              if (item.kind === "team_invitation") {
+                return [
+                  { id: "accept", label: "Accept", icon: Check, disabled: Boolean(teamPageActionId), onSelect: () => handleTeamInvitationDecision(item, "accept") },
+                  { id: "decline", label: "Decline", icon: X, disabled: Boolean(teamPageActionId), onSelect: () => handleTeamInvitationDecision(item, "decline") },
+                ];
+              }
+              if (item.kind === "organization_invitation") {
+                return [
+                  { id: "accept", label: "Accept", icon: Check, disabled: Boolean(organizationPageActionId), onSelect: () => handleOrganizationInvitationDecision(item, "accept") },
+                  { id: "decline", label: "Decline", icon: X, disabled: Boolean(organizationPageActionId), onSelect: () => handleOrganizationInvitationDecision(item, "decline") },
+                ];
+              }
+              return canOpenNotification(item)
+                ? [{ id: "open", label: "Open", icon: ChevronRight, onSelect: () => handleOpenNotificationPageItem(item) }]
+                : [];
+            },
+            emptyState: React.createElement("div", { className: "playground-plugins-empty playground-notifications-empty" },
+              React.createElement("div", { className: "playground-notifications-empty-title" }, emptyTitle),
+              React.createElement("div", { className: "playground-notifications-empty-description" }, emptyDescription)
+            ),
+            noResultsState: React.createElement("div", { className: "playground-plugins-empty playground-notifications-empty" },
+              React.createElement("div", { className: "playground-notifications-empty-title" }, "No matching notifications"),
+              React.createElement("div", { className: "playground-notifications-empty-description" }, "Try adjusting your search or filter settings.")
+            ),
+          });
 
           return React.createElement("section", { className: "playground-configure-notifications-section playground-notifications-scroll" },
             React.createElement("div", { className: "playground-configure-notifications-heading" },
@@ -212053,162 +209081,7 @@ ${PROJECT_OVERVIEW_SCRIPT}
             React.createElement("section", {
                 className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-configure-notifications-table-section",
               },
-              React.createElement("div", { className: "playground-agents-overview-sticky-table-header playground-notifications-sticky-table-header" },
-                React.createElement("div", { className: "playground-plugins-search-row playground-agents-overview-search-row playground-develop-server-kind-table-toolbar playground-notifications-overview-toolbar" },
-                  React.createElement("div", { className: "playground-develop-server-kind-table-controls" },
-                    React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell" },
-                      React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("input", {
-                        type: "search",
-                        className: "playground-plugins-search",
-                        value: notificationsPageSearchQuery,
-                        onChange: (event) => setNotificationsPageSearchQuery(event.target.value),
-                        placeholder: "Search notifications",
-                      })
-                    ),
-                    React.createElement("div", { className: "playground-plugins-toolbar-controls" },
-                      React.createElement("div", { className: "playground-files-toolbar-anchor playground-notifications-toolbar-anchor playground-tasks-toolbar-popup-shell" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-files-control-button is-bare is-backlog-sort" + (notificationsPageToolbarPopover === "sort" || notificationsPageSort !== "newest" ? " is-active" : ""),
-                          onClick: () => setNotificationsPageToolbarPopover((current) => current === "sort" ? "" : "sort"),
-                          "aria-expanded": notificationsPageToolbarPopover === "sort" ? "true" : "false",
-                        },
-                          React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("span", null, "Sort")
-                        ),
-                        renderNotificationsPageToolbarMenu("sort")
-                      ),
-                      React.createElement("div", { className: "playground-files-toolbar-anchor playground-notifications-toolbar-anchor playground-tasks-toolbar-popup-shell" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-files-control-button is-bare is-backlog-filter" + (notificationsPageToolbarPopover === "filter" || notificationsPageFilter !== "all" ? " is-active" : ""),
-                          onClick: () => setNotificationsPageToolbarPopover((current) => current === "filter" ? "" : "filter"),
-                          "aria-expanded": notificationsPageToolbarPopover === "filter" ? "true" : "false",
-                        },
-                          React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("span", null, "Filter")
-                        ),
-                        renderNotificationsPageToolbarMenu("filter")
-                      )
-                    )
-                  ),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-top-nav-private-chat-button playground-agents-nav-create-button playground-agents-overview-toolbar-create-button playground-notifications-mark-read-button",
-                    onClick: handleMarkAllNotificationsRead,
-                    disabled: notificationItems.length === 0,
-                  },
-                    React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Mark all read")
-                  )
-                )
-              ),
-              visibleNotificationPageItems.length === 0
-                ? React.createElement("div", { className: "playground-plugins-empty playground-notifications-empty" },
-                    React.createElement("div", { className: "playground-notifications-empty-title" }, emptyTitle),
-                    React.createElement("div", { className: "playground-notifications-empty-description" }, emptyDescription)
-                  )
-                : React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table playground-notifications-overview-list-table" },
-                    React.createElement("div", { className: "playground-project-overview-thread-list" },
-                      React.createElement("div", { className: "playground-project-overview-threads-table-header playground-agents-overview-column-header playground-notifications-overview-column-header" },
-                        React.createElement("div", null, "Notification"),
-                        React.createElement("div", null, "Type"),
-                        React.createElement("div", null, "Status"),
-                        React.createElement("div", null, "Time"),
-                        React.createElement("div", null)
-                      ),
-                      visibleNotificationPageItems.map((item) => {
-                        const Icon = getNotificationPageIcon(item);
-                        const canOpen = item.kind === "permission" || item.kind === "human_task" || item.kind === "team_invitation" || item.kind === "organization_invitation" || item.kind === "email_verification";
-                        const timeLabel = item.createdAt ? formatThreadSearchTimestamp(item.createdAt) : "—";
-                        return React.createElement("div", {
-                            key: item.kind + ":" + item.id,
-                            className: "playground-project-overview-threads-table-row playground-notifications-overview-row" + (canOpen ? " is-clickable" : ""),
-                            role: canOpen ? "button" : undefined,
-                            tabIndex: canOpen ? 0 : undefined,
-                            onClick: canOpen ? () => handleOpenNotificationPageItem(item) : undefined,
-                            onKeyDown: canOpen ? (event) => {
-                              if (event.key === "Enter" || event.key === " ") {
-                                event.preventDefault();
-                                handleOpenNotificationPageItem(item);
-                              }
-                            } : undefined,
-                          },
-                          React.createElement("div", { className: "playground-project-overview-thread-cell is-name" },
-                            React.createElement("div", { className: "playground-notifications-table-main" },
-                              React.createElement("span", { className: "playground-notifications-table-icon-shell", "aria-hidden": "true" },
-                                React.createElement(Icon, { className: "playground-notifications-table-icon", strokeWidth: 1.8 })
-                              ),
-                              React.createElement("span", { className: "playground-notifications-table-copy" },
-                                React.createElement("span", { className: "playground-agents-overview-name-title playground-notifications-table-title" }, item.label || item.kindLabel || "Notification"),
-                                React.createElement("span", { className: "playground-agents-overview-name-description playground-notifications-table-meta" }, item.text || item.meta || "Open notification")
-                              )
-                            )
-                          ),
-                          React.createElement("div", { className: "playground-project-overview-thread-cell is-type" },
-                            React.createElement("div", { className: "playground-agents-overview-table-value" }, item.kindLabel || "Notification")
-                          ),
-                          React.createElement("div", { className: "playground-project-overview-thread-cell is-status" },
-                            React.createElement("span", { className: "playground-notifications-status-pill" + (item.unread ? " is-unread" : "") }, item.statusLabel || (item.unread ? "Unread" : "Read"))
-                          ),
-                          React.createElement("div", { className: "playground-project-overview-thread-cell is-date" },
-                            React.createElement("div", { className: "playground-agents-overview-table-value" }, timeLabel)
-                          ),
-                          React.createElement("div", { className: "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell" },
-                            item.kind === "team_invitation"
-                              ? React.createElement("div", {
-                                  className: "playground-notifications-row-actions",
-                                  onClick: (event) => event.stopPropagation(),
-                                },
-                                  React.createElement("button", {
-                                    type: "button",
-                                    className: "notification-menu-action-button is-primary",
-                                    onClick: () => handleTeamInvitationDecision(item, "accept"),
-                                    disabled: Boolean(teamPageActionId),
-                                  }, "Accept"),
-                                  React.createElement("button", {
-                                    type: "button",
-                                    className: "notification-menu-action-button",
-                                    onClick: () => handleTeamInvitationDecision(item, "decline"),
-                                    disabled: Boolean(teamPageActionId),
-                                  }, "Decline")
-                                )
-                              : item.kind === "organization_invitation"
-                                ? React.createElement("div", {
-                                    className: "playground-notifications-row-actions",
-                                    onClick: (event) => event.stopPropagation(),
-                                  },
-                                    React.createElement("button", {
-                                      type: "button",
-                                      className: "notification-menu-action-button is-primary",
-                                      onClick: () => handleOrganizationInvitationDecision(item, "accept"),
-                                      disabled: Boolean(organizationPageActionId),
-                                    }, "Accept"),
-                                    React.createElement("button", {
-                                      type: "button",
-                                      className: "notification-menu-action-button",
-                                      onClick: () => handleOrganizationInvitationDecision(item, "decline"),
-                                      disabled: Boolean(organizationPageActionId),
-                                    }, "Decline")
-                                  )
-                              : canOpen
-                                ? React.createElement("button", {
-                                    type: "button",
-                                    className: "playground-overview-table-action-button",
-                                    title: "Open notification",
-                                    "aria-label": "Open notification",
-                                    onClick: (event) => {
-                                      event.stopPropagation();
-                                      handleOpenNotificationPageItem(item);
-                                    },
-                                  }, React.createElement(ChevronRight, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 }))
-                                : null
-                          )
-                        );
-                      })
-                    )
-                  )
+              notificationsTable
             )
           );
         }
@@ -214206,22 +211079,23 @@ ${PROJECT_OVERVIEW_SCRIPT}
               ].filter(Boolean).join(" ").toLowerCase();
               return haystack.includes(normalizedQuery);
             })
-            .sort((left, right) => {
-              if (guardrailsSort === "name") {
-                return String(left?.name || "").localeCompare(String(right?.name || ""));
-              }
-              if (guardrailsSort === "creator") {
-                return getGuardrailCreatorLabel(left).localeCompare(getGuardrailCreatorLabel(right));
-              }
-              if (guardrailsSort === "type") {
-                const leftType = isGuardrailSetReadonly(left) ? "Default" : "Custom";
-                const rightType = isGuardrailSetReadonly(right) ? "Default" : "Custom";
-                return leftType.localeCompare(rightType) || String(left?.name || "").localeCompare(String(right?.name || ""));
-              }
-              const rightTime = new Date(right?.updatedAt || right?.createdAt || 0).getTime() || 0;
-              const leftTime = new Date(left?.updatedAt || left?.createdAt || 0).getTime() || 0;
-              return rightTime - leftTime;
-            });
+	            .sort((left, right) => {
+	              let comparison = 0;
+	              if (guardrailsSort === "name") {
+	                comparison = String(left?.name || "").localeCompare(String(right?.name || ""));
+	              } else if (guardrailsSort === "creator") {
+	                comparison = getGuardrailCreatorLabel(left).localeCompare(getGuardrailCreatorLabel(right));
+	              } else if (guardrailsSort === "type") {
+	                const leftType = isGuardrailSetReadonly(left) ? "Default" : "Custom";
+	                const rightType = isGuardrailSetReadonly(right) ? "Default" : "Custom";
+	                comparison = leftType.localeCompare(rightType) || String(left?.name || "").localeCompare(String(right?.name || ""));
+	              } else {
+	                const rightTime = new Date(right?.updatedAt || right?.createdAt || 0).getTime() || 0;
+	                const leftTime = new Date(left?.updatedAt || left?.createdAt || 0).getTime() || 0;
+	                comparison = leftTime - rightTime;
+	              }
+	              return guardrailsSortDirection === "desc" ? -comparison : comparison;
+	            });
           const selectedGuardrailSet = safeGuardrailSets.find((set) => set?.id === selectedGuardrailSetId)
             || safeGuardrailSets[0]
             || null;
@@ -215354,289 +212228,94 @@ ${PROJECT_OVERVIEW_SCRIPT}
             { id: "custom", label: "Custom Sets", description: "Only show custom guardrails" },
           ];
 
-          function renderGuardrailsToolbarMenu(menuId, options) {
-            return React.createElement("div", {
-              className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-            },
-              sortOptions.map((option) =>
-                React.createElement("button", {
-                  key: option.id,
-                  type: "button",
-                  className: "tb-popup-row tb-popup-row-select" + ((menuId === "sort" ? guardrailsSort === option.id : guardrailsSetFilter === option.id) ? " selected" : ""),
-                  onClick: () => {
-                    if (menuId === "sort") {
-                      setGuardrailsSort(option.id);
-                    } else {
-                      setGuardrailsSetFilter(option.id);
-                    }
-                    setGuardrailsToolbarPopover("");
-                  },
-                },
-                  React.createElement("span", { className: "tb-popup-check-slot" },
-                    (menuId === "sort" ? guardrailsSort === option.id : guardrailsSetFilter === option.id)
-                      ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                      : null
-                  ),
-                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                    React.createElement("span", null, option.label),
-                    option.description ? React.createElement("span", null, option.description) : null
-                  )
-                )
-              )
-            );
-          }
 
           function renderGuardrailsTable() {
             const visibleGuardrailOverviewIds = filteredGuardrailSets.map((set) => String(set?.id || "").trim()).filter(Boolean);
             const selectedVisibleGuardrailOverviewIds = visibleGuardrailOverviewIds.filter((setId) => selectedGuardrailsOverviewIds.has(setId));
             const allVisibleGuardrailsSelected = visibleGuardrailOverviewIds.length > 0 && selectedVisibleGuardrailOverviewIds.length === visibleGuardrailOverviewIds.length;
-            const hasPartialVisibleGuardrailSelection = selectedVisibleGuardrailOverviewIds.length > 0 && !allVisibleGuardrailsSelected;
-            const toggleGuardrailOverviewSelection = (setId) => {
-              const normalizedSetId = String(setId || "").trim();
-              if (!normalizedSetId) return;
-              setSelectedGuardrailsOverviewIds((current) => {
-                const next = new Set(current || []);
-                if (next.has(normalizedSetId)) {
-                  next.delete(normalizedSetId);
-                } else {
-                  next.add(normalizedSetId);
-                }
-                return next;
-              });
-            };
-            const toggleVisibleGuardrailOverviewSelection = () => {
-              if (visibleGuardrailOverviewIds.length === 0) return;
-              setSelectedGuardrailsOverviewIds((current) => {
-                const next = new Set(current || []);
-                if (allVisibleGuardrailsSelected) {
-                  visibleGuardrailOverviewIds.forEach((setId) => next.delete(setId));
-                } else {
-                  visibleGuardrailOverviewIds.forEach((setId) => next.add(setId));
-                }
-                return next;
-              });
-            };
-            const renderGuardrailsOverviewSortIcon = (sortKey) => {
-              const isActive = guardrailsSort === sortKey;
-              const isDescending = isActive && sortKey === "updated";
-              const isAscending = isActive && !isDescending;
-              return React.createElement("span", {
-                  className: "playground-agents-overview-sort-icon"
-                    + (isActive ? " is-active" : "")
-                    + (isAscending ? " is-ascending" : "")
-                    + (isDescending ? " is-descending" : ""),
-                  "aria-hidden": "true",
-                },
-                React.createElement(ChevronsUpDown, {
-                  className: "playground-agents-overview-sort-icon-layer is-top",
-                  width: 14,
-                  height: 14,
-                  strokeWidth: 1.8,
-                }),
-                React.createElement(ChevronsUpDown, {
-                  className: "playground-agents-overview-sort-icon-layer is-bottom",
-                  width: 14,
-                  height: 14,
-                  strokeWidth: 1.8,
-                })
-              );
-            };
-            const renderGuardrailsOverviewSortableHeader = (label, sortKey) => {
-              const isActive = guardrailsSort === sortKey;
-              return React.createElement("div", { className: "playground-agents-overview-sortable-header" + (isActive ? " is-active" : "") },
-                React.createElement("span", { className: "playground-agents-overview-sortable-header-label" }, label),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-agents-overview-column-sort-button"
-                    + (isActive ? " is-active" : "")
-                    + (isActive && sortKey === "updated" ? " is-descending" : "")
-                    + (isActive && sortKey !== "updated" ? " is-ascending" : ""),
-                  title: "Sort " + label,
-                  "aria-label": "Sort " + label,
-                  "aria-pressed": isActive ? "true" : "false",
-                  onClick: (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    setGuardrailsSort(sortKey);
-                    setGuardrailsToolbarPopover("");
-                  },
-                }, renderGuardrailsOverviewSortIcon(sortKey))
-              );
-            };
-            const renderGuardrailsOverviewColumnHeader = () => React.createElement("div", {
-                className: "playground-project-overview-threads-table-header playground-agents-overview-column-header playground-guardrails-overview-column-header",
-              },
-              React.createElement("div", null,
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox"
-                    + (allVisibleGuardrailsSelected ? " is-selected" : "")
-                    + (hasPartialVisibleGuardrailSelection ? " is-partial" : ""),
-                  role: "checkbox",
-                  "aria-checked": allVisibleGuardrailsSelected ? "true" : (hasPartialVisibleGuardrailSelection ? "mixed" : "false"),
-                  "aria-label": allVisibleGuardrailsSelected ? "Deselect all visible guardrail sets" : "Select all visible guardrail sets",
-                  onClick: (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    toggleVisibleGuardrailOverviewSelection();
-                  },
-                })
-              ),
-              React.createElement("div", null, renderGuardrailsOverviewSortableHeader("Set", "name")),
-              React.createElement("div", null, renderGuardrailsOverviewSortableHeader("Type", "type")),
-              React.createElement("div", null, renderGuardrailsOverviewSortableHeader("Creator", "creator")),
-              React.createElement("div", null, renderGuardrailsOverviewSortableHeader("Updated", "updated")),
-              React.createElement("div", null)
-            );
-            const renderGuardrailsOverviewStickyTableHeader = (includeColumns = true) => React.createElement("div", {
-                className: "playground-agents-overview-sticky-table-header playground-team-overview-sticky-table-header playground-guardrails-overview-sticky-table-header",
-              },
-              React.createElement("div", {
-                  className: "playground-develop-server-kind-table-toolbar playground-team-overview-toolbar-row playground-guardrails-overview-toolbar-row",
-                  ref: guardrailsToolbarRef,
-                },
-                React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell playground-guardrails-overview-search-shell" },
-                  React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("input", {
-                    type: "search",
-                    value: guardrailsSearchQuery,
-                    onChange: (event) => setGuardrailsSearchQuery(event.target.value),
-                    className: "playground-plugins-search",
-                    placeholder: "Search guardrails",
-                    "aria-label": "Search guardrails",
-                  })
-                ),
-                React.createElement("div", { className: "playground-plugins-toolbar-controls playground-guardrails-overview-controls" },
-                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-control-button is-bare is-backlog-sort" + (guardrailsToolbarPopover === "sort" || guardrailsSort !== "updated" ? " is-active" : ""),
-                      onClick: () => {
-                        setGuardrailSetActionMenuId("");
-                        setGuardrailsToolbarPopover((current) => current === "sort" ? "" : "sort");
-                      },
-                      title: "Sort guardrails",
-                    },
-                      React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Sort")
-                    ),
-                    guardrailsToolbarPopover === "sort" ? renderGuardrailsToolbarMenu("sort", sortOptions) : null
-                  ),
-                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-control-button is-bare is-backlog-filter" + (guardrailsToolbarPopover === "filter" || guardrailsSetFilter !== "all" ? " is-active" : ""),
-                      onClick: () => {
-                        setGuardrailSetActionMenuId("");
-                        setGuardrailsToolbarPopover((current) => current === "filter" ? "" : "filter");
-                      },
-                      title: "Filter guardrails",
-                    },
-                      React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Filter")
-                    ),
-                    guardrailsToolbarPopover === "filter" ? renderGuardrailsToolbarMenu("filter", guardrailsSetFilterOptions) : null
-                  )
-                ),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-top-nav-private-chat-button playground-agents-nav-create-button playground-agents-overview-toolbar-create-button playground-guardrails-overview-create-button",
-                  onClick: createGuardrailSet,
-                },
-                  React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("span", null, "New Set")
-                )
-              ),
-              includeColumns ? renderGuardrailsOverviewColumnHeader() : null
-            );
-            return React.createElement("section", {
+	            const guardrailsOverviewColumns = [
+	              {
+	                id: "name",
+	                header: "Set",
+	                accessor: (set) => set?.name || "",
+	                sortable: true,
+	                width: "minmax(230px, 1.35fr)",
+	                cell: ({ row: set }) => React.createElement("div", { className: "playground-agents-overview-name-title" }, set.name || "Untitled Guardrail Set"),
+	              },
+	              {
+	                id: "type",
+	                header: "Type",
+	                accessor: (set) => isGuardrailSetReadonly(set) ? "Default" : "Custom",
+	                sortable: true,
+	                width: "minmax(105px, 0.56fr)",
+	                cell: ({ row: set }) => {
+	                  const isDefaultSet = isGuardrailSetReadonly(set);
+	                  return React.createElement("span", { className: "playground-guardrails-kind-pill" + (isDefaultSet ? " is-default" : " is-custom") }, isDefaultSet ? "Default" : "Custom");
+	                },
+	              },
+	              {
+	                id: "creator",
+	                header: "Creator",
+	                accessor: getGuardrailCreatorLabel,
+	                sortable: true,
+	                width: "minmax(160px, 0.82fr)",
+	                hideBelow: 760,
+	                cell: ({ row: set }) => renderGuardrailCreatorCell(set),
+	              },
+	              {
+	                id: "updated",
+	                header: "Updated",
+	                accessor: (set) => Date.parse(String(set?.updatedAt || set?.createdAt || "")) || 0,
+	                sortable: true,
+	                sortDescFirst: true,
+	                width: "minmax(120px, 0.6fr)",
+	                align: "end",
+	                hideBelow: 920,
+	                cell: ({ row: set }) => React.createElement("span", { className: "playground-guardrails-table-muted" }, formatGuardrailDate(set.updatedAt || set.createdAt)),
+	              },
+	            ];
+	            const guardrailsOverviewDataTable = React.createElement(PlatformDataTable, {
+	              rows: filteredGuardrailSets,
+	              columns: guardrailsOverviewColumns,
+	              getRowId: (set) => String(set?.id || ""),
+	              ariaLabel: "Guardrail sets",
+	              className: "playground-guardrails-platform-data-table",
+	              surface: "plain",
+	              sorting: {
+	                value: { id: guardrailsSort, direction: guardrailsSortDirection === "desc" ? "desc" : "asc" },
+	                manual: true,
+	                onChange: (nextSorting) => {
+	                  if (!nextSorting) return;
+	                  setGuardrailsSort(nextSorting.id);
+	                  setGuardrailsSortDirection(nextSorting.direction);
+	                  setGuardrailsToolbarPopover("");
+	                },
+	              },
+	              selection: {
+	                enabled: true,
+	                value: selectedGuardrailsOverviewIds,
+	                onChange: ({ selectedIds }) => setSelectedGuardrailsOverviewIds(new Set(selectedIds)),
+	                ariaLabel: (set) => "Select " + (set?.name || "guardrail set"),
+	              },
+	              toolbar: {
+	                search: { value: guardrailsSearchQuery, onChange: setGuardrailsSearchQuery, placeholder: "Search guardrails", manual: true },
+	                showSort: true,
+	                filters: [{ id: "type", label: "Type", value: guardrailsSetFilter, options: guardrailsSetFilterOptions, onChange: setGuardrailsSetFilter }],
+	                primaryAction: { label: "New Set", icon: Plus, onClick: createGuardrailSet },
+	              },
+	              getRowActions: (set) => isGuardrailSetReadonly(set) ? [] : [
+	                { id: "rename", label: "Rename", icon: SquarePen, onSelect: () => handleRenameGuardrailSet(set.id) },
+	                { id: "delete", label: "Delete", icon: Trash2, danger: true, separatorBefore: true, onSelect: () => handleDeleteGuardrailSet(set.id) },
+	              ],
+	              getRowAriaLabel: (set) => set?.name || "Guardrail set",
+	              onRowActivate: (set) => selectGuardrailSet(set.id),
+	              emptyState: "No guardrails found.",
+	            });
+	            return React.createElement("section", {
                 className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-team-overview-table-section playground-team-grid-table-section playground-guardrails-overview-table-section",
               },
-              React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table playground-guardrails-overview-table" },
-                renderGuardrailsOverviewStickyTableHeader(false),
-                React.createElement("div", { className: "playground-project-overview-thread-list" },
-                  renderGuardrailsOverviewColumnHeader(),
-                  filteredGuardrailSets.map((set) => {
-                    const isDefaultSet = isGuardrailSetReadonly(set);
-                    const setId = String(set?.id || "").trim();
-                    const isSelected = selectedGuardrailsOverviewIds.has(setId);
-                    return React.createElement("div", {
-                      key: setId,
-                      role: "button",
-                      tabIndex: 0,
-                      className: "playground-project-overview-threads-table-row",
-                      onClick: () => selectGuardrailSet(setId),
-                      onKeyDown: (event) => handleGuardrailSetKeyDown(event, setId),
-                    },
-                      React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-agents-overview-select-checkbox" + (isSelected ? " is-selected" : ""),
-                          role: "checkbox",
-                          "aria-checked": isSelected ? "true" : "false",
-                          "aria-label": "Select " + (set.name || "guardrail set"),
-                          onClick: (event) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            toggleGuardrailOverviewSelection(setId);
-                          },
-                          onKeyDown: (event) => event.stopPropagation(),
-                        })
-                      ),
-                      React.createElement("div", { className: "playground-project-overview-thread-cell is-name" },
-                        React.createElement("div", { className: "playground-agents-overview-name-cell playground-guardrails-overview-name-cell" },
-                          React.createElement("div", { className: "playground-agents-overview-name-copy" },
-                            React.createElement("div", { className: "playground-agents-overview-name-title" }, set.name || "Untitled Guardrail Set")
-                          )
-                        )
-                      ),
-                      React.createElement("div", { className: "playground-project-overview-thread-cell is-model" },
-                        React.createElement("span", { className: "playground-guardrails-kind-pill" + (isDefaultSet ? " is-default" : " is-custom") },
-                          isDefaultSet ? "Default" : "Custom"
-                        )
-                      ),
-                      React.createElement("div", { className: "playground-project-overview-thread-cell is-creator" },
-                        renderGuardrailCreatorCell(set)
-                      ),
-                      React.createElement("div", { className: "playground-project-overview-thread-cell is-date" },
-                        React.createElement("span", { className: "playground-guardrails-table-muted" }, formatGuardrailDate(set.updatedAt || set.createdAt))
-                      ),
-                      React.createElement("div", { className: "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell playground-tasks-toolbar-popup-shell playground-guardrails-overview-action-shell" },
-                        isDefaultSet
-                          ? null
-                          : renderPlaygroundPlatformPopup({
-                              open: guardrailSetActionMenuId === setId,
-                              shellRef: guardrailSetActionMenuId === setId ? guardrailSetActionMenuRef : null,
-                              shellClassName: "playground-guardrails-action-menu-shell playground-guardrails-row-action-menu-shell playground-tasks-toolbar-popup-shell",
-                              menuClassName: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu",
-                              trigger: React.createElement("button", {
-                                type: "button",
-                                className: "playground-overview-table-action-button" + (guardrailSetActionMenuId === setId ? " is-open" : ""),
-                                onClick: (event) => {
-                                  event.preventDefault();
-                                  event.stopPropagation();
-                                  setGuardrailDetailActionsMenuOpen(false);
-                                  setGuardrailSetActionMenuId((current) => current === setId ? "" : setId);
-                                },
-                                "aria-label": "Guardrail set actions",
-                                "aria-haspopup": "menu",
-                                "aria-expanded": guardrailSetActionMenuId === setId ? "true" : "false",
-                              }, React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 })),
-                              menuProps: {
-                                role: "menu",
-                                onClick: (event) => event.stopPropagation(),
-                              },
-                              children: renderGuardrailActionMenuItems(setId),
-                            })
-                      )
-                    );
-                  }),
-                  filteredGuardrailSets.length === 0
-                    ? React.createElement("div", { className: "playground-plugins-empty" }, "No guardrails found.")
-                    : null
-                )
-              )
-            );
+	              guardrailsOverviewDataTable
+	            );
           }
 
           const listContent = renderGuardrailsTable();
@@ -216813,16 +213492,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const allVisibleApiKeysSelected = visibleApiKeyIds.length > 0 && visibleApiKeyIds.every((keyId) => developApiKeysSelectedIds.has(keyId));
           const someVisibleApiKeysSelected = !allVisibleApiKeysSelected && visibleApiKeyIds.some((keyId) => developApiKeysSelectedIds.has(keyId));
 
-          const toggleApiKeySelection = (keyId) => {
-            const normalizedKeyId = String(keyId || "").trim();
-            if (!normalizedKeyId) return;
-            setDevelopApiKeysSelectedIds((current) => {
-              const next = new Set(current);
-              if (next.has(normalizedKeyId)) next.delete(normalizedKeyId);
-              else next.add(normalizedKeyId);
-              return next;
-            });
-          };
 
           const toggleAllVisibleApiKeys = () => {
             setDevelopApiKeysSelectedIds((current) => {
@@ -216852,34 +213521,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
             }, 90);
           };
 
-          const openApiKeyActionMenu = (event, apiKeyRecord, options = {}) => {
-            if (!apiKeyRecord?.id) return;
-            event.preventDefault();
-            event.stopPropagation();
-            const menuWidth = 220;
-            const menuHeight = 104;
-            const gutter = 12;
-            const viewportWidth = window.innerWidth || document.documentElement?.clientWidth || 0;
-            const viewportHeight = window.innerHeight || document.documentElement?.clientHeight || 0;
-            let left;
-            let top;
-            if (options.context) {
-              left = Number(event.clientX || 0);
-              top = Number(event.clientY || 0);
-            } else {
-              const rect = event.currentTarget.getBoundingClientRect();
-              left = rect.right - menuWidth;
-              top = rect.bottom + 6;
-            }
-            left = Math.max(gutter, Math.min(viewportWidth - menuWidth - gutter, left));
-            top = Math.max(gutter, Math.min(viewportHeight - menuHeight - gutter, top));
-            if (developApiKeyActionMenuCloseTimerRef.current !== null) {
-              window.clearTimeout(developApiKeyActionMenuCloseTimerRef.current);
-              developApiKeyActionMenuCloseTimerRef.current = null;
-            }
-            setDevelopApiKeyActionMenuClosing(false);
-            setDevelopApiKeyActionMenu({ apiKeyRecord, left, top });
-          };
 
           const openApiKeyRevealModal = async (apiKeyRecord) => {
             const keyId = String(apiKeyRecord?.id || "").trim();
@@ -216912,71 +213553,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
             }
           };
 
-          const renderApiKeyRow = (apiKeyRecord) => {
-            const keyPreview = String(apiKeyRecord?.keyPrefix || "key") + "••••";
-            const createdByLabel = getApiKeyCreatedByLabel(apiKeyRecord);
-            const keyId = String(apiKeyRecord?.id || "").trim();
-            const isSelected = developApiKeysSelectedIds.has(keyId);
-            const isMenuOpen = developApiKeyActionMenu?.apiKeyRecord?.id === apiKeyRecord.id;
-            return React.createElement("div", {
-                key: apiKeyRecord.id,
-                className: "playground-project-overview-threads-table-row playground-develop-api-keys-table-row",
-                onContextMenu: (event) => openApiKeyActionMenu(event, apiKeyRecord, { context: true }),
-              },
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-agents-overview-select-checkbox" + (isSelected ? " is-selected" : ""),
-                  role: "checkbox",
-                  "aria-checked": isSelected ? "true" : "false",
-                  "aria-label": "Select " + (apiKeyRecord.name || "API key"),
-                  onClick: (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    toggleApiKeySelection(keyId);
-                  },
-                })
-              ),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-name" },
-                React.createElement("div", { className: "playground-resources-overview-name-cell" },
-                  React.createElement("div", { className: "playground-resources-overview-name-copy" },
-                    React.createElement("div", { className: "playground-settings-api-keys-name-row" },
-                      React.createElement("span", { className: "playground-resources-overview-name-title" }, apiKeyRecord.name || "API Key"),
-                      isStandardApiKey(apiKeyRecord)
-                        ? React.createElement("span", { className: "playground-settings-api-keys-pill" }, "standard")
-                        : null
-                    )
-                  )
-                )
-              ),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-secret" },
-                React.createElement("div", { className: "playground-agents-overview-table-value playground-develop-api-keys-secret" }, keyPreview)
-              ),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-date" },
-                React.createElement("div", { className: "playground-agents-overview-table-value" }, formatSettingsDate(apiKeyRecord.createdAt))
-              ),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-date" },
-                React.createElement("div", { className: "playground-agents-overview-table-value" }, apiKeyRecord?.lastUsedAt ? formatSettingsDate(apiKeyRecord.lastUsedAt) : "Never")
-              ),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-created-by" },
-                React.createElement("div", { className: "playground-agents-overview-table-value", title: createdByLabel }, createdByLabel)
-              ),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-permissions" },
-                React.createElement("div", { className: "playground-agents-overview-table-value" }, getSettingsApiKeyScopeLabel(apiKeyRecord.permissions))
-              ),
-              React.createElement("div", { className: "playground-project-overview-thread-cell is-actions" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-overview-table-action-button" + (isMenuOpen ? " is-open" : ""),
-                  title: "API key actions",
-                  "aria-label": "Actions for " + (apiKeyRecord.name || "API key"),
-                  "aria-expanded": isMenuOpen ? "true" : "false",
-                  onClick: (event) => openApiKeyActionMenu(event, apiKeyRecord),
-                  onContextMenu: (event) => openApiKeyActionMenu(event, apiKeyRecord, { context: true }),
-                }, React.createElement(Ellipsis, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 }))
-              )
-            );
-          };
 
           const apiKeyDialogContent = settingsApiKeyDialogOpen
             ? React.createElement("div", {
@@ -217076,66 +213652,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
                 : apiKeyDialogContent)
             : null;
 
-          const apiKeyActionMenuContent = developApiKeyActionMenu
-            ? React.createElement("div", {
-                className: "sidebar-thread-popup-scrim",
-                style: { zIndex: 360 },
-                onClick: () => closeApiKeyActionMenu(),
-              },
-                React.createElement("div", {
-                    className: "playground-platform-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-toolbar-popup-shell-portal playground-agents-list-action-menu-shell is-open",
-                    style: {
-                      position: "fixed",
-                      top: developApiKeyActionMenu.top + "px",
-                      left: developApiKeyActionMenu.left + "px",
-                      right: "auto",
-                    },
-                    onClick: (event) => event.stopPropagation(),
-                  },
-                  React.createElement("div", {
-                      className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu" + (developApiKeyActionMenuClosing ? " is-closing" : " playground-tasks-toolbar-popup-menu-animate-down-in"),
-                      role: "menu",
-                    },
-                    React.createElement("button", {
-                      type: "button",
-                      role: "menuitem",
-                      className: "tb-popup-row",
-                      onClick: () => {
-                        const apiKeyRecord = developApiKeyActionMenu.apiKeyRecord;
-                        closeApiKeyActionMenu({ animate: false });
-                        void openApiKeyRevealModal(apiKeyRecord);
-                      },
-                    },
-                      React.createElement(Eye, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                        React.createElement("span", null, "View key")
-                      )
-                    ),
-                    React.createElement("button", {
-                      type: "button",
-                      role: "menuitem",
-                      className: "tb-popup-row",
-                      disabled: developApiKeyActionMenu.apiKeyRecord?.canRevoke === false || settingsRevokingKeyId === developApiKeyActionMenu.apiKeyRecord?.id,
-                      onClick: () => {
-                        const keyId = developApiKeyActionMenu.apiKeyRecord?.id;
-                        closeApiKeyActionMenu({ animate: false });
-                        void handleSettingsRevokeApiKey(keyId);
-                      },
-                    },
-                      settingsRevokingKeyId === developApiKeyActionMenu.apiKeyRecord?.id
-                        ? React.createElement(Loader2, { className: "tb-popup-icon playground-settings-records-spinner", width: 14, height: 14, strokeWidth: 1.8 })
-                        : React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                        React.createElement("span", null, "Delete")
-                      )
-                    )
-                  )
-                )
-              )
-            : null;
-          const apiKeyActionMenu = apiKeyActionMenuContent && typeof document !== "undefined" && document.body
-            ? createPortal(apiKeyActionMenuContent, document.body)
-            : apiKeyActionMenuContent;
 
           const apiKeyRevealDialogContent = developApiKeyRevealModal
             ? React.createElement("div", {
@@ -217195,6 +213711,140 @@ ${PROJECT_OVERVIEW_SCRIPT}
           const apiKeyRevealDialog = apiKeyRevealDialogContent && typeof document !== "undefined" && document.body
             ? createPortal(apiKeyRevealDialogContent, document.body)
             : apiKeyRevealDialogContent;
+
+          const apiKeyColumns = [
+            {
+              id: "name",
+              header: "Name",
+              accessor: (apiKeyRecord) => apiKeyRecord?.name || "API Key",
+              sortable: true,
+              width: "minmax(190px, 1.25fr)",
+              cell: ({ row: apiKeyRecord }) => React.createElement("div", { className: "playground-resources-overview-name-cell" },
+                React.createElement("div", { className: "playground-resources-overview-name-copy" },
+                  React.createElement("div", { className: "playground-settings-api-keys-name-row" },
+                    React.createElement("span", { className: "playground-resources-overview-name-title" }, apiKeyRecord.name || "API Key"),
+                    isStandardApiKey(apiKeyRecord)
+                      ? React.createElement("span", { className: "playground-settings-api-keys-pill" }, "standard")
+                      : null
+                  )
+                )
+              ),
+            },
+            {
+              id: "secret",
+              header: "Secret key",
+              accessor: (apiKeyRecord) => apiKeyRecord?.keyPrefix || "key",
+              width: "minmax(125px, 0.85fr)",
+              cell: ({ row: apiKeyRecord }) => React.createElement("div", { className: "playground-agents-overview-table-value playground-develop-api-keys-secret" }, String(apiKeyRecord?.keyPrefix || "key") + "••••"),
+            },
+            {
+              id: "created",
+              header: "Created",
+              accessor: (apiKeyRecord) => Date.parse(String(apiKeyRecord?.createdAt || "")) || 0,
+              sortable: true,
+              sortDescFirst: true,
+              width: "minmax(120px, 0.72fr)",
+              cell: ({ row: apiKeyRecord }) => React.createElement("div", { className: "playground-agents-overview-table-value" }, formatSettingsDate(apiKeyRecord.createdAt)),
+            },
+            {
+              id: "last-used",
+              header: "Last used",
+              accessor: (apiKeyRecord) => Date.parse(String(apiKeyRecord?.lastUsedAt || "")) || 0,
+              sortable: true,
+              sortDescFirst: true,
+              width: "minmax(120px, 0.72fr)",
+              hideBelow: 780,
+              cell: ({ row: apiKeyRecord }) => React.createElement("div", { className: "playground-agents-overview-table-value" }, apiKeyRecord?.lastUsedAt ? formatSettingsDate(apiKeyRecord.lastUsedAt) : "Never"),
+            },
+            {
+              id: "created-by",
+              header: "Created by",
+              accessor: getApiKeyCreatedByLabel,
+              sortable: true,
+              width: "minmax(130px, 0.8fr)",
+              hideBelow: 960,
+              cell: ({ row: apiKeyRecord }) => {
+                const createdByLabel = getApiKeyCreatedByLabel(apiKeyRecord);
+                return React.createElement("div", { className: "playground-agents-overview-table-value", title: createdByLabel }, createdByLabel);
+              },
+            },
+            {
+              id: "permissions",
+              header: "Permissions",
+              accessor: (apiKeyRecord) => getSettingsApiKeyScopeLabel(apiKeyRecord?.permissions),
+              sortable: true,
+              width: "minmax(140px, 0.9fr)",
+              hideBelow: 680,
+              cell: ({ row: apiKeyRecord }) => React.createElement("div", { className: "playground-agents-overview-table-value" }, getSettingsApiKeyScopeLabel(apiKeyRecord.permissions)),
+            },
+          ];
+          const apiKeysPlatformTable = React.createElement(PlatformDataTable, {
+            rows: visibleApiKeys,
+            columns: apiKeyColumns,
+            getRowId: (apiKeyRecord) => String(apiKeyRecord?.id || ""),
+            ariaLabel: "API keys",
+            className: "playground-api-keys-platform-data-table",
+            sorting: {
+              value: { id: developApiKeysSort, direction: developApiKeysSortDirection },
+              manual: true,
+              onChange: (next) => {
+                if (!next) {
+                  setDevelopApiKeysSort("name");
+                  setDevelopApiKeysSortDirection("asc");
+                  return;
+                }
+                setDevelopApiKeysSort(next.id === "created" || next.id === "last-used" ? next.id : "name");
+                setDevelopApiKeysSortDirection(next.direction);
+              },
+            },
+            selection: {
+              enabled: true,
+              value: developApiKeysSelectedIds,
+              onChange: ({ selectedIds }) => setDevelopApiKeysSelectedIds(new Set(selectedIds)),
+              ariaLabel: (apiKeyRecord) => "Select " + (apiKeyRecord.name || "API key"),
+            },
+            toolbar: {
+              search: {
+                value: developApiKeysSearchQuery,
+                onChange: setDevelopApiKeysSearchQuery,
+                placeholder: "Search API keys",
+                manual: true,
+              },
+              filters: [{
+                id: "api-key-kind",
+                label: "Filter",
+                value: developApiKeysFilter,
+                onChange: setDevelopApiKeysFilter,
+                options: apiKeyFilterOptions,
+              }],
+              showSort: true,
+              primaryAction: {
+                label: "New API Key",
+                icon: Plus,
+                onClick: () => setSettingsApiKeyDialogOpen(true),
+              },
+            },
+            getRowActions: (apiKeyRecord) => [
+              {
+                id: "view",
+                label: "View key",
+                icon: Eye,
+                onSelect: () => void openApiKeyRevealModal(apiKeyRecord),
+              },
+              {
+                id: "delete",
+                label: "Delete",
+                icon: Trash2,
+                danger: true,
+                disabled: apiKeyRecord?.canRevoke === false || settingsRevokingKeyId === apiKeyRecord?.id,
+                onSelect: () => void handleSettingsRevokeApiKey(apiKeyRecord?.id),
+              },
+            ],
+            loading: settingsApiKeysLoading,
+            error: settingsApiKeysError || null,
+            emptyState: "No API keys available.",
+            noResultsState: "No matching API keys found.",
+          });
 
           const apiKeysToolbar = React.createElement("div", {
               className: "playground-agents-overview-sticky-table-header playground-develop-resource-overview-sticky-table-header playground-develop-api-keys-sticky-table-header",
@@ -217296,43 +213946,6 @@ ${PROJECT_OVERVIEW_SCRIPT}
             )
           );
 
-          const apiKeysTable = React.createElement("div", {
-              className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-develop-resource-overview-list-table playground-develop-api-keys-list-table",
-            },
-            React.createElement("div", { className: "playground-project-overview-thread-list" },
-              React.createElement("div", { className: "playground-project-overview-threads-table-header playground-develop-resource-overview-column-header playground-develop-api-keys-column-header" },
-                React.createElement("div", null,
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox" + (allVisibleApiKeysSelected ? " is-selected" : "") + (someVisibleApiKeysSelected ? " is-partial" : ""),
-                    role: "checkbox",
-                    "aria-checked": allVisibleApiKeysSelected ? "true" : (someVisibleApiKeysSelected ? "mixed" : "false"),
-                    "aria-label": allVisibleApiKeysSelected ? "Deselect all API keys" : "Select all API keys",
-                    onClick: toggleAllVisibleApiKeys,
-                  })
-                ),
-                React.createElement("div", null, "Name"),
-                React.createElement("div", null, "Secret key"),
-                React.createElement("div", null, "Created"),
-                React.createElement("div", null, "Last used"),
-                React.createElement("div", null, "Created by"),
-                React.createElement("div", null, "Permissions"),
-                React.createElement("div", null)
-              ),
-              settingsApiKeysLoading
-                ? React.createElement("div", { className: "playground-plugins-empty playground-develop-api-keys-empty" },
-                    React.createElement(Loader2, { className: "playground-files-state-loader", width: 16, height: 16, strokeWidth: 1.75 }),
-                    React.createElement("span", null, "Loading API keys")
-                  )
-                : visibleApiKeys.length > 0
-                  ? visibleApiKeys.map(renderApiKeyRow)
-                  : React.createElement("div", { className: "playground-plugins-empty playground-develop-api-keys-empty" },
-                      normalizedApiKeySearchQuery || developApiKeysFilter !== "all"
-                        ? "No matching API keys found."
-                        : "No API keys available."
-                    )
-            )
-          );
 
           const newlyCreatedKeyNotice = settingsNewlyCreatedKey
             ? React.createElement("div", { className: "playground-settings-created-key-notice playground-develop-api-keys-created-notice" },
@@ -217407,15 +214020,13 @@ ${PROJECT_OVERVIEW_SCRIPT}
                     React.createElement("section", {
                         className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-overview-list-section playground-team-grid-table-section playground-resources-overview-section playground-develop-resource-overview-table-section playground-develop-api-keys-table-section is-servers-overview is-develop-server-kind-list",
                       },
-                      apiKeysToolbar,
-                      apiKeysTable
+                      apiKeysPlatformTable
                     )
                   )
                 )
               )
             ),
             apiKeyDialog,
-            apiKeyActionMenu,
             apiKeyRevealDialog
           );
         }
@@ -218421,6 +215032,11 @@ ${PROJECT_OVERVIEW_SCRIPT}
 	        function renderSidebarWorkspaceSwitcher() {
 	          const activeOption = getSidebarWorkspaceOption(sidebarWorkspaceMode);
 	          const ActiveIcon = getPlaygroundSafeIconComponent(activeOption.Icon, Circle);
+	          const workspaceMenuAnimationClass = sidebarWorkspaceMenuPhase === "enter"
+	            ? "account-menu-animate-up-in"
+	            : sidebarWorkspaceMenuPhase === "exit"
+	              ? "account-menu-animate-up-out"
+	              : "";
 
           return React.createElement("div", { className: "sidebar-workspace-switcher", ref: sidebarWorkspaceMenuRef },
             React.createElement("button", {
@@ -218436,8 +215052,10 @@ ${PROJECT_OVERVIEW_SCRIPT}
               React.createElement("span", { className: "sidebar-workspace-label" }, activeOption.label),
               React.createElement(ChevronsUpDown, { className: "sidebar-workspace-trigger-chevron", strokeWidth: 1.8 })
             ),
-	            sidebarWorkspaceMenuOpen
-	              ? React.createElement("div", { className: "sidebar-workspace-menu" },
+	            renderedSidebarWorkspaceMenu
+	              ? React.createElement("div", {
+	                  className: "sidebar-workspace-menu" + (workspaceMenuAnimationClass ? " " + workspaceMenuAnimationClass : ""),
+	                },
 	                  getSidebarWorkspaceOptions().map((option) => {
 	                    const OptionIcon = getPlaygroundSafeIconComponent(option.Icon, Circle);
                     const isActive = option.id === sidebarWorkspaceMode;

@@ -17409,6 +17409,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           const [metronomeWorkflowSearchQuery, setMetronomeWorkflowSearchQuery] = useState("");
           const [metronomeWorkflowFilter, setMetronomeWorkflowFilter] = useState("all");
           const [metronomeWorkflowSort, setMetronomeWorkflowSort] = useState("recent");
+          const [metronomeWorkflowSortDirection, setMetronomeWorkflowSortDirection] = useState("desc");
           const [metronomeWorkflowViewMode, setMetronomeWorkflowViewMode] = useState("list");
           const [metronomeWorkflowToolbarPopover, setMetronomeWorkflowToolbarPopover] = useState("");
           const metronomeWorkflowPreviewHydrationIdsRef = useRef(new Set());
@@ -17456,6 +17457,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           const [metronomeRunSearchQuery, setMetronomeRunSearchQuery] = useState("");
           const [metronomeRunFilter, setMetronomeRunFilter] = useState("all");
           const [metronomeRunSort, setMetronomeRunSort] = useState("recent");
+          const [metronomeRunSortDirection, setMetronomeRunSortDirection] = useState("desc");
           const [metronomeRunToolbarPopover, setMetronomeRunToolbarPopover] = useState("");
           const [selectedMetronomeRunIds, setSelectedMetronomeRunIds] = useState(() => new Set());
           const [metronomeRunActionMenu, setMetronomeRunActionMenu] = useState(null);
@@ -17795,7 +17797,6 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
           const activeMetronomeWorkflowFilter = METRONOME_WORKFLOW_FILTER_OPTIONS.find((option) => option.id === metronomeWorkflowFilter) || METRONOME_WORKFLOW_FILTER_OPTIONS[0];
           const activeMetronomeWorkflowFilterLabel = activeMetronomeWorkflowFilter?.label || "All workflows";
           const activeMetronomeWorkflowSort = METRONOME_WORKFLOW_SORT_OPTIONS.find((option) => option.id === metronomeWorkflowSort) || METRONOME_WORKFLOW_SORT_OPTIONS[0];
-          const activeMetronomeWorkflowSortLabel = activeMetronomeWorkflowSort?.label || "Last run";
           const hydrateTeamSharedMetronomeWorkflow = useCallback(async (workflow) => {
             const workflowId = String(workflow?.id || "").trim();
             if (!workflowId) return workflow;
@@ -22067,79 +22068,6 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                   : null
               );
             };
-            const renderMetronomeWorkflowSortMenu = () => {
-              if (metronomeWorkflowToolbarPopover !== "sort") return null;
-              return React.createElement("div", {
-                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in playground-metronome-list-filter-menu",
-                role: "menu",
-                onClick: (event) => event.stopPropagation(),
-              },
-                METRONOME_WORKFLOW_SORT_OPTIONS.map((option) => {
-                  const optionId = String(option.id || "recent");
-                  const active = optionId === metronomeWorkflowSort;
-                  return React.createElement("button", {
-                    key: optionId,
-                    type: "button",
-                    className: "tb-popup-row tb-popup-row-select" + (active ? " selected" : ""),
-                    role: "menuitemradio",
-                    "aria-checked": active ? "true" : "false",
-                    onClick: () => {
-                      setMetronomeWorkflowSort(optionId);
-                      setMetronomeWorkflowToolbarPopover("");
-                      setOpenMetronomeOverviewMenuWorkflowId("");
-                    },
-                  },
-                    React.createElement("span", { className: "tb-popup-check-slot" },
-                      active ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 }) : null
-                    ),
-                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                      React.createElement("span", null, option.label || optionId),
-                      option.description
-                        ? React.createElement("span", null, option.description)
-                        : null
-                    )
-                  );
-                })
-              );
-            };
-            const renderMetronomeWorkflowFilterMenu = () => {
-              if (metronomeWorkflowToolbarPopover !== "filter") return null;
-              return React.createElement("div", {
-                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in playground-metronome-list-filter-menu",
-                role: "menu",
-                onClick: (event) => event.stopPropagation(),
-              },
-                METRONOME_WORKFLOW_FILTER_OPTIONS.map((option) => {
-                  const optionId = String(option.id || "all");
-                  const active = optionId === metronomeWorkflowFilter;
-                  const optionLabel = optionId === "removed" && hasRemovedSharedMetronomeWorkflows
-                    ? option.label + " (" + removedUniqueSharedMetronomeWorkflows.length + ")"
-                    : option.label;
-                  return React.createElement("button", {
-                    key: optionId,
-                    type: "button",
-                    className: "tb-popup-row tb-popup-row-select" + (active ? " selected" : ""),
-                    role: "menuitemradio",
-                    "aria-checked": active ? "true" : "false",
-                    onClick: () => {
-                      setMetronomeWorkflowFilter(optionId);
-                      setMetronomeWorkflowToolbarPopover("");
-                      setOpenMetronomeOverviewMenuWorkflowId("");
-                    },
-                  },
-                    React.createElement("span", { className: "tb-popup-check-slot" },
-                      active ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 }) : null
-                    ),
-                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                      React.createElement("span", null, optionLabel),
-                      option.description
-                        ? React.createElement("span", null, option.description)
-                        : null
-                    )
-                  );
-                })
-              );
-            };
             const visibleMetronomeOverviewWorkflowIds = (Array.isArray(visibleWorkflowRows) ? visibleWorkflowRows : [])
               .map((workflow) => String(workflow?.id || "").trim())
               .filter(Boolean);
@@ -22147,174 +22075,6 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               .filter((workflowId) => selectedMetronomeOverviewWorkflowIds.has(workflowId));
             const allVisibleMetronomeWorkflowsSelected = visibleMetronomeOverviewWorkflowIds.length > 0
               && selectedVisibleMetronomeOverviewWorkflowIds.length === visibleMetronomeOverviewWorkflowIds.length;
-            const hasPartialVisibleMetronomeWorkflowSelection = selectedVisibleMetronomeOverviewWorkflowIds.length > 0
-              && !allVisibleMetronomeWorkflowsSelected;
-            const toggleMetronomeOverviewWorkflowSelection = (workflowId) => {
-              const normalizedWorkflowId = String(workflowId || "").trim();
-              if (!normalizedWorkflowId) return;
-              setSelectedMetronomeOverviewWorkflowIds((current) => {
-                const next = new Set(current || []);
-                if (next.has(normalizedWorkflowId)) {
-                  next.delete(normalizedWorkflowId);
-                } else {
-                  next.add(normalizedWorkflowId);
-                }
-                return next;
-              });
-            };
-            const toggleVisibleMetronomeOverviewWorkflowSelection = () => {
-              if (visibleMetronomeOverviewWorkflowIds.length === 0) return;
-              setSelectedMetronomeOverviewWorkflowIds((current) => {
-                const next = new Set(current || []);
-                if (allVisibleMetronomeWorkflowsSelected) {
-                  visibleMetronomeOverviewWorkflowIds.forEach((workflowId) => next.delete(workflowId));
-                } else {
-                  visibleMetronomeOverviewWorkflowIds.forEach((workflowId) => next.add(workflowId));
-                }
-                return next;
-              });
-            };
-            const renderMetronomeWorkflowSortIcon = (sortKey) => {
-              const isActive = metronomeWorkflowSort === sortKey;
-              const isDescending = sortKey === "recent";
-              return React.createElement("span", {
-                  className: "playground-agents-overview-sort-icon"
-                    + (isActive ? " is-active" : "")
-                    + (isActive && !isDescending ? " is-ascending" : "")
-                    + (isActive && isDescending ? " is-descending" : ""),
-                  "aria-hidden": "true",
-                },
-                React.createElement(ChevronsUpDown, {
-                  className: "playground-agents-overview-sort-icon-layer is-top",
-                  width: 14,
-                  height: 14,
-                  strokeWidth: 1.8,
-                }),
-                React.createElement(ChevronsUpDown, {
-                  className: "playground-agents-overview-sort-icon-layer is-bottom",
-                  width: 14,
-                  height: 14,
-                  strokeWidth: 1.8,
-                })
-              );
-            };
-            const renderMetronomeWorkflowSortableHeader = (label, sortKey) => {
-              const isActive = metronomeWorkflowSort === sortKey;
-              return React.createElement("div", { className: "playground-agents-overview-sortable-header" + (isActive ? " is-active" : "") },
-                React.createElement("span", { className: "playground-agents-overview-sortable-header-label" }, label),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-agents-overview-column-sort-button" + (isActive ? " is-active" : ""),
-                  title: "Sort " + label,
-                  "aria-label": "Sort " + label,
-                  "aria-pressed": isActive ? "true" : "false",
-                  onClick: (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    setMetronomeWorkflowSort(sortKey);
-                    setMetronomeWorkflowToolbarPopover("");
-                    setOpenMetronomeOverviewMenuWorkflowId("");
-                  },
-                }, renderMetronomeWorkflowSortIcon(sortKey))
-              );
-            };
-            const renderMetronomeWorkflowColumnHeader = () => React.createElement("div", {
-                className: "playground-project-overview-threads-table-header playground-agents-overview-column-header playground-metronome-overview-column-header",
-              },
-              React.createElement("div", null,
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox"
-                    + (allVisibleMetronomeWorkflowsSelected ? " is-selected" : "")
-                    + (hasPartialVisibleMetronomeWorkflowSelection ? " is-partial" : ""),
-                  role: "checkbox",
-                  "aria-checked": allVisibleMetronomeWorkflowsSelected ? "true" : (hasPartialVisibleMetronomeWorkflowSelection ? "mixed" : "false"),
-                  "aria-label": allVisibleMetronomeWorkflowsSelected ? "Deselect all visible metronomes" : "Select all visible metronomes",
-                  onClick: (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    toggleVisibleMetronomeOverviewWorkflowSelection();
-                  },
-                })
-              ),
-              React.createElement("div", null, renderMetronomeWorkflowSortableHeader("Name", "name")),
-              React.createElement("div", null, renderMetronomeWorkflowSortableHeader("Status", "status")),
-              React.createElement("div", null, "Trigger"),
-              React.createElement("div", null, renderMetronomeWorkflowSortableHeader("Creator", "creator")),
-              React.createElement("div", null, renderMetronomeWorkflowSortableHeader("Last run", "recent")),
-              React.createElement("div", null)
-            );
-            const renderMetronomeWorkflowListHeader = (includeColumns = true) => React.createElement("div", {
-                className: "playground-agents-overview-sticky-table-header playground-team-overview-sticky-table-header playground-metronome-overview-sticky-table-header",
-              },
-              React.createElement("div", {
-                  className: "playground-develop-server-kind-table-toolbar playground-team-overview-toolbar-row playground-metronome-overview-toolbar-row",
-                },
-                React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell playground-metronome-overview-search-shell" },
-                  React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("input", {
-                    type: "search",
-                    value: metronomeWorkflowSearchQuery,
-                    onChange: (event) => setMetronomeWorkflowSearchQuery(event.target.value),
-                    onFocus: () => setMetronomeWorkflowToolbarPopover(""),
-                    className: "playground-plugins-search",
-                    placeholder: "Search metronomes",
-                    "aria-label": "Search metronomes",
-                  })
-                ),
-                React.createElement("div", { className: "playground-plugins-toolbar-controls playground-metronome-overview-controls" },
-                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell playground-metronome-list-filter-shell" + (metronomeWorkflowToolbarPopover === "sort" ? " is-open" : "") },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-control-button is-bare is-backlog-sort" + (metronomeWorkflowToolbarPopover === "sort" || metronomeWorkflowSort !== "recent" ? " is-active" : ""),
-                      onClick: (event) => {
-                        event.stopPropagation();
-                        setOpenMetronomeOverviewMenuWorkflowId("");
-                        setMetronomeWorkflowToolbarPopover((current) => current === "sort" ? "" : "sort");
-                      },
-                      title: "Sort Metronomes: " + activeMetronomeWorkflowSortLabel,
-                      "aria-label": "Sort Metronomes",
-                      "aria-expanded": metronomeWorkflowToolbarPopover === "sort" ? "true" : "false",
-                    },
-                      React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Sort")
-                    ),
-                    renderMetronomeWorkflowSortMenu()
-                  ),
-                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell playground-metronome-list-filter-shell" + (metronomeWorkflowToolbarPopover === "filter" ? " is-open" : "") },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-control-button is-bare is-backlog-filter" + (metronomeWorkflowToolbarPopover === "filter" || metronomeWorkflowFilter !== "all" ? " is-active" : ""),
-                      onClick: (event) => {
-                        event.stopPropagation();
-                        setOpenMetronomeOverviewMenuWorkflowId("");
-                        setMetronomeWorkflowToolbarPopover((current) => current === "filter" ? "" : "filter");
-                      },
-                      title: "Filter Metronomes: " + activeMetronomeWorkflowFilterLabel,
-                      "aria-label": "Filter Metronomes",
-                      "aria-expanded": metronomeWorkflowToolbarPopover === "filter" ? "true" : "false",
-                    },
-                      React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Filter")
-                    ),
-                    renderMetronomeWorkflowFilterMenu()
-                  )
-                ),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-top-nav-private-chat-button playground-agents-nav-create-button playground-agents-overview-toolbar-create-button playground-metronome-overview-create-button",
-                  onClick: () => {
-                    setMetronomeWorkflowToolbarPopover("");
-                    setOpenMetronomeOverviewMenuWorkflowId("");
-                    openCreateWorkflowModal();
-                  },
-                },
-                  React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("span", null, "New Metronome")
-                )
-              ),
-              includeColumns ? renderMetronomeWorkflowColumnHeader() : null
-            );
             const renderMetronomeWorkflowEmptyContent = () => React.createElement("div", { className: "playground-metronome-table-main" },
               React.createElement("div", { className: "playground-metronome-table-title" },
                 normalizedMetronomeWorkflowSearchQuery && metronomeWorkflowRowsAvailableForCurrentView.length
@@ -22537,79 +22297,167 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 className: "playground-metronome-table-status playground-metronome-overview-status-label is-" + normalizedStatus,
               }, presentation?.statusLabel || "Draft");
             };
-            const renderMetronomeWorkflowOverviewRow = (workflow) => {
-              const workflowId = String(workflow?.id || "").trim();
-              const presentation = getMetronomeWorkflowPresentation(workflow);
-              const interactiveProps = getMetronomeWorkflowInteractiveProps(workflow, presentation);
-              const isSelected = workflowId && selectedMetronomeOverviewWorkflowIds.has(workflowId);
-              return React.createElement("div", {
-                  key: workflowId || presentation.title,
-                  ...interactiveProps,
-                  className: "playground-project-overview-threads-table-row " + (interactiveProps.className || ""),
-                  onContextMenu: (event) => {
-                    if (!workflowId) return;
-                    event.preventDefault();
-                    event.stopPropagation();
-                    setMetronomeWorkflowToolbarPopover("");
-                    setOpenMetronomeOverviewMenuWorkflowId(workflowId);
+            const renderWorkflowsTable = () => {
+              const columns = [
+                {
+                  id: "name",
+                  header: "Name",
+                  accessor: (workflow) => workflow?.name || "Untitled Metronome",
+                  sortable: true,
+                  width: "minmax(220px, 1.35fr)",
+                  cell: ({ row: workflow }) => {
+                    const presentation = getMetronomeWorkflowPresentation(workflow);
+                    return React.createElement("div", { className: "playground-agents-overview-name-cell playground-metronome-overview-name-cell", title: presentation.title },
+                      React.createElement("div", { className: "playground-agents-overview-name-copy" },
+                        React.createElement("div", { className: "playground-agents-overview-name-title playground-plugin-row-title" }, presentation.title)
+                      )
+                    );
                   },
                 },
-                React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-agents-overview-select-checkbox" + (isSelected ? " is-selected" : ""),
-                    role: "checkbox",
-                    "aria-checked": isSelected ? "true" : "false",
-                    "aria-label": "Select " + (presentation.title || "metronome"),
-                    onClick: (event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      toggleMetronomeOverviewWorkflowSelection(workflowId);
-                    },
-                    onKeyDown: (event) => event.stopPropagation(),
-                  })
-                ),
-                React.createElement("div", { className: "playground-project-overview-thread-cell is-name", title: presentation.title },
-                  React.createElement("div", { className: "playground-agents-overview-name-cell playground-metronome-overview-name-cell" },
-                    React.createElement("div", { className: "playground-agents-overview-name-copy" },
-                      React.createElement("div", { className: "playground-agents-overview-name-title playground-plugin-row-title" }, presentation.title)
-                    )
-                  )
-                ),
-                React.createElement("div", { className: "playground-project-overview-thread-cell is-model" },
-                  renderMetronomeWorkflowStatusLabel(presentation)
-                ),
-                React.createElement("div", { className: "playground-project-overview-thread-cell is-source" },
-                  React.createElement("span", { className: "playground-agents-overview-table-value" }, formatWorkflowTriggerColumn(workflow))
-                ),
-                React.createElement("div", { className: "playground-project-overview-thread-cell is-creator" },
-                  renderWorkflowCreatorColumn(workflow)
-                ),
-                React.createElement("div", { className: "playground-project-overview-thread-cell is-date", title: presentation.updatedLabel },
-                  React.createElement("span", { className: "playground-agents-overview-table-value" }, presentation.updatedLabel)
-                ),
-                React.createElement("div", { className: "playground-project-overview-thread-cell is-actions playground-overview-table-action-cell playground-tasks-toolbar-popup-shell playground-metronome-overview-action-shell" },
-                  renderWorkflowRowActions(workflow)
-                )
-              );
+                {
+                  id: "status",
+                  header: "Status",
+                  accessor: (workflow) => getMetronomeWorkflowPresentation(workflow).statusLabel,
+                  sortable: true,
+                  sortingFn: (left, right) => {
+                    const leftWorkflow = left.original;
+                    const rightWorkflow = right.original;
+                    const leftKey = isMetronomeWorkflowTeamShared(leftWorkflow) ? getMetronomeTeamSharedWorkflowHiddenKey(leftWorkflow) : "";
+                    const rightKey = isMetronomeWorkflowTeamShared(rightWorkflow) ? getMetronomeTeamSharedWorkflowHiddenKey(rightWorkflow) : "";
+                    return getMetronomeWorkflowStatusSortRank(leftWorkflow, Boolean(leftKey && hiddenTeamSharedMetronomeWorkflowKeySet.has(leftKey)))
+                      - getMetronomeWorkflowStatusSortRank(rightWorkflow, Boolean(rightKey && hiddenTeamSharedMetronomeWorkflowKeySet.has(rightKey)));
+                  },
+                  width: "minmax(105px, 0.62fr)",
+                  cell: ({ row: workflow }) => renderMetronomeWorkflowStatusLabel(getMetronomeWorkflowPresentation(workflow)),
+                },
+                {
+                  id: "trigger",
+                  header: "Trigger",
+                  accessor: formatWorkflowTriggerColumn,
+                  sortable: true,
+                  width: "minmax(120px, 0.72fr)",
+                  hideBelow: 720,
+                  cell: ({ row: workflow }) => React.createElement("span", { className: "playground-agents-overview-table-value" }, formatWorkflowTriggerColumn(workflow)),
+                },
+                {
+                  id: "creator",
+                  header: "Creator",
+                  accessor: getMetronomeWorkflowCreatorSortLabel,
+                  sortable: true,
+                  width: "minmax(155px, 0.9fr)",
+                  hideBelow: 860,
+                  cell: ({ row: workflow }) => renderWorkflowCreatorColumn(workflow),
+                },
+                {
+                  id: "recent",
+                  header: "Last run",
+                  accessor: getMetronomeWorkflowSortTimestamp,
+                  sortable: true,
+                  sortDescFirst: true,
+                  width: "minmax(125px, 0.72fr)",
+                  align: "end",
+                  cell: ({ row: workflow }) => {
+                    const presentation = getMetronomeWorkflowPresentation(workflow);
+                    return React.createElement("span", { className: "playground-agents-overview-table-value", title: presentation.updatedLabel }, presentation.updatedLabel);
+                  },
+                },
+              ];
+              const getWorkflowActions = (workflow) => {
+                const isBuiltInWorkflow = isMetronomeWorkflowBuiltIn(workflow);
+                const isTeamSharedWorkflow = isMetronomeWorkflowTeamShared(workflow);
+                const canEditSharedWorkflow = canEditMetronomeTeamSharedWorkflow(workflow);
+                const hiddenKey = isTeamSharedWorkflow ? getMetronomeTeamSharedWorkflowHiddenKey(workflow) : "";
+                const isHiddenSharedWorkflow = Boolean(hiddenKey && hiddenTeamSharedMetronomeWorkflowKeySet.has(hiddenKey));
+                if (isBuiltInWorkflow) {
+                  return [{ id: "duplicate", label: "Duplicate", icon: Copy, onSelect: () => void duplicateWorkflow(workflow) }];
+                }
+                if (isTeamSharedWorkflow && isHiddenSharedWorkflow) {
+                  return [
+                    { id: "restore", label: "Restore to list", icon: RotateCcw, onSelect: () => restoreTeamSharedMetronomeWorkflowToList(workflow) },
+                    { id: "duplicate", label: "Duplicate", icon: Copy, onSelect: () => void duplicateWorkflow(workflow) },
+                  ];
+                }
+                if (isTeamSharedWorkflow) {
+                  return [
+                    ...(canEditSharedWorkflow ? [{ id: "edit", label: "Edit", icon: SquarePen, onSelect: () => openEditWorkflowModalForWorkflow(workflow) }] : []),
+                    { id: "duplicate", label: "Duplicate", icon: Copy, onSelect: () => void duplicateWorkflow(workflow) },
+                    { id: "remove", label: "Remove from list", icon: Trash2, danger: true, onSelect: () => hideTeamSharedMetronomeWorkflowFromList(workflow) },
+                  ];
+                }
+                return [
+                  { id: "edit", label: "Edit", icon: SquarePen, onSelect: () => openEditWorkflowModalForWorkflow(workflow) },
+                  { id: "duplicate", label: "Duplicate", icon: Copy, onSelect: () => void duplicateWorkflow(workflow) },
+                  { id: "share", label: "Share", icon: UsersRound, onSelect: () => openMetronomeShareWorkflowModal(workflow) },
+                  { id: "delete", label: "Delete", icon: Trash2, danger: true, onSelect: () => deleteWorkflow(workflow) },
+                ];
+              };
+              return React.createElement(PlatformDataTable, {
+                rows: visibleWorkflowRows,
+                columns,
+                getRowId: (workflow) => String(workflow?.id || workflow?.name || ""),
+                ariaLabel: "Metronome workflows",
+                className: "playground-metronome-platform-data-table",
+                sorting: {
+                  value: { id: metronomeWorkflowSort, direction: metronomeWorkflowSortDirection },
+                  onChange: (next) => {
+                    if (!next) {
+                      setMetronomeWorkflowSort("recent");
+                      setMetronomeWorkflowSortDirection("desc");
+                      return;
+                    }
+                    setMetronomeWorkflowSort(next.id);
+                    setMetronomeWorkflowSortDirection(next.direction);
+                  },
+                },
+                selection: {
+                  enabled: true,
+                  value: selectedMetronomeOverviewWorkflowIds,
+                  onChange: ({ selectedIds }) => setSelectedMetronomeOverviewWorkflowIds(new Set(selectedIds)),
+                  ariaLabel: (workflow) => "Select " + (workflow?.name || "metronome"),
+                },
+                toolbar: {
+                  search: {
+                    value: metronomeWorkflowSearchQuery,
+                    onChange: setMetronomeWorkflowSearchQuery,
+                    placeholder: "Search metronomes",
+                    manual: true,
+                  },
+                  filters: [{
+                    id: "workflow-ownership",
+                    label: "Filter",
+                    value: metronomeWorkflowFilter,
+                    onChange: setMetronomeWorkflowFilter,
+                    options: METRONOME_WORKFLOW_FILTER_OPTIONS.map((option) => ({
+                      ...option,
+                      label: option.id === "removed" && hasRemovedSharedMetronomeWorkflows
+                        ? option.label + " (" + removedUniqueSharedMetronomeWorkflows.length + ")"
+                        : option.label,
+                    })),
+                  }],
+                  showSort: true,
+                  primaryAction: {
+                    label: "New Metronome",
+                    icon: Plus,
+                    onClick: openCreateWorkflowModal,
+                  },
+                },
+                onRowActivate: (workflow) => {
+                  const presentation = getMetronomeWorkflowPresentation(workflow);
+                  if (!presentation.isHiddenTeamSharedWorkflow) openMetronomeWorkflow(workflow);
+                },
+                isRowDisabled: (workflow) => getMetronomeWorkflowPresentation(workflow).isHiddenTeamSharedWorkflow,
+                getRowClassName: (workflow) => {
+                  const presentation = getMetronomeWorkflowPresentation(workflow);
+                  return presentation.isHiddenTeamSharedWorkflow
+                    ? "is-removed-shared"
+                    : presentation.isBuiltInWorkflow ? "is-built-in" : "";
+                },
+                getRowActions: getWorkflowActions,
+                loading: isLoadingMetronomes,
+                emptyState: React.createElement("div", { className: "playground-metronome-overview-empty-row" }, renderMetronomeWorkflowEmptyContent()),
+                noResultsState: React.createElement("div", { className: "playground-metronome-overview-empty-row" }, renderMetronomeWorkflowEmptyContent()),
+              });
             };
-            const renderWorkflowsTable = () => React.createElement("div", {
-                className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table playground-metronome-overview-table",
-              },
-              renderMetronomeWorkflowListHeader(false),
-              React.createElement("div", { className: "playground-project-overview-thread-list" },
-                renderMetronomeWorkflowColumnHeader(),
-                isLoadingMetronomes
-                  ? React.createElement("div", { className: "playground-metronome-overview-empty-row" },
-                      React.createElement("div", { className: "playground-metronome-table-subtitle" }, "Loading persisted workflow drafts and published automations...")
-                    )
-                  : visibleWorkflowRows.length
-                    ? visibleWorkflowRows.map((workflow) => renderMetronomeWorkflowOverviewRow(workflow))
-                    : React.createElement("div", { className: "playground-metronome-overview-empty-row" },
-                        renderMetronomeWorkflowEmptyContent()
-                      )
-              )
-            );
             return React.createElement("div", { className: "playground-metronome-overview playground-plugins-page playground-team-overview-page playground-agents-overview-page is-develop-configure-page" },
               React.createElement("h2", { className: "playground-metronome-hero-heading playground-tools-overview-heading" }, "Automate agent work across ACP"),
               React.createElement("section", { className: "playground-plugins-hero-slider playground-metronome-hero-slider" },
@@ -28956,7 +28804,6 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
             const getRunStepsCount = (run) => (run?.output?.steps || []).length || 0;
             const getRunThreadsCount = (run) => (run?.output?.threads || []).length || 0;
             const activeRunFilter = METRONOME_RUN_FILTER_OPTIONS.find((option) => option.id === metronomeRunFilter) || METRONOME_RUN_FILTER_OPTIONS[0];
-            const activeRunSort = METRONOME_RUN_SORT_OPTIONS.find((option) => option.id === metronomeRunSort) || METRONOME_RUN_SORT_OPTIONS[0];
             const visibleMetronomeRunRows = metronomeRuns
               .filter((run) => {
                 const statusId = getRunStatusId(run);
@@ -28991,33 +28838,6 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
               .filter((runId) => selectedMetronomeRunIds.has(runId));
             const allVisibleMetronomeRunsSelected = visibleMetronomeRunIds.length > 0
               && selectedVisibleMetronomeRunIds.length === visibleMetronomeRunIds.length;
-            const hasPartialVisibleMetronomeRunSelection = selectedVisibleMetronomeRunIds.length > 0
-              && !allVisibleMetronomeRunsSelected;
-            const toggleMetronomeRunSelection = (runId) => {
-              const normalizedRunId = String(runId || "").trim();
-              if (!normalizedRunId) return;
-              setSelectedMetronomeRunIds((current) => {
-                const next = new Set(current || []);
-                if (next.has(normalizedRunId)) {
-                  next.delete(normalizedRunId);
-                } else {
-                  next.add(normalizedRunId);
-                }
-                return next;
-              });
-            };
-            const toggleVisibleMetronomeRunSelection = () => {
-              if (!visibleMetronomeRunIds.length) return;
-              setSelectedMetronomeRunIds((current) => {
-                const next = new Set(current || []);
-                if (allVisibleMetronomeRunsSelected) {
-                  visibleMetronomeRunIds.forEach((runId) => next.delete(runId));
-                } else {
-                  visibleMetronomeRunIds.forEach((runId) => next.add(runId));
-                }
-                return next;
-              });
-            };
             const openMetronomeRunFullScreen = (runId) => {
               const normalizedRunId = String(runId || "").trim();
               if (!normalizedRunId) return;
@@ -29040,32 +28860,6 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 return selectedIds;
               }
               return normalizedRunId ? [normalizedRunId] : [];
-            };
-            const openMetronomeRunActionMenu = (event, run, options = {}) => {
-              event?.preventDefault?.();
-              event?.stopPropagation?.();
-              const runId = String(run?.id || "").trim();
-              if (!runId) return;
-              const targetIds = getMetronomeRunActionTargetIds(runId);
-              const rawContextX = Number(event?.clientX || 0) + 8;
-              const rawContextY = Number(event?.clientY || 0) + 2;
-              const viewportWidth = typeof window !== "undefined" ? Number(window.innerWidth || 0) : 0;
-              const viewportHeight = typeof window !== "undefined" ? Number(window.innerHeight || 0) : 0;
-              const contextX = options.context && viewportWidth
-                ? Math.min(Math.max(8, rawContextX), Math.max(8, viewportWidth - 188))
-                : rawContextX;
-              const contextY = options.context && viewportHeight
-                ? Math.min(Math.max(8, rawContextY), Math.max(8, viewportHeight - 86))
-                : rawContextY;
-              setMetronomeRunToolbarPopover("");
-              setMetronomeRunActionMenu({
-                anchorRunId: runId,
-                runIds: targetIds,
-                source: options.context ? "context" : "button",
-                x: options.context ? contextX : 0,
-                y: options.context ? contextY : 0,
-                key: Date.now() + "-" + runId + "-" + (options.context ? "context" : "button"),
-              });
             };
             const removeMetronomeRunsLocally = (runIds) => {
               const deletedIdSet = new Set((Array.isArray(runIds) ? runIds : []).map((id) => String(id || "").trim()).filter(Boolean));
@@ -29120,219 +28914,119 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 }
               });
             };
-            const renderMetronomeRunActionMenu = (runIds, options = {}) => {
-              const normalizedRunIds = Array.from(new Set((Array.isArray(runIds) ? runIds : [])
-                .map((id) => String(id || "").trim())
-                .filter(Boolean)));
-              if (!normalizedRunIds.length) return null;
-              const menuElement = React.createElement("div", {
-                key: options.menuKey || (options.context ? "context-" + Number(options.x || 0) + "-" + Number(options.y || 0) : "run-action-" + normalizedRunIds.join("-")),
-                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in playground-metronome-top-nav-menu playground-metronome-table-row-menu playground-metronome-run-table-action-menu" + (options.context ? " is-context" : ""),
-                role: "menu",
-                style: options.context ? { left: Number(options.x || 0) + "px", top: Number(options.y || 0) + "px" } : undefined,
-                onClick: (event) => event.stopPropagation(),
-                onContextMenu: (event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                },
-              },
-                React.createElement("button", {
-                  type: "button",
-                  className: "tb-popup-row",
-                  role: "menuitem",
-                  onClick: (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    deleteMetronomeRunsByIds(normalizedRunIds);
-                  },
-                },
-                  React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("span", null, "Delete")
-                )
-              );
-              return options.context && typeof document !== "undefined" && document.body && typeof createPortal === "function"
-                ? createPortal(menuElement, document.body)
-                : menuElement;
-            };
-            const renderMetronomeRunRowActions = (run) => {
-              const runId = String(run?.id || "").trim();
-              if (!runId) return null;
-              const isOpen = metronomeRunActionMenu?.source === "button" && metronomeRunActionMenu?.anchorRunId === runId;
-              const targetIds = isOpen ? metronomeRunActionMenu.runIds : getMetronomeRunActionTargetIds(runId);
-              return React.createElement("div", {
-                className: "playground-metronome-table-menu-shell playground-tasks-toolbar-popup-shell playground-metronome-overview-action-shell playground-metronome-run-action-menu-shell",
-                onClick: (event) => event.stopPropagation(),
-                onKeyDown: (event) => event.stopPropagation(),
-                onContextMenu: (event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                },
-              },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-overview-table-action-button" + (isOpen ? " is-open" : ""),
-                  title: "Run options",
-                  "aria-label": "Run options",
-                  "aria-expanded": isOpen ? "true" : "false",
-                  onClick: (event) => openMetronomeRunActionMenu(event, run),
-                }, React.createElement(EllipsisVertical, { className: "playground-overview-table-action-icon", strokeWidth: 1.8 })),
-                isOpen ? renderMetronomeRunActionMenu(targetIds) : null
-              );
-            };
-            const renderMetronomeRunToolbarMenu = (kind, options, value, onSelect) => (
-              metronomeRunToolbarPopover === kind
-                ? React.createElement("div", { className: "playground-tasks-toolbar-popup-menu" },
-                    options.map((option) => {
-                      const optionId = String(option.id || "").trim();
-                      const active = optionId === value;
-                      return React.createElement("button", {
-                        key: optionId,
-                        type: "button",
-                        className: "playground-tasks-toolbar-popup-item" + (active ? " is-active" : ""),
-                        onClick: (event) => {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          onSelect(optionId);
-                          setMetronomeRunToolbarPopover("");
-                        },
-                      },
-                        React.createElement("span", { className: "tb-popup-check-slot" },
-                          active ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 }) : null
-                        ),
-                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                          React.createElement("span", null, option.label),
-                          option.description ? React.createElement("span", null, option.description) : null
-                        )
-                      );
-                    })
-                  )
-                : null
-            );
-            const renderMetronomeRunSortIcon = (sortKey) => {
-              const isActive = metronomeRunSort === sortKey;
-              const isDescending = sortKey === "recent" || sortKey === "steps";
-              return React.createElement("span", {
-                  className: "playground-agents-overview-sort-icon"
-                    + (isActive ? " is-active" : "")
-                    + (isActive && !isDescending ? " is-ascending" : "")
-                    + (isActive && isDescending ? " is-descending" : ""),
-                  "aria-hidden": "true",
-                },
-                React.createElement(ChevronsUpDown, {
-                  className: "playground-agents-overview-sort-icon-layer is-top",
-                  width: 14,
-                  height: 14,
-                  strokeWidth: 1.8,
-                }),
-                React.createElement(ChevronsUpDown, {
-                  className: "playground-agents-overview-sort-icon-layer is-bottom",
-                  width: 14,
-                  height: 14,
-                  strokeWidth: 1.8,
-                })
-              );
-            };
-            const renderMetronomeRunSortableHeader = (label, sortKey) => {
-              const isActive = metronomeRunSort === sortKey;
-              return React.createElement("div", { className: "playground-agents-overview-sortable-header" + (isActive ? " is-active" : "") },
-                React.createElement("span", { className: "playground-agents-overview-sortable-header-label" }, label),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-agents-overview-column-sort-button" + (isActive ? " is-active" : ""),
-                  title: "Sort " + label,
-                  "aria-label": "Sort " + label,
-                  "aria-pressed": isActive ? "true" : "false",
-                  onClick: (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    setMetronomeRunSort(sortKey);
-                    setMetronomeRunToolbarPopover("");
-                  },
-                }, renderMetronomeRunSortIcon(sortKey))
-              );
-            };
-            const renderMetronomeRunColumnHeader = () => React.createElement("div", {
-                className: "playground-project-overview-threads-table-header playground-metronome-runs-column-header",
-              },
-              React.createElement("div", null,
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-agents-overview-select-checkbox playground-agents-overview-select-all-checkbox"
-                    + (allVisibleMetronomeRunsSelected ? " is-selected" : "")
-                    + (hasPartialVisibleMetronomeRunSelection ? " is-partial" : ""),
-                  role: "checkbox",
-                  "aria-checked": allVisibleMetronomeRunsSelected ? "true" : (hasPartialVisibleMetronomeRunSelection ? "mixed" : "false"),
-                  "aria-label": allVisibleMetronomeRunsSelected ? "Deselect all visible runs" : "Select all visible runs",
-                  onClick: (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    toggleVisibleMetronomeRunSelection();
-                  },
-                })
-              ),
-              React.createElement("div", null, renderMetronomeRunSortableHeader("Run", "run")),
-              React.createElement("div", null, renderMetronomeRunSortableHeader("Started", "recent")),
-              React.createElement("div", null, renderMetronomeRunSortableHeader("Steps", "steps")),
-              React.createElement("div", null, "Threads"),
-              React.createElement("div", null, renderMetronomeRunSortableHeader("Status", "status")),
-              React.createElement("div", null)
-            );
-            const renderMetronomeRunListHeader = () => React.createElement("div", {
-                className: "playground-agents-overview-sticky-table-header playground-team-overview-sticky-table-header playground-metronome-runs-sticky-table-header",
-              },
-              React.createElement("div", {
-                  className: "playground-develop-server-kind-table-toolbar playground-team-overview-toolbar-row playground-metronome-runs-toolbar-row",
-                },
-                React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell playground-metronome-runs-search-shell" },
-                  React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("input", {
-                    type: "search",
-                    value: metronomeRunSearchQuery,
-                    onChange: (event) => setMetronomeRunSearchQuery(event.target.value),
-                    onFocus: () => setMetronomeRunToolbarPopover(""),
-                    className: "playground-plugins-search",
-                    placeholder: "Search runs",
-                    "aria-label": "Search runs",
-                  })
+            const metronomeRunColumns = [
+              {
+                id: "run",
+                header: "Run",
+                accessor: getMetronomeRunPrompt,
+                sortable: true,
+                width: "minmax(260px, 1.6fr)",
+                cell: ({ row: run }) => React.createElement("div", { className: "playground-metronome-table-main" },
+                  React.createElement("div", { className: "playground-metronome-table-title" }, getMetronomeRunPrompt(run)),
+                  React.createElement("div", { className: "playground-metronome-table-subtitle" }, run.id || "Draft run")
                 ),
-                React.createElement("div", { className: "playground-plugins-toolbar-controls playground-metronome-runs-controls" },
-                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell playground-metronome-list-filter-shell" + (metronomeRunToolbarPopover === "sort" ? " is-open" : "") },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-control-button is-bare is-backlog-sort" + (metronomeRunToolbarPopover === "sort" || metronomeRunSort !== "recent" ? " is-active" : ""),
-                      onClick: (event) => {
-                        event.stopPropagation();
-                        setMetronomeRunToolbarPopover((current) => current === "sort" ? "" : "sort");
-                      },
-                      title: "Sort Runs: " + activeRunSort.label,
-                      "aria-label": "Sort Runs",
-                      "aria-expanded": metronomeRunToolbarPopover === "sort" ? "true" : "false",
-                    },
-                      React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Sort")
-                    ),
-                    renderMetronomeRunToolbarMenu("sort", METRONOME_RUN_SORT_OPTIONS, metronomeRunSort, setMetronomeRunSort)
-                  ),
-                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell playground-metronome-list-filter-shell" + (metronomeRunToolbarPopover === "filter" ? " is-open" : "") },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-control-button is-bare is-backlog-filter" + (metronomeRunToolbarPopover === "filter" || metronomeRunFilter !== "all" ? " is-active" : ""),
-                      onClick: (event) => {
-                        event.stopPropagation();
-                        setMetronomeRunToolbarPopover((current) => current === "filter" ? "" : "filter");
-                      },
-                      title: "Filter Runs: " + activeRunFilter.label,
-                      "aria-label": "Filter Runs",
-                      "aria-expanded": metronomeRunToolbarPopover === "filter" ? "true" : "false",
-                    },
-                      React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Filter")
-                    ),
-                    renderMetronomeRunToolbarMenu("filter", METRONOME_RUN_FILTER_OPTIONS, metronomeRunFilter, setMetronomeRunFilter)
+              },
+              {
+                id: "recent",
+                header: "Started",
+                accessor: getRunStartedTimestamp,
+                sortable: true,
+                sortDescFirst: true,
+                width: "minmax(130px, 0.78fr)",
+                cell: ({ row: run }) => React.createElement("span", { className: "playground-agents-overview-table-value" }, formatMetronomeRunTimestamp(run.createdAt)),
+              },
+              {
+                id: "steps",
+                header: "Steps",
+                accessor: getRunStepsCount,
+                sortable: true,
+                sortDescFirst: true,
+                width: "minmax(80px, 0.42fr)",
+                align: "end",
+                hideBelow: 650,
+                cell: ({ row: run }) => React.createElement("span", { className: "playground-agents-overview-table-value" }, String(getRunStepsCount(run))),
+              },
+              {
+                id: "threads",
+                header: "Threads",
+                accessor: getRunThreadsCount,
+                sortable: true,
+                sortDescFirst: true,
+                width: "minmax(85px, 0.45fr)",
+                align: "end",
+                hideBelow: 760,
+                cell: ({ row: run }) => React.createElement("span", { className: "playground-agents-overview-table-value" }, String(getRunThreadsCount(run))),
+              },
+              {
+                id: "status",
+                header: "Status",
+                accessor: getRunStatusId,
+                sortable: true,
+                width: "minmax(105px, 0.58fr)",
+                cell: ({ row: run }) => renderMetronomeRunStatusLabel(run),
+              },
+            ];
+            const metronomeRunsPlatformTable = React.createElement(PlatformDataTable, {
+              rows: visibleMetronomeRunRows,
+              columns: metronomeRunColumns,
+              getRowId: (run) => String(run?.id || ""),
+              ariaLabel: "Metronome runs",
+              className: "playground-metronome-runs-platform-data-table",
+              sorting: {
+                value: { id: metronomeRunSort, direction: metronomeRunSortDirection },
+                onChange: (next) => {
+                  if (!next) {
+                    setMetronomeRunSort("recent");
+                    setMetronomeRunSortDirection("desc");
+                    return;
+                  }
+                  setMetronomeRunSort(next.id);
+                  setMetronomeRunSortDirection(next.direction);
+                },
+              },
+              selection: {
+                enabled: true,
+                value: selectedMetronomeRunIds,
+                onChange: ({ selectedIds }) => setSelectedMetronomeRunIds(new Set(selectedIds)),
+                ariaLabel: (run) => "Select run " + String(run?.id || ""),
+              },
+              toolbar: {
+                search: {
+                  value: metronomeRunSearchQuery,
+                  onChange: setMetronomeRunSearchQuery,
+                  placeholder: "Search runs",
+                  manual: true,
+                },
+                filters: [{
+                  id: "run-status",
+                  label: "Filter",
+                  value: metronomeRunFilter,
+                  onChange: setMetronomeRunFilter,
+                  options: METRONOME_RUN_FILTER_OPTIONS,
+                }],
+                showSort: true,
+              },
+              onRowActivate: (run) => openMetronomeRunFullScreen(run.id),
+              getRowActions: () => [{
+                id: "delete",
+                label: "Delete",
+                icon: Trash2,
+                danger: true,
+                onSelect: ({ rows }) => deleteMetronomeRunsByIds(rows.map((run) => run.id)),
+              }],
+              loading: isLoadingMetronomeRuns,
+              error: metronomeRunsError
+                ? React.createElement("div", { className: "playground-metronome-table-main" },
+                    React.createElement("div", { className: "playground-metronome-table-title" }, "Runs unavailable"),
+                    React.createElement("div", { className: "playground-metronome-table-subtitle" }, metronomeRunsError)
                   )
-                )
-              )
-            );
+                : null,
+              emptyState: React.createElement("div", { className: "playground-metronome-table-main" },
+                React.createElement("div", { className: "playground-metronome-table-title" }, metronomeRuns.length ? "No matching runs" : "No runs yet"),
+                React.createElement("div", { className: "playground-metronome-table-subtitle" }, metronomeRuns.length ? "Try a different search term or filter." : "Start this workflow from the Run button.")
+              ),
+              noResultsState: "No matching runs.",
+            });
             return React.createElement("div", { className: "playground-metronome-runs-view" },
               React.createElement("div", { className: "playground-metronome-runs-header" },
                 React.createElement("div", null,
@@ -29346,94 +29040,7 @@ export const METRONOME_PAGE_SCRIPT = String.raw`
                 React.createElement("section", {
                     className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-overview-list-section playground-team-grid-table-section playground-metronome-runs-table-section",
                   },
-                  renderMetronomeRunListHeader(),
-                  React.createElement("div", { className: "playground-project-overview-threads-table playground-evaluations-runs-table playground-agents-overview-list-table playground-metronome-runs-list-table" },
-                    React.createElement("div", { className: "playground-project-overview-thread-list" },
-                      renderMetronomeRunColumnHeader(),
-                      isLoadingMetronomeRuns
-                        ? React.createElement("div", { className: "playground-metronome-runs-table-state" },
-                            React.createElement("span", { className: "playground-metronome-table-subtitle" }, "Loading runs...")
-                          )
-                        : metronomeRunsError
-                          ? React.createElement("div", { className: "playground-metronome-runs-table-state" },
-                              React.createElement("div", { className: "playground-metronome-table-main" },
-                                React.createElement("div", { className: "playground-metronome-table-title" }, "Runs unavailable"),
-                                React.createElement("div", { className: "playground-metronome-table-subtitle" }, metronomeRunsError)
-                              )
-                            )
-                          : visibleMetronomeRunRows.length
-                            ? visibleMetronomeRunRows.map((run) => React.createElement("div", {
-                                key: run.id,
-                                className: "playground-project-overview-threads-table-row",
-                                tabIndex: 0,
-                                role: "button",
-                                onClick: () => openMetronomeRunFullScreen(run.id),
-                                onKeyDown: (event) => {
-                                  if (event.key === "Enter" || event.key === " ") {
-                                    event.preventDefault();
-                                    openMetronomeRunFullScreen(run.id);
-                                  }
-                                },
-                                onContextMenu: (event) => openMetronomeRunActionMenu(event, run, { context: true }),
-                              },
-                                React.createElement("div", { className: "playground-project-overview-thread-cell is-select" },
-                                  React.createElement("button", {
-                                    type: "button",
-                                    className: "playground-agents-overview-select-checkbox"
-                                      + (selectedMetronomeRunIds.has(String(run?.id || "").trim()) ? " is-selected" : ""),
-                                    role: "checkbox",
-                                    "aria-checked": selectedMetronomeRunIds.has(String(run?.id || "").trim()) ? "true" : "false",
-                                    "aria-label": selectedMetronomeRunIds.has(String(run?.id || "").trim()) ? "Deselect run" : "Select run",
-                                    onClick: (event) => {
-                                      event.preventDefault();
-                                      event.stopPropagation();
-                                      toggleMetronomeRunSelection(run.id);
-                                    },
-                                  })
-                                ),
-                                React.createElement("div", { className: "playground-project-overview-thread-cell is-name" },
-                                  React.createElement("div", { className: "playground-metronome-table-main" },
-                                    React.createElement("div", { className: "playground-metronome-table-title" }, getMetronomeRunPrompt(run)),
-                                    React.createElement("div", { className: "playground-metronome-table-subtitle" }, run.id || "Draft run")
-                                  )
-                                ),
-                                React.createElement("div", { className: "playground-project-overview-thread-cell is-date" },
-                                  React.createElement("span", { className: "playground-agents-overview-table-value" }, formatMetronomeRunTimestamp(run.createdAt))
-                                ),
-                                React.createElement("div", { className: "playground-project-overview-thread-cell is-count" },
-                                  React.createElement("span", { className: "playground-agents-overview-table-value" }, String(getRunStepsCount(run)))
-                                ),
-                                React.createElement("div", { className: "playground-project-overview-thread-cell is-count" },
-                                  React.createElement("span", { className: "playground-agents-overview-table-value" }, String(getRunThreadsCount(run)))
-                                ),
-                                React.createElement("div", { className: "playground-project-overview-thread-cell is-status" },
-                                  renderMetronomeRunStatusLabel(run)
-                                ),
-                                React.createElement("div", { className: "playground-project-overview-thread-cell is-actions" },
-                                  renderMetronomeRunRowActions(run)
-                                )
-                              ))
-                            : React.createElement("div", { className: "playground-metronome-runs-table-state" },
-                                React.createElement("div", { className: "playground-metronome-table-main" },
-                                  React.createElement("div", { className: "playground-metronome-table-title" },
-                                    metronomeRuns.length ? "No matching runs" : "No runs yet"
-                                  ),
-                                  React.createElement("div", { className: "playground-metronome-table-subtitle" },
-                                    metronomeRuns.length ? "Try a different search term or filter." : "Start this workflow from the Run button."
-                                  )
-                                )
-                              )
-                    )
-                  )
-                  ,
-                  metronomeRunActionMenu?.source === "context"
-                    ? renderMetronomeRunActionMenu(metronomeRunActionMenu.runIds, {
-                        context: true,
-                        x: metronomeRunActionMenu.x,
-                        y: metronomeRunActionMenu.y,
-                        menuKey: metronomeRunActionMenu.key,
-                      })
-                    : null
+                  metronomeRunsPlatformTable
                 )
               )
             );

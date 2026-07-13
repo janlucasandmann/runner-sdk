@@ -7897,23 +7897,83 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
           function renderProjectOverviewFilesActivityPanel() {
             return React.createElement(React.Fragment, null,
               React.createElement("div", { className: "playground-project-overview-files-activity" },
-                filteredProjectFileActivityItems.length > 0
-                  ? React.createElement(React.Fragment, null,
-                      React.createElement("div", { className: "playground-project-overview-files-table-header" },
-                        React.createElement("div", null, "File Title"),
-                        React.createElement("div", null, "Operation"),
-                        React.createElement("div", null, "Modified by"),
-                        React.createElement("div", null, "Task"),
-                        React.createElement("div", null, "Date"),
-                        React.createElement("div", null)
-                      ),
-                      filteredProjectFileActivityItems.map((row) => renderOverviewFileActivityRow(row))
-                    )
-                  : projectOverviewFileActivityState?.status === "error"
-                      ? React.createElement("div", { className: "playground-environments-error" }, projectOverviewFileActivityState.error || "Failed to load project file activity.")
-                      : React.createElement("div", { className: "playground-tasks-secondary-copy" },
-                          hasProjectOverviewFileListFilters ? "No matching project file activity." : "No project file activity yet."
-                        )
+                React.createElement(PlatformDataTable, {
+                  rows: filteredProjectFileActivityItems,
+                  getRowId: (row) => String(row?.id || [row?.threadId, row?.stepId, row?.path].filter(Boolean).join(":")),
+                  ariaLabel: "Project file activity",
+                  className: "playground-project-files-platform-table",
+                  surface: "plain",
+                  sticky: false,
+                  loading: projectOverviewFileActivityState?.status === "loading",
+                  error: projectOverviewFileActivityState?.status === "error"
+                    ? (projectOverviewFileActivityState.error || "Failed to load project file activity.")
+                    : null,
+                  emptyState: hasProjectOverviewFileListFilters ? "No matching project file activity." : "No project file activity yet.",
+                  columns: [
+                    {
+                      id: "title",
+                      header: "File Title",
+                      accessor: (row) => row?.title || "Untitled file",
+                      width: "minmax(180px, 1.5fr)",
+                      cell: ({ row }) => React.createElement("div", { className: "playground-plugin-row-title" }, row?.title || "Untitled file"),
+                    },
+                    { id: "operation", header: "Operation", accessor: (row) => row?.operation || "Modified", width: "minmax(90px, 0.75fr)" },
+                    {
+                      id: "modified-by",
+                      header: "Modified by",
+                      accessor: (row) => row?.assignee || "No agent",
+                      width: "minmax(130px, 1fr)",
+                      cell: ({ row }) => {
+                        const assigneeId = String(row?.assigneeId || "").trim();
+                        const assigneeAgent = assigneeId && agentsById && agentsById[assigneeId] ? agentsById[assigneeId] : null;
+                        const assigneePhotoUrl = assigneeAgent ? normalizeSessionPhotoUrl(getPlaygroundAgentProfilePhotoUrl(assigneeAgent)) : "";
+                        return React.createElement("div", { className: "playground-project-overview-file-assignee" },
+                          row?.assignee ? renderAgentNameAvatar(row.assignee, "playground-project-overview-agent-avatar", assigneePhotoUrl) : null,
+                          React.createElement("div", { className: "playground-project-overview-file-assignee-name" }, row?.assignee || "No agent")
+                        );
+                      },
+                    },
+                    {
+                      id: "task",
+                      header: "Task",
+                      accessor: (row) => row?.taskTicketNumber || "—",
+                      width: "minmax(80px, 0.65fr)",
+                      hideBelow: 760,
+                      cell: ({ row }) => {
+                        const taskId = String(row?.taskId || "").trim();
+                        const taskLabel = String(row?.taskTicketNumber || "").trim() || "—";
+                        return taskId
+                          ? React.createElement("button", {
+                              type: "button",
+                              className: "playground-project-overview-file-task-button",
+                              onClick: (event) => {
+                                event.stopPropagation();
+                                if (typeof handleSelectTask === "function") handleSelectTask(taskId);
+                              },
+                            }, taskLabel)
+                          : taskLabel;
+                      },
+                    },
+                    { id: "date", header: "Date", accessor: (row) => row?.dateLabel || "—", width: "minmax(100px, 0.8fr)", align: "end" },
+                  ],
+                  onRowActivate: (row) => typeof navigateProjectOverviewFileToFiles === "function" && navigateProjectOverviewFileToFiles(row),
+                  getRowAriaLabel: (row) => "Open file " + (row?.title || "Untitled file"),
+                  getRowActions: (row) => {
+                    const rowId = String(row?.id || "").trim();
+                    const isRowMutating = projectOverviewFileMutationState?.rowId === rowId;
+                    const isRenaming = isRowMutating && projectOverviewFileMutationState?.action === "rename";
+                    const isReverting = isRowMutating && projectOverviewFileMutationState?.action === "revert";
+                    const isDeleting = isRowMutating && projectOverviewFileMutationState?.action === "delete";
+                    const busy = isRenaming || isReverting || isDeleting;
+                    return [
+                      { id: "rename", label: isRenaming ? "Renaming..." : "Rename file", icon: SquarePen, disabled: busy, onSelect: () => handleProjectOverviewFileRename?.(row) },
+                      { id: "revert", label: isReverting ? "Reverting..." : "Revert changes", icon: History, disabled: busy || !String(row?.revertTargetStepId || "").trim(), onSelect: () => handleProjectOverviewFileRevert?.(row) },
+                      { id: "show-file", label: "Show in Files", icon: FolderOpen, disabled: busy, onSelect: () => navigateProjectOverviewFileToFiles?.(row) },
+                      { id: "show-task", label: "Show Task", icon: ListTodo, disabled: busy || !String(row?.taskId || "").trim(), onSelect: () => handleSelectTask?.(String(row.taskId).trim()) },
+                      { id: "delete", label: isDeleting ? "Deleting..." : "Delete", icon: Trash2, danger: true, separatorBefore: true, disabled: busy, onSelect: () => handleProjectOverviewFileDelete?.(row) },
+                    ];
+                  },
+                })
               ),
               projectOverviewFileMutationState?.error
                 ? React.createElement("div", { className: "playground-environments-error" }, projectOverviewFileMutationState.error)
@@ -8010,23 +8070,43 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
                 React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Server Resources")
               ),
-              projectOverviewServerResourcesState?.status === "loading"
-                ? React.createElement("div", { className: "playground-tasks-secondary-copy" }, "Loading project resources...")
-                : projectOverviewServerResourcesState?.status === "error"
-                  ? React.createElement("div", { className: "playground-tasks-secondary-copy" }, projectOverviewServerResourcesState.error || "Failed to load project resources.")
-                  : visibleResourceItems.length > 0
-                    ? React.createElement("div", { className: "playground-project-overview-resources-table" },
-                        React.createElement("div", { className: "playground-project-overview-resources-table-header" },
-                          React.createElement("div", null, "Title"),
-                          React.createElement("div", null, "Endpoint"),
-                          React.createElement("div", null, "Creator"),
-                          React.createElement("div", null, "Date")
-                        ),
-                        visibleResourceItems.slice(0, 12).map((resource) => renderOverviewResourceRow(resource))
-                      )
-                    : React.createElement("div", { className: "playground-tasks-secondary-copy" },
-                        normalizedSearchQuery ? "No matching resources." : emptyLabel
-                      )
+              React.createElement(PlatformDataTable, {
+                rows: visibleResourceItems.slice(0, 12),
+                getRowId: (resource) => String(resource.id || resource.title),
+                ariaLabel: "Project server resources",
+                className: "playground-project-resources-platform-table",
+                surface: "plain",
+                sticky: false,
+                loading: projectOverviewServerResourcesState?.status === "loading",
+                error: projectOverviewServerResourcesState?.status === "error"
+                  ? (projectOverviewServerResourcesState.error || "Failed to load project resources.")
+                  : null,
+                emptyState: normalizedSearchQuery ? "No matching resources." : emptyLabel,
+                columns: [
+                  {
+                    id: "title",
+                    header: "Title",
+                    accessor: (resource) => resource?.title || "Untitled Resource",
+                    width: "minmax(180px, 1.5fr)",
+                    cell: ({ row: resource }) => React.createElement("div", { className: "playground-plugin-row-title" }, resource?.title || "Untitled Resource"),
+                  },
+                  { id: "endpoint", header: "Endpoint", accessor: (resource) => resource?.endpoint || "Internal", width: "minmax(160px, 1.3fr)", hideBelow: 720 },
+                  {
+                    id: "creator",
+                    header: "Creator",
+                    width: "minmax(130px, 1fr)",
+                    cell: ({ row: resource }) => renderProjectOverviewResourceCreator({ record: resource }),
+                  },
+                  {
+                    id: "date",
+                    header: "Date",
+                    accessor: (resource) => resource?.updatedAt || "",
+                    width: "minmax(100px, 0.8fr)",
+                    align: "end",
+                    cell: ({ row: resource }) => (typeof formatThreadSearchTimestamp === "function" ? formatThreadSearchTimestamp(resource?.updatedAt || "") : null) || formatRelativeThreadTime(resource?.updatedAt || "") || "—",
+                  },
+                ],
+              })
             );
           }
 
@@ -8914,94 +8994,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             },
           };
 
-          function renderOverviewResourceRow(resource) {
-            return React.createElement("div", {
-                key: resource.id || resource.title,
-                className: "playground-project-overview-resources-table-row",
-              },
-              React.createElement("div", { className: "playground-project-overview-resource-cell" },
-                React.createElement("div", { className: "playground-plugin-row-title" }, resource?.title || "Untitled Resource")
-              ),
-              React.createElement("div", {
-                className: "playground-project-overview-resource-cell is-endpoint",
-                title: resource?.endpoint || "",
-              }, resource?.endpoint || "Internal"),
-              React.createElement("div", { className: "playground-project-overview-resource-cell is-creator" },
-                renderProjectOverviewResourceCreator({ record: resource })
-              ),
-              React.createElement("div", { className: "playground-project-overview-resource-cell is-date" },
-                (typeof formatThreadSearchTimestamp === "function"
-                  ? formatThreadSearchTimestamp(resource?.updatedAt || "")
-                  : null)
-                || formatRelativeThreadTime(resource?.updatedAt || "")
-                || "—"
-              )
-            );
-          }
 
-          function renderOverviewFileActivityRow(row) {
-            const rowId = String(row?.id || "").trim();
-            const taskLabel = String(row?.taskTicketNumber || "").trim() || "—";
-            const taskId = String(row?.taskId || "").trim();
-            const assigneeId = String(row?.assigneeId || "").trim();
-            const assigneeAgent = assigneeId && agentsById && agentsById[assigneeId]
-              ? agentsById[assigneeId]
-              : null;
-            const assigneePhotoUrl = assigneeAgent
-              ? normalizeSessionPhotoUrl(getPlaygroundAgentProfilePhotoUrl(assigneeAgent))
-              : "";
-            const isRowMutating = projectOverviewFileMutationState?.rowId === rowId;
-            const isRenaming = isRowMutating && projectOverviewFileMutationState?.action === "rename";
-            const isReverting = isRowMutating && projectOverviewFileMutationState?.action === "revert";
-            const isDeleting = isRowMutating && projectOverviewFileMutationState?.action === "delete";
-
-            return React.createElement("div", {
-                key: rowId || [row?.threadId, row?.stepId, row?.path].filter(Boolean).join(":"),
-                className: "playground-project-overview-files-table-row",
-              },
-              React.createElement("div", { className: "playground-project-overview-file-cell" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-project-overview-file-title-button",
-                  onClick: () => typeof navigateProjectOverviewFileToFiles === "function" && navigateProjectOverviewFileToFiles(row),
-                },
-                  React.createElement("div", { className: "playground-plugin-row-title" }, row?.title || "Untitled file")
-                )
-              ),
-              React.createElement("div", { className: "playground-project-overview-file-cell is-operation" }, row?.operation || "Modified"),
-              React.createElement("div", { className: "playground-project-overview-file-cell" },
-                React.createElement("div", { className: "playground-project-overview-file-assignee" },
-                  row?.assignee
-                    ? renderAgentNameAvatar(row.assignee, "playground-project-overview-agent-avatar", assigneePhotoUrl)
-                    : null,
-                  React.createElement("div", { className: "playground-project-overview-file-assignee-name" }, row?.assignee || "No agent")
-                )
-              ),
-              React.createElement("div", { className: "playground-project-overview-file-cell is-task" },
-                taskId
-                  ? React.createElement("button", {
-                      type: "button",
-                      className: "playground-project-overview-file-task-button",
-                      onClick: () => typeof handleSelectTask === "function" && handleSelectTask(taskId),
-                    }, taskLabel)
-                  : taskLabel
-              ),
-              React.createElement("div", { className: "playground-project-overview-file-cell is-date" }, row?.dateLabel || "—"),
-              React.createElement("div", { className: "playground-project-overview-file-cell is-actions" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-project-overview-thread-menu-button",
-                  "aria-label": "File actions",
-                  onClick: (event) => typeof openProjectOverviewFileMenu === "function" && openProjectOverviewFileMenu(event, row),
-                  disabled: isRenaming || isReverting || isDeleting,
-                },
-                  isRenaming || isReverting || isDeleting
-                    ? React.createElement(Loader2, { width: 15, height: 15, strokeWidth: 1.8, className: "sidebar-thread-menu-icon is-spinning" })
-                    : React.createElement(Ellipsis, { width: 15, height: 15, strokeWidth: 1.8 })
-                )
-              )
-            );
-          }
 
           function renderProjectOverviewFileMenu() {
             if (!projectOverviewFileMenuState?.row) {
@@ -11790,25 +11783,6 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             }
           }
 
-          function renderProjectOverviewResourceRowMenu(row) {
-            const menuId = getProjectOverviewResourceRowMenuId(row);
-            if (!menuId || projectOverviewResourceMenuId !== menuId) {
-              return null;
-            }
-            return React.createElement("div", {
-                className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-project-resources-action-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                onClick: (event) => event.stopPropagation(),
-              },
-              React.createElement("button", {
-                  type: "button",
-                  className: "tb-popup-row playground-project-team-menu-item is-danger",
-                  onClick: () => handleRemoveProjectOverviewResourceFromProject(row),
-                },
-                React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("span", null, "Remove from project")
-              )
-            );
-          }
 
           function isProjectOverviewFileResourceRow(row) {
             return row?.kind === "attachment" || row?.kind === "file";
@@ -12053,99 +12027,6 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
             );
           }
 
-          function renderProjectOverviewResourceTableRows() {
-            if (!projectOverviewAllResourceRows.length) {
-              return renderProjectOverviewRecommendedTemplatesEmptyState();
-            }
-            if (!projectOverviewResourceRows.length) {
-              return React.createElement("div", { className: "playground-project-resources-empty" }, "No resources match this view yet.");
-            }
-            if (projectOverviewResourceViewMode === "grid") {
-              return React.createElement("div", { className: "playground-project-resources-grid" },
-                projectOverviewResourceRows.map((row) => {
-                  const meta = getProjectOverviewResourceTypeMeta(row.type);
-                  const Icon = meta.Icon || Layers;
-                  return React.createElement("button", {
-                      key: row.key,
-                      type: "button",
-                      className: "playground-project-resources-grid-card",
-                      onClick: () => openProjectOverviewResourceRow(row),
-                    },
-                    React.createElement("div", { className: "playground-project-resources-grid-card-top" },
-                      renderProjectOverviewResourceIcon(row, Icon),
-                      React.createElement("span", { className: "playground-project-resource-title-copy" },
-                        React.createElement("span", { className: "playground-project-resource-title-main" }, row.title || "Untitled resource"),
-                        row.subtitle
-                          ? React.createElement("span", { className: "playground-project-resource-title-sub" }, row.subtitle)
-                          : null
-                      )
-                    ),
-                    React.createElement("div", { className: "playground-project-resources-grid-card-meta" },
-                      React.createElement("span", { className: "playground-project-resources-cell" }, meta.label),
-                      React.createElement("span", { className: "playground-project-resources-cell" }, row.updatedLabel || "-")
-                    )
-                  );
-                })
-              );
-            }
-            return React.createElement(React.Fragment, null,
-              React.createElement("div", { className: "playground-project-resources-row is-header" },
-                React.createElement("div", null, "Resource"),
-                React.createElement("div", null, "Creator"),
-                React.createElement("div", null, "Updated"),
-                React.createElement("div", null, "")
-              ),
-              projectOverviewResourceRows.map((row) => {
-                const meta = getProjectOverviewResourceTypeMeta(row.type);
-                const Icon = meta.Icon || Layers;
-                const rowMenuId = getProjectOverviewResourceRowMenuId(row);
-                const rowMenuOpen = projectOverviewResourceMenuId === rowMenuId;
-                return React.createElement("div", {
-                    key: row.key,
-                    role: "button",
-                    tabIndex: 0,
-                    className: "playground-project-resources-row" + (rowMenuOpen ? " is-menu-open" : ""),
-                    onClick: () => openProjectOverviewResourceRow(row),
-                    onKeyDown: (event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        openProjectOverviewResourceRow(row);
-                      }
-                    },
-                  },
-                  React.createElement("div", { className: "playground-project-resource-title-cell" },
-                    renderProjectOverviewResourceIcon(row, Icon),
-                    React.createElement("span", { className: "playground-project-resource-title-copy" },
-                      React.createElement("span", { className: "playground-project-resource-title-main" }, row.title || "Untitled resource")
-                    )
-                  ),
-                  React.createElement("div", { className: "playground-project-resources-cell" }, renderProjectOverviewResourceCreator(row)),
-                  React.createElement("div", { className: "playground-project-resources-cell" }, row.updatedLabel || "-"),
-                  React.createElement("div", { className: "playground-project-resources-row-action" },
-                    React.createElement("div", {
-                        className: "playground-tasks-toolbar-popup-shell playground-project-resources-action-shell" + (rowMenuOpen ? " is-open" : ""),
-                      },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-project-resources-action-button",
-                        onClick: (event) => {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          if (typeof setProjectOverviewResourceToolbarPopover === "function") {
-                            setProjectOverviewResourceToolbarPopover("");
-                          }
-                          setProjectOverviewResourceMenuId?.((current) => current === rowMenuId ? "" : rowMenuId);
-                        },
-                        "aria-label": "Resource actions for " + (row.title || "resource"),
-                        "aria-expanded": rowMenuOpen ? "true" : "false",
-                      }, React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })),
-                      renderProjectOverviewResourceRowMenu(row)
-                    )
-                  )
-                );
-              })
-            );
-          }
 
           function renderProjectOverviewResourcesHome() {
             return React.createElement(PlaygroundSharedResourcesTab, {
@@ -12166,7 +12047,13 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
               getRowMenuId: getProjectOverviewResourceRowMenuId,
               renderIcon: (row, meta) => renderProjectOverviewResourceIcon(row, meta?.Icon || Layers),
               renderCreator: renderProjectOverviewResourceCreator,
-              renderRowMenu: renderProjectOverviewResourceRowMenu,
+              getRowActions: (row) => [{
+                id: "remove",
+                label: "Remove from project",
+                icon: Trash2,
+                danger: true,
+                onSelect: () => handleRemoveProjectOverviewResourceFromProject(row),
+              }],
               renderNewMenu: renderProjectOverviewResourceNewMenu,
               renderEmptyContent: renderProjectOverviewRecommendedTemplatesEmptyState,
               onRowOpen: openProjectOverviewResourceRow,
@@ -14406,92 +14293,78 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	              );
 	            };
 
-	            const renderProjectTeamTable = () =>
-	              React.createElement("section", { className: "playground-project-settings-access-section" },
-	                React.createElement("div", { className: "playground-project-teams-table-heading" },
-	                  React.createElement("h2", { className: "playground-project-teams-table-title" }, "Manage Project Access"),
-	                  hasRealAccess
-	                    ? React.createElement("div", { className: "playground-tasks-toolbar-popup-shell playground-project-teams-add-shell" + (projectOverviewTeamMenuId === "add-teams" ? " is-open" : "") },
-	                        React.createElement("button", {
-	                          type: "button",
-	                          className: "playground-files-control-button playground-project-teams-add-button",
-	                          onClick: (event) => {
-	                            event.stopPropagation();
-	                            if (!workspaceTeamsLoading) {
-	                              requestProjectOverviewWorkspaceTeams?.();
-	                            }
-	                            setProjectOverviewTeamMenuId?.((current) => current === "add-teams" ? "" : "add-teams");
-	                          },
-	                          disabled: workspaceTeamsLoading,
-	                        },
-	                          React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                          React.createElement("span", null, "Add Teams")
-	                        ),
-	                        renderAddProjectTeamsMenu()
-	                      )
-	                    : null
-	                ),
-	                React.createElement("div", { className: "playground-auth-users-table-shell playground-team-table-shell playground-project-teams-table-shell" },
-	                  React.createElement("table", { className: "playground-auth-users-table is-secrets-table playground-team-table" },
-	                    React.createElement("colgroup", null,
-	                      React.createElement("col", { className: "playground-team-table-col-main" }),
-	                      React.createElement("col", { className: "playground-team-table-col-role" }),
-	                      React.createElement("col", { className: "playground-team-table-col-meta" }),
-	                      React.createElement("col", { className: "playground-team-table-col-actions" })
+	            const renderProjectTeamTable = () => {
+	              const addTeamsControl = hasRealAccess
+	                ? React.createElement("div", { className: "playground-tasks-toolbar-popup-shell playground-project-teams-add-shell" + (projectOverviewTeamMenuId === "add-teams" ? " is-open" : "") },
+	                    React.createElement("button", {
+	                      type: "button",
+	                      className: "playground-files-control-button playground-project-teams-add-button",
+	                      onClick: (event) => {
+	                        event.stopPropagation();
+	                        if (!workspaceTeamsLoading) requestProjectOverviewWorkspaceTeams?.();
+	                        setProjectOverviewTeamMenuId?.((current) => current === "add-teams" ? "" : "add-teams");
+	                      },
+	                      disabled: workspaceTeamsLoading,
+	                    },
+	                      React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                      React.createElement("span", null, "Add Teams")
 	                    ),
-	                    React.createElement("thead", null,
-	                      React.createElement("tr", null,
-	                        React.createElement("th", null, "Team"),
-	                        React.createElement("th", null, "Policy"),
-	                        React.createElement("th", null, "Created"),
-	                        React.createElement("th", { className: "is-actions" }, "")
-	                      )
-	                    ),
-	                    React.createElement("tbody", null,
-	                      projectPermissionTeams.map((team) =>
-	                        React.createElement("tr", {
-	                          key: team.id,
-	                          className: "is-clickable" + (projectOverviewTeamMenuId === "team:" + String(team.id || "") ? " is-menu-open" : ""),
-	                          tabIndex: 0,
-	                          onClick: () => openProjectOverviewPermissionDetail(team),
-	                          onKeyDown: (event) => {
-	                            if (event.key === "Enter" || event.key === " ") {
-	                              event.preventDefault();
-	                              openProjectOverviewPermissionDetail(team);
-	                            }
-	                          },
-	                        },
-	                          React.createElement("td", null,
-	                            React.createElement("div", { className: "playground-team-table-title" }, team.name),
-	                            React.createElement("div", { className: "playground-team-table-meta" }, team.meta)
-	                          ),
-	                          React.createElement("td", { className: "playground-auth-users-cell" }, team.permission),
-	                          React.createElement("td", { className: "playground-auth-users-cell" }, team.locked ? "Default" : (formatProjectTeamCreatedDate(team.createdAt) || "—")),
-	                          React.createElement("td", { className: "is-actions" },
-	                            React.createElement("div", {
-	                                className: "playground-tasks-toolbar-popup-shell playground-project-team-action-shell" + (projectOverviewTeamMenuId === "team:" + String(team.id || "") ? " is-open" : ""),
-	                              },
-	                              React.createElement("button", {
-	                                type: "button",
-	                                className: "playground-project-team-action-button",
-	                                onClick: (event) => {
-	                                  event.preventDefault();
-	                                  event.stopPropagation();
-	                                  const menuId = "team:" + String(team.id || "");
-	                                  setProjectOverviewTeamMenuId?.((current) => current === menuId ? "" : menuId);
-	                                },
-	                                "aria-label": "Team actions for " + team.name,
-	                                "aria-expanded": projectOverviewTeamMenuId === "team:" + String(team.id || "") ? "true" : "false",
-	                              }, React.createElement(Ellipsis, { width: 16, height: 16, strokeWidth: 1.8 })),
-	                              renderProjectTeamMenu(team)
-	                            )
-	                          )
-	                        )
-	                      )
-	                    )
+	                    renderAddProjectTeamsMenu()
 	                  )
-	                )
+	                : null;
+	              const columns = [
+	                {
+	                  id: "team",
+	                  header: "Team",
+	                  accessor: (team) => team.name || "Untitled team",
+	                  sortable: true,
+	                  width: "minmax(220px, 1.45fr)",
+	                  cell: ({ row: team }) => React.createElement("div", null,
+	                    React.createElement("div", { className: "playground-team-table-title" }, team.name),
+	                    React.createElement("div", { className: "playground-team-table-meta" }, team.meta)
+	                  ),
+	                },
+	                {
+	                  id: "policy",
+	                  header: "Policy",
+	                  accessor: (team) => team.permission || "",
+	                  sortable: true,
+	                  width: "minmax(145px, 0.85fr)",
+	                },
+	                {
+	                  id: "created",
+	                  header: "Created",
+	                  accessor: (team) => Date.parse(String(team.createdAt || "")) || 0,
+	                  sortable: true,
+	                  sortDescFirst: true,
+	                  width: "minmax(120px, 0.7fr)",
+	                  align: "end",
+	                  cell: ({ row: team }) => team.locked ? "Default" : (formatProjectTeamCreatedDate(team.createdAt) || "—"),
+	                },
+	              ];
+	              return React.createElement("section", { className: "playground-project-settings-access-section" },
+	                React.createElement("div", { className: "playground-project-teams-table-heading" },
+	                  React.createElement("h2", { className: "playground-project-teams-table-title" }, "Manage Project Access")
+	                ),
+	                React.createElement(PlatformDataTable, {
+	                  rows: projectPermissionTeams,
+	                  columns,
+	                  getRowId: (team) => String(team.id || ""),
+	                  ariaLabel: "Project team access",
+	                  className: "playground-project-access-platform-data-table",
+	                  sorting: { defaultValue: { id: "team", direction: "asc" } },
+	                  toolbar: addTeamsControl ? { trailing: addTeamsControl } : undefined,
+	                  onRowActivate: openProjectOverviewPermissionDetail,
+	                  getRowActions: (team) => team.locked
+	                    ? []
+	                    : [
+	                        { id: "view-team", label: "View team", icon: ExternalLink, onSelect: () => handleOpenTeamDetails(team) },
+	                        ...(hasRealAccess ? [{ id: "remove", label: "Remove from project", icon: Trash2, danger: true, onSelect: () => handleRemoveProjectTeam(team) }] : []),
+	                      ],
+	                  emptyState: "No teams have project access.",
+	                })
 	              );
+	            };
 
 	            if (selectedPermissionTeam) {
 	              const isAllAgentsTeam = selectedPermissionTeam.id === "all_agents";

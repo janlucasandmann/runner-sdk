@@ -530,113 +530,95 @@ export const RESOURCE_TEMPLATES_PAGE_SCRIPT = String.raw`
           );
         }
 
-        function renderTemplateRow(template) {
-          return React.createElement("tr", {
-              key: "template:" + String(template.id || template.title),
-              className: "is-clickable",
-              tabIndex: 0,
-              role: "button",
-              onClick: () => previewTemplate(template),
-              onKeyDown: (event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  previewTemplate(template);
-                }
-              },
-            },
-            React.createElement("td", null,
-              React.createElement("div", { className: "playground-resource-templates-template-main" },
+        function renderTemplatesTable() {
+          const columns = [
+            {
+              id: "resource",
+              header: "Resource",
+              accessor: (template) => template.title || "Untitled template",
+              sortable: true,
+              width: "minmax(260px, 1.65fr)",
+              cell: ({ row: template }) => React.createElement("div", { className: "playground-resource-templates-template-main" },
                 React.createElement("span", { className: "playground-resource-templates-template-icon" }, renderTemplateIcon(template.type, 16)),
                 React.createElement("div", { className: "playground-resource-templates-template-copy" },
                   React.createElement("div", { className: "playground-resource-templates-row-title" }, template.title || "Untitled template"),
                   React.createElement("div", { className: "playground-resource-templates-row-summary" }, template.summary || "")
                 )
-              )
-            ),
-            React.createElement("td", null,
-              React.createElement("span", { className: "playground-resource-templates-row-cell" }, template.typeLabel || template.type || "Template")
-            ),
-            React.createElement("td", null,
-              React.createElement("span", { className: "playground-resource-templates-row-cell" }, template.difficulty || "Standard")
-            ),
-            React.createElement("td", null,
-              React.createElement("span", { className: "playground-resource-templates-row-cell" }, template.estimatedSetup || "5 min")
-            ),
-            React.createElement("td", { className: "is-actions" },
-              React.createElement("button", {
-                type: "button",
-                className: "playground-resource-templates-publish-button",
-                onClick: (event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  if (typeof setPublishTemplateId === "function") {
-                    setPublishTemplateId(String(template.id || ""));
-                  }
-                },
-              }, "Publish")
-            )
-          );
-        }
-
-        function renderTemplatesTable() {
-          return React.createElement("div", { className: "playground-auth-users-table-shell playground-metronome-table-shell playground-resource-templates-table-shell" },
-            React.createElement("table", { className: "playground-auth-users-table is-secrets-table playground-metronome-workflow-table playground-resource-templates-resource-table" },
-              React.createElement("thead", null,
-                React.createElement("tr", null,
-                  React.createElement("th", { className: "playground-resource-templates-col-main" }, "Resource"),
-                  React.createElement("th", { className: "playground-resource-templates-col-category" }, "Category"),
-                  React.createElement("th", { className: "playground-resource-templates-col-difficulty" }, "Difficulty"),
-                  React.createElement("th", { className: "playground-resource-templates-col-setup" }, "Setup"),
-                  React.createElement("th", { className: "is-actions playground-resource-templates-col-actions" }, "")
-                )
               ),
-              React.createElement("tbody", null,
-                filteredTemplates.length > 0
-                  ? filteredTemplates.map(renderTemplateRow)
-                  : React.createElement("tr", null,
-                      React.createElement("td", { colSpan: 5 },
-                        React.createElement("div", { className: "playground-metronome-table-main playground-resource-templates-table-empty" },
-                          React.createElement("div", { className: "playground-metronome-table-title" }, "No resources match this filter"),
-                          React.createElement("div", { className: "playground-metronome-table-subtitle" }, "Adjust search or choose another category.")
-                        )
-                      )
-                    )
-              )
-            )
-          );
-        }
-
-        function renderTemplateToolbar() {
-          return React.createElement("div", { className: "playground-plugins-search-row playground-resource-templates-toolbar" },
-            React.createElement("div", { className: "playground-plugins-search-shell" },
-              React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-              React.createElement("input", {
-                type: "search",
+            },
+            {
+              id: "category",
+              header: "Category",
+              accessor: (template) => template.typeLabel || template.type || "Template",
+              sortable: true,
+              width: "minmax(130px, 0.75fr)",
+              cell: ({ row: template }) => React.createElement("span", { className: "playground-resource-templates-row-cell" }, template.typeLabel || template.type || "Template"),
+            },
+            {
+              id: "difficulty",
+              header: "Difficulty",
+              accessor: (template) => template.difficulty || "Standard",
+              sortable: true,
+              width: "minmax(110px, 0.65fr)",
+              hideBelow: 760,
+              cell: ({ row: template }) => React.createElement("span", { className: "playground-resource-templates-row-cell" }, template.difficulty || "Standard"),
+            },
+            {
+              id: "setup",
+              header: "Setup",
+              accessor: (template) => template.estimatedSetup || "5 min",
+              sortable: true,
+              width: "minmax(100px, 0.55fr)",
+              hideBelow: 900,
+              cell: ({ row: template }) => React.createElement("span", { className: "playground-resource-templates-row-cell" }, template.estimatedSetup || "5 min"),
+            },
+          ];
+          return React.createElement(PlatformDataTable, {
+            rows: filteredTemplates,
+            columns,
+            getRowId: (template) => "template:" + String(template.id || template.title),
+            ariaLabel: "Resource templates",
+            className: "playground-resource-templates-platform-data-table",
+            sorting: { defaultValue: { id: "resource", direction: "asc" } },
+            toolbar: {
+              search: {
                 value: searchQuery || "",
-                onChange: (event) => typeof setSearchQuery === "function" && setSearchQuery(event.target.value),
-                className: "playground-plugins-search",
+                onChange: (value) => typeof setSearchQuery === "function" && setSearchQuery(value),
                 placeholder: "Search resources",
-              })
+                manual: true,
+              },
+              filters: [{
+                id: "template-type",
+                label: "Filter",
+                value: normalizedActiveType,
+                onChange: (value) => typeof setActiveType === "function" && setActiveType(value),
+                options: typeList.map((option) => {
+                  const optionId = String(option?.id || "all");
+                  const count = Math.max(0, Number(templateCountByType[optionId] || 0) || 0);
+                  return {
+                    id: optionId,
+                    label: option?.label || optionId,
+                    description: count === 1 ? "1 resource" : count + " resources",
+                  };
+                }),
+              }],
+              showSort: true,
+            },
+            onRowActivate: previewTemplate,
+            getRowActions: (template) => [{
+              id: "publish",
+              label: "Publish",
+              icon: Plus,
+              onSelect: () => {
+                if (typeof setPublishTemplateId === "function") setPublishTemplateId(String(template.id || ""));
+              },
+            }],
+            emptyState: React.createElement("div", { className: "playground-metronome-table-main playground-resource-templates-table-empty" },
+              React.createElement("div", { className: "playground-metronome-table-title" }, "No resources match this filter"),
+              React.createElement("div", { className: "playground-metronome-table-subtitle" }, "Adjust search or choose another category.")
             ),
-            React.createElement("div", { className: "playground-plugins-toolbar-controls" },
-              React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell playground-resource-templates-filter-shell" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-files-control-button is-bare is-backlog-filter" + (normalizedTemplateToolbarPopover === "filter" || normalizedActiveType !== "all" ? " is-active" : ""),
-                  onClick: () => updateTemplateToolbarPopover((current) => current === "filter" ? "" : "filter"),
-                  title: activeTypeOption?.label || "Filter",
-                },
-                  React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("span", null, "Filter")
-                ),
-                normalizedTemplateToolbarPopover === "filter"
-                  ? React.createElement("div", { className: "tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                      typeList.map(renderTemplateFilterOption)
-                    )
-                  : null
-              )
-            )
-          );
+            noResultsState: "No resources match this search.",
+          });
         }
 
         function renderTemplateModal(template) {
@@ -795,7 +777,6 @@ export const RESOURCE_TEMPLATES_PAGE_SCRIPT = String.raw`
                     : null
                 )
               ),
-              renderTemplateToolbar(),
               renderTemplatesTable()
             )
           ),

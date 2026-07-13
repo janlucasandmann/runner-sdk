@@ -9,6 +9,8 @@ const cssPath = path.join(packageRoot, "src", "react", "runner-chat.css");
 const threadCssPath = path.join(packageRoot, "src", "react", "thread", "runner-thread.css");
 const generatedTsPath = path.join(packageRoot, "src", "react", "runner-chat-css.ts");
 const distCssPath = path.join(packageRoot, "dist", "react", "runner-chat.css");
+const platformDataTableCssPath = path.join(packageRoot, "src", "platform-ui", "data-table", "data-table.css");
+const distPlatformDataTableCssPath = path.join(packageRoot, "dist", "platform-ui", "data-table", "data-table.css");
 const assetsSourceDir = path.join(packageRoot, "src", "react", "assets");
 const distAssetsDir = path.join(packageRoot, "dist", "react", "assets");
 const bundledDiffCssPath = path.join(packageRoot, "node_modules", "@git-diff-view", "react", "styles", "diff-view-pure.css");
@@ -33,9 +35,14 @@ async function prepare() {
 }
 
 async function copy() {
-  const cssText = await loadBundledCss();
+  const [cssText, platformDataTableCssText] = await Promise.all([
+    loadBundledCss(),
+    fs.readFile(platformDataTableCssPath, "utf8"),
+  ]);
   await fs.mkdir(path.dirname(distCssPath), { recursive: true });
   await fs.writeFile(distCssPath, cssText, "utf8");
+  await fs.mkdir(path.dirname(distPlatformDataTableCssPath), { recursive: true });
+  await fs.writeFile(distPlatformDataTableCssPath, platformDataTableCssText, "utf8");
   await fs.mkdir(distAssetsDir, { recursive: true });
   const assets = await fs.readdir(assetsSourceDir);
   await Promise.all(
