@@ -69,6 +69,16 @@ import {
 } from "lucide-react";
 import { RunnerDeepResearchSession, RunnerExecuteResult, RunnerLog, RunnerThreadStep, RunnerThreadStepDiffResult } from "../types.js";
 import { iterateSseData } from "../sse.js";
+import {
+  PlatformPopupSurface,
+  type PlatformPopupAnimation,
+} from "../platform-ui/components/composite/popup/index.js";
+import {
+  PlatformPrimaryButton,
+  PlatformSecondaryButton,
+} from "../platform-ui/components/ui/button/index.js";
+import { PlatformModal } from "../platform-ui/components/composite/modal/index.js";
+import { PlatformSwitch } from "../platform-ui/components/ui/switch/index.js";
 import { adaptLegacyThreadToProjection } from "../thread/legacy-adapter.js";
 import type { RunnerThreadAction, RunnerThreadMessage, RunnerThreadPermissionRequest, RunnerThreadProjection, RunnerThreadRoutedMessageResult, RunnerThreadRunStatus } from "../thread/types.js";
 import { useRunnerExecution } from "./use-runner-execution.js";
@@ -10782,33 +10792,38 @@ function defaultAttachmentFromFile(file: File): RunnerAttachment {
   };
 }
 
-type RunnerComposerPlanTier = "free" | "pro" | "team" | "enterprise";
+type RunnerComposerPlanTier = "sandbox" | "builder" | "team" | "business" | "enterprise";
 
 function normalizeRunnerComposerPlanTier(value: unknown): RunnerComposerPlanTier {
   const normalized = String(value || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
   if (normalized === "enterprise" || normalized === "enterprise_plan" || normalized === "organization" || normalized === "org") {
     return "enterprise";
   }
-  if (normalized === "team" || normalized === "team_plan" || normalized === "business") {
+  if (normalized === "business" || normalized === "business_plan") {
+    return "business";
+  }
+  if (normalized === "team" || normalized === "team_plan" || normalized === "scale") {
     return "team";
   }
-  if (normalized === "pro" || normalized === "pro_plan" || normalized === "individual" || normalized === "individual_plan" || normalized === "paid") {
-    return "pro";
+  if (normalized === "builder" || normalized === "builder_plan" || normalized === "pro" || normalized === "pro_plan" || normalized === "individual" || normalized === "individual_plan" || normalized === "paid") {
+    return "builder";
   }
-  return "free";
+  return "sandbox";
 }
 
 function getRunnerComposerPlanDisplay(tierId: unknown): { label: string; Icon: typeof LucideStar } {
   switch (normalizeRunnerComposerPlanTier(tierId)) {
     case "enterprise":
       return { label: "Enterprise Plan", Icon: LucideStar };
+    case "business":
+      return { label: "Business Plan", Icon: LucideUsersRound };
     case "team":
       return { label: "Team Plan", Icon: LucideUsersRound };
-    case "pro":
-      return { label: "Pro Plan", Icon: LucideStar };
-    case "free":
+    case "builder":
+      return { label: "Builder Plan", Icon: LucideStar };
+    case "sandbox":
     default:
-      return { label: "Upgrade to Pro", Icon: LucideStar };
+      return { label: "Upgrade to Builder", Icon: LucideStar };
   }
 }
 
@@ -14512,7 +14527,7 @@ export function RunnerChat({
               <LucideEllipsis className="tb-run-summary-action-icon" strokeWidth={2} />
             </button>
             {isMoreMenuOpen ? (
-              <div className="tb-run-summary-more-menu" role="menu" onClick={(event) => event.stopPropagation()}>
+              <PlatformPopupSurface className="tb-run-summary-more-menu" role="menu" onClick={(event) => event.stopPropagation()}>
                 <button
                   type="button"
                   className="tb-run-summary-more-menu-item"
@@ -14521,7 +14536,7 @@ export function RunnerChat({
                 >
                   Report issue
                 </button>
-              </div>
+              </PlatformPopupSurface>
             ) : null}
           </span>
         </span>
@@ -14552,7 +14567,7 @@ export function RunnerChat({
                   {attachmentLabel}
                 </button>
                 {isAttachmentPopoverOpen ? (
-                  <div className="tb-email-delivery-attachments-popover tb-popup-menu tb-popup-menu-animate-up-in" role="dialog" aria-label="Email attachments" onClick={(event) => event.stopPropagation()}>
+                  <PlatformPopupSurface className="tb-email-delivery-attachments-popover" animation="up-in" role="dialog" aria-label="Email attachments" onClick={(event) => event.stopPropagation()}>
                     <div className="tb-email-delivery-attachments-popover-title">Attached files</div>
                     <div className="tb-email-delivery-attachments-list">
                       {attachmentFiles.length > 0 ? attachmentFiles.map((file, index) => {
@@ -14589,7 +14604,7 @@ export function RunnerChat({
                         </div>
                       )}
                     </div>
-                  </div>
+                  </PlatformPopupSurface>
                 ) : null}
               </span>
             ) : null}
@@ -21746,7 +21761,7 @@ export function RunnerChat({
           <LucideEllipsis className="tb-attachment-preview-drawer-action-icon" strokeWidth={1.9} />
         </button>
         {documentPreviewActionMenuOpen ? (
-          <div className="tb-document-preview-actions-menu" role="menu">
+          <PlatformPopupSurface className="tb-document-preview-actions-menu" role="menu">
             {previewedDocumentOpenUrl ? (
               <a
                 className="tb-document-preview-actions-menu-item"
@@ -21777,7 +21792,7 @@ export function RunnerChat({
                 Copy path
               </button>
             ) : null}
-          </div>
+          </PlatformPopupSurface>
         ) : null}
       </span>
       <button
@@ -21885,18 +21900,18 @@ export function RunnerChat({
     mainPopupPhase === "exit" &&
     renderedMainPopup === "main" &&
     renderedSidePopup !== null;
-  const mainPopupAnimationClass = mainPopupPhase === "enter"
-    ? "tb-popup-menu-animate-up-in"
+  const mainPopupAnimation: PlatformPopupAnimation | false = mainPopupPhase === "enter"
+    ? "up-in"
     : mainPopupPhase === "exit"
-      ? "tb-popup-menu-animate-up-out"
-      : "";
-  const sidePopupAnimationClass = sidePopupPhase === "enter"
-    ? "tb-popup-menu-animate-left-in"
+      ? "up-out"
+      : false;
+  const sidePopupAnimation: PlatformPopupAnimation | false = sidePopupPhase === "enter"
+    ? "left-in"
     : sidePopupPhase === "exit"
       ? isClosingPopupStackTogether || sidePopupExitDirection === "down"
-        ? "tb-popup-menu-animate-down-out"
-        : "tb-popup-menu-animate-left-out"
-      : "";
+        ? "up-out"
+        : "left-out"
+      : false;
   const contextIndicatorSource = threadContextDetails || threadContext;
   const contextIndicatorMetrics = deriveThreadContextDisplayMetrics(contextIndicatorSource);
   const contextUsageRatio = Math.max(0, Math.min(1, contextIndicatorMetrics.usedRatio));
@@ -22053,7 +22068,7 @@ export function RunnerChat({
 
         {renderComposerPopupPortal(
           showOrganizationPopup ? (
-            <div ref={organizationPopupRef} className={`tb-popup-menu tb-popup-menu-inline tb-popup-menu-inline-agent tb-popup-menu-inline-organization ${mainPopupAnimationClass}`.trim()}>
+            <PlatformPopupSurface ref={organizationPopupRef} className="tb-popup-menu-inline tb-popup-menu-inline-agent tb-popup-menu-inline-organization" animation={mainPopupAnimation}>
               <div className="tb-popup-menu-inline-body tb-popup-menu-inline-body-organization">
                 {composerOrganizationOptions.map((organization) => {
                   const isSelected = selectedComposerOrganization?.id === organization.id;
@@ -22073,7 +22088,7 @@ export function RunnerChat({
                   );
                 })}
               </div>
-            </div>
+            </PlatformPopupSurface>
           ) : null,
           organizationPopupStyle
         )}
@@ -22101,7 +22116,7 @@ export function RunnerChat({
 
         {renderComposerPopupPortal(
           showAgentPopup ? (
-          <div ref={agentPopupRef} className={`tb-popup-menu tb-popup-menu-inline tb-popup-menu-inline-agent ${mainPopupAnimationClass}`.trim()}>
+          <PlatformPopupSurface ref={agentPopupRef} className="tb-popup-menu-inline tb-popup-menu-inline-agent" animation={mainPopupAnimation} animateHeight>
             {!hasApiKey ? (
               <div className="tb-popup-note">
                 <div className="tb-popup-note-title">API key required</div>
@@ -22110,35 +22125,15 @@ export function RunnerChat({
             ) : (
               <>
                 <div className="tb-popup-panel-section tb-popup-panel-section-attach-header">
-                  <div className="tb-popup-nav">
-                    {availableAgentPopupModes.includes("agents") ? (
-                      <button
-                        type="button"
-                        className={`tb-popup-nav-button ${agentPopupMode === "agents" ? "active" : ""}`}
-                        onClick={() => setAgentPopupMode("agents")}
-                      >
-                        Agents
-                      </button>
-                    ) : null}
-                    {availableAgentPopupModes.includes("teams") ? (
-                      <button
-                        type="button"
-                        className={`tb-popup-nav-button ${agentPopupMode === "teams" ? "active" : ""}`}
-                        onClick={() => setAgentPopupMode("teams")}
-                      >
-                        Teams
-                      </button>
-                    ) : null}
-                    {availableAgentPopupModes.includes("humans") ? (
-                      <button
-                        type="button"
-                        className={`tb-popup-nav-button ${agentPopupMode === "humans" ? "active" : ""}`}
-                        onClick={() => setAgentPopupMode("humans")}
-                      >
-                        Humans
-                      </button>
-                    ) : null}
-                  </div>
+                  <PlatformSwitch
+                    ariaLabel="Agent type"
+                    value={agentPopupMode}
+                    options={availableAgentPopupModes.map((mode) => ({
+                      value: mode,
+                      label: mode === "teams" ? "Squads" : mode === "humans" ? "Humans" : "Agents",
+                    }))}
+                    onValueChange={(nextMode) => setAgentPopupMode(nextMode as RunnerAgentSelectorMode)}
+                  />
                 </div>
                 <div className="tb-popup-menu-inline-body tb-popup-menu-inline-body-agent">
                   {filteredOrderedAgents.length > 0 ? (
@@ -22177,14 +22172,14 @@ export function RunnerChat({
                 </button>
               </>
             )}
-          </div>
+          </PlatformPopupSurface>
           ) : null,
           agentPopupStyle
         )}
 
         {renderComposerPopupPortal(
           showAgentReasoningPopup ? (
-          <div ref={agentReasoningPopupRef} className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-agent-reasoning ${sidePopupAnimationClass}`.trim()}>
+          <PlatformPopupSurface ref={agentReasoningPopupRef} className="tb-popup-menu-side tb-popup-menu-agent-reasoning" animation={sidePopupAnimation}>
             <div className="tb-popup-attach-topbar">
               <button type="button" className="tb-popup-attach-topbar-button tb-popup-attach-topbar-button-close" onClick={closeAgentReasoningPopup} aria-label="Close reasoning effort popup">
                 <LucideX className="tb-popup-attach-topbar-icon" strokeWidth={1.75} />
@@ -22195,23 +22190,19 @@ export function RunnerChat({
               </button>
             </div>
             <div className="tb-agent-reasoning-effort-panel tb-agent-reasoning-effort-panel-side" onClick={(event) => event.stopPropagation()}>
-              <div className="tb-popup-nav tb-agent-reasoning-effort-tabs" role="radiogroup" aria-label="Reasoning effort">
-                {RUNNER_REASONING_EFFORT_OPTIONS.map((option) => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={selectedReasoningEffortOption.id === option.id}
-                    title={option.description}
-                    className={`tb-popup-nav-button ${selectedReasoningEffortOption.id === option.id ? "active" : ""}`.trim()}
-                    onClick={() => selectReasoningEffort(option.id)}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
+              <PlatformSwitch
+                className="tb-agent-reasoning-effort-tabs"
+                ariaLabel="Reasoning effort"
+                value={selectedReasoningEffortOption.id}
+                options={RUNNER_REASONING_EFFORT_OPTIONS.map((option) => ({
+                  value: option.id,
+                  label: option.label,
+                  title: option.description,
+                }))}
+                onValueChange={(nextEffort) => selectReasoningEffort(nextEffort as RunnerReasoningEffortId)}
+              />
             </div>
-          </div>
+          </PlatformPopupSurface>
           ) : null,
           agentReasoningPopupStyle
         )}
@@ -22242,7 +22233,7 @@ export function RunnerChat({
 
         {renderComposerPopupPortal(
           showEnvironmentPopup ? (
-          <div ref={environmentPopupRef} className={`tb-popup-menu tb-popup-menu-inline tb-popup-menu-inline-right tb-popup-menu-inline-workspace ${mainPopupAnimationClass}`.trim()}>
+          <PlatformPopupSurface ref={environmentPopupRef} className="tb-popup-menu-inline tb-popup-menu-inline-right tb-popup-menu-inline-workspace" animation={mainPopupAnimation}>
             {!hasApiKey ? (
               <div className="tb-popup-note">
                 <div className="tb-popup-note-title">API key required</div>
@@ -22251,22 +22242,19 @@ export function RunnerChat({
             ) : (
               <>
                 <div className="tb-popup-panel-section tb-popup-panel-section-attach-header">
-                  <div className="tb-popup-nav">
-                    <button
-                      type="button"
-                      className={`tb-popup-nav-button ${workspaceSelectorMode === "computers" ? "active" : ""}`}
-                      onClick={() => setWorkspaceSelectorMode("computers")}
-                    >
-                      Computers
-                    </button>
-                    <button
-                      type="button"
-                      className={`tb-popup-nav-button ${workspaceSelectorMode === "projects" ? "active" : ""}`}
-                      onClick={() => setWorkspaceSelectorMode("projects")}
-                    >
-                      Projects
-                    </button>
-                  </div>
+                  <PlatformSwitch
+                    ariaLabel="Workspace type"
+                    value={workspaceSelectorMode}
+                    options={[
+                      { value: "computers", label: "Computers" },
+                      { value: "projects", label: "Projects" },
+                    ]}
+                    onValueChange={(nextMode) => {
+                      if (nextMode === "computers" || nextMode === "projects") {
+                        setWorkspaceSelectorMode(nextMode);
+                      }
+                    }}
+                  />
                 </div>
                 <div className="tb-popup-menu-inline-body tb-popup-menu-inline-body-agent tb-popup-menu-inline-body-workspace">
                   {workspaceSelectorMode === "projects" ? (
@@ -22324,7 +22312,7 @@ export function RunnerChat({
                 </div>
               </>
             )}
-          </div>
+          </PlatformPopupSurface>
           ) : null,
           environmentPopupStyle
         )}
@@ -22569,18 +22557,18 @@ export function RunnerChat({
   function renderThreadContextPopup() {
     if (!hasApiKey) {
       return (
-        <div className={`tb-popup-menu tb-popup-menu-context ${mainPopupAnimationClass}`.trim()}>
+        <PlatformPopupSurface className="tb-popup-menu-context" animation={mainPopupAnimation}>
           <div className="tb-popup-menu-title tb-popup-menu-title-context">Thread Context</div>
           <div className="tb-popup-note">
             <div className="tb-popup-note-title">API key required</div>
             <div className="tb-popup-note-body">Enter an API key in the playground sidebar to inspect and manage thread context.</div>
           </div>
-        </div>
+        </PlatformPopupSurface>
       );
     }
 
     return (
-      <div className={`tb-popup-menu tb-popup-menu-context ${mainPopupAnimationClass}`.trim()}>
+      <PlatformPopupSurface className="tb-popup-menu-context" animation={mainPopupAnimation}>
         <div className="tb-popup-menu-title tb-popup-menu-title-context">
           <span>Thread Context</span>
           {hasDisplayContextUsage ? (
@@ -22598,9 +22586,9 @@ export function RunnerChat({
           <div className="tb-popup-note">
             <div className="tb-popup-note-title">Context unavailable</div>
             <div className="tb-popup-note-body">{threadContextDetailsError}</div>
-            <button type="button" className="tb-popup-action tb-popup-action-secondary tb-context-panel-retry" onClick={() => void refreshThreadContextDetails()}>
+            <PlatformSecondaryButton size="large" type="button" className="tb-popup-action tb-popup-action-secondary tb-context-panel-retry" onClick={() => void refreshThreadContextDetails()}>
               Retry
-            </button>
+            </PlatformSecondaryButton>
           </div>
         ) : (
           <div className="tb-context-panel">
@@ -22692,7 +22680,7 @@ export function RunnerChat({
             </div>
           </div>
         )}
-      </div>
+      </PlatformPopupSurface>
     );
   }
 
@@ -23264,7 +23252,7 @@ export function RunnerChat({
       ) : null}
 
       {quotedSelectionPopup ? (
-        <div
+        <PlatformPopupSurface
           ref={quotedSelectionPopupRef}
           className="tb-selection-popup"
           style={{
@@ -23281,7 +23269,7 @@ export function RunnerChat({
             <LucideTextQuote className="tb-selection-popup-icon" strokeWidth={1.7} />
             <span>Add to chat</span>
           </button>
-        </div>
+        </PlatformPopupSurface>
       ) : null}
 
       <div className="workinglogsbox">
@@ -24027,17 +24015,18 @@ export function RunnerChat({
                               autoFocus
                             />
                             <div className="tb-user-turn-edit-actions">
-                              <button type="button" className="tb-user-turn-edit-button tb-user-turn-edit-button-secondary" onClick={cancelEditingTurn}>
+                              <PlatformSecondaryButton size="medium" type="button" className="tb-user-turn-edit-button tb-user-turn-edit-button-secondary" onClick={cancelEditingTurn}>
                                 Cancel
-                              </button>
-                              <button
+                              </PlatformSecondaryButton>
+                              <PlatformPrimaryButton
+                                size="medium"
                                 type="button"
                                 className="tb-user-turn-edit-button tb-user-turn-edit-button-primary"
                                 onClick={() => handleEditedTurnSend(turn.id)}
                                 disabled={!editingTurnDraft.trim()}
                               >
                                 Send
-                              </button>
+                              </PlatformPrimaryButton>
                             </div>
                           </>
                         ) : taskPreviewForTurn ? (
@@ -24238,7 +24227,7 @@ export function RunnerChat({
               className={`task-input-box ${privateMode ? "task-input-box-private" : ""} ${stagedComposerToneValue ? `task-input-box-thread-context task-input-box-thread-context-${stagedComposerToneValue}` : ""}`.trim()}
             >
               {stagedAdCreationCommand ? (
-                <div className="tb-popup-menu tb-popup-menu-main tb-ad-creation-popup tb-popup-menu-animate-up-in" role="dialog" aria-label="Create Ad settings">
+                <PlatformPopupSurface className="tb-popup-menu-main tb-ad-creation-popup" animation="up-in" role="dialog" aria-label="Create Ad settings">
                   <div className="tb-ad-creation-popup-header">
                     <div className="tb-ad-creation-popup-title">Create Ad</div>
                     <button
@@ -24324,7 +24313,7 @@ export function RunnerChat({
                       <span>Total estimate</span>
                     </div>
                   </div>
-                </div>
+                </PlatformPopupSurface>
               ) : null}
 
               {attachments.length > 0 ? (
@@ -24366,7 +24355,7 @@ export function RunnerChat({
                 }
               >
                 {showSlashCommandPopup ? (
-                  <div className="tb-popup-menu tb-popup-menu-main tb-popup-menu-slash tb-popup-menu-animate-up-in">
+                  <PlatformPopupSurface className="tb-popup-menu-main tb-popup-menu-slash" animation="up-in">
                     {filteredSlashCommandItems.length > 0 ? (
                       filteredSlashCommandItems.map((item) => (
                         <button
@@ -24393,7 +24382,7 @@ export function RunnerChat({
                         <div className="tb-popup-empty-state">No slash commands match that input.</div>
                       </div>
                     )}
-                  </div>
+                  </PlatformPopupSurface>
                 ) : null}
                 {hasStagedComposerCommand ? (
                   <span
@@ -24435,7 +24424,7 @@ export function RunnerChat({
 
                       {renderComposerPopupPortal(
                         showMainMenu ? (
-                        <div ref={plusMainPopupRef} className={`tb-popup-menu tb-popup-menu-main ${mainPopupAnimationClass}`.trim()}>
+                        <PlatformPopupSurface ref={plusMainPopupRef} className="tb-popup-menu-main" animation={mainPopupAnimation}>
                           <button
                             type="button"
                             className={`tb-popup-row tb-popup-row-divider tb-popup-row-core-action ${showAttachFilesPopup ? "selected" : ""}`}
@@ -24493,14 +24482,14 @@ export function RunnerChat({
                               <span className="tb-popup-shortcut-key tb-popup-shortcut-key-letter">{SCHEDULE_SHORTCUT_KEY.toUpperCase()}</span>
                             </span>
                           </button>
-                        </div>
+                        </PlatformPopupSurface>
                         ) : null,
                         plusMainPopupStyle
                       )}
 
                       {renderComposerPopupPortal(
                         showSkillsPopup ? (
-                        <div ref={plusSidePopupRef} className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-skills ${sidePopupAnimationClass}`.trim()}>
+                        <PlatformPopupSurface ref={plusSidePopupRef} className="tb-popup-menu-side tb-popup-menu-skills" animation={sidePopupAnimation}>
                           <div className="tb-popup-attach-topbar">
                             <button type="button" className="tb-popup-attach-topbar-button tb-popup-attach-topbar-button-close" onClick={closeSkillsPopup} aria-label="Close skills popup">
                               <LucideX className="tb-popup-attach-topbar-icon" strokeWidth={1.75} />
@@ -24511,14 +24500,19 @@ export function RunnerChat({
                             </button>
                           </div>
                           <div className="tb-popup-panel-section tb-popup-panel-section-attach-header">
-                            <div className="tb-popup-nav">
-                              <button type="button" className={`tb-popup-nav-button ${skillsTab === "system" ? "active" : ""}`} onClick={() => setSkillsTab("system")}>
-                                System
-                              </button>
-                              <button type="button" className={`tb-popup-nav-button ${skillsTab === "custom" ? "active" : ""}`} onClick={() => setSkillsTab("custom")}>
-                                Custom
-                              </button>
-                            </div>
+                            <PlatformSwitch
+                              ariaLabel="Skill source"
+                              value={skillsTab}
+                              options={[
+                                { value: "system", label: "System" },
+                                { value: "custom", label: "Custom" },
+                              ]}
+                              onValueChange={(nextTab) => {
+                                if (nextTab === "system" || nextTab === "custom") {
+                                  setSkillsTab(nextTab);
+                                }
+                              }}
+                            />
                           </div>
                           <div className="tb-popup-panel-section tb-popup-panel-section-divider tb-popup-panel-section-divider-spaced tb-popup-panel-section-skills-body">
                             {(skillsTab === "system" ? systemSkills : customSkillItems).map((skill) => {
@@ -24546,14 +24540,14 @@ export function RunnerChat({
                               <div className="tb-popup-empty-state">No custom skills yet.</div>
                             ) : null}
                           </div>
-                        </div>
+                        </PlatformPopupSurface>
                         ) : null,
                         plusSidePopupStyle
                       )}
 
                       {renderComposerPopupPortal(
                         showGithubPopup ? (
-                        <div ref={plusSidePopupRef} className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-panel ${sidePopupAnimationClass}`.trim()}>
+                        <PlatformPopupSurface ref={plusSidePopupRef} className="tb-popup-menu-side tb-popup-menu-panel" animation={sidePopupAnimation}>
                           {!githubConnected ? (
                             <div className="tb-popup-note">
                               <div className="tb-popup-note-title">GitHub not connected</div>
@@ -24592,24 +24586,24 @@ export function RunnerChat({
                                 </select>
                               </div>
                               <div className="tb-popup-panel-footer">
-                                <button type="button" className="tb-popup-action tb-popup-action-secondary" onClick={() => {
+                                <PlatformSecondaryButton size="large" type="button" className="tb-popup-action tb-popup-action-secondary" onClick={() => {
                                   githubConfig?.onDisconnect?.();
                                   closeAllInputPopups();
                                 }}>
                                   <IconLogout className="tb-popup-action-icon" />
                                   Disconnect GitHub
-                                </button>
+                                </PlatformSecondaryButton>
                               </div>
                             </>
                           )}
-                        </div>
+                        </PlatformPopupSurface>
                         ) : null,
                         plusSidePopupStyle
                       )}
 
                       {renderComposerPopupPortal(
                         showNotionPopup ? (
-                        <div ref={plusSidePopupRef} className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-panel ${sidePopupAnimationClass}`.trim()}>
+                        <PlatformPopupSurface ref={plusSidePopupRef} className="tb-popup-menu-side tb-popup-menu-panel" animation={sidePopupAnimation}>
                           {!notionConnected ? (
                             <div className="tb-popup-note">
                               <div className="tb-popup-note-title">Notion not connected</div>
@@ -24638,24 +24632,24 @@ export function RunnerChat({
                                 </select>
                               </div>
                               <div className="tb-popup-panel-footer">
-                                <button type="button" className="tb-popup-action tb-popup-action-secondary" onClick={() => {
+                                <PlatformSecondaryButton size="large" type="button" className="tb-popup-action tb-popup-action-secondary" onClick={() => {
                                   notionConfig?.onDisconnect?.();
                                   closeAllInputPopups();
                                 }}>
                                   <IconLogout className="tb-popup-action-icon" />
                                   Disconnect Notion
-                                </button>
+                                </PlatformSecondaryButton>
                               </div>
                             </>
                           )}
-                        </div>
+                        </PlatformPopupSurface>
                         ) : null,
                         plusSidePopupStyle
                       )}
 
                       {renderComposerPopupPortal(
                         showGoogleDrivePopup ? (
-                        <div ref={plusSidePopupRef} className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-filebrowser ${sidePopupAnimationClass}`.trim()}>
+                        <PlatformPopupSurface ref={plusSidePopupRef} className="tb-popup-menu-side tb-popup-menu-filebrowser" animation={sidePopupAnimation}>
                           {!googleDriveConnected ? (
                             <div className="tb-popup-note">
                               <div className="tb-popup-note-title">Google Drive not connected</div>
@@ -24715,21 +24709,21 @@ export function RunnerChat({
                                 )}
                               </div>
                               <div className="tb-popup-file-footer">
-                                <button type="button" className="tb-popup-action tb-popup-action-primary" disabled={selectedGoogleDriveFileIds.length === 0} onClick={() => void attachIntegrationFiles("google-drive")}>
+                                <PlatformPrimaryButton size="large" type="button" className="tb-popup-action tb-popup-action-primary" disabled={selectedGoogleDriveFileIds.length === 0} onClick={() => void attachIntegrationFiles("google-drive")}>
                                   <IconPaperclip className="tb-popup-action-icon" />
                                   Attach {selectedGoogleDriveFileIds.length > 0 ? `${selectedGoogleDriveFileIds.length} file${selectedGoogleDriveFileIds.length > 1 ? "s" : ""}` : "Files"}
-                                </button>
+                                </PlatformPrimaryButton>
                               </div>
                             </>
                           )}
-                        </div>
+                        </PlatformPopupSurface>
                         ) : null,
                         plusSidePopupStyle
                       )}
 
                       {renderComposerPopupPortal(
                         showOneDrivePopup ? (
-                        <div ref={plusSidePopupRef} className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-filebrowser ${sidePopupAnimationClass}`.trim()}>
+                        <PlatformPopupSurface ref={plusSidePopupRef} className="tb-popup-menu-side tb-popup-menu-filebrowser" animation={sidePopupAnimation}>
                           {!oneDriveConnected ? (
                             <div className="tb-popup-note">
                               <div className="tb-popup-note-title">OneDrive not connected</div>
@@ -24789,21 +24783,21 @@ export function RunnerChat({
                                 )}
                               </div>
                               <div className="tb-popup-file-footer">
-                                <button type="button" className="tb-popup-action tb-popup-action-primary" disabled={selectedOneDriveFileIds.length === 0} onClick={() => void attachIntegrationFiles("one-drive")}>
+                                <PlatformPrimaryButton size="large" type="button" className="tb-popup-action tb-popup-action-primary" disabled={selectedOneDriveFileIds.length === 0} onClick={() => void attachIntegrationFiles("one-drive")}>
                                   <IconPaperclip className="tb-popup-action-icon" />
                                   Attach {selectedOneDriveFileIds.length > 0 ? `${selectedOneDriveFileIds.length} file${selectedOneDriveFileIds.length > 1 ? "s" : ""}` : "Files"}
-                                </button>
+                                </PlatformPrimaryButton>
                               </div>
                             </>
                           )}
-                        </div>
+                        </PlatformPopupSurface>
                         ) : null,
                         plusSidePopupStyle
                       )}
 
                       {renderComposerPopupPortal(
                         showSchedulePopup ? (
-                        <div ref={plusSidePopupRef} className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-schedule ${sidePopupAnimationClass}`.trim()}>
+                        <PlatformPopupSurface ref={plusSidePopupRef} className="tb-popup-menu-side tb-popup-menu-schedule" animation={sidePopupAnimation}>
                           <div className="tb-popup-attach-topbar">
                             <button type="button" className="tb-popup-attach-topbar-button tb-popup-attach-topbar-button-close" onClick={closeSchedulePopup} aria-label="Close schedule popup">
                               <LucideX className="tb-popup-attach-topbar-icon" strokeWidth={1.75} />
@@ -24814,14 +24808,19 @@ export function RunnerChat({
                             </button>
                           </div>
                           <div className="tb-popup-panel-section tb-popup-panel-section-attach-header">
-                            <div className="tb-popup-nav">
-                              <button type="button" className={`tb-popup-nav-button ${scheduleType === "one-time" ? "active" : ""}`} onClick={() => setScheduleType("one-time")}>
-                                One-time
-                              </button>
-                              <button type="button" className={`tb-popup-nav-button ${scheduleType === "recurring" ? "active" : ""}`} onClick={() => setScheduleType("recurring")}>
-                                Recurring
-                              </button>
-                            </div>
+                            <PlatformSwitch
+                              ariaLabel="Schedule type"
+                              value={scheduleType}
+                              options={[
+                                { value: "one-time", label: "One-time" },
+                                { value: "recurring", label: "Recurring" },
+                              ]}
+                              onValueChange={(nextType) => {
+                                if (nextType === "one-time" || nextType === "recurring") {
+                                  setScheduleType(nextType);
+                                }
+                              }}
+                            />
                           </div>
                           <div className="tb-popup-panel-section tb-popup-panel-section-divider tb-popup-panel-section-divider-spaced">
                             <>
@@ -24861,14 +24860,14 @@ export function RunnerChat({
                               ) : null}
                             </>
                           </div>
-                        </div>
+                        </PlatformPopupSurface>
                         ) : null,
                         plusSidePopupStyle
                       )}
 
                       {renderComposerPopupPortal(
                         showAttachFilesPopup ? (
-                        <div ref={plusSidePopupRef} className={`tb-popup-menu tb-popup-menu-side tb-popup-menu-attach ${sidePopupAnimationClass}`.trim()}>
+                        <PlatformPopupSurface ref={plusSidePopupRef} className="tb-popup-menu-side tb-popup-menu-attach" animation={sidePopupAnimation}>
                           <div className="tb-popup-attach-topbar">
                             <button type="button" className="tb-popup-attach-topbar-button tb-popup-attach-topbar-button-close" onClick={closeAttachFilesPopup} aria-label="Close attach files popup">
                               <LucideX className="tb-popup-attach-topbar-icon" strokeWidth={1.75} />
@@ -24879,13 +24878,13 @@ export function RunnerChat({
                             </button>
                           </div>
                           <div className="tb-popup-panel-section tb-popup-panel-section-attach-header">
-                            <div className="tb-popup-nav">
-                              <button type="button" className="tb-popup-nav-button active" onClick={handleUploadNewFilesClick}>
+                            <div className="platform-switch" role="group" aria-label="Attachment source">
+                              <button type="button" className="platform-switch__option is-active" onClick={handleUploadNewFilesClick}>
                                 Upload New
                               </button>
                               <button
                                 type="button"
-                                className="tb-popup-nav-button"
+                                className="platform-switch__option"
                                 onClick={() => {
                                   openFileBrowserModal("workspace");
                                 }}
@@ -24915,7 +24914,7 @@ export function RunnerChat({
                               <span className="tb-popup-dropzone-copy">or click to browse</span>
                             </button>
                           </div>
-                        </div>
+                        </PlatformPopupSurface>
                         ) : null,
                         plusSidePopupStyle
                       )}
@@ -25080,8 +25079,15 @@ export function RunnerChat({
       {shouldRenderInlineComposerWithEmptyState ? emptyStateAfterComposer : null}
 
       {reportIssueTurn ? (
-        <div className="tb-popup-modal-scrim" onClick={closeReportIssueModal}>
-          <div className="tb-popup-modal tb-report-issue-modal" onClick={(event) => event.stopPropagation()}>
+        <PlatformModal
+          open
+          visible
+          size="small"
+          ariaLabel="Report an issue"
+          backdropClassName="tb-popup-modal-scrim"
+          className="tb-popup-modal tb-report-issue-modal"
+          onClose={closeReportIssueModal}
+        >
             <div className="tb-popup-modal-header tb-report-issue-modal-header">
               <div className="tb-popup-note-title">Report an issue</div>
               <button
@@ -25130,37 +25136,42 @@ export function RunnerChat({
               {reportIssueError ? <div className="runner-inline-error tb-report-issue-error">{reportIssueError}</div> : null}
 
               <div className="tb-edit-confirmation-actions tb-report-issue-actions">
-                <button
+                <PlatformSecondaryButton
+                  size="large"
                   type="button"
                   className="tb-popup-action tb-popup-action-secondary"
                   onClick={closeReportIssueModal}
                   disabled={isReportIssueSubmitting}
                 >
                   Cancel
-                </button>
-                <button
+                </PlatformSecondaryButton>
+                <PlatformPrimaryButton
+                  size="large"
                   type="button"
                   className={`tb-popup-action tb-popup-action-primary ${isReportIssueSubmitting ? "loading" : ""}`.trim()}
                   onClick={() => void submitReportIssue()}
                   disabled={isReportIssueSubmitting || !reportIssueMessage.trim()}
                 >
                   {isReportIssueSubmitting ? "Sending..." : "Send"}
-                </button>
+                </PlatformPrimaryButton>
               </div>
             </div>
-          </div>
-        </div>
+        </PlatformModal>
       ) : null}
 
       {pendingForkConfiguration ? (
-        <div
-          className="tb-popup-modal-scrim"
-          onClick={() => {
+        <PlatformModal
+          open
+          visible
+          size="medium"
+          ariaLabel="Fork thread"
+          backdropClassName="tb-popup-modal-scrim"
+          className="tb-popup-modal tb-fork-thread-modal"
+          onClose={() => {
             if (forkingTurnId) return;
             cancelPendingForkConfiguration();
           }}
         >
-          <div className="tb-popup-modal tb-fork-thread-modal" onClick={(event) => event.stopPropagation()}>
             <div className="tb-popup-modal-header">
               <div className="tb-popup-note-title">Fork Thread</div>
             </div>
@@ -25222,7 +25233,7 @@ export function RunnerChat({
                         </button>
 
                         {showForkEnvironmentPopup ? (
-                          <div className="tb-popup-menu tb-popup-menu-inline tb-fork-thread-environment-popup">
+                          <PlatformPopupSurface className="tb-popup-menu-inline tb-fork-thread-environment-popup">
                             <div className="tb-popup-menu-inline-body">
                               {orderedForkTargetEnvironments.map((environment) => (
                                 <button
@@ -25244,7 +25255,7 @@ export function RunnerChat({
                                 </button>
                               ))}
                             </div>
-                          </div>
+                          </PlatformPopupSurface>
                         ) : null}
                       </div>
                     </div>
@@ -25417,15 +25428,17 @@ export function RunnerChat({
               {forkDialogError ? <div className="runner-inline-error tb-fork-thread-error">{forkDialogError}</div> : null}
 
               <div className="tb-edit-confirmation-actions tb-fork-thread-actions">
-                <button
+                <PlatformSecondaryButton
+                  size="large"
                   type="button"
                   className="tb-popup-action tb-popup-action-secondary"
                   onClick={cancelPendingForkConfiguration}
                   disabled={Boolean(forkingTurnId)}
                 >
                   Cancel
-                </button>
-                <button
+                </PlatformSecondaryButton>
+                <PlatformPrimaryButton
+                  size="large"
                   type="button"
                   className={`tb-popup-action tb-popup-action-primary ${forkingTurnId ? "loading" : ""}`.trim()}
                   onClick={() => void confirmForkFromPendingConfiguration()}
@@ -25444,16 +25457,22 @@ export function RunnerChat({
                   ) : (
                     "Create Fork"
                   )}
-                </button>
+                </PlatformPrimaryButton>
               </div>
             </div>
-          </div>
-        </div>
+        </PlatformModal>
       ) : null}
 
       {pendingEditConfirmation ? (
-        <div className="tb-popup-modal-scrim" onClick={() => setPendingEditConfirmation(null)}>
-          <div className="tb-popup-modal tb-edit-confirmation-modal" onClick={(event) => event.stopPropagation()}>
+        <PlatformModal
+          open
+          visible
+          size="small"
+          ariaLabel="File changes detected"
+          backdropClassName="tb-popup-modal-scrim"
+          className="tb-popup-modal tb-edit-confirmation-modal"
+          onClose={() => setPendingEditConfirmation(null)}
+        >
             <div className="tb-popup-modal-header">
               <div className="tb-popup-note-title">File changes detected</div>
             </div>
@@ -25479,10 +25498,11 @@ export function RunnerChat({
               </div>
             ) : null}
             <div className="tb-edit-confirmation-actions">
-              <button type="button" className="tb-popup-action tb-popup-action-secondary" onClick={() => setPendingEditConfirmation(null)}>
+              <PlatformSecondaryButton size="large" type="button" className="tb-popup-action tb-popup-action-secondary" onClick={() => setPendingEditConfirmation(null)}>
                 Cancel
-              </button>
-              <button
+              </PlatformSecondaryButton>
+              <PlatformSecondaryButton
+                size="large"
                 type="button"
                 className="tb-popup-action tb-popup-action-secondary"
                 onClick={() => {
@@ -25492,8 +25512,9 @@ export function RunnerChat({
                 }}
               >
                 Revert file changes
-              </button>
-              <button
+              </PlatformSecondaryButton>
+              <PlatformPrimaryButton
+                size="large"
                 type="button"
                 className="tb-popup-action tb-popup-action-primary"
                 onClick={() => {
@@ -25503,10 +25524,9 @@ export function RunnerChat({
                 }}
               >
                 Keep file changes
-              </button>
+              </PlatformPrimaryButton>
             </div>
-          </div>
-        </div>
+        </PlatformModal>
       ) : null}
 
       {deepResearchDetailDrawer}
@@ -25517,8 +25537,16 @@ export function RunnerChat({
       {showFileBrowserModal && typeof document !== "undefined"
         ? createPortal(
             <div className="tb-runner-chat">
-              <div className="tb-file-browser-scrim" onClick={closeFileBrowserModal}>
-                <div className="tb-file-browser-modal" onClick={(event) => event.stopPropagation()}>
+              <PlatformModal
+                open
+                visible
+                portal={false}
+                size="full"
+                ariaLabel="Attach files"
+                backdropClassName="tb-file-browser-scrim"
+                className="tb-file-browser-modal"
+                onClose={closeFileBrowserModal}
+              >
                   <div className="tb-file-browser-body">
                     <div className="tb-file-browser-sidebar">
                       <div className="tb-file-browser-search-wrap">
@@ -25801,10 +25829,10 @@ export function RunnerChat({
                   </div>
 
                   <div className="tb-file-browser-footer">
-                    <button type="button" className="tb-file-browser-footer-button tb-file-browser-footer-button-secondary" onClick={closeFileBrowserModal}>
+                    <PlatformSecondaryButton type="button" className="tb-file-browser-footer-button tb-file-browser-footer-button-secondary" onClick={closeFileBrowserModal}>
                       Cancel
-                    </button>
-                    <button
+                    </PlatformSecondaryButton>
+                    <PlatformPrimaryButton
                       type="button"
                       className="tb-file-browser-footer-button tb-file-browser-footer-button-primary"
                       onClick={() => void handleFileBrowserAttach()}
@@ -25818,10 +25846,9 @@ export function RunnerChat({
                             : `${currentFileBrowserSource === "notion" ? "Use" : "Attach"} ${selectedFileBrowserIds.length > 0 ? selectedFileBrowserLabel : currentFileBrowserSource === "notion" ? "Database" : "Files"}`}
                         </span>
                       </span>
-                    </button>
+                    </PlatformPrimaryButton>
                   </div>
-                </div>
-              </div>
+              </PlatformModal>
             </div>,
             document.body,
           )
@@ -25829,19 +25856,26 @@ export function RunnerChat({
       {showFileBrowserApiKeyPrompt && typeof document !== "undefined"
         ? createPortal(
             <div className="tb-runner-chat">
-              <div className="tb-file-browser-scrim" onClick={closeFileBrowserApiKeyPrompt}>
-                <div className="tb-file-browser-api-key-modal" onClick={(event) => event.stopPropagation()}>
+              <PlatformModal
+                open
+                visible
+                portal={false}
+                size="compact"
+                ariaLabel="API key required"
+                backdropClassName="tb-file-browser-scrim"
+                className="tb-file-browser-api-key-modal"
+                onClose={closeFileBrowserApiKeyPrompt}
+              >
                   <div className="tb-popup-note">
                     <div className="tb-popup-note-title">API key required</div>
                     <div className="tb-popup-note-body">Enter an API key in the playground sidebar to browse workspace files.</div>
                   </div>
                   <div className="tb-file-browser-api-key-footer">
-                    <button type="button" className="tb-file-browser-footer-button tb-file-browser-footer-button-secondary" onClick={closeFileBrowserApiKeyPrompt}>
+                    <PlatformSecondaryButton type="button" className="tb-file-browser-footer-button tb-file-browser-footer-button-secondary" onClick={closeFileBrowserApiKeyPrompt}>
                       Close
-                    </button>
+                    </PlatformSecondaryButton>
                   </div>
-                </div>
-              </div>
+              </PlatformModal>
             </div>,
             document.body,
           )

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { METRONOME_PAGE_SCRIPT } from "./demo-metronome-page.mjs";
+import { METRONOME_PAGE_SCRIPT } from "../src/platform-services/create-mode/metronome/index.mjs";
 
 const startMarker = "function parseMetronomeDynamicContentJsonObject";
 const endMarker = "function normalizeMetronomeDataBinding";

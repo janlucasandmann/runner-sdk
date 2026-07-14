@@ -192,7 +192,8 @@ export const VERSION_SIDEBAR_SCRIPT = String.raw`
             React.createElement("div", { className: "playground-metronome-publish-row-actions" },
               typeof props.onPublishVersion !== "function"
                 ? null
-                : React.createElement("button", {
+                : React.createElement(PlatformSecondaryButton, {
+                  size: "large",
                     type: "button",
                     className: "playground-metronome-secondary-button playground-metronome-publish-row-action",
                     disabled: isBusy || !canPublishVersion,
@@ -223,8 +224,9 @@ export const VERSION_SIDEBAR_SCRIPT = String.raw`
                       "aria-expanded": openMenuId === versionId ? "true" : "false",
                     }, React.createElement(EllipsisVertical, { width: 15, height: 15, strokeWidth: 1.8 })),
                     openMenuId === versionId
-                      ? React.createElement("div", {
+                      ? React.createElement(PlatformPopupSurface, {
                           className: "playground-metronome-publish-row-menu",
+                          animation: "down-in",
                           role: "menu",
                           onClick: (event) => event.stopPropagation(),
                         },
@@ -342,7 +344,8 @@ export const VERSION_SIDEBAR_SCRIPT = String.raw`
               React.createElement("span", { className: "playground-metronome-publish-sidebar-section-title-text" }, sectionTitle),
               React.createElement("span", { className: "playground-metronome-publish-title-actions" },
                 typeof props.onSaveVersion === "function"
-                  ? React.createElement("button", {
+                  ? React.createElement(PlatformSecondaryButton, {
+                    size: "large",
                       type: "button",
                       className: "playground-metronome-secondary-button playground-metronome-publish-new-button playground-metronome-publish-version-button",
                       disabled: isBusy,
@@ -366,7 +369,8 @@ export const VERSION_SIDEBAR_SCRIPT = String.raw`
           hasFooterActions
             ? React.createElement("div", { className: "playground-metronome-publish-sidebar-actions" },
                 typeof props.onPublishCurrent === "function"
-                  ? React.createElement("button", {
+                  ? React.createElement(PlatformPrimaryButton, {
+                    size: "large",
                       type: "button",
                       className: "playground-metronome-primary-button playground-metronome-publish-new-button",
                       disabled: isBusy,
@@ -377,7 +381,8 @@ export const VERSION_SIDEBAR_SCRIPT = String.raw`
                     )
                   : null,
                 typeof props.onUnpublishActive === "function"
-                  ? React.createElement("button", {
+                  ? React.createElement(PlatformSecondaryButton, {
+                    size: "large",
                       type: "button",
                       className: "playground-metronome-secondary-button playground-metronome-publish-new-button",
                       disabled: isBusy,

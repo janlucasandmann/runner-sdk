@@ -1,0 +1,142 @@
+.platform-button {
+  --platform-button-border: linear-gradient(
+    -10deg,
+    rgba(200, 200, 200, 0.25),
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.15),
+    rgba(255, 255, 255, 0.375)
+  );
+  --platform-button-height: 28px;
+  --platform-button-padding-inline: 14px;
+  --platform-button-gap: 8px;
+  --platform-button-font-size: 12px;
+  --platform-button-font-weight: 400;
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+  height: var(--platform-button-height) !important;
+  min-height: var(--platform-button-height) !important;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: var(--platform-button-gap) !important;
+  padding: 0 var(--platform-button-padding-inline) !important;
+  overflow: hidden;
+  border: 0 !important;
+  border-radius: 999px !important;
+  outline: none;
+  color: rgba(255, 255, 255, 0.9);
+  font: inherit;
+  font-size: var(--platform-button-font-size) !important;
+  line-height: 1;
+  font-weight: var(--platform-button-font-weight) !important;
+  letter-spacing: 0;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease, filter 160ms ease, opacity 160ms ease;
+}
+
+.platform-button::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--platform-button-border);
+  mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+  mask-clip: content-box, border-box;
+  mask-composite: exclude;
+  mask-origin: content-box, border-box;
+  mask-repeat: repeat, repeat;
+  mask-size: auto, auto;
+}
+
+.platform-button > * {
+  position: relative;
+  z-index: 1;
+}
+
+.platform-button svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+}
+
+.platform-button.is-primary {
+  background: linear-gradient(to top, #082673, #1d59be) !important;
+  color: #fff !important;
+}
+
+.platform-button.is-primary:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.platform-button.is-secondary {
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+}
+
+.platform-button.is-secondary:hover:not(:disabled),
+.platform-button.is-secondary.is-active {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #fff !important;
+}
+
+.platform-button.is-danger,
+.platform-button.is-destructive {
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: rgba(248, 113, 113, 0.98) !important;
+}
+
+.platform-button:focus-visible {
+  box-shadow: 0 0 0 2px #000, 0 0 0 4px rgba(77, 163, 255, 0.72);
+}
+
+.platform-button:disabled,
+.platform-button[aria-disabled="true"] {
+  opacity: 0.5 !important;
+  cursor: default !important;
+  filter: none !important;
+}
+
+.platform-button.is-size-compact {
+  --platform-button-height: 26px;
+  --platform-button-padding-inline: 10px;
+  --platform-button-gap: 6px;
+  --platform-button-font-size: 10px;
+}
+
+.platform-button.is-size-small {
+  --platform-button-height: 28px;
+  --platform-button-padding-inline: 14px;
+  --platform-button-font-size: 12px;
+}
+
+.platform-button.is-size-medium {
+  --platform-button-height: 34px;
+  --platform-button-padding-inline: 14px;
+  --platform-button-font-size: 12px;
+}
+
+.platform-button.is-size-large {
+  --platform-button-height: 38px;
+  --platform-button-padding-inline: 16px;
+  --platform-button-font-size: 13px;
+  --platform-button-font-weight: 500;
+}
+
+.platform-button.is-full-width {
+  width: 100%;
+  flex: 1 1 auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .platform-button {
+    transition-duration: 1ms;
+  }
+}

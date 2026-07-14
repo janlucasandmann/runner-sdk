@@ -1,0 +1,13 @@
+import { MARKETPLACE_PAGE_DIALOGS_SCRIPT } from "./dialogs.mjs";
+import { MARKETPLACE_PAGE_SETUP_SCRIPT } from "./setup.mjs";
+import { MARKETPLACE_PAGE_TABLE_SCRIPT } from "./table.mjs";
+import { MARKETPLACE_PAGE_VIEW_SCRIPT } from "./view.mjs";
+
+export const MARKETPLACE_PAGE_SCRIPT_FRAGMENTS = Object.freeze({
+  setup: MARKETPLACE_PAGE_SETUP_SCRIPT,
+  table: MARKETPLACE_PAGE_TABLE_SCRIPT,
+  dialogs: MARKETPLACE_PAGE_DIALOGS_SCRIPT,
+  view: MARKETPLACE_PAGE_VIEW_SCRIPT,
+});
+
+export const MARKETPLACE_PAGE_SCRIPT = Object.values(MARKETPLACE_PAGE_SCRIPT_FRAGMENTS).join("");

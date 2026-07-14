@@ -1,0 +1,12 @@
+import { GUARDRAILS_APP_REFS_SCRIPT } from "./refs.mjs";
+import { GUARDRAILS_APP_VALUES_SCRIPT } from "./values.mjs";
+
+export const GUARDRAILS_APP_STATE_SCRIPT_FRAGMENTS = Object.freeze({
+  refs: GUARDRAILS_APP_REFS_SCRIPT,
+  values: GUARDRAILS_APP_VALUES_SCRIPT,
+});
+
+export const GUARDRAILS_APP_STATE_SCRIPT = [
+  GUARDRAILS_APP_REFS_SCRIPT,
+  GUARDRAILS_APP_VALUES_SCRIPT,
+].join("");

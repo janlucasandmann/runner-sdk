@@ -1,6 +1,10 @@
 import { AlertCircle, CheckCircle2, Clock3, LoaderCircle, ShieldAlert, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { RunnerThreadPermissionRequest } from "../../thread/types.js";
+import {
+  PlatformPrimaryButton,
+  PlatformSecondaryButton,
+} from "../../platform-ui/components/ui/button/index.js";
 
 export interface RunnerThreadPermissionRequestCardProps {
   request: RunnerThreadPermissionRequest;
@@ -93,7 +97,8 @@ export function RunnerThreadPermissionRequestCard({
             </div>
           ) : (
             <div className="tb-thread-permission-actions">
-              <button
+              <PlatformSecondaryButton
+                size="compact"
                 type="button"
                 className="is-secondary"
                 onClick={() => void submitDecision("deny")}
@@ -101,8 +106,9 @@ export function RunnerThreadPermissionRequestCard({
               >
                 {submittingDecision === "deny" ? <LoaderCircle className="is-spinning" strokeWidth={1.7} /> : null}
                 Deny
-              </button>
-              <button
+              </PlatformSecondaryButton>
+              <PlatformPrimaryButton
+                size="compact"
                 type="button"
                 className="is-primary"
                 onClick={() => void submitDecision("allow")}
@@ -110,7 +116,7 @@ export function RunnerThreadPermissionRequestCard({
               >
                 {submittingDecision === "allow" ? <LoaderCircle className="is-spinning" strokeWidth={1.7} /> : null}
                 Approve once
-              </button>
+              </PlatformPrimaryButton>
             </div>
           )}
           {decisionError ? (

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, ChevronRight, EllipsisVertical } from "lucide-react";
 import { DiffModeEnum, DiffView } from "@git-diff-view/react";
 import { generateDiffFile } from "@git-diff-view/file";
+import { PlatformPopupSurface } from "../platform-ui/components/composite/popup/index.js";
 import { mountRunnerChatStyles } from "./runner-chat-styles.js";
 
 export interface RunnerFileDiffSurfaceProps {
@@ -842,7 +843,7 @@ export function RunnerFileDiffSurface({
                 <EllipsisVertical className="tb-runner-diff-surface-action-icon" strokeWidth={1.8} />
               </button>
               {viewMenuOpen ? (
-                <div className="tb-runner-diff-surface-view-menu" role="menu">
+                <PlatformPopupSurface className="tb-runner-diff-surface-view-menu" role="menu">
                   {[
                     { id: "split" as const, label: "Split view" },
                     { id: "unified" as const, label: "Unified view" },
@@ -864,7 +865,7 @@ export function RunnerFileDiffSurface({
                       <span>{item.label}</span>
                     </button>
                   ))}
-                </div>
+                </PlatformPopupSurface>
               ) : null}
             </div>
           </div>

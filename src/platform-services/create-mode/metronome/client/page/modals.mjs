@@ -1,0 +1,475 @@
+export const METRONOME_PAGE_MODALS_SCRIPT = String.raw`
+          const renderEditor = () => metronomeVersionChangesState
+            ? renderMetronomeChangesMode()
+            : metronomeEditorMode === "code"
+            ? React.createElement(React.Fragment, null,
+                renderCodeMode(),
+                renderMetronomePublishSidebarPortal(),
+                renderMetronomeRunSidebarPortal()
+              )
+            : metronomeEditorMode === "runs"
+              ? React.createElement(React.Fragment, null,
+                  renderRunsMode(),
+                  renderMetronomePublishSidebarPortal(),
+                  renderMetronomeRunSidebarPortal()
+                )
+              : React.createElement(React.Fragment, null,
+                  React.createElement("div", { className: "playground-metronome-editor" },
+                    React.createElement("main", { className: "playground-metronome-editor-main" },
+                      React.createElement("div", { className: "playground-metronome-editor-content-header" },
+                        renderMetronomeHeaderControls()
+                      ),
+                      isMetronomeFlowReady
+                        ? React.createElement(ReactFlowProvider, { key: metronomeFlowGraphKey + "|mount:" + metronomeFlowMountVersion },
+                            React.createElement(MetronomeFlowCanvas, {
+                              key: metronomeFlowGraphKey,
+                              nodes: renderedMetronomeNodes,
+                              edges: renderedMetronomeEdges,
+                              nodeTypes,
+                              edgeTypes,
+                              onNodesChange: handleNodesChangeWithHistory,
+                              onEdgesChange: handleEdgesChangeWithHistory,
+                              onConnect: handleConnect,
+                              onNodeDragStop: handleMetronomeNodeDragStop,
+                              onCreateNode: handleCreateNode,
+                              onSelectNode: selectMetronomeNodeFromCanvas,
+                              onPaneClick: () => setSelectedNodeId(""),
+                              onUndo: undoGraphChange,
+                              onRedo: redoGraphChange,
+                              canUndo: graphUndoStack.length > 0,
+                              canRedo: graphRedoStack.length > 0,
+                              readOnly: isActiveWorkflowBuiltIn,
+                              interactionMode: metronomeCanvasInteractionMode,
+                              onInteractionModeChange: setMetronomeCanvasInteractionMode,
+                              onViewportChange: (viewport) => {
+                                const nextZoom = Number(viewport?.zoom);
+                                if (Number.isFinite(nextZoom) && nextZoom > 0) {
+                                  setMetronomeFlowZoom(nextZoom);
+                                }
+                              },
+                            })
+                          )
+                        : React.createElement("div", { className: "playground-metronome-flow" }),
+                      renderPalette(),
+                      renderInlineNodeInspector()
+                    )
+                  ),
+                  renderMetronomePublishSidebarPortal(),
+                  renderMetronomeRunSidebarPortal()
+                );
+
+          const renderWorkflowNameModal = () => {
+            if (!workflowNameModal) return null;
+            const isCreate = workflowNameModal.mode === "create";
+            const wallpaperOptions = getMetronomeWorkflowWallpaperOptions();
+            const currentWallpaperId = getMetronomeWorkflowWallpaperId(workflowWallpaperDraftId, wallpaperOptions[0]?.id || "");
+            const currentWallpaper = getMetronomeWorkflowWallpaperConfig(currentWallpaperId);
+            const getWorkflowWallpaperPreviewUrl = (wallpaper) => String(wallpaper?.url || "").trim();
+            const buildWorkflowWallpaperPreviewImage = (wallpaper) => {
+              const url = getWorkflowWallpaperPreviewUrl(wallpaper);
+              return url ? "url(" + JSON.stringify(url) + ")" : undefined;
+            };
+            const stepWorkflowWallpaper = (direction) => {
+              if (!wallpaperOptions.length) return;
+              const currentIndex = wallpaperOptions.findIndex((wallpaper) => wallpaper.id === currentWallpaperId);
+              const safeCurrentIndex = currentIndex >= 0 ? currentIndex : 0;
+              const step = direction === "prev" ? -1 : 1;
+              const nextIndex = (safeCurrentIndex + step + wallpaperOptions.length) % wallpaperOptions.length;
+              const nextWallpaper = wallpaperOptions[nextIndex] || wallpaperOptions[0];
+              if (!nextWallpaper?.id || nextWallpaper.id === currentWallpaperId) {
+                return;
+              }
+              if (workflowWallpaperTransitionTimerRef.current) {
+                window.clearTimeout(workflowWallpaperTransitionTimerRef.current);
+                workflowWallpaperTransitionTimerRef.current = null;
+              }
+              workflowWallpaperPreloadTokenRef.current += 1;
+              setWorkflowWallpaperTransition({
+                token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                direction: step > 0 ? "next" : "prev",
+                fromPreview: buildWorkflowWallpaperPreviewImage(wallpaperOptions[safeCurrentIndex] || currentWallpaper),
+                toPreview: buildWorkflowWallpaperPreviewImage(nextWallpaper),
+              });
+              setWorkflowWallpaperDraftId(nextWallpaper.id);
+              workflowWallpaperTransitionTimerRef.current = window.setTimeout(() => {
+                setWorkflowWallpaperTransition(null);
+                workflowWallpaperTransitionTimerRef.current = null;
+              }, 380);
+            };
+            const isWorkflowWallpaperPreviewTransitioning = workflowWallpaperTransition
+              && typeof workflowWallpaperTransition.fromPreview === "string"
+              && typeof workflowWallpaperTransition.toPreview === "string";
+            return React.createElement(PlatformModalBackdrop, {
+              className: "playground-tasks-project-modal-backdrop playground-metronome-name-modal-backdrop playground-metronome-workflow-modal-backdrop"
+                + (workflowNameModalVisible ? " is-visible" : "")
+                + (workflowNameModalClosing ? " is-closing" : ""),
+              role: "dialog",
+              "aria-modal": "true",
+              onClick: closeWorkflowNameModal,
+            },
+              React.createElement(PlatformModalSurface, {
+                as: "form",
+                className: "playground-tasks-project-modal playground-tasks-project-composer-modal playground-metronome-name-modal playground-metronome-workflow-modal"
+                  + (workflowNameModalVisible ? " is-visible" : "")
+                  + (workflowNameModalClosing ? " is-closing" : ""),
+                onClick: (event) => event.stopPropagation(),
+                onSubmit: (event) => {
+                  event.preventDefault();
+                  void commitWorkflowNameModal();
+                },
+              },
+                React.createElement("div", { className: "playground-metronome-workflow-modal-scroll" },
+                React.createElement("div", { className: "playground-tasks-project-modal-top playground-metronome-workflow-modal-top" },
+                  React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                    React.createElement("span", {
+                      className: "playground-tasks-project-modal-icon-trigger playground-metronome-workflow-modal-icon",
+                      "aria-hidden": "true",
+                    }, React.createElement(Metronome, { width: 20, height: 20, strokeWidth: 1.9 })),
+                    React.createElement("input", {
+                      className: "playground-tasks-project-modal-name-input playground-metronome-workflow-modal-name-input",
+                      value: workflowNameDraft,
+                      placeholder: "Metronome name",
+                      autoFocus: true,
+                      onChange: (event) => setWorkflowNameDraft(event.target.value),
+                      onKeyDown: (event) => {
+                        if (event.key === "Escape") {
+                          event.preventDefault();
+                          closeWorkflowNameModal();
+                        }
+                      },
+                    }),
+                    React.createElement("button", {
+                      type: "button",
+                      className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                      onClick: closeWorkflowNameModal,
+                      title: "Close",
+                      "aria-label": "Close",
+                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                  )
+                ),
+                wallpaperOptions.length
+                  ? React.createElement("div", { className: "playground-tasks-project-wallpaper-field playground-metronome-workflow-wallpaper-field" },
+                      React.createElement("div", { className: "playground-tasks-project-initial-setup-label" }, "Background"),
+                      React.createElement("div", { className: "playground-tasks-project-wallpaper-picker playground-metronome-workflow-wallpaper-picker" },
+                        React.createElement("div", {
+                            className: "playground-tasks-project-wallpaper-picker-preview"
+                              + (isWorkflowWallpaperPreviewTransitioning ? " is-" + workflowWallpaperTransition.direction : ""),
+                            style: isWorkflowWallpaperPreviewTransitioning ? undefined : { backgroundImage: buildWorkflowWallpaperPreviewImage(currentWallpaper) },
+                            "aria-hidden": "true",
+                          },
+                          isWorkflowWallpaperPreviewTransitioning
+                            ? React.createElement(React.Fragment, { key: workflowWallpaperTransition.token },
+                                React.createElement("div", {
+                                  className: "playground-tasks-project-wallpaper-picker-preview-image is-outgoing",
+                                  style: { backgroundImage: workflowWallpaperTransition.fromPreview },
+                                }),
+                                React.createElement("div", {
+                                  className: "playground-tasks-project-wallpaper-picker-preview-image is-incoming",
+                                  style: { backgroundImage: workflowWallpaperTransition.toPreview },
+                                })
+                              )
+                            : React.createElement("div", {
+                                key: currentWallpaperId || "current",
+                                className: "playground-tasks-project-wallpaper-picker-preview-image is-current",
+                                style: { backgroundImage: buildWorkflowWallpaperPreviewImage(currentWallpaper) },
+                              })
+                        ),
+                        React.createElement("div", { className: "playground-tasks-project-wallpaper-picker-controls" },
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-tasks-project-wallpaper-picker-button",
+                            onClick: () => stepWorkflowWallpaper("prev"),
+                            "aria-label": "Previous background image",
+                            title: "Previous background image",
+                          }, React.createElement(ChevronLeft, { width: 16, height: 16, strokeWidth: 1.8 })),
+                          React.createElement("div", { className: "playground-tasks-project-wallpaper-picker-label" },
+                            currentWallpaper?.name || "Background"
+                          ),
+                          React.createElement("button", {
+                            type: "button",
+                            className: "playground-tasks-project-wallpaper-picker-button",
+                            onClick: () => stepWorkflowWallpaper("next"),
+                            "aria-label": "Next background image",
+                            title: "Next background image",
+                          }, React.createElement(ChevronRight, { width: 16, height: 16, strokeWidth: 1.8 }))
+                        )
+                      )
+                    )
+                  : null,
+                React.createElement("div", { className: "playground-tasks-project-modal-actions playground-metronome-name-modal-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-action-button",
+                    onClick: closeWorkflowNameModal,
+                  }, "Cancel"),
+                  React.createElement(PlatformPrimaryButton, {
+                    size: "medium",
+                    type: "submit",
+                    className: "playground-environments-action-button is-primary",
+                    disabled: !String(workflowNameDraft || "").trim(),
+                  }, isCreate ? "Create" : "Save")
+                )
+                )
+              )
+            );
+          };
+
+          const renderWorkflowVersionModal = () => {
+            if (!workflowVersionModal) return null;
+            const isBusy = metronomePublishState.status === "loading";
+            const isEdit = workflowVersionModal.mode === "edit";
+            const trimmedVersionName = String(workflowVersionNameDraft || "").trim();
+            const renderDescriptionField = () => React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-initial-setup-goal-editor playground-tasks-issue-description-editor playground-agents-version-description-editor playground-metronome-version-description-editor" },
+              React.createElement("div", { className: "playground-tasks-detail-section-header" },
+                React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
+                React.createElement("div", { className: "playground-tasks-detail-format-actions" },
+                  [
+                    { id: "bold", label: "Bold", icon: Bold },
+                    { id: "italic", label: "Italic", icon: Italic },
+                    { id: "underline", label: "Underline", icon: Underline },
+                    { id: "list", label: "List", icon: List },
+                  ].map((action) =>
+                    React.createElement("button", {
+                      key: action.id,
+                      type: "button",
+                      className: "playground-tasks-detail-format-button",
+                      title: action.label,
+                      "aria-label": action.label,
+                      disabled: isBusy,
+                      onMouseDown: (event) => event.preventDefault(),
+                      onClick: () => applyWorkflowVersionDescriptionFormat(action.id),
+                    }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
+                  )
+                )
+              ),
+              React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isWorkflowVersionDescriptionEditing ? " is-editing" : " is-preview") },
+                !isWorkflowVersionDescriptionEditing
+                  ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
+                      String(workflowVersionDescriptionDraft || "").trim()
+                        ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                            content: workflowVersionDescriptionDraft,
+                            className: "playground-tasks-detail-description-preview tb-message-markdown",
+                          })
+                        : React.createElement("div", {
+                            className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
+                          }, "Describe what changed in this version.")
+                    )
+                  : null,
+                React.createElement("textarea", {
+                  ref: workflowVersionDescriptionTextareaRef,
+                  className: "playground-tasks-detail-description-input " + (isWorkflowVersionDescriptionEditing ? "is-editing" : "is-preview"),
+                  rows: 1,
+                  placeholder: isWorkflowVersionDescriptionEditing ? "Describe what changed in this version." : "",
+                  value: workflowVersionDescriptionDraft || "",
+                  disabled: isBusy,
+                  onFocus: () => setIsWorkflowVersionDescriptionEditing(true),
+                  onChange: (event) => setWorkflowVersionDescriptionDraft(event.target.value),
+                  onBlur: () => setIsWorkflowVersionDescriptionEditing(false),
+                  onKeyDown: (event) => {
+                    if (event.key === "Escape") {
+                      event.preventDefault();
+                      closeWorkflowVersionModal();
+                    }
+                  },
+                })
+              )
+            );
+            return renderPlaygroundPlatformModal({
+              open: Boolean(workflowVersionModal),
+              visible: workflowVersionModalVisible,
+              closing: workflowVersionModalClosing,
+              onClose: () => closeWorkflowVersionModal(),
+              as: "form",
+              backdropClassName: "playground-tasks-project-issue-backdrop playground-agents-version-modal-backdrop playground-metronome-version-modal-backdrop",
+              className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal playground-agents-version-modal playground-metronome-version-modal",
+              ariaLabel: isEdit ? "Edit Metronome version" : "New Metronome version",
+              surfaceProps: {
+                onSubmit: (event) => {
+                  event.preventDefault();
+                  void commitWorkflowVersionModal();
+                },
+                onKeyDown: (event) => {
+                  if (event.key === "Escape") {
+                    event.preventDefault();
+                    closeWorkflowVersionModal();
+                  }
+                },
+              },
+              children: React.createElement(React.Fragment, null,
+                React.createElement("div", { className: "playground-tasks-project-modal-top" },
+                  React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
+                    React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
+                      React.createElement(isEdit ? SquarePen : GitBranchPlus, { width: 18, height: 18, strokeWidth: 1.9 })
+                    ),
+                    React.createElement("input", {
+                      type: "text",
+                      className: "playground-tasks-project-modal-name-input playground-tasks-issue-modal-title-input",
+                      value: workflowVersionNameDraft,
+                      placeholder: "Version name",
+                      autoFocus: true,
+                      disabled: isBusy,
+                      onChange: (event) => setWorkflowVersionNameDraft(event.target.value),
+                    })
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                    onClick: () => closeWorkflowVersionModal(),
+                    title: "Close",
+                    disabled: isBusy,
+                  }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                ),
+                React.createElement("div", { className: "playground-tasks-issue-modal-body" },
+                  renderDescriptionField(),
+                  metronomePublishState.status === "error" && metronomePublishState.message
+                    ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, metronomePublishState.message)
+                    : null
+                ),
+                React.createElement("div", { className: "playground-tasks-project-modal-actions" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-environments-action-button",
+                    onClick: () => closeWorkflowVersionModal(),
+                    disabled: isBusy,
+                  }, "Cancel"),
+                  React.createElement(PlatformPrimaryButton, {
+                    size: "medium",
+                    type: "submit",
+                    className: "playground-environments-action-button is-primary",
+                    disabled: isBusy || !trimmedVersionName,
+                  }, isBusy ? (isEdit ? "Saving..." : "Creating...") : (isEdit ? "Save Version" : "Create Version"))
+                )
+              )
+            });
+          };
+
+          const renderMetronomeShareWorkflowModal = () => {
+            if (!metronomeShareWorkflow || isMetronomeWorkflowBuiltIn(metronomeShareWorkflow)) return null;
+            const isBusy = metronomeShareState.status === "loading" || metronomeShareState.status === "sharing";
+            const accessOptions = [
+              { value: "use", label: "Use" },
+              { value: "edit", label: "Edit" },
+              { value: "manage", label: "Manage" },
+            ];
+            return React.createElement(PlatformModalBackdrop, {
+              className: "playground-metronome-name-modal-backdrop",
+              role: "dialog",
+              "aria-modal": "true",
+              onMouseDown: (event) => {
+                if (event.target === event.currentTarget) {
+                  closeMetronomeShareWorkflowModal();
+                }
+              },
+            },
+              React.createElement(PlatformModalSurface, { className: "playground-metronome-name-modal is-share-workflow" },
+                React.createElement("div", { className: "playground-metronome-name-modal-header" },
+                  React.createElement("div", null,
+                    React.createElement("div", { className: "playground-metronome-name-modal-title" }, "Share Metronome"),
+                    React.createElement("div", { className: "playground-metronome-name-modal-copy" },
+                      "Share \"" + (metronomeShareWorkflow.name || "Untitled Metronome") + "\" with a team."
+                    )
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-metronome-icon-button playground-metronome-name-modal-close",
+                    onClick: closeMetronomeShareWorkflowModal,
+                    disabled: isBusy,
+                    "aria-label": "Close",
+                  },
+                    React.createElement(X, { width: 15, height: 15, strokeWidth: 1.9 })
+                  )
+                ),
+                React.createElement("div", { className: "playground-metronome-name-modal-body" },
+                  React.createElement("div", { className: "playground-metronome-field" },
+                    React.createElement("label", { className: "playground-metronome-field-label" }, "Team"),
+                    React.createElement("select", {
+                      className: "playground-metronome-select",
+                      value: metronomeShareTeamId,
+                      disabled: isBusy || metronomeShareTeams.length === 0,
+                      onChange: (event) => setMetronomeShareTeamId(event.target.value),
+                    },
+                      React.createElement("option", { value: "" }, metronomeShareTeams.length ? "Select team" : "No teams available"),
+                      metronomeShareTeams.map((team) => React.createElement("option", { key: team.id, value: team.id }, team.name || "Untitled team"))
+                    )
+                  ),
+                  React.createElement("div", { className: "playground-metronome-field" },
+                    React.createElement("label", { className: "playground-metronome-field-label" }, "Access"),
+                    React.createElement("select", {
+                      className: "playground-metronome-select",
+                      value: metronomeShareAccessLevel,
+                      disabled: isBusy,
+                      onChange: (event) => setMetronomeShareAccessLevel(event.target.value),
+                    },
+                      accessOptions.map((option) => React.createElement("option", { key: option.value, value: option.value }, option.label))
+                    )
+                  ),
+                  metronomeShareState.message
+                    ? React.createElement("p", {
+                        className: "playground-metronome-share-status" + (metronomeShareState.status === "error" ? " is-error" : ""),
+                      }, metronomeShareState.message)
+                    : null,
+                  React.createElement("div", { className: "playground-metronome-name-modal-actions" },
+                    React.createElement(PlatformSecondaryButton, {
+                      size: "large",
+                      type: "button",
+                      className: "playground-metronome-secondary-button",
+                      onClick: closeMetronomeShareWorkflowModal,
+                      disabled: isBusy,
+                    }, "Cancel"),
+                    React.createElement(PlatformPrimaryButton, {
+                      size: "large",
+                      type: "button",
+                      className: "playground-metronome-primary-button",
+                      onClick: () => void shareMetronomeWorkflowWithTeam(),
+                      disabled: isBusy || !metronomeShareTeamId,
+                    }, metronomeShareState.status === "sharing" ? "Sharing..." : "Share")
+                  )
+                )
+              )
+            );
+          };
+
+          const renderMetronomeDeploymentHistoryModal = () => {
+            if (!isMetronomeDeploymentHistoryModalOpen) return null;
+            return React.createElement(PlatformModalBackdrop, {
+              className: "playground-metronome-name-modal-backdrop",
+              role: "dialog",
+              "aria-modal": "true",
+            },
+              React.createElement(PlatformModalSurface, { className: "playground-metronome-name-modal playground-metronome-deployment-history-modal" },
+                React.createElement("div", { className: "playground-metronome-name-modal-header" },
+                  React.createElement("div", null,
+                    React.createElement("div", { className: "playground-metronome-name-modal-title" }, "Deployment history"),
+                    React.createElement("div", { className: "playground-metronome-name-modal-copy" },
+                      "Published and unpublished versions for this Metronome workflow."
+                    )
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-metronome-icon-button playground-metronome-name-modal-close",
+                    onClick: () => setIsMetronomeDeploymentHistoryModalOpen(false),
+                    "aria-label": "Close",
+                  },
+                    React.createElement(X, { width: 15, height: 15, strokeWidth: 1.9 })
+                  )
+                ),
+                React.createElement("div", { className: "playground-metronome-name-modal-body" },
+                  renderMetronomeDeploymentHistory()
+                )
+              )
+            );
+          };
+
+          return React.createElement(React.Fragment, null,
+            React.createElement("div", {
+              className: "playground-metronome-page"
+                + (isEditor ? " is-editor" : " is-overview")
+                + (isEditor && metronomeEditorMode === "code" ? " is-code" : ""),
+            }, isEditor ? renderEditor() : renderOverview()),
+            renderWorkflowNameModal(),
+            renderWorkflowVersionModal(),
+            renderMetronomeShareWorkflowModal(),
+            renderMetronomeDeploymentHistoryModal()
+          );
+        }
+`;

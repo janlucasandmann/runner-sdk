@@ -1,0 +1,28 @@
+export const TEAMS_STATE_DIALOGS_SCRIPT = `	        const [teamPageCreateName, setTeamPageCreateName] = useState("");
+        const [teamPageCreateModalOpen, setTeamPageCreateModalOpen] = useState(false);
+        const [teamPageCreateInviteEmails, setTeamPageCreateInviteEmails] = useState("");
+        const [teamPageCreateInviteRole, setTeamPageCreateInviteRole] = useState("member");
+        const [teamPageRenameModalOpen, setTeamPageRenameModalOpen] = useState(false);
+        const [teamPageRenameModalVisible, setTeamPageRenameModalVisible] = useState(false);
+        const [teamPageRenameModalClosing, setTeamPageRenameModalClosing] = useState(false);
+        const [teamPageRenameName, setTeamPageRenameName] = useState("");
+        const [teamPageInviteModalOpen, setTeamPageInviteModalOpen] = useState(false);
+        const [teamPageInviteModalVisible, setTeamPageInviteModalVisible] = useState(false);
+        const [teamPageInviteModalClosing, setTeamPageInviteModalClosing] = useState(false);
+        const [teamPageInviteEmail, setTeamPageInviteEmail] = useState("");
+        const [teamPageInviteRole, setTeamPageInviteRole] = useState("member");
+        const [teamPageShareModalOpen, setTeamPageShareModalOpen] = useState(false);
+        const [teamPageShareModalVisible, setTeamPageShareModalVisible] = useState(false);
+        const [teamPageShareModalClosing, setTeamPageShareModalClosing] = useState(false);
+        const [teamPageShareResourceType, setTeamPageShareResourceType] = useState("project");
+        const [teamPageShareResourceId, setTeamPageShareResourceId] = useState("");
+        const [teamPageShareAccessLevel, setTeamPageShareAccessLevel] = useState("use");
+        const [teamPageShareResourcePickerOpen, setTeamPageShareResourcePickerOpen] = useState(false);
+        const [teamPageShareAccessPickerOpen, setTeamPageShareAccessPickerOpen] = useState(false);
+        const [teamPageActionId, setTeamPageActionId] = useState("");
+        const teamPageRenameModalCloseTimerRef = useRef(null);
+        const teamPageInviteModalCloseTimerRef = useRef(null);
+        const teamPageShareModalCloseTimerRef = useRef(null);
+        const teamPageProjectResourceIndexLoadKeyRef = useRef("");
+`;
+

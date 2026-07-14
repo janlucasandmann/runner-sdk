@@ -1,0 +1,103 @@
+export const GUARDRAILS_CATALOG_SCRIPT = `      const PLAYGROUND_GUARDRAILS_STORAGE_KEY = "runner_demo_guardrail_sets";
+      const PLAYGROUND_DEFAULT_GUARDRAIL_SETS = [
+        {
+          id: "default_guardrail_operational_safety",
+          name: "Operational Safety",
+          description: "Keeps agents from taking irreversible or high-risk actions without explicit confirmation.",
+          source: "default",
+          isDefault: true,
+          readOnly: true,
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+          prompts: [
+            {
+              id: "default_guardrail_operational_safety_confirm",
+              title: "Require explicit confirmation",
+              prompt: "Before deleting, overwriting, publishing, billing, sending external messages, changing permissions, or running irreversible operations, state the exact action, expected impact, and ask for explicit user confirmation. If the user already gave explicit approval for that exact action in the current thread, proceed without asking again.",
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+            },
+            {
+              id: "default_guardrail_operational_safety_reversible",
+              title: "Prefer reversible changes",
+              prompt: "When multiple approaches are possible, choose the reversible or low-blast-radius path first. Preserve existing user work, avoid broad refactors, and do not reset, discard, or overwrite user-created state unless the user explicitly asks.",
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+            },
+            {
+              id: "default_guardrail_operational_safety_uncertainty",
+              title: "Surface uncertainty and blockers",
+              prompt: "If required context is missing or a requested action could create material risk, ask a concise clarifying question or explain the blocker before proceeding. Do not invent credentials, approvals, system state, legal facts, financial facts, or medical facts.",
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+            },
+          ],
+        },
+        {
+          id: "default_guardrail_data_privacy",
+          name: "Data Privacy & Secrets",
+          description: "Protects credentials, personal data, and confidential workspace content.",
+          source: "default",
+          isDefault: true,
+          readOnly: true,
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+          prompts: [
+            {
+              id: "default_guardrail_data_privacy_secrets",
+              title: "Never expose secrets",
+              prompt: "Never print, summarize, log, transmit, or store secrets such as API keys, access tokens, passwords, private keys, session cookies, or recovery codes. If secret material appears in context, treat it as sensitive and refer to it only generically.",
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+            },
+            {
+              id: "default_guardrail_data_privacy_minimize",
+              title: "Minimize personal data",
+              prompt: "Use the minimum personal or customer data needed for the task. Avoid copying personal data into prompts, comments, tickets, logs, or external tools unless it is necessary and allowed by the user request.",
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+            },
+            {
+              id: "default_guardrail_data_privacy_external",
+              title: "Check external sharing",
+              prompt: "Before sending workspace data to an external service, repository, email, chat, or public location, verify that the destination is intended and that the content does not include secrets or unnecessary sensitive information.",
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+            },
+          ],
+        },
+        {
+          id: "default_guardrail_quality_accountability",
+          name: "Quality & Accountability",
+          description: "Keeps agent outputs verifiable, scoped, and production-oriented.",
+          source: "default",
+          isDefault: true,
+          readOnly: true,
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+          prompts: [
+            {
+              id: "default_guardrail_quality_accountability_verify",
+              title: "Verify before finalizing",
+              prompt: "Before marking work complete, run the relevant checks that are available for the task. If checks cannot be run, say exactly what was not verified and why.",
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+            },
+            {
+              id: "default_guardrail_quality_accountability_scope",
+              title: "Keep scope tight",
+              prompt: "Stay within the user's requested scope and the surrounding system conventions. Do not make unrelated rewrites, cosmetic churn, or speculative changes unless they are required to safely complete the task.",
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+            },
+            {
+              id: "default_guardrail_quality_accountability_audit",
+              title: "Make outcomes auditable",
+              prompt: "When reporting results, name the concrete files, records, workflows, or resources changed and summarize the verification performed. Mention residual risks or follow-up work only when they are actionable.",
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+            },
+          ],
+        },
+      ];
+`;

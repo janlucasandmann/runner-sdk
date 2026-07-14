@@ -19,12 +19,144 @@
     "./react/styles.css": {
       "default": "./dist/react/runner-chat.css"
     },
+    "./platform-ui/components": {
+      "types": "./dist/platform-ui/components/index.d.ts",
+      "default": "./dist/platform-ui/components/index.js"
+    },
+    "./platform-ui/components/ui": {
+      "types": "./dist/platform-ui/components/ui/index.d.ts",
+      "default": "./dist/platform-ui/components/ui/index.js"
+    },
+    "./platform-ui/components/ui/button": {
+      "types": "./dist/platform-ui/components/ui/button/index.d.ts",
+      "default": "./dist/platform-ui/components/ui/button/index.js"
+    },
+    "./platform-ui/components/ui/button/styles.css": {
+      "default": "./dist/platform-ui/components/ui/button/button.css"
+    },
+    "./platform-ui/components/ui/search": {
+      "types": "./dist/platform-ui/components/ui/search/index.d.ts",
+      "default": "./dist/platform-ui/components/ui/search/index.js"
+    },
+    "./platform-ui/components/ui/search/styles.css": {
+      "default": "./dist/platform-ui/components/ui/search/search.css"
+    },
+    "./platform-ui/components/ui/switch": {
+      "types": "./dist/platform-ui/components/ui/switch/index.d.ts",
+      "default": "./dist/platform-ui/components/ui/switch/index.js"
+    },
+    "./platform-ui/components/ui/switch/styles.css": {
+      "default": "./dist/platform-ui/components/ui/switch/switch.css"
+    },
+    "./platform-ui/components/composite": {
+      "types": "./dist/platform-ui/components/composite/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/index.js"
+    },
+    "./platform-ui/components/composite/data-table": {
+      "types": "./dist/platform-ui/components/composite/data-table/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/data-table/index.js"
+    },
+    "./platform-ui/components/composite/data-table/styles.css": {
+      "default": "./dist/platform-ui/components/composite/data-table/data-table.css"
+    },
+    "./platform-ui/components/composite/modal": {
+      "types": "./dist/platform-ui/components/composite/modal/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/modal/index.js"
+    },
+    "./platform-ui/components/composite/modal/styles.css": {
+      "default": "./dist/platform-ui/components/composite/modal/modal.css"
+    },
+    "./platform-ui/components/composite/popup": {
+      "types": "./dist/platform-ui/components/composite/popup/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/popup/index.js"
+    },
+    "./platform-ui/components/composite/popup/styles.css": {
+      "default": "./dist/platform-ui/components/composite/popup/popup.css"
+    },
+    "./platform-ui/components/composite/widgets": {
+      "types": "./dist/platform-ui/components/composite/widgets/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/widgets/index.js"
+    },
     "./platform-ui/data-table": {
-      "types": "./dist/platform-ui/data-table/index.d.ts",
-      "default": "./dist/platform-ui/data-table/index.js"
+      "types": "./dist/platform-ui/components/composite/data-table/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/data-table/index.js"
     },
     "./platform-ui/data-table/styles.css": {
-      "default": "./dist/platform-ui/data-table/data-table.css"
+      "default": "./dist/platform-ui/components/composite/data-table/data-table.css"
+    },
+    "./platform-ui/components/button": {
+      "types": "./dist/platform-ui/components/ui/button/index.d.ts",
+      "default": "./dist/platform-ui/components/ui/button/index.js"
+    },
+    "./platform-ui/components/button/styles.css": {
+      "default": "./dist/platform-ui/components/ui/button/button.css"
+    },
+    "./platform-ui/components/search": {
+      "types": "./dist/platform-ui/components/ui/search/index.d.ts",
+      "default": "./dist/platform-ui/components/ui/search/index.js"
+    },
+    "./platform-ui/components/search/styles.css": {
+      "default": "./dist/platform-ui/components/ui/search/search.css"
+    },
+    "./platform-ui/components/data-table": {
+      "types": "./dist/platform-ui/components/composite/data-table/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/data-table/index.js"
+    },
+    "./platform-ui/components/data-table/styles.css": {
+      "default": "./dist/platform-ui/components/composite/data-table/data-table.css"
+    },
+    "./platform-ui/components/modal": {
+      "types": "./dist/platform-ui/components/composite/modal/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/modal/index.js"
+    },
+    "./platform-ui/components/modal/styles.css": {
+      "default": "./dist/platform-ui/components/composite/modal/modal.css"
+    },
+    "./platform-ui/components/popup": {
+      "types": "./dist/platform-ui/components/composite/popup/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/popup/index.js"
+    },
+    "./platform-ui/components/popup/styles.css": {
+      "default": "./dist/platform-ui/components/composite/popup/popup.css"
+    },
+    "./platform-ui/components/switch": {
+      "types": "./dist/platform-ui/components/ui/switch/index.d.ts",
+      "default": "./dist/platform-ui/components/ui/switch/index.js"
+    },
+    "./platform-ui/components/switch/styles.css": {
+      "default": "./dist/platform-ui/components/ui/switch/switch.css"
+    },
+    "./platform-ui/components/widgets": {
+      "types": "./dist/platform-ui/components/composite/widgets/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/widgets/index.js"
+    },
+    "./platform-ui/popup": {
+      "types": "./dist/platform-ui/components/composite/popup/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/popup/index.js"
+    },
+    "./platform-ui/popup/styles.css": {
+      "default": "./dist/platform-ui/components/composite/popup/popup.css"
+    },
+    "./platform-ui/pages": {
+      "types": "./dist/platform-ui/pages/index.d.ts",
+      "default": "./dist/platform-ui/pages/index.js"
+    },
+    "./platform-ui/pages/styles.css": {
+      "default": "./dist/platform-ui/pages/overview/resource-overview.css"
+    },
+    "./platform-resources": {
+      "types": "./dist/platform-resources/index.d.ts",
+      "default": "./dist/platform-resources/index.js"
+    },
+    "./platform-resources/styles.css": {
+      "default": "./dist/platform-ui/pages/overview/resource-overview.css"
+    },
+    "./platform-ui/resources": {
+      "types": "./dist/platform-resources/index.d.ts",
+      "default": "./dist/platform-resources/index.js"
+    },
+    "./platform-ui/resources/styles.css": {
+      "default": "./dist/platform-ui/pages/overview/resource-overview.css"
     }
   },
   "files": [
@@ -33,17 +165,42 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "npm run platform-table-invariants && node ./scripts/runner-chat-assets.mjs prepare && tsc -p tsconfig.json && node ./scripts/runner-chat-assets.mjs copy",
+    "build": "npm run platform-component-invariants && npm run platform-table-invariants && npm run platform-overlay-invariants && npm run platform-button-invariants && npm run platform-widget-invariants && npm run platform-resource-invariants && node ./scripts/runner-chat-assets.mjs prepare && tsc -p tsconfig.json && node ./scripts/runner-chat-assets.mjs copy",
     "clean": "rm -rf dist",
     "history-smoke": "npm run build && node ./examples/history-api-test.mjs",
+    "calendar-service-test": "node ./src/platform-services/create-mode/calendar/calendar-service-test.mjs",
+    "evaluations-service-test": "node ./src/platform-services/configure-mode/evaluations/evaluations-service-test.mjs",
+    "files-service-test": "node ./src/platform-services/create-mode/files/files-service-test.mjs",
+    "fine-tuning-service-test": "node ./src/platform-services/configure-mode/fine-tuning/fine-tuning-service-test.mjs",
+    "guardrails-service-test": "node ./src/platform-services/configure-mode/guardrails/guardrails-service-test.mjs",
+    "imagine-service-test": "node ./src/platform-services/create-mode/imagine/imagine-service-test.mjs",
+    "inference-service-test": "node ./src/platform-services/configure-mode/inference/inference-service-test.mjs",
     "metronome-runtime-test": "node ./examples/metronome-dynamic-content-runtime-test.mjs",
+    "metronome-service-test": "node ./src/platform-services/create-mode/metronome/metronome-service-test.mjs",
+    "marketplace-service-test": "node ./src/platform-services/configure-mode/marketplace/marketplace-service-test.mjs",
+    "models-service-test": "node ./src/platform-services/configure-mode/models/models-service-test.mjs",
+    "organizations-service-test": "node ./src/platform-services/configure-mode/organizations/organizations-service-test.mjs",
+    "projects-service-test": "node ./src/platform-services/create-mode/projects/projects-service-test.mjs",
+    "teams-service-test": "node ./src/platform-services/configure-mode/teams/teams-service-test.mjs",
     "thread-domain-test": "npm run build && node ./examples/thread-domain-test.mjs",
     "thread-ui-test": "npm run build && node ./examples/thread-ui-test.mjs",
     "thread-proxy-test": "node ./examples/demo-thread-v2-proxy-test.mjs",
     "thread-preview": "npm run build && node ./examples/thread-ui-preview.mjs",
     "realtime-metronome-test": "npm run build && node ./examples/realtime-metronome-adapters-test.mjs",
     "platform-table-invariants": "node ./scripts/platform-table-invariants.mjs",
-    "platform-table-test": "npm run platform-table-invariants && vitest run src/platform-ui/data-table",
+    "platform-component-invariants": "node ./scripts/platform-component-invariants.mjs",
+    "platform-table-test": "npm run platform-table-invariants && vitest run src/platform-ui/components/composite/data-table",
+    "platform-button-test": "vitest run src/platform-ui/components/ui/button",
+    "platform-search-test": "vitest run src/platform-ui/components/ui/search",
+    "platform-button-invariants": "node ./scripts/platform-button-invariants.mjs",
+    "platform-overlay-invariants": "node ./scripts/platform-overlay-invariants.mjs",
+    "platform-resource-invariants": "node ./scripts/platform-resource-invariants.mjs",
+    "platform-popup-test": "vitest run src/platform-ui/components/composite/popup",
+    "platform-modal-test": "vitest run src/platform-ui/components/composite/modal",
+    "platform-switch-test": "vitest run src/platform-ui/components/ui/switch",
+    "platform-widget-invariants": "node ./scripts/platform-widget-invariants.mjs",
+    "platform-widget-test": "npm run platform-widget-invariants && vitest run src/platform-ui/components/composite/widgets",
+    "platform-resource-overview-test": "npm run platform-resource-invariants && vitest run src/platform-ui/pages/overview",
     "smoke": "npm run build && node ./examples/smoke-test.mjs",
     "demo": "npm run build && node ./examples/demo-server.mjs"
   },

@@ -1,0 +1,15 @@
+import { GUARDRAILS_PAGE_FOUNDATION_CSS } from "./foundation.mjs";
+import { GUARDRAILS_PAGE_OVERVIEW_CSS } from "./overview.mjs";
+import { GUARDRAILS_PAGE_DETAIL_CSS } from "./detail.mjs";
+
+export const GUARDRAILS_PAGE_CSS_FRAGMENTS = Object.freeze({
+  foundation: GUARDRAILS_PAGE_FOUNDATION_CSS,
+  overview: GUARDRAILS_PAGE_OVERVIEW_CSS,
+  detail: GUARDRAILS_PAGE_DETAIL_CSS,
+});
+
+export const GUARDRAILS_PAGE_CSS = [
+  GUARDRAILS_PAGE_FOUNDATION_CSS,
+  GUARDRAILS_PAGE_OVERVIEW_CSS,
+  GUARDRAILS_PAGE_DETAIL_CSS,
+].join("");

@@ -1,0 +1,153 @@
+.platform-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10020;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow: auto;
+  background: rgba(0, 0, 0, 0);
+  transition: background-color 75ms linear;
+}
+
+.platform-modal-backdrop.is-visible {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.platform-modal-surface {
+  --platform-modal-border: var(
+    --tb-task-input-border,
+    var(
+      --tb-runner-input-border,
+      linear-gradient(
+        -10deg,
+        rgba(200, 200, 200, 0.25),
+        rgba(255, 255, 255, 0.1),
+        rgba(255, 255, 255, 0.15),
+        rgba(255, 255, 255, 0.375)
+      )
+    )
+  );
+  position: relative;
+  width: min(820px, calc(100vw - 48px));
+  max-height: calc(100dvh - 48px);
+  padding: var(--platform-modal-padding, 0 16px);
+  overflow: visible;
+  border: 0 !important;
+  border-radius: var(--platform-modal-radius, 25px) !important;
+  outline: none;
+  background: var(--platform-modal-background, rgba(30, 30, 30, 0.5)) !important;
+  box-shadow: var(--platform-modal-shadow, 0 24px 70px rgba(0, 0, 0, 0.48)) !important;
+  -webkit-backdrop-filter: var(--platform-modal-backdrop-filter, blur(20px)) !important;
+  backdrop-filter: var(--platform-modal-backdrop-filter, blur(20px)) !important;
+  transform-origin: center;
+  opacity: 0.5;
+  transform: scale(0.5);
+  transition: opacity 75ms linear, transform 75ms linear;
+  will-change: opacity, transform;
+}
+
+.platform-modal-surface.is-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.platform-modal-surface.is-closing {
+  pointer-events: none;
+}
+
+.platform-modal-surface.is-scrollable {
+  overflow: auto;
+}
+
+.platform-modal-surface.is-size-compact {
+  width: min(400px, calc(100vw - 48px));
+}
+
+.platform-modal-surface.is-size-small {
+  width: min(520px, calc(100vw - 48px));
+}
+
+.platform-modal-surface.is-size-medium {
+  width: min(820px, calc(100vw - 48px));
+}
+
+.platform-modal-surface.is-size-large {
+  width: min(1040px, calc(100vw - 48px));
+}
+
+.platform-modal-surface.is-size-wide {
+  width: min(1280px, calc(100vw - 48px));
+}
+
+.platform-modal-surface.is-size-full {
+  width: calc(100vw - 32px);
+  max-width: none;
+  height: calc(100dvh - 32px);
+  max-height: none;
+}
+
+.platform-modal-surface::before {
+  content: "" !important;
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: block !important;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--platform-modal-border) !important;
+  mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+  mask-clip: content-box, border-box;
+  mask-composite: exclude;
+  mask-origin: content-box, border-box;
+  mask-repeat: repeat, repeat;
+  mask-size: auto, auto;
+}
+
+.platform-modal-surface::after {
+  content: none !important;
+  display: none !important;
+}
+
+.platform-modal-header,
+.platform-modal-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.platform-modal-header {
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.platform-modal-body {
+  min-width: 0;
+}
+
+.platform-modal-footer {
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+@media (max-width: 640px) {
+  .platform-modal-backdrop {
+    align-items: flex-end;
+    padding: 12px;
+  }
+
+  .platform-modal-surface,
+  .platform-modal-surface[class*="is-size-"] {
+    width: 100%;
+    max-height: calc(100dvh - 24px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .platform-modal-backdrop,
+  .platform-modal-surface {
+    transition-duration: 1ms;
+  }
+}

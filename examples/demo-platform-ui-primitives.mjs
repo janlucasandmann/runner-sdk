@@ -1,118 +1,4 @@
-export const PLATFORM_UI_PRIMITIVES_CSS = String.raw`
-      .playground-platform-modal-backdrop {
-        position: fixed;
-        inset: 0;
-        z-index: 10020;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 24px;
-        background: rgba(0, 0, 0, 0);
-        backdrop-filter: none;
-        -webkit-backdrop-filter: none;
-        transition: background-color 75ms linear !important;
-      }
-
-      .playground-platform-modal-backdrop.is-visible {
-        background: rgba(0, 0, 0, 0.5);
-      }
-
-      .playground-platform-modal {
-        --tb-runner-input-border: linear-gradient(
-          -10deg,
-          rgba(200, 200, 200, 0.25),
-          rgba(255, 255, 255, 0.1),
-          rgba(255, 255, 255, 0.15),
-          rgba(255, 255, 255, 0.375)
-        );
-        position: relative;
-        overflow: visible;
-        border: 0 !important;
-        border-radius: 25px;
-        background: rgba(30, 30, 30, 0.5) !important;
-        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.48) !important;
-        backdrop-filter: blur(20px) !important;
-        -webkit-backdrop-filter: blur(20px) !important;
-        transform-origin: center;
-        opacity: 0.5;
-        transform: scale(0.5);
-        transition: opacity 75ms linear, transform 75ms linear !important;
-        will-change: opacity, transform;
-      }
-
-      .playground-platform-modal.is-visible {
-        opacity: 1;
-        transform: scale(1);
-      }
-
-      .playground-platform-modal::before {
-        content: "" !important;
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        z-index: 5;
-        display: block !important;
-        border-radius: inherit;
-        padding: 1px;
-        background: var(--tb-task-input-border, var(--tb-runner-input-border));
-        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-        mask-clip: content-box, border-box;
-        mask-composite: exclude;
-        mask-origin: content-box, border-box;
-        mask-repeat: repeat, repeat;
-        mask-size: auto, auto;
-      }
-
-      .playground-platform-modal::after {
-        content: none !important;
-        display: none !important;
-      }
-
-      .playground-platform-popup-shell {
-        position: relative;
-        z-index: 31;
-      }
-
-      .playground-platform-popup-shell.is-open {
-        z-index: 120;
-      }
-
-      .playground-platform-popup-shell .playground-platform-popup-menu {
-        --playground-platform-popup-border: var(--tb-task-input-border, var(--tb-runner-input-border, linear-gradient(-10deg, rgba(200, 200, 200, 0.25), rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.375))));
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        overflow: hidden;
-        border: 0;
-        border-radius: 25px;
-        background: rgba(30, 30, 30, 0.5);
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
-        -webkit-backdrop-filter: blur(5px);
-        backdrop-filter: blur(5px);
-      }
-
-      .playground-platform-popup-shell .playground-platform-popup-menu::before {
-        content: "";
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        z-index: 5;
-        border-radius: inherit;
-        padding: 1px;
-        background: var(--playground-platform-popup-border);
-        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-        mask-clip: content-box, border-box;
-        mask-composite: exclude;
-        mask-origin: content-box, border-box;
-        mask-repeat: repeat, repeat;
-        mask-size: auto, auto;
-      }
-
-      .playground-platform-popup-shell .playground-platform-popup-menu > * {
-        position: relative;
-        z-index: 6;
-      }
-`;
+export const PLATFORM_UI_PRIMITIVES_CSS = String.raw``;
 
 export const PLATFORM_UI_PRIMITIVES_SCRIPT = String.raw`
       const PLAYGROUND_PLATFORM_MODAL_ANIMATION_MS = 75;
@@ -125,31 +11,20 @@ export const PLATFORM_UI_PRIMITIVES_SCRIPT = String.raw`
           .join(" ");
       }
 
-      function getPlaygroundPlatformModalBackdropClassName({ className = "", visible = false, closing = false } = {}) {
-        return joinPlaygroundPlatformClassNames(
-          "playground-platform-modal-backdrop",
-          className,
-          visible ? "is-visible" : "",
-          closing ? "is-closing" : ""
-        );
-      }
-
-      function getPlaygroundPlatformModalClassName({ className = "", visible = false, closing = false } = {}) {
-        return joinPlaygroundPlatformClassNames(
-          "playground-platform-modal",
-          className,
-          visible ? "is-visible" : "",
-          closing ? "is-closing" : ""
-        );
-      }
-
       function renderPlaygroundPlatformModal({
         open,
-        visible = false,
+        visible = true,
         closing = false,
         onClose,
         closeOnBackdrop = true,
+        closeOnEscape = true,
         as = "div",
+        size = "medium",
+        width,
+        maxWidth,
+        maxHeight,
+        scrollable = false,
+        lockScroll = true,
         backdropClassName = "",
         className = "",
         role = "dialog",
@@ -158,41 +33,32 @@ export const PLATFORM_UI_PRIMITIVES_SCRIPT = String.raw`
         surfaceProps = {},
         children,
       } = {}) {
-        if (!open) {
-          return null;
-        }
-        const SurfaceElement = as || "div";
-        const modalElement = React.createElement("div", {
-            className: getPlaygroundPlatformModalBackdropClassName({ className: backdropClassName, visible, closing }),
-            onClick: closeOnBackdrop && typeof onClose === "function" ? () => onClose() : undefined,
-          },
-          React.createElement(SurfaceElement, {
-              ...(surfaceProps || {}),
-              className: getPlaygroundPlatformModalClassName({ className, visible, closing }),
-              role,
-              "aria-modal": "true",
-              "aria-label": ariaLabel || undefined,
-              onClick: (event) => {
-                event.stopPropagation();
-                if (typeof surfaceProps?.onClick === "function") {
-                  surfaceProps.onClick(event);
-                }
-              },
-            },
-            children
-          )
-        );
-        return portal && typeof document !== "undefined" && document.body
-          ? createPortal(modalElement, document.body)
-          : modalElement;
+        return React.createElement(PlatformModal, {
+          open: Boolean(open),
+          visible,
+          closing,
+          onClose: typeof onClose === "function" ? () => onClose() : undefined,
+          closeOnBackdrop,
+          closeOnEscape,
+          as,
+          size,
+          width,
+          maxWidth,
+          maxHeight,
+          scrollable,
+          lockScroll,
+          backdropClassName,
+          className,
+          role,
+          ariaLabel,
+          portal,
+          surfaceProps,
+        }, children);
       }
 
       function getPlaygroundPlatformPopupMenuClassName(className = "", options = {}) {
-        const animationClassName = options.animate === false
-          ? ""
-          : options.animationClassName || "playground-tasks-toolbar-popup-menu-animate-down-in";
+        const animationClassName = options.animationClassName || "";
         return joinPlaygroundPlatformClassNames(
-          "tb-popup-menu",
           "playground-tasks-toolbar-popup-menu",
           "playground-platform-popup-menu",
           animationClassName,
@@ -215,26 +81,22 @@ export const PLATFORM_UI_PRIMITIVES_SCRIPT = String.raw`
           className: menuPropsClassName = "",
           ...restMenuProps
         } = menuProps || {};
-        return React.createElement("div", {
-            className: joinPlaygroundPlatformClassNames(
+        return React.createElement(PlatformPopup, {
+            open: Boolean(open),
+            rootRef: shellRef || undefined,
+            rootClassName: joinPlaygroundPlatformClassNames(
               "playground-platform-popup-shell",
               "playground-tasks-toolbar-popup-shell",
-              shellClassName,
-              open ? "is-open" : ""
+              shellClassName
             ),
-            ref: shellRef || undefined,
-          },
-          typeof trigger === "function" ? trigger({ open: Boolean(open) }) : trigger,
-          open
-            ? React.createElement("div", {
-                ...restMenuProps,
-                className: getPlaygroundPlatformPopupMenuClassName(
-                  joinPlaygroundPlatformClassNames(menuClassName, menuPropsClassName),
-                  { animate, animationClassName }
-                ),
-              }, children)
-            : null
-        );
+            trigger,
+            surfaceClassName: getPlaygroundPlatformPopupMenuClassName(
+              joinPlaygroundPlatformClassNames(menuClassName, menuPropsClassName),
+              { animationClassName }
+            ),
+            surfaceProps: restMenuProps,
+            animation: animate === false ? false : (animationClassName ? undefined : "down-in"),
+          }, children);
       }
 
       const PlaygroundPlatformModal = renderPlaygroundPlatformModal;

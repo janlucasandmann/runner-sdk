@@ -596,20 +596,18 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   gap: 10px;
   min-height: 48px;
   padding: 0 18px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 999px;
-  background: rgba(34, 34, 34, 0.94);
-  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
+  border: 0;
+  border-radius: 21px;
+  background: transparent;
   color: rgba(255, 255, 255, 0.96);
   font-size: 13px;
   line-height: 1;
   font-weight: 500;
   cursor: pointer;
-  backdrop-filter: blur(18px);
 }
 
 .tb-runner-chat .tb-selection-popup-button:hover {
-  background: rgba(42, 42, 42, 0.97);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .tb-runner-chat .tb-selection-popup-icon {
@@ -1949,30 +1947,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   width: min(420px, calc(100vw - 32px));
   max-width: 420px;
   min-width: min(340px, calc(100vw - 32px));
-  padding: 8px;
-  border-radius: 18px;
-  background: rgba(30, 30, 30, 0.5);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
-  -webkit-backdrop-filter: blur(5px);
-  backdrop-filter: blur(5px);
   transform-origin: bottom right;
-}
-
-.tb-runner-chat .tb-popup-menu.tb-email-delivery-attachments-popover::before {
-  content: "";
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  border-radius: inherit;
-  padding: 1px;
-  background: var(--tb-task-input-border, var(--tb-runner-input-border));
-  mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-  mask-clip: content-box, border-box;
-  mask-composite: exclude;
-  mask-origin: content-box, border-box;
-  mask-repeat: repeat, repeat;
-  mask-size: auto, auto;
 }
 
 .tb-runner-chat .tb-email-delivery-attachments-popover-title {
@@ -2504,11 +2479,6 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   right: 0;
   z-index: 25;
   width: 172px;
-  padding: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  background: #323232;
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
 }
 
 .tb-runner-chat .tb-run-summary-more-menu-item {
@@ -4096,11 +4066,6 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   right: 0;
   z-index: 20;
   width: 220px;
-  padding: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  background: rgba(22, 22, 22, 0.98);
-  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.28);
 }
 
 .tb-runner-chat .tb-log-agent-list-popup-title {
@@ -6552,22 +6517,6 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   right: 0;
   z-index: 40;
   min-width: 148px;
-  padding: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  background: rgba(20, 20, 20, 0.9);
-  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.42);
-  -webkit-backdrop-filter: blur(18px);
-  backdrop-filter: blur(18px);
-}
-
-.tb-runner-diff-surface-view-menu::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .tb-runner-diff-surface-view-menu-item {
@@ -9839,14 +9788,9 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   z-index: 1450;
   width: max-content;
   min-width: 150px;
-  padding: 6px;
   display: flex;
   flex-direction: column;
   gap: 2px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  background: #323232;
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.42);
 }
 
 .tb-document-preview-actions-menu-item {
@@ -11473,36 +11417,6 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   color: rgba(255, 255, 255, 0.76);
 }
 
-.tb-runner-chat .tb-popup-menu {
-  position: absolute;
-  z-index: 20;
-  min-width: 240px;
-  overflow: hidden;
-  border: 0;
-  border-radius: 25px;
-  background: rgba(30, 30, 30, 0.5);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
-  -webkit-backdrop-filter: blur(5px);
-  backdrop-filter: blur(5px);
-}
-
-.tb-runner-chat .tb-popup-menu::before {
-  content: "";
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  border-radius: inherit;
-  padding: 1px;
-  background: var(--tb-task-input-border, var(--tb-runner-input-border));
-  mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-  mask-clip: content-box, border-box;
-  mask-composite: exclude;
-  mask-origin: content-box, border-box;
-  mask-repeat: repeat, repeat;
-  mask-size: auto, auto;
-}
-
 .tb-composer-popup-portal-root {
   position: fixed;
   z-index: 2147483000;
@@ -11527,9 +11441,6 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   inset: auto;
   z-index: auto;
   pointer-events: auto;
-  background: rgba(30, 30, 30, 0.5);
-  -webkit-backdrop-filter: blur(5px);
-  backdrop-filter: blur(5px);
 }
 
 .tb-composer-popup-portal-root .tb-composer-popup-portal-scope .tb-popup-menu-main,
@@ -11544,34 +11455,6 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 
 .tb-composer-popup-portal-root .tb-composer-popup-portal-scope .tb-composer-popup-measure {
   pointer-events: auto;
-}
-
-.tb-runner-chat .tb-popup-menu-animate-up-in {
-  animation: tb-popup-fade-up-in 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  transform-origin: bottom left;
-}
-
-.tb-runner-chat .tb-popup-menu-animate-up-out {
-  animation: tb-popup-fade-up-out 180ms cubic-bezier(0.4, 0, 1, 1) both;
-  transform-origin: bottom left;
-  pointer-events: none;
-}
-
-.tb-runner-chat .tb-popup-menu-animate-left-in {
-  animation: tb-popup-fade-left-in 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  transform-origin: left center;
-}
-
-.tb-runner-chat .tb-popup-menu-animate-left-out {
-  animation: tb-popup-fade-left-out 180ms cubic-bezier(0.4, 0, 1, 1) both;
-  transform-origin: left center;
-  pointer-events: none;
-}
-
-.tb-runner-chat .tb-popup-menu-animate-down-out {
-  animation: tb-popup-fade-down-out 180ms cubic-bezier(0.4, 0, 1, 1) both;
-  transform-origin: bottom left;
-  pointer-events: none;
 }
 
 .tb-runner-chat .tb-popup-menu-main,
@@ -11717,7 +11600,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   margin-left: 4px;
 }
 
-.tb-runner-chat .tb-agent-reasoning-effort-tabs .tb-popup-nav-button {
+.tb-runner-chat .tb-agent-reasoning-effort-tabs .platform-switch__option {
   padding-left: 8px;
   padding-right: 8px;
   font-size: 11px;
@@ -12151,7 +12034,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   align-items: center;
   justify-content: center;
   color: rgba(255, 255, 255, 0.55);
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 400;
   line-height: 1;
 }
@@ -12379,41 +12262,6 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .tb-popup-link-button:hover {
-  color: white;
-}
-
-.tb-runner-chat .tb-popup-nav {
-  display: flex;
-  gap: 8px;
-  padding: 2px;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.1);
-  line-height: 1rem;
-  position: relative;
-  overflow: hidden;
-}
-
-.tb-runner-chat .tb-popup-nav-button {
-  flex: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 4px 12px;
-  border: 0;
-  border-radius: 20px;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1rem;
-  cursor: pointer;
-  position: relative;
-  z-index: 1;
-}
-
-.tb-runner-chat .tb-popup-nav-button.active {
-  background: rgba(255, 255, 255, 0.35);
   color: white;
 }
 
@@ -14034,66 +13882,6 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 @keyframes tb-popup-spin {
   to {
     transform: rotate(360deg);
-  }
-}
-
-@keyframes tb-popup-fade-up-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes tb-popup-fade-up-out {
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  to {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-}
-
-@keyframes tb-popup-fade-left-in {
-  from {
-    opacity: 0;
-    transform: translateX(-10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes tb-popup-fade-left-out {
-  from {
-    opacity: 1;
-    transform: translateX(0);
-  }
-
-  to {
-    opacity: 0;
-    transform: translateX(-10px);
-  }
-}
-
-@keyframes tb-popup-fade-down-out {
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  to {
-    opacity: 0;
-    transform: translateY(10px);
   }
 }
 

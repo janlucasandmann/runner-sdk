@@ -1,0 +1,13 @@
+export const MODELS_APP_STATE_SCRIPT = `        const modelsPageToolbarRef = useRef(null);
+        const modelsPageActionsMenuRef = useRef(null);
+        const [modelsPageTab, setModelsPageTab] = useState("agent");
+        const [modelsPageSearchQuery, setModelsPageSearchQuery] = useState("");
+        const [modelsPageProviderFilter, setModelsPageProviderFilter] = useState("all");
+        const [modelsPageSort, setModelsPageSort] = useState("provider");
+        const [modelsPageSortDirection, setModelsPageSortDirection] = useState("asc");
+        const [modelsPageToolbarPopover, setModelsPageToolbarPopover] = useState("");
+        const [modelsPageToolbarPopoverClosing, setModelsPageToolbarPopoverClosing] = useState("");
+        const [modelsPageActionsMenuOpen, setModelsPageActionsMenuOpen] = useState(false);
+        const [modelsPageViewMode, setModelsPageViewMode] = useState("table");
+        const [modelsPageAgentModelOptions, setModelsPageAgentModelOptions] = useState(() => PLAYGROUND_AGENT_MODEL_OPTIONS);
+`;

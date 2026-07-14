@@ -1,0 +1,31 @@
+import { ORGANIZATIONS_BILLING_STATE_SCRIPT } from "./billing-state.mjs";
+import { ORGANIZATIONS_HISTORY_CAPTURE_SCRIPT } from "./history-capture.mjs";
+import { ORGANIZATIONS_HISTORY_RESTORE_SCRIPT } from "./history-restore.mjs";
+import { ORGANIZATIONS_LOAD_LIFECYCLE_SCRIPT } from "./load-lifecycle.mjs";
+import { ORGANIZATIONS_NAVIGATION_SCRIPT } from "./navigation.mjs";
+import { ORGANIZATIONS_REQUEST_SCOPE_SCRIPT } from "./request-scope.mjs";
+import { ORGANIZATIONS_ROLE_LIFECYCLE_SCRIPT } from "./role-lifecycle.mjs";
+import { ORGANIZATIONS_SELECTED_TITLE_SCRIPT } from "./selected-title.mjs";
+import { ORGANIZATIONS_SIDEBAR_ENTRY_SCRIPT } from "./sidebar-entry.mjs";
+import { ORGANIZATIONS_STATE_DIALOGS_SCRIPT } from "./state-dialogs.mjs";
+import { ORGANIZATIONS_STATE_PRIMARY_SCRIPT } from "./state-primary.mjs";
+import { ORGANIZATIONS_TABLE_LIFECYCLE_SCRIPT } from "./table-lifecycle.mjs";
+import { ORGANIZATIONS_TOP_NAVIGATION_SCRIPT } from "./top-navigation.mjs";
+import { ORGANIZATIONS_WORKSPACE_LIFECYCLE_SCRIPT } from "./workspace-lifecycle.mjs";
+
+export const ORGANIZATIONS_APP_SCRIPT_FRAGMENTS = Object.freeze({
+  billingState: ORGANIZATIONS_BILLING_STATE_SCRIPT,
+  statePrimary: ORGANIZATIONS_STATE_PRIMARY_SCRIPT,
+  stateDialogs: ORGANIZATIONS_STATE_DIALOGS_SCRIPT,
+  roleLifecycle: ORGANIZATIONS_ROLE_LIFECYCLE_SCRIPT,
+  tableLifecycle: ORGANIZATIONS_TABLE_LIFECYCLE_SCRIPT,
+  requestScope: ORGANIZATIONS_REQUEST_SCOPE_SCRIPT,
+  workspaceLifecycle: ORGANIZATIONS_WORKSPACE_LIFECYCLE_SCRIPT,
+  navigation: ORGANIZATIONS_NAVIGATION_SCRIPT,
+  loadLifecycle: ORGANIZATIONS_LOAD_LIFECYCLE_SCRIPT,
+  historyCapture: ORGANIZATIONS_HISTORY_CAPTURE_SCRIPT,
+  historyRestore: ORGANIZATIONS_HISTORY_RESTORE_SCRIPT,
+  selectedTitle: ORGANIZATIONS_SELECTED_TITLE_SCRIPT,
+  topNavigation: ORGANIZATIONS_TOP_NAVIGATION_SCRIPT,
+  sidebarEntry: ORGANIZATIONS_SIDEBAR_ENTRY_SCRIPT,
+});

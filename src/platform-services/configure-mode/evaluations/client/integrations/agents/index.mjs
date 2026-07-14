@@ -1,0 +1,21 @@
+import { EVALUATIONS_AGENT_LIFECYCLE_SCRIPT } from "./lifecycle.mjs";
+import { EVALUATIONS_AGENT_MODAL_SCRIPT } from "./modal.mjs";
+import { EVALUATIONS_AGENT_PROPS_SCRIPT } from "./props.mjs";
+import { EVALUATIONS_AGENT_REFS_SCRIPT } from "./refs.mjs";
+import { EVALUATIONS_AGENT_STATE_SCRIPT } from "./state.mjs";
+import { EVALUATIONS_AGENT_STYLES } from "./styles.mjs";
+import { EVALUATIONS_AGENT_VIEW_SCRIPT } from "./view.mjs";
+
+export const EVALUATIONS_AGENT_SCRIPT_FRAGMENTS = Object.freeze({
+  lifecycle: EVALUATIONS_AGENT_LIFECYCLE_SCRIPT,
+  modal: EVALUATIONS_AGENT_MODAL_SCRIPT,
+  props: EVALUATIONS_AGENT_PROPS_SCRIPT,
+  refs: EVALUATIONS_AGENT_REFS_SCRIPT,
+  state: EVALUATIONS_AGENT_STATE_SCRIPT,
+  view: EVALUATIONS_AGENT_VIEW_SCRIPT,
+});
+
+export const EVALUATIONS_AGENT_STYLE_FRAGMENTS = Object.freeze({
+  page: EVALUATIONS_AGENT_STYLES,
+});
+

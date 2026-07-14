@@ -1,0 +1,153 @@
+.platform-popup-anchor {
+  position: relative;
+  z-index: 31;
+}
+
+.platform-popup-anchor.is-open {
+  z-index: 120;
+}
+
+.platform-popup-dismiss-layer {
+  position: fixed;
+  inset: 0;
+  background: transparent;
+}
+
+.platform-popup-surface {
+  --platform-popup-font-size: 12px;
+  --platform-popup-icon-size: 13px;
+  --platform-popup-border: var(
+    --tb-task-input-border,
+    var(
+      --tb-runner-input-border,
+      linear-gradient(
+        -10deg,
+        rgba(200, 200, 200, 0.25),
+        rgba(255, 255, 255, 0.1),
+        rgba(255, 255, 255, 0.15),
+        rgba(255, 255, 255, 0.375)
+      )
+    )
+  );
+  position: absolute;
+  z-index: 20;
+  min-width: 240px;
+  padding: var(--platform-popup-padding, 0) !important;
+  overflow: hidden;
+  border: 0 !important;
+  border-radius: var(--platform-popup-radius, 25px) !important;
+  background: var(--platform-popup-background, rgba(30, 30, 30, 0.5)) !important;
+  box-shadow: var(--platform-popup-shadow, 0 12px 30px rgba(0, 0, 0, 0.35)) !important;
+  font-size: var(--platform-popup-font-size);
+  line-height: 1.4;
+  -webkit-backdrop-filter: var(--platform-popup-backdrop-filter, blur(5px)) !important;
+  backdrop-filter: var(--platform-popup-backdrop-filter, blur(5px)) !important;
+}
+
+.platform-popup-surface :where(button, a, [role="button"], [role="menuitem"]) {
+  font-size: var(--platform-popup-font-size);
+}
+
+.platform-popup-surface .tb-popup-label {
+  font-size: var(--platform-popup-font-size) !important;
+}
+
+.platform-popup-surface :where(button, a, [role="button"], [role="menuitem"]) svg,
+.platform-popup-surface :where(.tb-popup-icon, .tb-popup-chevron, .tb-popup-check) {
+  width: var(--platform-popup-icon-size);
+  height: var(--platform-popup-icon-size);
+}
+
+.platform-popup-surface.is-fixed {
+  position: fixed;
+}
+
+.platform-popup-surface.is-inline {
+  position: relative;
+}
+
+.platform-popup-surface::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--platform-popup-border) !important;
+  mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+  mask-clip: content-box, border-box;
+  mask-composite: exclude;
+  mask-origin: content-box, border-box;
+  mask-repeat: repeat, repeat;
+  mask-size: auto, auto;
+}
+
+.platform-popup-surface[data-platform-popup-animation="up-in"] {
+  animation: platform-popup-up-in 180ms cubic-bezier(0.16, 1, 0.3, 1) both !important;
+  transform-origin: bottom left;
+}
+
+.platform-popup-surface[data-platform-popup-animation="up-out"] {
+  pointer-events: none;
+  animation: platform-popup-up-out 180ms cubic-bezier(0.4, 0, 1, 1) both !important;
+  transform-origin: bottom left;
+}
+
+.platform-popup-surface[data-platform-popup-animation="down-in"] {
+  animation: platform-popup-down-in 180ms cubic-bezier(0.16, 1, 0.3, 1) both !important;
+  transform-origin: top right;
+}
+
+.platform-popup-surface[data-platform-popup-animation="down-out"] {
+  pointer-events: none;
+  animation: platform-popup-down-out 180ms cubic-bezier(0.4, 0, 1, 1) both !important;
+  transform-origin: top right;
+}
+
+.platform-popup-surface[data-platform-popup-animation="left-in"] {
+  animation: platform-popup-left-in 180ms cubic-bezier(0.16, 1, 0.3, 1) both !important;
+  transform-origin: left center;
+}
+
+.platform-popup-surface[data-platform-popup-animation="left-out"] {
+  pointer-events: none;
+  animation: platform-popup-left-out 180ms cubic-bezier(0.4, 0, 1, 1) both !important;
+  transform-origin: left center;
+}
+
+@keyframes platform-popup-up-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes platform-popup-up-out {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(10px); }
+}
+
+@keyframes platform-popup-down-in {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes platform-popup-down-out {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-10px); }
+}
+
+@keyframes platform-popup-left-in {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes platform-popup-left-out {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(-10px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .platform-popup-surface[data-platform-popup-animation] {
+    animation-duration: 1ms;
+  }
+}

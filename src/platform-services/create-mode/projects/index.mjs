@@ -1,0 +1,10 @@
+export {
+  PROJECTS_DOMAIN_FOUNDATION_SCRIPT,
+  PROJECTS_DOMAIN_RUNTIME_SCRIPT,
+  PROJECTS_INTEGRATIONS_RUNTIME_SCRIPT,
+  PROJECTS_PAGE_RUNTIME_SCRIPT,
+  PROJECTS_STYLE_FRAGMENTS,
+  PROJECTS_STYLES,
+} from "./client/index.mjs";
+
+export { createProjectsService } from "./server/index.mjs";

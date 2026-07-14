@@ -1,0 +1,11 @@
+import { INFERENCE_DOMAIN_CONSTANTS_SCRIPT } from "./constants.mjs";
+import { INFERENCE_DOMAIN_MODEL_OPTIONS_SCRIPT } from "./model-options.mjs";
+import { INFERENCE_DOMAIN_RUNTIME_SCRIPT } from "./runtime.mjs";
+import { INFERENCE_DOMAIN_SETTINGS_SCRIPT } from "./settings.mjs";
+
+export const INFERENCE_DOMAIN_SCRIPT_FRAGMENTS = Object.freeze({
+  constants: INFERENCE_DOMAIN_CONSTANTS_SCRIPT,
+  settings: INFERENCE_DOMAIN_SETTINGS_SCRIPT,
+  modelOptions: INFERENCE_DOMAIN_MODEL_OPTIONS_SCRIPT,
+  runtime: INFERENCE_DOMAIN_RUNTIME_SCRIPT,
+});

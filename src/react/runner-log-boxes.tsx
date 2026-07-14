@@ -69,6 +69,10 @@ import {
 } from "lucide-react";
 import type { RunnerDeepResearchSession, RunnerLog } from "../types.js";
 import {
+  PlatformPrimaryButton,
+  PlatformSecondaryButton,
+} from "../platform-ui/components/ui/button/index.js";
+import {
   buildRunnerPreviewAttachmentFromPath,
   buildRunnerPreviewDownloadUrl,
   buildRunnerPreviewHtmlDocument,
@@ -12568,22 +12572,24 @@ function PermissionRequestLogBox({
         {error ? <div className="tb-log-card-state tb-log-card-state-error">{error}</div> : null}
         {isPending ? (
           <div className="tb-log-permission-actions">
-            <button
+            <PlatformSecondaryButton
+              size="compact"
               type="button"
               className="tb-log-permission-button tb-log-permission-button-secondary"
               onClick={() => void decide("deny")}
               disabled={Boolean(isSubmitting)}
             >
               {isSubmitting === "deny" ? "Denying..." : "Deny"}
-            </button>
-            <button
+            </PlatformSecondaryButton>
+            <PlatformPrimaryButton
+              size="compact"
               type="button"
               className="tb-log-permission-button tb-log-permission-button-primary"
               onClick={() => void decide("allow")}
               disabled={Boolean(isSubmitting)}
             >
               {isSubmitting === "allow" ? "Approving..." : "Accept"}
-            </button>
+            </PlatformPrimaryButton>
           </div>
         ) : null}
       </div>

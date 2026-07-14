@@ -1,0 +1,16 @@
+import { INFERENCE_PAGE_LOCAL_RUNNERS_SCRIPT } from "./local-runners.mjs";
+import { INFERENCE_PAGE_SETUP_SCRIPT } from "./setup.mjs";
+import { INFERENCE_PAGE_VIEW_SCRIPT } from "./view.mjs";
+
+export const INFERENCE_PAGE_SCRIPT_FRAGMENTS = Object.freeze({
+  setup: INFERENCE_PAGE_SETUP_SCRIPT,
+  localRunners: INFERENCE_PAGE_LOCAL_RUNNERS_SCRIPT,
+  view: INFERENCE_PAGE_VIEW_SCRIPT,
+});
+
+export const INFERENCE_PAGE_CASE_SCRIPT = [
+  INFERENCE_PAGE_SETUP_SCRIPT,
+  INFERENCE_PAGE_LOCAL_RUNNERS_SCRIPT,
+  "\n",
+  INFERENCE_PAGE_VIEW_SCRIPT,
+].join("");

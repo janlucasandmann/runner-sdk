@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowUpDown, Bot, Check, Search, SlidersHorizontal } from "lucide-react";
 import type { RunnerLog } from "../types.js";
+import { PlatformPopupSurface } from "../platform-ui/components/composite/popup/index.js";
 import { LogHeader, LogPanel } from "./runner-log-card.js";
 import { stripRunnerSystemTags } from "./runner-markdown.js";
 
@@ -1191,7 +1192,7 @@ export function ComputerAgentsListLogBox({
                   <span>Sort</span>
                 </button>
                 {openPopover === "sort" ? (
-                  <div className="tb-log-agent-list-popup-menu">
+                  <PlatformPopupSurface className="tb-log-agent-list-popup-menu">
                     <div className="tb-log-agent-list-popup-title">Sort by</div>
                     {sortOptions.map((option) => (
                       <button
@@ -1209,7 +1210,7 @@ export function ComputerAgentsListLogBox({
                         <span>{option.label}</span>
                       </button>
                     ))}
-                  </div>
+                  </PlatformPopupSurface>
                 ) : null}
               </div>
               <div className="tb-log-agent-list-popup-shell">
@@ -1222,7 +1223,7 @@ export function ComputerAgentsListLogBox({
                   <span>Filter</span>
                 </button>
                 {openPopover === "filter" ? (
-                  <div className="tb-log-agent-list-popup-menu">
+                  <PlatformPopupSurface className="tb-log-agent-list-popup-menu">
                     <div className="tb-log-agent-list-popup-title">Provider</div>
                     {providerOptions.map((option) => (
                       <button
@@ -1240,7 +1241,7 @@ export function ComputerAgentsListLogBox({
                         <span>{option.label}</span>
                       </button>
                     ))}
-                  </div>
+                  </PlatformPopupSurface>
                 ) : null}
               </div>
             </div>

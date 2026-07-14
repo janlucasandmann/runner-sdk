@@ -1,0 +1,16 @@
+import { GUARDRAILS_CATALOG_SCRIPT } from "./catalog.mjs";
+import {
+  GUARDRAILS_DOMAIN_RUNTIME_SCRIPT,
+  GUARDRAILS_DOMAIN_RUNTIME_SCRIPT_FRAGMENTS,
+} from "./runtime/index.mjs";
+
+export { GUARDRAILS_CATALOG_SCRIPT } from "./catalog.mjs";
+export {
+  GUARDRAILS_DOMAIN_RUNTIME_SCRIPT,
+  GUARDRAILS_DOMAIN_RUNTIME_SCRIPT_FRAGMENTS,
+} from "./runtime/index.mjs";
+
+export const GUARDRAILS_DOMAIN_FRAGMENTS = Object.freeze({
+  catalog: GUARDRAILS_CATALOG_SCRIPT,
+  runtime: GUARDRAILS_DOMAIN_RUNTIME_SCRIPT,
+});

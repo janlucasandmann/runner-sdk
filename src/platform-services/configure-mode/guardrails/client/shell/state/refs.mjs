@@ -1,0 +1,18 @@
+export const GUARDRAILS_APP_REFS_SCRIPT = `        const guardrailsToolbarRef = useRef(null);
+        const guardrailTitleInputRef = useRef(null);
+        const guardrailSetActionMenuRef = useRef(null);
+        const guardrailDetailActionsMenuRef = useRef(null);
+        const guardrailsDescriptionTextareaRef = useRef(null);
+        const guardrailPublishMenuRef = useRef(null);
+        const guardrailVersionDescriptionTextareaRef = useRef(null);
+        const guardrailVersionModalCloseTimerRef = useRef(null);
+        const guardrailVersionModalFrameRef = useRef(null);
+        const guardrailVersionBaselineRef = useRef({ key: "", signature: "" });
+        const guardrailVersionDraftTouchedRef = useRef(false);
+        const guardrailsBackendLoadRef = useRef("");
+        const guardrailsBackendLoadedRef = useRef(false);
+        const guardrailDetailsLoadedRef = useRef(new Set());
+        const guardrailsBackendMigratedLocalRef = useRef(false);
+        const guardrailPersistTimersRef = useRef(new Map());
+        const guardrailPersistSignaturesRef = useRef(new Map());
+`;

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowUpDown, Check, Monitor, Rocket, Search, SlidersHorizontal } from "lucide-react";
 import type { RunnerLog } from "../types.js";
+import { PlatformPopupSurface } from "../platform-ui/components/composite/popup/index.js";
 import { LogHeader, LogPanel } from "./runner-log-card.js";
 import { stripRunnerSystemTags } from "./runner-markdown.js";
 
@@ -563,7 +564,7 @@ export function TaskManagementProjectsListLogBox({
                   <span>Sort</span>
                 </button>
                 {openPopover === "sort" ? (
-                  <div className="tb-log-agent-list-popup-menu">
+                  <PlatformPopupSurface className="tb-log-agent-list-popup-menu">
                     <div className="tb-log-agent-list-popup-title">Sort by</div>
                     {sortOptions.map((option) => (
                       <button
@@ -581,7 +582,7 @@ export function TaskManagementProjectsListLogBox({
                         <span>{option.label}</span>
                       </button>
                     ))}
-                  </div>
+                  </PlatformPopupSurface>
                 ) : null}
               </div>
               <div className="tb-log-agent-list-popup-shell">
@@ -594,7 +595,7 @@ export function TaskManagementProjectsListLogBox({
                   <span>Filter</span>
                 </button>
                 {openPopover === "filter" ? (
-                  <div className="tb-log-agent-list-popup-menu">
+                  <PlatformPopupSurface className="tb-log-agent-list-popup-menu">
                     <div className="tb-log-agent-list-popup-title">Computer</div>
                     {computerOptions.map((option) => (
                       <button
@@ -612,7 +613,7 @@ export function TaskManagementProjectsListLogBox({
                         <span>{option.label}</span>
                       </button>
                     ))}
-                  </div>
+                  </PlatformPopupSurface>
                 ) : null}
               </div>
             </div>

@@ -1,0 +1,11 @@
+import { ORGANIZATIONS_ADMINISTRATION_SCRIPT } from "./administration.mjs";
+import { ORGANIZATIONS_LOADING_SCRIPT } from "./loading.mjs";
+import { ORGANIZATIONS_MEMBERSHIP_SCRIPT } from "./membership.mjs";
+import { ORGANIZATIONS_PERMISSIONS_SCRIPT } from "./permissions.mjs";
+
+export const ORGANIZATIONS_RUNTIME_SCRIPT_FRAGMENTS = Object.freeze({
+  loading: ORGANIZATIONS_LOADING_SCRIPT,
+  administration: ORGANIZATIONS_ADMINISTRATION_SCRIPT,
+  membership: ORGANIZATIONS_MEMBERSHIP_SCRIPT,
+  permissions: ORGANIZATIONS_PERMISSIONS_SCRIPT,
+});
