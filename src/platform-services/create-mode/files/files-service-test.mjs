@@ -20,6 +20,7 @@ assert.match(FILES_PAGE_RUNTIME_SCRIPT, /function PlaygroundImageSelectionMaskOv
 assert.match(FILES_PAGE_RUNTIME_SCRIPT, /function PlaygroundFilesPage/);
 assert.match(FILES_PAGE_RUNTIME_SCRIPT, /function renderFilesBrowserContent/);
 assert.match(FILES_STYLE_FRAGMENTS.foundation, /\.playground-files-page/);
+assert.match(FILES_STYLE_FRAGMENTS.foundation, /\.playground-files-browser[\s\S]*margin: 0;[\s\S]*border: 0;[\s\S]*border-radius: 0;/);
 assert.match(FILES_STYLE_FRAGMENTS.preview, /\.playground-files-image-mask-overlay/);
 assert.match(FILES_STYLE_FRAGMENTS.editor, /\.playground-code-preview-editor-shell/);
 

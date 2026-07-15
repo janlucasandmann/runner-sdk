@@ -1,49 +1,33 @@
 import type { ReactNode } from "react";
+import type {
+  PlatformAnalyticsChartType,
+  PlatformAnalyticsMetric,
+  PlatformAnalyticsModel,
+  PlatformAnalyticsSeries,
+  PlatformAnalyticsValueKind,
+} from "../../components/composite/analytics/index.js";
 import type { PlatformDataTableProps } from "../../components/composite/data-table/index.js";
 
 export type ResourceOverviewPeriod = "day" | "week" | "month";
-export type ResourceOverviewSeriesType = "bar" | "line";
-export type ResourceOverviewValueKind = "count" | "currency" | "duration" | "percent";
+export type ResourceOverviewSeriesType = PlatformAnalyticsChartType;
+export type ResourceOverviewValueKind = PlatformAnalyticsValueKind;
 
 export interface ResourceOverviewPeriodOption {
   id: ResourceOverviewPeriod;
   label: string;
 }
 
-export interface ResourceOverviewMetric {
-  id: string;
-  label: string;
-  value: ReactNode;
-  color?: string;
-}
-
-export interface ResourceOverviewSeries {
-  id: string;
-  label: string;
-  values: readonly number[];
-  color: string;
-  type?: ResourceOverviewSeriesType;
-  stack?: string;
-  valueKind?: ResourceOverviewValueKind;
-  fill?: boolean;
-}
-
-export interface ResourceOverviewAnalyticsModel {
-  metrics: readonly ResourceOverviewMetric[];
-  labels: readonly string[];
-  series: readonly ResourceOverviewSeries[];
-  title?: string;
-  ariaLabel?: string;
-  loading?: boolean;
-  error?: ReactNode;
-  emptyState?: ReactNode;
-}
+export type ResourceOverviewMetric = PlatformAnalyticsMetric;
+export type ResourceOverviewSeries = PlatformAnalyticsSeries;
+export type ResourceOverviewAnalyticsModel = PlatformAnalyticsModel;
 
 export interface ResourceOverviewPageProps<TData> {
-  title: ReactNode;
   period: ResourceOverviewPeriod;
   onPeriodChange: (period: ResourceOverviewPeriod) => void;
   analytics: ResourceOverviewAnalyticsModel;
+  heroContent?: ReactNode;
+  showPeriodSelector?: boolean;
+  controlsPortalId?: string;
   table: PlatformDataTableProps<TData>;
   periodOptions?: readonly ResourceOverviewPeriodOption[];
   headerActions?: ReactNode;

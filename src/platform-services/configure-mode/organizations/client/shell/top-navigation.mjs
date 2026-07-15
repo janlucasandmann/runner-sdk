@@ -9,7 +9,7 @@ export const ORGANIZATIONS_TOP_NAVIGATION_SCRIPT = `        function renderOrgan
 	            billing: "Billing",
 	            usage: "Usage",
 	          }[organizationPageActiveTab] || "Members";
-          return renderUnifiedTopNav({
+          return renderAppHeader({
             className: "playground-settings-top-navbar",
 	            pathItems: selectedOrganization
 	              ? [

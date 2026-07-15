@@ -38,7 +38,7 @@ export const GUARDRAILS_APP_TOP_NAVIGATION_SCRIPT = `        function renderGuar
                 })
               )
             : null;
-          return renderUnifiedTopNav({
+          return renderAppHeader({
             className: "playground-configure-navbar playground-models-navbar",
             pathItems: guardrailsPathItems,
             extraActions: guardrailDetailTopNavActions,

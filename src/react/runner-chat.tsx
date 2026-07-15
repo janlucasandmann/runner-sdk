@@ -22126,6 +22126,7 @@ export function RunnerChat({
               <>
                 <div className="tb-popup-panel-section tb-popup-panel-section-attach-header">
                   <PlatformSwitch
+                    className="tb-popup-selector-switch"
                     ariaLabel="Agent type"
                     value={agentPopupMode}
                     options={availableAgentPopupModes.map((mode) => ({
@@ -22215,10 +22216,6 @@ export function RunnerChat({
       return null;
     }
 
-    if (availableEnvironments.length === 0 && availableProjects.length === 0) {
-      return null;
-    }
-
     return (
       <div className="tb-selector-anchor">
         <button
@@ -22243,6 +22240,7 @@ export function RunnerChat({
               <>
                 <div className="tb-popup-panel-section tb-popup-panel-section-attach-header">
                   <PlatformSwitch
+                    className="tb-popup-selector-switch"
                     ariaLabel="Workspace type"
                     value={workspaceSelectorMode}
                     options={[

@@ -34,6 +34,13 @@
     "./platform-ui/components/ui/button/styles.css": {
       "default": "./dist/platform-ui/components/ui/button/button.css"
     },
+    "./platform-ui/components/ui/label": {
+      "types": "./dist/platform-ui/components/ui/label/index.d.ts",
+      "default": "./dist/platform-ui/components/ui/label/index.js"
+    },
+    "./platform-ui/components/ui/label/styles.css": {
+      "default": "./dist/platform-ui/components/ui/label/label.css"
+    },
     "./platform-ui/components/ui/search": {
       "types": "./dist/platform-ui/components/ui/search/index.d.ts",
       "default": "./dist/platform-ui/components/ui/search/index.js"
@@ -52,12 +59,40 @@
       "types": "./dist/platform-ui/components/composite/index.d.ts",
       "default": "./dist/platform-ui/components/composite/index.js"
     },
+    "./platform-ui/components/composite/analytics": {
+      "types": "./dist/platform-ui/components/composite/analytics/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/analytics/index.js"
+    },
+    "./platform-ui/components/composite/analytics/styles.css": {
+      "default": "./dist/platform-ui/components/composite/analytics/analytics.css"
+    },
     "./platform-ui/components/composite/data-table": {
       "types": "./dist/platform-ui/components/composite/data-table/index.d.ts",
       "default": "./dist/platform-ui/components/composite/data-table/index.js"
     },
     "./platform-ui/components/composite/data-table/styles.css": {
       "default": "./dist/platform-ui/components/composite/data-table/data-table.css"
+    },
+    "./platform-ui/components/composite/detail-sidebar": {
+      "types": "./dist/platform-ui/components/composite/detail-sidebar/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/detail-sidebar/index.js"
+    },
+    "./platform-ui/components/composite/detail-sidebar/styles.css": {
+      "default": "./dist/platform-ui/components/composite/detail-sidebar/detail-sidebar.css"
+    },
+    "./platform-ui/components/composite/detail-tab-bar": {
+      "types": "./dist/platform-ui/components/composite/detail-tab-bar/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/detail-tab-bar/index.js"
+    },
+    "./platform-ui/components/composite/detail-tab-bar/styles.css": {
+      "default": "./dist/platform-ui/components/composite/detail-tab-bar/detail-tab-bar.css"
+    },
+    "./platform-ui/components/composite/instructions-editor": {
+      "types": "./dist/platform-ui/components/composite/instructions-editor/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/instructions-editor/index.js"
+    },
+    "./platform-ui/components/composite/instructions-editor/styles.css": {
+      "default": "./dist/platform-ui/components/composite/instructions-editor/instructions-editor.css"
     },
     "./platform-ui/components/composite/modal": {
       "types": "./dist/platform-ui/components/composite/modal/index.d.ts",
@@ -90,6 +125,13 @@
     },
     "./platform-ui/components/button/styles.css": {
       "default": "./dist/platform-ui/components/ui/button/button.css"
+    },
+    "./platform-ui/components/label": {
+      "types": "./dist/platform-ui/components/ui/label/index.d.ts",
+      "default": "./dist/platform-ui/components/ui/label/index.js"
+    },
+    "./platform-ui/components/label/styles.css": {
+      "default": "./dist/platform-ui/components/ui/label/label.css"
     },
     "./platform-ui/components/search": {
       "types": "./dist/platform-ui/components/ui/search/index.d.ts",
@@ -141,22 +183,33 @@
       "types": "./dist/platform-ui/pages/index.d.ts",
       "default": "./dist/platform-ui/pages/index.js"
     },
+    "./platform-ui/pages/details": {
+      "types": "./dist/platform-ui/pages/details/index.d.ts",
+      "default": "./dist/platform-ui/pages/details/index.js"
+    },
+    "./platform-ui/pages/details/styles.css": {
+      "default": "./dist/platform-ui/pages/details/resource-detail.css"
+    },
     "./platform-ui/pages/styles.css": {
-      "default": "./dist/platform-ui/pages/overview/resource-overview.css"
+      "default": "./dist/platform-ui/pages/styles.css"
     },
     "./platform-resources": {
       "types": "./dist/platform-resources/index.d.ts",
       "default": "./dist/platform-resources/index.js"
     },
     "./platform-resources/styles.css": {
-      "default": "./dist/platform-ui/pages/overview/resource-overview.css"
+      "default": "./dist/platform-ui/pages/styles.css"
     },
     "./platform-ui/resources": {
       "types": "./dist/platform-resources/index.d.ts",
       "default": "./dist/platform-resources/index.js"
     },
     "./platform-ui/resources/styles.css": {
-      "default": "./dist/platform-ui/pages/overview/resource-overview.css"
+      "default": "./dist/platform-ui/pages/styles.css"
+    },
+    "./platform-services/develop-mode": {
+      "types": "./dist/platform-services/develop-mode/index.d.ts",
+      "default": "./dist/platform-services/develop-mode/index.js"
     }
   },
   "files": [
@@ -169,6 +222,9 @@
     "clean": "rm -rf dist",
     "history-smoke": "npm run build && node ./examples/history-api-test.mjs",
     "calendar-service-test": "node ./src/platform-services/create-mode/calendar/calendar-service-test.mjs",
+    "configure-home-service-test": "node ./src/platform-services/configure-mode/configure-home/configure-home-service-test.mjs",
+    "develop-home-service-test": "node ./src/platform-services/develop-mode/develop-home/develop-home-service-test.mjs",
+    "api-keys-service-test": "node ./src/platform-services/develop-mode/api-keys/api-keys-service-test.mjs",
     "evaluations-service-test": "node ./src/platform-services/configure-mode/evaluations/evaluations-service-test.mjs",
     "files-service-test": "node ./src/platform-services/create-mode/files/files-service-test.mjs",
     "fine-tuning-service-test": "node ./src/platform-services/configure-mode/fine-tuning/fine-tuning-service-test.mjs",
@@ -180,6 +236,9 @@
     "marketplace-service-test": "node ./src/platform-services/configure-mode/marketplace/marketplace-service-test.mjs",
     "models-service-test": "node ./src/platform-services/configure-mode/models/models-service-test.mjs",
     "organizations-service-test": "node ./src/platform-services/configure-mode/organizations/organizations-service-test.mjs",
+    "settings-modal-service-test": "node ./src/platform-shell/settings-modal/settings-modal-service-test.mjs",
+    "app-header-service-test": "node ./src/platform-shell/app-header/app-header-service-test.mjs",
+    "app-sidebar-service-test": "node ./src/platform-shell/app-sidebar/app-sidebar-service-test.mjs",
     "projects-service-test": "node ./src/platform-services/create-mode/projects/projects-service-test.mjs",
     "teams-service-test": "node ./src/platform-services/configure-mode/teams/teams-service-test.mjs",
     "thread-domain-test": "npm run build && node ./examples/thread-domain-test.mjs",
@@ -200,7 +259,9 @@
     "platform-switch-test": "vitest run src/platform-ui/components/ui/switch",
     "platform-widget-invariants": "node ./scripts/platform-widget-invariants.mjs",
     "platform-widget-test": "npm run platform-widget-invariants && vitest run src/platform-ui/components/composite/widgets",
-    "platform-resource-overview-test": "npm run platform-resource-invariants && vitest run src/platform-ui/pages/overview",
+    "develop-mode-service-test": "node ./src/platform-services/develop-mode/develop-mode-service-test.mjs",
+    "platform-resource-overview-test": "npm run platform-resource-invariants && npm run develop-mode-service-test && vitest run src/platform-ui/pages/overview src/platform-services/develop-mode",
+    "platform-resource-detail-test": "npm run platform-component-invariants && npm run platform-resource-invariants && vitest run src/platform-ui/pages/details src/platform-ui/components/composite/detail-tab-bar src/platform-ui/components/composite/detail-sidebar src/platform-ui/components/composite/instructions-editor src/platform-resources/agents/detail",
     "smoke": "npm run build && node ./examples/smoke-test.mjs",
     "demo": "npm run build && node ./examples/demo-server.mjs"
   },

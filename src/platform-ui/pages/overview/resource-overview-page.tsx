@@ -1,14 +1,20 @@
-import { Ellipsis } from "lucide-react";
-import type { ReactNode } from "react";
-import { PlatformDataTable } from "../../components/composite/data-table/index.js";
+import { Ellipsis, Plus } from "lucide-react";
+import { createElement, isValidElement, useEffect, useState, type ElementType, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { PlatformAnalyticsSection } from "../../components/composite/analytics/index.js";
+import {
+  PlatformDataTable,
+  type PlatformDataTableIcon,
+  type PlatformDataTablePrimaryAction,
+} from "../../components/composite/data-table/index.js";
+import { PlatformPrimaryButton } from "../../components/ui/button/index.js";
 import { PlatformSwitch } from "../../components/ui/switch/index.js";
-import { ResourceOverviewChart } from "./resource-overview-chart.js";
 import type { ResourceOverviewPageProps, ResourceOverviewPeriodOption } from "./resource-overview-types.js";
 
 const DEFAULT_PERIOD_OPTIONS: readonly ResourceOverviewPeriodOption[] = [
-  { id: "day", label: "1D" },
-  { id: "week", label: "1W" },
-  { id: "month", label: "1M" },
+  { id: "day", label: "24H" },
+  { id: "week", label: "7D" },
+  { id: "month", label: "30D" },
 ];
 
 function renderHeaderActions(actions: ReactNode) {
@@ -16,58 +22,108 @@ function renderHeaderActions(actions: ReactNode) {
   return <div className="resource-overview-page__header-actions">{actions}</div>;
 }
 
+function useOverviewControlsPortalTarget(portalId: string) {
+  const [target, setTarget] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!portalId || typeof document === "undefined") {
+      setTarget(null);
+      return undefined;
+    }
+
+    const nextTarget = document.getElementById(portalId);
+    setTarget((current) => current === nextTarget ? current : nextTarget);
+    return undefined;
+  }, [portalId]);
+
+  return target;
+}
+
+function renderActionIcon(icon: PlatformDataTableIcon | undefined): ReactNode {
+  const resolvedIcon = icon || Plus;
+  if (isValidElement(resolvedIcon)) return resolvedIcon;
+  if (typeof resolvedIcon === "string" || typeof resolvedIcon === "number") return resolvedIcon;
+  return createElement(resolvedIcon as ElementType, {
+    width: 14,
+    height: 14,
+    strokeWidth: 1.8,
+    "aria-hidden": true,
+  });
+}
+
+function renderPrimaryAction(action: PlatformDataTablePrimaryAction | undefined) {
+  if (!action) return null;
+  return (
+    <PlatformPrimaryButton
+      size="small"
+      className={action.className}
+      disabled={action.disabled}
+      onClick={action.onClick}
+      aria-label={action.ariaLabel || action.label}
+    >
+      {renderActionIcon(action.icon)}
+      <span>{action.label}</span>
+    </PlatformPrimaryButton>
+  );
+}
+
 export function ResourceOverviewPage<TData>({
-  title,
   period,
   onPeriodChange,
   analytics,
+  heroContent,
+  showPeriodSelector = true,
+  controlsPortalId = "",
   table,
   periodOptions = DEFAULT_PERIOD_OPTIONS,
   headerActions,
   className = "",
 }: ResourceOverviewPageProps<TData>) {
-  return (
-    <div className={`resource-overview-page${className ? ` ${className}` : ""}`}>
-      <header className="resource-overview-page__header">
-        <h1 className="resource-overview-page__title">{title}</h1>
-        <div className="resource-overview-page__header-controls">
-          <PlatformSwitch
-            ariaLabel="Analytics time frame"
-            value={period}
-            options={periodOptions.map((option) => ({ value: option.id, label: option.label }))}
-            onValueChange={(value) => {
-              const nextPeriod = periodOptions.find((option) => option.id === value);
-              if (nextPeriod) onPeriodChange(nextPeriod.id);
-            }}
-          />
+  const primaryAction = table.toolbar?.primaryAction;
+  const resolvedTable = primaryAction
+    ? { ...table, toolbar: { ...table.toolbar, primaryAction: undefined } }
+    : table;
+  const hasHeaderControls = showPeriodSelector || Boolean(primaryAction) || Boolean(headerActions);
+  const controlsPortalTarget = useOverviewControlsPortalTarget(controlsPortalId);
+  const overviewControls = hasHeaderControls && controlsPortalTarget
+    ? createPortal(
+        <div className="resource-overview-page__controls" data-resource-overview-controls="true">
+          {showPeriodSelector ? (
+            <PlatformSwitch
+              ariaLabel="Analytics time frame"
+              value={period}
+              options={periodOptions.map((option) => ({ value: option.id, label: option.label }))}
+              onValueChange={(value) => {
+                const nextPeriod = periodOptions.find((option) => option.id === value);
+                if (nextPeriod) onPeriodChange(nextPeriod.id);
+              }}
+            />
+          ) : null}
+          {renderPrimaryAction(primaryAction)}
           {renderHeaderActions(headerActions)}
-        </div>
-      </header>
+        </div>,
+        controlsPortalTarget,
+      )
+    : null;
 
-      <section className="resource-overview-analytics" aria-label={analytics.ariaLabel || "Resource analytics"}>
-        <div className="resource-overview-analytics__metrics">
-          {analytics.metrics.map((metric) => (
-            <div key={metric.id} className="resource-overview-analytics__metric">
-              <div className="resource-overview-analytics__metric-label">
-                <span className="resource-overview-analytics__metric-dot" style={{ backgroundColor: metric.color || "#fff" }} aria-hidden="true" />
-                <span>{metric.label}</span>
-              </div>
-              <div className="resource-overview-analytics__metric-value">{metric.value}</div>
-            </div>
-          ))}
-        </div>
-        <ResourceOverviewChart analytics={analytics} />
-      </section>
+  return (
+    <>
+      {overviewControls}
+      <div className={`resource-overview-page${className ? ` ${className}` : ""}`}>
+        {heroContent === undefined
+          ? <PlatformAnalyticsSection analytics={analytics} chartType="line" />
+          : heroContent}
 
-      <section className="resource-overview-page__table-section">
-        <PlatformDataTable<TData>
-          {...table}
-          surface={table.surface || "plain"}
-          layout={table.layout || "fill"}
-          pagination={table.pagination === undefined ? {} : table.pagination}
-        />
-      </section>
-    </div>
+        <section className="resource-overview-page__table-section">
+          <PlatformDataTable<TData>
+            {...resolvedTable}
+            surface={resolvedTable.surface || "plain"}
+            layout={resolvedTable.layout || "fill"}
+            pagination={resolvedTable.pagination === undefined ? {} : resolvedTable.pagination}
+          />
+        </section>
+      </div>
+    </>
   );
 }
 

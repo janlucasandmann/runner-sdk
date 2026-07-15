@@ -1,5 +1,7 @@
 import type { ComponentType } from "react";
 
+type ResourceOverviewIdentitySize = "standard" | "compact";
+
 interface ResourceOverviewIdentityCellProps {
   title: string;
   imageUrl?: string;
@@ -7,6 +9,7 @@ interface ResourceOverviewIdentityCellProps {
   fallback?: string;
   icon?: ComponentType<{ width?: number; height?: number; strokeWidth?: number }>;
   iconClassName?: string;
+  size?: ResourceOverviewIdentitySize;
 }
 
 export function ResourceOverviewIdentityCell({
@@ -16,10 +19,11 @@ export function ResourceOverviewIdentityCell({
   fallback = "",
   icon: Icon,
   iconClassName = "",
+  size = "standard",
 }: ResourceOverviewIdentityCellProps) {
   return (
     <div className="resource-overview-identity">
-      <span className={`resource-overview-identity__visual${iconClassName ? ` ${iconClassName}` : ""}`} aria-hidden="true">
+      <span className={`resource-overview-identity__visual is-size-${size}${iconClassName ? ` ${iconClassName}` : ""}`} aria-hidden="true">
         {imageUrl ? <img src={imageUrl} alt="" className={imageClassName} /> : Icon ? <Icon width={17} height={17} strokeWidth={1.8} /> : fallback}
       </span>
       <span className="resource-overview-identity__title">{title}</span>

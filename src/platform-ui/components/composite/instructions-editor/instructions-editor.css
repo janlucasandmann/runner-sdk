@@ -1,0 +1,163 @@
+.platform-instructions-editor {
+  box-sizing: border-box;
+  min-width: 0;
+  margin: 0 0 42px;
+  padding: 0;
+  overflow: visible;
+}
+
+.platform-instructions-editor__header {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 12px 20px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 0;
+  border-radius: 15px 15px 0 0;
+  background: #121212;
+}
+
+.platform-instructions-editor.is-sticky .platform-instructions-editor__header {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  height: 40px;
+}
+
+.platform-instructions-editor.is-static .platform-instructions-editor__header {
+  position: static;
+  padding-left: 23px;
+  padding-right: 23px;
+  background: transparent;
+}
+
+.platform-instructions-editor__title {
+  min-width: 0;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  line-height: 1.3;
+  font-weight: 500;
+}
+
+.platform-instructions-editor__toolbar {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: nowrap;
+}
+
+.platform-instructions-editor__toolbar-button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.62);
+  background: transparent;
+  cursor: pointer;
+  transition: color 150ms ease, background-color 150ms ease;
+}
+
+.platform-instructions-editor__toolbar-button:hover:not(:disabled) { color: rgba(255, 255, 255, 0.96); background: rgba(255, 255, 255, 0.08); }
+.platform-instructions-editor__toolbar-button:focus-visible { outline: 1px solid rgba(77, 163, 255, 0.78); outline-offset: 2px; }
+.platform-instructions-editor__toolbar-button:disabled { color: rgba(255, 255, 255, 0.28); opacity: 1; cursor: not-allowed; }
+.platform-instructions-editor__toolbar-divider { width: 1px; height: 16px; margin: 0 2px; flex: 0 0 1px; background: rgba(255, 255, 255, 0.14); }
+
+.platform-instructions-editor__body {
+  box-sizing: border-box;
+  position: relative;
+  width: calc(100% - 6px);
+  min-height: 0;
+  margin-left: 3px;
+  padding: 20px 20px 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: #000;
+  overflow: visible;
+}
+
+.platform-instructions-editor__preview-scope {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.platform-instructions-editor__body.is-editing .platform-instructions-editor__preview-scope { display: none; }
+
+.platform-instructions-editor__preview,
+.platform-instructions-editor__input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 36px;
+  padding: 0 0 14px;
+  color: rgba(255, 255, 255, 0.7);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.platform-instructions-editor__input {
+  position: relative;
+  z-index: 2;
+  display: block;
+  border: 0;
+  outline: none;
+  background: transparent;
+  caret-color: rgba(255, 255, 255, 0.96);
+  resize: none;
+  overflow: hidden;
+}
+
+.platform-instructions-editor__input.is-preview {
+  position: absolute;
+  inset: 0;
+  height: 100% !important;
+  min-height: 100%;
+  padding: 0;
+  color: transparent;
+  opacity: 0;
+}
+
+.platform-instructions-editor__input.is-editing { color: rgba(255, 255, 255, 0.7); }
+.platform-instructions-editor__input::placeholder { color: rgba(255, 255, 255, 0.38); }
+.platform-instructions-editor__preview.playground-tasks-detail-description-placeholder { color: rgba(255, 255, 255, 0.38); }
+
+.platform-markdown { color: rgba(255, 255, 255, 0.7); font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.platform-markdown > :first-child { margin-top: 0; }
+.platform-markdown > :last-child { margin-bottom: 0; }
+.platform-markdown__paragraph { margin: 0 0 10px; }
+.platform-markdown__heading { margin: 16px 0 8px; color: rgba(255, 255, 255, 0.92); font-size: 14px; line-height: 1.35; font-weight: 500; }
+.platform-markdown__list { margin: 0 0 10px; padding-left: 20px; }
+.platform-markdown__list-item + .platform-markdown__list-item { margin-top: 4px; }
+.platform-markdown__inline-code { padding: 1px 4px; border-radius: 4px; background: rgba(255, 255, 255, 0.08); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.platform-markdown__pre { margin: 0 0 10px; padding: 12px; overflow: auto; border-radius: 8px; background: rgba(255, 255, 255, 0.05); }
+.platform-markdown__pre .platform-markdown__code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.platform-markdown__link { color: #7eb9ff; text-decoration: none; }
+.platform-markdown__link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.platform-markdown__quote { margin: 0 0 10px; padding-left: 12px; border-left: 2px solid rgba(255, 255, 255, 0.18); color: rgba(255, 255, 255, 0.58); }
+.platform-markdown__table-wrap { max-width: 100%; margin-bottom: 10px; overflow-x: auto; }
+.platform-markdown__table { width: 100%; border-collapse: collapse; }
+.platform-markdown__th,
+.platform-markdown__td { padding: 7px 8px; border: 1px solid rgba(255, 255, 255, 0.1); text-align: left; }
+.platform-markdown__rule { margin: 14px 0; border: 0; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+.platform-markdown__image { display: block; max-width: 100%; height: auto; border-radius: 8px; }
+.platform-markdown__underline { text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+@media (max-width: 760px) {
+  .platform-instructions-editor__header { padding-left: 12px; padding-right: 12px; }
+  .platform-instructions-editor__toolbar { max-width: 72vw; overflow-x: auto; scrollbar-width: none; }
+  .platform-instructions-editor__toolbar::-webkit-scrollbar { display: none; }
+  .platform-instructions-editor__body { width: 100%; margin-left: 0; padding-left: 14px; padding-right: 14px; }
+}

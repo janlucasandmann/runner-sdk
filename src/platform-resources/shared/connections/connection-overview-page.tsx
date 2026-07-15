@@ -1,6 +1,7 @@
-import { Cable, ChevronRight, Link2, Plus, Unlink } from "lucide-react";
+import { Cable, ChevronRight, Link2, Unlink } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import type { PlatformDataTableAction, PlatformDataTableColumn } from "../../../platform-ui/components/composite/data-table/index.js";
+import { PlatformLabel } from "../../../platform-ui/components/ui/label/index.js";
 import {
   ResourceOverviewPage,
   ResourceOverviewStatus,
@@ -34,9 +35,11 @@ export interface ConnectionOverviewPageProps {
   onPeriodChange: (period: ResourceOverviewPeriod) => void;
   analytics?: ResourceOverviewAnalyticsModel;
   loading?: boolean;
+  heroContent?: ReactNode;
+  showPeriodSelector?: boolean;
+  controlsPortalId?: string;
   headerActions?: ReactNode;
   onOpen: (row: ConnectionOverviewRow) => void;
-  onCreate?: () => void;
 }
 
 function createFallbackAnalytics(kind: "tags" | "plugins", rows: readonly ConnectionOverviewRow[]): ResourceOverviewAnalyticsModel {
@@ -64,9 +67,11 @@ export function ConnectionOverviewPage({
   onPeriodChange,
   analytics,
   loading = false,
+  heroContent,
+  showPeriodSelector,
+  controlsPortalId,
   headerActions,
   onOpen,
-  onCreate,
 }: ConnectionOverviewPageProps) {
   const [statusFilter, setStatusFilter] = useState("all");
   const [category, setCategory] = useState("all");
@@ -88,7 +93,7 @@ export function ConnectionOverviewPage({
       width: "minmax(220px, 1.25fr)",
       cell: ({ row }) => (
         <div className="resource-overview-identity">
-          <span className="resource-overview-identity__visual is-connection" aria-hidden="true">
+          <span className={`resource-overview-identity__visual is-connection${kind === "tags" ? " is-size-compact" : ""}`} aria-hidden="true">
             {row.logoUrl ? <img src={row.logoUrl} alt="" className={row.logoClassName} /> : row.icon || <Cable width={17} height={17} strokeWidth={1.8} />}
           </span>
           <span className="resource-overview-identity__title">{row.name}</span>
@@ -101,7 +106,9 @@ export function ConnectionOverviewPage({
       accessor: (row) => row.connected ? 1 : 0,
       sortable: true,
       width: "minmax(125px, 0.62fr)",
-      cell: ({ row }) => <ResourceOverviewStatus active={row.connected} activeLabel="Connected" inactiveLabel="Not Connected" />,
+      cell: ({ row }) => kind === "tags"
+        ? <PlatformLabel variant={row.connected ? "green" : "gray"}>{row.connected ? "Connected" : "Not Connected"}</PlatformLabel>
+        : <ResourceOverviewStatus active={row.connected} activeLabel="Connected" inactiveLabel="Not Connected" />,
     },
     {
       id: "identity",
@@ -121,7 +128,7 @@ export function ConnectionOverviewPage({
       hideBelow: 960,
       cell: ({ row }) => <ResourceOverviewValue>{row.providerLabel}</ResourceOverviewValue>,
     },
-  ], []);
+  ], [kind]);
 
   const getRowActions = (row: ConnectionOverviewRow): readonly PlatformDataTableAction<ConnectionOverviewRow>[] => [
     { id: "open", label: "Open", icon: ChevronRight, onSelect: () => onOpen(row) },
@@ -145,10 +152,12 @@ export function ConnectionOverviewPage({
 
   return (
     <ResourceOverviewPage<ConnectionOverviewRow>
-      title={`Configure your ${entity}`}
       period={period}
       onPeriodChange={onPeriodChange}
       analytics={resolvedAnalytics}
+      heroContent={heroContent}
+      showPeriodSelector={showPeriodSelector}
+      controlsPortalId={controlsPortalId}
       headerActions={headerActions}
       className={`is-${kind}`}
       table={{
@@ -174,7 +183,6 @@ export function ConnectionOverviewPage({
             ],
           }],
           trailing: categorySwitch,
-          primaryAction: kind === "tags" && onCreate ? { label: "New Custom Tag", icon: Plus, onClick: onCreate } : undefined,
         },
         getRowActions,
         onRowActivate: onOpen,

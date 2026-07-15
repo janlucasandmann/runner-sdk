@@ -26,7 +26,7 @@ export const GUARDRAILS_PAGE_CONTROLLER_SCRIPT = `        function renderGuardra
             if (isGuardrailSetReadonly(set)) {
               return {
                 name: "Computer Agents",
-                avatarUrl: RUNNER_TRANSPARENT_LOGO_URL,
+                avatarUrl: COMPUTER_AGENTS_CREATOR_PROFILE_URL,
                 isSystem: true,
               };
             }

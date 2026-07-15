@@ -29,6 +29,7 @@ export interface SkillsOverviewPageProps {
   period: ResourceOverviewPeriod;
   onPeriodChange: (period: ResourceOverviewPeriod) => void;
   analytics?: ResourceOverviewAnalyticsModel;
+  controlsPortalId?: string;
   loading?: boolean;
   mutating?: boolean;
   headerActions?: ReactNode;
@@ -64,6 +65,7 @@ export function SkillsOverviewPage({
   period,
   onPeriodChange,
   analytics,
+  controlsPortalId,
   loading = false,
   mutating = false,
   headerActions,
@@ -154,10 +156,10 @@ export function SkillsOverviewPage({
 
   return (
     <ResourceOverviewPage<SkillOverviewRow>
-      title="Configure your Skills"
       period={period}
       onPeriodChange={onPeriodChange}
       analytics={resolvedAnalytics}
+      controlsPortalId={controlsPortalId}
       headerActions={headerActions}
       className="is-skills"
       table={{
@@ -183,7 +185,7 @@ export function SkillsOverviewPage({
             ],
           }],
           trailing: modeSwitch,
-          primaryAction: { label: "New Skill", icon: Plus, onClick: onCreate },
+          primaryAction: { label: "Skill", icon: Plus, onClick: onCreate },
         },
         getRowActions,
         onRowActivate: onOpen,

@@ -1,5 +1,5 @@
 export const INFERENCE_APP_RUNTIME_LIFECYCLE_SCRIPT = `        useEffect(() => {
-          if (activePage !== "settings" || settingsSection !== "inference") {
+          if (activePage !== "inference") {
             return undefined;
           }
 
@@ -109,7 +109,7 @@ export const INFERENCE_APP_RUNTIME_LIFECYCLE_SCRIPT = `        useEffect(() => {
           return () => {
             cancelled = true;
           };
-        }, [activePage, hasRealAccess, proxyBackendBase, requestHeaders, settingsLocalRunnersReloadToken, settingsSection]);
+        }, [activePage, hasRealAccess, proxyBackendBase, requestHeaders, settingsLocalRunnersReloadToken]);
         useEffect(() => {
           if (!settingsLocalRunnerOnboardingOpen || !hasRealAccess) {
             return undefined;
@@ -357,4 +357,3 @@ export const INFERENCE_APP_RUNTIME_LIFECYCLE_SCRIPT = `        useEffect(() => {
           }
         }, [hasRealAccess, proxyBackendBase, requestHeaders, settingsLocalBindingForm]);
 `;
-

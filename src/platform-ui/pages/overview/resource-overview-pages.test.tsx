@@ -20,6 +20,16 @@ const analytics: ResourceOverviewAnalyticsModel = {
   series: [],
   emptyState: "No activity yet.",
 };
+const CONTROLS_PORTAL_ID = "resource-overview-test-controls";
+
+function renderWithOverviewControls(ui: React.ReactNode) {
+  return render(
+    <>
+      <div id={CONTROLS_PORTAL_ID} data-testid="overview-controls" />
+      {ui}
+    </>,
+  );
+}
 
 afterEach(cleanup);
 
@@ -40,6 +50,7 @@ describe("resource overview pages", () => {
         period="month"
         onPeriodChange={vi.fn()}
         analytics={analytics}
+        controlsPortalId={CONTROLS_PORTAL_ID}
         onOpen={vi.fn()}
         onCreateAgent={vi.fn()}
         onCreateSquad={vi.fn()}
@@ -58,12 +69,17 @@ describe("resource overview pages", () => {
           profileLabel: "Standard",
           status: "Running",
           isRunning: true,
+          creatorName: "Computer Agents",
+          creatorAvatarUrl: "/img/agent-profile-pics/ca-profilepic.jpg",
+          creatorFallback: "CA",
+          creatorIsSystem: true,
           createdLabel: "Today",
           lastUsedLabel: "Now",
         }]}
         period="month"
         onPeriodChange={vi.fn()}
         analytics={analytics}
+        controlsPortalId={CONTROLS_PORTAL_ID}
         onOpen={vi.fn()}
         onCreate={vi.fn()}
         onRename={vi.fn()}
@@ -86,6 +102,7 @@ describe("resource overview pages", () => {
         period="month"
         onPeriodChange={vi.fn()}
         analytics={analytics}
+        controlsPortalId={CONTROLS_PORTAL_ID}
         onOpen={vi.fn()}
         onCreate={vi.fn()}
         onEdit={vi.fn()}
@@ -105,8 +122,8 @@ describe("resource overview pages", () => {
         period="month"
         onPeriodChange={vi.fn()}
         analytics={analytics}
+        controlsPortalId={CONTROLS_PORTAL_ID}
         onOpen={vi.fn()}
-        onCreate={vi.fn()}
       />
     )],
     ["plugins", () => (
@@ -121,11 +138,13 @@ describe("resource overview pages", () => {
         period="month"
         onPeriodChange={vi.fn()}
         analytics={analytics}
+        controlsPortalId={CONTROLS_PORTAL_ID}
         onOpen={vi.fn()}
       />
     )],
   ])("renders the canonical shell for %s", (kind, createPage) => {
-    const { container } = render(createPage());
+    const { container } = renderWithOverviewControls(createPage());
+    const isTagsOverview = kind === "tags";
     const toolbarTitles: Record<string, string> = {
       agents: "All Agents",
       computers: "All Computers",
@@ -135,33 +154,125 @@ describe("resource overview pages", () => {
     };
 
     expect(container.querySelectorAll(".resource-overview-page")).toHaveLength(1);
-    expect(container.querySelectorAll(".resource-overview-analytics")).toHaveLength(1);
+    expect(container.querySelector(".resource-overview-page__header")).toBeNull();
+    expect(container.querySelectorAll(".platform-analytics")).toHaveLength(isTagsOverview ? 0 : 1);
     expect(container.querySelector(".resource-overview-analytics__chart-header")).toBeNull();
     expect(container.querySelectorAll(".resource-overview-page__table-section")).toHaveLength(1);
-    expect(screen.getByRole("radiogroup", { name: "Analytics time frame" }).getAttribute("data-platform-switch")).toBe("true");
+    if (isTagsOverview) {
+      expect(screen.queryByRole("radiogroup", { name: "Analytics time frame" })).toBeNull();
+      expect(screen.getByRole("region", { name: "Get started with Tags" })).not.toBeNull();
+      expect(screen.queryByText("No activity yet.")).toBeNull();
+    } else {
+      expect(screen.getByRole("radiogroup", { name: "Analytics time frame" }).getAttribute("data-platform-switch")).toBe("true");
+      expect(screen.getByText("No activity yet.")).not.toBeNull();
+    }
     expect(container.querySelector(".platform-data-table.is-fill-layout")).not.toBeNull();
     expect(screen.getByRole("navigation", { name: /pagination/ })).not.toBeNull();
     expect(screen.getByRole("heading", { name: toolbarTitles[kind], level: 2 })).not.toBeNull();
     expect(screen.getByText("1-1 of 1")).not.toBeNull();
-    expect(screen.getByText("No activity yet.")).not.toBeNull();
     expect(screen.getByRole("button", { name: /Sort Name/ })).not.toBeNull();
+  });
+
+  it("renders computer names without icons and maps profiles to shared labels", () => {
+    const { container } = render(
+      <ComputersOverviewPage
+        rows={[
+          { id: "light", name: "Light Computer", profileLabel: "Light", status: "Stopped", isRunning: false, creatorName: "Computer Agents", creatorAvatarUrl: "/img/agent-profile-pics/ca-profilepic.jpg", createdLabel: "Today", lastUsedLabel: "Never" },
+          { id: "standard", name: "Standard Computer", profileLabel: "Standard", status: "Running", isRunning: true, creatorName: "Me", creatorFallback: "ME", createdLabel: "Today", lastUsedLabel: "Now" },
+          { id: "power", name: "Power Computer", profileLabel: "Power", status: "Stopped", isRunning: false, creatorName: "Me", creatorFallback: "ME", createdLabel: "Today", lastUsedLabel: "Never" },
+          { id: "desktop", name: "Desktop Computer", profileLabel: "Desktop", status: "Stopped", isRunning: false, creatorName: "Me", creatorFallback: "ME", createdLabel: "Today", lastUsedLabel: "Never" },
+        ]}
+        period="month"
+        onPeriodChange={vi.fn()}
+        analytics={analytics}
+        onOpen={vi.fn()}
+        onCreate={vi.fn()}
+        onRename={vi.fn()}
+        onShare={vi.fn()}
+        onCopy={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("Light Computer").closest(".platform-data-table__cell")?.querySelector("svg")).toBeNull();
+    expect(screen.getByText("Light").getAttribute("data-platform-label-variant")).toBe("gray");
+    expect(screen.getByText("Standard").getAttribute("data-platform-label-variant")).toBe("blue");
+    expect(screen.getByText("Power").getAttribute("data-platform-label-variant")).toBe("yellow");
+    expect(screen.getByText("Desktop").getAttribute("data-platform-label-variant")).toBe("green");
+    expect(screen.getByText("Computer Agents").closest(".resource-overview-identity")?.querySelector("img")?.getAttribute("src")).toBe("/img/agent-profile-pics/ca-profilepic.jpg");
+    expect(container.querySelectorAll(".platform-label")).toHaveLength(4);
+  });
+
+  it("renders the Tags guide, compact icons, and shared connection labels", async () => {
+    const user = userEvent.setup();
+    const onOpen = vi.fn();
+    const rows = [
+      { id: "email", name: "Email", connected: true, identityLabel: "mail@example.com", providerLabel: "Channel" },
+      { id: "telegram", name: "Telegram", connected: false, identityLabel: "Not connected", providerLabel: "Channel" },
+    ];
+    const { container } = render(
+      <TagsOverviewPage
+        rows={rows}
+        period="month"
+        onPeriodChange={vi.fn()}
+        analytics={analytics}
+        onOpen={onOpen}
+      />,
+    );
+
+    expect(container.querySelectorAll(".resource-overview-identity__visual.is-connection.is-size-compact")).toHaveLength(2);
+    expect(screen.getByText("Connected").getAttribute("data-platform-label-variant")).toBe("green");
+    expect(screen.getByText("Not Connected").getAttribute("data-platform-label-variant")).toBe("gray");
+    expect(screen.queryByRole("button", { name: "New Custom Tag" })).toBeNull();
+    expect(screen.getByText("Connect Email, Telegram, and Discord to start agent tasks and receive results directly in those channels.")).not.toBeNull();
+    expect(screen.getByRole("link", { name: "Quickstart" }).getAttribute("href")).toBe("/developers/quickstart");
+    expect(screen.getByRole("link", { name: "Documentation" }).getAttribute("href")).toBe("/developers/run-and-scale/webhooks");
+    expect(screen.getByRole("link", { name: "Event-driven tutorial" }).getAttribute("href")).toBe("/tutorials/event-driven-triggers");
+
+    await user.click(screen.getByRole("button", { name: "Run tasks by email" }));
+    expect(onOpen).toHaveBeenCalledWith(rows[0]);
   });
 
   it("routes period changes through the common selector", async () => {
     const user = userEvent.setup();
     const onPeriodChange = vi.fn();
-    render(
+    renderWithOverviewControls(
       <PluginsOverviewPage
         rows={[]}
         period="month"
         onPeriodChange={onPeriodChange}
         analytics={analytics}
+        controlsPortalId={CONTROLS_PORTAL_ID}
         onOpen={vi.fn()}
       />,
     );
 
-    await user.click(screen.getByRole("radio", { name: "1W" }));
+    await user.click(screen.getByRole("radio", { name: "7D" }));
     expect(onPeriodChange).toHaveBeenCalledWith("week");
+  });
+
+  it("portals the primary create action and time frame selector outside the page body", () => {
+    renderWithOverviewControls(
+      <ComputersOverviewPage
+        rows={[]}
+        period="month"
+        onPeriodChange={vi.fn()}
+        analytics={analytics}
+        controlsPortalId={CONTROLS_PORTAL_ID}
+        onOpen={vi.fn()}
+        onCreate={vi.fn()}
+        onRename={vi.fn()}
+        onShare={vi.fn()}
+        onCopy={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    );
+
+    const createButton = screen.getByRole("button", { name: "Computer" });
+    expect(screen.getByTestId("overview-controls").contains(createButton)).toBe(true);
+    expect(screen.getByTestId("overview-controls").contains(screen.getByRole("radiogroup", { name: "Analytics time frame" }))).toBe(true);
+    expect(document.querySelector(".resource-overview-page__header")).toBeNull();
+    expect(createButton.closest(".platform-data-table__toolbar")).toBeNull();
   });
 
   it("uses the shared switch for agent and squad modes", async () => {

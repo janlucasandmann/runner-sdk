@@ -9,37 +9,6 @@ export const CALENDAR_TOOLBAR_ACTIONS_CSS = `
 
       .playground-tasks-calendar-view-switch {
         flex: 0 0 auto;
-        --playground-tasks-calendar-view-switch-border: linear-gradient(
-          -10deg,
-          rgba(200, 200, 200, 0.25),
-          rgba(255, 255, 255, 0.1),
-          rgba(255, 255, 255, 0.15),
-          rgba(255, 255, 255, 0.375)
-        );
-        border: 0;
-        background: transparent;
-        z-index: 0;
-      }
-
-      .playground-tasks-calendar-view-switch::before {
-        content: "";
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        padding: 1px;
-        background: var(--playground-tasks-calendar-view-switch-border);
-        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-        mask-clip: content-box, border-box;
-        mask-composite: exclude;
-        mask-origin: content-box, border-box;
-        mask-repeat: repeat, repeat;
-        mask-size: auto, auto;
-      }
-
-      .playground-tasks-calendar-view-switch > * {
-        position: relative;
-        z-index: 1;
       }
 
       .playground-tasks-calendar-toolbar-plus {

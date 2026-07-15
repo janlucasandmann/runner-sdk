@@ -1,0 +1,1543 @@
+export const DEVELOP_HOME_CONTENT_CSS = `      .playground-develop-webhooks-page {
+        width: 100%;
+      }
+
+      .playground-develop-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+      }
+
+      .playground-develop-title {
+        margin: 0;
+        font-size: 24px;
+        line-height: 1;
+        font-weight: 500;
+        letter-spacing: -0.04em;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-project-overview-summary-title {
+        font-size: 18px !important;
+        font-weight: 400;
+      }
+
+      .playground-project-overview-summary-title.playground-develop-title {
+        font-size: 18px !important;
+      }
+
+      .playground-develop-header-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .playground-develop-link-button {
+        min-height: 34px;
+        padding: 0 14px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+        background: transparent;
+        -webkit-backdrop-filter: blur(20px);
+        backdrop-filter: blur(20px);
+        color: rgba(255, 255, 255, 0.9);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-develop-link-button:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.16);
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .playground-develop-link-button svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      .playground-develop-tabs {
+        display: inline-flex;
+        align-items: center;
+        gap: 18px;
+        padding-bottom: 0;
+        border-bottom: 0;
+        overflow-x: auto;
+      }
+
+      .playground-develop-home .playground-agents-overview-tabs.playground-project-overview-tabs {
+        margin-bottom: 0;
+      }
+
+      .playground-develop-home .playground-develop-home-hero.playground-environments-home-hero {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .playground-develop-home .playground-develop-home-hero-header {
+        margin: 0 0 12px;
+        padding-bottom: 12px;
+      }
+
+      .playground-develop-home .playground-develop-home-tabs.playground-agents-overview-tabs.playground-project-overview-tabs {
+        margin: 0 0 24px;
+      }
+
+      .playground-develop-home .playground-develop-home-overview-metrics.playground-environments-home-metrics {
+        max-height: 364px;
+        margin-top: 12px;
+        margin-bottom: 0;
+        overflow: hidden;
+        position: relative;
+        z-index: 0;
+      }
+
+      .playground-develop-tab {
+        min-height: 28px;
+        padding: 0 0 6px;
+        border: 0;
+        border-bottom: 1px solid transparent;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.5);
+        display: inline-flex;
+        align-items: center;
+        white-space: nowrap;
+        font-size: 13px;
+        line-height: 1;
+        font-weight: 400;
+        cursor: pointer;
+        transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
+      }
+
+      .playground-develop-tab:hover {
+        color: rgba(255, 255, 255, 0.78);
+      }
+
+      .playground-develop-tab.is-active {
+        color: rgba(255, 255, 255, 0.96);
+        border-bottom-color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-develop-server-metrics {
+        width: 100%;
+        margin-top: 0;
+      }
+
+      .playground-develop-server-metrics.playground-environments-home-metrics {
+        margin-top: 0;
+        gap: 10px;
+      }
+
+      .playground-functions-empty-landing {
+        width: 100%;
+        margin-top: 48px;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-functions-empty-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 200px;
+        align-items: center;
+        gap: 40px;
+      }
+
+      .playground-functions-empty-title {
+        max-width: 560px;
+        margin: 0;
+        color: #fff;
+        font-size: 32px;
+        line-height: 1.02;
+        font-weight: 500;
+        letter-spacing: -0.06em;
+      }
+
+      .playground-functions-empty-copy {
+        max-width: 520px;
+        margin: 20px 0 0;
+        color: rgba(255, 255, 255, 0.64);
+        font-size: 14px;
+        line-height: 1.75;
+        font-weight: 400;
+      }
+
+      .playground-functions-empty-actions {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 28px;
+      }
+
+      .playground-functions-empty-button,
+      .playground-functions-empty-icon-box,
+      .playground-functions-example-icon-box,
+      .playground-functions-examples-all-button {
+        --playground-project-overview-control-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        z-index: 0;
+        overflow: hidden;
+      }
+
+      .playground-functions-empty-button::before,
+      .playground-functions-empty-icon-box::before,
+      .playground-functions-example-icon-box::before,
+      .playground-functions-examples-all-button::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-project-overview-control-border);
+        -webkit-mask:
+          linear-gradient(#000 0 0) content-box,
+          linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor;
+        mask:
+          linear-gradient(#000 0 0) content-box,
+          linear-gradient(#000 0 0);
+        mask-composite: exclude;
+        z-index: 1;
+      }
+
+      .playground-functions-empty-button > *,
+      .playground-functions-empty-icon-box > *,
+      .playground-functions-example-icon-box > *,
+      .playground-functions-examples-all-button > * {
+        position: relative;
+        z-index: 2;
+      }
+
+      .playground-functions-empty-button {
+        appearance: none;
+        min-height: 40px;
+        padding: 0 20px;
+        border: 0;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1;
+        cursor: pointer;
+        transition: background-color 160ms ease, transform 160ms ease;
+      }
+
+      .playground-functions-empty-button.is-primary {
+        background: #fff;
+        color: #000;
+      }
+
+      .playground-functions-empty-button.is-secondary {
+        background: rgba(255, 255, 255, 0.02);
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .playground-functions-empty-button.is-primary:hover {
+        background: rgba(255, 255, 255, 0.9);
+      }
+
+      .playground-functions-empty-button.is-secondary:hover {
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .playground-functions-empty-button:active {
+        transform: translateY(1px);
+      }
+
+      .playground-functions-empty-art {
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      .playground-functions-empty-image {
+        width: 200px;
+        max-width: 100%;
+        height: auto;
+        display: block;
+        object-fit: contain;
+      }
+
+      .playground-functions-empty-features {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 40px;
+        margin-top: 64px;
+      }
+
+      .playground-functions-empty-feature {
+        min-width: 0;
+      }
+
+      .playground-functions-empty-icon-box {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        border: 0;
+        background: rgba(255, 255, 255, 0.02);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .playground-functions-empty-feature-title {
+        margin-top: 24px;
+        color: #fff;
+        font-size: 14px;
+        line-height: 1.25;
+        font-weight: 500;
+      }
+
+      .playground-functions-empty-feature-copy {
+        max-width: 240px;
+        margin-top: 16px;
+        color: rgba(255, 255, 255, 0.56);
+        font-size: 12px;
+        line-height: 1.9;
+        font-weight: 400;
+      }
+
+      .playground-functions-examples-section {
+        margin-top: 80px;
+        margin-bottom: 24px;
+      }
+
+      .playground-functions-examples-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 24px;
+      }
+
+      .playground-functions-examples-title {
+        max-width: 640px;
+        margin: 0;
+        color: #fff;
+        font-size: 24px;
+        line-height: 1.08;
+        font-weight: 500;
+        letter-spacing: -0.055em;
+      }
+
+      .playground-functions-examples-all-button {
+        appearance: none;
+        min-height: 36px;
+        padding: 0 16px;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.92);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 12px;
+        line-height: 1;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 160ms ease;
+      }
+
+      .playground-functions-examples-all-button:hover {
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-functions-examples-slider {
+        display: flex;
+        gap: 20px;
+        margin-top: 36px;
+        padding-bottom: 8px;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+      }
+
+      .playground-functions-examples-slider::-webkit-scrollbar {
+        display: none;
+      }
+
+      .playground-functions-example-card {
+        flex: 0 0 calc((100% - 40px) / 3);
+        min-width: 0;
+        overflow: hidden;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        color: inherit;
+        text-decoration: none;
+        scroll-snap-align: start;
+      }
+
+      .playground-functions-example-visual {
+        position: relative;
+        height: 128px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background-position: center;
+        background-size: cover;
+      }
+
+      .playground-functions-example-visual::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.36);
+      }
+
+      .playground-functions-example-icon-box {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        border: 0;
+        background: rgba(255, 255, 255, 0.08);
+        -webkit-backdrop-filter: blur(20px);
+        backdrop-filter: blur(20px);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.94);
+      }
+
+      .playground-functions-example-body {
+        padding: 20px;
+      }
+
+      .playground-functions-example-title {
+        color: #fff;
+        font-size: 15px;
+        line-height: 1.25;
+        font-weight: 500;
+        letter-spacing: -0.03em;
+      }
+
+      .playground-functions-example-copy {
+        min-height: 72px;
+        margin-top: 12px;
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 12px;
+        line-height: 2;
+        font-weight: 400;
+      }
+
+      .playground-functions-example-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 18px;
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 12px;
+        line-height: 1;
+        font-weight: 500;
+      }
+
+      .playground-functions-examples-controls {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 20px;
+      }
+
+      .playground-functions-examples-arrow {
+        appearance: none;
+        width: 32px;
+        height: 32px;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.68);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-functions-examples-arrow:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
+
+      .playground-develop-server-metrics-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 12px;
+        margin-bottom: 24px;
+        min-width: 0;
+      }
+
+      .playground-develop-server-metrics-resource-pill {
+        --playground-project-overview-control-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        overflow: hidden;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        min-height: 34px;
+        padding: 5px 12px 5px 6px;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.18);
+        -webkit-backdrop-filter: blur(20px);
+        backdrop-filter: blur(20px);
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 13px;
+        line-height: 1;
+        font-weight: 500;
+      }
+
+      .playground-develop-server-metrics-resource-pill::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-project-overview-control-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-develop-server-metrics-resource-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 24px;
+        height: 24px;
+        padding: 0 8px;
+        border-radius: 999px;
+        background: #fff;
+        color: #000;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1;
+      }
+
+      .playground-develop-server-metrics-resource-label {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-develop-server-metrics-resource-pill svg {
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .playground-develop-server-metrics-add-button {
+        flex: 0 0 auto;
+      }
+
+      .playground-develop-api-keys-toolbar {
+        justify-content: space-between;
+      }
+
+      .playground-develop-api-keys-toolbar .playground-develop-server-metrics-add-button {
+        margin-left: auto;
+      }
+
+      .playground-develop-webhooks-section {
+        gap: 0;
+      }
+
+      .playground-develop-webhooks-actions {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-left: auto;
+      }
+
+      .playground-develop-api-keys-scroll.playground-environments-detail-scroll {
+        padding: 0;
+      }
+
+      .playground-develop-server-metrics-title {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 14px;
+        line-height: 1.25;
+        font-weight: 500;
+      }
+
+      .playground-develop-server-metrics-title-row {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .playground-develop-server-metrics-menu-shell {
+        flex: 0 0 auto;
+      }
+
+      .playground-develop-server-metrics-menu-shell .playground-content-menu-button {
+        width: 24px;
+        height: 24px;
+      }
+
+      .playground-develop-server-metrics-menu-shell .playground-tasks-toolbar-popup-menu {
+        right: 0;
+        left: auto;
+        top: calc(100% + 8px);
+        min-width: 160px;
+      }
+
+      .playground-develop-home .playground-develop-server-metrics .playground-database-overview-chart-block {
+        --playground-project-overview-chart-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        box-sizing: border-box;
+        width: 100%;
+        padding: 20px;
+        border: 0;
+        border-radius: 15px;
+        background: transparent;
+        overflow: hidden;
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
+      }
+
+      .playground-develop-home .playground-develop-server-metrics .playground-database-overview-chart-block::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-project-overview-chart-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-develop-home .playground-develop-server-metrics .playground-database-overview-chart-block > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-develop-home .playground-develop-server-metrics .playground-database-overview-timeseries-card,
+      .playground-develop-home .playground-develop-server-metrics .playground-database-overview-timeseries-chart {
+        height: auto;
+      }
+
+      .playground-develop-home .playground-develop-server-metrics .playground-project-overview-chart-kpis {
+        background: transparent;
+        padding-left: 1px;
+        padding-right: 1px;
+      }
+
+      .playground-develop-server-metrics-kpis.playground-settings-usage-chart-kpis {
+        width: calc(100% + 40px);
+        margin-top: -20px;
+        margin-left: -20px;
+        margin-right: -20px;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 0;
+        padding: 0;
+      }
+
+      .playground-develop-home .playground-develop-server-metrics-kpi,
+      .playground-resources-page.is-develop-configure-page .playground-develop-server-metrics-kpi,
+      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-metrics-kpi {
+        appearance: none;
+        min-height: 68px;
+        padding: 16px 20px 14px;
+        border: 0;
+        border-bottom: 1px solid transparent;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+        transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-resources-page.is-develop-configure-page .playground-develop-server-metrics-kpi,
+      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-metrics-kpi {
+        cursor: default;
+      }
+
+      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-operational-metrics .playground-develop-server-metrics-kpi {
+        cursor: pointer;
+      }
+
+      .playground-develop-home .playground-develop-server-metrics-kpi.is-active,
+      .playground-resources-page.is-develop-configure-page .playground-develop-server-metrics-kpi.is-active,
+      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-metrics-kpi.is-active {
+        background: rgba(255, 255, 255, 0.05);
+        border-bottom-color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-develop-home .playground-develop-server-metrics-kpi:focus-visible,
+      .playground-resources-page.is-develop-configure-page .playground-develop-server-metrics-kpi:focus-visible,
+      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-metrics-kpi:focus-visible {
+        outline: 2px solid rgba(255, 255, 255, 0.22);
+        outline-offset: -2px;
+      }
+
+      .playground-develop-server-metrics-panel {
+        padding-top: 0;
+      }
+
+      .playground-develop-server-metrics-header {
+        align-items: center;
+      }
+
+      .playground-develop-server-metrics-source,
+      .playground-develop-server-metrics-error {
+        font-size: 11px;
+        line-height: 1.3;
+        font-weight: 400;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .playground-develop-server-metrics-error {
+        color: rgba(255, 122, 122, 0.9);
+      }
+
+      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-requests {
+        background: var(--playground-chart-blue);
+      }
+
+      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-success {
+        background: var(--playground-chart-green);
+      }
+
+      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-latency,
+      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-writes {
+        background: var(--playground-chart-yellow);
+      }
+
+      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-reads {
+        background: var(--playground-chart-blue);
+      }
+
+      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-compute,
+      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-errors,
+      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-resource-4 {
+        background: var(--playground-chart-pink);
+      }
+
+      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-resources,
+      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-resource-3 {
+        background: var(--playground-chart-green);
+      }
+
+      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-resource-1 {
+        background: var(--playground-chart-blue);
+      }
+
+      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-resource-2 {
+        background: var(--playground-chart-yellow);
+      }
+
+      .playground-develop-server-metrics-footer {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-top: 8px;
+        padding-top: 10px;
+      }
+
+      .playground-develop-server-metrics-footer-left {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .playground-develop-server-metrics-footer .playground-settings-usage-legend-item {
+        gap: 6px;
+        font-size: 11px;
+        line-height: 1.3;
+      }
+
+      .playground-develop-server-metrics-footer .playground-settings-usage-legend-swatch {
+        width: 7px;
+        height: 7px;
+      }
+
+      .playground-develop-server-metrics-timescale {
+        --playground-project-overview-control-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        overflow: hidden;
+        border-radius: 999px;
+        -webkit-backdrop-filter: blur(20px);
+        backdrop-filter: blur(20px);
+      }
+
+      .playground-develop-server-metrics-timescale::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-project-overview-control-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-develop-server-metrics-timescale::after {
+        z-index: 2;
+      }
+
+      .playground-develop-server-metrics-timescale .playground-environments-home-comparison-timescale-select {
+        position: relative;
+        z-index: 1;
+        min-height: 30px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        font-size: 11px;
+        font-weight: 400;
+      }
+
+      .playground-develop-demo-card {
+        min-height: 112px;
+        padding: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.02);
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 18px;
+        box-sizing: border-box;
+      }
+
+      .playground-develop-demo-art {
+        width: 112px;
+        height: 90px;
+        border-radius: 12px;
+        background:
+          radial-gradient(circle at 20% 20%, rgba(77, 163, 255, 0.42), transparent 36%),
+          radial-gradient(circle at 82% 76%, rgba(255, 231, 23, 0.34), transparent 34%),
+          linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .playground-develop-demo-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .playground-develop-demo-title {
+        font-size: 15px;
+        line-height: 1.2;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.94);
+      }
+
+      .playground-develop-demo-subtitle {
+        max-width: 620px;
+        font-size: 13px;
+        line-height: 1.45;
+        font-weight: 400;
+        color: rgba(255, 255, 255, 0.46);
+      }
+
+      .playground-develop-demo-button {
+        min-height: 38px;
+        padding: 0 18px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.02);
+        color: rgba(255, 255, 255, 0.92);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+
+      .playground-develop-quickstart {
+        min-height: 360px;
+        padding: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.055);
+        display: grid;
+        grid-template-columns: minmax(240px, 0.36fr) minmax(0, 1fr);
+        gap: 34px;
+        align-items: center;
+        box-sizing: border-box;
+      }
+
+      .playground-develop-quickstart-copy {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 18px;
+      }
+
+      .playground-develop-quickstart-title {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.2;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-develop-quickstart-text {
+        max-width: 300px;
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.5;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.44);
+      }
+
+      .playground-develop-primary-button {
+        min-height: 36px;
+        padding: 0 16px;
+        border: 0;
+        border-radius: 10px;
+        background: #fff;
+        color: #000;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+
+      .playground-develop-code-card {
+        min-width: 0;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 14px;
+        background: rgba(0, 0, 0, 0.58);
+        overflow: hidden;
+        box-sizing: border-box;
+      }
+
+      .playground-develop-code-header {
+        height: 34px;
+        padding: 0 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+      }
+
+      .playground-develop-code-copy {
+        width: 28px;
+        height: 28px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.66);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+
+      .playground-develop-code-body {
+        margin: 0;
+        padding: 14px 18px 18px;
+        overflow-x: auto;
+        color: rgba(255, 255, 255, 0.78);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 12px;
+        line-height: 1.6;
+        white-space: pre;
+      }
+
+      .playground-develop-code-line-number {
+        display: inline-block;
+        width: 24px;
+        margin-right: 14px;
+        color: rgba(255, 255, 255, 0.44);
+        text-align: right;
+        user-select: none;
+      }
+
+      .playground-develop-code-keyword {
+        color: #ff7ac8;
+      }
+
+      .playground-develop-code-string {
+        color: #8ee7ff;
+      }
+
+      .playground-develop-code-identifier {
+        color: #c9b4ff;
+      }
+
+      .playground-develop-docs-quickstart-card {
+        --playground-project-overview-chart-border: linear-gradient(
+          -10deg,
+          rgba(200, 200, 200, 0.25),
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.375)
+        );
+        position: relative;
+        width: 100%;
+        overflow: hidden;
+        border: 0;
+        border-radius: 15px;
+        background: transparent;
+        box-shadow: none;
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
+      }
+
+      .playground-develop-docs-quickstart-card::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        border-radius: inherit;
+        padding: 1px;
+        background: var(--playground-project-overview-chart-border);
+        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
+        mask-clip: content-box, border-box;
+        mask-composite: exclude;
+        mask-origin: content-box, border-box;
+        mask-repeat: repeat, repeat;
+        mask-size: auto, auto;
+      }
+
+      .playground-develop-docs-quickstart-card > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .playground-develop-docs-quickstart-inner {
+        display: grid;
+        grid-template-columns: 320px minmax(0, 1fr);
+        align-items: center;
+        gap: 32px;
+        padding: 28px;
+      }
+
+      .playground-develop-docs-quickstart-title {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 18px;
+        line-height: 1.2;
+        font-weight: 500;
+        letter-spacing: -0.03em;
+      }
+
+      .playground-develop-docs-quickstart-text {
+        max-width: 280px;
+        margin: 16px 0 0;
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 12px;
+        line-height: 2;
+        font-weight: 400;
+      }
+
+      .playground-develop-docs-quickstart-button {
+        appearance: none;
+        margin-top: 24px;
+        min-height: 34px;
+        padding: 0 16px;
+        border: 0;
+        border-radius: 999px;
+        background: #fff;
+        color: #000;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        line-height: 1;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 160ms ease;
+      }
+
+      .playground-develop-docs-quickstart-button:hover {
+        background: rgba(255, 255, 255, 0.9);
+      }
+
+      .playground-develop-docs-code-card {
+        min-width: 0;
+        overflow: hidden;
+        background: transparent;
+      }
+
+      .playground-develop-docs-code-toolbar {
+        margin-bottom: 10px;
+        padding-bottom: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .playground-develop-docs-code-tabs {
+        margin-left: 28px;
+        display: inline-flex;
+        align-items: center;
+        padding: 2px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .playground-develop-docs-code-tab {
+        appearance: none;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        padding: 4px 10px;
+        color: rgba(255, 255, 255, 0.42);
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-develop-docs-code-tab:hover {
+        color: rgba(255, 255, 255, 0.78);
+      }
+
+      .playground-develop-docs-code-tab.is-active {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+      }
+
+      .playground-develop-docs-code-copy {
+        appearance: none;
+        width: 32px;
+        height: 32px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.52);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-develop-docs-code-copy:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: #fff;
+      }
+
+      .playground-develop-docs-code-body {
+        margin: 0;
+        padding: 10px;
+        overflow-x: auto;
+        color: rgba(255, 255, 255, 0.82);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 12px;
+        line-height: 18px;
+        white-space: pre;
+      }
+
+      .playground-develop-docs-code-line {
+        display: block;
+        min-height: 18px;
+      }
+
+      .playground-develop-docs-code-line-number {
+        display: inline-block;
+        width: 22px;
+        margin-right: 10px;
+        color: #565656;
+        text-align: right;
+        user-select: none;
+      }
+
+      .playground-develop-docs-code-token.is-keyword {
+        color: #5dafff;
+      }
+
+      .playground-develop-docs-code-token.is-string {
+        color: #f0a36d;
+      }
+
+      .playground-develop-docs-code-token.is-identifier {
+        color: #35e8bb;
+      }
+
+      .playground-develop-docs-code-token.is-property {
+        color: #f185d2;
+      }
+
+      .playground-develop-docs-concepts {
+        margin-top: 24px;
+      }
+
+      .playground-develop-docs-concepts-header {
+        margin-bottom: 20px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 24px;
+      }
+
+      .playground-develop-docs-concepts-title {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 18px;
+        line-height: 1.2;
+        font-weight: 500;
+        letter-spacing: -0.03em;
+      }
+
+      .playground-develop-docs-concepts-copy {
+        margin: 6px 0 0;
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 12px;
+        line-height: 2;
+        font-weight: 400;
+      }
+
+      .playground-develop-docs-concepts-view-all {
+        appearance: none;
+        border: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 12px;
+        line-height: 1;
+        font-weight: 400;
+        cursor: pointer;
+        transition: color 160ms ease;
+      }
+
+      .playground-develop-docs-concepts-view-all:hover {
+        color: #fff;
+      }
+
+      .playground-develop-docs-concepts-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 24px;
+      }
+
+      .playground-develop-docs-concept-card {
+        appearance: none;
+        border: 0;
+        padding: 0;
+        background: transparent;
+        color: inherit;
+        text-align: left;
+        display: block;
+        cursor: pointer;
+      }
+
+      .playground-develop-docs-concept-art {
+        position: relative;
+        aspect-ratio: 1.7 / 1;
+        overflow: hidden;
+        border-radius: 15px;
+        background-size: cover;
+        background-position: center;
+      }
+
+      .playground-develop-docs-concept-art::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at top, rgba(255, 255, 255, 0.14), transparent 56%);
+        opacity: 0.8;
+        pointer-events: none;
+      }
+
+      .playground-develop-docs-concept-art::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.16));
+        pointer-events: none;
+      }
+
+      .playground-develop-docs-concept-copy {
+        margin-top: 12px;
+      }
+
+      .playground-develop-docs-concept-title {
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 14px;
+        line-height: 1.2;
+        font-weight: 500;
+        letter-spacing: -0.02em;
+      }
+
+      .playground-develop-docs-concept-description {
+        margin-top: 6px;
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 12px;
+        line-height: 2;
+        font-weight: 400;
+      }
+
+      .playground-develop-bottom-grid {
+        margin-top: 24px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 24px;
+        display: grid;
+        grid-template-columns: minmax(280px, 0.68fr) minmax(0, 1fr);
+        gap: 28px;
+        align-items: flex-start;
+      }
+
+      .playground-develop-section {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .playground-develop-section-title {
+        margin: 0;
+        font-size: 18px;
+        line-height: 1.2;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-develop-usage-card {
+        min-height: 182px;
+        padding: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.02);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-sizing: border-box;
+      }
+
+      .playground-develop-usage-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .playground-develop-usage-label {
+        font-size: 13px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.48);
+      }
+
+      .playground-develop-usage-value {
+        margin-top: 6px;
+        font-size: 24px;
+        line-height: 1;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-develop-usage-icon {
+        width: 34px;
+        height: 34px;
+        border: 0;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.76);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .playground-develop-usage-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .playground-develop-secondary-button {
+        min-height: 34px;
+        padding: 0 14px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.02);
+        color: rgba(255, 255, 255, 0.92);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+
+      .playground-develop-secondary-button.is-primary {
+        border-color: transparent;
+        background: #fff;
+        color: #000;
+      }
+
+      .playground-develop-quick-links {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .playground-develop-quick-link {
+        min-height: 58px;
+        padding: 0 18px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.02);
+        color: rgba(255, 255, 255, 0.92);
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        text-align: left;
+        cursor: pointer;
+        box-sizing: border-box;
+        transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-develop-quick-link:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.18);
+        color: #fff;
+      }
+
+      .playground-develop-quick-link-icon {
+        width: 18px;
+        height: 18px;
+        color: rgba(255, 255, 255, 0.54);
+        flex: 0 0 auto;
+      }
+
+      .playground-develop-quick-link-label {
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      @media (max-width: 920px) {
+        .playground-develop-home,
+        .playground-settings-page {
+          padding: 30px 20px 42px;
+        }
+
+        .playground-develop-header,
+        .playground-develop-demo-card,
+        .playground-develop-quickstart,
+        .playground-develop-docs-quickstart-inner,
+        .playground-develop-docs-concepts-grid,
+        .playground-develop-bottom-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .playground-functions-empty-hero {
+          grid-template-columns: 1fr;
+        }
+
+        .playground-functions-empty-art {
+          justify-content: flex-start;
+        }
+
+        .playground-functions-empty-title {
+          font-size: 38px;
+        }
+
+        .playground-functions-empty-features {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 28px;
+        }
+
+        .playground-functions-examples-header {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .playground-functions-example-card {
+          flex-basis: min(78vw, 320px);
+        }
+
+        .playground-develop-docs-code-tabs {
+          margin-left: 0;
+        }
+
+        .playground-develop-demo-card {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .playground-develop-header {
+          display: flex;
+          align-items: flex-start;
+        }
+
+        .playground-develop-header-actions {
+          justify-content: flex-start;
+        }
+
+        .playground-develop-quick-links {
+          grid-template-columns: 1fr;
+        }
+      }
+
+`;

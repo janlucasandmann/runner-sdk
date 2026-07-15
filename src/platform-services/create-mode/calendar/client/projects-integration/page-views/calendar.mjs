@@ -995,9 +995,7 @@ export const CALENDAR_PROJECTS_PAGE_CALENDAR_VIEW_SCRIPT = `
         function getPlaygroundCalendarWeekStart(date) {
           const nextDate = new Date(date);
           nextDate.setHours(0, 0, 0, 0);
-          const weekday = nextDate.getDay();
-          const offset = weekday === 0 ? -6 : 1 - weekday;
-          nextDate.setDate(nextDate.getDate() + offset);
+          nextDate.setDate(nextDate.getDate() - nextDate.getDay());
           return nextDate;
         }
 
@@ -1046,16 +1044,16 @@ export const CALENDAR_PROJECTS_PAGE_CALENDAR_VIEW_SCRIPT = `
                   "aria-label": "Next",
                 }, React.createElement(ChevronRight, { width: 16, height: 16, strokeWidth: 1.8 }))
               ),
-              React.createElement("div", { className: "content-mode-switch playground-tasks-nav playground-tasks-calendar-view-switch" },
-                allowedScheduleCalendarViews.map((viewId) =>
-                  React.createElement("button", {
-                    key: viewId,
-                    type: "button",
-                    className: "content-mode-button" + (currentView === viewId ? " is-active" : ""),
-                    onClick: () => toolbarProps?.onView?.(viewId),
-                  }, viewId.charAt(0).toUpperCase() + viewId.slice(1))
-                )
-              ),
+              React.createElement(PlatformSwitch, {
+                className: "playground-tasks-calendar-view-switch",
+                value: currentView,
+                options: allowedScheduleCalendarViews.map((viewId) => ({
+                  value: viewId,
+                  label: viewId.charAt(0).toUpperCase() + viewId.slice(1),
+                })),
+                ariaLabel: "Calendar view",
+                onValueChange: (nextView) => toolbarProps?.onView?.(nextView),
+              }),
               React.createElement("button", {
                 type: "button",
                 className: "playground-files-header-icon-button is-plain playground-tasks-calendar-toolbar-plus",
@@ -1154,13 +1152,14 @@ export const CALENDAR_PROJECTS_PAGE_CALENDAR_VIEW_SCRIPT = `
                   startAccessor: "start",
                   endAccessor: "end",
                   style: { height: "100%" },
+                  toolbar: !isStandaloneCalendarMode,
                   components: {
                     toolbar: renderScheduleCalendarToolbar,
                     event: renderProjectCalendarEvent,
                   },
                   views: allowedScheduleCalendarViews,
                   view: activeScheduleCalendarView,
-                  onView: (nextView) => setScheduleCalendarView(allowedScheduleCalendarViews.includes(nextView) ? nextView : "week"),
+                  onView: handleScheduleCalendarViewChange,
                   date: scheduleCalendarDate,
                   onNavigate: setScheduleCalendarDate,
                   eventPropGetter: getProjectCalendarEventProps,

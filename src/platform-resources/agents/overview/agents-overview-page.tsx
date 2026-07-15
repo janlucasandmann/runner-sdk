@@ -38,6 +38,7 @@ export interface AgentsOverviewPageProps {
   period: ResourceOverviewPeriod;
   onPeriodChange: (period: ResourceOverviewPeriod) => void;
   analytics: ResourceOverviewAnalyticsModel;
+  controlsPortalId?: string;
   loading?: boolean;
   mutating?: boolean;
   headerActions?: React.ReactNode;
@@ -58,6 +59,7 @@ export function AgentsOverviewPage({
   period,
   onPeriodChange,
   analytics,
+  controlsPortalId,
   loading = false,
   mutating = false,
   headerActions,
@@ -120,6 +122,7 @@ export function AgentsOverviewPage({
           imageClassName={row.modelIconClassName}
           icon={row.modelIconUrl ? undefined : Bot}
           iconClassName="is-model"
+          size="compact"
         />
       ),
     },
@@ -135,7 +138,7 @@ export function AgentsOverviewPage({
           title={row.creatorName}
           imageUrl={row.creatorAvatarUrl}
           fallback={row.creatorFallback}
-          iconClassName={row.creatorIsSystem ? "is-system-creator" : "is-creator"}
+          iconClassName="is-creator"
         />
       ),
     },
@@ -188,10 +191,10 @@ export function AgentsOverviewPage({
   const entity = mode === "squads" ? "Squads" : "Agents";
   return (
     <ResourceOverviewPage<AgentOverviewRow>
-      title="Configure your Agents"
       period={period}
       onPeriodChange={onPeriodChange}
       analytics={analytics}
+      controlsPortalId={controlsPortalId}
       headerActions={headerActions}
       className="is-agents"
       table={{
@@ -217,7 +220,7 @@ export function AgentsOverviewPage({
             ],
           }],
           trailing: modeSwitch,
-          primaryAction: { label: mode === "squads" ? "New Squad" : "New Agent", icon: Plus, onClick: mode === "squads" ? onCreateSquad : onCreateAgent },
+          primaryAction: { label: mode === "squads" ? "Squad" : "Agent", icon: Plus, onClick: mode === "squads" ? onCreateSquad : onCreateAgent },
         },
         getRowActions,
         onRowActivate: onOpen,

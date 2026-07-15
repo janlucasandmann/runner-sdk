@@ -5,7 +5,7 @@
 This directory sits beside `platform-ui` intentionally:
 
 - `platform-resources` owns resource-specific row models, page configuration, actions, filters, and presentation adapters.
-- `platform-ui` owns resource-agnostic components and page shells such as `PlatformDataTable` and `ResourceOverviewPage`.
+- `platform-ui` owns resource-agnostic components and page shells such as `PlatformDataTable`, `ResourceOverviewPage`, and `ResourceDetailPage`.
 - `platform-services` owns API access, persistence, transport, and backend-facing contracts.
 
 Resource modules may compose `platform-ui` components and pages. Generic UI code must not depend on a specific resource module.
@@ -54,6 +54,8 @@ import "@computer-agents/runner-web-sdk/platform-resources/styles.css";
 4. Export the resource from `platform-resources/index.ts`.
 5. Add the resource to the cross-resource overview test and structural invariant.
 6. Keep fetching and mutations in platform services or the application adapter.
+
+Detail modules follow the same boundary: resource adapters define tabs and domain behavior, then compose `ResourceDetailPage`. Navigation and persistence remain outside the shared shell.
 
 ## Verification
 

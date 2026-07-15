@@ -1,0 +1,24 @@
+import type { ReactNode } from "react";
+import type { PlatformDetailTab } from "../../components/composite/detail-tab-bar/index.js";
+
+export interface ResourceDetailPageProps<TTab extends string = string> {
+  title?: ReactNode;
+  header?: ReactNode;
+  headerActions?: ReactNode;
+  tabs: readonly PlatformDetailTab<TTab>[];
+  activeTab: TTab;
+  onTabChange: (tab: TTab) => void;
+  actions?: ReactNode;
+  children: ReactNode;
+  sidebar?: ReactNode;
+  sidebarCollapsed?: boolean;
+  ariaLabel?: string;
+  tabAriaLabel?: string;
+  sidebarAriaLabel?: string;
+  className?: string;
+  headerClassName?: string;
+  tabBarClassName?: string;
+  actionBarClassName?: string;
+  contentClassName?: string;
+  sidebarClassName?: string;
+}

@@ -56,6 +56,8 @@ export const PROJECTS_PAGE_SHELL_SCRIPT = `
         onRequestSidebarCollapse,
         useUnifiedProjectNav = false,
         onTasksHeaderChange,
+        onCalendarTopNavStateChange,
+        calendarTopNavActionsRef,
         onProjectIssueCreateHandlerChange,
         projectNavBackRequestToken = 0,
         projectNavViewRequest = null,
@@ -5484,6 +5486,7 @@ ${CALENDAR_PROJECTS_PAGE_SHELL_FRAGMENTS.editorState}
         }, [allTaskChildrenByParentId, boardBlockedPickerState?.taskId, taskTicketNumbersById, tasks]);
 
 ${CALENDAR_PROJECTS_PAGE_SHELL_FRAGMENTS.derivedState}
+${CALENDAR_PROJECTS_PAGE_SHELL_FRAGMENTS.topNavigation}
         const boardSprints = useMemo(() => {
           return [
             {

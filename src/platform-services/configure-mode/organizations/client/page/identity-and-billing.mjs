@@ -142,7 +142,7 @@ export const ORGANIZATIONS_PAGE_IDENTITY_AND_BILLING_SCRIPT = `          const g
 	                )
 	              ),
 	              activeBillingSection === "costs-plans" ? renderOrganizationBillingSnapshot() : null,
-	              renderSettingsPage({
+	              renderSettingsSurface({
 	                section: activeBillingSection,
 	                embedded: true,
 	                organizationBilling: true,
@@ -153,7 +153,7 @@ export const ORGANIZATIONS_PAGE_IDENTITY_AND_BILLING_SCRIPT = `          const g
 	          const renderOrganizationUsageSection = () => React.createElement("section", {
 	              className: "playground-team-detail-panel playground-organization-billing-panel playground-organization-usage-panel is-consolidated",
 	            },
-	            renderSettingsPage({
+	            renderSettingsSurface({
 	              section: "costs-overview",
 	              embedded: true,
 	              organizationBilling: true,

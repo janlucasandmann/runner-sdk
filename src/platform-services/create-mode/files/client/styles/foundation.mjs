@@ -388,9 +388,9 @@ export const FILES_FOUNDATION_CSS = `
         min-height: 0;
         display: flex;
         flex-direction: column;
-        margin: 0 5px 5px 0;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 15px;
+        margin: 0;
+        border: 0;
+        border-radius: 0;
         background: #000;
         box-sizing: border-box;
       }

@@ -11528,6 +11528,16 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   padding-bottom: 4px;
 }
 
+.tb-runner-chat .tb-popup-selector-switch {
+  width: 100%;
+  min-width: 0;
+}
+
+.tb-runner-chat .tb-popup-selector-switch .platform-switch__option {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 .tb-runner-chat .tb-popup-menu-context {
   bottom: calc(100% + 8px);
   left: -6px;

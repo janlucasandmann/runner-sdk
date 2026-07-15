@@ -45,6 +45,7 @@ import {
   togglePlatformDataTableSelection,
   togglePlatformDataTableVisibleSelection,
 } from "./data-table-state.js";
+import { useAnimatedHeight } from "./use-animated-height.js";
 import { DotLoader } from "../../../../react/dot-loader.js";
 import { PlatformPrimaryButton } from "../../ui/button/platform-button.js";
 import { PlatformSearch } from "../../ui/search/platform-search.js";
@@ -402,6 +403,16 @@ export function PlatformDataTable<TData>({
   const pageRangeEnd = totalRowCount
     ? Math.min(totalRowCount, resolvedPageIndex * activePagination.pageSize + renderedRows.length)
     : 0;
+  const surfaceHeightAnimationKey = [
+    loading ? "loading" : error ? "error" : renderedRows.length ? "rows" : "empty",
+    renderedRows.map((tableRow) => `${tableRow.id}:${isRowExpanded?.(tableRow.original) ? "expanded" : "collapsed"}`).join(","),
+    paginationEnabled ? `${resolvedPageIndex}:${activePagination.pageSize}:${totalRowCount}` : "unpaginated",
+    footer ? "footer" : "no-footer",
+  ].join("|");
+  const surfaceRef = useAnimatedHeight<HTMLDivElement>({
+    enabled: layout === "fill",
+    changeKey: surfaceHeightAnimationKey,
+  });
   const pageSizeOptions = useMemo(() => Array.from(new Set([
     ...(paginationConfig?.pageSizeOptions || DEFAULT_PAGE_SIZE_OPTIONS),
     activePagination.pageSize,
@@ -1029,10 +1040,11 @@ export function PlatformDataTable<TData>({
     },
     renderToolbar(),
     createElement("div", {
+        ref: surfaceRef,
         className: "platform-data-table__surface",
       },
       createElement("section", {
-          className: "platform-data-table__scroll",
+          className: "platform-data-table__table",
           role: "table",
           "aria-label": ariaLabel,
           "aria-rowcount": (paginationEnabled ? totalRowCount : renderedRows.length) + 1,
@@ -1041,7 +1053,9 @@ export function PlatformDataTable<TData>({
         createElement("div", { className: "platform-data-table__sticky" },
           renderHeader(),
         ),
-        renderBody(),
+        createElement("div", { className: "platform-data-table__scroll" },
+          renderBody(),
+        ),
       ),
       footer ? createElement("div", { className: "platform-data-table__footer" }, footer) : null,
       renderPagination(),

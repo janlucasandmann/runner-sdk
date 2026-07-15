@@ -931,10 +931,25 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
           });
 
           let reloadTimer = null;
+          const scheduleRunTraceReload = (run, failed) => {
+            if (cancelled) return;
+            const startedAt = Date.parse(String(run?.startedAt || run?.createdAt || ""));
+            const elapsedMs = Number.isFinite(startedAt) ? Math.max(0, Date.now() - startedAt) : 0;
+            const delayMs = failed
+              ? 15000
+              : document.visibilityState === "hidden"
+                ? 30000
+                : elapsedMs >= 10 * 60 * 1000
+                  ? 15000
+                  : elapsedMs >= 60 * 1000
+                    ? 10000
+                    : 5000;
+            reloadTimer = setTimeout(loadRunTrace, delayMs);
+          };
           const loadRunTrace = async () => {
             try {
               const { response, data } = await fetchJsonWithTimeout(
-                proxyBackendBase + "/metronomes/" + encodeURIComponent(workflowId) + "/runs/" + encodeURIComponent(runId) + "/timeline",
+                proxyBackendBase + "/metronomes/" + encodeURIComponent(workflowId) + "/runs/" + encodeURIComponent(runId) + "/timeline?view=compact",
                 { method: "GET", headers: authRequestHeaders },
                 12000
               );
@@ -1029,7 +1044,7 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
                 [key]: String(nextRun?.status || "").trim(),
               }));
               if (isActiveMetronomeRunStatus(nextRun?.status) && !cancelled) {
-                reloadTimer = setTimeout(loadRunTrace, 2500);
+                scheduleRunTraceReload(nextRun, false);
               }
             } catch (error) {
               if (cancelled) return;
@@ -1039,6 +1054,7 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
                 run: buildFallbackMetronomeRunTraceRun(selection),
                 error: error instanceof Error ? error.message : "Failed to load Metronome run.",
               });
+              scheduleRunTraceReload(buildFallbackMetronomeRunTraceRun(selection), true);
             }
           };
 

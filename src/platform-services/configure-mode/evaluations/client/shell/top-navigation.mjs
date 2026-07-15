@@ -11,7 +11,7 @@ export const EVALUATIONS_APP_TOP_NAVIGATION_SCRIPT = `        function renderEva
           if (evaluationsPageMode === "run" && activeEvaluationRun?.label) {
             evaluationsPathItems.push({ label: activeEvaluationRun.label });
           }
-          return renderUnifiedTopNav({
+          return renderAppHeader({
             className: "playground-configure-navbar playground-models-navbar",
             pathItems: evaluationsPathItems,
             includeSearchDivider: showEvaluationSetActions,

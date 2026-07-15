@@ -1,6 +1,7 @@
-import { Copy, HardDrive, Plus, SquarePen, Trash2, UsersRound } from "lucide-react";
+import { Copy, Plus, SquarePen, Trash2, UsersRound } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { PlatformDataTableAction, PlatformDataTableColumn } from "../../../platform-ui/components/composite/data-table/index.js";
+import { PlatformLabel, type PlatformLabelVariant } from "../../../platform-ui/components/ui/label/index.js";
 import {
   ResourceOverviewIdentityCell,
   ResourceOverviewPage,
@@ -8,6 +9,20 @@ import {
   type ResourceOverviewAnalyticsModel,
   type ResourceOverviewPeriod,
 } from "../../../platform-ui/pages/overview/index.js";
+
+function getComputerProfileLabelVariant(profileLabel: string): PlatformLabelVariant {
+  switch (profileLabel.trim().toLowerCase()) {
+    case "standard":
+      return "blue";
+    case "power":
+      return "yellow";
+    case "desktop":
+      return "green";
+    case "light":
+    default:
+      return "gray";
+  }
+}
 
 export interface ComputerOverviewRow {
   id: string;
@@ -17,6 +32,10 @@ export interface ComputerOverviewRow {
   status: string;
   isRunning: boolean;
   isSystem?: boolean;
+  creatorName: string;
+  creatorAvatarUrl?: string;
+  creatorFallback?: string;
+  creatorIsSystem?: boolean;
   createdAt?: number;
   createdLabel: string;
   createdTitle?: string;
@@ -30,6 +49,7 @@ export interface ComputersOverviewPageProps {
   period: ResourceOverviewPeriod;
   onPeriodChange: (period: ResourceOverviewPeriod) => void;
   analytics: ResourceOverviewAnalyticsModel;
+  controlsPortalId?: string;
   loading?: boolean;
   mutating?: boolean;
   headerActions?: React.ReactNode;
@@ -46,6 +66,7 @@ export function ComputersOverviewPage({
   period,
   onPeriodChange,
   analytics,
+  controlsPortalId,
   loading = false,
   mutating = false,
   headerActions,
@@ -70,7 +91,7 @@ export function ComputersOverviewPage({
       accessor: "name",
       sortable: true,
       width: "minmax(220px, 1.5fr)",
-      cell: ({ row }) => <ResourceOverviewIdentityCell title={row.name} icon={HardDrive} iconClassName="is-computer" />,
+      cell: ({ row }) => <span className="resource-overview-identity__title" title={row.name}>{row.name}</span>,
     },
     {
       id: "profile",
@@ -79,7 +100,27 @@ export function ComputersOverviewPage({
       sortable: true,
       width: "minmax(150px, 0.75fr)",
       hideBelow: 720,
-      cell: ({ row }) => <ResourceOverviewValue>{row.profileLabel}</ResourceOverviewValue>,
+      cell: ({ row }) => (
+        <PlatformLabel variant={getComputerProfileLabelVariant(row.profileLabel)}>
+          {row.profileLabel}
+        </PlatformLabel>
+      ),
+    },
+    {
+      id: "creator",
+      header: "Creator",
+      accessor: "creatorName",
+      sortable: true,
+      width: "minmax(180px, 0.82fr)",
+      hideBelow: 940,
+      cell: ({ row }) => (
+        <ResourceOverviewIdentityCell
+          title={row.creatorName}
+          imageUrl={row.creatorAvatarUrl}
+          fallback={row.creatorFallback}
+          iconClassName="is-creator"
+        />
+      ),
     },
     {
       id: "created",
@@ -122,10 +163,10 @@ export function ComputersOverviewPage({
 
   return (
     <ResourceOverviewPage<ComputerOverviewRow>
-      title="Configure your Computers"
       period={period}
       onPeriodChange={onPeriodChange}
       analytics={analytics}
+      controlsPortalId={controlsPortalId}
       headerActions={headerActions}
       className="is-computers"
       table={{
@@ -138,7 +179,7 @@ export function ComputersOverviewPage({
         selection: { enabled: true, ariaLabel: (row) => `Select ${row.name}` },
         toolbar: {
           title: "All Computers",
-          search: { placeholder: "Search computers", getSearchText: (row) => row.searchText || `${row.name} ${row.profileLabel} ${row.status}` },
+          search: { placeholder: "Search computers", getSearchText: (row) => row.searchText || `${row.name} ${row.profileLabel} ${row.creatorName} ${row.status}` },
           filters: [{
             id: "status",
             label: "Status",
@@ -150,7 +191,7 @@ export function ComputersOverviewPage({
               { id: "stopped", label: "Stopped" },
             ],
           }],
-          primaryAction: { label: "New Computer", icon: Plus, onClick: onCreate },
+          primaryAction: { label: "Computer", icon: Plus, onClick: onCreate },
         },
         getRowActions,
         onRowActivate: onOpen,

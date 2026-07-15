@@ -33,7 +33,7 @@
 />
 ```
 
-`layout="content"` is the default and grows with its rows. `layout="fill"` consumes a constrained flex parent's remaining height, keeps the toolbar outside the scroll viewport, and scrolls the table surface beneath its sticky column header. Every parent in a fill-height chain must provide `min-height: 0`.
+`layout="content"` is the default and grows with its rows. `layout="fill"` uses its intrinsic content height up to a constrained flex parent's remaining height and animates between intrinsic heights as its rendered rows change. Once that maximum is reached, only the row body scrolls; the toolbar, column header, and pagination remain outside the scroll viewport. Every parent in a fill-height chain must provide `min-height: 0`.
 
 Passing `pagination={{}}` enables client pagination with 20 rows per page and 10, 20, and 50-row options. Use `value` and `onChange` for controlled state. For server pagination, set `manual: true` and provide `totalCount`. Resource overview pages enable pagination by default; pass `pagination={false}` through their table configuration to opt out.
 

@@ -175,14 +175,20 @@ describe("PlatformDataTable", () => {
     expect(onChange).toHaveBeenCalledWith("published");
   });
 
-  it("supports a fill layout with an internally scrollable table surface", () => {
+  it("keeps the fill-layout header outside the row scroll viewport", () => {
     const { container } = renderTable({ layout: "fill" });
     const root = container.querySelector(".platform-data-table");
     const table = screen.getByRole("table", { name: "Test resources" });
+    const scrollViewport = container.querySelector(".platform-data-table__scroll");
+    const header = container.querySelector(".platform-data-table__header-group");
+    const body = container.querySelector(".platform-data-table__body");
 
     expect(root?.classList.contains("is-fill-layout")).toBe(true);
     expect(root?.classList.contains("is-content-layout")).toBe(false);
-    expect(table.classList.contains("platform-data-table__scroll")).toBe(true);
+    expect(table.classList.contains("platform-data-table__table")).toBe(true);
+    expect(table.contains(scrollViewport)).toBe(true);
+    expect(scrollViewport?.contains(body)).toBe(true);
+    expect(scrollViewport?.contains(header)).toBe(false);
   });
 
   it("paginates rows and keeps navigation outside the scroll viewport", async () => {

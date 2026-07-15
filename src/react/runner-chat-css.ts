@@ -12621,6 +12621,16 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   padding-bottom: 4px;
 }
 
+.tb-runner-chat .tb-popup-selector-switch {
+  width: 100%;
+  min-width: 0;
+}
+
+.tb-runner-chat .tb-popup-selector-switch .platform-switch__option {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 .tb-runner-chat .tb-popup-menu-context {
   bottom: calc(100% + 8px);
   left: -6px;
@@ -16236,5 +16246,37 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   .platform-button {
     transition-duration: 1ms;
   }
+}
+
+
+.platform-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 10px;
+  line-height: 1.2;
+  font-weight: 400;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.platform-label.is-green {
+  color: #85df7b;
+  background: rgba(133, 223, 123, 0.1);
+}
+
+.platform-label.is-blue {
+  color: #4da3ff;
+  background: rgba(77, 163, 255, 0.1);
+}
+
+.platform-label.is-yellow {
+  color: #ffe717;
+  background: rgba(255, 231, 23, 0.1);
 }
 `;

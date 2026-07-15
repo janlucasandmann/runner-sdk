@@ -314,7 +314,7 @@ export const TEAMS_PAGE_SETUP_SCRIPT = `        function renderTeamPage() {
                   React.createElement("button", {
                     type: "button",
                     className: "playground-team-plan-empty-button",
-                    onClick: () => openSettingsPage("costs-plans"),
+                    onClick: () => openSettingsModal("costs-plans"),
                   }, "View plans")
                 )
               )

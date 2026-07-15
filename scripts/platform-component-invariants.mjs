@@ -4,8 +4,8 @@ import { fileURLToPath } from "node:url";
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const componentRoot = path.join(packageRoot, "src", "platform-ui", "components");
-const primitiveComponents = ["button", "search", "switch"];
-const compositeComponents = ["data-table", "modal", "popup", "widgets"];
+const primitiveComponents = ["button", "label", "search", "switch"];
+const compositeComponents = ["analytics", "data-table", "detail-sidebar", "detail-tab-bar", "instructions-editor", "modal", "popup", "widgets"];
 const retiredRootComponents = [...primitiveComponents, ...compositeComponents];
 
 async function pathExists(targetPath) {
@@ -61,7 +61,7 @@ const runtimeFiles = [
   ...await collectFiles(path.join(packageRoot, "src")),
   ...await collectFiles(path.join(packageRoot, "examples")),
 ];
-const retiredImportPattern = /platform-ui\/components\/(?:button|search|switch|data-table|modal|popup|widgets)(?:\/|["'])|(?:^|\.)\.\/[^"']*components\/(?:button|search|switch|data-table|modal|popup|widgets)(?:\/|["'])/m;
+const retiredImportPattern = /platform-ui\/components\/(?:analytics|button|label|search|switch|data-table|modal|popup|widgets)(?:\/|["'])|(?:^|\.)\.\/[^"']*components\/(?:analytics|button|label|search|switch|data-table|modal|popup|widgets)(?:\/|["'])/m;
 for (const filePath of runtimeFiles) {
   if (filePath.endsWith(path.join("src", "react", "runner-chat-css.ts"))) continue;
   const source = await fs.readFile(filePath, "utf8");
@@ -73,9 +73,14 @@ for (const filePath of runtimeFiles) {
 const packageJson = JSON.parse(await fs.readFile(path.join(packageRoot, "package.json"), "utf8"));
 const canonicalExports = new Map([
   ["./platform-ui/components/ui/button", "./dist/platform-ui/components/ui/button/index.js"],
+  ["./platform-ui/components/ui/label", "./dist/platform-ui/components/ui/label/index.js"],
   ["./platform-ui/components/ui/search", "./dist/platform-ui/components/ui/search/index.js"],
   ["./platform-ui/components/ui/switch", "./dist/platform-ui/components/ui/switch/index.js"],
+  ["./platform-ui/components/composite/analytics", "./dist/platform-ui/components/composite/analytics/index.js"],
   ["./platform-ui/components/composite/data-table", "./dist/platform-ui/components/composite/data-table/index.js"],
+  ["./platform-ui/components/composite/detail-sidebar", "./dist/platform-ui/components/composite/detail-sidebar/index.js"],
+  ["./platform-ui/components/composite/detail-tab-bar", "./dist/platform-ui/components/composite/detail-tab-bar/index.js"],
+  ["./platform-ui/components/composite/instructions-editor", "./dist/platform-ui/components/composite/instructions-editor/index.js"],
   ["./platform-ui/components/composite/modal", "./dist/platform-ui/components/composite/modal/index.js"],
   ["./platform-ui/components/composite/popup", "./dist/platform-ui/components/composite/popup/index.js"],
   ["./platform-ui/components/composite/widgets", "./dist/platform-ui/components/composite/widgets/index.js"],
@@ -88,6 +93,7 @@ for (const [exportName, expectedPath] of canonicalExports) {
 
 const compatibilityExports = new Map([
   ["./platform-ui/components/button", canonicalExports.get("./platform-ui/components/ui/button")],
+  ["./platform-ui/components/label", canonicalExports.get("./platform-ui/components/ui/label")],
   ["./platform-ui/components/search", canonicalExports.get("./platform-ui/components/ui/search")],
   ["./platform-ui/components/switch", canonicalExports.get("./platform-ui/components/ui/switch")],
   ["./platform-ui/components/data-table", canonicalExports.get("./platform-ui/components/composite/data-table")],

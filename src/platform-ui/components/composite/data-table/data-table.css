@@ -2,33 +2,31 @@
   --platform-data-table-columns: minmax(0, 1fr);
   --platform-data-table-row-min-height: 58px;
   --platform-data-table-sticky-top: 0px;
-  --platform-data-table-surface: #000;
-  --platform-data-table-body-background: #000;
-  --platform-data-table-header-background: rgba(255, 255, 255, 0.075);
+  --platform-data-table-surface: rgba(255, 255, 255, 0.075);
+  --platform-data-table-body-background: transparent;
+  --platform-data-table-row-background: #000;
+  --platform-data-table-header-background: transparent;
   --platform-data-table-border: rgba(255, 255, 255, 0.075);
-  --platform-data-table-sticky-background: #000;
+  --platform-data-table-sticky-background: transparent;
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   min-width: 0;
   color: #fff;
   overflow: visible;
 }
 
-.platform-data-table.is-plain {
-  --platform-data-table-surface: transparent;
-}
-
 .platform-data-table.is-fill-layout {
-  flex: 1 1 0;
+  flex: 0 1 auto;
   min-height: 0;
-  height: 100%;
+  height: auto;
   max-height: 100%;
   overflow: hidden;
 }
 
 .platform-data-table__surface {
+  box-sizing: border-box;
   position: relative;
   min-width: 0;
   border: 1px solid var(--platform-data-table-border);
@@ -38,42 +36,53 @@
 }
 
 .platform-data-table.is-fill-layout > .platform-data-table__surface {
-  flex: 1 1 0;
+  flex: 0 1 auto;
   min-height: 0;
   max-height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--platform-data-table-body-background);
+  background: var(--platform-data-table-surface);
 }
 
+.platform-data-table__table,
 .platform-data-table__scroll {
   min-width: 0;
 }
 
-.platform-data-table.is-fill-layout .platform-data-table__scroll {
-  flex: 1 1 0;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  overflow-x: hidden;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
-  scrollbar-width: thin;
-}
-
-.platform-data-table.is-fill-layout .platform-data-table__scroll::-webkit-scrollbar {
-  width: 6px;
-}
-
-.platform-data-table.is-fill-layout .platform-data-table__scroll::-webkit-scrollbar-track {
+.platform-data-table__scroll {
+  box-sizing: border-box;
+  width: 100%;
+  padding-right: 3px;
+  padding-left: 3px;
   background: transparent;
 }
 
-.platform-data-table.is-fill-layout .platform-data-table__scroll::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.16);
+.platform-data-table.is-fill-layout .platform-data-table__table {
+  flex: 0 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.platform-data-table.is-fill-layout .platform-data-table__scroll {
+  flex: 0 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.platform-data-table.is-fill-layout .platform-data-table__scroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .platform-data-table.is-glass .platform-data-table__surface {
@@ -90,7 +99,7 @@
   background: var(--platform-data-table-sticky-background);
 }
 
-.platform-data-table.has-sticky-header .platform-data-table__scroll > .platform-data-table__sticky {
+.platform-data-table.has-sticky-header .platform-data-table__table > .platform-data-table__sticky {
   position: sticky;
   top: var(--platform-data-table-sticky-top);
 }
@@ -140,8 +149,13 @@
 }
 
 .platform-data-table__toolbar-controls {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
+  max-width: 100%;
   justify-content: flex-end;
+}
+
+.platform-data-table__toolbar-trailing {
+  flex: 0 0 auto;
 }
 
 .platform-data-table__toolbar-spacer {
@@ -150,8 +164,9 @@
 }
 
 .platform-data-table__search {
+  flex: 0 1 min(340px, 38vw);
   width: min(340px, 38vw);
-  min-width: 220px;
+  min-width: 160px;
 }
 
 .platform-data-table__toolbar-button,
@@ -189,6 +204,7 @@
 }
 
 .platform-data-table__primary-action {
+  flex: 0 0 auto;
   box-shadow: 0 2px 7px rgba(0, 0, 0, 0.3);
 }
 
@@ -206,6 +222,7 @@
 .platform-data-table__view-switch {
   box-sizing: border-box;
   display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
   height: 28px;
   padding: 2px;
@@ -271,14 +288,16 @@
 }
 
 .platform-data-table__header {
-  min-height: 44px;
-  padding-top: 2px;
-  padding-bottom: 2px;
+  min-height: 40px;
+  padding-right: 21px;
+  padding-left: 21px;
+  padding-top: 0;
+  padding-bottom: 0;
   color: rgba(255, 255, 255, 0.46);
   font-size: 12px;
   font-weight: 400;
   line-height: 1.2;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+  border-bottom: 0;
   background: var(--platform-data-table-header-background);
 }
 
@@ -414,7 +433,7 @@
   padding-top: 12px;
   padding-bottom: 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background: var(--platform-data-table-body-background);
+  background: var(--platform-data-table-row-background);
   color: rgba(255, 255, 255, 0.74);
   font-size: 12px;
   font-weight: 400;
@@ -425,7 +444,7 @@
 .platform-data-table__row[tabindex]:hover,
 .platform-data-table__row.is-menu-open,
 .platform-data-table__row.is-selected {
-  background: rgba(255, 255, 255, 0.035);
+  background: rgba(255, 255, 255, 0.0375);
 }
 
 .platform-data-table__row[tabindex] {
@@ -529,10 +548,10 @@
 
 .platform-data-table__footer {
   flex: 0 0 auto;
-  padding: 12px 18px;
-  border-top: 1px solid rgba(255, 255, 255, 0.075);
+  padding: 12px 21px;
+  border-top: 0;
   border-radius: 0 0 9px 9px;
-  background: var(--platform-data-table-body-background);
+  background: transparent;
   color: rgba(255, 255, 255, 0.5);
   font-size: 12px;
 }
@@ -541,15 +560,15 @@
   position: relative;
   z-index: 2;
   flex: 0 0 auto;
-  min-height: 38px;
-  padding: 3px 18px;
+  min-height: 36px;
+  padding: 3px 21px;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.075);
+  border-top: 0;
   border-radius: 0 0 9px 9px;
-  background: var(--platform-data-table-header-background);
+  background: transparent;
   color: rgba(255, 255, 255, 0.58);
   font-size: 12px;
   font-weight: 400;
@@ -784,14 +803,24 @@
     padding-left: 12px;
   }
 
+  .platform-data-table__header {
+    padding-right: 15px;
+    padding-left: 15px;
+  }
+
   .platform-data-table__expanded-row {
     padding-right: 12px;
     padding-left: 12px;
   }
 
+  .platform-data-table__footer {
+    padding-right: 15px;
+    padding-left: 15px;
+  }
+
   .platform-data-table__pagination {
     min-height: 38px;
-    padding: 3px 12px;
+    padding: 3px 15px;
     gap: 12px;
   }
 

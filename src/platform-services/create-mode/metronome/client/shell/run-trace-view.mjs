@@ -866,9 +866,7 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
               openToolsView("plugins");
             },
             onOpenPlansBudget: () => {
-              setSidebarWorkspaceMode("configure");
-              setActivePage("settings");
-              setSettingsSection("costs-plans");
+              openSettingsModal("costs-plans");
             },
             onThreadIdChange: (threadId) => {
               const normalizedThreadId = String(threadId || "").trim();

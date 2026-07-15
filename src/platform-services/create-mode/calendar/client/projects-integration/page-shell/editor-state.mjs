@@ -12,6 +12,6 @@ export const CALENDAR_PROJECTS_PAGE_SHELL_EDITOR_STATE_SCRIPT = `
         const [scheduleDetailsCollapsed, setScheduleDetailsCollapsed] = useState(false);
         const [scheduleCalendarView, setScheduleCalendarView] = useState("week");
         const [scheduleCalendarDate, setScheduleCalendarDate] = useState(() => new Date());
-        const allowedScheduleCalendarViews = ["month", "week", "day"];
+        const allowedScheduleCalendarViews = ["day", "week", "month"];
         const activeScheduleCalendarView = allowedScheduleCalendarViews.includes(scheduleCalendarView) ? scheduleCalendarView : "week";
 `;

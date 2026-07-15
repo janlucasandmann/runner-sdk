@@ -11,8 +11,18 @@ const generatedTsPath = path.join(packageRoot, "src", "react", "runner-chat-css.
 const distCssPath = path.join(packageRoot, "dist", "react", "runner-chat.css");
 const platformDataTableCssPath = path.join(packageRoot, "src", "platform-ui", "components", "composite", "data-table", "data-table.css");
 const distPlatformComponentsDataTableCssPath = path.join(packageRoot, "dist", "platform-ui", "components", "composite", "data-table", "data-table.css");
+const platformDetailSidebarCssPath = path.join(packageRoot, "src", "platform-ui", "components", "composite", "detail-sidebar", "detail-sidebar.css");
+const distPlatformDetailSidebarCssPath = path.join(packageRoot, "dist", "platform-ui", "components", "composite", "detail-sidebar", "detail-sidebar.css");
+const platformDetailTabBarCssPath = path.join(packageRoot, "src", "platform-ui", "components", "composite", "detail-tab-bar", "detail-tab-bar.css");
+const distPlatformDetailTabBarCssPath = path.join(packageRoot, "dist", "platform-ui", "components", "composite", "detail-tab-bar", "detail-tab-bar.css");
+const platformInstructionsEditorCssPath = path.join(packageRoot, "src", "platform-ui", "components", "composite", "instructions-editor", "instructions-editor.css");
+const distPlatformInstructionsEditorCssPath = path.join(packageRoot, "dist", "platform-ui", "components", "composite", "instructions-editor", "instructions-editor.css");
+const platformAnalyticsCssPath = path.join(packageRoot, "src", "platform-ui", "components", "composite", "analytics", "analytics.css");
+const distPlatformComponentsAnalyticsCssPath = path.join(packageRoot, "dist", "platform-ui", "components", "composite", "analytics", "analytics.css");
 const platformButtonCssPath = path.join(packageRoot, "src", "platform-ui", "components", "ui", "button", "button.css");
 const distPlatformComponentsButtonCssPath = path.join(packageRoot, "dist", "platform-ui", "components", "ui", "button", "button.css");
+const platformLabelCssPath = path.join(packageRoot, "src", "platform-ui", "components", "ui", "label", "label.css");
+const distPlatformComponentsLabelCssPath = path.join(packageRoot, "dist", "platform-ui", "components", "ui", "label", "label.css");
 const platformSearchCssPath = path.join(packageRoot, "src", "platform-ui", "components", "ui", "search", "search.css");
 const distPlatformComponentsSearchCssPath = path.join(packageRoot, "dist", "platform-ui", "components", "ui", "search", "search.css");
 const platformPopupCssPath = path.join(packageRoot, "src", "platform-ui", "components", "composite", "popup", "popup.css");
@@ -23,6 +33,9 @@ const platformModalCssPath = path.join(packageRoot, "src", "platform-ui", "compo
 const distPlatformComponentsModalCssPath = path.join(packageRoot, "dist", "platform-ui", "components", "composite", "modal", "modal.css");
 const platformOverviewPageCssPath = path.join(packageRoot, "src", "platform-ui", "pages", "overview", "resource-overview.css");
 const distPlatformOverviewPageCssPath = path.join(packageRoot, "dist", "platform-ui", "pages", "overview", "resource-overview.css");
+const platformDetailPageCssPath = path.join(packageRoot, "src", "platform-ui", "pages", "details", "resource-detail.css");
+const distPlatformDetailPageCssPath = path.join(packageRoot, "dist", "platform-ui", "pages", "details", "resource-detail.css");
+const distPlatformPagesCssPath = path.join(packageRoot, "dist", "platform-ui", "pages", "styles.css");
 const assetsSourceDir = path.join(packageRoot, "src", "react", "assets");
 const distAssetsDir = path.join(packageRoot, "dist", "react", "assets");
 const bundledDiffCssPath = path.join(packageRoot, "node_modules", "@git-diff-view", "react", "styles", "diff-view-pure.css");
@@ -33,17 +46,18 @@ function serializeCssAsTs(cssText) {
 }
 
 async function loadBundledCss() {
-  const [baseCssText, threadCssText, diffCssText, buttonCssText, searchCssText, popupCssText, switchCssText, modalCssText] = await Promise.all([
+  const [baseCssText, threadCssText, diffCssText, buttonCssText, labelCssText, searchCssText, popupCssText, switchCssText, modalCssText] = await Promise.all([
     fs.readFile(cssPath, "utf8"),
     fs.readFile(threadCssPath, "utf8"),
     fs.readFile(bundledDiffCssPath, "utf8"),
     fs.readFile(platformButtonCssPath, "utf8"),
+    fs.readFile(platformLabelCssPath, "utf8"),
     fs.readFile(platformSearchCssPath, "utf8"),
     fs.readFile(platformPopupCssPath, "utf8"),
     fs.readFile(platformSwitchCssPath, "utf8"),
     fs.readFile(platformModalCssPath, "utf8"),
   ]);
-  return `${diffCssText}\n\n${popupCssText}\n\n${searchCssText}\n\n${switchCssText}\n\n${modalCssText}\n\n${baseCssText}\n\n${threadCssText}\n\n${buttonCssText}`;
+  return `${diffCssText}\n\n${popupCssText}\n\n${searchCssText}\n\n${switchCssText}\n\n${modalCssText}\n\n${baseCssText}\n\n${threadCssText}\n\n${buttonCssText}\n\n${labelCssText}`;
 }
 
 async function prepare() {
@@ -52,22 +66,38 @@ async function prepare() {
 }
 
 async function copy() {
-  const [cssText, platformDataTableCssText, platformButtonCssText, platformSearchCssText, platformPopupCssText, platformSwitchCssText, platformModalCssText, platformOverviewPageCssText] = await Promise.all([
+  const [cssText, platformDataTableCssText, platformDetailSidebarCssText, platformDetailTabBarCssText, platformInstructionsEditorCssText, platformAnalyticsCssText, platformButtonCssText, platformLabelCssText, platformSearchCssText, platformPopupCssText, platformSwitchCssText, platformModalCssText, platformOverviewPageCssText, platformDetailPageCssText] = await Promise.all([
     loadBundledCss(),
     fs.readFile(platformDataTableCssPath, "utf8"),
+    fs.readFile(platformDetailSidebarCssPath, "utf8"),
+    fs.readFile(platformDetailTabBarCssPath, "utf8"),
+    fs.readFile(platformInstructionsEditorCssPath, "utf8"),
+    fs.readFile(platformAnalyticsCssPath, "utf8"),
     fs.readFile(platformButtonCssPath, "utf8"),
+    fs.readFile(platformLabelCssPath, "utf8"),
     fs.readFile(platformSearchCssPath, "utf8"),
     fs.readFile(platformPopupCssPath, "utf8"),
     fs.readFile(platformSwitchCssPath, "utf8"),
     fs.readFile(platformModalCssPath, "utf8"),
     fs.readFile(platformOverviewPageCssPath, "utf8"),
+    fs.readFile(platformDetailPageCssPath, "utf8"),
   ]);
   await fs.mkdir(path.dirname(distCssPath), { recursive: true });
   await fs.writeFile(distCssPath, cssText, "utf8");
   await fs.mkdir(path.dirname(distPlatformComponentsDataTableCssPath), { recursive: true });
   await fs.writeFile(distPlatformComponentsDataTableCssPath, platformDataTableCssText, "utf8");
+  await fs.mkdir(path.dirname(distPlatformDetailSidebarCssPath), { recursive: true });
+  await fs.writeFile(distPlatformDetailSidebarCssPath, platformDetailSidebarCssText, "utf8");
+  await fs.mkdir(path.dirname(distPlatformDetailTabBarCssPath), { recursive: true });
+  await fs.writeFile(distPlatformDetailTabBarCssPath, platformDetailTabBarCssText, "utf8");
+  await fs.mkdir(path.dirname(distPlatformInstructionsEditorCssPath), { recursive: true });
+  await fs.writeFile(distPlatformInstructionsEditorCssPath, platformInstructionsEditorCssText, "utf8");
+  await fs.mkdir(path.dirname(distPlatformComponentsAnalyticsCssPath), { recursive: true });
+  await fs.writeFile(distPlatformComponentsAnalyticsCssPath, platformAnalyticsCssText, "utf8");
   await fs.mkdir(path.dirname(distPlatformComponentsButtonCssPath), { recursive: true });
   await fs.writeFile(distPlatformComponentsButtonCssPath, platformButtonCssText, "utf8");
+  await fs.mkdir(path.dirname(distPlatformComponentsLabelCssPath), { recursive: true });
+  await fs.writeFile(distPlatformComponentsLabelCssPath, platformLabelCssText, "utf8");
   await fs.mkdir(path.dirname(distPlatformComponentsSearchCssPath), { recursive: true });
   await fs.writeFile(distPlatformComponentsSearchCssPath, platformSearchCssText, "utf8");
   await fs.mkdir(path.dirname(distPlatformComponentsPopupCssPath), { recursive: true });
@@ -77,7 +107,15 @@ async function copy() {
   await fs.mkdir(path.dirname(distPlatformComponentsModalCssPath), { recursive: true });
   await fs.writeFile(distPlatformComponentsModalCssPath, platformModalCssText, "utf8");
   await fs.mkdir(path.dirname(distPlatformOverviewPageCssPath), { recursive: true });
-  await fs.writeFile(distPlatformOverviewPageCssPath, platformOverviewPageCssText, "utf8");
+  await fs.writeFile(distPlatformOverviewPageCssPath, `${platformAnalyticsCssText}\n\n${platformOverviewPageCssText}`, "utf8");
+  await fs.mkdir(path.dirname(distPlatformDetailPageCssPath), { recursive: true });
+  await fs.writeFile(distPlatformDetailPageCssPath, platformDetailPageCssText, "utf8");
+  await fs.mkdir(path.dirname(distPlatformPagesCssPath), { recursive: true });
+  await fs.writeFile(
+    distPlatformPagesCssPath,
+    `${platformAnalyticsCssText}\n\n${platformOverviewPageCssText}\n\n${platformDetailTabBarCssText}\n\n${platformDetailSidebarCssText}\n\n${platformInstructionsEditorCssText}\n\n${platformDetailPageCssText}`,
+    "utf8",
+  );
   await fs.mkdir(distAssetsDir, { recursive: true });
   const assets = await fs.readdir(assetsSourceDir);
   await Promise.all(

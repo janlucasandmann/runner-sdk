@@ -2,7 +2,7 @@ export const METRONOME_TRIGGERS_RUNTIME_SCRIPT = String.raw`
         const METRONOME_STORAGE_KEY = "runner_demo_metronomes_v1";
         const METRONOME_HIDDEN_TEAM_SHARED_WORKFLOWS_STORAGE_PREFIX = "runner_demo_metronome_hidden_team_shared_workflows_v1:";
         const METRONOME_IMAGINE_CUSTOM_TEMPLATE_STORAGE_KEY = "runner_demo_imagine_custom_templates_v1";
-        const METRONOME_RUNNER_TRANSPARENT_LOGO_URL = "https://computer-agents.com/img/logos/runnertransparent.png";
+        const METRONOME_COMPUTER_AGENTS_CREATOR_PROFILE_URL = "/img/agent-profile-pics/ca-profilepic.jpg";
         const METRONOME_IMAGINE_BUILT_IN_TEMPLATE_OPTIONS = [
           { id: "product-ads", title: "Product ads", mediaType: "image", prompt: "Create a premium product ad with a clean studio setup, soft light, and conversion-focused composition." },
           { id: "astra-ads", title: "AstraFlow ads", mediaType: "image", prompt: "Create a sci-fi SaaS early-access advertisement with an astronaut product hero, luminous platform blocks, bold launch typography, premium dark-blue lighting, concise offer copy, and a polished conversion-focused call to action." },

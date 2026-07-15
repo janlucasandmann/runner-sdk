@@ -7,6 +7,8 @@ const scanRoots = ["examples", "src"];
 const sourceExtensions = new Set([".js", ".jsx", ".mjs", ".ts", ".tsx"]);
 const directTableAllowlist = [
   "tb-message-markdown-table",
+  // Markdown documents contain semantic content tables, not resource-data tables.
+  "platform-markdown__table",
   "playground-files-empty-folder-table",
 ];
 const legacyTableClassNames = [
@@ -49,6 +51,8 @@ function collectDirectTableViolations(relativePath, source) {
   if (relativePath.startsWith(`src${path.sep}platform-ui${path.sep}`)) {
     const jsxPattern = /<table(?:\s|>)/g;
     for (const match of source.matchAll(jsxPattern)) {
+      const context = source.slice(match.index, match.index + 260);
+      if (directTableAllowlist.some((className) => context.includes(className))) continue;
       violations.push(`${relativePath}:${getLineNumber(source, match.index)} renders a JSX table outside PlatformDataTable`);
     }
   }

@@ -60,7 +60,7 @@ export function createModelsAppTopNavigationScript({ pricingUrl = "", developers
         }
 
         function renderModelsPageNav() {
-          return renderUnifiedTopNav({
+          return renderAppHeader({
             className: "playground-configure-navbar playground-models-navbar",
             pathItems: [{ label: "Configure" }, { label: "Models" }],
             extraActions: renderModelsPageActionsMenu(),

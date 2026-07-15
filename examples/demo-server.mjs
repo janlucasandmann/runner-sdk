@@ -77,6 +77,37 @@ import {
   createOrganizationsPageScriptFragments,
   createOrganizationsService,
 } from "../src/platform-services/configure-mode/organizations/index.mjs";
+import {
+  CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS,
+  CONFIGURE_HOME_DOMAIN_SCRIPT_FRAGMENTS,
+  CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS,
+  CONFIGURE_HOME_STYLE_FRAGMENTS,
+  createConfigureHomePageScriptFragments,
+  createConfigureHomeService,
+} from "../src/platform-services/configure-mode/configure-home/index.mjs";
+import {
+  APP_HEADER_STYLE_FRAGMENTS,
+  SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS,
+  SETTINGS_MODAL_CSS,
+  createAppHeaderScriptFragments,
+  createAppSidebarScriptFragments,
+  createAppSidebarStyleFragments,
+  createSettingsModalPageScript,
+} from "../src/platform-shell/index.mjs";
+import {
+  DEVELOP_HOME_APP_SCRIPT_FRAGMENTS,
+  DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS,
+  DEVELOP_HOME_STYLE_FRAGMENTS,
+  createDevelopHomePageScript,
+} from "../src/platform-services/develop-mode/develop-home/index.mjs";
+import {
+  API_KEYS_APP_SCRIPT_FRAGMENTS,
+  API_KEYS_DOMAIN_SCRIPT_FRAGMENTS,
+  API_KEYS_PAGE_SCRIPT_FRAGMENTS,
+  API_KEYS_RUNTIME_SCRIPT_FRAGMENTS,
+  API_KEYS_STYLE_FRAGMENTS,
+  createApiKeysService,
+} from "../src/platform-services/develop-mode/api-keys/index.mjs";
 import { PLATFORM_UI_PRIMITIVES_CSS, PLATFORM_UI_PRIMITIVES_SCRIPT } from "./demo-platform-ui-primitives.mjs";
 import {
   PROJECTS_DOMAIN_FOUNDATION_SCRIPT,
@@ -140,6 +171,31 @@ const TEAMS_PAGE_SCRIPT_FRAGMENTS = createTeamsPageScriptFragments({
 });
 const ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS = createOrganizationsPageScriptFragments({
   documentationUrl: aiosOrigin + "/developers/organizations",
+});
+const CONFIGURE_HOME_PAGE_SCRIPT_FRAGMENTS = createConfigureHomePageScriptFragments({
+  pricingUrl: aiosOrigin + "/pricing",
+});
+const DEVELOP_HOME_PAGE_SCRIPT = createDevelopHomePageScript({
+  aiosOrigin,
+  inferenceEntry: INFERENCE_APP_SCRIPT_FRAGMENTS.configureHomeEntry,
+});
+const SETTINGS_MODAL_PAGE_SCRIPT = createSettingsModalPageScript({
+  inferencePageCaseScript: INFERENCE_PAGE_CASE_SCRIPT,
+  apiKeysLegacySettingsCase: API_KEYS_PAGE_SCRIPT_FRAGMENTS.legacySettingsCase,
+  webhooksDocumentationUrl: aiosOrigin + "/developers/run-and-scale/webhooks",
+});
+const APP_HEADER_APP_SCRIPT_FRAGMENTS = createAppHeaderScriptFragments();
+const APP_SIDEBAR_APP_SCRIPT_FRAGMENTS = createAppSidebarScriptFragments({
+  metronomeSidebarEntryScript: METRONOME_APP_SCRIPT_FRAGMENTS.sidebarEntry,
+  metronomeRunActionMenuScript: METRONOME_APP_SCRIPT_FRAGMENTS.runActionMenu,
+  configurePrimaryEntries: CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.sidebarEntry + TEAMS_APP_SCRIPT_FRAGMENTS.sidebarEntry + ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.sidebarEntry,
+  configureGovernanceEntries: EVALUATIONS_APP_SCRIPT_FRAGMENTS.sidebarEntry + FINE_TUNING_APP_SCRIPT_FRAGMENTS.sidebarEntry + GUARDRAILS_APP_SCRIPT_FRAGMENTS.sidebarEntry,
+  configureInfrastructureEntries: MODELS_APP_SCRIPT_FRAGMENTS.sidebarEntry + MARKETPLACE_APP_SCRIPT_FRAGMENTS.sidebarEntry + INFERENCE_APP_SCRIPT_FRAGMENTS.sidebarEntry,
+  developPrimaryEntries: DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.sidebarEntry + API_KEYS_APP_SCRIPT_FRAGMENTS.sidebarEntry,
+  createPrimaryEntries: IMAGINE_APP_SCRIPT_FRAGMENTS.sidebarEntry,
+});
+const APP_SIDEBAR_STYLE_FRAGMENTS = createAppSidebarStyleFragments({
+  metronomeSidebarCss: METRONOME_SHELL_STYLE_FRAGMENTS.sidebar,
 });
 const platformOrigin = (process.env.PLATFORM_APP_ORIGIN || process.env.NEXT_PUBLIC_PLATFORM_APP_URL || `http://localhost:${port}`).replace(/\/+$/, "");
 const defaultUpstreamOrigin = (process.env.RUNNER_UPSTREAM_ORIGIN || "https://api.computer-agents.com/v1").replace(/\/+$/, "");
@@ -328,7 +384,7 @@ ${CALENDAR_VENDOR_HEAD_HTML}
     <link rel="stylesheet" href="/dist/platform-ui/components/composite/data-table/data-table.css" />
     <link rel="stylesheet" href="/dist/platform-ui/components/composite/popup/popup.css" />
     <link rel="stylesheet" href="/dist/platform-ui/components/composite/modal/modal.css" />
-    <link rel="stylesheet" href="/dist/platform-ui/pages/overview/resource-overview.css" />
+    <link rel="stylesheet" href="/dist/platform-ui/pages/styles.css" />
     <style>
       :root {
         --bg-0: #000000;
@@ -778,1734 +834,7 @@ ${CALENDAR_VENDOR_HEAD_HTML}
         padding: 12px;
       }
 
-      .playground-shell {
-        --playground-shell-sidebar-width: 270px;
-        position: relative;
-        width: 100vw;
-        height: 100vh;
-        display: grid;
-        grid-template-columns: 270px minmax(0, 1fr);
-        background: var(--playground-app-bg);
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        transition: grid-template-columns 260ms cubic-bezier(0.16, 1, 0.3, 1);
-      }
-
-      .playground-shell.sidebar-collapsed {
-        --playground-shell-sidebar-width: 64px;
-        grid-template-columns: 64px minmax(0, 1fr);
-      }
-
-      .playground-sidebar {
-        --sidebar-link-color: rgba(255, 255, 255, 0.7);
-        --sidebar-link-active-color: #fff;
-        position: relative;
-        z-index: 4;
-        display: block;
-        min-width: 0;
-        height: 100vh;
-        padding: 0;
-        overflow: hidden;
-        background: rgba(255, 255, 255, 0.075);
-        backdrop-filter: none;
-        -webkit-backdrop-filter: none;
-        transition: width 260ms cubic-bezier(0.16, 1, 0.3, 1);
-      }
-
-      .playground-shell.is-projects-page .playground-sidebar:not(.is-collapsed),
-      .playground-shell.is-agents-page .playground-sidebar:not(.is-collapsed) {
-        backdrop-filter: none;
-        -webkit-backdrop-filter: none;
-      }
-
-      .playground-shell.is-projects-page .playground-sidebar.is-collapsed,
-      .playground-shell.is-agents-page .playground-sidebar.is-collapsed {
-        backdrop-filter: none;
-        -webkit-backdrop-filter: none;
-      }
-
-      .playground-sidebar-panel,
-      .playground-sidebar-rail {
-        position: absolute;
-        inset: 0;
-      }
-
-      .playground-sidebar-panel {
-        min-width: 0;
-        min-height: 0;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        padding: 0 10px 0;
-        opacity: 1;
-        transform: translateX(0);
-        visibility: visible;
-        pointer-events: auto;
-        transition:
-          opacity 180ms ease,
-          transform 260ms cubic-bezier(0.16, 1, 0.3, 1),
-          visibility 0s linear 0s;
-      }
-
-      .sidebar-hide-button {
-        width: 24px;
-        height: 24px;
-        padding: 0;
-        border: 0;
-        border-radius: 10px;
-        background: transparent;
-        color: var(--sidebar-link-color);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: background-color 160ms ease, color 160ms ease;
-      }
-
-      .sidebar-hide-button:hover {
-        background: rgba(255, 255, 255, 0.08);
-        color: #fff;
-      }
-
-      .sidebar-toggle-icon,
-      .sidebar-action-icon,
-      .sidebar-search-trigger-icon,
-      .sidebar-section-icon,
-      .sidebar-settings-icon,
-      .sidebar-thread-header-icon,
-      .sidebar-rail-icon,
-      .sidebar-pin-icon {
-        width: 14px;
-        height: 14px;
-        flex-shrink: 0;
-        stroke-width: 2;
-      }
-
-      .playground-sidebar-top {
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-        min-height: 56px;
-        padding: 4px 0 4px;
-        margin-bottom: 0;
-        box-sizing: border-box;
-      }
-
-      .sidebar-workspace-row {
-        position: relative;
-        z-index: 20;
-        padding: 0;
-        margin: 0 0 12px;
-        box-sizing: border-box;
-      }
-
-      .sidebar-workspace-switcher {
-        position: relative;
-        flex: 1 1 auto;
-        min-width: 0;
-      }
-
-      .sidebar-workspace-trigger {
-        --sidebar-workspace-border: linear-gradient(
-          -10deg,
-          rgba(200, 200, 200, 0.25),
-          rgba(255, 255, 255, 0.1),
-          rgba(255, 255, 255, 0.15),
-          rgba(255, 255, 255, 0.375)
-        );
-        width: 100%;
-        height: 34px;
-        min-height: 34px;
-        padding: 0 12px;
-        position: relative;
-        z-index: 0;
-        border: 0;
-        border-radius: 999px;
-        background: rgba(255,255,255,0.025);
-        color: var(--sidebar-link-color);
-        display: inline-flex;
-        align-items: center;
-        gap: 14px;
-        cursor: pointer;
-        overflow: hidden;
-        box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.15);
-        box-sizing: border-box;
-        transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
-      }
-
-      .sidebar-workspace-trigger::before {
-        content: "";
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        padding: 1px;
-        background: var(--sidebar-workspace-border);
-        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-        mask-clip: content-box, border-box;
-        mask-composite: exclude;
-        mask-origin: content-box, border-box;
-        mask-repeat: repeat, repeat;
-        mask-size: auto, auto;
-      }
-
-      .sidebar-workspace-trigger > * {
-        position: relative;
-        z-index: 1;
-      }
-
-      .sidebar-workspace-trigger:hover,
-      .sidebar-workspace-trigger.is-open {
-        background: rgba(255, 255, 255, 0.04);
-        color: var(--sidebar-link-active-color);
-      }
-
-      .sidebar-workspace-icon-shell {
-        width: 14px;
-        height: 14px;
-        border-radius: 0;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: transparent;
-        color: inherit;
-        flex: 0 0 auto;
-      }
-
-      .sidebar-workspace-icon {
-        width: 14px;
-        height: 14px;
-      }
-
-      .sidebar-workspace-label {
-        min-width: 0;
-        flex: 1 1 auto;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        font-size: 12px;
-        font-weight: 500;
-        text-align: left;
-      }
-
-      .sidebar-workspace-trigger-chevron {
-        width: 11px;
-        height: 11px;
-        flex: 0 0 auto;
-        color: var(--sidebar-link-color);
-      }
-
-      .sidebar-workspace-collapse-button {
-        width: 34px;
-        height: 38px;
-        padding: 0;
-        border: 0;
-        border-radius: 10px;
-        background: transparent;
-        color: var(--sidebar-link-color);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: background-color 160ms ease, color 160ms ease;
-      }
-
-      .sidebar-workspace-collapse-button:hover {
-        background: rgba(255, 255, 255, 0.07);
-        color: var(--sidebar-link-active-color);
-      }
-
-      .sidebar-workspace-menu {
-        position: absolute;
-        top: calc(100% + 6px);
-        left: 0;
-        width: 100%;
-        z-index: 120;
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-        box-sizing: border-box;
-        transform-origin: top left;
-      }
-
-      .sidebar-workspace-option {
-        width: 100%;
-        padding: 12px 16px;
-        border: 0;
-        background: transparent;
-        color: white;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        text-align: left;
-        cursor: pointer;
-        box-sizing: border-box;
-        transition: background-color 160ms ease;
-      }
-
-      .sidebar-workspace-option:hover,
-      .sidebar-workspace-option.is-active {
-        background: rgba(255, 255, 255, 0.1);
-        color: #fff;
-      }
-
-      .sidebar-workspace-menu .sidebar-workspace-icon-shell,
-      .sidebar-workspace-menu .sidebar-workspace-icon {
-        width: var(--platform-popup-icon-size, 13px);
-        height: var(--platform-popup-icon-size, 13px);
-      }
-
-      .sidebar-workspace-option-copy {
-        min-width: 0;
-        flex: 1 1 auto;
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-      }
-
-      .sidebar-workspace-option-label {
-        font-size: var(--platform-popup-font-size, 12px);
-        font-weight: 500;
-        line-height: 1.2;
-      }
-
-      .sidebar-workspace-option-description {
-        font-size: 11px;
-        font-weight: 400;
-        line-height: 1.25;
-        color: rgba(255, 255, 255, 0.62);
-      }
-
-      .sidebar-workspace-option-check {
-        width: 16px;
-        height: 16px;
-        color: rgba(255, 255, 255, 0.76);
-        flex: 0 0 auto;
-      }
-
-      .sidebar-search-trigger {
-        justify-content: space-between;
-        color: var(--sidebar-link-color);
-      }
-
-      .sidebar-search-trigger:hover {
-        color: var(--sidebar-link-color);
-      }
-
-      .sidebar-search-trigger-main {
-        min-width: 0;
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .sidebar-search-trigger-icon {
-        width: 14px;
-        height: 14px;
-        flex-shrink: 0;
-      }
-
-      .sidebar-search-trigger-copy {
-        font-size: 14px;
-        font-weight: 500;
-      }
-
-      .sidebar-search-trigger-shortcut {
-        display: none;
-        flex-shrink: 0;
-        color: rgba(255, 255, 255, 0.52);
-        font-size: 10px;
-        font-weight: 600;
-        line-height: 1;
-        letter-spacing: 0.04em;
-      }
-
-      .sidebar-search-trigger:hover .sidebar-search-trigger-shortcut,
-      .sidebar-search-trigger:focus-visible .sidebar-search-trigger-shortcut,
-      .sidebar-search-trigger:focus-within .sidebar-search-trigger-shortcut {
-        display: inline;
-      }
-
-      .playground-sidebar-brand {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        padding: 0 0 0 4px;
-        border: 0;
-        background: transparent;
-        color: var(--sidebar-link-color);
-        border-radius: 10px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: flex-start;
-        cursor: pointer;
-        overflow: hidden;
-        box-sizing: border-box;
-        transition: background-color 160ms ease, color 160ms ease;
-      }
-
-      .playground-sidebar-brand:hover,
-      .playground-sidebar-brand:focus-visible {
-        background: transparent;
-        color: var(--sidebar-link-active-color);
-      }
-
-      .playground-sidebar-brand-logo {
-        position: absolute;
-        left: 12px;
-        top: 50%;
-        margin: 0;
-        display: block;
-        width: auto;
-        height: 14px;
-        object-fit: contain;
-        transform: translateY(-50%) scale(1);
-        transform-origin: center;
-        opacity: 1;
-        transition: opacity 160ms ease, transform 160ms ease;
-      }
-
-      .playground-sidebar-brand-close-icon {
-        position: absolute;
-        left: 12px;
-        top: 50%;
-        margin: 0;
-        width: 14px;
-        height: 14px;
-        transform: translateY(-50%) scale(0.9);
-        transform-origin: center;
-        opacity: 0;
-        transition: opacity 160ms ease, transform 160ms ease;
-      }
-
-      .playground-sidebar-brand:hover .playground-sidebar-brand-logo,
-      .playground-sidebar-brand:focus-visible .playground-sidebar-brand-logo {
-        opacity: 0;
-        transform: translateY(-50%) scale(0.9);
-      }
-
-      .playground-sidebar-brand:hover .playground-sidebar-brand-close-icon,
-      .playground-sidebar-brand:focus-visible .playground-sidebar-brand-close-icon {
-        opacity: 1;
-        transform: translateY(-50%) scale(1);
-      }
-
-      .playground-sidebar-rail {
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0;
-        padding: 0 10px 0;
-        opacity: 0;
-        transform: translateX(-12px);
-        visibility: hidden;
-        pointer-events: none;
-        transition:
-          opacity 180ms ease,
-          transform 260ms cubic-bezier(0.16, 1, 0.3, 1),
-          visibility 0s linear 180ms;
-      }
-
-      .sidebar-rail-top {
-        width: 100%;
-        min-height: 56px;
-        padding: 4px 0 4px;
-        box-sizing: border-box;
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-      }
-
-      .playground-sidebar.is-collapsed .playground-sidebar-panel {
-        opacity: 0;
-        transform: translateX(-18px);
-        visibility: hidden;
-        pointer-events: none;
-        transition-delay: 0s, 0s, 180ms;
-      }
-
-      .playground-sidebar.is-collapsed .playground-sidebar-rail {
-        opacity: 1;
-        transform: translateX(0);
-        visibility: visible;
-        pointer-events: auto;
-        transition-delay: 0s, 0s, 0s;
-      }
-
-      .sidebar-rail-logo-button,
-      .sidebar-rail-button {
-        width: 34px;
-        height: 34px;
-        margin-left: 4px;
-        padding: 0;
-        border: 0;
-        border-radius: 10px;
-        background: transparent;
-        color: var(--sidebar-link-color);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        box-sizing: border-box;
-        transition: background-color 160ms ease, color 160ms ease;
-      }
-
-      .sidebar-rail-logo-button {
-        width: 34px;
-        height: 34px;
-        margin-left: 2px;
-      }
-
-      .sidebar-rail-logo-button {
-        color: var(--sidebar-link-color);
-      }
-
-      .sidebar-rail-logo-button {
-        position: relative;
-        overflow: hidden;
-      }
-
-      .sidebar-rail-logo-button:hover {
-        background: transparent;
-        color: var(--sidebar-link-active-color);
-      }
-
-      .sidebar-rail-button:hover {
-        background: rgba(255, 255, 255, 0.08);
-        color: var(--sidebar-link-active-color);
-      }
-
-      .sidebar-rail-logo {
-        position: absolute;
-        left: 12px;
-        top: 50%;
-        margin: 0;
-        display: block;
-        width: auto;
-        height: 14px;
-        object-fit: contain;
-        transform: translateY(-50%) scale(1);
-        transform-origin: center;
-        opacity: 1;
-        transition: opacity 160ms ease, transform 160ms ease;
-      }
-
-      .sidebar-rail-logo-open-icon {
-        position: absolute;
-        left: 12px;
-        top: 50%;
-        margin: 0;
-        width: 14px;
-        height: 14px;
-        transform: translateY(-50%) scale(0.9);
-        transform-origin: center;
-        opacity: 0;
-        transition: opacity 160ms ease, transform 160ms ease;
-      }
-
-      .sidebar-rail-logo-button:hover .sidebar-rail-logo,
-      .sidebar-rail-logo-button:focus-visible .sidebar-rail-logo {
-        opacity: 0;
-        transform: translateY(-50%) scale(0.9);
-      }
-
-      .sidebar-rail-logo-button:hover .sidebar-rail-logo-open-icon,
-      .sidebar-rail-logo-button:focus-visible .sidebar-rail-logo-open-icon {
-        opacity: 1;
-        transform: translateY(-50%) scale(1);
-      }
-
-      .sidebar-rail-actions {
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 4px;
-      }
-
-      .sidebar-rail-footer {
-        margin-top: auto;
-        padding-bottom: 10px;
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 4px;
-      }
-
-      .sidebar-rail-button.is-active {
-        background: rgba(255, 255, 255, 0.08);
-        border-radius: 10px;
-        color: var(--sidebar-link-active-color);
-      }
-
-      .sidebar-rail-account {
-        width: 34px;
-        height: 34px;
-        margin-top: 0;
-        margin-bottom: 0;
-        margin-left: 4px;
-        padding: 0;
-        border: 0;
-        border-radius: 10px;
-        background: transparent;
-        color: var(--sidebar-link-color);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        box-sizing: border-box;
-        transition: background-color 160ms ease, color 160ms ease;
-      }
-
-      .sidebar-rail-account:hover {
-        background: rgba(255, 255, 255, 0.08);
-        color: var(--sidebar-link-active-color);
-      }
-
-      .sidebar-rail-account-image,
-      .sidebar-account-avatar-image,
-      .account-menu-avatar-image,
-      .profile-editor-avatar-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-      }
-
-      .sidebar-action-list {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        margin-bottom: 20px;
-      }
-
-      .sidebar-action-subtitle {
-        width: 100%;
-        margin: 8px 0 4px;
-        padding: 0 12px;
-        color: rgba(255, 255, 255, 1);
-        font-size: 12px;
-        font-weight: 500;
-        line-height: 1;
-        text-transform: none;
-        letter-spacing: 0;
-        box-sizing: border-box;
-      }
-
-      .sidebar-action-button,
-      .sidebar-settings-button {
-        width: 100%;
-        min-height: 34px;
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        padding: 10px 12px;
-        border: 0;
-        border-radius: 10px;
-        background: transparent;
-        color: var(--sidebar-link-color);
-        cursor: pointer;
-        text-align: left;
-        font-size: 12px;
-        line-height: 14px;
-        font-weight: 500;
-        box-sizing: border-box;
-        transition: background-color 160ms ease, color 160ms ease;
-      }
-
-      .sidebar-action-button:hover,
-      .sidebar-settings-button:hover {
-        background: rgba(255, 255, 255, 0.07);
-      }
-
-      .sidebar-action-button.is-active {
-        background: rgba(255, 255, 255, 0.08);
-        color: var(--sidebar-link-active-color);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-      }
-
-      .sidebar-settings-button.is-active {
-        color: var(--sidebar-link-active-color);
-      }
-
-      .sidebar-pinned-list,
-      .sidebar-thread-list {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-      }
-
-      .sidebar-pinned-list {
-        margin-bottom: 18px;
-      }
-
-      .sidebar-pinned-button,
-      .sidebar-thread-item {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 8px 10px;
-        padding-right: 64px;
-        border: 0;
-        border-radius: 10px;
-        background: transparent;
-        color: var(--sidebar-link-color);
-        text-align: left;
-        position: relative;
-        transition: background-color 160ms ease;
-      }
-
-      .sidebar-pinned-button:hover,
-      .sidebar-thread-item:hover {
-        background: rgba(255, 255, 255, 0.05);
-      }
-
-      .sidebar-pinned-button.is-active,
-      .sidebar-thread-item.is-active {
-        background: rgba(255, 255, 255, 0.08);
-        color: var(--sidebar-link-active-color);
-      }
-
-${METRONOME_SHELL_STYLE_FRAGMENTS.sidebar}
-
-      .sidebar-thread-main {
-        min-width: 0;
-        flex: 1;
-        padding: 0;
-        border: 0;
-        background: transparent;
-        color: inherit;
-        display: flex;
-        align-items: center;
-        cursor: pointer;
-        text-align: left;
-      }
-
-      .sidebar-pin-icon {
-        color: var(--sidebar-link-color);
-      }
-
-      .sidebar-thread-content {
-        min-width: 0;
-        flex: 1;
-        display: flex;
-        align-items: center;
-        min-height: 14px;
-        padding-right: 6px;
-      }
-
-      .sidebar-thread-title-row {
-        min-width: 0;
-        flex: 1;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-
-      .sidebar-thread-title-copy {
-        min-width: 0;
-        flex: 1;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        overflow: hidden;
-      }
-
-      .sidebar-thread-project-icon {
-        width: 16px;
-        height: 16px;
-        flex-shrink: 0;
-        color: inherit;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .sidebar-thread-project-icon svg {
-        width: 10px;
-        height: 10px;
-      }
-
-      .sidebar-thread-title {
-        min-width: 0;
-        flex: 1;
-        font-size: 12px;
-        font-weight: 400;
-        color: var(--sidebar-link-color);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .sidebar-pinned-button.is-active .sidebar-thread-title,
-      .sidebar-thread-item.is-active .sidebar-thread-title {
-        color: var(--sidebar-link-active-color);
-      }
-
-      .sidebar-thread-ticket-number {
-        flex-shrink: 0;
-        font-size: 12px;
-        color: inherit;
-      }
-
-      .sidebar-thread-running-indicator {
-        width: 12px;
-        height: 12px;
-        flex-shrink: 0;
-        color: inherit;
-        animation: spinner-rotate 1s linear infinite;
-      }
-
-      .sidebar-thread-attention-dot {
-        width: 7px;
-        height: 7px;
-        flex: 0 0 7px;
-        border-radius: 999px;
-        background: #60a5fa;
-        box-shadow: 0 0 0 2px #0b0b0c;
-      }
-
-      .sidebar-thread-side {
-        position: absolute;
-        top: 50%;
-        right: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        min-width: 24px;
-        max-width: 96px;
-        height: 24px;
-        padding-right: 28px;
-        transform: translateY(-50%);
-      }
-
-      .sidebar-thread-meta {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        flex-shrink: 0;
-        white-space: nowrap;
-        line-height: 1;
-        transition: opacity 160ms ease;
-      }
-
-      .sidebar-thread-hover-meta {
-        position: absolute;
-        top: 50%;
-        right: 28px;
-        transform: translateY(-50%);
-        color: rgba(255, 255, 255, 0.72);
-        font-size: 10px;
-        font-weight: 400;
-        letter-spacing: 0.02em;
-        line-height: 1;
-        white-space: nowrap;
-        margin-right: -3px;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 160ms ease;
-      }
-
-      .sidebar-thread-menu-button {
-        width: 24px;
-        height: 24px;
-        flex-shrink: 0;
-        padding: 0;
-        border: 0;
-        border-radius: 8px;
-        background: transparent;
-        color: var(--sidebar-link-color);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        position: absolute;
-        top: 50%;
-        right: 0;
-        transform: translateY(-50%);
-        opacity: 0;
-        pointer-events: none;
-        transition: background-color 160ms ease, color 160ms ease;
-      }
-
-      .sidebar-thread-menu-button:hover,
-      .sidebar-thread-menu-button.is-open {
-        background: rgba(255, 255, 255, 0.05);
-        color: var(--sidebar-link-active-color);
-      }
-
-      .sidebar-pinned-button:hover .sidebar-thread-menu-button,
-      .sidebar-thread-item:hover .sidebar-thread-menu-button,
-      .sidebar-pinned-button:focus-within .sidebar-thread-menu-button,
-      .sidebar-thread-item:focus-within .sidebar-thread-menu-button,
-      .sidebar-pinned-button.is-active .sidebar-thread-menu-button,
-      .sidebar-thread-item.is-active .sidebar-thread-menu-button,
-      .sidebar-thread-menu-button.is-open {
-        opacity: 1;
-        pointer-events: auto;
-      }
-
-      .sidebar-pinned-button:hover .sidebar-thread-meta,
-      .sidebar-thread-item:hover .sidebar-thread-meta,
-      .sidebar-pinned-button:focus-within .sidebar-thread-meta,
-      .sidebar-thread-item:focus-within .sidebar-thread-meta,
-      .sidebar-pinned-button.is-active .sidebar-thread-meta,
-      .sidebar-thread-item.is-active .sidebar-thread-meta {
-        opacity: 0;
-        pointer-events: none;
-      }
-
-      .sidebar-pinned-button:hover .sidebar-thread-hover-meta,
-      .sidebar-thread-item:hover .sidebar-thread-hover-meta,
-      .sidebar-pinned-button:focus-within .sidebar-thread-hover-meta,
-      .sidebar-thread-item:focus-within .sidebar-thread-hover-meta,
-      .sidebar-pinned-button.is-active .sidebar-thread-hover-meta,
-      .sidebar-thread-item.is-active .sidebar-thread-hover-meta {
-        opacity: 1;
-      }
-
-      .sidebar-thread-menu-icon {
-        width: 14px;
-        height: 14px;
-        flex-shrink: 0;
-      }
-
-      .sidebar-thread-menu-icon.is-spinning {
-        animation: spinner-rotate 1s linear infinite;
-      }
-
-      .sidebar-thread-meta-positive {
-        color: #34d67a;
-        font-size: 12px;
-        font-weight: 600;
-      }
-
-      .sidebar-thread-meta-negative {
-        color: #ff5f57;
-        font-size: 12px;
-        font-weight: 600;
-      }
-
-      .sidebar-thread-meta-neutral {
-        color: rgba(255, 255, 255, 0.58);
-        font-size: 12px;
-        font-weight: 500;
-      }
-
-      .sidebar-thread-section {
-        min-height: 0;
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-      }
-
-      .sidebar-thread-section-header {
-        width: 100%;
-        padding: 0 12px;
-        border: 0;
-        background: transparent;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 8px;
-        cursor: pointer;
-      }
-
-      .sidebar-thread-section-title {
-        font-size: 12px;
-        font-weight: 500;
-        color: var(--sidebar-link-color);
-      }
-
-      .sidebar-thread-section-chevron {
-        width: 14px;
-        height: 14px;
-        flex-shrink: 0;
-        margin-right: 2px;
-        color: var(--sidebar-link-color);
-        transition: transform 160ms ease, color 160ms ease;
-      }
-
-      .sidebar-action-icon,
-      .sidebar-search-trigger-icon,
-      .sidebar-rail-icon {
-        stroke-width: 1.5;
-      }
-
-      .sidebar-thread-section-header.is-collapsed .sidebar-thread-section-chevron {
-        transform: rotate(180deg);
-      }
-
-      .sidebar-thread-section-header:hover .sidebar-thread-section-chevron {
-        color: var(--sidebar-link-active-color);
-      }
-
-      .sidebar-thread-popup-scrim,
-      .sidebar-thread-rename-scrim {
-        position: fixed;
-        inset: 0;
-        z-index: 120;
-      }
-
-      .sidebar-thread-popup {
-        position: fixed;
-        z-index: 121;
-        width: 220px;
-      }
-
-      .sidebar-thread-popup.is-agent-list-action-menu {
-        transform-origin: top right;
-        animation: playground-tasks-toolbar-popup-fade-down-in 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
-      }
-
-      .sidebar-thread-popup.is-agent-list-action-menu.is-closing {
-        pointer-events: none;
-        animation: playground-agent-list-action-menu-fade-out 90ms ease both;
-      }
-
-      .sidebar-thread-popup-title {
-        padding: 12px 16px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        color: rgba(255, 255, 255, 0.65);
-        font-size: 12px;
-        line-height: 1.2;
-      }
-
-      .sidebar-thread-popup-row {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 12px 16px;
-        border: 0;
-        background: transparent;
-        color: white;
-        cursor: pointer;
-        text-align: left;
-        transition: background-color 160ms ease;
-      }
-
-      .sidebar-thread-popup-row:hover:enabled {
-        background: transparent;
-      }
-
-      .sidebar-thread-popup-row.is-danger {
-        color: #ff9c9c;
-      }
-
-      .sidebar-thread-popup-row:disabled {
-        opacity: 0.45;
-        cursor: default;
-      }
-
-      .sidebar-thread-popup-row-icon {
-        width: 14px;
-        height: 14px;
-        flex-shrink: 0;
-      }
-
-      .sidebar-thread-popup-row-label {
-        min-width: 0;
-        flex: 1;
-        font-size: 14px;
-        font-weight: 500;
-        line-height: 1.2;
-      }
-
-      @keyframes playground-agent-list-action-menu-fade-out {
-        from {
-          opacity: 1;
-          transform: translateY(0) scale(1);
-        }
-
-        to {
-          opacity: 0;
-          transform: translateY(-4px) scale(0.98);
-        }
-      }
-
-      .sidebar-thread-rename-scrim {
-        background: rgba(0, 0, 0, 0.45);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 16px;
-      }
-
-      .sidebar-thread-rename-modal {
-        width: min(340px, 100%);
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-        padding: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 15px;
-        background: #323232;
-        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.38);
-        backdrop-filter: blur(10px);
-      }
-
-      .sidebar-thread-rename-title {
-        color: rgba(255, 255, 255, 0.96);
-        font-size: 16px;
-        font-weight: 600;
-        line-height: 1.2;
-      }
-
-      .sidebar-thread-rename-copy {
-        color: rgba(255, 255, 255, 0.62);
-        font-size: 12px;
-        line-height: 1.45;
-      }
-
-      .sidebar-thread-rename-input {
-        width: 100%;
-        height: 40px;
-        padding: 0 12px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.08);
-        color: #fff;
-        font-size: 14px;
-        outline: none;
-      }
-
-      .sidebar-thread-rename-input:focus {
-        border-color: rgba(77, 163, 255, 0.6);
-      }
-
-      .sidebar-thread-rename-error {
-        color: #ff9c9c;
-        font-size: 12px;
-        line-height: 1.4;
-      }
-
-      .sidebar-thread-rename-actions {
-        display: flex;
-        gap: 10px;
-      }
-
-      .sidebar-thread-rename-button {
-        flex: 1;
-        height: 38px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        padding: 0 12px;
-        border: 0;
-        border-radius: 999px;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: opacity 160ms ease, background-color 160ms ease, color 160ms ease;
-      }
-
-      .sidebar-thread-rename-button:hover:enabled {
-        opacity: 0.88;
-      }
-
-      .sidebar-thread-rename-button:disabled {
-        opacity: 0.45;
-        cursor: default;
-      }
-
-      .sidebar-thread-rename-button.is-secondary {
-        background: transparent;
-        color: white;
-      }
-
-      .sidebar-thread-rename-button.is-primary {
-        background: white;
-        color: black;
-      }
-
-      .sidebar-thread-project-picker-modal {
-        width: min(420px, 100%);
-      }
-
-      .sidebar-thread-project-picker-modal .sidebar-thread-rename-button {
-        font-size: 12px;
-      }
-
-      .sidebar-thread-project-picker-list {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        max-height: min(52vh, 360px);
-        overflow: auto;
-        padding-right: 2px;
-      }
-
-      .sidebar-thread-project-picker-row {
-        width: 100%;
-        border: 0;
-        background: transparent;
-        padding: 0;
-        text-align: left;
-        cursor: pointer;
-      }
-
-      .sidebar-thread-project-picker-row .playground-tasks-project-row {
-        transition: border-color 160ms ease, background-color 160ms ease;
-      }
-
-      .sidebar-thread-project-picker-row:hover .playground-tasks-project-row,
-      .sidebar-thread-project-picker-row.is-selected .playground-tasks-project-row {
-        border-color: rgba(102, 166, 255, 0.45);
-        background: rgba(102, 166, 255, 0.09);
-      }
-
-      .sidebar-thread-project-picker-row:disabled {
-        cursor: default;
-        opacity: 0.55;
-      }
-
-      .sidebar-thread-project-picker-empty {
-        padding: 16px 0 6px;
-        color: rgba(255, 255, 255, 0.56);
-        font-size: 12px;
-        line-height: 1.5;
-      }
-
-      .playground-thread-home-project-picker-scrim {
-        background: rgba(0, 0, 0, 0.28);
-      }
-
-      .playground-thread-home-project-picker-modal {
-        width: min(280px, calc(100vw - 32px));
-        max-height: min(320px, calc(100vh - 64px));
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-        padding: 0;
-        overflow: hidden;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 15px;
-        background: #323232;
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-      }
-
-      .playground-thread-home-project-picker-title {
-        padding: 12px 16px 0;
-        color: rgba(255, 255, 255, 0.65);
-        font-size: 12px;
-        line-height: 1.2;
-      }
-
-      .playground-thread-home-project-picker-body {
-        flex: 1;
-        min-height: 0;
-        margin-top: 12px;
-        padding-top: 12px;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-        overflow-y: auto;
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-      }
-
-      .playground-thread-home-project-picker-body::-webkit-scrollbar {
-        display: none;
-        width: 0;
-        height: 0;
-      }
-
-      .playground-thread-home-project-picker-row {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 12px 16px;
-        border: 0;
-        background: transparent;
-        color: white;
-        cursor: pointer;
-        text-align: left;
-        transition: background-color 160ms ease;
-      }
-
-      .playground-thread-home-project-picker-row:hover {
-        background: rgba(255, 255, 255, 0.05);
-      }
-
-      .playground-thread-home-project-picker-icon {
-        width: 16px;
-        height: 16px;
-        flex: 0 0 auto;
-        color: rgba(255, 255, 255, 0.6);
-      }
-
-      .playground-thread-home-project-picker-row.is-selected .playground-thread-home-project-picker-icon,
-      .playground-thread-home-project-picker-row.is-selected .playground-thread-home-project-picker-label,
-      .playground-thread-home-project-picker-row.is-selected .playground-thread-home-project-picker-check {
-        color: white;
-      }
-
-      .playground-thread-home-project-picker-label {
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        font-size: 14px;
-        font-weight: 500;
-        color: white;
-      }
-
-      .playground-thread-home-project-picker-check-slot {
-        width: 16px;
-        height: 16px;
-        margin-left: auto;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        flex: 0 0 auto;
-      }
-
-      .playground-thread-home-project-picker-check {
-        width: 16px;
-        height: 16px;
-        color: white;
-      }
-
-      .playground-thread-home-project-picker-empty,
-      .playground-thread-home-project-picker-loading {
-        padding: 0 16px 12px;
-        color: rgba(255, 255, 255, 0.6);
-        font-size: 12px;
-        line-height: 1.4;
-      }
-
-      .playground-thread-home-project-picker-loading {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .playground-thread-home-project-picker-spinner {
-        width: 14px;
-        height: 14px;
-        border-radius: 999px;
-        border: 1.5px solid rgba(255, 255, 255, 0.16);
-        border-top-color: rgba(255, 255, 255, 0.7);
-        animation: spin 700ms linear infinite;
-      }
-
-      .playground-thread-home-project-picker-error {
-        padding: 0 16px 12px;
-        color: #ff9c9c;
-        font-size: 12px;
-        line-height: 1.4;
-      }
-
-      .sidebar-thread-section-actions {
-        display: inline-flex;
-        align-items: center;
-        gap: 2px;
-      }
-
-      .sidebar-thread-section-button {
-        width: 28px;
-        height: 28px;
-        padding: 0;
-        border: 0;
-        border-radius: 10px;
-        background: transparent;
-        color: var(--sidebar-link-color);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: background-color 160ms ease, color 160ms ease;
-      }
-
-      .sidebar-thread-section-button:hover {
-        background: rgba(255, 255, 255, 0.08);
-        color: #fff;
-      }
-
-      .sidebar-thread-scroll {
-        min-height: 0;
-        overflow: auto;
-        padding-right: 2px;
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-      }
-
-      .sidebar-thread-scroll::-webkit-scrollbar {
-        display: none;
-      }
-
-      .sidebar-empty-state {
-        padding: 10px 12px;
-        color: rgba(255, 255, 255, 0.52);
-        font-size: 12px;
-        line-height: 1.45;
-      }
-
-      .sidebar-show-more {
-        margin: 8px 0 0 10px;
-        padding: 0;
-        border: 0;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.48);
-        font-size: 12px;
-        font-weight: 500;
-        cursor: pointer;
-        text-align: left;
-      }
-
-      .sidebar-show-more:hover {
-        color: rgba(255, 255, 255, 0.8);
-      }
-
-      .sidebar-footer {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        margin-top: auto;
-        padding: 12px 0;
-      }
-
-      .sidebar-footer .status-indicator-stack {
-        margin-top: 0;
-      }
-
-      .sidebar-footer .status-indicator-list,
-      .sidebar-footer .status-indicator {
-        width: 100%;
-        box-sizing: border-box;
-      }
-
-      .sidebar-account-button {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 0;
-        border: 0;
-        border-radius: 0;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.94);
-        cursor: pointer;
-        text-align: left;
-        transition: opacity 160ms ease;
-      }
-
-      .sidebar-account-button:hover {
-        opacity: 0.9;
-      }
-
-      .sidebar-account-avatar,
-      .account-menu-avatar {
-        position: relative;
-        overflow: hidden;
-        flex-shrink: 0;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.2);
-        color: #fff;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .sidebar-account-avatar {
-        width: 24px;
-        height: 24px;
-        font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 0.02em;
-      }
-
-      .sidebar-account-avatar-fallback,
-      .account-menu-avatar-fallback {
-        width: 100%;
-        height: 100%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        line-height: 1;
-        font-weight: 400;
-        letter-spacing: 0;
-        text-transform: uppercase;
-      }
-
-      .sidebar-account-copy {
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1px;
-      }
-
-      .sidebar-account-name {
-        width: 100%;
-        font-size: 12px;
-        font-weight: 600;
-        color: rgba(255, 255, 255, 0.96);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .sidebar-account-tier {
-        font-size: 11px;
-        font-weight: 500;
-        color: rgba(255, 255, 255, 0.64);
-      }
-
-      .sidebar-plan-card {
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-        padding: 0 0 5px;
-        color: rgba(255, 255, 255, 0.94);
-        box-sizing: border-box;
-      }
-
-      .sidebar-plan-name {
-        font-family: Georgia, "Times New Roman", serif;
-        font-style: italic;
-        font-size: 12px;
-        font-weight: 400;
-        line-height: 1.2;
-        color: rgba(255, 255, 255, 0.72);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .sidebar-plan-action {
-        --sidebar-plan-action-border: linear-gradient(
-          -10deg,
-          rgba(200, 200, 200, 0.25),
-          rgba(255, 255, 255, 0.1),
-          rgba(255, 255, 255, 0.15),
-          rgba(255, 255, 255, 0.375)
-        );
-        width: 100%;
-        height: 30px;
-        min-height: 30px;
-        padding: 0 12px;
-        position: relative;
-        z-index: 0;
-        border: 0;
-        border-radius: 999px;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.94);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        cursor: pointer;
-        overflow: hidden;
-        box-sizing: border-box;
-        font-size: 12px;
-        font-weight: 400;
-        line-height: 1;
-        transition: background-color 160ms ease, color 160ms ease, opacity 160ms ease;
-      }
-
-      .sidebar-plan-action::before {
-        content: "";
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        padding: 1px;
-        background: var(--sidebar-plan-action-border);
-        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-        mask-clip: content-box, border-box;
-        mask-composite: exclude;
-        mask-origin: content-box, border-box;
-        mask-repeat: repeat, repeat;
-        mask-size: auto, auto;
-      }
-
-      .sidebar-plan-action > * {
-        position: relative;
-        z-index: 1;
-      }
-
-      .sidebar-plan-action:hover {
-        background: rgba(255, 255, 255, 0.04);
-        color: #fff;
-      }
-
-      .sidebar-plan-action.is-upgrade {
-        background: #fff;
-        color: #000;
-      }
-
-      .sidebar-plan-action.is-upgrade:hover {
-        background: rgba(255, 255, 255, 0.9);
-        color: #000;
-      }
-
-      .sidebar-plan-action:disabled {
-        cursor: default;
-        opacity: 0.58;
-      }
-
-      .sidebar-organization-card {
-        width: 100%;
-        min-width: 0;
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 28px;
-        align-items: center;
-        gap: 8px;
-        padding: 4px 0 12px 12px;
-        color: rgba(255, 255, 255, 0.94);
-        box-sizing: border-box;
-      }
-
-      .sidebar-organization-main {
-        min-width: 0;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 0;
-        border: 0;
-        background: transparent;
-        color: inherit;
-        cursor: pointer;
-        text-align: left;
-      }
-
-      .sidebar-organization-main:disabled {
-        cursor: default;
-        opacity: 0.7;
-      }
-
-      .sidebar-organization-avatar {
-        position: relative;
-        overflow: hidden;
-        width: 34px;
-        height: 34px;
-        flex: 0 0 34px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.2);
-        color: #fff;
-        font-size: 11px;
-        font-weight: 500;
-        line-height: 1;
-      }
-
-      .sidebar-organization-avatar-image {
-        width: 100%;
-        height: 100%;
-        display: block;
-        object-fit: cover;
-      }
-
-      .sidebar-organization-avatar-fallback {
-        width: 100%;
-        height: 100%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        line-height: 1;
-        letter-spacing: 0;
-        text-transform: uppercase;
-      }
-
-      .sidebar-organization-copy {
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-      }
-
-      .sidebar-organization-name,
-      .sidebar-organization-plan {
-        max-width: 100%;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .sidebar-organization-name {
-        color: rgba(255, 255, 255, 0.96);
-        font-size: 12px;
-        font-weight: 500;
-        line-height: 1.2;
-      }
-
-      .sidebar-organization-plan {
-        color: rgba(255, 255, 255, 0.62);
-        font-size: 10px;
-        font-weight: 400;
-        line-height: 1.2;
-      }
-
-      .sidebar-organization-menu-button {
-        width: 28px;
-        height: 28px;
-        min-width: 28px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-        border: 0;
-        border-radius: 999px;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.58);
-        cursor: pointer;
-        transition: color 160ms ease, background-color 160ms ease;
-      }
-
-      .sidebar-organization-menu-button:hover,
-      .sidebar-organization-menu-button.is-open {
-        color: rgba(255, 255, 255, 0.94);
-        background: rgba(255, 255, 255, 0.06);
-      }
-
-      .sidebar-organization-menu-icon {
-        width: 16px;
-        height: 16px;
-      }
-
-      .sidebar-rail-plan {
-        position: relative;
-        z-index: 0;
-        overflow: hidden;
-      }
-
-      .sidebar-rail-plan::before {
-        content: "";
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        padding: 1px;
-        background: linear-gradient(
-          -10deg,
-          rgba(200, 200, 200, 0.25),
-          rgba(255, 255, 255, 0.1),
-          rgba(255, 255, 255, 0.15),
-          rgba(255, 255, 255, 0.375)
-        );
-        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-        mask-clip: content-box, border-box;
-        mask-composite: exclude;
-        mask-origin: content-box, border-box;
-        mask-repeat: repeat, repeat;
-        mask-size: auto, auto;
-      }
-
-      .sidebar-rail-plan > * {
-        position: relative;
-        z-index: 1;
-      }
+${APP_SIDEBAR_STYLE_FRAGMENTS.foundation}
 
       .playground-main {
         position: relative;
@@ -2595,1903 +924,8 @@ ${METRONOME_SHELL_STYLE_FRAGMENTS.sidebar}
         gap: 8px;
       }
 
-      .playground-configure-home {
-        width: 100%;
-        min-height: 100%;
-        overflow: auto;
-        padding: 42px 50px 56px;
-        box-sizing: border-box;
-        background: #000;
-      }
-
-      .playground-configure-home-inner {
-        width: min(100%, var(--playground-centered-page-max-width));
-        margin: 0 auto;
-        display: flex;
-        flex-direction: column;
-        gap: 38px;
-      }
-
-      .playground-configure-announcement {
-        width: max-content;
-        max-width: 100%;
-        min-height: 36px;
-        padding: 0 10px 0 7px;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.02);
-        color: rgba(255, 255, 255, 0.92);
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 13px;
-        font-weight: 400;
-        cursor: pointer;
-        box-sizing: border-box;
-      }
-
-      .playground-configure-announcement-badge {
-        min-height: 22px;
-        padding: 0 10px;
-        border-radius: 999px;
-        background: #fff;
-        color: #000;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 11px;
-        font-weight: 500;
-      }
-
-      .playground-configure-announcement-icon {
-        width: 13px;
-        height: 13px;
-        color: rgba(255, 255, 255, 0.55);
-      }
-
-      .playground-configure-hero {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-      }
-
-      .playground-configure-kicker {
-        font-size: 13px;
-        line-height: 1.4;
-        font-weight: 400;
-        color: rgba(255, 255, 255, 0.42);
-      }
-
-      .playground-configure-title {
-        margin: 0;
-        font-size: 28px;
-        line-height: 1.12;
-        font-weight: 400;
-        color: rgba(255, 255, 255, 0.96);
-      }
-
-      .playground-configure-card-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 14px;
-      }
-
-      .playground-configure-feature-card {
-        min-height: 180px;
-        padding: 18px;
-        border: 0;
-        border-radius: 18px;
-        background: rgba(255, 255, 255, 0.08);
-        color: rgba(255, 255, 255, 0.94);
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        align-items: flex-start;
-        text-align: left;
-        cursor: pointer;
-        box-sizing: border-box;
-        transition: background-color 160ms ease, transform 160ms ease;
-      }
-
-      .playground-configure-feature-card:hover {
-        background: rgba(255, 255, 255, 0.11);
-        transform: translateY(-1px);
-      }
-
-      .playground-configure-feature-art {
-        width: 72px;
-        height: 72px;
-        border-radius: 22px;
-        background:
-          radial-gradient(circle at 72% 28%, rgba(77, 163, 255, 0.45), transparent 34%),
-          radial-gradient(circle at 24% 72%, rgba(34, 197, 94, 0.3), transparent 36%),
-          rgba(0, 0, 0, 0.2);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: #fff;
-      }
-
-      .playground-configure-feature-icon {
-        width: 26px;
-        height: 26px;
-      }
-
-      .playground-configure-feature-label {
-        width: 100%;
-        text-align: center;
-        font-size: 13px;
-        font-weight: 500;
-        color: rgba(255, 255, 255, 0.94);
-      }
-
-      .playground-configure-sections {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(280px, 0.82fr);
-        gap: 56px;
-        align-items: flex-start;
-      }
-
-      .playground-configure-section {
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 18px;
-      }
-
-      .playground-configure-section-title {
-        margin: 0;
-        font-size: 17px;
-        line-height: 1.2;
-        font-weight: 500;
-        color: rgba(255, 255, 255, 0.96);
-      }
-
-      .playground-configure-resource-list,
-      .playground-configure-action-list {
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-      }
-
-      .playground-configure-resource-row,
-      .playground-configure-action-row {
-        width: 100%;
-        min-height: 58px;
-        padding: 0;
-        border: 0;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.9);
-        display: grid;
-        grid-template-columns: auto minmax(0, 1fr) auto;
-        align-items: center;
-        gap: 14px;
-        text-align: left;
-        cursor: pointer;
-      }
-
-      .playground-configure-resource-icon,
-      .playground-configure-action-icon {
-        width: 44px;
-        height: 44px;
-        border-radius: 14px;
-        background: rgba(255, 255, 255, 0.08);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: rgba(255, 255, 255, 0.86);
-      }
-
-      .playground-configure-resource-icon svg,
-      .playground-configure-action-icon svg {
-        width: 18px;
-        height: 18px;
-      }
-
-      .playground-configure-row-copy {
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-      }
-
-      .playground-configure-row-title {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        font-size: 13px;
-        font-weight: 600;
-        color: rgba(255, 255, 255, 0.92);
-      }
-
-      .playground-configure-row-subtitle {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        font-size: 12px;
-        font-weight: 400;
-        color: rgba(255, 255, 255, 0.62);
-      }
-
-      .playground-configure-row-meta {
-        min-width: 30px;
-        color: rgba(255, 255, 255, 0.42);
-        font-size: 12px;
-        font-weight: 500;
-        text-align: right;
-      }
-
-      .playground-develop-home {
-        width: 100%;
-        height: 100%;
-        min-height: 100%;
-        overflow-y: auto;
-        overflow-x: hidden;
-        padding: 42px 44px 56px;
-        box-sizing: border-box;
-        background: #000;
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-      }
-
-      .playground-develop-home::-webkit-scrollbar {
-        width: 0;
-        height: 0;
-        display: none;
-      }
-
-      .playground-develop-home-inner {
-        width: min(100%, var(--playground-centered-page-max-width));
-        margin: 0 auto;
-        display: flex;
-        flex-direction: column;
-        gap: 24px;
-      }
-
-      .playground-configure-home-inner.playground-develop-home-inner {
-        gap: 12px;
-      }
-
-      .playground-configure-home-inner.playground-develop-home-inner .playground-configure-usage-metrics,
-      .playground-configure-home-inner.playground-develop-home-inner .playground-configure-overview-cards,
-      .playground-configure-home-inner.playground-develop-home-inner .playground-configure-sections {
-        margin-top: 12px;
-      }
-
-      .playground-configure-overview-cards {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 14px;
-      }
-
-      .playground-configure-overview-card {
-        min-width: 0;
-        min-height: 132px;
-        padding: 18px;
-        border: 0;
-        border-radius: 10px;
-        background: rgba(255, 255, 255, 0.075);
-        color: rgba(255, 255, 255, 0.94);
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 18px;
-        text-align: left;
-        cursor: pointer;
-        box-sizing: border-box;
-        transition: background-color 160ms ease, transform 160ms ease;
-      }
-
-      .playground-configure-overview-card:hover {
-        background: rgba(255, 255, 255, 0.08);
-        transform: translateY(-1px);
-      }
-
-      .playground-configure-overview-card-top {
-        width: 100%;
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 16px;
-      }
-
-      .playground-configure-overview-card-icon {
-        width: 32px;
-        height: 32px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.08);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: rgba(255, 255, 255, 0.88);
-        flex: 0 0 auto;
-      }
-
-      .playground-configure-overview-card-icon svg {
-        width: 15px;
-        height: 15px;
-      }
-
-      .playground-configure-overview-card-arrow {
-        width: 14px;
-        height: 14px;
-        color: rgba(255, 255, 255, 0.42);
-        flex: 0 0 auto;
-      }
-
-      .playground-configure-overview-card-value {
-        margin-top: 2px;
-        color: #fff;
-        font-size: 28px;
-        line-height: 1;
-        font-weight: 500;
-      }
-
-      .playground-configure-overview-card-copy {
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-      }
-
-      .playground-configure-overview-card-title {
-        color: rgba(255, 255, 255, 0.92);
-        font-size: 13px;
-        line-height: 1.2;
-        font-weight: 500;
-      }
-
-      .playground-configure-overview-card-description {
-        color: rgba(255, 255, 255, 0.48);
-        font-size: 12px;
-        line-height: 1.35;
-        font-weight: 400;
-      }
-
-      .playground-develop-webhooks-page {
-        width: 100%;
-      }
-
-      .playground-develop-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 18px;
-      }
-
-      .playground-develop-title {
-        margin: 0;
-        font-size: 24px;
-        line-height: 1;
-        font-weight: 500;
-        letter-spacing: -0.04em;
-        color: rgba(255, 255, 255, 0.96);
-      }
-
-      .playground-project-overview-summary-title {
-        font-size: 18px !important;
-        font-weight: 400;
-      }
-
-      .playground-project-overview-summary-title.playground-develop-title {
-        font-size: 18px !important;
-      }
-
-      .playground-develop-header-actions {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-      }
-
-      .playground-develop-link-button {
-        min-height: 34px;
-        padding: 0 14px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 999px;
-        background: transparent;
-        -webkit-backdrop-filter: blur(20px);
-        backdrop-filter: blur(20px);
-        color: rgba(255, 255, 255, 0.9);
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 13px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
-      }
-
-      .playground-develop-link-button:hover {
-        background: rgba(255, 255, 255, 0.06);
-        border-color: rgba(255, 255, 255, 0.16);
-        color: rgba(255, 255, 255, 0.9);
-      }
-
-      .playground-develop-link-button svg {
-        width: 14px;
-        height: 14px;
-      }
-
-      .playground-develop-tabs {
-        display: inline-flex;
-        align-items: center;
-        gap: 18px;
-        padding-bottom: 0;
-        border-bottom: 0;
-        overflow-x: auto;
-      }
-
-      .playground-develop-home .playground-agents-overview-tabs.playground-project-overview-tabs {
-        margin-bottom: 0;
-      }
-
-      .playground-develop-home .playground-develop-home-hero.playground-environments-home-hero {
-        margin: 0;
-        padding: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-      }
-
-      .playground-develop-home .playground-develop-home-hero-header {
-        margin: 0 0 12px;
-        padding-bottom: 12px;
-      }
-
-      .playground-develop-home .playground-develop-home-tabs.playground-agents-overview-tabs.playground-project-overview-tabs {
-        margin: 0 0 24px;
-      }
-
-      .playground-develop-home .playground-develop-home-overview-metrics.playground-environments-home-metrics {
-        max-height: 364px;
-        margin-top: 12px;
-        margin-bottom: 0;
-        overflow: hidden;
-        position: relative;
-        z-index: 0;
-      }
-
-      .playground-develop-tab {
-        min-height: 28px;
-        padding: 0 0 6px;
-        border: 0;
-        border-bottom: 1px solid transparent;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.5);
-        display: inline-flex;
-        align-items: center;
-        white-space: nowrap;
-        font-size: 13px;
-        line-height: 1;
-        font-weight: 400;
-        cursor: pointer;
-        transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
-      }
-
-      .playground-develop-tab:hover {
-        color: rgba(255, 255, 255, 0.78);
-      }
-
-      .playground-develop-tab.is-active {
-        color: rgba(255, 255, 255, 0.96);
-        border-bottom-color: rgba(255, 255, 255, 0.96);
-      }
-
-      .playground-develop-server-metrics {
-        width: 100%;
-        margin-top: 0;
-      }
-
-      .playground-develop-server-metrics.playground-environments-home-metrics {
-        margin-top: 0;
-        gap: 10px;
-      }
-
-      .playground-functions-empty-landing {
-        width: 100%;
-        margin-top: 48px;
-        color: rgba(255, 255, 255, 0.96);
-      }
-
-      .playground-functions-empty-hero {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 200px;
-        align-items: center;
-        gap: 40px;
-      }
-
-      .playground-functions-empty-title {
-        max-width: 560px;
-        margin: 0;
-        color: #fff;
-        font-size: 32px;
-        line-height: 1.02;
-        font-weight: 500;
-        letter-spacing: -0.06em;
-      }
-
-      .playground-functions-empty-copy {
-        max-width: 520px;
-        margin: 20px 0 0;
-        color: rgba(255, 255, 255, 0.64);
-        font-size: 14px;
-        line-height: 1.75;
-        font-weight: 400;
-      }
-
-      .playground-functions-empty-actions {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 28px;
-      }
-
-      .playground-functions-empty-button,
-      .playground-functions-empty-icon-box,
-      .playground-functions-example-icon-box,
-      .playground-functions-examples-all-button {
-        --playground-project-overview-control-border: linear-gradient(
-          -10deg,
-          rgba(200, 200, 200, 0.25),
-          rgba(255, 255, 255, 0.1),
-          rgba(255, 255, 255, 0.15),
-          rgba(255, 255, 255, 0.375)
-        );
-        position: relative;
-        z-index: 0;
-        overflow: hidden;
-      }
-
-      .playground-functions-empty-button::before,
-      .playground-functions-empty-icon-box::before,
-      .playground-functions-example-icon-box::before,
-      .playground-functions-examples-all-button::before {
-        content: "";
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        padding: 1px;
-        background: var(--playground-project-overview-control-border);
-        -webkit-mask:
-          linear-gradient(#000 0 0) content-box,
-          linear-gradient(#000 0 0);
-        -webkit-mask-composite: xor;
-        mask:
-          linear-gradient(#000 0 0) content-box,
-          linear-gradient(#000 0 0);
-        mask-composite: exclude;
-        z-index: 1;
-      }
-
-      .playground-functions-empty-button > *,
-      .playground-functions-empty-icon-box > *,
-      .playground-functions-example-icon-box > *,
-      .playground-functions-examples-all-button > * {
-        position: relative;
-        z-index: 2;
-      }
-
-      .playground-functions-empty-button {
-        appearance: none;
-        min-height: 40px;
-        padding: 0 20px;
-        border: 0;
-        border-radius: 999px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        font-size: 13px;
-        font-weight: 500;
-        line-height: 1;
-        cursor: pointer;
-        transition: background-color 160ms ease, transform 160ms ease;
-      }
-
-      .playground-functions-empty-button.is-primary {
-        background: #fff;
-        color: #000;
-      }
-
-      .playground-functions-empty-button.is-secondary {
-        background: rgba(255, 255, 255, 0.02);
-        color: rgba(255, 255, 255, 0.92);
-      }
-
-      .playground-functions-empty-button.is-primary:hover {
-        background: rgba(255, 255, 255, 0.9);
-      }
-
-      .playground-functions-empty-button.is-secondary:hover {
-        background: rgba(255, 255, 255, 0.06);
-      }
-
-      .playground-functions-empty-button:active {
-        transform: translateY(1px);
-      }
-
-      .playground-functions-empty-art {
-        display: flex;
-        justify-content: flex-end;
-      }
-
-      .playground-functions-empty-image {
-        width: 200px;
-        max-width: 100%;
-        height: auto;
-        display: block;
-        object-fit: contain;
-      }
-
-      .playground-functions-empty-features {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 40px;
-        margin-top: 64px;
-      }
-
-      .playground-functions-empty-feature {
-        min-width: 0;
-      }
-
-      .playground-functions-empty-icon-box {
-        width: 44px;
-        height: 44px;
-        border-radius: 10px;
-        border: 0;
-        background: rgba(255, 255, 255, 0.02);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: rgba(255, 255, 255, 0.9);
-      }
-
-      .playground-functions-empty-feature-title {
-        margin-top: 24px;
-        color: #fff;
-        font-size: 14px;
-        line-height: 1.25;
-        font-weight: 500;
-      }
-
-      .playground-functions-empty-feature-copy {
-        max-width: 240px;
-        margin-top: 16px;
-        color: rgba(255, 255, 255, 0.56);
-        font-size: 12px;
-        line-height: 1.9;
-        font-weight: 400;
-      }
-
-      .playground-functions-examples-section {
-        margin-top: 80px;
-        margin-bottom: 24px;
-      }
-
-      .playground-functions-examples-header {
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        gap: 24px;
-      }
-
-      .playground-functions-examples-title {
-        max-width: 640px;
-        margin: 0;
-        color: #fff;
-        font-size: 24px;
-        line-height: 1.08;
-        font-weight: 500;
-        letter-spacing: -0.055em;
-      }
-
-      .playground-functions-examples-all-button {
-        appearance: none;
-        min-height: 36px;
-        padding: 0 16px;
-        border: 0;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.04);
-        color: rgba(255, 255, 255, 0.92);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        font-size: 12px;
-        line-height: 1;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background-color 160ms ease;
-      }
-
-      .playground-functions-examples-all-button:hover {
-        background: rgba(255, 255, 255, 0.08);
-      }
-
-      .playground-functions-examples-slider {
-        display: flex;
-        gap: 20px;
-        margin-top: 36px;
-        padding-bottom: 8px;
-        overflow-x: auto;
-        scroll-snap-type: x mandatory;
-        scrollbar-width: none;
-      }
-
-      .playground-functions-examples-slider::-webkit-scrollbar {
-        display: none;
-      }
-
-      .playground-functions-example-card {
-        flex: 0 0 calc((100% - 40px) / 3);
-        min-width: 0;
-        overflow: hidden;
-        border-radius: 10px;
-        background: rgba(255, 255, 255, 0.05);
-        color: inherit;
-        text-decoration: none;
-        scroll-snap-align: start;
-      }
-
-      .playground-functions-example-visual {
-        position: relative;
-        height: 128px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-        background-position: center;
-        background-size: cover;
-      }
-
-      .playground-functions-example-visual::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.36);
-      }
-
-      .playground-functions-example-icon-box {
-        width: 56px;
-        height: 56px;
-        border-radius: 12px;
-        border: 0;
-        background: rgba(255, 255, 255, 0.08);
-        -webkit-backdrop-filter: blur(20px);
-        backdrop-filter: blur(20px);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: rgba(255, 255, 255, 0.94);
-      }
-
-      .playground-functions-example-body {
-        padding: 20px;
-      }
-
-      .playground-functions-example-title {
-        color: #fff;
-        font-size: 15px;
-        line-height: 1.25;
-        font-weight: 500;
-        letter-spacing: -0.03em;
-      }
-
-      .playground-functions-example-copy {
-        min-height: 72px;
-        margin-top: 12px;
-        color: rgba(255, 255, 255, 0.52);
-        font-size: 12px;
-        line-height: 2;
-        font-weight: 400;
-      }
-
-      .playground-functions-example-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        margin-top: 18px;
-        color: rgba(255, 255, 255, 0.58);
-        font-size: 12px;
-        line-height: 1;
-        font-weight: 500;
-      }
-
-      .playground-functions-examples-controls {
-        display: flex;
-        justify-content: flex-end;
-        gap: 8px;
-        margin-top: 20px;
-      }
-
-      .playground-functions-examples-arrow {
-        appearance: none;
-        width: 32px;
-        height: 32px;
-        border: 0;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.06);
-        color: rgba(255, 255, 255, 0.68);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: background-color 160ms ease, color 160ms ease;
-      }
-
-      .playground-functions-examples-arrow:hover {
-        background: rgba(255, 255, 255, 0.1);
-        color: #fff;
-      }
-
-      .playground-develop-server-metrics-toolbar {
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-        gap: 12px;
-        margin-bottom: 24px;
-        min-width: 0;
-      }
-
-      .playground-develop-server-metrics-resource-pill {
-        --playground-project-overview-control-border: linear-gradient(
-          -10deg,
-          rgba(200, 200, 200, 0.25),
-          rgba(255, 255, 255, 0.1),
-          rgba(255, 255, 255, 0.15),
-          rgba(255, 255, 255, 0.375)
-        );
-        position: relative;
-        overflow: hidden;
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        min-width: 0;
-        min-height: 34px;
-        padding: 5px 12px 5px 6px;
-        border-radius: 999px;
-        background: rgba(0, 0, 0, 0.18);
-        -webkit-backdrop-filter: blur(20px);
-        backdrop-filter: blur(20px);
-        color: rgba(255, 255, 255, 0.9);
-        font-size: 13px;
-        line-height: 1;
-        font-weight: 500;
-      }
-
-      .playground-develop-server-metrics-resource-pill::before {
-        content: "";
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        padding: 1px;
-        background: var(--playground-project-overview-control-border);
-        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-        mask-clip: content-box, border-box;
-        mask-composite: exclude;
-        mask-origin: content-box, border-box;
-        mask-repeat: repeat, repeat;
-        mask-size: auto, auto;
-      }
-
-      .playground-develop-server-metrics-resource-count {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 24px;
-        height: 24px;
-        padding: 0 8px;
-        border-radius: 999px;
-        background: #fff;
-        color: #000;
-        font-size: 12px;
-        font-weight: 500;
-        line-height: 1;
-      }
-
-      .playground-develop-server-metrics-resource-label {
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .playground-develop-server-metrics-resource-pill svg {
-        flex: 0 0 auto;
-        color: rgba(255, 255, 255, 0.72);
-      }
-
-      .playground-develop-server-metrics-add-button {
-        flex: 0 0 auto;
-      }
-
-      .playground-develop-api-keys-toolbar {
-        justify-content: space-between;
-      }
-
-      .playground-develop-api-keys-toolbar .playground-develop-server-metrics-add-button {
-        margin-left: auto;
-      }
-
-      .playground-develop-webhooks-section {
-        gap: 0;
-      }
-
-      .playground-develop-webhooks-actions {
-        display: inline-flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 10px;
-        margin-left: auto;
-      }
-
-      .playground-develop-api-keys-scroll.playground-environments-detail-scroll {
-        padding: 0;
-      }
-
-      .playground-develop-server-metrics-title {
-        margin: 0;
-        color: rgba(255, 255, 255, 0.94);
-        font-size: 14px;
-        line-height: 1.25;
-        font-weight: 500;
-      }
-
-      .playground-develop-server-metrics-title-row {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        min-width: 0;
-      }
-
-      .playground-develop-server-metrics-menu-shell {
-        flex: 0 0 auto;
-      }
-
-      .playground-develop-server-metrics-menu-shell .playground-content-menu-button {
-        width: 24px;
-        height: 24px;
-      }
-
-      .playground-develop-server-metrics-menu-shell .playground-tasks-toolbar-popup-menu {
-        right: 0;
-        left: auto;
-        top: calc(100% + 8px);
-        min-width: 160px;
-      }
-
-      .playground-develop-home .playground-develop-server-metrics .playground-database-overview-chart-block {
-        --playground-project-overview-chart-border: linear-gradient(
-          -10deg,
-          rgba(200, 200, 200, 0.25),
-          rgba(255, 255, 255, 0.1),
-          rgba(255, 255, 255, 0.15),
-          rgba(255, 255, 255, 0.375)
-        );
-        position: relative;
-        box-sizing: border-box;
-        width: 100%;
-        padding: 20px;
-        border: 0;
-        border-radius: 15px;
-        background: transparent;
-        overflow: hidden;
-        -webkit-backdrop-filter: blur(50px);
-        backdrop-filter: blur(50px);
-      }
-
-      .playground-develop-home .playground-develop-server-metrics .playground-database-overview-chart-block::before {
-        content: "";
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        z-index: 5;
-        border-radius: inherit;
-        padding: 1px;
-        background: var(--playground-project-overview-chart-border);
-        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-        mask-clip: content-box, border-box;
-        mask-composite: exclude;
-        mask-origin: content-box, border-box;
-        mask-repeat: repeat, repeat;
-        mask-size: auto, auto;
-      }
-
-      .playground-develop-home .playground-develop-server-metrics .playground-database-overview-chart-block > * {
-        position: relative;
-        z-index: 1;
-      }
-
-      .playground-develop-home .playground-develop-server-metrics .playground-database-overview-timeseries-card,
-      .playground-develop-home .playground-develop-server-metrics .playground-database-overview-timeseries-chart {
-        height: auto;
-      }
-
-      .playground-develop-home .playground-develop-server-metrics .playground-project-overview-chart-kpis {
-        background: transparent;
-        padding-left: 1px;
-        padding-right: 1px;
-      }
-
-      .playground-develop-server-metrics-kpis.playground-settings-usage-chart-kpis {
-        width: calc(100% + 40px);
-        margin-top: -20px;
-        margin-left: -20px;
-        margin-right: -20px;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
-        gap: 0;
-        padding: 0;
-      }
-
-      .playground-develop-home .playground-develop-server-metrics-kpi,
-      .playground-resources-page.is-develop-configure-page .playground-develop-server-metrics-kpi,
-      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-metrics-kpi {
-        appearance: none;
-        min-height: 68px;
-        padding: 16px 20px 14px;
-        border: 0;
-        border-bottom: 1px solid transparent;
-        background: transparent;
-        color: inherit;
-        font: inherit;
-        text-align: left;
-        cursor: pointer;
-        transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
-      }
-
-      .playground-resources-page.is-develop-configure-page .playground-develop-server-metrics-kpi,
-      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-metrics-kpi {
-        cursor: default;
-      }
-
-      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-operational-metrics .playground-develop-server-metrics-kpi {
-        cursor: pointer;
-      }
-
-      .playground-develop-home .playground-develop-server-metrics-kpi.is-active,
-      .playground-resources-page.is-develop-configure-page .playground-develop-server-metrics-kpi.is-active,
-      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-metrics-kpi.is-active {
-        background: rgba(255, 255, 255, 0.05);
-        border-bottom-color: rgba(255, 255, 255, 0.96);
-      }
-
-      .playground-develop-home .playground-develop-server-metrics-kpi:focus-visible,
-      .playground-resources-page.is-develop-configure-page .playground-develop-server-metrics-kpi:focus-visible,
-      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-metrics-kpi:focus-visible {
-        outline: 2px solid rgba(255, 255, 255, 0.22);
-        outline-offset: -2px;
-      }
-
-      .playground-develop-server-metrics-panel {
-        padding-top: 0;
-      }
-
-      .playground-develop-server-metrics-header {
-        align-items: center;
-      }
-
-      .playground-develop-server-metrics-source,
-      .playground-develop-server-metrics-error {
-        font-size: 11px;
-        line-height: 1.3;
-        font-weight: 400;
-        color: rgba(255, 255, 255, 0.5);
-      }
-
-      .playground-develop-server-metrics-error {
-        color: rgba(255, 122, 122, 0.9);
-      }
-
-      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-requests {
-        background: var(--playground-chart-blue);
-      }
-
-      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-success {
-        background: var(--playground-chart-green);
-      }
-
-      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-latency,
-      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-writes {
-        background: var(--playground-chart-yellow);
-      }
-
-      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-reads {
-        background: var(--playground-chart-blue);
-      }
-
-      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-compute,
-      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-errors,
-      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-resource-4 {
-        background: var(--playground-chart-pink);
-      }
-
-      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-resources,
-      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-resource-3 {
-        background: var(--playground-chart-green);
-      }
-
-      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-resource-1 {
-        background: var(--playground-chart-blue);
-      }
-
-      .playground-develop-server-metrics-legend .playground-settings-usage-legend-swatch.is-resource-2 {
-        background: var(--playground-chart-yellow);
-      }
-
-      .playground-develop-server-metrics-footer {
-        position: relative;
-        z-index: 2;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        margin-top: 8px;
-        padding-top: 10px;
-      }
-
-      .playground-develop-server-metrics-footer-left {
-        min-width: 0;
-        display: inline-flex;
-        align-items: center;
-        gap: 12px;
-      }
-
-      .playground-develop-server-metrics-footer .playground-settings-usage-legend-item {
-        gap: 6px;
-        font-size: 11px;
-        line-height: 1.3;
-      }
-
-      .playground-develop-server-metrics-footer .playground-settings-usage-legend-swatch {
-        width: 7px;
-        height: 7px;
-      }
-
-      .playground-develop-server-metrics-timescale {
-        --playground-project-overview-control-border: linear-gradient(
-          -10deg,
-          rgba(200, 200, 200, 0.25),
-          rgba(255, 255, 255, 0.1),
-          rgba(255, 255, 255, 0.15),
-          rgba(255, 255, 255, 0.375)
-        );
-        position: relative;
-        overflow: hidden;
-        border-radius: 999px;
-        -webkit-backdrop-filter: blur(20px);
-        backdrop-filter: blur(20px);
-      }
-
-      .playground-develop-server-metrics-timescale::before {
-        content: "";
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        padding: 1px;
-        background: var(--playground-project-overview-control-border);
-        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-        mask-clip: content-box, border-box;
-        mask-composite: exclude;
-        mask-origin: content-box, border-box;
-        mask-repeat: repeat, repeat;
-        mask-size: auto, auto;
-      }
-
-      .playground-develop-server-metrics-timescale::after {
-        z-index: 2;
-      }
-
-      .playground-develop-server-metrics-timescale .playground-environments-home-comparison-timescale-select {
-        position: relative;
-        z-index: 1;
-        min-height: 30px;
-        border: 0;
-        border-radius: 999px;
-        background: transparent;
-        font-size: 11px;
-        font-weight: 400;
-      }
-
-      .playground-develop-demo-card {
-        min-height: 112px;
-        padding: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 22px;
-        background: rgba(255, 255, 255, 0.02);
-        display: grid;
-        grid-template-columns: auto minmax(0, 1fr) auto;
-        align-items: center;
-        gap: 18px;
-        box-sizing: border-box;
-      }
-
-      .playground-develop-demo-art {
-        width: 112px;
-        height: 90px;
-        border-radius: 12px;
-        background:
-          radial-gradient(circle at 20% 20%, rgba(77, 163, 255, 0.42), transparent 36%),
-          radial-gradient(circle at 82% 76%, rgba(255, 231, 23, 0.34), transparent 34%),
-          linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: rgba(255, 255, 255, 0.9);
-        font-size: 12px;
-        font-weight: 600;
-      }
-
-      .playground-develop-demo-copy {
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-
-      .playground-develop-demo-title {
-        font-size: 15px;
-        line-height: 1.2;
-        font-weight: 600;
-        color: rgba(255, 255, 255, 0.94);
-      }
-
-      .playground-develop-demo-subtitle {
-        max-width: 620px;
-        font-size: 13px;
-        line-height: 1.45;
-        font-weight: 400;
-        color: rgba(255, 255, 255, 0.46);
-      }
-
-      .playground-develop-demo-button {
-        min-height: 38px;
-        padding: 0 18px;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.02);
-        color: rgba(255, 255, 255, 0.92);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 13px;
-        font-weight: 500;
-        cursor: pointer;
-      }
-
-      .playground-develop-quickstart {
-        min-height: 360px;
-        padding: 28px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 24px;
-        background: rgba(255, 255, 255, 0.055);
-        display: grid;
-        grid-template-columns: minmax(240px, 0.36fr) minmax(0, 1fr);
-        gap: 34px;
-        align-items: center;
-        box-sizing: border-box;
-      }
-
-      .playground-develop-quickstart-copy {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 18px;
-      }
-
-      .playground-develop-quickstart-title {
-        margin: 0;
-        font-size: 20px;
-        line-height: 1.2;
-        font-weight: 600;
-        color: rgba(255, 255, 255, 0.96);
-      }
-
-      .playground-develop-quickstart-text {
-        max-width: 300px;
-        margin: 0;
-        font-size: 13px;
-        line-height: 1.5;
-        font-weight: 500;
-        color: rgba(255, 255, 255, 0.44);
-      }
-
-      .playground-develop-primary-button {
-        min-height: 36px;
-        padding: 0 16px;
-        border: 0;
-        border-radius: 10px;
-        background: #fff;
-        color: #000;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        font-size: 13px;
-        font-weight: 500;
-        cursor: pointer;
-      }
-
-      .playground-develop-code-card {
-        min-width: 0;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 14px;
-        background: rgba(0, 0, 0, 0.58);
-        overflow: hidden;
-        box-sizing: border-box;
-      }
-
-      .playground-develop-code-header {
-        height: 34px;
-        padding: 0 10px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-      }
-
-      .playground-develop-code-copy {
-        width: 28px;
-        height: 28px;
-        border: 0;
-        border-radius: 8px;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.66);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-      }
-
-      .playground-develop-code-body {
-        margin: 0;
-        padding: 14px 18px 18px;
-        overflow-x: auto;
-        color: rgba(255, 255, 255, 0.78);
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-        font-size: 12px;
-        line-height: 1.6;
-        white-space: pre;
-      }
-
-      .playground-develop-code-line-number {
-        display: inline-block;
-        width: 24px;
-        margin-right: 14px;
-        color: rgba(255, 255, 255, 0.44);
-        text-align: right;
-        user-select: none;
-      }
-
-      .playground-develop-code-keyword {
-        color: #ff7ac8;
-      }
-
-      .playground-develop-code-string {
-        color: #8ee7ff;
-      }
-
-      .playground-develop-code-identifier {
-        color: #c9b4ff;
-      }
-
-      .playground-develop-docs-quickstart-card {
-        --playground-project-overview-chart-border: linear-gradient(
-          -10deg,
-          rgba(200, 200, 200, 0.25),
-          rgba(255, 255, 255, 0.1),
-          rgba(255, 255, 255, 0.15),
-          rgba(255, 255, 255, 0.375)
-        );
-        position: relative;
-        width: 100%;
-        overflow: hidden;
-        border: 0;
-        border-radius: 15px;
-        background: transparent;
-        box-shadow: none;
-        -webkit-backdrop-filter: blur(50px);
-        backdrop-filter: blur(50px);
-      }
-
-      .playground-develop-docs-quickstart-card::before {
-        content: "";
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        z-index: 5;
-        border-radius: inherit;
-        padding: 1px;
-        background: var(--playground-project-overview-chart-border);
-        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-        mask-clip: content-box, border-box;
-        mask-composite: exclude;
-        mask-origin: content-box, border-box;
-        mask-repeat: repeat, repeat;
-        mask-size: auto, auto;
-      }
-
-      .playground-develop-docs-quickstart-card > * {
-        position: relative;
-        z-index: 1;
-      }
-
-      .playground-develop-docs-quickstart-inner {
-        display: grid;
-        grid-template-columns: 320px minmax(0, 1fr);
-        align-items: center;
-        gap: 32px;
-        padding: 28px;
-      }
-
-      .playground-develop-docs-quickstart-title {
-        margin: 0;
-        color: rgba(255, 255, 255, 0.96);
-        font-size: 18px;
-        line-height: 1.2;
-        font-weight: 500;
-        letter-spacing: -0.03em;
-      }
-
-      .playground-develop-docs-quickstart-text {
-        max-width: 280px;
-        margin: 16px 0 0;
-        color: rgba(255, 255, 255, 0.58);
-        font-size: 12px;
-        line-height: 2;
-        font-weight: 400;
-      }
-
-      .playground-develop-docs-quickstart-button {
-        appearance: none;
-        margin-top: 24px;
-        min-height: 34px;
-        padding: 0 16px;
-        border: 0;
-        border-radius: 999px;
-        background: #fff;
-        color: #000;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 12px;
-        line-height: 1;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background-color 160ms ease;
-      }
-
-      .playground-develop-docs-quickstart-button:hover {
-        background: rgba(255, 255, 255, 0.9);
-      }
-
-      .playground-develop-docs-code-card {
-        min-width: 0;
-        overflow: hidden;
-        background: transparent;
-      }
-
-      .playground-develop-docs-code-toolbar {
-        margin-bottom: 10px;
-        padding-bottom: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-      }
-
-      .playground-develop-docs-code-tabs {
-        margin-left: 28px;
-        display: inline-flex;
-        align-items: center;
-        padding: 2px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.04);
-      }
-
-      .playground-develop-docs-code-tab {
-        appearance: none;
-        border: 0;
-        border-radius: 999px;
-        background: transparent;
-        padding: 4px 10px;
-        color: rgba(255, 255, 255, 0.42);
-        font-size: 10px;
-        line-height: 1;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background-color 160ms ease, color 160ms ease;
-      }
-
-      .playground-develop-docs-code-tab:hover {
-        color: rgba(255, 255, 255, 0.78);
-      }
-
-      .playground-develop-docs-code-tab.is-active {
-        background: rgba(255, 255, 255, 0.2);
-        color: #fff;
-      }
-
-      .playground-develop-docs-code-copy {
-        appearance: none;
-        width: 32px;
-        height: 32px;
-        border: 0;
-        border-radius: 999px;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.52);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: background-color 160ms ease, color 160ms ease;
-      }
-
-      .playground-develop-docs-code-copy:hover {
-        background: rgba(255, 255, 255, 0.06);
-        color: #fff;
-      }
-
-      .playground-develop-docs-code-body {
-        margin: 0;
-        padding: 10px;
-        overflow-x: auto;
-        color: rgba(255, 255, 255, 0.82);
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-        font-size: 12px;
-        line-height: 18px;
-        white-space: pre;
-      }
-
-      .playground-develop-docs-code-line {
-        display: block;
-        min-height: 18px;
-      }
-
-      .playground-develop-docs-code-line-number {
-        display: inline-block;
-        width: 22px;
-        margin-right: 10px;
-        color: #565656;
-        text-align: right;
-        user-select: none;
-      }
-
-      .playground-develop-docs-code-token.is-keyword {
-        color: #5dafff;
-      }
-
-      .playground-develop-docs-code-token.is-string {
-        color: #f0a36d;
-      }
-
-      .playground-develop-docs-code-token.is-identifier {
-        color: #35e8bb;
-      }
-
-      .playground-develop-docs-code-token.is-property {
-        color: #f185d2;
-      }
-
-      .playground-develop-docs-concepts {
-        margin-top: 24px;
-      }
-
-      .playground-develop-docs-concepts-header {
-        margin-bottom: 20px;
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        gap: 24px;
-      }
-
-      .playground-develop-docs-concepts-title {
-        margin: 0;
-        color: rgba(255, 255, 255, 0.96);
-        font-size: 18px;
-        line-height: 1.2;
-        font-weight: 500;
-        letter-spacing: -0.03em;
-      }
-
-      .playground-develop-docs-concepts-copy {
-        margin: 6px 0 0;
-        color: rgba(255, 255, 255, 0.62);
-        font-size: 12px;
-        line-height: 2;
-        font-weight: 400;
-      }
-
-      .playground-develop-docs-concepts-view-all {
-        appearance: none;
-        border: 0;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.72);
-        font-size: 12px;
-        line-height: 1;
-        font-weight: 400;
-        cursor: pointer;
-        transition: color 160ms ease;
-      }
-
-      .playground-develop-docs-concepts-view-all:hover {
-        color: #fff;
-      }
-
-      .playground-develop-docs-concepts-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 24px;
-      }
-
-      .playground-develop-docs-concept-card {
-        appearance: none;
-        border: 0;
-        padding: 0;
-        background: transparent;
-        color: inherit;
-        text-align: left;
-        display: block;
-        cursor: pointer;
-      }
-
-      .playground-develop-docs-concept-art {
-        position: relative;
-        aspect-ratio: 1.7 / 1;
-        overflow: hidden;
-        border-radius: 15px;
-        background-size: cover;
-        background-position: center;
-      }
-
-      .playground-develop-docs-concept-art::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(circle at top, rgba(255, 255, 255, 0.14), transparent 56%);
-        opacity: 0.8;
-        pointer-events: none;
-      }
-
-      .playground-develop-docs-concept-art::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(180deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.16));
-        pointer-events: none;
-      }
-
-      .playground-develop-docs-concept-copy {
-        margin-top: 12px;
-      }
-
-      .playground-develop-docs-concept-title {
-        color: rgba(255, 255, 255, 0.96);
-        font-size: 14px;
-        line-height: 1.2;
-        font-weight: 500;
-        letter-spacing: -0.02em;
-      }
-
-      .playground-develop-docs-concept-description {
-        margin-top: 6px;
-        color: rgba(255, 255, 255, 0.62);
-        font-size: 12px;
-        line-height: 2;
-        font-weight: 400;
-      }
-
-      .playground-develop-bottom-grid {
-        margin-top: 24px;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-        padding-top: 24px;
-        display: grid;
-        grid-template-columns: minmax(280px, 0.68fr) minmax(0, 1fr);
-        gap: 28px;
-        align-items: flex-start;
-      }
-
-      .playground-develop-section {
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-      }
-
-      .playground-develop-section-title {
-        margin: 0;
-        font-size: 18px;
-        line-height: 1.2;
-        font-weight: 500;
-        color: rgba(255, 255, 255, 0.96);
-      }
-
-      .playground-develop-usage-card {
-        min-height: 182px;
-        padding: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 15px;
-        background: rgba(255, 255, 255, 0.02);
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        box-sizing: border-box;
-      }
-
-      .playground-develop-usage-top {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 16px;
-      }
-
-      .playground-develop-usage-label {
-        font-size: 13px;
-        font-weight: 500;
-        color: rgba(255, 255, 255, 0.48);
-      }
-
-      .playground-develop-usage-value {
-        margin-top: 6px;
-        font-size: 24px;
-        line-height: 1;
-        font-weight: 600;
-        color: rgba(255, 255, 255, 0.96);
-      }
-
-      .playground-develop-usage-icon {
-        width: 34px;
-        height: 34px;
-        border: 0;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.76);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .playground-develop-usage-actions {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
-
-      .playground-develop-secondary-button {
-        min-height: 34px;
-        padding: 0 14px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.02);
-        color: rgba(255, 255, 255, 0.92);
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 13px;
-        font-weight: 500;
-        cursor: pointer;
-      }
-
-      .playground-develop-secondary-button.is-primary {
-        border-color: transparent;
-        background: #fff;
-        color: #000;
-      }
-
-      .playground-develop-quick-links {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
-      }
-
-      .playground-develop-quick-link {
-        min-height: 58px;
-        padding: 0 18px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 15px;
-        background: rgba(255, 255, 255, 0.02);
-        color: rgba(255, 255, 255, 0.92);
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        text-align: left;
-        cursor: pointer;
-        box-sizing: border-box;
-        transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
-      }
-
-      .playground-develop-quick-link:hover {
-        background: rgba(255, 255, 255, 0.06);
-        border-color: rgba(255, 255, 255, 0.18);
-        color: #fff;
-      }
-
-      .playground-develop-quick-link-icon {
-        width: 18px;
-        height: 18px;
-        color: rgba(255, 255, 255, 0.54);
-        flex: 0 0 auto;
-      }
-
-      .playground-develop-quick-link-label {
-        font-size: 13px;
-        font-weight: 500;
-      }
-
-      @media (max-width: 920px) {
-        .playground-develop-home,
-        .playground-settings-page {
-          padding: 30px 20px 42px;
-        }
-
-        .playground-develop-header,
-        .playground-develop-demo-card,
-        .playground-develop-quickstart,
-        .playground-develop-docs-quickstart-inner,
-        .playground-develop-docs-concepts-grid,
-        .playground-develop-bottom-grid {
-          grid-template-columns: 1fr;
-        }
-
-        .playground-functions-empty-hero {
-          grid-template-columns: 1fr;
-        }
-
-        .playground-functions-empty-art {
-          justify-content: flex-start;
-        }
-
-        .playground-functions-empty-title {
-          font-size: 38px;
-        }
-
-        .playground-functions-empty-features {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 28px;
-        }
-
-        .playground-functions-examples-header {
-          align-items: flex-start;
-          flex-direction: column;
-        }
-
-        .playground-functions-example-card {
-          flex-basis: min(78vw, 320px);
-        }
-
-        .playground-develop-docs-code-tabs {
-          margin-left: 0;
-        }
-
-        .playground-develop-demo-card {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-        }
-
-        .playground-develop-header {
-          display: flex;
-          align-items: flex-start;
-        }
-
-        .playground-develop-header-actions {
-          justify-content: flex-start;
-        }
-
-        .playground-develop-quick-links {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      .playground-shell.is-initial-thread-page .playground-content-title {
+${CONFIGURE_HOME_STYLE_FRAGMENTS.foundation}${DEVELOP_HOME_STYLE_FRAGMENTS.foundation}${CONFIGURE_HOME_STYLE_FRAGMENTS.overviewCards}
+${DEVELOP_HOME_STYLE_FRAGMENTS.content}      .playground-shell.is-initial-thread-page .playground-content-title {
         color: rgba(255, 255, 255, 0.7);
       }
 
@@ -4524,337 +958,7 @@ ${METRONOME_SHELL_STYLE_FRAGMENTS.sidebar}
         gap: 6px;
       }
 
-      .playground-top-nav-search-divider {
-        flex: 0 0 1px;
-        width: 1px;
-        height: 22px;
-        margin: 0 2px 0 6px;
-        background: rgba(255, 255, 255, 0.15);
-      }
-
-      .playground-top-nav-private-chat-button {
-        --playground-top-nav-private-chat-border: linear-gradient(
-          -10deg,
-          rgba(200, 200, 200, 0.25),
-          rgba(255, 255, 255, 0.1),
-          rgba(255, 255, 255, 0.15),
-          rgba(255, 255, 255, 0.375)
-        );
-        position: relative;
-        z-index: 0;
-        min-height: 30px;
-        height: 30px;
-        overflow: hidden;
-        border: 0;
-        border-radius: 999px;
-        background: transparent;
-        padding: 0 14px;
-        color: rgba(255, 255, 255, 0.92);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        font-size: 12px;
-        font-weight: 400;
-        line-height: 1;
-        cursor: pointer;
-        transition: color 160ms ease, background 160ms ease;
-      }
-
-      .playground-top-nav-private-chat-button.is-active,
-      .playground-top-nav-private-chat-button:hover,
-      .playground-top-nav-private-chat-button:focus-visible {
-        background: rgba(255, 255, 255, 0.1);
-        color: rgba(255, 255, 255, 0.98);
-        outline: none;
-      }
-
-      .playground-top-nav-private-chat-button::before {
-        content: "";
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        padding: 1px;
-        background: var(--playground-top-nav-private-chat-border);
-        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-        mask-clip: content-box, border-box;
-        mask-composite: exclude;
-        mask-origin: content-box, border-box;
-        mask-repeat: repeat, repeat;
-        mask-size: auto, auto;
-      }
-
-      .playground-top-nav-private-chat-button > * {
-        position: relative;
-        z-index: 1;
-      }
-
-      .playground-top-nav-private-chat-button svg {
-        width: 14px;
-        height: 14px;
-        flex: 0 0 auto;
-      }
-
-      .playground-skills-top-nav-action-button {
-        padding-left: 12px;
-        padding-right: 12px;
-      }
-
-      .playground-skills-top-nav-action-button:disabled {
-        cursor: default;
-        opacity: 0.45;
-      }
-
-      .playground-top-nav-pill-button {
-        --playground-top-nav-pill-border: linear-gradient(
-          -10deg,
-          rgba(200, 200, 200, 0.25),
-          rgba(255, 255, 255, 0.1),
-          rgba(255, 255, 255, 0.15),
-          rgba(255, 255, 255, 0.375)
-        );
-        position: relative;
-        z-index: 0;
-        min-height: 30px;
-        height: 30px;
-        overflow: hidden;
-        border: 0;
-        border-radius: 999px;
-        background: transparent;
-        padding: 0 14px;
-        color: rgba(255, 255, 255, 0.92);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        font-size: 12px;
-        font-weight: 400;
-        line-height: 1;
-        cursor: pointer;
-        transition: color 160ms ease, background 160ms ease;
-      }
-
-      .playground-top-nav-pill-button.is-active,
-      .playground-top-nav-pill-button:hover,
-      .playground-top-nav-pill-button:focus-visible {
-        background: rgba(255, 255, 255, 0.1);
-        color: rgba(255, 255, 255, 0.98);
-        outline: none;
-      }
-
-      .playground-top-nav-pill-button::before {
-        content: "";
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        padding: 1px;
-        background: var(--playground-top-nav-pill-border);
-        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-        mask-clip: content-box, border-box;
-        mask-composite: exclude;
-        mask-origin: content-box, border-box;
-        mask-repeat: repeat, repeat;
-        mask-size: auto, auto;
-      }
-
-      .playground-top-nav-pill-button > * {
-        position: relative;
-        z-index: 1;
-      }
-
-      .playground-top-nav-pill-button svg {
-        width: 14px;
-        height: 14px;
-        flex: 0 0 auto;
-        color: rgba(255, 255, 255, 0.9);
-      }
-
-      .playground-top-nav-sidebar-toggle {
-        flex: 0 0 auto;
-        min-height: 26px;
-        width: 20px;
-        height: 26px;
-        border: 0;
-        border-radius: 999px;
-        padding: 0 9px;
-        background: transparent;
-        color: #fff;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 7px;
-        appearance: none;
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        font-style: normal;
-        font-size: 12px;
-        font-weight: 400;
-        line-height: 1;
-        cursor: pointer;
-      }
-
-      .playground-top-nav-sidebar-toggle:hover,
-      .playground-top-nav-sidebar-toggle:focus-visible {
-        outline: none;
-      }
-
-      .playground-top-nav-sidebar-toggle-icon {
-        width: 20px;
-        height: 20px;
-        flex: 0 0 auto;
-        padding: 3px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 5px;
-        box-sizing: border-box;
-      }
-
-      .playground-unified-top-navbar .playground-environments-editor-navbar-copy {
-        flex-direction: row;
-        align-items: center;
-        gap: 16px;
-      }
-
-      .playground-top-nav-path {
-        min-width: 0;
-        display: inline-flex;
-        align-items: center;
-        gap: 12px;
-        color: rgba(255, 255, 255, 0.52);
-      }
-
-      .playground-top-nav-path-item {
-        min-width: 0;
-        max-width: min(360px, 42vw);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        border: 0;
-        padding: 0;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.58);
-        font: inherit;
-        font-size: 12px;
-        cursor: default;
-      }
-
-      button.playground-top-nav-path-item {
-        cursor: pointer;
-        transition: color 160ms ease;
-      }
-
-      button.playground-top-nav-path-item:hover {
-        color: rgba(255, 255, 255, 0.82);
-      }
-
-      .playground-top-nav-path-item.is-current {
-        color: rgba(255, 255, 255, 0.94);
-      }
-
-      .playground-top-nav-path-icon {
-        flex: 0 0 auto;
-        width: 13px;
-        height: 13px;
-      }
-
-      .playground-top-nav-path-label {
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .playground-top-nav-path-separator {
-        flex: 0 0 auto;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: rgba(255, 255, 255, 0.34);
-        width: 12px;
-        height: 12px;
-      }
-
-      .playground-top-nav-left-extra {
-        min-width: 0;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .playground-top-nav-account-button {
-        width: 32px;
-        height: 32px;
-        margin-left: 4px;
-        padding: 0;
-        border: 0;
-        border-radius: 999px;
-        background: transparent;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-      }
-
-      .playground-top-nav-avatar {
-        --playground-top-nav-avatar-border: linear-gradient(
-          -10deg,
-          rgba(200, 200, 200, 0.25),
-          rgba(255, 255, 255, 0.1),
-          rgba(255, 255, 255, 0.15),
-          rgba(255, 255, 255, 0.375)
-        );
-        position: relative;
-        overflow: hidden;
-        flex-shrink: 0;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.2);
-        color: #fff;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 24px;
-        height: 24px;
-        font-size: 10px;
-        font-weight: 400;
-      }
-
-      .playground-top-nav-avatar:has(> .playground-top-nav-avatar-fallback)::before {
-        content: "";
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        padding: 1px;
-        background: var(--playground-top-nav-avatar-border);
-        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-        mask-clip: content-box, border-box;
-        mask-composite: exclude;
-        mask-origin: content-box, border-box;
-        mask-repeat: repeat, repeat;
-        mask-size: auto, auto;
-      }
-
-      .playground-top-nav-avatar-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-
-      .playground-top-nav-avatar-fallback {
-        width: 100%;
-        height: 100%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        line-height: 1;
-        letter-spacing: 0;
-        text-transform: uppercase;
-        position: relative;
-        z-index: 1;
-      }
-
+${APP_HEADER_STYLE_FRAGMENTS.header}
       .playground-content-shell.is-thread-task-detail-open > .playground-content-nav > .playground-content-nav-center,
       .playground-content-shell.is-thread-task-detail-open > .playground-content-nav > .playground-content-nav-right,
       .playground-content-shell.is-thread-side-detail-open > .playground-content-nav > .playground-content-nav-center,
@@ -5032,9 +1136,9 @@ ${PROJECTS_STYLE_FRAGMENTS.connectorBrowser}
         flex: 1;
         min-height: 0;
         position: relative;
-        margin: 0 5px 5px 0;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 15px;
+        margin: 0;
+        border: 0;
+        border-radius: 0;
         background: #000;
         background-clip: padding-box;
         box-sizing: border-box;
@@ -8476,24 +4580,8 @@ ${CALENDAR_STYLE_FRAGMENTS.welcomeWidget}
         inset: 0;
       }
 
-      .thread-search-scrim {
-        z-index: 94;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 24px;
-        background: rgba(0, 0, 0, 0.42);
-        backdrop-filter: blur(14px);
-      }
-
-      .account-menu-scrim {
-        z-index: 92;
-      }
-
-      .notification-menu-scrim {
-        z-index: 93;
-      }
-
+${APP_HEADER_STYLE_FRAGMENTS.overlayScrims}
+${APP_HEADER_STYLE_FRAGMENTS.notificationsScrim}
       .profile-editor-scrim {
         z-index: 96;
         display: flex;
@@ -8504,632 +4592,10 @@ ${CALENDAR_STYLE_FRAGMENTS.welcomeWidget}
         backdrop-filter: blur(12px);
       }
 
-      .account-menu {
-        position: fixed;
-        left: 12px;
-        bottom: 68px;
-        width: min(248px, calc(100vw - 24px));
-        overflow: hidden;
-      }
-
-      .notification-menu {
-        position: fixed;
-        top: 58px;
-        right: 12px;
-        width: min(360px, calc(100vw - 24px));
-        max-height: min(560px, calc(100vh - 76px));
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-      }
-
-      .notification-menu-header,
-      .notification-menu-footer {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 12px 14px;
-      }
-
-      .notification-menu-header {
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      .notification-menu-title {
-        margin: 0;
-        color: rgba(255, 255, 255, 0.96);
-        font-size: 12px;
-        font-weight: 400;
-      }
-
-      .notification-menu-body {
-        overflow: auto;
-        min-height: 0;
-        padding: 6px;
-      }
-
-      .notification-menu-item {
-        width: 100%;
-        display: flex;
-        align-items: flex-start;
-        gap: 10px;
-        padding: 10px;
-        border: 0;
-        border-radius: 10px;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.92);
-        text-align: left;
-      }
-
-      button.notification-menu-item {
-        cursor: pointer;
-        transition: background-color 160ms ease;
-      }
-
-      button.notification-menu-item:hover {
-        background: rgba(255, 255, 255, 0.08);
-      }
-
-      .notification-menu-icon {
-        width: 16px;
-        height: 16px;
-        margin-top: 2px;
-        flex-shrink: 0;
-        color: #fff;
-      }
-
-      .notification-menu-icon.is-warning {
-        color: #fff;
-      }
-
-      .notification-menu-copy {
-        min-width: 0;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-      }
-
-      .notification-menu-label {
-        font-size: 12px;
-        font-weight: 400;
-        line-height: 1.25;
-        color: rgba(255, 255, 255, 0.96);
-      }
-
-      .notification-menu-text,
-      .notification-menu-meta,
-      .notification-menu-empty {
-        font-size: 12px;
-        font-weight: 400;
-        line-height: 1.45;
-        color: rgba(255, 255, 255, 0.62);
-      }
-
-      .notification-menu-meta {
-        color: rgba(255, 255, 255, 0.48);
-      }
-
-      .notification-menu-actions {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-top: 6px;
-      }
-
-      .notification-menu-action-button {
-        min-height: 28px;
-        padding: 0 10px;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.06);
-        color: rgba(255, 255, 255, 0.9);
-        cursor: pointer;
-        transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
-      }
-
-      .notification-menu-action-button:hover:not(:disabled) {
-        border-color: rgba(255, 255, 255, 0.22);
-        background: rgba(255, 255, 255, 0.1);
-        color: #fff;
-      }
-
-      .notification-menu-action-button.is-primary {
-        border-color: #fff;
-        background: #fff;
-        color: #000;
-      }
-
-      .notification-menu-action-button:disabled {
-        opacity: 0.5;
-        cursor: default;
-      }
-
-      .notification-menu-product-html {
-        min-width: 0;
-      }
-
-      .notification-menu-product-html div,
-      .notification-menu-product-html p {
-        margin: 0;
-      }
-
-      .notification-menu-product-html a {
-        color: #9ec5ff;
-        text-decoration: none;
-      }
-
-      .notification-menu-product-html a:hover {
-        text-decoration: underline;
-      }
-
-      .notification-menu-empty {
-        padding: 18px 10px;
-        text-align: center;
-      }
-
-      .notification-menu-mark-read {
-        width: 100%;
-        min-height: 34px;
-        border: 0;
-        border-radius: 10px;
-        background: rgba(255, 255, 255, 0.1);
-        color: rgba(255, 255, 255, 0.92);
-        font-size: 12px;
-        font-weight: 400;
-        cursor: pointer;
-      }
-
-      .notification-menu-footer .notification-menu-mark-read {
-        width: auto;
-        flex: 1 1 0;
-      }
-
-      .notification-menu,
-      .notification-menu * {
-        font-size: 12px;
-        font-weight: 400;
-      }
-
-      .notification-menu-mark-read:hover:not(:disabled) {
-        background: rgba(255, 255, 255, 0.14);
-      }
-
-      .notification-menu-mark-read:disabled {
-        opacity: 0.45;
-        cursor: default;
-      }
-
-      .playground-configure-notifications-section {
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-        margin-top: 42px;
-      }
-
-      .playground-configure-notifications-section .playground-files-control-row .playground-files-control-button {
-        --playground-files-control-button-border: linear-gradient(
-          -10deg,
-          rgba(200, 200, 200, 0.25),
-          rgba(255, 255, 255, 0.1),
-          rgba(255, 255, 255, 0.15),
-          rgba(255, 255, 255, 0.375)
-        );
-        position: relative;
-        z-index: 0;
-        overflow: hidden;
-        border: 0;
-        background: transparent;
-      }
-
-      .playground-configure-notifications-section .playground-files-control-row .playground-files-control-button::before {
-        content: "";
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        padding: 1px;
-        background: var(--playground-files-control-button-border);
-        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-        mask-clip: content-box, border-box;
-        mask-composite: exclude;
-        mask-origin: content-box, border-box;
-        mask-repeat: repeat, repeat;
-        mask-size: auto, auto;
-      }
-
-      .playground-configure-notifications-section .playground-files-control-row .playground-files-control-button > * {
-        position: relative;
-        z-index: 1;
-      }
-
-      .playground-configure-notifications-section .playground-files-control-button.is-backlog-filter {
-        padding-right: 14px;
-      }
-
-      .playground-notifications-header {
-        display: flex;
-        flex-direction: row;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 18px;
-        padding-bottom: 12px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      .playground-notifications-title {
-        margin: 0;
-        color: rgba(255, 255, 255, 0.96);
-        font-size: 18px;
-        font-weight: 500;
-        line-height: 1.2;
-      }
-
-      .playground-notifications-subtitle {
-        margin: 0;
-        color: rgba(255, 255, 255, 0.52);
-        font-size: 12px;
-        font-weight: 400;
-        line-height: 1.45;
-      }
-
-      .playground-notifications-library-header .playground-files-library-title-row {
-        align-items: center;
-      }
-
-      .playground-notifications-nav-row {
-        overflow: visible;
-      }
-
-      .playground-notifications-context-row {
-        flex: 1 1 auto;
-      }
-
-      .playground-configure-notifications-section .playground-files-library-new-button:disabled {
-        opacity: 0.45;
-        cursor: default;
-      }
-
-      .playground-notifications-toolbar {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        min-width: 0;
-      }
-
-      .playground-notifications-search-anchor {
-        flex: 1 1 420px;
-        min-width: 220px;
-      }
-
-      .playground-notifications-search.playground-files-library-search {
-        width: 100%;
-      }
-
-      .playground-notifications-toolbar-anchor {
-        flex: 0 0 auto;
-      }
-
-      .playground-notifications-toolbar-menu {
-        position: absolute;
-        top: calc(100% + 8px);
-        right: 0;
-        min-width: 210px;
-        z-index: 10100;
-      }
-
-      .playground-notifications-mark-read-button {
-        flex: 0 0 auto;
-      }
-
-      .playground-notifications-table-shell.playground-team-table-shell {
-        border-radius: 10px;
-        overflow: visible;
-      }
-
-      .playground-auth-users-table.is-secrets-table.playground-notifications-table .playground-notifications-table-col-notification {
-        width: 46%;
-      }
-
-      .playground-auth-users-table.is-secrets-table.playground-notifications-table .playground-notifications-table-col-type {
-        width: 16%;
-      }
-
-      .playground-auth-users-table.is-secrets-table.playground-notifications-table .playground-notifications-table-col-status {
-        width: 16%;
-      }
-
-      .playground-auth-users-table.is-secrets-table.playground-notifications-table .playground-notifications-table-col-time {
-        width: 15%;
-      }
-
-      .playground-auth-users-table.is-secrets-table.playground-notifications-table .playground-notifications-table-col-actions {
-        width: 70px;
-      }
-
-      .playground-notifications-table-main {
-        min-width: 0;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .playground-notifications-table-icon-shell {
-        width: 28px;
-        height: 28px;
-        flex: 0 0 28px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.06);
-        color: rgba(255, 255, 255, 0.88);
-      }
-
-      .playground-notifications-table-icon {
-        width: 14px;
-        height: 14px;
-      }
-
-      .playground-notifications-table-copy {
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-      }
-
-      .playground-notifications-table-title,
-      .playground-notifications-table-meta {
-        max-width: 100%;
-      }
-
-      .playground-notifications-status-pill {
-        display: inline-flex;
-        align-items: center;
-        min-height: 22px;
-        padding: 0 8px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.06);
-        color: rgba(255, 255, 255, 0.58);
-        font-size: 11px;
-        font-weight: 400;
-        line-height: 1;
-      }
-
-      .playground-notifications-status-pill.is-unread {
-        background: rgba(102, 166, 255, 0.14);
-        color: #9ec5ff;
-      }
-
-      .playground-notifications-row-actions {
-        display: inline-flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 6px;
-      }
-
-      .playground-notifications-row-actions .notification-menu-action-button {
-        min-height: 26px;
-        padding: 0 8px;
-        font-size: 11px;
-      }
-
-      .playground-notifications-empty {
-        min-height: 220px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        border-top: 0;
-        text-align: center;
-      }
-
-      .playground-notifications-empty-title {
-        color: #fff;
-        font-size: 12px;
-        font-weight: 400;
-        line-height: 1.35;
-      }
-
-      .playground-notifications-empty-description {
-        max-width: none;
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 12px;
-        font-weight: 400;
-        line-height: 1.45;
-        white-space: nowrap;
-      }
-
-      @media (max-width: 760px) {
-        .playground-notifications-header,
-        .playground-notifications-toolbar {
-          align-items: stretch;
-          flex-direction: column;
-        }
-
-        .playground-notifications-search-anchor,
-        .playground-notifications-mark-read-button {
-          width: 100%;
-        }
-      }
-
 ${TEAMS_STYLE_FRAGMENTS.foundation}${ORGANIZATIONS_STYLE_FRAGMENTS.billing}${TEAMS_STYLE_FRAGMENTS.rolesAndDialogs}${TEAMS_STYLE_FRAGMENTS.responsive}
-      .account-menu.is-sidebar-open {
-        left: 14px;
-        bottom: 80px;
-      }
-
-      .account-menu.is-top-nav {
-        left: auto;
-        right: 12px;
-        top: 58px;
-        bottom: auto;
-        transform-origin: top right;
-      }
-
-      .account-menu-animate-up-in {
-        animation: account-menu-fade-up-in 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
-        transform-origin: bottom left;
-      }
-
-      .account-menu.is-top-nav.account-menu-animate-up-in,
-      .account-menu.is-top-nav.account-menu-animate-up-out {
-        transform-origin: top right;
-      }
-
-      .account-menu-animate-up-out {
-        animation: account-menu-fade-up-out 180ms cubic-bezier(0.4, 0, 1, 1) both;
-        transform-origin: bottom left;
-        pointer-events: none;
-      }
-
-      .account-menu-account-button {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 12px 16px;
-        border: 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        background: transparent;
-        color: white;
-        text-align: left;
-        cursor: pointer;
-        transition: background-color 160ms ease;
-      }
-
-      .account-menu-account-button:hover {
-        background: rgba(255, 255, 255, 0.1);
-      }
-
-      .account-menu-avatar {
-        width: 32px;
-        height: 32px;
-        font-size: 12px;
-        font-weight: 600;
-        letter-spacing: 0.02em;
-      }
-
-      .account-menu-account-copy {
-        min-width: 0;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-      }
-
-      .account-menu-account-name {
-        min-width: 0;
-        font-size: 14px;
-        font-weight: 500;
-        color: rgba(255, 255, 255, 0.96);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .account-menu-account-email {
-        min-width: 0;
-        font-size: 12px;
-        font-weight: 400;
-        color: rgba(255, 255, 255, 0.6);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .account-menu-section {
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-        padding: 0;
-      }
-
-      .account-menu-divider {
-        height: 1px;
-        margin: 4px 0;
-        background: rgba(255, 255, 255, 0.1);
-      }
-
-      .account-menu-item {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 12px 16px;
-        border: 0;
-        background: transparent;
-        color: white;
-        text-align: left;
-        cursor: pointer;
-        transition: background-color 160ms ease;
-      }
-
-      .account-menu-item:hover {
-        background: rgba(255, 255, 255, 0.1);
-        color: #fff;
-      }
-
-      .account-menu-item.is-disabled {
-        cursor: default;
-        color: rgba(255, 255, 255, 0.56);
-      }
-
-      .account-menu-item.is-signout {
-        color: rgba(255, 255, 255, 0.92);
-      }
-
-      .account-menu-item-icon,
-      .account-menu-item-chevron,
-      .profile-editor-close-icon,
-      .profile-editor-camera-icon {
-        width: 16px;
-        height: 16px;
-        flex-shrink: 0;
-      }
-
-      .account-menu-item-label {
-        flex: 1;
-        font-size: 14px;
-        font-weight: 500;
-      }
-
-      .account-menu-item-copy {
-        font-size: 12px;
-        font-weight: 400;
-        color: rgba(255, 255, 255, 0.56);
-      }
-
-      .account-menu-item-chevron {
-        margin-left: auto;
-        color: rgba(255, 255, 255, 0.52);
-      }
-
-      @keyframes account-menu-fade-up-in {
-        from {
-          opacity: 0;
-          transform: translateY(10px);
-        }
-
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      @keyframes account-menu-fade-up-out {
-        from {
-          opacity: 1;
-          transform: translateY(0);
-        }
-
-        to {
-          opacity: 0;
-          transform: translateY(10px);
-        }
-      }
+${CONFIGURE_HOME_STYLE_FRAGMENTS.notificationPage}
+${APP_HEADER_STYLE_FRAGMENTS.notificationsPopup}
+${APP_HEADER_STYLE_FRAGMENTS.accountMenu}
 
       @keyframes playground-tasks-toolbar-popup-fade-down-in {
         from {
@@ -9143,260 +4609,7 @@ ${TEAMS_STYLE_FRAGMENTS.foundation}${ORGANIZATIONS_STYLE_FRAGMENTS.billing}${TEA
         }
       }
 
-      .thread-search-modal {
-        --playground-top-nav-popup-border: var(--tb-task-input-border, var(--tb-runner-input-border, linear-gradient(-10deg, rgba(200, 200, 200, 0.25), rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.375))));
-        position: relative;
-        width: min(792px, calc(100vw - 24px));
-        max-height: min(78vh, 720px);
-        padding-top: 4px;
-        padding-bottom: 4px;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        border-radius: 25px;
-        border: 0;
-        background: rgba(30, 30, 30, 0.5);
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
-        -webkit-backdrop-filter: blur(5px);
-        backdrop-filter: blur(5px);
-      }
-
-      .thread-search-modal::before {
-        content: "";
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        z-index: 5;
-        border-radius: inherit;
-        padding: 1px;
-        background: var(--playground-top-nav-popup-border);
-        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-        mask-clip: content-box, border-box;
-        mask-composite: exclude;
-        mask-origin: content-box, border-box;
-        mask-repeat: repeat, repeat;
-        mask-size: auto, auto;
-      }
-
-      .thread-search-input-row {
-        position: relative;
-        display: flex;
-        align-items: center;
-        min-height: 46px;
-        padding: 0 16px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      .thread-search-input {
-        width: 100%;
-        height: 100%;
-        padding: 0 34px 0 0;
-        border: 0;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.96);
-        outline: none;
-        font-size: 12px;
-        font-weight: 400;
-      }
-
-      .thread-search-input::placeholder {
-        color: rgba(255, 255, 255, 0.44);
-      }
-
-      .thread-search-input-icon {
-        position: absolute;
-        right: 16px;
-        width: 18px;
-        height: 18px;
-        color: rgba(255, 255, 255, 0.56);
-        pointer-events: none;
-      }
-
-      .thread-search-body {
-        min-height: 0;
-        flex: 1;
-        overflow: auto;
-        padding: 0 16px 10px;
-      }
-
-      .thread-search-section {
-        padding-top: 10px;
-      }
-
-      .thread-search-section + .thread-search-section {
-        margin-top: 8px;
-      }
-
-      .thread-search-section-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 0 4px 10px;
-      }
-
-      .thread-search-section-label {
-        font-size: 12px;
-        font-weight: 500;
-        color: rgba(255, 255, 255, 0.5);
-      }
-
-      .thread-search-section-link {
-        padding: 0;
-        border: 0;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.62);
-        font-size: 12px;
-        font-weight: 500;
-        cursor: pointer;
-      }
-
-      .thread-search-section-link:hover {
-        color: rgba(255, 255, 255, 0.9);
-      }
-
-      .thread-search-action-card {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        min-height: 42px;
-        padding: 0 12px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.05);
-        color: rgba(255, 255, 255, 0.96);
-        cursor: pointer;
-        text-align: left;
-        transition: background-color 160ms ease, border-color 160ms ease;
-      }
-
-      .thread-search-action-card:hover {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: rgba(255, 255, 255, 0.14);
-      }
-
-      .thread-search-action-icon {
-        width: 16px;
-        height: 16px;
-        flex-shrink: 0;
-      }
-
-      .thread-search-action-copy {
-        font-size: 13px;
-        font-weight: 500;
-      }
-
-      .thread-search-result-list {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-      }
-
-      .thread-search-result {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        min-height: 42px;
-        padding: 0 12px;
-        border: 1px solid transparent;
-        border-radius: 8px;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.96);
-        cursor: pointer;
-        text-align: left;
-        transition: background-color 160ms ease, border-color 160ms ease, opacity 160ms ease;
-      }
-
-      .thread-search-result:hover,
-      .thread-search-result.is-active {
-        opacity: 1;
-        background: rgba(255, 255, 255, 0.08);
-        border-color: rgba(255, 255, 255, 0.1);
-      }
-
-      .thread-search-result-title {
-        min-width: 0;
-        flex: 1;
-        font-size: 13px;
-        font-weight: 400;
-        color: inherit;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .thread-search-result-time {
-        flex-shrink: 0;
-        font-size: 12px;
-        font-weight: 400;
-        color: rgba(255, 255, 255, 0.48);
-        white-space: nowrap;
-      }
-
-      .thread-search-result-icon {
-        width: 16px;
-        height: 16px;
-        flex: 0 0 auto;
-        color: rgba(255, 255, 255, 0.64);
-      }
-
-      .thread-search-result-copy {
-        min-width: 0;
-        flex: 1 1 auto;
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-      }
-
-      .thread-search-result-subtitle {
-        min-width: 0;
-        color: rgba(255, 255, 255, 0.44);
-        font-size: 11px;
-        line-height: 1.25;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .thread-search-empty-state {
-        padding: 24px 4px 12px;
-        color: rgba(255, 255, 255, 0.48);
-        font-size: 13px;
-        line-height: 1.5;
-      }
-
-      .thread-search-footer {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        min-height: 44px;
-        padding: 0 16px;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 12px;
-        font-weight: 500;
-      }
-
-      .thread-search-footer-copy,
-      .thread-search-footer-meta {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .thread-search-footer-icon {
-        width: 15px;
-        height: 15px;
-        flex-shrink: 0;
-      }
-
-      .thread-search-footer-separator {
-        color: rgba(255, 255, 255, 0.24);
-      }
+${APP_HEADER_STYLE_FRAGMENTS.searchModal}
 
       .playground-onboarding-scrim {
         position: fixed;
@@ -14478,121 +9691,7 @@ ${INFERENCE_PAGE_CSS}
         color: rgba(255, 255, 255, 0.44);
       }
 
-      .playground-settings-api-keys-table {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-      }
-
-      .playground-settings-api-keys-table-header,
-      .playground-settings-api-keys-table-row {
-        display: grid;
-        grid-template-columns: minmax(0, 2.2fr) minmax(116px, 0.95fr) minmax(112px, 0.9fr) minmax(112px, 0.9fr) minmax(168px, 1.15fr) minmax(96px, 0.8fr) 32px;
-        align-items: center;
-        gap: 16px;
-      }
-
-      .playground-settings-api-keys-table-header {
-        min-height: 34px;
-        padding: 0 0 8px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        font-size: 11px;
-        line-height: 1.4;
-        font-weight: 500;
-        color: rgba(255, 255, 255, 0.45);
-        letter-spacing: 0.02em;
-      }
-
-      .playground-settings-api-keys-table-row {
-        min-height: 50px;
-        padding: 10px 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      }
-
-      .playground-settings-api-keys-table-row:last-child {
-        border-bottom: 0;
-      }
-
-      .playground-settings-api-keys-table-row:hover {
-        background: rgba(255, 255, 255, 0.02);
-      }
-
-      .playground-settings-api-keys-cell {
-        min-width: 0;
-        font-size: 12px;
-        line-height: 1.45;
-        color: rgba(255, 255, 255, 0.56);
-      }
-
-      .playground-settings-api-keys-cell.is-name {
-        color: rgba(255, 255, 255, 1);
-      }
-
-      .playground-settings-api-keys-cell.is-date,
-      .playground-settings-api-keys-cell.is-permissions {
-        white-space: nowrap;
-      }
-
-      .playground-settings-api-keys-cell.is-created-by,
-      .playground-settings-api-keys-cell.is-secret {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .playground-settings-api-keys-cell.is-secret {
-        font-family: "SFMono-Regular", ui-monospace, Menlo, Monaco, Consolas, monospace;
-      }
-
-      .playground-settings-api-keys-name-row {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        min-width: 0;
-      }
-
-      .playground-settings-api-keys-name {
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .playground-settings-api-keys-pill {
-        flex-shrink: 0;
-        padding: 2px 8px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.08);
-        color: rgba(255, 255, 255, 0.6);
-        font-size: 10px;
-        line-height: 1.2;
-      }
-
-      .playground-settings-api-keys-actions {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-      }
-
-      .playground-settings-api-keys-action-button {
-        width: 28px;
-        height: 28px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 999px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        background: rgba(255, 255, 255, 0.03);
-        color: rgba(255, 255, 255, 0.94);
-        transition: background 160ms ease, border-color 160ms ease, opacity 160ms ease;
-      }
-
-      .playground-settings-api-keys-action-button:hover {
-        border-color: rgba(248, 113, 113, 0.2);
-        background: rgba(239, 68, 68, 0.1);
-      }
-
-      .playground-settings-records-current {
+${API_KEYS_STYLE_FRAGMENTS.table}      .playground-settings-records-current {
         margin-bottom: 24px;
       }
 
@@ -15813,290 +10912,7 @@ ${INFERENCE_PAGE_CSS}
         font-size: 12px;
       }
 
-      .playground-settings-api-key-card,
-      .playground-settings-trigger-card,
-      .playground-settings-scope-option {
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        padding: 14px;
-        border-radius: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        background: rgba(255, 255, 255, 0.03);
-      }
-
-      .playground-settings-api-key-card.is-revoked {
-        border-color: rgba(239, 68, 68, 0.3);
-        opacity: 0.6;
-      }
-
-      .playground-settings-trigger-card,
-      .playground-settings-scope-option {
-        cursor: pointer;
-        text-align: left;
-      }
-
-      .playground-settings-trigger-card:hover,
-      .playground-settings-scope-option:hover {
-        background: rgba(255, 255, 255, 0.05);
-      }
-
-      .playground-settings-scope-option.is-active {
-        border-color: rgba(137, 182, 255, 0.26);
-        background: rgba(137, 182, 255, 0.08);
-      }
-
-      .playground-settings-api-key-modal-backdrop {
-        z-index: 10010;
-      }
-
-      .playground-settings-api-key-modal {
-        width: min(640px, 100%);
-      }
-
-      .playground-settings-api-key-modal-top {
-        margin-bottom: 12px;
-      }
-
-      .playground-settings-api-key-modal-title-shell {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        min-width: 0;
-      }
-
-      .playground-settings-api-key-modal-title {
-        font-size: 17px;
-        line-height: 1.2;
-        font-weight: 400;
-        color: rgba(255, 255, 255, 0.98);
-      }
-
-      .playground-settings-api-key-modal-subtitle {
-        font-size: 12px;
-        line-height: 1.45;
-        color: rgba(255, 255, 255, 0.46);
-      }
-
-      .playground-settings-api-key-modal-body {
-        gap: 18px;
-      }
-
-      .playground-settings-api-key-modal-scopes {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
-
-      .playground-settings-api-key-modal textarea.playground-tasks-project-modal-textarea {
-        min-height: 96px;
-      }
-
-      .playground-settings-api-key-header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 16px;
-        padding-bottom: 12px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      .playground-settings-api-key-title-wrap {
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-
-      .playground-settings-api-key-badges {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-
-      .playground-settings-api-key-name {
-        font-size: 14px;
-        font-weight: 500;
-        color: rgba(255, 255, 255, 0.96);
-      }
-
-      .playground-settings-api-key-badge {
-        display: inline-flex;
-        align-items: center;
-        min-height: 20px;
-        padding: 0 10px;
-        border-radius: 999px;
-        font-size: 10px;
-        font-weight: 600;
-      }
-
-      .playground-settings-api-key-badge.is-neutral {
-        background: rgba(255, 255, 255, 0.1);
-        color: rgba(209, 213, 219, 0.9);
-      }
-
-      .playground-settings-api-key-badge.is-primary {
-        background: rgba(59, 130, 246, 0.2);
-        color: rgba(147, 197, 253, 0.98);
-      }
-
-      .playground-settings-api-key-badge.is-danger {
-        background: rgba(239, 68, 68, 0.2);
-        color: rgba(248, 113, 113, 0.98);
-      }
-
-      .playground-settings-api-key-description,
-      .playground-settings-api-key-managed-copy {
-        margin: 0;
-        font-size: 12px;
-        line-height: 1.5;
-      }
-
-      .playground-settings-api-key-description {
-        color: rgba(156, 163, 175, 0.95);
-      }
-
-      .playground-settings-api-key-managed-copy {
-        color: rgba(107, 114, 128, 0.95);
-      }
-
-      .playground-settings-api-key-revoke {
-        min-width: 74px;
-        min-height: 32px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0 12px;
-        border-radius: 10px;
-        border: 0;
-        background: transparent;
-        color: rgba(156, 163, 175, 0.95);
-        font-size: 12px;
-        cursor: pointer;
-        transition: background-color 160ms ease, color 160ms ease, opacity 160ms ease;
-      }
-
-      .playground-settings-api-key-revoke:hover {
-        background: rgba(239, 68, 68, 0.08);
-        color: rgba(248, 113, 113, 0.98);
-      }
-
-      .playground-settings-api-key-preview {
-        display: block;
-        width: 100%;
-        font-family: SFMono-Regular, Menlo, Consolas, monospace;
-        font-size: 12px;
-        color: rgba(156, 163, 175, 0.95);
-        overflow-wrap: anywhere;
-      }
-
-      .playground-settings-api-key-stats {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 12px;
-      }
-
-      .playground-settings-api-key-stat {
-        padding: 10px 12px;
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.05);
-      }
-
-      .playground-settings-api-key-stat-label {
-        font-size: 10px;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: rgba(107, 114, 128, 0.95);
-      }
-
-      .playground-settings-api-key-stat-value {
-        margin-top: 6px;
-        font-size: 14px;
-        color: rgba(255, 255, 255, 0.96);
-      }
-
-      .playground-settings-api-key-meta {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        flex-wrap: wrap;
-        font-size: 10px;
-        color: rgba(156, 163, 175, 0.95);
-      }
-
-      .playground-settings-created-key-notice {
-        padding: 16px;
-        border-radius: 14px;
-        border: 1px solid rgba(34, 197, 94, 0.3);
-        background: rgba(34, 197, 94, 0.08);
-      }
-
-      .playground-settings-created-key-row {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 16px;
-      }
-
-      .playground-settings-created-key-title {
-        margin: 0 0 8px;
-        font-size: 12px;
-        font-weight: 600;
-        color: rgba(74, 222, 128, 0.98);
-      }
-
-      .playground-settings-created-key-copy {
-        margin: 0 0 12px;
-        font-size: 12px;
-        color: rgba(209, 213, 219, 0.82);
-      }
-
-      .playground-settings-inline-code,
-      .playground-settings-code {
-        display: block;
-        width: 100%;
-        padding: 12px;
-        border-radius: 12px;
-        background: rgba(0, 0, 0, 0.36);
-        color: #d1e0ff;
-        font-family: SFMono-Regular, Menlo, Consolas, monospace;
-        font-size: 12px;
-        line-height: 1.5;
-        overflow-wrap: anywhere;
-      }
-
-      .playground-settings-code-row {
-        display: flex;
-        align-items: stretch;
-        gap: 10px;
-      }
-
-      .playground-settings-icon-button {
-        width: 36px;
-        min-width: 36px;
-        height: 36px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        background: rgba(255, 255, 255, 0.05);
-        color: rgba(255, 255, 255, 0.72);
-        cursor: pointer;
-      }
-
-      .playground-settings-inline-button {
-        min-height: 34px;
-      }
-
-      .playground-settings-api-key-metrics {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-
+${API_KEYS_STYLE_FRAGMENTS.sharedComponents}
       .playground-settings-metric-pill {
         display: inline-flex;
         align-items: center;
@@ -34218,233 +29034,7 @@ ${ORGANIZATIONS_STYLE_FRAGMENTS.overview}
 		        overflow: visible !important;
 		      }
 
-	      .playground-configure-notifications-heading {
-	        display: flex;
-	        flex-direction: column;
-	        gap: 4px;
-	      }
-
-	      .playground-configure-notifications-title {
-	        margin: 0;
-	        font-size: 14px;
-	        font-weight: 400;
-	      }
-
-	      .playground-configure-home .playground-configure-notifications-table-section.playground-agents-overview-table-section {
-	        position: relative;
-	        isolation: isolate;
-	        gap: 0;
-	        margin-top: 0 !important;
-	        margin-bottom: 24px;
-	        padding: 0 18px 6px;
-	        border: 1px solid rgba(255, 255, 255, 0.075);
-	        border-radius: 15px;
-	        overflow: visible !important;
-	        background: rgba(255, 255, 255, 0.075);
-	        -webkit-backdrop-filter: none;
-	        backdrop-filter: none;
-	      }
-
-	      .playground-configure-home .playground-configure-notifications-table-section.playground-agents-overview-table-section::before {
-	        content: none;
-	      }
-
-	      .playground-configure-home .playground-configure-notifications-table-section > * {
-	        position: relative;
-	        z-index: 1;
-	      }
-
-	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-sticky-table-header {
-	        position: sticky;
-	        top: 0;
-	        z-index: 240;
-	        margin: 0 -18px;
-	        padding: 12px 18px 0;
-	        border-radius: 15px 15px 0 0;
-	        background: #121212;
-	        -webkit-backdrop-filter: none;
-	        backdrop-filter: none;
-	      }
-
-	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-overview-toolbar {
-	        position: relative;
-	        z-index: 1;
-	        display: flex;
-	        flex-direction: row;
-	        align-items: center;
-	        justify-content: flex-start;
-	        flex-wrap: nowrap;
-	        gap: 10px;
-	        width: 100%;
-	        margin: 0;
-	        padding: 0 0 12px;
-	        border-bottom: 0;
-	        background: transparent;
-	      }
-
-	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-overview-toolbar .playground-develop-server-kind-table-controls {
-	        flex: 1 1 auto;
-	        width: auto;
-	        min-width: 0;
-	        margin-left: 0;
-	        display: flex;
-	        justify-content: flex-start;
-	        align-items: center;
-	        flex-wrap: nowrap;
-	        gap: 10px;
-	      }
-
-	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-overview-toolbar .playground-develop-server-kind-search-shell {
-	        flex: 0 1 340px;
-	        width: min(340px, 100%);
-	        min-width: min(280px, 100%);
-	        max-width: 340px;
-	        background: rgba(255, 255, 255, 0.025) !important;
-	      }
-
-	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-overview-toolbar .playground-plugins-toolbar-controls {
-	        display: inline-flex;
-	        flex: 0 0 auto;
-	        align-items: center;
-	        flex-wrap: nowrap;
-	      }
-
-	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-overview-toolbar .playground-notifications-mark-read-button {
-	        flex: 0 0 auto;
-	        margin-left: auto;
-	      }
-
-	      .playground-configure-home .playground-configure-notifications-table-section .playground-tasks-toolbar-popup-shell {
-	        z-index: 250;
-	      }
-
-	      .playground-configure-home .playground-configure-notifications-table-section .playground-tasks-toolbar-popup-menu {
-	        z-index: 251;
-	      }
-
-	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-overview-list-table {
-	        position: relative;
-	        z-index: 0;
-	        width: 100%;
-	        margin: 0;
-	        padding: 0;
-	        border: 0;
-	        border-radius: 0;
-	        overflow: visible !important;
-	        background: transparent;
-	      }
-
-	      .playground-configure-home .playground-configure-notifications-table-section .playground-project-overview-thread-list {
-	        width: calc(100% + 24px);
-	        margin-left: -12px;
-	        padding: 0 12px;
-	        border: 1px solid rgba(255, 255, 255, 0.1);
-	        border-radius: 10px;
-	        overflow: visible !important;
-	        background: #000;
-	        box-sizing: border-box;
-	      }
-
-	      .playground-configure-home .playground-configure-notifications-table-section .playground-project-overview-threads-table-header,
-	      .playground-configure-home .playground-configure-notifications-table-section .playground-project-overview-threads-table-row {
-	        grid-template-columns: minmax(260px, 1.45fr) minmax(120px, 0.52fr) minmax(90px, 0.38fr) minmax(110px, 0.48fr) minmax(32px, max-content) !important;
-	        gap: 12px;
-	        width: 100%;
-	        max-width: 100%;
-	        padding-right: 0;
-	        box-sizing: border-box;
-	      }
-
-	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-overview-column-header {
-	        position: relative;
-	        z-index: 1;
-	        margin-top: 12px;
-	        padding-top: 0;
-	        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-	        background: transparent;
-	        -webkit-backdrop-filter: none;
-	        backdrop-filter: none;
-	      }
-
-	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-overview-row {
-	        min-height: 58px;
-	        padding-top: 12px;
-	        padding-bottom: 12px;
-	        overflow: visible !important;
-	      }
-
-	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-overview-row.is-clickable {
-	        cursor: pointer;
-	      }
-
-	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-overview-row.is-clickable:hover {
-	        background: rgba(255, 255, 255, 0.025);
-	      }
-
-	      .playground-configure-home .playground-configure-notifications-table-section .playground-project-overview-thread-list > .playground-notifications-overview-row:last-child {
-	        border-bottom: 0;
-	      }
-
-	      .playground-configure-home .playground-configure-notifications-table-section .playground-project-overview-thread-cell,
-	      .playground-configure-home .playground-configure-notifications-table-section .playground-agents-overview-table-value {
-	        min-width: 0;
-	        overflow: hidden;
-	        text-overflow: ellipsis;
-	        white-space: nowrap;
-	        font-size: 12px;
-	      }
-
-	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-table-title,
-	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-table-meta {
-	        min-width: 0;
-	        max-width: 100%;
-	        overflow: hidden;
-	        text-overflow: ellipsis;
-	        white-space: nowrap;
-	      }
-
-	      .playground-configure-home .playground-configure-notifications-table-section .playground-project-overview-thread-cell.is-name {
-	        color: rgba(255, 255, 255, 0.9);
-	      }
-
-	      .playground-configure-home .playground-configure-notifications-table-section .playground-project-overview-thread-cell.is-actions,
-	      .playground-configure-home .playground-configure-notifications-table-section .playground-project-overview-threads-table-header > div:last-child {
-	        justify-self: end;
-	      }
-
-	      .playground-configure-home .playground-configure-notifications-table-section .playground-project-overview-thread-cell.is-actions {
-	        width: 100%;
-	        display: flex;
-	        align-items: center;
-	        justify-content: flex-end;
-	      }
-
-	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-table-main {
-	        gap: 8px;
-	      }
-
-	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-table-icon-shell {
-	        width: 20px;
-	        height: 20px;
-	        flex: 0 0 20px;
-	        border-radius: 50%;
-	      }
-
-	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-table-icon {
-	        width: 12px;
-	        height: 12px;
-	      }
-
-	      .playground-configure-home .playground-configure-notifications-table-section .playground-notifications-table-copy {
-	        gap: 0;
-	      }
-
-	      .playground-configure-home .playground-configure-notifications-table-section > .playground-notifications-empty {
-	        min-height: 0;
-	        margin: 0;
-	        padding: 28px 24px;
-	      }
-
+${CONFIGURE_HOME_STYLE_FRAGMENTS.notificationsTable}
 		      .playground-resources-page.is-develop-configure-page .playground-resources-overview-section.is-computers-overview.is-develop-server-kind-list {
 		        position: relative;
 		        isolation: isolate;
@@ -34752,97 +29342,7 @@ ${ORGANIZATIONS_STYLE_FRAGMENTS.overview}
 		        justify-content: flex-end;
 		      }
 
-		      .playground-develop-api-keys-page .playground-develop-api-keys-page-header {
-		        margin-bottom: 24px;
-		      }
-
-		      .playground-resources-page.is-develop-server-kind-page.playground-develop-api-keys-page .playground-develop-api-keys-column-header {
-		        margin-top: 0;
-		      }
-
-		      .playground-develop-api-keys-page .playground-develop-api-keys-created-notice,
-		      .playground-develop-api-keys-page .playground-settings-inline-status {
-		        margin-bottom: 16px;
-		      }
-
-		      .playground-resources-page.is-develop-server-kind-page.playground-develop-api-keys-page .playground-develop-resource-overview-table-section.playground-develop-api-keys-table-section .playground-project-overview-threads-table-header,
-		      .playground-resources-page.is-develop-server-kind-page.playground-develop-api-keys-page .playground-develop-resource-overview-table-section.playground-develop-api-keys-table-section .playground-project-overview-threads-table-row {
-		        grid-template-columns: 28px minmax(180px, 1.45fr) minmax(112px, 0.72fr) minmax(88px, 0.52fr) minmax(88px, 0.52fr) minmax(140px, 0.8fr) minmax(96px, 0.56fr) 32px !important;
-		        gap: 12px;
-		      }
-
-		      .playground-develop-api-keys-page .playground-develop-api-keys-column-header > div:nth-child(2) {
-		        justify-content: flex-start !important;
-		      }
-
-		      .playground-develop-api-keys-page .playground-develop-api-keys-column-header > div:first-child,
-		      .playground-develop-api-keys-page .playground-develop-api-keys-table-row .is-select {
-		        display: flex;
-		        align-items: center;
-		        justify-content: center;
-		      }
-
-		      .playground-develop-api-keys-page .playground-develop-api-keys-table-row {
-		        cursor: default;
-		      }
-
-		      .playground-develop-api-keys-page .playground-develop-api-keys-secret {
-		        font-family: "SFMono-Regular", ui-monospace, Menlo, Monaco, Consolas, monospace;
-		      }
-
-		      .playground-develop-api-keys-page .playground-settings-api-keys-name-row {
-		        max-width: 100%;
-		      }
-
-		      .playground-develop-api-keys-page .playground-develop-api-keys-empty {
-		        min-height: 96px;
-		        margin: 0;
-		        padding: 28px 20px;
-		      }
-
-		      @media (max-width: 1180px) {
-		        .playground-develop-api-keys-page .playground-develop-api-keys-column-header > div:nth-child(6),
-		        .playground-develop-api-keys-page .playground-develop-api-keys-table-row .is-created-by {
-		          display: none;
-		        }
-
-		        .playground-resources-page.is-develop-server-kind-page.playground-develop-api-keys-page .playground-develop-resource-overview-table-section.playground-develop-api-keys-table-section .playground-project-overview-threads-table-header,
-		        .playground-resources-page.is-develop-server-kind-page.playground-develop-api-keys-page .playground-develop-resource-overview-table-section.playground-develop-api-keys-table-section .playground-project-overview-threads-table-row {
-		          grid-template-columns: 28px minmax(170px, 1fr) minmax(110px, 0.64fr) minmax(92px, 0.46fr) minmax(92px, 0.46fr) minmax(100px, 0.5fr) 32px !important;
-		        }
-		      }
-
-		      @media (max-width: 860px) {
-		        .playground-develop-api-keys-page .playground-develop-api-keys-column-header > div:nth-child(3),
-		        .playground-develop-api-keys-page .playground-develop-api-keys-column-header > div:nth-child(5),
-		        .playground-develop-api-keys-page .playground-develop-api-keys-table-row .is-secret,
-		        .playground-develop-api-keys-page .playground-develop-api-keys-table-row > .is-date:nth-child(5) {
-		          display: none;
-		        }
-
-		        .playground-resources-page.is-develop-server-kind-page.playground-develop-api-keys-page .playground-develop-resource-overview-table-section.playground-develop-api-keys-table-section .playground-project-overview-threads-table-header,
-		        .playground-resources-page.is-develop-server-kind-page.playground-develop-api-keys-page .playground-develop-resource-overview-table-section.playground-develop-api-keys-table-section .playground-project-overview-threads-table-row {
-		          grid-template-columns: 28px minmax(160px, 1fr) minmax(92px, 0.48fr) minmax(100px, 0.52fr) 32px !important;
-		        }
-		      }
-
-		      .playground-api-key-reveal-modal .playground-settings-code-row {
-		        margin-top: 4px;
-		      }
-
-		      .playground-api-key-reveal-modal .playground-settings-code {
-		        min-width: 0;
-		        overflow-wrap: anywhere;
-		        white-space: normal;
-		        user-select: all;
-		      }
-
-		      .playground-api-key-reveal-error {
-		        color: rgba(255, 255, 255, 0.6);
-		        font-size: 12px;
-		        line-height: 1.5;
-		      }
-
+${API_KEYS_STYLE_FRAGMENTS.page}
 		      .playground-resources-page.is-develop-server-kind-page .playground-develop-server-kind-table-title,
 		      .playground-resources-page.is-develop-configure-page .playground-develop-server-kind-table-title {
 		        flex: 0 0 auto;
@@ -35190,36 +29690,6 @@ ${ORGANIZATIONS_STYLE_FRAGMENTS.overview}
       .playground-agents-page .playground-agents-detail-main-pane .playground-agents-detail-content,
       .playground-agents-detail-assistant-page .playground-agents-detail-main-pane .playground-agents-detail-content {
         padding-top: 42px;
-      }
-
-      .playground-agents-detail-main-pane.is-agent-background-active,
-      .playground-environments-detail > .playground-environments-editor-main.playground-tasks-detail-main.is-agent-background-active {
-        position: relative;
-        overflow: hidden;
-      }
-
-      .playground-agents-detail-main-pane.is-agent-background-active::before,
-      .playground-environments-detail > .playground-environments-editor-main.playground-tasks-detail-main.is-agent-background-active::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: min(760px, 100%);
-        pointer-events: none;
-        z-index: 0;
-        background-image:
-          linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, #000 100%),
-          var(--playground-agent-detail-bg-image);
-        background-position: center top;
-        background-size: cover;
-        background-repeat: no-repeat;
-      }
-
-      .playground-agents-detail-main-pane.is-agent-background-active > .playground-environments-detail-scroll,
-      .playground-environments-detail > .playground-environments-editor-main.playground-tasks-detail-main.is-agent-background-active > .playground-environments-detail-scroll {
-        position: relative;
-        z-index: 1;
       }
 
       .playground-agents-detail-content .playground-tasks-detail-facts,
@@ -36229,10 +30699,10 @@ ${GUARDRAILS_STYLE_FRAGMENTS.agentIntegration}      .playground-project-overview
       .playground-agents-detail-instructions-section .playground-tasks-detail-description-editor {
         display: block;
         box-sizing: border-box;
-        width: calc(100% - 12px);
+        width: calc(100% - 6px);
         height: auto;
         min-height: 0;
-        margin-left: 6px;
+        margin-left: 3px;
         padding-top: 20px;
         padding-left: 20px;
         padding-right: 20px;
@@ -37718,9 +32188,10 @@ ${GUARDRAILS_STYLE_FRAGMENTS.agentIntegration}      .playground-project-overview
 
       .playground-tools-navbar {
         min-height: 56px;
-        padding: 0 5px 0 0;
+        padding: 0 20px;
         margin-bottom: 0;
-        border-bottom: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+        background: #000;
         box-sizing: border-box;
       }
 
@@ -37756,7 +32227,9 @@ ${GUARDRAILS_STYLE_FRAGMENTS.agentIntegration}      .playground-project-overview
         white-space: nowrap;
       }
 
+      .playground-tools-overview-controls-slot,
       .playground-tools-skills-nav-actions-slot,
+      .playground-resource-overview-controls-slot,
       .playground-resources-nav-actions-slot {
         display: inline-flex;
         align-items: center;
@@ -38449,10 +32922,10 @@ ${GUARDRAILS_STYLE_FRAGMENTS.agentIntegration}      .playground-project-overview
       .playground-content-body.is-tasks-page .playground-environments-page:not(.playground-agents-page) .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll,
       .playground-content-body.is-calendar-page .playground-environments-page:not(.playground-agents-page) .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll {
         position: relative;
-        margin: 0 5px 5px 0;
+        margin: 0;
         padding: 42px 50px 56px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 15px;
+        border: 0;
+        border-radius: 0;
         background: #000;
         background-image: none !important;
         background-clip: padding-box;
@@ -41557,19 +36030,7 @@ ${METRONOME_SHELL_STYLE_FRAGMENTS.runTrace}
           flex-direction: column;
           align-items: flex-start;
         }
-        .playground-shell,
-        .playground-shell.sidebar-collapsed {
-          grid-template-columns: 1fr;
-        }
-        .playground-sidebar {
-          position: fixed;
-          inset: 0 auto 0 0;
-          width: min(270px, 100vw);
-          z-index: 85;
-        }
-        .playground-sidebar.is-collapsed {
-          width: 64px;
-        }
+${APP_SIDEBAR_STYLE_FRAGMENTS.responsive}
         .playground-main {
           min-height: 68vh;
         }
@@ -41581,8 +36042,10 @@ ${MODELS_PAGE_CSS}
 ${MARKETPLACE_PAGE_CSS}
 ${PLAYGROUND_FINE_TUNING_CSS}
 ${PLATFORM_UI_PRIMITIVES_CSS}
+${SETTINGS_MODAL_CSS}
     </style>
     <link rel="stylesheet" href="/dist/platform-ui/components/ui/button/button.css" />
+    <link rel="stylesheet" href="/dist/platform-ui/components/ui/label/label.css" />
     <link rel="stylesheet" href="/dist/platform-ui/components/ui/search/search.css" />
     <link rel="stylesheet" href="/dist/platform-ui/components/ui/switch/switch.css" />
 
@@ -41649,16 +36112,18 @@ ${CALENDAR_BROWSER_FOUNDATION_FRAGMENTS.calendarImport}
       import { addEdge, Background, BaseEdge, Controls, EdgeLabelRenderer, getSimpleBezierPath, Handle, MarkerType, NodeResizer, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from "@xyflow/react";
       import { getApps, initializeApp } from "https://esm.sh/firebase@10.12.2/app";
       import { browserLocalPersistence, getAuth, GoogleAuthProvider, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut as signOutFirebaseAuth } from "https://esm.sh/firebase@10.12.2/auth";
-	      import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, LassoSelect, Layers, LayoutDashboard, LayoutGrid, LibraryBig, Lightbulb, Link2, List, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Underline, Undo2, Unlink, User, UserRound, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
+	      import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, KeyRound, LassoSelect, Layers, LayoutDashboard, LayoutGrid, LibraryBig, Lightbulb, Link2, List, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Underline, Undo2, Unlink, User, UserRound, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
 	      import { RunnerClient } from "/dist/index.js";
 	      import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
 	      import { PlatformDataTable } from "/dist/platform-ui/components/composite/data-table/index.js";
+	      import { PlatformInstructionsEditor } from "/dist/platform-ui/components/composite/instructions-editor/index.js";
 	      import { PlatformButton, PlatformPrimaryButton, PlatformSecondaryButton } from "/dist/platform-ui/components/ui/button/index.js";
 	      import { PlatformPopup, PlatformPopupDismissLayer, PlatformPopupSurface } from "/dist/platform-ui/components/composite/popup/index.js";
-	      import { PlatformModal, PlatformModalBackdrop, PlatformModalSurface } from "/dist/platform-ui/components/composite/modal/index.js";
+	      import { PlatformModal, PlatformModalBackdrop, PlatformModalBody, PlatformModalHeader, PlatformModalSurface } from "/dist/platform-ui/components/composite/modal/index.js";
 	      import { PlatformSwitch } from "/dist/platform-ui/components/ui/switch/index.js";
 	      import { PlatformCalendarWidget, PlatformProjectWidget, PlatformProjectWidgetEmpty, PlatformProjectWidgetEmptyState, PlatformProjectWidgetTask, PlatformProjectWidgetTaskList, PlatformUsageWidget } from "/dist/platform-ui/components/composite/widgets/index.js";
-	      import { AgentsOverviewPage, ComputersOverviewPage, PluginsOverviewPage, SkillsOverviewPage, TagsOverviewPage } from "/dist/platform-resources/index.js";
+		      import { AgentDetailPage, AgentsOverviewAnalyticsRequestError, AgentsOverviewPage, ComputersOverviewAnalyticsRequestError, ComputersOverviewPage, PluginsOverviewPage, SkillsOverviewPage, TagsOverviewPage, createAgentsOverviewAnalytics, fetchAgentsOverviewAnalytics, fetchComputersOverviewAnalytics, invalidateAgentsOverviewAnalytics, invalidateComputersOverviewAnalytics, readCachedAgentsOverviewAnalytics, readCachedComputersOverviewAnalytics } from "/dist/platform-resources/index.js";
+	      import { DevelopResourceOverviewRoute, DevelopVoiceAgentsOverviewPage, createDevelopResourceOverviewRows, createDevelopVoiceAgentOverviewRows } from "/dist/platform-services/develop-mode/index.js";
 	      import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
 
 	      function getPlaygroundSafeIconComponent(Icon, fallbackIcon = Circle) {
@@ -42251,6 +36716,7 @@ ${CALENDAR_BROWSER_FOUNDATION_FRAGMENTS.localizer}
       const INTEGRATION_STATUS_STORAGE_KEY = "runner_demo_integration_status_v1";
       const HISTORY_MONACO_THEME_NAME = "runner-history-diff";
       const RUNNER_TRANSPARENT_LOGO_URL = "https://computer-agents.com/img/logos/runnertransparent.png";
+      const COMPUTER_AGENTS_CREATOR_PROFILE_URL = "/img/agent-profile-pics/ca-profilepic.jpg";
       const PLAYGROUND_GITHUB_LOGO_URL = "https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg";
       const PLAYGROUND_GITLAB_LOGO_URL = "https://upload.wikimedia.org/wikipedia/commons/e/e1/GitLab_logo.svg";
       const PLAYGROUND_GOOGLE_DRIVE_LOGO_URL = "https://upload.wikimedia.org/wikipedia/commons/1/12/Google_Drive_icon_%282020%29.svg";
@@ -42276,10 +36742,7 @@ ${ORGANIZATIONS_DOMAIN_SCRIPT_FRAGMENTS.constants}      const PLAYGROUND_CONNECT
         "connectorSavedAt",
       ];
       const INITIAL_THREAD_LAST_VISIT_STORAGE_KEY = "runner_playground_initial_thread_last_visited_at_v1";
-      const PLAYGROUND_NOTIFICATION_READ_STORAGE_PREFIX = "runner_demo_read_notifications_v1";
-      const PLAYGROUND_PERMISSION_NOTIFICATION_READ_STORAGE_KEY = "runner_demo_read_permission_notifications_v1";
-      const PLAYGROUND_HUMAN_TASK_NOTIFICATION_READ_STORAGE_KEY = "runner_demo_read_human_task_notifications_v1";
-      const PLAYGROUND_AGENTS_APP_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/agentsappicon.png")};
+${CONFIGURE_HOME_DOMAIN_SCRIPT_FRAGMENTS.constants}      const PLAYGROUND_AGENTS_APP_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/agentsappicon.png")};
       const PLAYGROUND_BROWSER_APP_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/browsericon.png")};
       const PLAYGROUND_FILES_APP_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/filesicon.png")};
       const PLAYGROUND_TERMINAL_APP_ICON_URL = ${JSON.stringify(aiosOrigin + "/img/logos/terminalicon.png")};
@@ -42371,24 +36834,7 @@ ${PLAYGROUND_BILLING_CATALOG_SCRIPT}
         pauseOnLimit: true,
         emailAlerts: true,
       };
-${INFERENCE_DOMAIN_SCRIPT_FRAGMENTS.constants}      const SETTINGS_API_KEY_SCOPE_PRESETS = {
-        full: {
-          label: "Full Access",
-          description: "Read, write, execute, and admin access.",
-          permissions: ["*"],
-        },
-        execute: {
-          label: "Execute Only",
-          description: "Run tasks and inspect results.",
-          permissions: ["threads:read", "threads:write", "execute"],
-        },
-        read: {
-          label: "Read Only",
-          description: "View projects, threads, and billing data.",
-          permissions: ["projects:read", "threads:read", "billing:read"],
-        },
-      };
-      const SETTINGS_TRIGGER_SOURCE_OPTIONS = [
+${INFERENCE_DOMAIN_SCRIPT_FRAGMENTS.constants}${API_KEYS_DOMAIN_SCRIPT_FRAGMENTS.scopePresets}      const SETTINGS_TRIGGER_SOURCE_OPTIONS = [
         { value: "github", label: "GitHub" },
         { value: "gitlab", label: "GitLab" },
         { value: "slack", label: "Slack" },
@@ -42520,81 +36966,8 @@ ${INFERENCE_DOMAIN_SCRIPT_FRAGMENTS.constants}      const SETTINGS_API_KEY_SCOPE
         writePendingStatusIndicatorIds(current.filter((value) => value !== id));
       }
 
-      function normalizeNotificationStorageId(value) {
-        return typeof value === "string" && value.trim() ? value.trim() : "";
-      }
-
-      function readStoredNotificationIds(key, storageType = "local") {
-        try {
-          const storage = storageType === "session" ? sessionStorage : localStorage;
-          const raw = storage.getItem(key);
-          const parsed = raw ? JSON.parse(raw) : [];
-          return Array.isArray(parsed)
-            ? parsed.map(normalizeNotificationStorageId).filter(Boolean)
-            : [];
-        } catch {
-          return [];
-        }
-      }
-
-      function writeStoredNotificationIds(key, ids, storageType = "local") {
-        try {
-          const storage = storageType === "session" ? sessionStorage : localStorage;
-          const uniqueIds = Array.from(new Set((Array.isArray(ids) ? ids : []).map(normalizeNotificationStorageId).filter(Boolean)));
-          storage.setItem(key, JSON.stringify(uniqueIds.slice(0, 500)));
-        } catch {}
-      }
-
-      function buildNotificationReadStorageKey(userId, email) {
-        const accountKey = String(userId || email || "anonymous")
-          .trim()
-          .toLowerCase()
-          .replace(/[^a-z0-9._:-]+/g, "_")
-          .slice(0, 160) || "anonymous";
-        return PLAYGROUND_NOTIFICATION_READ_STORAGE_PREFIX + ":" + accountKey;
-      }
-
-      function normalizeInAppNotificationRecord(value) {
-        if (!value || typeof value !== "object" || Array.isArray(value)) {
-          return null;
-        }
-        const id = typeof value.id === "string" ? value.id.trim() : "";
-        const html = typeof value.html === "string" ? value.html.trim() : "";
-        if (!id || !html) {
-          return null;
-        }
-        return {
-          id,
-          html,
-          createdAt: typeof value.createdAt === "string" ? value.createdAt : "",
-          expiresAt: typeof value.expiresAt === "string" ? value.expiresAt : "",
-          metadata: value.metadata && typeof value.metadata === "object" && !Array.isArray(value.metadata)
-            ? value.metadata
-            : {},
-        };
-      }
-
-      function normalizeTeamInvitationNotificationRecord(value) {
-        if (!value || typeof value !== "object" || Array.isArray(value)) {
-          return null;
-        }
-        const id = String(value.id || value.invitationId || "").trim();
-        if (!id) {
-          return null;
-        }
-        const teamName = String(value.teamName || value.team_name || "Team").trim() || "Team";
-        return {
-          id,
-          teamId: String(value.teamId || value.team_id || "").trim(),
-          teamName,
-          role: String(value.role || "create").trim() || "create",
-          invitedByName: String(value.invitedByName || value.invited_by_name || "").trim(),
-          invitedByEmail: String(value.invitedByEmail || value.invited_by_email || "").trim(),
-          createdAt: value.createdAt || value.created_at || "",
-          expiresAt: value.expiresAt || value.expires_at || "",
-        };
-      }
-
+${CONFIGURE_HOME_DOMAIN_SCRIPT_FRAGMENTS.storage}
+${CONFIGURE_HOME_DOMAIN_SCRIPT_FRAGMENTS.records}
 ${ORGANIZATIONS_DOMAIN_SCRIPT_FRAGMENTS.invitationNotifications}
       function readCachedIntegrationStatuses() {
         try {
@@ -43566,26 +37939,7 @@ ${INFERENCE_DOMAIN_SCRIPT_FRAGMENTS.modelOptions}
       }
 
 ${INFERENCE_DOMAIN_SCRIPT_FRAGMENTS.runtime}
-      function getSettingsApiKeyScopeLabel(permissions) {
-        const items = Array.isArray(permissions) ? permissions : [];
-        for (const preset of Object.values(SETTINGS_API_KEY_SCOPE_PRESETS)) {
-          if (
-            preset.permissions.length === items.length &&
-            preset.permissions.every((permission) => items.includes(permission))
-          ) {
-            return preset.label;
-          }
-        }
-        return items.length ? "Custom" : "Default";
-      }
-
-      function isSettingsSystemManagedKey(apiKeyRecord) {
-        const metadata = apiKeyRecord?.metadata && typeof apiKeyRecord.metadata === "object" && !Array.isArray(apiKeyRecord.metadata)
-          ? apiKeyRecord.metadata
-          : {};
-        return metadata.isDefault === true || typeof metadata.createdBy === "string" && metadata.createdBy.includes("provisioner");
-      }
-
+${API_KEYS_DOMAIN_SCRIPT_FRAGMENTS.helpers}
       function getSettingsTriggerSourceMeta(source) {
         switch (String(source || "").trim().toLowerCase()) {
           case "github":
@@ -45284,9 +39638,6 @@ ${METRONOME_SHELL_RUNTIME_SCRIPT}
       const PLAYGROUND_SPARK_AGENT_PROFILE_URL = "/img/agent-profile-pics/spark.webp";
       const PLAYGROUND_FORGE_AGENT_PROFILE_URL = "/img/agent-profile-pics/forge.webp";
       const PLAYGROUND_FOUNDRY_AGENT_PROFILE_URL = "/img/agent-profile-pics/foundry.webp";
-      const PLAYGROUND_SPARK_AGENT_BACKGROUND_URL = "/img/agent-backgrounds/spark.webp";
-      const PLAYGROUND_FORGE_AGENT_BACKGROUND_URL = "/img/agent-backgrounds/forge.webp";
-      const PLAYGROUND_FOUNDRY_AGENT_BACKGROUND_URL = "/img/agent-backgrounds/foundry.webp";
       const PLAYGROUND_AGENT_CREATOR_METADATA_ROLE = "agent_creator";
       const PLAYGROUND_AGENT_CREATOR_NAME = "Agent Creator";
       const PLAYGROUND_AGENT_CREATOR_DESCRIPTION = "Creates and improves ACP agent instructions from a requested use case.";
@@ -46153,43 +40504,6 @@ ${METRONOME_SHELL_RUNTIME_SCRIPT}
         }
 
         return PLAYGROUND_SPARK_AGENT_PROFILE_URL;
-      }
-
-      function getPlaygroundAgentBackgroundImageUrl(agent) {
-        const metadata = agent?.metadata && typeof agent.metadata === "object" && !Array.isArray(agent.metadata)
-          ? agent.metadata
-          : null;
-        const explicitBackgroundUrl = typeof metadata?.backgroundImageUrl === "string" && metadata.backgroundImageUrl.trim()
-          ? metadata.backgroundImageUrl.trim()
-          : typeof metadata?.backgroundUrl === "string" && metadata.backgroundUrl.trim()
-            ? metadata.backgroundUrl.trim()
-            : typeof metadata?.wallpaperUrl === "string" && metadata.wallpaperUrl.trim()
-              ? metadata.wallpaperUrl.trim()
-              : "";
-        if (explicitBackgroundUrl) {
-          return explicitBackgroundUrl;
-        }
-
-        const normalizedName = String(agent?.name || "").trim().toLowerCase();
-        const isBuiltinDefaultAgent = agent?.isDefault === true
-          || agent?.isSystem === true
-          || normalizedName === "spark"
-          || normalizedName === "forge"
-          || normalizedName === "foundry";
-
-        if (isBuiltinDefaultAgent && isPlaygroundAssistantAgent(agent)) {
-          return PLAYGROUND_SPARK_AGENT_BACKGROUND_URL;
-        }
-
-        if (isBuiltinDefaultAgent && isPlaygroundDeveloperAgent(agent)) {
-          return PLAYGROUND_FORGE_AGENT_BACKGROUND_URL;
-        }
-
-        if (isBuiltinDefaultAgent && isPlaygroundResearcherAgent(agent)) {
-          return PLAYGROUND_FOUNDRY_AGENT_BACKGROUND_URL;
-        }
-
-        return "";
       }
 
       function getPlaygroundAgentRunnerPhotoUrl(agent) {
@@ -57787,7 +52101,6 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
           return next;
         });
         const [environmentAnalyticsById, setEnvironmentAnalyticsById] = useState({});
-        const [environmentHomeAnalytics, setEnvironmentHomeAnalytics] = useState(null);
         const [environmentHomeCostSummaryByPeriod, setEnvironmentHomeCostSummaryByPeriod] = useState({});
         const [environmentHomeCostBreakdownByPeriod, setEnvironmentHomeCostBreakdownByPeriod] = useState({});
         const [environmentHomeChartSummariesByPeriod, setEnvironmentHomeChartSummariesByPeriod] = useState({});
@@ -57829,7 +52142,6 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
         const normalizedResourceBillingPreferences = normalizeDemoSettingsBillingPreferences(resourceBillingPreferences);
         const [loadingEnvironmentId, setLoadingEnvironmentId] = useState("");
         const [loadingEnvironmentAnalyticsId, setLoadingEnvironmentAnalyticsId] = useState("");
-        const [environmentHomeAnalyticsLoading, setEnvironmentHomeAnalyticsLoading] = useState(false);
         const [environmentHomeCostSummaryLoadingPeriod, setEnvironmentHomeCostSummaryLoadingPeriod] = useState("");
         const [environmentHomeCostBreakdownLoadingPeriod, setEnvironmentHomeCostBreakdownLoadingPeriod] = useState("");
         const [environmentHomeChartSummariesLoadingPeriod, setEnvironmentHomeChartSummariesLoadingPeriod] = useState("");
@@ -57904,6 +52216,23 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
         const [environmentHomeChartTimescale, setEnvironmentHomeChartTimescale] = useState(() => (
           normalizePlaygroundEnvironmentHomeChartPeriod(developServerOperationalMetricsPeriod)
         ));
+        const computersOverviewAnalyticsScopeKey = useMemo(() => {
+          let headerSignature = "";
+          try {
+            headerSignature = Array.from(new Headers(requestHeaders || {}).entries())
+              .sort(([left], [right]) => left.localeCompare(right))
+              .map(([key, value]) => key + ":" + value)
+              .join("|");
+          } catch {}
+          return String(backendUrl || "").replace(new RegExp("/+$"), "") + "|" + String(currentUserId || currentUserEmail || "session") + "|" + headerSignature;
+        }, [backendUrl, currentUserEmail, currentUserId, requestHeaders]);
+        const [computersOverviewAnalyticsState, setComputersOverviewAnalyticsState] = useState(() => ({
+          scopeKey: "",
+          dataByPeriod: {},
+          loadingPeriod: "",
+          errorsByPeriod: {},
+        }));
+        const computersOverviewAnalyticsFallbackScopeRef = useRef("");
         const updateEnvironmentHomeChartTimescale = useCallback((value) => {
           const normalizedPeriod = normalizePlaygroundEnvironmentHomeChartPeriod(value);
           setEnvironmentHomeChartTimescale(normalizedPeriod);
@@ -58079,7 +52408,6 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
         const [environmentBulkActionMenuClosing, setEnvironmentBulkActionMenuClosing] = useState(false);
         const [serverResourceActionMenuState, setServerResourceActionMenuState] = useState(null);
         const [environmentAnalyticsErrorById, setEnvironmentAnalyticsErrorById] = useState({});
-        const [environmentHomeAnalyticsError, setEnvironmentHomeAnalyticsError] = useState("");
         const [environmentHomeCostSummaryError, setEnvironmentHomeCostSummaryError] = useState("");
         const [environmentHomeCostBreakdownError, setEnvironmentHomeCostBreakdownError] = useState("");
         const [environmentHomeChartSummariesError, setEnvironmentHomeChartSummariesError] = useState("");
@@ -60152,41 +54480,6 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
             setLoadingEnvironmentAnalyticsId((current) => current === normalizedEnvironmentId ? "" : current);
           }
         }, [backendUrl, environmentAnalyticsById, requestHeaders]);
-
-        const loadEnvironmentHomeAnalytics = useCallback(async (options = {}) => {
-          const force = options?.force === true;
-          if (!force && environmentHomeAnalytics) {
-            return environmentHomeAnalytics;
-          }
-
-          setEnvironmentHomeAnalyticsLoading(true);
-          setEnvironmentHomeAnalyticsError("");
-
-          try {
-            const response = await fetch(
-              buildPlaygroundEnvironmentHomeAnalyticsUrl(backendUrl),
-              {
-                method: "GET",
-                headers: requestHeaders,
-              }
-            );
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) {
-              throw new Error(data?.message || data?.error || "Failed to load overview analytics.");
-            }
-            const normalizedRecord = {
-              ...data,
-              loadedAt: new Date().toISOString(),
-            };
-            setEnvironmentHomeAnalytics(normalizedRecord);
-            return normalizedRecord;
-          } catch (error) {
-            setEnvironmentHomeAnalyticsError(error instanceof Error ? error.message : "Failed to load overview analytics.");
-            return null;
-          } finally {
-            setEnvironmentHomeAnalyticsLoading(false);
-          }
-        }, [backendUrl, environmentHomeAnalytics, requestHeaders]);
 
         const loadEnvironmentHomeCostSummary = useCallback(async (period, options = {}) => {
           const normalizedPeriod = normalizePlaygroundEnvironmentHomeChartPeriod(period);
@@ -62511,8 +56804,13 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
               message: "Container stopped",
             });
           }
+          invalidateComputersOverviewAnalytics({
+            backendUrl,
+            headers: requestHeaders,
+            identity: currentUserId || currentUserEmail || "session",
+          });
           return true;
-        }, [backendUrl, requestHeaders]);
+        }, [backendUrl, currentUserEmail, currentUserId, requestHeaders]);
 
         useEffect(() => {
           setEnvironmentDetailsById((current) => {
@@ -62754,87 +57052,80 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
 
         useEffect(() => {
           if (resourceMode !== "computers" || !isHomeViewActive) {
-            return;
+            return undefined;
           }
-          if (environmentHomeAnalytics || environmentHomeAnalyticsLoading) {
-            return;
-          }
-          void loadEnvironmentHomeAnalytics();
-        }, [environmentHomeAnalytics, environmentHomeAnalyticsLoading, isHomeViewActive, loadEnvironmentHomeAnalytics, resourceMode]);
+          const period = normalizePlaygroundEnvironmentHomeChartPeriod(environmentHomeChartTimescale);
+          const requestOptions = {
+            backendUrl,
+            headers: requestHeaders,
+            identity: currentUserId || currentUserEmail || "session",
+            period,
+          };
+          const cached = readCachedComputersOverviewAnalytics(requestOptions);
+          setComputersOverviewAnalyticsState((current) => {
+            const isSameScope = current.scopeKey === computersOverviewAnalyticsScopeKey;
+            const currentDataByPeriod = isSameScope ? current.dataByPeriod : {};
+            return {
+              scopeKey: computersOverviewAnalyticsScopeKey,
+              dataByPeriod: cached?.data
+                ? { ...currentDataByPeriod, [period]: cached.data }
+                : currentDataByPeriod,
+              loadingPeriod: cached?.data ? "" : period,
+              errorsByPeriod: isSameScope ? { ...current.errorsByPeriod, [period]: "" } : {},
+            };
+          });
 
-        useEffect(() => {
-          if (resourceMode !== "computers" || !isHomeViewActive) {
-            return;
-          }
-          const normalizedPeriod = normalizePlaygroundEnvironmentHomeChartPeriod(environmentHomeChartTimescale);
-          const currentSummary = environmentHomeCostSummaryByPeriod[normalizedPeriod];
-          if (currentSummary || environmentHomeCostSummaryLoadingPeriod === normalizedPeriod) {
-            return;
-          }
-          void loadEnvironmentHomeCostSummary(normalizedPeriod);
-        }, [
-          environmentHomeChartTimescale,
-          environmentHomeCostSummaryByPeriod,
-          environmentHomeCostSummaryLoadingPeriod,
-          isHomeViewActive,
-          loadEnvironmentHomeCostSummary,
-          resourceMode,
-        ]);
+          let isActive = true;
+          void fetchComputersOverviewAnalytics(requestOptions).then((data) => {
+            if (!isActive) return;
+            computersOverviewAnalyticsFallbackScopeRef.current = "";
+            setComputersOverviewAnalyticsState((current) => {
+              if (current.scopeKey !== computersOverviewAnalyticsScopeKey) return current;
+              return {
+                ...current,
+                dataByPeriod: { ...current.dataByPeriod, [period]: data },
+                loadingPeriod: current.loadingPeriod === period ? "" : current.loadingPeriod,
+                errorsByPeriod: { ...current.errorsByPeriod, [period]: "" },
+              };
+            });
+          }).catch((error) => {
+            if (!isActive) return;
+            const errorMessage = error instanceof Error ? error.message : "Failed to load computer analytics.";
+            const shouldUseLegacyFallback = error instanceof ComputersOverviewAnalyticsRequestError
+              && (error.status === 404 || error.status === 501);
+            setComputersOverviewAnalyticsState((current) => {
+              if (current.scopeKey !== computersOverviewAnalyticsScopeKey) return current;
+              return {
+                ...current,
+                loadingPeriod: current.loadingPeriod === period ? "" : current.loadingPeriod,
+                errorsByPeriod: { ...current.errorsByPeriod, [period]: shouldUseLegacyFallback ? "" : errorMessage },
+              };
+            });
+            const fallbackKey = computersOverviewAnalyticsScopeKey + "|" + period;
+            if (shouldUseLegacyFallback && computersOverviewAnalyticsFallbackScopeRef.current !== fallbackKey) {
+              computersOverviewAnalyticsFallbackScopeRef.current = fallbackKey;
+              void loadEnvironmentHomeCostSummary(period);
+              void loadEnvironmentHomeCostBreakdown(period);
+              void loadEnvironmentHomeChartSummaries(period);
+              void loadEnvironmentHomeChartBreakdowns(period);
+            }
+          });
 
-        useEffect(() => {
-          if (resourceMode !== "computers" || !isHomeViewActive) {
-            return;
-          }
-          const normalizedPeriod = normalizePlaygroundEnvironmentHomeChartPeriod(environmentHomeChartTimescale);
-          const currentBreakdown = environmentHomeCostBreakdownByPeriod[normalizedPeriod];
-          if (currentBreakdown || environmentHomeCostBreakdownLoadingPeriod === normalizedPeriod) {
-            return;
-          }
-          void loadEnvironmentHomeCostBreakdown(normalizedPeriod);
+          return () => {
+            isActive = false;
+          };
         }, [
-          environmentHomeChartTimescale,
-          environmentHomeCostBreakdownByPeriod,
-          environmentHomeCostBreakdownLoadingPeriod,
-          isHomeViewActive,
-          loadEnvironmentHomeCostBreakdown,
-          resourceMode,
-        ]);
-
-        useEffect(() => {
-          if (resourceMode !== "computers" || !isHomeViewActive) {
-            return;
-          }
-          const normalizedPeriod = normalizePlaygroundEnvironmentHomeChartPeriod(environmentHomeChartTimescale);
-          const currentSummaries = environmentHomeChartSummariesByPeriod[normalizedPeriod];
-          if (Array.isArray(currentSummaries) || environmentHomeChartSummariesLoadingPeriod === normalizedPeriod) {
-            return;
-          }
-          void loadEnvironmentHomeChartSummaries(normalizedPeriod);
-        }, [
-          environmentHomeChartSummariesByPeriod,
-          environmentHomeChartSummariesLoadingPeriod,
-          environmentHomeChartTimescale,
-          isHomeViewActive,
-          loadEnvironmentHomeChartSummaries,
-          resourceMode,
-        ]);
-
-        useEffect(() => {
-          if (resourceMode !== "computers" || !isHomeViewActive) {
-            return;
-          }
-          const normalizedPeriod = normalizePlaygroundEnvironmentHomeChartPeriod(environmentHomeChartTimescale);
-          const currentBreakdowns = environmentHomeChartBreakdownsByPeriod[normalizedPeriod];
-          if (Array.isArray(currentBreakdowns) || environmentHomeChartBreakdownsLoadingPeriod === normalizedPeriod) {
-            return;
-          }
-          void loadEnvironmentHomeChartBreakdowns(normalizedPeriod);
-        }, [
-          environmentHomeChartBreakdownsByPeriod,
-          environmentHomeChartBreakdownsLoadingPeriod,
+          backendUrl,
+          computersOverviewAnalyticsScopeKey,
+          currentUserEmail,
+          currentUserId,
           environmentHomeChartTimescale,
           isHomeViewActive,
           loadEnvironmentHomeChartBreakdowns,
+          loadEnvironmentHomeChartSummaries,
+          loadEnvironmentHomeCostBreakdown,
+          loadEnvironmentHomeCostSummary,
+          requestHeaders,
           resourceMode,
         ]);
 
@@ -68941,14 +63232,14 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
             );
         }
 
-        async function handleDeleteServer(serverId) {
+	        async function handleDeleteServer(serverId, options = {}) {
           if (!serverId || serverId === PLAYGROUND_SERVER_DRAFT_ID) {
             return;
           }
           if (resourceTemplatePreviewServerRecordById[serverId] || (draftServer?.id === serverId && isSelectedServerTemplatePreview)) {
             return;
           }
-          if (!window.confirm("Delete this server?")) {
+	          if (!options?.skipConfirmation && !window.confirm("Delete this server?")) {
             return;
           }
 
@@ -68968,8 +63259,8 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
               throw new Error(data?.message || data?.error || "Failed to delete server.");
             }
 
-            const nextServers = servers.filter((server) => server.id !== serverId);
-            setServers(nextServers);
+	            const nextServers = servers.filter((server) => server.id !== serverId);
+	            setServers((current) => current.filter((server) => server.id !== serverId));
             setServerDetailsById((current) => {
               const next = { ...current };
               delete next[serverId];
@@ -69094,14 +63385,14 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
           }
         }
 
-        async function handleDeleteDatabase(databaseId) {
+	        async function handleDeleteDatabase(databaseId, options = {}) {
           if (!databaseId || databaseId === PLAYGROUND_DATABASE_DRAFT_ID) {
             return;
           }
           if (resourceTemplatePreviewDatabaseRecordById[databaseId] || (draftDatabase?.id === databaseId && isSelectedDatabaseTemplatePreview)) {
             return;
           }
-          if (!window.confirm("Delete this database and all of its collections/documents?")) {
+	          if (!options?.skipConfirmation && !window.confirm("Delete this database and all of its collections/documents?")) {
             return;
           }
 
@@ -69121,9 +63412,12 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
               throw new Error(data?.message || data?.error || "Failed to delete database.");
             }
 
-            const nextDatabases = databases.filter((database) => database.id !== databaseId);
-            writePlaygroundDatabaseListCache(databaseListScopeKeyRef.current, nextDatabases);
-            setDatabases(nextDatabases);
+	            const nextDatabases = databases.filter((database) => database.id !== databaseId);
+	            setDatabases((current) => {
+	              const next = current.filter((database) => database.id !== databaseId);
+	              writePlaygroundDatabaseListCache(databaseListScopeKeyRef.current, next);
+	              return next;
+	            });
             setDatabaseDetailsById((current) => {
               const next = { ...current };
               delete next[databaseId];
@@ -86678,6 +80972,119 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
         }
 
         function renderEnvironmentsHome(overviewListContent = null) {
+	          const shouldRenderCanonicalDevelopResourceOverview = embeddedInResources
+	            && isServersMode
+	            && Boolean(normalizedEmbeddedServerKind);
+	          if (shouldRenderCanonicalDevelopResourceOverview) {
+	            const canonicalPeriod = normalizePlaygroundEnvironmentHomeChartPeriod(developServerOperationalMetricsPeriod);
+	            const metricsMatchCurrentResource = String(developServerOperationalMetrics?.scopeKind || "").trim() === normalizedEmbeddedServerKind
+	              && normalizePlaygroundEnvironmentHomeChartPeriod(developServerOperationalMetrics?.period) === canonicalPeriod;
+	            if (normalizedEmbeddedServerKind === "voice_agent") {
+	              const voiceRows = createDevelopVoiceAgentOverviewRows(
+	                voiceAgentRecords,
+	                voiceAgentDraftsById,
+	                voiceAgentsState,
+	                voiceAgentSessionResultsById
+	              );
+	              return React.createElement(DevelopVoiceAgentsOverviewPage, {
+	                rows: voiceRows,
+	                period: canonicalPeriod,
+	                onPeriodChange: onDevelopServerOperationalMetricsPeriodChange || updateEnvironmentHomeChartTimescale,
+	                controlsPortalId: "playground-resource-overview-controls",
+	                operationalMetrics: metricsMatchCurrentResource ? developServerOperationalMetrics : null,
+	                analyticsLoading: Boolean(developServerOperationalMetricsLoading || !metricsMatchCurrentResource),
+	                analyticsError: metricsMatchCurrentResource ? developServerOperationalMetricsError : "",
+	                loading: Boolean(voiceAgentsLoading && voiceRows.length === 0),
+	                error: voiceAgentsState.error,
+	                message: voiceAgentsState.message,
+	                modeOptions: PLAYGROUND_VOICE_AGENT_MODE_OPTIONS,
+	                modelOptions: PLAYGROUND_VOICE_AGENT_MODEL_OPTIONS,
+	                onRefresh: () => void loadVoiceAgents({ force: true }),
+	                onChange: (row, patch) => updateVoiceAgentDraft(row.id, {
+	                  ...(Object.prototype.hasOwnProperty.call(patch, "mode") ? { voiceMode: patch.mode } : {}),
+	                  ...(Object.prototype.hasOwnProperty.call(patch, "model") ? { voiceModel: patch.model } : {}),
+	                  ...(Object.prototype.hasOwnProperty.call(patch, "voiceId") ? { voiceId: patch.voiceId } : {}),
+	                  ...(Object.prototype.hasOwnProperty.call(patch, "languageHint") ? { voiceLanguageHint: patch.languageHint } : {}),
+	                  ...(Object.prototype.hasOwnProperty.call(patch, "instructions") ? { voiceInstructions: patch.instructions } : {}),
+	                }),
+	                onSave: (row) => saveVoiceAgentConfig(row.id),
+	                onTest: async (row) => {
+	                  const savedRecord = await saveVoiceAgentConfig(row.id);
+	                  if (savedRecord) await createVoiceAgentTestSession(row.id);
+	                },
+	                onProvision: async (row) => {
+	                  const savedRecord = await saveVoiceAgentConfig(row.id);
+	                  if (savedRecord) await provisionVoiceAgentPhoneNumber(row.id);
+	                },
+	                onDisablePhone: (row) => disableVoiceAgentPhoneNumber(row.id),
+	                onOpenThread: typeof onThreadOpen === "function" ? onThreadOpen : undefined,
+	              });
+	            }
+	            const sourceResources = visibleDisplayServerResources.filter((resource) => (
+	              resource?.id !== PLAYGROUND_SERVER_DRAFT_ID
+	              && resource?.id !== PLAYGROUND_DATABASE_DRAFT_ID
+	            ));
+	            const overviewRows = createDevelopResourceOverviewRows(
+	              sourceResources,
+	              normalizedEmbeddedServerKind,
+	              {
+	                formatDate: formatPlaygroundFileDate,
+	                formatExactDate: formatPlaygroundExactDate,
+	              }
+	            );
+	            const sourceByRowId = new Map(sourceResources.map((resource) => [
+	              (resource?.resourceType === "database" ? "database:" : "server:") + String(resource?.id || ""),
+	              resource,
+	            ]));
+	            const resolveSourceResource = (row) => sourceByRowId.get(row.id) || null;
+	            const isCatalogLoading = normalizedEmbeddedServerKind === "database"
+	              ? (!hasLoadedDatabases || databaseListLoading)
+	              : (!hasLoadedServers || serverListLoading);
+	            const deleteOverviewRows = async (rows) => {
+	              const targets = rows.map((row) => ({ row, resource: resolveSourceResource(row) })).filter((entry) => entry.resource);
+	              if (!targets.length) return;
+	              if (targets.length > 1 && !window.confirm("Delete " + String(targets.length) + " selected resources?")) return;
+	              for (const target of targets) {
+	                if (target.row.resourceType === "database") {
+	                  await handleDeleteDatabase(target.row.sourceId, { skipConfirmation: targets.length > 1 });
+	                } else {
+	                  await handleDeleteServer(target.row.sourceId, { skipConfirmation: targets.length > 1 });
+	                }
+	              }
+	            };
+	            return React.createElement(DevelopResourceOverviewRoute, {
+	              kind: normalizedEmbeddedServerKind,
+	              rows: overviewRows,
+	              period: canonicalPeriod,
+	              onPeriodChange: onDevelopServerOperationalMetricsPeriodChange || updateEnvironmentHomeChartTimescale,
+	              controlsPortalId: "playground-resource-overview-controls",
+	              operationalMetrics: metricsMatchCurrentResource ? developServerOperationalMetrics : null,
+	              analyticsLoading: Boolean(developServerOperationalMetricsLoading || !metricsMatchCurrentResource),
+	              analyticsError: metricsMatchCurrentResource ? developServerOperationalMetricsError : "",
+	              loading: overviewRows.length === 0 && isCatalogLoading,
+	              mutating: Boolean(serverSaveState.isSaving || databaseSaveState.isSaving),
+	              onOpen: (row) => row.resourceType === "database" ? handleDatabaseSelect(row.sourceId) : handleServerSelect(row.sourceId),
+	              onCreate: () => handleCreateServer(normalizedEmbeddedServerKind),
+	              onRename: (row) => {
+	                const resource = resolveSourceResource(row);
+	                if (!resource) return;
+	                if (row.resourceType === "database") openDatabaseRenameDialog(resource);
+	                else openServerRenameDialog(resource);
+	              },
+	              onCopy: (row) => {
+	                const resource = resolveSourceResource(row);
+	                if (resource) openServerResourceCopyComposer(resource);
+	              },
+	              onDelete: (rows) => void deleteOverviewRows(rows),
+	              onPrefetch: (row) => {
+	                if (row.resourceType === "database") {
+	                  prefetchDatabaseBootstrap(row.sourceId);
+	                } else if (["function", "web_app", "auth", "agent_runtime", "secrets", "payments"].includes(row.kind)) {
+	                  void loadServerAnalytics(row.sourceId, { period: "day" });
+	                }
+	              },
+	            });
+	          }
           const renderHomeResourceIcon = (item, className) => {
             if (item?.resourceType === "computer") {
               return React.createElement(HardDrive, { className, strokeWidth: 1.8 });
@@ -87129,6 +81536,11 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
 
           const normalizedEnvironmentHomeChartTimescale = normalizePlaygroundEnvironmentHomeChartPeriod(environmentHomeChartTimescale);
           const homeActivityBuckets = buildPlaygroundEnvironmentHomeActivityBuckets(normalizedEnvironmentHomeChartTimescale);
+          const compactComputerAnalyticsSnapshot = computersOverviewAnalyticsState.scopeKey === computersOverviewAnalyticsScopeKey
+            ? computersOverviewAnalyticsState.dataByPeriod?.[normalizedEnvironmentHomeChartTimescale] || null
+            : null;
+          const hasCompactComputerAnalytics = Array.isArray(compactComputerAnalyticsSnapshot?.buckets)
+            && compactComputerAnalyticsSnapshot.buckets.length > 0;
 
           const currentEnvironmentHomeCostSummary = environmentHomeCostSummaryByPeriod[normalizedEnvironmentHomeChartTimescale] || null;
           const currentEnvironmentHomeCostBreakdown = environmentHomeCostBreakdownByPeriod[normalizedEnvironmentHomeChartTimescale] || null;
@@ -87245,636 +81657,8 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
 	            : environmentOverviewPeriodLabel + " cost by Computer Type";
 	          const environmentOverviewChartLabel = isServersMode ? "server" : "computer";
 	          const activeResourcesOverviewHomeTab = getActiveResourcesOverviewHomeTab();
-	          const isDevelopServerKindHome = embeddedInResources && isServersMode && Boolean(normalizedEmbeddedServerKind);
-	          const isDevelopConfigureHome = embeddedInResources && (!isServersMode || Boolean(normalizedEmbeddedServerKind));
-	          const developServerKindTitle = embeddedServerKindPluralLabel || "Servers";
-	          const developServerKindSingularTitle = embeddedServerKindLabel || developServerKindTitle.replace(/s$/, "");
-	          const developServerKindDocumentationPathByKind = {
-	            web_app: "/developers/libraries/web-apps",
-	            function: "/developers/libraries/functions",
-	            database: "/developers/libraries/databases",
-	            auth: "/developers/libraries/authentication",
-	            agent_runtime: "/developers/libraries/agent-runtimes",
-	            voice_agent: "/developers/libraries/voice-agents",
-	            secrets: "/developers/libraries/secrets",
-	            payments: "/developers/libraries/payments",
-	          };
-	          const developServerKindDocumentationUrl = ${JSON.stringify(aiosOrigin)} + (developServerKindDocumentationPathByKind[normalizedEmbeddedServerKind] || "/developers");
-	          const developConfigureTitle = isDevelopServerKindHome ? developServerKindTitle : "Computers";
-	          const developConfigureSingularTitle = isDevelopServerKindHome ? developServerKindSingularTitle : "Computer";
-	          const developConfigureCount = Math.max(0, Math.round(Number(
-	            isDevelopServerKindHome
-	              ? (normalizedEmbeddedServerKind === "voice_agent" ? filteredVoiceAgentRecords?.length : filteredOverviewServerResources?.length)
-	              : filteredOverviewEnvironments?.length
-	          ) || 0));
-	          const formatDevelopResourceOperationalMetricValue = (value) => {
-	            const numericValue = Math.max(0, Math.round(Number.isFinite(Number(value)) ? Number(value) : 0));
-	            if (numericValue >= 1000000) {
-	              return (numericValue / 1000000).toFixed(numericValue >= 10000000 ? 0 : 1).replace(".0", "") + "M";
-	            }
-	            if (numericValue >= 1000) {
-	              return (numericValue / 1000).toFixed(numericValue >= 10000 ? 0 : 1).replace(".0", "") + "k";
-	            }
-	            return numericValue.toLocaleString("en-US");
-	          };
-	          const buildDevelopResourceSvgLinePath = (points) => {
-	            if (!Array.isArray(points) || points.length === 0) {
-	              return "";
-	            }
-	            return points.map((point, index) => (index === 0 ? "M " : "L ") + point.x.toFixed(2) + " " + point.y.toFixed(2)).join(" ");
-	          };
-	          const buildDevelopResourceMetricHourLabels = () => {
-	            const formatter = new Intl.DateTimeFormat("en-US", { hour: "numeric" });
-	            const anchor = new Date();
-	            anchor.setMinutes(0, 0, 0);
-	            return Array.from({ length: 24 }, (_, index) => {
-	              const date = new Date(anchor);
-	              date.setHours(anchor.getHours() - (23 - index));
-	              return formatter.format(date);
-	            });
-	          };
-	          const developResourceOperationalLabels = Array.isArray(developServerOperationalMetrics?.labels) && developServerOperationalMetrics.labels.length
-	            ? developServerOperationalMetrics.labels
-	            : buildDevelopResourceMetricHourLabels();
-	          const getDevelopResourceOperationalSeries = (key) => {
-	            const values = developServerOperationalMetrics?.series?.[key];
-	            return Array.isArray(values) && values.length === developResourceOperationalLabels.length
-	              ? values.map((value) => Math.max(0, Number(value || 0)))
-	              : developResourceOperationalLabels.map(() => 0);
-	          };
-	          const formatDevelopResourceOperationalTabValue = (tab, value) => {
-	            const formatted = formatDevelopResourceOperationalMetricValue(value);
-	            return tab?.valueSuffix ? formatted + " " + tab.valueSuffix : formatted;
-	          };
-	          const buildDevelopServerKindSharedMetricTabs = (resourceCountKey, resourceLabel) => [
-	            {
-	              id: "compute-tokens",
-	              key: "computeTokens",
-	              label: "Usage cost",
-	              title: "Usage cost",
-	              tone: "compute",
-	              legend: "USD credits",
-	              resourceCountKey,
-	              valueSuffix: "",
-	              emptyText: "No usage cost in the last 24 hours",
-	            },
-	            {
-	              id: "resources",
-	              key: "resources",
-	              label: "Resources",
-	              title: "Resources",
-	              tone: "resources",
-	              legend: resourceLabel,
-	              resourceCountKey,
-	              emptyText: "No resources in the last 24 hours",
-	            },
-	            {
-	              id: "errors",
-	              key: "errors",
-	              label: "Errors",
-	              title: "Errors",
-	              tone: "errors",
-	              legend: "Errors",
-	              resourceCountKey,
-	              emptyText: "No errors in the last 24 hours",
-	            },
-	          ];
-	          const getDevelopServerKindOperationalMetricTabs = () => {
-	            if (normalizedEmbeddedServerKind === "web_app") {
-	              return [
-	                {
-	                  id: "hosting-requests",
-	                  key: "hostingRequests",
-	                  label: "Hosting Requests",
-	                  title: "Hosting Requests",
-	                  tone: "requests",
-	                  legend: "Web apps",
-	                  resourceCountKey: "webApps",
-	                  emptyText: "No hosting requests in the last 24 hours",
-	                },
-	                ...buildDevelopServerKindSharedMetricTabs("webApps", "Web apps"),
-	              ];
-	            }
-	            if (normalizedEmbeddedServerKind === "function") {
-	              return [
-	                {
-	                  id: "function-calls",
-	                  key: "functionCalls",
-	                  label: "Function Calls",
-	                  title: "Function Calls",
-	                  tone: "latency",
-	                  legend: "Functions",
-	                  resourceCountKey: "functions",
-	                  emptyText: "No function calls in the last 24 hours",
-	                },
-	                ...buildDevelopServerKindSharedMetricTabs("functions", "Functions"),
-	              ];
-	            }
-	            if (normalizedEmbeddedServerKind === "database") {
-	              return [
-	                {
-	                  id: "database-reads",
-	                  key: "databaseReads",
-	                  label: "Database Reads",
-	                  title: "Database Reads",
-	                  tone: "reads",
-	                  legend: "Reads",
-	                  resourceCountKey: "databases",
-	                  emptyText: "No database reads in the last 24 hours",
-	                },
-	                {
-	                  id: "database-writes",
-	                  key: "databaseWrites",
-	                  label: "Database Writes",
-	                  title: "Database Writes",
-	                  tone: "writes",
-	                  legend: "Writes",
-	                  resourceCountKey: "databases",
-	                  emptyText: "No database writes in the last 24 hours",
-	                },
-	                ...buildDevelopServerKindSharedMetricTabs("databases", "Databases"),
-	              ];
-	            }
-	            if (normalizedEmbeddedServerKind === "agent_runtime") {
-	              return [
-	                {
-	                  id: "runtime-runs",
-	                  key: "agentRuntimeRuns",
-	                  label: "Runtime Runs",
-	                  title: "Runtime Runs",
-	                  tone: "success",
-	                  legend: "Agent runtime",
-	                  resourceCountKey: "agentRuntimes",
-	                  emptyText: "No runtime runs in the last 24 hours",
-	                },
-	                ...buildDevelopServerKindSharedMetricTabs("agentRuntimes", "Agent runtimes"),
-	              ];
-	            }
-	            if (normalizedEmbeddedServerKind === "voice_agent") {
-	              return [
-	                {
-	                  id: "voice-calls",
-	                  key: "voiceCalls",
-	                  label: "Voice Calls",
-	                  title: "Voice Calls",
-	                  tone: "success",
-	                  legend: "Calls",
-	                  resourceCountKey: "voiceAgents",
-	                  emptyText: "No voice calls in the last 24 hours",
-	                },
-	                {
-	                  id: "voice-minutes",
-	                  key: "voiceMinutes",
-	                  label: "Voice Minutes",
-	                  title: "Voice Minutes",
-	                  tone: "latency",
-	                  legend: "Minutes",
-	                  resourceCountKey: "voiceAgents",
-	                  emptyText: "No voice minutes in the last 24 hours",
-	                },
-	                ...buildDevelopServerKindSharedMetricTabs("voiceAgents", "Voice agents"),
-	              ];
-	            }
-	            if (normalizedEmbeddedServerKind === "secrets") {
-	              return [
-	                {
-	                  id: "secret-reads",
-	                  key: "secretReads",
-	                  label: "Secret Reads",
-	                  title: "Secret Reads",
-	                  tone: "success",
-	                  legend: "Secrets",
-	                  resourceCountKey: "secrets",
-	                  emptyText: "No secret reads in the last 24 hours",
-	                },
-	                ...buildDevelopServerKindSharedMetricTabs("secrets", "Secrets"),
-	              ];
-	            }
-		            if (normalizedEmbeddedServerKind === "auth") {
-		              return [
-		                {
-		                  id: "auth-events",
-		                  key: "authEvents",
-		                  label: "Authentication Events",
-		                  title: "Authentication Events",
-		                  tone: "success",
-		                  legend: "Authentication",
-		                  resourceCountKey: "auth",
-		                  emptyText: "No authentication events in the last 24 hours",
-		                },
-		                ...buildDevelopServerKindSharedMetricTabs("auth", "Authentication"),
-		              ];
-		            }
-	            if (normalizedEmbeddedServerKind === "payments") {
-	              return [
-	                {
-	                  id: "payment-checkouts",
-	                  key: "paymentCheckoutSessions",
-	                  label: "Checkout Sessions",
-	                  title: "Checkout Sessions",
-	                  tone: "success",
-	                  legend: "Payments",
-	                  resourceCountKey: "payments",
-	                  emptyText: "No checkout sessions in the last 24 hours",
-	                },
-	                {
-	                  id: "resources",
-	                  key: "resources",
-	                  label: "Payments",
-	                  title: "Payments",
-	                  tone: "resources",
-	                  legend: "Payments",
-	                  resourceCountKey: "payments",
-	                  emptyText: "No payments resources in the last 24 hours",
-	                },
-	                {
-	                  id: "errors",
-	                  key: "errors",
-	                  label: "Errors",
-	                  title: "Errors",
-	                  tone: "errors",
-	                  legend: "Errors",
-	                  resourceCountKey: "payments",
-	                  emptyText: "No errors in the last 24 hours",
-	                },
-	              ];
-	            }
-	            return [
-	              {
-	                id: "api-requests",
-	                key: "apiRequests",
-	                label: "API Requests",
-	                title: "API Requests",
-	                tone: "success",
-	                legend: "APIs",
-	                resourceCountKey: "apis",
-	                emptyText: "No API requests in the last 24 hours",
-	              },
-	              ...buildDevelopServerKindSharedMetricTabs("apis", "APIs"),
-	            ];
-	          };
-	          const developServerKindOperationalMetricTabs = getDevelopServerKindOperationalMetricTabs();
-	          const activeDevelopServerKindOperationalMetric = developServerKindOperationalMetricTabs.find((tab) => tab.id === developServerMetricsChartTab)
-	            || developServerKindOperationalMetricTabs[0];
-	          const setDevelopServerKindMetricTab = typeof onDevelopServerMetricsChartTabChange === "function"
-	            ? onDevelopServerMetricsChartTabChange
-	            : () => {};
-	          const toggleDevelopServerKindAnalyticsMenu = () => {
-	            if (typeof onDevelopAnalyticsMenuOpenChange === "function") {
-	              onDevelopAnalyticsMenuOpenChange((current) => !current);
-	            }
-	          };
-	          const closeDevelopServerKindAnalyticsMenu = () => {
-	            if (typeof onDevelopAnalyticsMenuOpenChange === "function") {
-	              onDevelopAnalyticsMenuOpenChange(false);
-	            }
-	          };
-	          const openDevelopServerKindUsage = () => {
-	            closeDevelopServerKindAnalyticsMenu();
-	            if (typeof onOpenSettingsUsage === "function") {
-	              onOpenSettingsUsage();
-	            }
-	          };
-	          const getDevelopServerKindOperationalChartSeries = (metric) => {
-	            const topSeries = metric?.key && metric.key !== "resources"
-	              ? developServerOperationalMetrics?.topResourceSeries?.[metric.key]
-	              : null;
-	            const normalizedTopSeries = Array.isArray(topSeries)
-	              ? topSeries.filter((entry) => Math.max(0, Number(entry?.total || 0)) > 0).slice(0, 4)
-	              : [];
-	            if (normalizedTopSeries.length > 0) {
-	              return normalizedTopSeries.map((entry, index) => ({
-	                key: String(entry?.id || metric.key + ":" + index),
-	                label: String(entry?.label || metric.legend || metric.label || "Resource"),
-	                tone: "resource-" + String((index % 4) + 1),
-	                values: Array.isArray(entry?.values) && entry.values.length === developResourceOperationalLabels.length
-	                  ? entry.values.map((value) => Math.max(0, Number(value || 0)))
-	                  : developResourceOperationalLabels.map(() => 0),
-	              }));
-	            }
-	            return [{
-	              key: metric.key,
-	              label: metric.legend || metric.label,
-	              tone: metric.tone,
-	              values: getDevelopResourceOperationalSeries(metric.key),
-	            }];
-	          };
-	          const renderDevelopServerKindOperationalMetrics = () => {
-	            const activeChartSeries = getDevelopServerKindOperationalChartSeries(activeDevelopServerKindOperationalMetric);
-	            const activeResourceCount = Math.max(0, Math.round(Number(
-	              developServerOperationalMetrics?.resourceCounts?.[activeDevelopServerKindOperationalMetric.resourceCountKey]
-	              ?? developConfigureCount
-	              ?? 0
-	            ) || 0));
-	            return React.createElement("section", {
-	              className: "playground-environments-home-metrics playground-develop-server-metrics playground-develop-server-kind-metrics playground-develop-server-kind-operational-metrics",
-	            },
-	              React.createElement("div", { className: "playground-develop-server-metrics-title-row" },
-	                React.createElement("h2", { className: "playground-develop-server-metrics-title" }, "Analytics"),
-	                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-develop-server-metrics-menu-shell" },
-	                  React.createElement("button", {
-	                    type: "button",
-	                    className: "playground-content-menu-button",
-	                    "aria-label": "Analytics options",
-	                    "aria-expanded": developAnalyticsMenuOpen ? "true" : "false",
-	                    onClick: toggleDevelopServerKindAnalyticsMenu,
-	                  }, React.createElement(Ellipsis, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
-	                  developAnalyticsMenuOpen
-	                    ? React.createElement(PlatformPopupSurface, {
-	                        className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-	                      },
-	                        React.createElement("button", {
-	                          type: "button",
-	                          className: "tb-popup-row",
-	                          onClick: openDevelopServerKindUsage,
-	                        },
-	                          React.createElement(ChartNoAxesColumnIncreasing, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-	                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-	                            React.createElement("span", null, "Show Usage")
-	                          )
-	                        )
-	                      )
-	                    : null
-	                )
-	              ),
-	              React.createElement("div", { className: "playground-tasks-detail-facts" },
-	                React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-	                  React.createElement("div", { className: "playground-database-overview" },
-	                    React.createElement("div", { className: "playground-database-overview-chart-block playground-settings-usage-chart-block playground-develop-server-metrics-chart-block" },
-	                      React.createElement("div", {
-	                        className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis playground-settings-usage-chart-kpis playground-develop-server-metrics-kpis",
-	                        style: { gridTemplateColumns: "repeat(" + String(Math.max(1, developServerKindOperationalMetricTabs.length)) + ", minmax(0, 1fr))" },
-	                      },
-	                        developServerKindOperationalMetricTabs.map((tab) =>
-	                          React.createElement("button", {
-	                            key: tab.id,
-	                            type: "button",
-	                            className: "playground-project-overview-summary-kpi playground-settings-usage-chart-kpi playground-develop-server-metrics-kpi" + (activeDevelopServerKindOperationalMetric.id === tab.id ? " is-active" : ""),
-	                            onClick: () => setDevelopServerKindMetricTab(tab.id),
-	                          },
-	                            React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
-	                              React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, tab.label)
-	                            ),
-	                            React.createElement("div", { className: "playground-project-overview-summary-kpi-value" },
-	                              formatDevelopResourceOperationalTabValue(tab, developServerOperationalMetrics?.totals?.[tab.key] || 0)
-	                            )
-	                          )
-	                        )
-	                      ),
-	                      React.createElement("div", { className: "playground-settings-usage-chart-panel playground-develop-server-metrics-panel" },
-	                        developServerOperationalMetricsLoading
-	                          ? React.createElement("div", { className: "playground-settings-loading-state playground-settings-usage-chart-loading-frame" },
-	                              React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
-	                            )
-	                          : renderPlaygroundTelemetryTimeseriesChart({
-	                              labels: developResourceOperationalLabels,
-	                              series: activeChartSeries,
-	                              emptyText: activeDevelopServerKindOperationalMetric.emptyText,
-	                              ariaLabel: activeDevelopServerKindOperationalMetric.title + " over time",
-	                              chartHeight: 288,
-	                              buildLinePath: buildDevelopResourceSvgLinePath,
-	                              getSeriesValue: (entry, _label, index) => entry?.values?.[index],
-	                              getXAxisLabel: (label) => String(label || ""),
-	                              formatAxisValue: formatDevelopResourceOperationalMetricValue,
-	                            }),
-	                        React.createElement("div", { className: "playground-develop-server-metrics-footer" },
-	                          React.createElement("div", { className: "playground-develop-server-metrics-footer-left playground-develop-server-metrics-legend" },
-	                            activeChartSeries.map((entry) =>
-	                              React.createElement("div", { key: "legend:" + entry.key, className: "playground-settings-usage-legend-item" },
-	                                React.createElement("span", { className: "playground-settings-usage-legend-swatch is-" + entry.tone }),
-	                                React.createElement("span", null, entry.label)
-	                              )
-	                            ),
-	                            developServerOperationalMetricsError
-	                              ? React.createElement("span", { className: "playground-develop-server-metrics-error" }, developServerOperationalMetricsError)
-	                              : React.createElement("span", { className: "playground-develop-server-metrics-source" },
-	                                  formatDevelopResourceOperationalMetricValue(activeResourceCount) + " resources monitored"
-	                                )
-	                          ),
-	                          React.createElement("div", { className: "playground-environments-home-comparison-timescale playground-develop-server-metrics-timescale" },
-	                            React.createElement("select", {
-	                              className: "playground-environments-home-comparison-timescale-select",
-	                              value: "24h",
-	                              "aria-label": "Server metrics period",
-	                              onChange: () => {},
-	                            },
-	                              React.createElement("option", { value: "24h" }, "Last 24 hours")
-	                            )
-	                          )
-	                        )
-	                      )
-	                    )
-	                  )
-	                )
-	              )
-	            );
-	          };
-	          const environmentHomeTimescaleOptions = [
-	            { id: "day", label: "1D" },
-	            { id: "week", label: "1W" },
-	            { id: "month", label: "1M" },
-	          ];
-	          const activeEnvironmentHomeTimescaleId = environmentHomeTimescaleOptions.some((option) => option.id === normalizedEnvironmentHomeChartTimescale)
-	            ? normalizedEnvironmentHomeChartTimescale
-	            : "month";
-	          const environmentHomeTimescaleControl = React.createElement("div", {
-	              className: "playground-project-overview-progress-combo-ranges",
-	              role: "group",
-	              "aria-label": (isDevelopServerKindHome ? developServerKindSingularTitle : "Computer") + " analytics time frame",
-	            },
-	            environmentHomeTimescaleOptions.map((option) =>
-	              React.createElement("button", {
-	                key: option.id,
-	                type: "button",
-	                className: "playground-project-overview-progress-combo-range" + (activeEnvironmentHomeTimescaleId === option.id ? " is-active" : ""),
-                onClick: () => updateEnvironmentHomeChartTimescale(option.id),
-	                "aria-pressed": activeEnvironmentHomeTimescaleId === option.id ? "true" : "false",
-	              }, option.label)
-	            )
-	          );
-	          const environmentHomeAnalyticsOptions = isDevelopConfigureHome
-	            ? React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-develop-server-metrics-menu-shell" },
-	                React.createElement("button", {
-	                  type: "button",
-	                  className: "playground-content-menu-button",
-	                  "aria-label": "Analytics options",
-	                  "aria-expanded": developAnalyticsMenuOpen ? "true" : "false",
-	                  onClick: toggleDevelopServerKindAnalyticsMenu,
-	                }, React.createElement(Ellipsis, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
-	                developAnalyticsMenuOpen
-	                  ? React.createElement(PlatformPopupSurface, {
-	                      className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-	                    },
-	                      React.createElement("button", {
-	                        type: "button",
-	                        className: "tb-popup-row",
-	                        onClick: openDevelopServerKindUsage,
-	                      },
-	                        React.createElement(ChartNoAxesColumnIncreasing, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-	                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-	                          React.createElement("span", null, "Show Usage")
-	                        )
-	                      )
-	                    )
-	                  : null
-	              )
-	            : null;
-	          const developResourceOverviewActivityMetricTabs = developServerKindOperationalMetricTabs.filter((tab) => (
-	            !["compute-tokens", "resources", "errors"].includes(tab.id)
-	          ));
-	          const developResourceOverviewCountTab = developServerKindOperationalMetricTabs.find((tab) => tab.id === "resources")
-	            || developServerKindOperationalMetricTabs[0];
-	          const developResourceOverviewErrorTab = developServerKindOperationalMetricTabs.find((tab) => tab.id === "errors")
-	            || { id: "errors", key: "errors", label: "Errors" };
-	          const developResourceOverviewCostTab = developServerKindOperationalMetricTabs.find((tab) => tab.id === "compute-tokens")
-	            || { id: "compute-tokens", key: "computeTokens", label: "Usage cost" };
-	          const developResourceOverviewPublishedCount = normalizedEmbeddedServerKind === "voice_agent"
-	            ? filteredVoiceAgentRecords.filter((record) => (
-	                normalizePlaygroundVoiceAgentMode(record?.voice?.mode || record?.agent?.voiceMode) !== "off"
-	                || Boolean(record?.phoneNumber?.phoneNumber)
-	              )).length
-	            : filteredOverviewServerResources.filter((resource) => (
-	                resource?.resourceType === "database"
-	                  ? String(resource?.status || "").trim().toLowerCase() === "active"
-	                  : (
-	                      String(resource?.status || "").trim().toLowerCase() === "deployed"
-	                      || Boolean(String(resource?.serviceUrl || resource?.customDomain || resource?.cloudRunServiceName || "").trim())
-	                    )
-	              )).length;
-	          const developResourceOverviewCount = Math.max(0, Math.round(Number(
-	            developServerOperationalMetrics?.resourceCounts?.[developResourceOverviewCountTab?.resourceCountKey]
-	            ?? developConfigureCount
-	            ?? 0
-	          ) || 0));
-	          const developResourceOverviewKpiColors = [
-	            "#7effff",
-	            "rgb(143, 196, 255)",
-	            "rgb(103, 80, 255)",
-	            "#f53b3a",
-	            "#9ff6ce",
-	          ];
-	          const developResourceOverviewPrimaryKpis = developResourceOverviewActivityMetricTabs.slice(0, 2).map((tab, index) => ({
-	            id: tab.id,
-	            label: tab.label,
-	            color: developResourceOverviewKpiColors[index + 1],
-	            value: formatDevelopResourceOperationalMetricValue(developServerOperationalMetrics?.totals?.[tab.key] || 0),
-	          }));
-	          if (developResourceOverviewPrimaryKpis.length < 2) {
-	            developResourceOverviewPrimaryKpis.push({
-	              id: normalizedEmbeddedServerKind + "-published",
-	              label: normalizedEmbeddedServerKind === "voice_agent" ? "Enabled" : "Published",
-	              color: developResourceOverviewKpiColors[2],
-	              value: formatDevelopResourceOperationalMetricValue(developResourceOverviewPublishedCount),
-	            });
-	          }
-	          const developResourceOverviewKpis = [
-	            {
-	              id: normalizedEmbeddedServerKind + "-resources",
-	              label: developServerKindTitle,
-	              color: developResourceOverviewKpiColors[0],
-	              value: formatDevelopResourceOperationalMetricValue(developResourceOverviewCount),
-	            },
-	            ...developResourceOverviewPrimaryKpis,
-	            {
-	              id: normalizedEmbeddedServerKind + "-errors",
-	              label: developResourceOverviewErrorTab.label,
-	              color: developResourceOverviewKpiColors[3],
-	              value: formatDevelopResourceOperationalMetricValue(developServerOperationalMetrics?.totals?.[developResourceOverviewErrorTab.key] || 0),
-	            },
-	            {
-	              id: normalizedEmbeddedServerKind + "-cost",
-	              label: developResourceOverviewCostTab.label,
-	              color: developResourceOverviewKpiColors[4],
-	              value: formatDevelopResourceOperationalMetricValue(developServerOperationalMetrics?.totals?.[developResourceOverviewCostTab.key] || 0),
-	            },
-	          ];
-	          const developResourceOverviewChartTabs = [
-	            ...developResourceOverviewActivityMetricTabs.slice(0, 2),
-	            ...(developResourceOverviewActivityMetricTabs.length < 2 ? [developResourceOverviewErrorTab] : []),
-	          ].slice(0, 2);
-	          const renderDevelopResourceOverviewAnalyticsSection = () =>
-	            React.createElement("div", {
-	              className: "playground-environments-home-metrics playground-develop-server-metrics playground-develop-server-kind-metrics playground-resource-type-overview-metrics",
-	            },
-	              React.createElement("section", {
-	                className: "playground-project-overview-progress-combo-card playground-agents-detail-progress-combo-card playground-evaluations-analytics-card playground-agents-overview-analytics-card playground-resource-type-overview-analytics-card",
-	              },
-	                React.createElement("div", { className: "playground-project-overview-progress-combo-metrics" },
-	                  developResourceOverviewKpis.map((item) =>
-	                    React.createElement("div", { key: item.id, className: "playground-project-overview-progress-combo-metric" },
-	                      React.createElement("div", { className: "playground-project-overview-progress-combo-metric-label" },
-	                        React.createElement("span", {
-	                          className: "playground-project-overview-progress-combo-metric-dot is-" + item.id,
-	                          style: { background: item.color },
-	                          "aria-hidden": "true",
-	                        }),
-	                        React.createElement("span", null, item.label)
-	                      ),
-	                      React.createElement("div", { className: "playground-project-overview-progress-combo-metric-value" }, item.value)
-	                    )
-	                  )
-	                ),
-	                React.createElement("div", { className: "playground-project-overview-progress-combo-chart" },
-	                  React.createElement(PlaygroundResourceOperationsChart, {
-	                    ariaLabel: developServerKindSingularTitle + " activity over time",
-	                    labels: developResourceOperationalLabels,
-	                    series: developResourceOverviewChartTabs.map((tab, index) => ({
-	                      id: tab.id,
-	                      label: tab.label,
-	                      color: index === 0 ? "rgb(143, 196, 255)" : "rgb(103, 80, 255)",
-	                      values: getDevelopResourceOperationalSeries(tab.key),
-	                    })),
-	                    emptyText: developServerOperationalMetricsError
-	                      || "No " + developServerKindSingularTitle.toLowerCase() + " activity yet",
-	                    loadingLabel: "Loading " + developServerKindSingularTitle.toLowerCase() + " activity",
-	                    isLoading: developServerOperationalMetricsLoading,
-	                  })
-	                )
-	              )
-	            );
-	          const renderComputerOverviewAnalyticsSection = () =>
-	            React.createElement("div", {
-	              className: "playground-environments-home-metrics playground-develop-server-metrics playground-develop-server-kind-metrics playground-computers-overview-metrics",
-	            },
-	              React.createElement("section", { className: "playground-project-overview-progress-combo-card playground-agents-detail-progress-combo-card playground-evaluations-analytics-card playground-computers-overview-analytics-card" },
-	                React.createElement("div", { className: "playground-project-overview-progress-combo-metrics" },
-	                  environmentsHomeKpis.map((item) =>
-	                    React.createElement("div", { key: item.id, className: "playground-project-overview-progress-combo-metric" },
-	                      React.createElement("div", { className: "playground-project-overview-progress-combo-metric-label" },
-	                        React.createElement("span", { className: "playground-project-overview-progress-combo-metric-dot is-" + item.id, "aria-hidden": "true" }),
-	                        React.createElement("span", null, item.label)
-	                      ),
-	                      React.createElement("div", { className: "playground-project-overview-progress-combo-metric-value" }, item.value)
-	                    )
-	                  )
-	                ),
-	                React.createElement("div", { className: "playground-project-overview-progress-combo-chart" },
-	                  renderHomeStackedUsageChart({
-	                    ariaLabel: "Overall computer activity",
-	                    labels: homeActivityBuckets.map((bucket) => String(bucket?.label || "")),
-	                    series: environmentOverviewChartSeries,
-	                    emptyText: "No usage data yet",
-	                    emptyContent: renderPlaygroundConfigureUsageEmptyState(
-	                      "no-computer-usage.avif",
-	                      "No Computer Usage yet",
-	                      "Computer usage appears here once agents run work inside connected computers."
-	                    ),
-	                    title: environmentOverviewChartTitle,
-	                    isLoading: isEnvironmentHomeChartLoading,
-	                    tickFormatter: formatSettingsComputeTokens,
-	                    showLegend: false,
-	                    hideHeader: true,
-	                    chartCardClassName: "playground-computers-overview-chart-card",
-	                  })
-	                )
-	              )
-	            );
 	          const environmentOverviewMetricsSection = activeResourcesOverviewHomeTab === "general"
-	            ? isDevelopServerKindHome
-	              ? renderDevelopResourceOverviewAnalyticsSection()
-	              : isDevelopConfigureHome && !isDevelopServerKindHome
-	                ? renderComputerOverviewAnalyticsSection()
-	                : React.createElement("div", {
+	            ? React.createElement("div", {
 	                    className: "playground-environments-home-metrics",
 	                  },
 	                    React.createElement("section", { className: "playground-tasks-detail-facts" },
@@ -87917,475 +81701,7 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
 	                    )
 	                  )
 	            : null;
-	          const canCreateDevelopServerKindResource = normalizedEmbeddedServerKind !== "voice_agent";
-	          const developServerKindToolbar = React.createElement("div", {
-	              className: "playground-develop-server-metrics-toolbar playground-develop-api-keys-toolbar playground-develop-server-kind-toolbar",
-	            },
-	            React.createElement("div", { className: "playground-develop-server-metrics-resource-pill" },
-	              React.createElement("span", { className: "playground-develop-server-metrics-resource-count" }, String(developConfigureCount)),
-	              React.createElement("span", { className: "playground-develop-server-metrics-resource-label" }, developConfigureCount === 1 ? developConfigureSingularTitle : developConfigureTitle),
-	              React.createElement(ChevronRight, { width: 14, height: 14, strokeWidth: 1.8 })
-	            ),
-	            canCreateDevelopServerKindResource ? React.createElement(PlatformSecondaryButton, {
-	              type: "button",
-	              className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button playground-develop-server-metrics-add-button",
-	              onClick: isDevelopServerKindHome ? () => handleCreateServer(normalizedEmbeddedServerKind) : handleCreateEnvironment,
-	            }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }), isDevelopServerKindHome ? "Add Resource" : "Add Computer") : null
-	          );
-	          const functionEmptyFeatures = [
-	            {
-	              title: "Fully managed",
-	              description: "Create backend logic from the same workspace where agents write, test, and deploy code.",
-	              Icon: Code2,
-	            },
-	            {
-	              title: "Global invocation",
-	              description: "Expose APIs, webhooks, transformations, and automation handlers that run on demand.",
-	              Icon: Globe,
-	            },
-	            {
-	              title: "Connected resources",
-	              description: "Bind functions to databases, auth, secrets, web apps, and agent runtimes.",
-	              Icon: Database,
-	            },
-	            {
-	              title: "Secure by default",
-	              description: "Keep credentials out of code and control access through managed project resources.",
-	              Icon: Shield,
-	            },
-	          ];
-	          const functionExampleCards = [
-	            {
-	              title: "Hello world",
-	              description: "Return a JSON response from the smallest possible deployable function.",
-	              href: "https://github.com/computer-agents/functions-examples/tree/main/hello-world",
-	              background: "/img/bg/mountain.avif",
-	              Icon: MessageSquare,
-	            },
-	            {
-	              title: "Contact form to database",
-	              description: "Validate a form submission and store it in a connected Computer Agents database.",
-	              href: "https://github.com/computer-agents/functions-examples/tree/main/database-contact-form",
-	              background: "/img/bg/water.avif",
-	              Icon: Database,
-	            },
-	            {
-	              title: "Signed webhook handler",
-	              description: "Verify incoming webhooks with a signing secret from a connected Secrets vault.",
-	              href: "https://github.com/computer-agents/functions-examples/tree/main/secure-webhook",
-	              background: "/img/bg/desert.avif",
-	              Icon: Key,
-	            },
-	            {
-	              title: "Trigger an agent run",
-	              description: "Expose an API endpoint that starts a connected Agent Runtime for async work.",
-	              href: "https://github.com/computer-agents/functions-examples/tree/main/agent-run-api",
-	              background: "/img/bg/forest.avif",
-	              Icon: Bot,
-	            },
-	          ];
-	          const webAppEmptyFeatures = [
-	            {
-	              title: "Hosted surfaces",
-	              description: "Publish dashboards, internal tools, portals, prototypes, and AI chat apps from project workspaces.",
-	              Icon: Monitor,
-	            },
-	            {
-	              title: "Live deployments",
-	              description: "Deploy, inspect, and operate web apps with logs, analytics, runtime state, and file access.",
-	              Icon: Globe,
-	            },
-	            {
-	              title: "Connected backends",
-	              description: "Bind apps to databases, auth modules, functions, secrets, and published agent runtimes.",
-	              Icon: Database,
-	            },
-	            {
-	              title: "Production controls",
-	              description: "Manage resource access, runtime configuration, custom domains, and connected project context.",
-	              Icon: Shield,
-	            },
-	          ];
-	          const webAppExampleCards = [
-	            {
-	              title: "Agent support portal",
-	              description: "A customer support web app that sends visitor questions to a connected Agent Runtime.",
-	              href: "https://github.com/computer-agents/webapps-examples/tree/main/agent-support-portal",
-	              background: "/img/bg/mountain.avif",
-	              Icon: Bot,
-	            },
-	            {
-	              title: "Authenticated customer portal",
-	              description: "A signed-in dashboard backed by Computer Agents Auth and a connected database.",
-	              href: "https://github.com/computer-agents/webapps-examples/tree/main/authenticated-customer-portal",
-	              background: "/img/bg/water.avif",
-	              Icon: Shield,
-	            },
-	            {
-	              title: "Function-backed admin dashboard",
-	              description: "A web app that calls a connected Function for server-side actions and analytics.",
-	              href: "https://github.com/computer-agents/webapps-examples/tree/main/function-backed-admin-dashboard",
-	              background: "/img/bg/desert.avif",
-	              Icon: FunctionSquare,
-	            },
-	            {
-	              title: "Secrets-powered integration console",
-	              description: "A small operations console that uses managed secrets for external service calls.",
-	              href: "https://github.com/computer-agents/webapps-examples/tree/main/secrets-integration-console",
-	              background: "/img/bg/forest.avif",
-	              Icon: Key,
-	            },
-	          ];
-	          const authEmptyFeatures = [
-	            {
-	              title: "Managed identity",
-	              description: "Provision sign-up, sign-in, sessions, and user administration as a deployable resource.",
-	              Icon: Key,
-	            },
-	            {
-	              title: "User lifecycle",
-	              description: "Create users, drive sign-up and sign-in flows, and inspect identity operations from the SDK.",
-	              Icon: UsersRound,
-	            },
-	            {
-	              title: "Connected products",
-	              description: "Bind auth to web apps, databases, functions, secrets, and agent runtimes in one workspace.",
-	              Icon: Database,
-	            },
-	            {
-	              title: "Operational control",
-	              description: "Deploy, inspect logs, review bindings, and manage auth behavior from the resource surface.",
-	              Icon: Shield,
-	            },
-	          ];
-	          const agentRuntimeEmptyFeatures = [
-	            {
-	              title: "Live agent systems",
-	              description: "Deploy long-lived agent-backed services that stay available beyond a single thread.",
-	              Icon: Bot,
-	            },
-	            {
-	              title: "Product endpoints",
-	              description: "Expose agent APIs, embedded assistants, operational copilots, and workflow runtimes.",
-	              Icon: Zap,
-	            },
-	            {
-	              title: "Connected workspace",
-	              description: "Bind runtimes to web apps, functions, databases, auth modules, secrets, and project context.",
-	              Icon: Link2,
-	            },
-	            {
-	              title: "Operational control",
-	              description: "Inspect deployments, logs, analytics, files, runtime config, and bindings from one resource.",
-	              Icon: Shield,
-	            },
-	          ];
-	          const secretsEmptyFeatures = [
-	            {
-	              title: "Secret vaults",
-	              description: "Store API keys, credentials, tokens, and private runtime configuration as managed resources.",
-	              Icon: Key,
-	            },
-	            {
-	              title: "Runtime access",
-	              description: "Read secrets from server-side helpers so values never enter bundles, prompts, or source control.",
-	              Icon: Code2,
-	            },
-	            {
-	              title: "Connected resources",
-	              description: "Bind vaults to web apps, functions, auth modules, databases, and agent runtimes that need them.",
-	              Icon: Link2,
-	            },
-	            {
-	              title: "Rotation control",
-	              description: "Update values centrally and redeploy connected resources when providers require it.",
-	              Icon: RefreshCw,
-	            },
-	          ];
-	          const paymentsEmptyFeatures = [
-	            {
-	              title: "Stripe Connect",
-	              description: "Connect one Stripe account and reuse it across apps, functions, and agent runtimes.",
-	              Icon: ReceiptText,
-	            },
-	            {
-	              title: "Runtime checkout",
-	              description: "Create checkout sessions from deployed workloads without exposing Stripe credentials.",
-	              Icon: Link2,
-	            },
-	            {
-	              title: "Revenue visibility",
-	              description: "Track onboarding, payment counts, and earned revenue from the resource detail page.",
-	              Icon: DollarSign,
-	            },
-	            {
-	              title: "Connected products",
-	              description: "Bind payments to products that humans or agents deploy inside Computer Agents.",
-	              Icon: Rocket,
-	            },
-	          ];
-	          const scrollDevelopServerExamples = (direction) => {
-	            if (typeof document === "undefined") {
-	              return;
-	            }
-	            const slider = document.querySelector(".playground-functions-examples-slider");
-	            if (!slider || typeof slider.scrollBy !== "function") {
-	              return;
-	            }
-	            const card = slider.querySelector("[data-function-example-card]");
-	            const amount = card?.getBoundingClientRect ? Math.max(card.getBoundingClientRect().width + 20, 280) : 320;
-	            slider.scrollBy({ left: Number(direction || 1) * amount, behavior: "smooth" });
-	          };
-	          const renderDevelopServerExampleSection = ({ title, repositoryUrl, examples, previousLabel, nextLabel }) =>
-	            React.createElement("div", { className: "playground-functions-examples-section" },
-	              React.createElement("div", { className: "playground-functions-examples-header" },
-	                React.createElement("h3", { className: "playground-functions-examples-title" }, title),
-	                React.createElement("button", {
-	                  type: "button",
-	                  className: "playground-functions-examples-all-button",
-	                  onClick: () => window.open(repositoryUrl, "_blank", "noopener,noreferrer"),
-	                },
-	                  React.createElement("span", null, "View all examples"),
-	                  React.createElement(ArrowUpRight, { width: 13, height: 13, strokeWidth: 1.8 })
-	                )
-	              ),
-	              React.createElement("div", { className: "playground-functions-examples-slider" },
-	                examples.map((example) =>
-	                  React.createElement("a", {
-	                    key: example.title,
-	                    className: "playground-functions-example-card",
-	                    href: example.href,
-	                    target: "_blank",
-	                    rel: "noreferrer",
-	                    "data-function-example-card": "true",
-	                  },
-	                    React.createElement("div", {
-	                      className: "playground-functions-example-visual",
-	                      style: { backgroundImage: "url(" + example.background + ")" },
-	                    },
-	                      React.createElement("div", { className: "playground-functions-example-icon-box" },
-	                        React.createElement(getPlaygroundSafeIconComponent(example.Icon, Code2), { width: 22, height: 22, strokeWidth: 1.7 })
-	                      )
-	                    ),
-	                    React.createElement("div", { className: "playground-functions-example-body" },
-	                      React.createElement("div", { className: "playground-functions-example-title" }, example.title),
-	                      React.createElement("div", { className: "playground-functions-example-copy" }, example.description),
-	                      React.createElement("div", { className: "playground-functions-example-link" },
-	                        "View example",
-	                        React.createElement(ArrowUpRight, { width: 12, height: 12, strokeWidth: 1.8 })
-	                      )
-	                    )
-	                  )
-	                )
-	              ),
-	              React.createElement("div", { className: "playground-functions-examples-controls" },
-	                React.createElement("button", {
-	                  type: "button",
-	                  className: "playground-functions-examples-arrow",
-	                  "aria-label": previousLabel,
-	                  onClick: () => scrollDevelopServerExamples(-1),
-	                }, React.createElement(ChevronLeft, { width: 16, height: 16, strokeWidth: 1.8 })),
-	                React.createElement("button", {
-	                  type: "button",
-	                  className: "playground-functions-examples-arrow",
-	                  "aria-label": nextLabel,
-	                  onClick: () => scrollDevelopServerExamples(1),
-	                }, React.createElement(ChevronRight, { width: 16, height: 16, strokeWidth: 1.8 }))
-	              )
-	            );
-	          const renderDevelopFunctionsEmptyLanding = () =>
-	            React.createElement("section", { className: "playground-functions-empty-landing" },
-	              React.createElement("div", { className: "playground-functions-empty-hero" },
-	                React.createElement("div", { className: "playground-functions-empty-copy-block" },
-	                  React.createElement("h2", { className: "playground-functions-empty-title" }, "Deploy backend logic from agent workspaces."),
-	                  React.createElement("p", { className: "playground-functions-empty-copy" },
-	                    "Let agents create, deploy, invoke, and inspect JavaScript functions for APIs, webhooks, data transformations, scheduled jobs, and product automation."
-	                  ),
-	                  React.createElement("div", { className: "playground-functions-empty-actions" },
-	                    React.createElement(PlatformPrimaryButton, {
-	                      size: "medium",
-	                      type: "button",
-	                      className: "playground-functions-empty-button is-primary",
-	                      onClick: () => handleCreateServer("function"),
-	                    }, React.createElement("span", null, "Start now")),
-	                    React.createElement(PlatformSecondaryButton, {
-	                      size: "medium",
-	                      type: "button",
-	                      className: "playground-functions-empty-button is-secondary",
-	                      onClick: () => window.open(developServerKindDocumentationUrl, "_blank", "noopener,noreferrer"),
-	                    },
-	                      React.createElement("span", null, "View Docs"),
-	                      React.createElement(ArrowUpRight, { width: 13, height: 13, strokeWidth: 1.8 })
-	                    )
-	                  )
-	                ),
-	                React.createElement("div", { className: "playground-functions-empty-art", "aria-hidden": "true" },
-	                  React.createElement("img", {
-	                    className: "playground-functions-empty-image",
-	                    src: "/dist/react/assets/server-function.webp",
-	                    alt: "",
-	                    draggable: "false",
-	                  })
-	                )
-	              ),
-	              React.createElement("div", { className: "playground-functions-empty-features" },
-	                functionEmptyFeatures.map((feature) =>
-	                  React.createElement("div", { key: feature.title, className: "playground-functions-empty-feature" },
-	                    React.createElement("div", { className: "playground-functions-empty-icon-box" },
-	                      React.createElement(getPlaygroundSafeIconComponent(feature.Icon, Circle), { width: 18, height: 18, strokeWidth: 1.8 })
-	                    ),
-	                    React.createElement("div", { className: "playground-functions-empty-feature-title" }, feature.title),
-	                    React.createElement("div", { className: "playground-functions-empty-feature-copy" }, feature.description)
-	                  )
-	                )
-	              ),
-	              renderDevelopServerExampleSection({
-	                title: "What you can build with Functions",
-	                repositoryUrl: "https://github.com/computer-agents/functions-examples",
-	                examples: functionExampleCards,
-	                previousLabel: "Previous function example",
-	                nextLabel: "Next function example",
-	              })
-	            );
-	          const renderDevelopWebAppsEmptyLanding = () =>
-	            React.createElement("section", { className: "playground-functions-empty-landing playground-web-apps-empty-landing" },
-	              React.createElement("div", { className: "playground-functions-empty-hero" },
-	                React.createElement("div", { className: "playground-functions-empty-copy-block" },
-	                  React.createElement("h2", { className: "playground-functions-empty-title" }, "Deploy frontend products from agent workspaces."),
-	                  React.createElement("p", { className: "playground-functions-empty-copy" },
-	                    "Let agents create, deploy, inspect, and operate hosted web apps for dashboards, portals, AI chat apps, internal tools, and product prototypes."
-	                  ),
-	                  React.createElement("div", { className: "playground-functions-empty-actions" },
-	                    React.createElement(PlatformPrimaryButton, {
-	                      size: "medium",
-	                      type: "button",
-	                      className: "playground-functions-empty-button is-primary",
-	                      onClick: () => handleCreateServer("web_app"),
-	                    }, React.createElement("span", null, "Start now")),
-	                    React.createElement(PlatformSecondaryButton, {
-	                      size: "medium",
-	                      type: "button",
-	                      className: "playground-functions-empty-button is-secondary",
-	                      onClick: () => window.open(developServerKindDocumentationUrl, "_blank", "noopener,noreferrer"),
-	                    },
-	                      React.createElement("span", null, "View Docs"),
-	                      React.createElement(ArrowUpRight, { width: 13, height: 13, strokeWidth: 1.8 })
-	                    )
-	                  )
-	                ),
-	                React.createElement("div", { className: "playground-functions-empty-art", "aria-hidden": "true" },
-	                  React.createElement("img", {
-	                    className: "playground-functions-empty-image",
-	                    src: "/dist/react/assets/server-app.webp",
-	                    alt: "",
-	                    draggable: "false",
-	                  })
-	                )
-	              ),
-	              React.createElement("div", { className: "playground-functions-empty-features" },
-	                webAppEmptyFeatures.map((feature) =>
-	                  React.createElement("div", { key: feature.title, className: "playground-functions-empty-feature" },
-	                    React.createElement("div", { className: "playground-functions-empty-icon-box" },
-	                      React.createElement(getPlaygroundSafeIconComponent(feature.Icon, Circle), { width: 18, height: 18, strokeWidth: 1.8 })
-	                    ),
-	                    React.createElement("div", { className: "playground-functions-empty-feature-title" }, feature.title),
-	                    React.createElement("div", { className: "playground-functions-empty-feature-copy" }, feature.description)
-	                  )
-	                )
-	              ),
-	              renderDevelopServerExampleSection({
-	                title: "What you can build with Web apps",
-	                repositoryUrl: "https://github.com/computer-agents/webapps-examples",
-	                examples: webAppExampleCards,
-	                previousLabel: "Previous web app example",
-	                nextLabel: "Next web app example",
-	              })
-	            );
-	          const renderDevelopBasicResourceEmptyLanding = ({ className, title, copy, imageSrc, features, resourceKind }) =>
-	            React.createElement("section", { className: "playground-functions-empty-landing " + String(className || "").trim() },
-	              React.createElement("div", { className: "playground-functions-empty-hero" },
-	                React.createElement("div", { className: "playground-functions-empty-copy-block" },
-	                  React.createElement("h2", { className: "playground-functions-empty-title" }, title),
-	                  React.createElement("p", { className: "playground-functions-empty-copy" }, copy),
-	                  React.createElement("div", { className: "playground-functions-empty-actions" },
-	                    React.createElement(PlatformPrimaryButton, {
-	                      size: "medium",
-	                      type: "button",
-	                      className: "playground-functions-empty-button is-primary",
-	                      onClick: () => handleCreateServer(resourceKind),
-	                    }, React.createElement("span", null, "Start now")),
-	                    React.createElement(PlatformSecondaryButton, {
-	                      size: "medium",
-	                      type: "button",
-	                      className: "playground-functions-empty-button is-secondary",
-	                      onClick: () => window.open(developServerKindDocumentationUrl, "_blank", "noopener,noreferrer"),
-	                    },
-	                      React.createElement("span", null, "View Docs"),
-	                      React.createElement(ArrowUpRight, { width: 13, height: 13, strokeWidth: 1.8 })
-	                    )
-	                  )
-	                ),
-	                imageSrc
-	                  ? React.createElement("div", { className: "playground-functions-empty-art", "aria-hidden": "true" },
-	                      React.createElement("img", {
-	                        className: "playground-functions-empty-image",
-	                        src: imageSrc,
-	                        alt: "",
-	                        draggable: "false",
-	                      })
-	                    )
-	                  : null
-	              ),
-	              React.createElement("div", { className: "playground-functions-empty-features" },
-	                features.map((feature) =>
-	                  React.createElement("div", { key: feature.title, className: "playground-functions-empty-feature" },
-	                    React.createElement("div", { className: "playground-functions-empty-icon-box" },
-	                      React.createElement(getPlaygroundSafeIconComponent(feature.Icon, Circle), { width: 18, height: 18, strokeWidth: 1.8 })
-	                    ),
-	                    React.createElement("div", { className: "playground-functions-empty-feature-title" }, feature.title),
-	                    React.createElement("div", { className: "playground-functions-empty-feature-copy" }, feature.description)
-	                  )
-	                )
-	              )
-	            );
-	          const renderDevelopAuthEmptyLanding = () =>
-	            renderDevelopBasicResourceEmptyLanding({
-	              className: "playground-auth-empty-landing",
-	              title: "Add secure auth to agent-built products.",
-	              copy: "Let humans or agents create, deploy, bind, and operate authentication modules for web apps, APIs, databases, and agent runtimes from one persistent workspace.",
-	              imageSrc: "/dist/react/assets/server-auth.webp",
-	              features: authEmptyFeatures,
-	              resourceKind: "auth",
-	            });
-	          const renderDevelopAgentRuntimesEmptyLanding = () =>
-	            renderDevelopBasicResourceEmptyLanding({
-	              className: "playground-agent-runtimes-empty-landing",
-	              title: "Ship live agent-backed product runtimes.",
-	              copy: "Let humans or agents deploy always-available agent systems for APIs, embedded assistants, operational copilots, and workflow services that keep project context connected.",
-	              imageSrc: "/dist/react/assets/server-runtime.webp",
-	              features: agentRuntimeEmptyFeatures,
-	              resourceKind: "agent_runtime",
-	            });
-	          const renderDevelopSecretsEmptyLanding = () =>
-	            renderDevelopBasicResourceEmptyLanding({
-	              className: "playground-secrets-empty-landing",
-	              title: "Keep secrets connected to deployed workloads.",
-	              copy: "Create and manage vaults for API keys, credentials, tokens, and private runtime configuration without putting sensitive values into source files or prompts.",
-	              imageSrc: "/dist/react/assets/server-runtime.webp",
-	              features: secretsEmptyFeatures,
-	              resourceKind: "secrets",
-	            });
-	          const renderDevelopPaymentsEmptyLanding = () =>
-	            renderDevelopBasicResourceEmptyLanding({
-	              className: "playground-payments-empty-landing",
-	              title: "Accept payments from agent-built products.",
-	              copy: "Create a Stripe-backed payments resource that humans and agents can bind to deployed apps, functions, and runtimes.",
-	              imageSrc: "/dist/react/assets/server-runtime.webp",
-	              features: paymentsEmptyFeatures,
-	              resourceKind: "payments",
-	            });
-
-	          if (isDevelopConfigureHome && !isServersMode) {
+	          if (embeddedInResources && !isServersMode) {
 	            const getComputerCreatedValue = (environment) => environment?.createdAt || environment?.metadata?.createdAt || "";
 	            const getComputerLastUsedValue = (environment) => {
 	              const metadata = environment?.metadata && typeof environment.metadata === "object" && !Array.isArray(environment.metadata)
@@ -88416,6 +81732,78 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
 	              return selected;
 	            };
 	            const sourceComputers = displayEnvironments.filter((environment) => environment?.id && environment.id !== PLAYGROUND_ENVIRONMENT_DRAFT_ID);
+	            const getComputerCreator = (environment) => {
+	              if (environment?.isDefault === true || environment?.isSystem === true) {
+	                return { name: "Computer Agents", avatarUrl: COMPUTER_AGENTS_CREATOR_PROFILE_URL, isSystem: true };
+	              }
+	              const metadata = environment?.metadata && typeof environment.metadata === "object" && !Array.isArray(environment.metadata)
+	                ? environment.metadata
+	                : {};
+	              const nested = environment?.creator && typeof environment.creator === "object"
+	                ? environment.creator
+	                : environment?.createdBy && typeof environment.createdBy === "object"
+	                  ? environment.createdBy
+	                  : metadata?.creator && typeof metadata.creator === "object"
+	                    ? metadata.creator
+	                    : metadata?.createdBy && typeof metadata.createdBy === "object"
+	                      ? metadata.createdBy
+	                      : {};
+	              const creatorId = String(
+	                nested?.id
+	                || nested?.agentId
+	                || nested?.agent_id
+	                || environment?.creatorId
+	                || environment?.creator_id
+	                || metadata?.creatorId
+	                || metadata?.creator_id
+	                || (typeof environment?.createdBy === "string" ? environment.createdBy : "")
+	                || (typeof metadata?.createdBy === "string" ? metadata.createdBy : "")
+	                || ""
+	              ).trim();
+	              const creatorAgent = (Array.isArray(agents) ? agents : []).find((agent) => String(agent?.id || "").trim() === creatorId) || null;
+	              if (creatorAgent) {
+	                const agentName = String(creatorAgent?.name || nested?.name || "Agent").trim();
+	                const agentAvatarUrl = normalizeSessionPhotoUrl(getPlaygroundAgentProfilePhotoUrl(creatorAgent));
+	                return {
+	                  name: agentName,
+	                  avatarUrl: canRenderAvatarImage(agentAvatarUrl) ? agentAvatarUrl : "",
+	                  isSystem: Boolean(creatorAgent?.isDefault || creatorAgent?.isSystem),
+	                };
+	              }
+	              const name = String(
+	                nested?.name
+	                || nested?.displayName
+	                || nested?.display_name
+	                || environment?.creatorName
+	                || environment?.creator_name
+	                || environment?.createdByName
+	                || environment?.created_by_name
+	                || metadata?.creatorName
+	                || metadata?.creator_name
+	                || metadata?.createdByName
+	                || metadata?.created_by_name
+	                || currentUserName
+	                || currentUserEmail
+	                || "Unknown"
+	              ).trim();
+	              const avatarUrl = normalizeSessionPhotoUrl(
+	                nested?.avatarUrl
+	                || nested?.avatar_url
+	                || nested?.photoUrl
+	                || nested?.photoURL
+	                || environment?.creatorAvatarUrl
+	                || environment?.creator_avatar_url
+	                || environment?.createdByAvatarUrl
+	                || environment?.created_by_avatar_url
+	                || metadata?.creatorAvatarUrl
+	                || metadata?.creator_avatar_url
+	                || metadata?.createdByAvatarUrl
+	                || metadata?.created_by_avatar_url
+	                || currentUserAvatarUrl
+	                || ""
+	              );
+	              return { name, avatarUrl: canRenderAvatarImage(avatarUrl) ? avatarUrl : "", isSystem: false };
+	            };
 	            const computerRows = sourceComputers.map((environment) => {
 	              const createdValue = getComputerCreatedValue(environment);
 	              const lastUsedValue = getComputerLastUsedValue(environment);
@@ -88424,14 +81812,19 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
 	              const profileLabel = String(getPlaygroundEnvironmentComputeProfileConfig(environment?.computeProfile)?.label || "Standard").trim();
 	              const name = String(environment?.name || "Untitled Computer").trim();
 	              const status = String(environment?.status || "").trim();
+	              const creator = getComputerCreator(environment);
 	              return {
 	                id: String(environment.id),
 	                name,
-	                searchText: [name, profileLabel, status].join(" "),
+	                searchText: [name, profileLabel, creator.name, status].join(" "),
 	                profileLabel,
 	                status,
 	                isRunning: status.toLowerCase() === "running",
 	                isSystem: Boolean(environment?.isDefault || environment?.isSystem),
+	                creatorName: creator.name,
+	                creatorAvatarUrl: creator.avatarUrl,
+	                creatorFallback: getAccountInitials(creator.name),
+	                creatorIsSystem: creator.isSystem,
 	                createdAt: Number.isFinite(createdTimestamp) ? createdTimestamp : 0,
 	                createdLabel: createdValue ? formatPlaygroundFileDate(createdValue) : "-",
 	                createdTitle: createdValue ? formatPlaygroundExactDate(createdValue) : "",
@@ -88441,15 +81834,32 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
 	              };
 	            });
 	            const runningComputers = computerRows.filter((row) => row.isRunning).length;
-	            const computerCostValuesUsd = homeComputerUsage.map((value) => Math.max(0, Number(value || 0)) / SETTINGS_CT_PER_DOLLAR);
-	            const totalComputerCostUsd = Math.max(0, Number(totalComputerRuntimeCT || 0)) / SETTINGS_CT_PER_DOLLAR;
+	            const computerCostValuesUsd = hasCompactComputerAnalytics
+	              ? compactComputerAnalyticsSnapshot.buckets.map((bucket) => Math.max(0, Number(bucket?.computerCostUsd) || 0))
+	              : homeComputerUsage.map((value) => Math.max(0, Number(value || 0)) / SETTINGS_CT_PER_DOLLAR);
+	            const totalComputerCostUsd = hasCompactComputerAnalytics
+	              ? Math.max(0, Number(compactComputerAnalyticsSnapshot?.totalComputerCostUsd) || 0)
+	              : Math.max(0, Number(totalComputerRuntimeCT || 0)) / SETTINGS_CT_PER_DOLLAR;
+	            const compactComputerAnalyticsLoading = computersOverviewAnalyticsState.scopeKey !== computersOverviewAnalyticsScopeKey
+	              || computersOverviewAnalyticsState.loadingPeriod === normalizedEnvironmentHomeChartTimescale;
+	            const compactComputerAnalyticsError = computersOverviewAnalyticsState.scopeKey === computersOverviewAnalyticsScopeKey
+	              ? String(computersOverviewAnalyticsState.errorsByPeriod?.[normalizedEnvironmentHomeChartTimescale] || "")
+	              : "";
+	            const legacyFallbackKey = computersOverviewAnalyticsScopeKey + "|" + normalizedEnvironmentHomeChartTimescale;
+	            const isUsingLegacyComputerAnalytics = computersOverviewAnalyticsFallbackScopeRef.current === legacyFallbackKey;
+	            const computerAnalyticsLoading = !hasCompactComputerAnalytics && (
+	              isUsingLegacyComputerAnalytics ? isEnvironmentHomeChartLoading : compactComputerAnalyticsLoading
+	            );
+	            const computerAnalyticsError = hasCompactComputerAnalytics || computerAnalyticsLoading
+	              ? ""
+	              : isUsingLegacyComputerAnalytics
+	                ? (environmentHomeCostSummaryError || environmentHomeCostBreakdownError || environmentHomeChartSummariesError || environmentHomeChartBreakdownsError)
+	                : compactComputerAnalyticsError;
 	            const computerAnalytics = {
 	              title: environmentOverviewChartTitle,
 	              ariaLabel: "Computer cost over time",
-	              loading: isEnvironmentHomeChartLoading,
-	              error: hasEnvironmentHomeChartError
-	                ? (environmentHomeCostSummaryError || environmentHomeCostBreakdownError || environmentHomeChartSummariesError || environmentHomeChartBreakdownsError)
-	                : null,
+	              loading: computerAnalyticsLoading,
+	              error: computerAnalyticsError || null,
 	              emptyState: "Computer usage appears here once computers start running.",
 	              metrics: [
 	                { id: "computers", label: "Computers", value: String(computerRows.length), color: "#8fc4ff" },
@@ -88458,8 +81868,10 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
 	                { id: "profiles", label: "Profiles", value: String(new Set(computerRows.map((row) => row.profileLabel)).size), color: "#4da3ff" },
 	                { id: "cost", label: "Total cost", value: formatSettingsUsdCredits(totalComputerCostUsd), color: "#fff" },
 	              ],
-	              labels: homeActivityBuckets.map((bucket) => String(bucket?.label || "")),
-	              series: [{ id: "computers", label: "Computers", color: "#8fc4ff", values: computerCostValuesUsd, valueKind: "currency", type: "bar" }],
+	              labels: hasCompactComputerAnalytics
+	                ? compactComputerAnalyticsSnapshot.buckets.map((bucket) => String(bucket?.label || ""))
+	                : homeActivityBuckets.map((bucket) => String(bucket?.label || "")),
+	              series: [{ id: "computers", label: "Computers", color: "#8fc4ff", values: computerCostValuesUsd, valueKind: "currency", type: "line" }],
 	            };
 	            const resolveSourceComputer = (row) => sourceComputers.find((environment) => String(environment?.id || "") === row.id) || null;
 	            return React.createElement(ComputersOverviewPage, {
@@ -88467,6 +81879,7 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
 	              period: normalizedEnvironmentHomeChartTimescale,
 	              onPeriodChange: updateEnvironmentHomeChartTimescale,
 	              analytics: computerAnalytics,
+	              controlsPortalId: "playground-resource-overview-controls",
 	              loading: false,
 	              mutating: Boolean(saveState.isSaving || fileEnvironmentMutationState.action || environmentShareTeamState.action),
 	              onOpen: (row) => handleEnvironmentSelect(row.id),
@@ -88492,22 +81905,7 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
 	            });
 	          }
 
-	          const environmentsHomeHero = isDevelopConfigureHome
-	            ? React.createElement("section", { className: "playground-environments-home-hero playground-develop-server-kind-hero" },
-	                React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header playground-develop-server-kind-header" },
-	                  React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title" }, isDevelopServerKindHome ? "Configure your " + developServerKindTitle : "Configure your Computers"),
-	                  React.createElement("div", { className: "playground-project-overview-summary-title-actions playground-develop-header-actions" },
-	                    environmentHomeTimescaleControl,
-	                    environmentHomeAnalyticsOptions
-	                  )
-	                ),
-	                isDevelopServerKindHome ? null : renderResourcesOverviewHomeTabs(),
-	                React.createElement(React.Fragment, null,
-	                  environmentOverviewMetricsSection,
-	                  overviewListContent
-	                )
-	              )
-	            : React.createElement("section", { className: "playground-environments-home-hero" },
+	          const environmentsHomeHero = React.createElement("section", { className: "playground-environments-home-hero" },
 	                React.createElement("div", { className: "playground-environments-home-hero-title" }, "Build and run your full AI app stack."),
 	                renderResourcesOverviewHomeTabs(),
 	                environmentOverviewMetricsSection,
@@ -88780,6 +82178,9 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
           return null;
         };
         const renderCurrentResourceCreateControl = (buttonClassName) => {
+          if (!isServersMode && shouldShowEnvironmentHome) {
+            return null;
+          }
           if (isServersMode && normalizedEmbeddedServerKind === "voice_agent") {
             return null;
           }
@@ -88872,9 +82273,10 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
         };
         const shouldHideResourcesTopNavActions = environmentVersionsSidebarOpen
           || serverVersionsSidebarOpen
-          || (embeddedInResources && !isServersMode && shouldShowEnvironmentHome)
           || (!isServersMode && !shouldShowEnvironmentHome && Boolean(selectedEnvironmentId));
-        const resourcesTopNavActions = topNavActionsContainer && !shouldHideResourcesTopNavActions
+        const resourcesTopNavActions = topNavActionsContainer
+          && !shouldHideResourcesTopNavActions
+          && (isServersMode || !shouldShowEnvironmentHome)
           ? createPortal(
               renderResourcesTopActionControl(isServersMode ? "playground-files-header-icon-button is-plain" : "playground-top-nav-private-chat-button"),
               topNavActionsContainer
@@ -89108,292 +82510,7 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
             className: "playground-agents-overview-table-value is-right",
             title: value ? formatPlaygroundExactDate(value) : "",
           }, value ? formatPlaygroundFileDate(value) : emptyLabel);
-          const getVoiceAgentModeLabel = (mode) => {
-            const normalizedMode = normalizePlaygroundVoiceAgentMode(mode);
-            return PLAYGROUND_VOICE_AGENT_MODE_OPTIONS.find((option) => option.id === normalizedMode)?.label || "Off";
-          };
-          const renderVoiceAgentSessionResult = (agentId) => {
-            const result = voiceAgentSessionResultsById[agentId];
-            if (!result) {
-              return null;
-            }
-            const threadId = String(result?.thread?.id || result?.voiceSession?.threadId || "").trim();
-            const realtimeUrl = String(result?.xai?.realtimeUrl || "").trim();
-            return React.createElement("div", { className: "playground-environments-success playground-environments-editor-notice" },
-              React.createElement("span", null, "Web voice session ready"),
-              threadId && typeof onThreadOpen === "function"
-                ? React.createElement("button", {
-                    type: "button",
-                    className: "playground-server-detail-docs-tab",
-                    onClick: () => onThreadOpen(threadId),
-                  },
-                    React.createElement(MessageSquare, { className: "playground-server-detail-docs-tab-icon", width: 12, height: 12, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Open Thread")
-                  )
-                : null,
-              realtimeUrl
-                ? React.createElement("button", {
-                    type: "button",
-                    className: "playground-server-detail-docs-tab",
-                    onClick: () => {
-                      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
-                        void navigator.clipboard.writeText(realtimeUrl);
-                      }
-                    },
-                  },
-                    React.createElement(Copy, { className: "playground-server-detail-docs-tab-icon", width: 12, height: 12, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Copy Realtime URL")
-                  )
-                : null
-            );
-          };
-          const renderVoiceAgentsOverviewSection = () => {
-            const hasVoiceAgentRows = filteredVoiceAgentRecords.length > 0;
-            const shouldShowVoiceLoading = voiceAgentsLoading && !hasVoiceAgentRows;
-            const getVoiceAgentRowContext = (record) => {
-              const agent = record.agent || {};
-              const agentId = String(agent.id || "").trim();
-              const draft = voiceAgentDraftsById[agentId] || buildPlaygroundVoiceAgentDraft(record);
-              const phoneRecord = record.phoneNumber || null;
-              const hasPhoneNumber = Boolean(String(phoneRecord?.phoneNumber || "").trim());
-              return {
-                agent,
-                agentId,
-                draft,
-                phoneRecord,
-                hasPhoneNumber,
-                phoneStatus: String(phoneRecord?.status || (hasPhoneNumber ? "active" : "")).trim(),
-                isSaving: voiceAgentsState.savingAgentId === agentId,
-                isProvisioning: voiceAgentsState.provisioningAgentId === agentId,
-                isDisabling: voiceAgentsState.disablingAgentId === agentId,
-                isTesting: voiceAgentsState.testingAgentId === agentId,
-              };
-            };
-            const renderVoiceAgentExpandedControls = (record) => {
-              const { agentId, draft, hasPhoneNumber, isProvisioning, isDisabling } = getVoiceAgentRowContext(record);
-              return React.createElement("div", { className: "playground-settings-detail-stack", style: { gap: 10 } },
-                React.createElement("div", { style: { display: "grid", gridTemplateColumns: "minmax(0, 1fr) 180px", gap: 12, alignItems: "start" } },
-                  React.createElement("label", { className: "playground-settings-field" },
-                    React.createElement("span", { className: "playground-settings-label" }, "Voice instructions"),
-                    React.createElement("textarea", {
-                      className: "playground-settings-textarea",
-                      rows: 3,
-                      value: draft.voiceInstructions,
-                      onChange: (event) => updateVoiceAgentDraft(agentId, { voiceInstructions: event.target.value }),
-                      placeholder: "Use the agent instructions",
-                    })
-                  ),
-                  React.createElement("label", { className: "playground-settings-field" },
-                    React.createElement("span", { className: "playground-settings-label" }, "Language hint"),
-                    React.createElement("input", {
-                      type: "text",
-                      className: "playground-settings-input",
-                      value: draft.voiceLanguageHint,
-                      onChange: (event) => updateVoiceAgentDraft(agentId, { voiceLanguageHint: event.target.value }),
-                      placeholder: "en",
-                    })
-                  )
-                ),
-                React.createElement("div", { className: "playground-auth-users-toolbar-actions" },
-                  hasPhoneNumber
-                    ? React.createElement("button", {
-                        type: "button",
-                        className: "playground-server-detail-docs-tab",
-                        onClick: () => void disableVoiceAgentPhoneNumber(agentId),
-                        disabled: isDisabling,
-                      },
-                        isDisabling
-                          ? React.createElement(Loader2, { className: "playground-server-detail-docs-tab-icon playground-files-state-loader", width: 12, height: 12, strokeWidth: 1.8 })
-                          : React.createElement(Trash2, { className: "playground-server-detail-docs-tab-icon", width: 12, height: 12, strokeWidth: 1.8 }),
-                        React.createElement("span", null, isDisabling ? "Disabling..." : "Disable Number")
-                      )
-                    : React.createElement("button", {
-                        type: "button",
-                        className: "playground-server-detail-docs-tab",
-                        onClick: async () => {
-                          const savedRecord = await saveVoiceAgentConfig(agentId);
-                          if (savedRecord) await provisionVoiceAgentPhoneNumber(agentId);
-                        },
-                        disabled: isProvisioning || !isPlaygroundVoiceAgentPhoneEnabled(draft.voiceMode),
-                        title: isPlaygroundVoiceAgentPhoneEnabled(draft.voiceMode) ? "Provision phone number" : "Enable phone voice mode first",
-                      },
-                        isProvisioning
-                          ? React.createElement(Loader2, { className: "playground-server-detail-docs-tab-icon playground-files-state-loader", width: 12, height: 12, strokeWidth: 1.8 })
-                          : React.createElement(Webhook, { className: "playground-server-detail-docs-tab-icon", width: 12, height: 12, strokeWidth: 1.8 }),
-                        React.createElement("span", null, isProvisioning ? "Provisioning..." : "Provision Number")
-                      ),
-                  React.createElement("span", { className: "playground-agents-model-access" + (normalizePlaygroundVoiceAgentMode(draft.voiceMode) === "off" ? " is-locked" : " is-available") },
-                    getVoiceAgentModeLabel(draft.voiceMode)
-                  )
-                ),
-                renderVoiceAgentSessionResult(agentId)
-              );
-            };
-            return React.createElement("section", {
-                className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-overview-list-section playground-team-grid-table-section playground-resources-overview-section playground-develop-resource-overview-table-section is-servers-overview is-develop-server-kind-list",
-              },
-              React.createElement("div", {
-                  className: "playground-plugins-search-row playground-resources-overview-search-row playground-develop-server-kind-table-toolbar playground-develop-resource-overview-toolbar-row",
-                  ref: resourcesOverviewToolbarRef,
-                },
-                React.createElement("div", { className: "playground-develop-server-kind-table-controls" },
-                  React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell" },
-                    React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("input", {
-                      type: "search",
-                      value: searchPopupQuery,
-                      onChange: (event) => setSearchPopupQuery(event.target.value),
-                      className: "playground-plugins-search",
-                      placeholder: "Search voice agents",
-                    })
-                  ),
-                  React.createElement("div", { className: "playground-plugins-toolbar-controls" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-control-button is-bare",
-                      onClick: () => void loadVoiceAgents({ force: true }),
-                      disabled: voiceAgentsLoading,
-                    },
-                      React.createElement(RefreshCw, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, voiceAgentsLoading ? "Refreshing" : "Refresh")
-                    )
-                  )
-                )
-              ),
-              voiceAgentsState.error
-                ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, voiceAgentsState.error)
-                : null,
-              voiceAgentsState.message
-                ? React.createElement("div", { className: "playground-environments-success playground-environments-editor-notice" }, voiceAgentsState.message)
-                : null,
-              React.createElement(PlatformDataTable, {
-                rows: filteredVoiceAgentRecords,
-                getRowId: (record) => String(record?.agent?.id || ""),
-                ariaLabel: "Voice agent configuration",
-                className: "playground-voice-agents-platform-table",
-                surface: "plain",
-                sticky: false,
-                loading: shouldShowVoiceLoading,
-                error: voiceAgentsState.error || null,
-                emptyState: normalizedResourcesSearchQuery
-                  ? "No matching voice agents found."
-                  : "No agents are available for voice configuration.",
-                columns: [
-                  {
-                    id: "agent",
-                    header: "Agent",
-                    accessor: (record) => record?.agent?.name || "Untitled Agent",
-                    width: "minmax(190px, 1.5fr)",
-                    cell: ({ row: record }) => {
-                      const { agent } = getVoiceAgentRowContext(record);
-                      return React.createElement("div", { className: "playground-resources-overview-name-cell" },
-                        React.createElement("span", { className: "playground-resources-overview-table-icon", "aria-hidden": "true" },
-                          React.createElement(Mic, { width: 17, height: 17, strokeWidth: 1.8 })
-                        ),
-                        React.createElement("div", { className: "playground-resources-overview-name-copy" },
-                          React.createElement("div", { className: "playground-resources-overview-name-title" }, agent.name || "Untitled Agent"),
-                          React.createElement("div", {
-                            className: "playground-resources-overview-name-description",
-                            title: agent.description || agent.id || "",
-                          }, agent.description || agent.id || "Agent")
-                        )
-                      );
-                    },
-                  },
-                  {
-                    id: "mode",
-                    header: "Mode",
-                    width: "minmax(110px, 0.85fr)",
-                    cell: ({ row: record }) => {
-                      const { agent, agentId, draft } = getVoiceAgentRowContext(record);
-                      return React.createElement("select", {
-                        className: "playground-settings-select",
-                        value: normalizePlaygroundVoiceAgentMode(draft.voiceMode),
-                        onChange: (event) => updateVoiceAgentDraft(agentId, { voiceMode: event.target.value }),
-                        "aria-label": "Voice mode for " + (agent.name || agentId),
-                      }, PLAYGROUND_VOICE_AGENT_MODE_OPTIONS.map((option) =>
-                        React.createElement("option", { key: option.id, value: option.id }, option.label)
-                      ));
-                    },
-                  },
-                  {
-                    id: "voice",
-                    header: "Voice",
-                    width: "minmax(120px, 0.95fr)",
-                    cell: ({ row: record }) => {
-                      const { agent, agentId, draft } = getVoiceAgentRowContext(record);
-                      return React.createElement("input", {
-                        type: "text",
-                        className: "playground-settings-input",
-                        value: draft.voiceId,
-                        onChange: (event) => updateVoiceAgentDraft(agentId, { voiceId: event.target.value }),
-                        placeholder: "eve",
-                        "aria-label": "Voice id for " + (agent.name || agentId),
-                      });
-                    },
-                  },
-                  {
-                    id: "model",
-                    header: "Model",
-                    width: "minmax(170px, 1.25fr)",
-                    hideBelow: 760,
-                    cell: ({ row: record }) => {
-                      const { agent, agentId, draft } = getVoiceAgentRowContext(record);
-                      return React.createElement("select", {
-                        className: "playground-settings-select",
-                        value: draft.voiceModel,
-                        onChange: (event) => updateVoiceAgentDraft(agentId, { voiceModel: event.target.value }),
-                        "aria-label": "Voice model for " + (agent.name || agentId),
-                      }, PLAYGROUND_VOICE_AGENT_MODEL_OPTIONS.map((option) =>
-                        React.createElement("option", { key: option.id, value: option.id }, option.label)
-                      ));
-                    },
-                  },
-                  {
-                    id: "phone",
-                    header: "Phone",
-                    width: "minmax(150px, 1.1fr)",
-                    hideBelow: 940,
-                    cell: ({ row: record }) => {
-                      const { phoneRecord, hasPhoneNumber, phoneStatus } = getVoiceAgentRowContext(record);
-                      return hasPhoneNumber
-                        ? React.createElement("div", { className: "playground-agents-overview-model-copy" },
-                            React.createElement("div", { className: "playground-agents-overview-name-title" }, phoneRecord.phoneNumber),
-                            React.createElement("div", { className: "playground-agents-overview-name-description" }, phoneStatus || "active")
-                          )
-                        : React.createElement("span", { className: "playground-agents-model-access is-locked" }, "No number");
-                    },
-                  },
-                ],
-                getRowActions: (record) => {
-                  const { agent, agentId, draft, isSaving, isTesting } = getVoiceAgentRowContext(record);
-                  return [
-                    {
-                      id: "save",
-                      label: isSaving ? "Saving..." : "Save configuration",
-                      icon: isSaving ? Loader2 : Save,
-                      disabled: isSaving,
-                      onSelect: () => saveVoiceAgentConfig(agentId),
-                    },
-                    {
-                      id: "test",
-                      label: isTesting ? "Creating session..." : "Create web voice session",
-                      icon: isTesting ? Loader2 : MessageSquare,
-                      disabled: isTesting || !isPlaygroundVoiceAgentWebEnabled(draft.voiceMode),
-                      onSelect: async () => {
-                        const savedRecord = await saveVoiceAgentConfig(agentId);
-                        if (savedRecord) await createVoiceAgentTestSession(agentId);
-                      },
-                    },
-                  ];
-                },
-                getRowAriaLabel: (record) => "Configure voice for " + (record?.agent?.name || record?.agent?.id || "agent"),
-                isRowExpanded: () => true,
-                renderExpandedRow: ({ row: record }) => renderVoiceAgentExpandedControls(record),
-              })
-            );
-          };
-          const renderComputerProfilesTable = () => (
+	          const renderComputerProfilesTable = () => (
             React.createElement(PlatformDataTable, {
               rows: PLAYGROUND_ENVIRONMENT_COMPUTE_PROFILES,
               getRowId: (profile) => profile.id,
@@ -89901,10 +83018,7 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
 		              ? (isServersMode ? "No matching " + currentServerResourcesLabel.toLowerCase() + " found." : "No matching computers found.")
 		              : (isServersMode ? "No " + currentServerResourcesLabel.toLowerCase() + " available." : "No computers available."),
 		          });
-			          if (isDevelopConfigureOverview && activeResourcesOverviewHomeTab === "general" && normalizedEmbeddedServerKind === "voice_agent") {
-			            return renderVoiceAgentsOverviewSection();
-			          }
-			          if (isDevelopConfigureOverview && activeResourcesOverviewHomeTab === "general") {
+	          if (isDevelopConfigureOverview && activeResourcesOverviewHomeTab === "general") {
 		            return React.createElement("section", {
 		              className: isServersMode
 		                ? "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-overview-list-section playground-team-grid-table-section playground-resources-overview-section playground-develop-resource-overview-table-section is-servers-overview is-develop-server-kind-list"
@@ -90096,8 +83210,14 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
                   renderEnvironmentCreationSetupPage()
                 )
               : shouldShowEnvironmentHome
-              ? React.createElement("section", { className: embeddedResourcesPageClassName },
-                  renderEnvironmentsHome(isServersMode ? renderEmbeddedResourcesOverviewSection() : null)
+	              ? React.createElement("section", { className: embeddedResourcesPageClassName },
+	                  renderEnvironmentsHome(
+	                    isServersMode && normalizedEmbeddedServerKind
+	                      ? null
+	                      : isServersMode
+	                        ? renderEmbeddedResourcesOverviewSection()
+	                        : null
+	                  )
                 )
               : React.createElement("section", { className: embeddedResourcesPageClassName },
                   React.createElement("div", { className: resourcesDetailScrollClassName, ref: resourcesDetailScrollRef },
@@ -90535,8 +83655,6 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.props}        embeddedInResources = false,
         const agentAutosaveInFlightRef = useRef(false);
         const agentDetailMainRef = useRef(null);
         const agentResourcesDetailScrollRef = useRef(null);
-        const agentInstructionsSectionRef = useRef(null);
-        const agentInstructionsTextareaRef = useRef(null);
         const agentCreationInstructionsTextareaRef = useRef(null);
         const agentComposerInstructionsTextareaRef = useRef(null);
         const agentProfileAvatarPickerRef = useRef(null);
@@ -90582,7 +83700,6 @@ ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.refs}        const agentApiEnvironmentPopov
         const agentDeepResearchModelTriggerRef = useRef(null);
         const agentVoicePopoverRef = useRef(null);
         const agentsOverviewToolbarRef = useRef(null);
-        const agentsOverviewActionsMenuRef = useRef(null);
         const agentsObservabilityToolbarRef = useRef(null);
         const lastAppliedFocusedAgentSelectionTokenRef = useRef("");
         const handledBackRequestTokenRef = useRef(backRequestToken);
@@ -90627,8 +83744,24 @@ ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.state}${GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.s
         const [agentsHomeThreadsLoading, setAgentsHomeThreadsLoading] = useState(false);
         const [agentsHomeThreadsError, setAgentsHomeThreadsError] = useState("");
         const [agentsHomeChartTimescale, setAgentsHomeChartTimescale] = useState("month");
+        const agentsOverviewAnalyticsScopeKey = useMemo(() => {
+          let headerSignature = "";
+          try {
+            headerSignature = Array.from(new Headers(requestHeaders || {}).entries())
+              .sort(([left], [right]) => left.localeCompare(right))
+              .map(([key, value]) => key + ":" + value)
+              .join("|");
+          } catch {}
+          return String(backendUrl || "").replace(new RegExp("/+$"), "") + "|" + String(currentUserId || currentUserEmail || "session") + "|" + headerSignature;
+        }, [backendUrl, currentUserEmail, currentUserId, requestHeaders]);
+        const [agentsOverviewAnalyticsState, setAgentsOverviewAnalyticsState] = useState(() => ({
+          scopeKey: "",
+          dataByPeriod: {},
+          loadingPeriod: "",
+          errorsByPeriod: {},
+        }));
+        const agentsOverviewAnalyticsFallbackScopeRef = useRef("");
         const [agentsAnalyticsMenuOpen, setAgentsAnalyticsMenuOpen] = useState(false);
-        const [agentsOverviewActionsMenuOpen, setAgentsOverviewActionsMenuOpen] = useState(false);
         const [agentDetailChartTimescale, setAgentDetailChartTimescale] = useState("month");
         const [agentDetailPerformanceRange, setAgentDetailPerformanceRange] = useState("1m");
         const [agentsHomeCreationCommandRequest, setAgentsHomeCreationCommandRequest] = useState(null);
@@ -90649,12 +83782,6 @@ ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.lifecycle}        const [saveState, setSave
           isSaving: false,
           error: "",
           message: "",
-        });
-        const [isAgentInstructionsEditing, setIsAgentInstructionsEditing] = useState(false);
-        const [agentInstructionsHeaderStuck, setAgentInstructionsHeaderStuck] = useState(false);
-        const [agentInstructionsHistory, setAgentInstructionsHistory] = useState({
-          past: [],
-          future: [],
         });
         const [agentProfileAvatarBroken, setAgentProfileAvatarBroken] = useState(false);
         const [agentProfileAvatarPickerOpen, setAgentProfileAvatarPickerOpen] = useState(false);
@@ -92132,7 +85259,6 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLoader}
 
         function resetEditorAuxiliaryState() {
           editorDirtyRef.current = false;
-          setIsAgentInstructionsEditing(false);
           setAgentActionsPopoverOpen(false);
           setAgentPublishMenuOpen(false);
           setAgentVersionsHeaderMenuOpen(false);
@@ -92179,11 +85305,7 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLoader}
         }
 
         function applyAgentMarkdownSelection(field, textareaRef, nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
-          if (field === "instructions" && textareaRef === agentInstructionsTextareaRef) {
-            updateAgentInstructionsValue(nextValue);
-          } else {
-            updateAgentField(field, nextValue);
-          }
+          updateAgentField(field, nextValue);
           window.requestAnimationFrame(() => {
             const textarea = textareaRef.current;
             if (!textarea) {
@@ -92196,78 +85318,6 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLoader}
             textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
             resizeAgentDescriptionTextarea(textarea);
           });
-        }
-
-        function focusAgentInstructionsTextareaAtEnd(value) {
-          window.requestAnimationFrame(() => {
-            const textarea = agentInstructionsTextareaRef.current;
-            if (!textarea) {
-              return;
-            }
-            const nextCaret = String(value || "").length;
-            textarea.focus();
-            textarea.setSelectionRange(nextCaret, nextCaret);
-            resizeAgentDescriptionTextarea(textarea);
-          });
-        }
-
-        function updateAgentInstructionsValue(value, options = {}) {
-          if (isPlaygroundDefaultAgentConfigurationLocked(draftAgent)) {
-            return;
-          }
-          const nextValue = String(value ?? "");
-          const previousValue = String(draftAgent?.instructions || "");
-          if (previousValue === nextValue) {
-            return;
-          }
-          if (options.recordHistory !== false) {
-            setAgentInstructionsHistory((current) => ({
-              past: [...(Array.isArray(current.past) ? current.past : []), previousValue].slice(-80),
-              future: [],
-            }));
-          }
-          updateAgentField("instructions", nextValue);
-        }
-
-        function applyAgentInstructionsHistoryValue(value) {
-          updateAgentField("instructions", String(value ?? ""));
-          focusAgentInstructionsTextareaAtEnd(value);
-        }
-
-        function handleAgentInstructionsUndo() {
-          const historyPast = Array.isArray(agentInstructionsHistory.past) ? agentInstructionsHistory.past : [];
-          if (historyPast.length === 0 || isPlaygroundDefaultAgentConfigurationLocked(draftAgent)) {
-            return;
-          }
-          const currentValue = String(draftAgent?.instructions || "");
-          const previousValue = historyPast[historyPast.length - 1];
-          setAgentInstructionsHistory((current) => {
-            const past = Array.isArray(current.past) ? current.past : [];
-            const future = Array.isArray(current.future) ? current.future : [];
-            return {
-              past: past.slice(0, -1),
-              future: [currentValue, ...future].slice(0, 80),
-            };
-          });
-          applyAgentInstructionsHistoryValue(previousValue);
-        }
-
-        function handleAgentInstructionsRedo() {
-          const historyFuture = Array.isArray(agentInstructionsHistory.future) ? agentInstructionsHistory.future : [];
-          if (historyFuture.length === 0 || isPlaygroundDefaultAgentConfigurationLocked(draftAgent)) {
-            return;
-          }
-          const currentValue = String(draftAgent?.instructions || "");
-          const nextValue = historyFuture[0];
-          setAgentInstructionsHistory((current) => {
-            const past = Array.isArray(current.past) ? current.past : [];
-            const future = Array.isArray(current.future) ? current.future : [];
-            return {
-              past: [...past, currentValue].slice(-80),
-              future: future.slice(1),
-            };
-          });
-          applyAgentInstructionsHistoryValue(nextValue);
         }
 
         function buildWrappedAgentMarkdownEdit(value, selectionStart, selectionEnd, prefix, suffix = prefix) {
@@ -93834,7 +86884,6 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLoader}
           setAgentListMode("agents");
           setSelectedAgentId(savedAgent.id);
           setDraftAgent(savedAgent);
-          setIsAgentInstructionsEditing(false);
           setIsHomeViewActive(false);
           return savedAgent;
         }
@@ -94363,59 +87412,6 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLoader}
           return () => window.cancelAnimationFrame(frameId);
         }, [isHomeViewActive, selectedAgentId]);
 
-        const agentInstructionsHeaderPresentation = isPlaygroundDefaultAgentConfigurationLocked(draftAgent)
-          ? "static-transparent"
-          : "default";
-
-        useEffect(() => {
-          const sectionNode = agentInstructionsSectionRef.current;
-          const currentAgentDetailTab = agentDetailTab === "threads" ? "insights" : agentDetailTab;
-          if (agentInstructionsHeaderPresentation === "static-transparent" || !sectionNode || currentAgentDetailTab !== "general") {
-            setAgentInstructionsHeaderStuck(false);
-            return undefined;
-          }
-
-          const headerNode = sectionNode.querySelector(".playground-tasks-detail-section-header");
-          if (!headerNode) {
-            setAgentInstructionsHeaderStuck(false);
-            return undefined;
-          }
-
-          const scrollNode = agentResourcesDetailScrollRef.current
-            || agentDetailMainRef.current?.querySelector(".playground-environments-detail-scroll")
-            || null;
-          let frameId = 0;
-          const updateStickyState = () => {
-            frameId = 0;
-            const sectionRect = sectionNode.getBoundingClientRect();
-            const headerRect = headerNode.getBoundingClientRect();
-            const containerRect = scrollNode && typeof scrollNode.getBoundingClientRect === "function"
-              ? scrollNode.getBoundingClientRect()
-              : { top: 0 };
-            const topEdge = Number(containerRect.top || 0);
-            const nextIsStuck = headerRect.top <= topEdge + 1 && sectionRect.bottom > topEdge + headerRect.height + 1;
-            setAgentInstructionsHeaderStuck((current) => current === nextIsStuck ? current : nextIsStuck);
-          };
-          const scheduleUpdate = () => {
-            if (frameId) {
-              return;
-            }
-            frameId = window.requestAnimationFrame(updateStickyState);
-          };
-
-          scheduleUpdate();
-          const eventTarget = scrollNode || window;
-          eventTarget.addEventListener("scroll", scheduleUpdate, { passive: true });
-          window.addEventListener("resize", scheduleUpdate);
-          return () => {
-            if (frameId) {
-              window.cancelAnimationFrame(frameId);
-            }
-            eventTarget.removeEventListener("scroll", scheduleUpdate);
-            window.removeEventListener("resize", scheduleUpdate);
-          };
-        }, [agentDetailTab, selectedAgentId, draftAgent?.id, isHomeViewActive, agentInstructionsHeaderPresentation]);
-
         useEffect(() => {
           if (!normalizedFocusedAgentSelectionToken || !normalizedFocusedAgentId) {
             return;
@@ -94678,13 +87674,6 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLoader}
           setAgentProfileAvatarBroken(false);
           setAgentProfileAvatarPickerOpen(false);
         }, [draftAgent?.id, rawAgentProfilePhotoUrl]);
-
-        useEffect(() => {
-          setAgentInstructionsHistory({
-            past: [],
-            future: [],
-          });
-        }, [draftAgent?.id]);
 
         useEffect(() => {
           agentWorkspaceTeamMembersRequestedRef.current = new Set();
@@ -95205,33 +88194,6 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLifecycle}
         }, [agentActionsPopoverOpen]);
 
         useEffect(() => {
-          if (!agentsOverviewActionsMenuOpen) {
-            return undefined;
-          }
-
-          function handleAgentsOverviewActionsMenuPointerDown(event) {
-            const target = event?.target instanceof Node ? event.target : null;
-            if (!target || !agentsOverviewActionsMenuRef.current || agentsOverviewActionsMenuRef.current.contains(target)) {
-              return;
-            }
-            setAgentsOverviewActionsMenuOpen(false);
-          }
-
-          function handleAgentsOverviewActionsMenuEscape(event) {
-            if (event.key === "Escape") {
-              setAgentsOverviewActionsMenuOpen(false);
-            }
-          }
-
-          document.addEventListener("mousedown", handleAgentsOverviewActionsMenuPointerDown);
-          window.addEventListener("keydown", handleAgentsOverviewActionsMenuEscape);
-          return () => {
-            document.removeEventListener("mousedown", handleAgentsOverviewActionsMenuPointerDown);
-            window.removeEventListener("keydown", handleAgentsOverviewActionsMenuEscape);
-          };
-        }, [agentsOverviewActionsMenuOpen]);
-
-        useEffect(() => {
           if (!agentPublishMenuOpen) {
             return undefined;
           }
@@ -95359,10 +88321,6 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLifecycle}
         }, [agentCreationSetupOpen, agentCreationSetupResetToken]);
 
         useLayoutEffect(() => {
-          resizeAgentDescriptionTextarea(agentInstructionsTextareaRef.current);
-        }, [draftAgent?.instructions, draftAgent?.id]);
-
-        useLayoutEffect(() => {
           if (!agentCreationSetupOpen) {
             return;
           }
@@ -95381,52 +88339,6 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLifecycle}
           }
           resizeAgentDescriptionTextarea(agentComposerInstructionsTextareaRef.current);
         }, [agentComposerDraft?.instructions, agentComposerOpen]);
-
-        useEffect(() => {
-          const textarea = agentInstructionsTextareaRef.current;
-          const detailMain = agentDetailMainRef.current;
-          if (!textarea || !detailMain) return undefined;
-
-          let frameId = 0;
-          const timeoutIds = [];
-          const scheduleResize = () => {
-            if (frameId) {
-              window.cancelAnimationFrame(frameId);
-            }
-            frameId = window.requestAnimationFrame(() => {
-              resizeAgentDescriptionTextarea(agentInstructionsTextareaRef.current);
-            });
-          };
-
-          scheduleResize();
-          [120, 240, 360].forEach((delay) => {
-            timeoutIds.push(window.setTimeout(scheduleResize, delay));
-          });
-
-          if (typeof ResizeObserver === "undefined") {
-            window.addEventListener("resize", scheduleResize);
-            return () => {
-              if (frameId) {
-                window.cancelAnimationFrame(frameId);
-              }
-              timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
-              window.removeEventListener("resize", scheduleResize);
-            };
-          }
-
-          const observer = new ResizeObserver(() => {
-            scheduleResize();
-          });
-          observer.observe(detailMain);
-
-          return () => {
-            if (frameId) {
-              window.cancelAnimationFrame(frameId);
-            }
-            timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
-            observer.disconnect();
-          };
-        }, [draftAgent?.id]);
 
         useEffect(() => {
           if (!agentComposerModelPopover) {
@@ -95502,10 +88414,68 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLifecycle}
 
         useEffect(() => {
           if (!isHomeViewActive) {
-            return;
+            return undefined;
           }
-          void loadAgentsHomeThreads();
-        }, [isHomeViewActive, loadAgentsHomeThreads]);
+          const period = agentsHomeChartTimescale === "day" || agentsHomeChartTimescale === "week"
+            ? agentsHomeChartTimescale
+            : "month";
+          const requestOptions = {
+            backendUrl,
+            headers: requestHeaders,
+            identity: currentUserId || currentUserEmail || "session",
+            period,
+          };
+          const cached = readCachedAgentsOverviewAnalytics(requestOptions);
+          setAgentsOverviewAnalyticsState((current) => {
+            const isSameScope = current.scopeKey === agentsOverviewAnalyticsScopeKey;
+            const currentDataByPeriod = isSameScope ? current.dataByPeriod : {};
+            return {
+              scopeKey: agentsOverviewAnalyticsScopeKey,
+              dataByPeriod: cached?.data
+                ? { ...currentDataByPeriod, [period]: cached.data }
+                : currentDataByPeriod,
+              loadingPeriod: cached?.data ? "" : period,
+              errorsByPeriod: isSameScope ? { ...current.errorsByPeriod, [period]: "" } : {},
+            };
+          });
+
+          let isActive = true;
+          void fetchAgentsOverviewAnalytics(requestOptions).then((data) => {
+            if (!isActive) return;
+            agentsOverviewAnalyticsFallbackScopeRef.current = "";
+            setAgentsOverviewAnalyticsState((current) => {
+              if (current.scopeKey !== agentsOverviewAnalyticsScopeKey) return current;
+              return {
+                ...current,
+                dataByPeriod: { ...current.dataByPeriod, [period]: data },
+                loadingPeriod: current.loadingPeriod === period ? "" : current.loadingPeriod,
+                errorsByPeriod: { ...current.errorsByPeriod, [period]: "" },
+              };
+            });
+          }).catch((error) => {
+            if (!isActive) return;
+            const errorMessage = error instanceof Error ? error.message : "Failed to load agent analytics.";
+            const shouldUseLegacyFallback = error instanceof AgentsOverviewAnalyticsRequestError
+              && (error.status === 404 || error.status === 501);
+            setAgentsOverviewAnalyticsState((current) => {
+              if (current.scopeKey !== agentsOverviewAnalyticsScopeKey) return current;
+              return {
+                ...current,
+                loadingPeriod: current.loadingPeriod === period ? "" : current.loadingPeriod,
+                errorsByPeriod: { ...current.errorsByPeriod, [period]: shouldUseLegacyFallback ? "" : errorMessage },
+              };
+            });
+            const fallbackKey = agentsOverviewAnalyticsScopeKey + "|" + period;
+            if (shouldUseLegacyFallback && agentsOverviewAnalyticsFallbackScopeRef.current !== fallbackKey) {
+              agentsOverviewAnalyticsFallbackScopeRef.current = fallbackKey;
+              void loadAgentsHomeThreads();
+            }
+          });
+
+          return () => {
+            isActive = false;
+          };
+        }, [agentsHomeChartTimescale, agentsOverviewAnalyticsScopeKey, backendUrl, currentUserEmail, currentUserId, isHomeViewActive, loadAgentsHomeThreads, requestHeaders]);
 
         useEffect(() => {
           if (!selectedAgentId || selectedAgentId === PLAYGROUND_AGENT_DRAFT_ID || isHomeViewActive) {
@@ -95522,6 +88492,12 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLifecycle}
           if (!signal || !normalizedThreadId) {
             return;
           }
+
+          invalidateAgentsOverviewAnalytics({
+            backendUrl,
+            headers: requestHeaders,
+            identity: currentUserId || currentUserEmail || "session",
+          });
 
           if (String(signal.action || "").trim() === "delete") {
             setAgentsHomeThreadRecords((current) => {
@@ -95558,7 +88534,7 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLifecycle}
             });
             return didFind ? nextItems : [signalRecord, ...currentItems];
           });
-        }, [loadAgentsHomeThreads, threadMutationSignal]);
+        }, [backendUrl, currentUserEmail, currentUserId, loadAgentsHomeThreads, requestHeaders, threadMutationSignal]);
 
 	        function handleAgentSelect(agentId) {
 	          if (draftAgent?.id && draftAgent.id !== PLAYGROUND_AGENT_DRAFT_ID && editorDirtyRef.current) {
@@ -98199,7 +91175,7 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLifecycle}
             },
             isDevelopConfigureAgentsHome
               ? React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header playground-develop-server-kind-header" },
-                  React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title" }, "Configure your Agents"),
+                  React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title" }, "Agents"),
                   React.createElement("div", { className: "playground-project-overview-summary-title-actions playground-develop-header-actions" },
                     agentsHomeTimescaleControl,
                     agentsHomeAnalyticsOptions
@@ -101734,13 +94710,7 @@ ${GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.versionDiffPayload}        function buildAge
 
           const agentVersionChangesPage = renderAgentVersionChangesPage();
           if (agentVersionChangesPage) {
-            const agentDetailBackgroundImageUrl = getPlaygroundAgentBackgroundImageUrl(draftAgent);
-            const agentDetailMainClassName = "playground-environments-editor-main playground-tasks-detail-main"
-              + (agentDetailBackgroundImageUrl ? " is-agent-background-active" : "");
-            const agentDetailMainStyle = agentDetailBackgroundImageUrl
-              ? { "--playground-agent-detail-bg-image": "url(" + JSON.stringify(agentDetailBackgroundImageUrl) + ")" }
-              : undefined;
-            return React.createElement("div", { className: agentDetailMainClassName, ref: agentDetailMainRef, style: agentDetailMainStyle },
+            return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: agentDetailMainRef },
               React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
                 React.createElement("div", { className: "playground-agents-detail-content is-agent-overview-general is-agent-version-changes" },
                   agentVersionChangesPage
@@ -102648,17 +95618,6 @@ ${GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.versionDiffPayload}        function buildAge
             )
           );
 
-	          const agentResourceDetailBackButton = embeddedInResources
-	            ? React.createElement("button", {
-	                type: "button",
-	                className: "playground-resource-detail-back-button",
-	                onClick: showAgentsHome,
-	                "aria-label": "Back to Agents",
-	              },
-	                React.createElement(ArrowLeft, { width: 12, height: 12, strokeWidth: 1.8 }),
-	                React.createElement("span", null, "Back")
-	              )
-	            : null;
           const canShowAgentDetailHeaderPublish = Boolean(
             !agentCreationSetupOpen
             && draftAgent?.id
@@ -103102,7 +96061,7 @@ ${GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.versionDiffPayload}        function buildAge
               : null,
             renderAgentSidebarToggleButton()
           );
-          const agentDetailTopControls = React.createElement("div", { className: "playground-agents-detail-top-controls" },
+          const agentDetailTopControls = React.createElement(React.Fragment, null,
             renderAgentVersionSelector(),
             agentDetailSidebarControls
           );
@@ -103763,11 +96722,7 @@ ${GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.versionDiffPayload}        function buildAge
               })
             );
           };
-	          const agentPropertiesSidebar = React.createElement("aside", {
-	              className: "playground-project-overview-sidebar playground-agents-detail-sidebar"
-	                + (agentModelPopover || agentOwnerPopoverOpen || agentVoicePopoverOpen ? " is-popover-open" : ""),
-	              "aria-label": isTeamAgent ? "Squad settings" : "Agent settings",
-	            },
+          const agentPropertiesSidebar = React.createElement(React.Fragment, null,
             React.createElement("section", {
                 className: "playground-project-overview-sidebar-card playground-agents-detail-about-card",
               },
@@ -104516,29 +97471,6 @@ ${GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.page}          const agentDetailThreadSortOp
                   )
           );
 ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.view}          const normalizedAgentDetailTab = agentDetailTab === "threads" ? "insights" : agentDetailTab;
-          const agentDetailTabs = React.createElement("div", { className: "playground-agents-overview-tabs playground-agents-detail-tabs" },
-            React.createElement("div", { className: "playground-project-overview-chart-tabs" },
-              [
-                { id: "general", label: "General", Icon: LayoutGrid },
-                { id: "insights", label: "Insights", Icon: ChartNoAxesColumnIncreasing },
-                { id: "evaluation", label: "Evaluation", Icon: ChartColumnIncreasing },
-                { id: "guardrails", label: "Guardrails", Icon: Shield },
-                { id: "permissions", label: "Permissions", Icon: FingerprintPattern },
-              ].map((tab) => {
-                const TabIcon = tab.Icon;
-                return React.createElement("button", {
-                    key: tab.id,
-                    type: "button",
-                    className: "playground-project-overview-chart-tab" + (normalizedAgentDetailTab === tab.id ? " is-active" : ""),
-                    onClick: () => setAgentDetailTab(tab.id),
-                    "aria-pressed": normalizedAgentDetailTab === tab.id ? "true" : "false",
-                  },
-                  TabIcon ? React.createElement(TabIcon, { className: "playground-agents-detail-tab-icon", strokeWidth: 1.7 }) : null,
-                  React.createElement("span", null, tab.label)
-                );
-              })
-            )
-          );
 
           const teamSection = isTeamAgent
             ? React.createElement("div", { className: "playground-environments-stack" },
@@ -104605,135 +97537,16 @@ ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.view}          const normalizedAgentDetailT
 	              )
 	            : null;
 
-	          const canUndoAgentInstructions = Array.isArray(agentInstructionsHistory.past) && agentInstructionsHistory.past.length > 0;
-          const canRedoAgentInstructions = Array.isArray(agentInstructionsHistory.future) && agentInstructionsHistory.future.length > 0;
-          const renderAgentInstructionsToolbarButton = (action) =>
-            React.createElement("button", {
-              key: action.id,
-              type: "button",
-              className: "playground-tasks-detail-format-button",
-              title: action.label,
-              "aria-label": action.label,
-              disabled: Boolean(action.disabled),
-              onMouseDown: (event) => event.preventDefault(),
-              onClick: action.onClick,
-            }, React.createElement(action.icon, {
-              width: 14,
-              height: 14,
-              strokeWidth: action.strokeWidth || 1.8,
-            }));
-          const agentInstructionsTextFormatActions = [
-            { id: "bold", label: "Bold", icon: Bold, strokeWidth: 2.7 },
-            { id: "italic", label: "Italic", icon: Italic },
-            { id: "underline", label: "Underline", icon: Underline },
-          ];
-          const agentInstructionsListFormatActions = [
-            { id: "list", label: "List", icon: List },
-            { id: "ordered-list", label: "Ordered list", icon: ListOrdered },
-          ];
-          const agentInstructionsInsertFormatActions = [
-            { id: "code", label: "Code", icon: CodeXml },
-            { id: "link", label: "Link", icon: Link2 },
-          ];
-          const instructionsSection = React.createElement("div", {
-              ref: agentInstructionsSectionRef,
-              className: "playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section"
-                + (agentInstructionsHeaderStuck && agentInstructionsHeaderPresentation !== "static-transparent" ? " is-header-stuck" : ""),
-            },
-            React.createElement(PlaygroundDetailSectionHeader, {
-                title: isTeamAgent ? "Squad Instructions" : "Instructions",
-                presentation: agentInstructionsHeaderPresentation,
-              },
-              isDefaultAgentConfigurationLocked
-                ? null
-                : React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                    renderAgentInstructionsToolbarButton({
-                      id: "undo",
-                      label: "Undo",
-                      icon: Undo2,
-                      disabled: !canUndoAgentInstructions,
-                      onClick: handleAgentInstructionsUndo,
-                    }),
-                    renderAgentInstructionsToolbarButton({
-                      id: "redo",
-                      label: "Redo",
-                      icon: Redo2,
-                      disabled: !canRedoAgentInstructions,
-                      onClick: handleAgentInstructionsRedo,
-                    }),
-                    React.createElement("span", {
-                      key: "history-divider",
-                      className: "playground-agents-detail-instructions-toolbar-divider",
-                      "aria-hidden": "true",
-                    }),
-                    agentInstructionsTextFormatActions.map((action) =>
-                      renderAgentInstructionsToolbarButton({
-                        ...action,
-                        onClick: () => handleAgentMarkdownFormat("instructions", agentInstructionsTextareaRef, action.id),
-                      })
-                    ),
-                    React.createElement("span", {
-                      key: "list-divider-start",
-                      className: "playground-agents-detail-instructions-toolbar-divider",
-                      "aria-hidden": "true",
-                    }),
-                    agentInstructionsListFormatActions.map((action) =>
-                      renderAgentInstructionsToolbarButton({
-                        ...action,
-                        onClick: () => handleAgentMarkdownFormat("instructions", agentInstructionsTextareaRef, action.id),
-                      })
-                    ),
-                    React.createElement("span", {
-                      key: "list-divider-end",
-                      className: "playground-agents-detail-instructions-toolbar-divider",
-                      "aria-hidden": "true",
-                    }),
-                    agentInstructionsInsertFormatActions.map((action) =>
-                      renderAgentInstructionsToolbarButton({
-                        ...action,
-                        onClick: () => handleAgentMarkdownFormat("instructions", agentInstructionsTextareaRef, action.id),
-                      })
-                    )
-                  )
-            ),
-            React.createElement("div", {
-                className: "playground-tasks-detail-description-editor"
-                  + (isAgentInstructionsEditing && !isDefaultAgentConfigurationLocked ? " is-editing" : " is-preview")
-                  + (isDefaultAgentConfigurationLocked ? " is-readonly" : ""),
-              },
-              (!isAgentInstructionsEditing || isDefaultAgentConfigurationLocked)
-                ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                    String(draftAgent.instructions || "").trim()
-                      ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                          content: draftAgent.instructions,
-                          className: "playground-tasks-detail-description-preview tb-message-markdown",
-                        })
-                      : React.createElement("div", {
-                          className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                        }, isTeamAgent ? "Add Squad Instructions here" : "Add Instructions here")
-                  )
-                : null,
-              isDefaultAgentConfigurationLocked
-                ? null
-                : React.createElement("textarea", {
-                    ref: agentInstructionsTextareaRef,
-                    className: "playground-tasks-detail-description-input " + (isAgentInstructionsEditing ? "is-editing" : "is-preview"),
-                    rows: 1,
-                    placeholder: isAgentInstructionsEditing ? (isTeamAgent ? "Add Squad Instructions here" : "Add Instructions here") : "",
-                    value: draftAgent.instructions || "",
-                    onFocus: () => {
-                      setIsAgentInstructionsEditing(true);
-                    },
-                    onChange: (event) => {
-                      updateAgentInstructionsValue(event.target.value);
-                      resizeAgentDescriptionTextarea(event.currentTarget);
-                    },
-                    onBlur: () => {
-                      setIsAgentInstructionsEditing(false);
-                    },
-                  })
-            )
-          );
+          const instructionsSection = React.createElement(PlatformInstructionsEditor, {
+            value: draftAgent.instructions || "",
+            onChange: (value) => updateAgentField("instructions", value),
+            title: isTeamAgent ? "Squad Instructions" : "Instructions",
+            placeholder: isTeamAgent ? "Add Squad Instructions here" : "Add Instructions here",
+            ariaLabel: isTeamAgent ? "Squad instructions" : "Agent instructions",
+            readOnly: isDefaultAgentConfigurationLocked,
+            stickyHeader: !isDefaultAgentConfigurationLocked,
+            historyKey: draftAgent.id || "draft-agent",
+          });
 
           const agentInsightsSection = React.createElement(React.Fragment, null,
             agentUsageChartSection,
@@ -104753,32 +97566,23 @@ ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.view}          const normalizedAgentDetailT
 	                    : null,
 		                  instructionsSection
 		                );
-          const agentDetailWorkspaceSection = React.createElement("div", {
-              className: "playground-project-overview-layout playground-agents-detail-overview-layout" + (agentDetailSidebarCollapsed ? " is-sidebar-collapsed" : ""),
+          const agentDetailWorkspaceSection = React.createElement(AgentDetailPage, {
+              header: agentProfileSection,
+              actions: agentDetailTopControls,
+              sidebar: agentPropertiesSidebar,
+              activeTab: normalizedAgentDetailTab,
+              onTabChange: setAgentDetailTab,
+              sidebarCollapsed: agentDetailSidebarCollapsed,
+              sidebarPopoverOpen: Boolean(agentModelPopover || agentOwnerPopoverOpen || agentVoicePopoverOpen),
+              ariaLabel: (isTeamAgent ? "Squad" : "Agent") + " details for " + (draftAgent.name || "Untitled"),
+              sidebarAriaLabel: isTeamAgent ? "Squad settings" : "Agent settings",
             },
-            agentDetailTabs,
-            agentDetailTopControls,
-            React.createElement("div", {
-                className: "playground-project-overview-main playground-agents-detail-overview-main"
-                  + (normalizedAgentDetailTab === "permissions" ? " is-permissions-tab" : ""),
-              },
-              agentDetailActiveSection
-            ),
-            agentPropertiesSidebar
+            agentDetailActiveSection
           );
 
-          const agentDetailBackgroundImageUrl = getPlaygroundAgentBackgroundImageUrl(draftAgent);
-          const agentDetailMainClassName = "playground-environments-editor-main playground-tasks-detail-main"
-            + (agentDetailBackgroundImageUrl ? " is-agent-background-active" : "");
-          const agentDetailMainStyle = agentDetailBackgroundImageUrl
-            ? { "--playground-agent-detail-bg-image": "url(" + JSON.stringify(agentDetailBackgroundImageUrl) + ")" }
-            : undefined;
-
-	          return React.createElement("div", { className: agentDetailMainClassName, ref: agentDetailMainRef, style: agentDetailMainStyle },
+	          return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: agentDetailMainRef },
 	            React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
 	              React.createElement("div", { className: "playground-agents-detail-content" + ((normalizedAgentDetailTab === "general" || normalizedAgentDetailTab === "insights" || normalizedAgentDetailTab === "permissions" || normalizedAgentDetailTab === "evaluation" || normalizedAgentDetailTab === "guardrails") ? " is-agent-overview-general" : "") },
-		                agentResourceDetailBackButton,
-		                agentProfileSection,
 	                agentDetailWorkspaceSection
               ),
 ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.modal}            )
@@ -104870,67 +97674,6 @@ ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.modal}            )
           window.addEventListener("keydown", handleAgentVersionKeyboardShortcut, true);
           return () => window.removeEventListener("keydown", handleAgentVersionKeyboardShortcut, true);
         }, [canShowAgentVersions, draftAgent, saveState.isSaving, agentVersionState.status, agentVersionModal]);
-        function renderAgentsOverviewActionsMenu() {
-          if (!shouldShowAgentsHome || agentCreationSetupOpen || agentListMode !== "agents") {
-            return null;
-          }
-          return renderPlaygroundPlatformPopup({
-            open: agentsOverviewActionsMenuOpen,
-            shellRef: agentsOverviewActionsMenuRef,
-            shellClassName: "playground-agents-overview-topnav-actions-shell",
-            menuClassName: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-            trigger: React.createElement("button", {
-              type: "button",
-              className: "playground-files-header-icon-button is-plain" + (agentsOverviewActionsMenuOpen ? " is-active" : ""),
-              title: "Agent resources",
-              "aria-label": "Agent resources",
-              "aria-haspopup": "menu",
-              "aria-expanded": agentsOverviewActionsMenuOpen ? "true" : "false",
-              onClick: () => setAgentsOverviewActionsMenuOpen((current) => !current),
-            }, React.createElement(Ellipsis, { width: 16, height: 16, strokeWidth: 1.8 })),
-            menuProps: {
-              role: "menu",
-              onClick: (event) => event.stopPropagation(),
-            },
-            children: React.createElement(React.Fragment, null,
-              React.createElement("button", {
-                type: "button",
-                role: "menuitem",
-                className: "tb-popup-row",
-                onClick: () => {
-                  setAgentsOverviewActionsMenuOpen(false);
-                  if (typeof onOpenSettingsUsage === "function") {
-                    onOpenSettingsUsage();
-                  }
-                },
-              },
-                React.createElement(ChartNoAxesColumnIncreasing, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                  React.createElement("span", null, "Show Usage")
-                )
-              ),
-${MODELS_AGENT_SCRIPT_FRAGMENTS.overviewAction}              React.createElement("button", {
-                type: "button",
-                role: "menuitem",
-                className: "tb-popup-row",
-                onClick: () => {
-                  setAgentsOverviewActionsMenuOpen(false);
-                  if (typeof window !== "undefined") {
-                    const guideWindow = window.open("http://localhost:3001/developers/prompt-guidance", "_blank", "noopener,noreferrer");
-                    if (guideWindow) {
-                      guideWindow.opener = null;
-                    }
-                  }
-                },
-              },
-                React.createElement(BookOpen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                  React.createElement("span", null, "Prompting guide")
-                )
-              )
-            ),
-          });
-        }
         const agentsTopNavActions = topNavActionsContainer && !agentVersionsSidebarOpen
           ? createPortal(
               React.createElement(React.Fragment, null,
@@ -104997,8 +97740,7 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.overviewAction}              React.createElement
                           )
                         : null
                     )
-	                  : null,
-                renderAgentsOverviewActionsMenu()
+	                  : null
               ),
               topNavActionsContainer
             )
@@ -105581,6 +98323,11 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.overviewAction}              React.createElement
 
         function renderModularAgentsOverviewPage() {
           const allOverviewAgents = allKnownAgents.filter((agent) => agent?.id && agent.id !== PLAYGROUND_AGENT_DRAFT_ID);
+          const compactAnalyticsSnapshot = agentsOverviewAnalyticsState.scopeKey === agentsOverviewAnalyticsScopeKey
+            ? agentsOverviewAnalyticsState.dataByPeriod?.[agentsHomeChartTimescale] || null
+            : null;
+          const hasCompactAnalytics = Array.isArray(compactAnalyticsSnapshot?.buckets)
+            && compactAnalyticsSnapshot.buckets.length > 0;
           const squadAgentIds = new Set(
             allOverviewAgents.filter((agent) => isPlaygroundTeamAgent(agent)).map((agent) => String(agent.id || "").trim()).filter(Boolean)
           );
@@ -105617,6 +98364,7 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.overviewAction}              React.createElement
           const squadRuns = buckets.map(() => 0);
           const agentCostsUsd = buckets.map(() => 0);
           const squadCostsUsd = buckets.map(() => 0);
+          const combinedTokens = buckets.map(() => 0);
           const usageTokensByAgentId = new Map();
 
           const readThreadUsageTokens = (thread) => {
@@ -105630,63 +98378,89 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.overviewAction}              React.createElement
             return Math.round(inputTokens + outputTokens + cacheTokens);
           };
 
-          (Array.isArray(agentsHomeThreadRecords) ? agentsHomeThreadRecords : []).forEach((thread) => {
-            const agentId = String(thread?.agentId || thread?.agent?.id || thread?.metadata?.agentId || "").trim();
-            const activityValue = thread?.updatedAt || thread?.createdAt || "";
-            const activityTimestamp = Date.parse(String(activityValue));
-            if (agentId && Number.isFinite(activityTimestamp)) {
-              const current = latestActivityByAgentId.get(agentId);
-              if (!current || activityTimestamp > current.timestamp) {
+          if (hasCompactAnalytics) {
+            compactAnalyticsSnapshot.buckets.forEach((bucket, index) => {
+              if (index >= buckets.length) return;
+              agentRuns[index] = Math.max(0, Number(bucket?.agentRuns) || 0);
+              squadRuns[index] = Math.max(0, Number(bucket?.squadRuns) || 0);
+              agentCostsUsd[index] = Math.max(0, Number(bucket?.agentCostUsd) || 0);
+              squadCostsUsd[index] = Math.max(0, Number(bucket?.squadCostUsd) || 0);
+              combinedTokens[index] = Math.max(0, Number(bucket?.tokens) || 0);
+            });
+            (Array.isArray(compactAnalyticsSnapshot.resources) ? compactAnalyticsSnapshot.resources : []).forEach((resource) => {
+              const agentId = String(resource?.agentId || "").trim();
+              if (!agentId) return;
+              usageTokensByAgentId.set(agentId, Math.max(0, Number(resource?.tokenCount) || 0));
+              const activityValue = String(resource?.lastUsedAt || "").trim();
+              const activityTimestamp = Date.parse(activityValue);
+              if (Number.isFinite(activityTimestamp)) {
                 latestActivityByAgentId.set(agentId, { timestamp: activityTimestamp, value: activityValue });
               }
-            }
-            const createdAt = Date.parse(String(thread?.createdAt || thread?.updatedAt || ""));
-            if (!Number.isFinite(createdAt) || createdAt < periodStart.getTime()) return;
-            if (agentId) {
-              usageTokensByAgentId.set(
-                agentId,
-                (usageTokensByAgentId.get(agentId) || 0) + readThreadUsageTokens(thread),
-              );
-            }
-            const bucketIndex = buckets.findIndex((bucket) => createdAt >= bucket.startMs && createdAt < bucket.endMs);
-            if (bucketIndex < 0) return;
-            const isSquad = squadAgentIds.has(agentId);
-            const costUsd = Math.max(0, Number(readSettingsComputeTokens(thread, "totalCT", "totalCost") || 0)) / SETTINGS_CT_PER_DOLLAR;
-            if (isSquad) {
-              squadRuns[bucketIndex] += 1;
-              squadCostsUsd[bucketIndex] += costUsd;
-            } else {
-              agentRuns[bucketIndex] += 1;
-              agentCostsUsd[bucketIndex] += costUsd;
-            }
-          });
+            });
+          } else {
+            (Array.isArray(agentsHomeThreadRecords) ? agentsHomeThreadRecords : []).forEach((thread) => {
+              const agentId = String(thread?.agentId || thread?.agent?.id || thread?.metadata?.agentId || "").trim();
+              const activityValue = thread?.updatedAt || thread?.createdAt || "";
+              const activityTimestamp = Date.parse(String(activityValue));
+              if (agentId && Number.isFinite(activityTimestamp)) {
+                const current = latestActivityByAgentId.get(agentId);
+                if (!current || activityTimestamp > current.timestamp) {
+                  latestActivityByAgentId.set(agentId, { timestamp: activityTimestamp, value: activityValue });
+                }
+              }
+              const createdAt = Date.parse(String(thread?.createdAt || thread?.updatedAt || ""));
+              if (!Number.isFinite(createdAt) || createdAt < periodStart.getTime()) return;
+              const usageTokens = readThreadUsageTokens(thread);
+              if (agentId) {
+                usageTokensByAgentId.set(
+                  agentId,
+                  (usageTokensByAgentId.get(agentId) || 0) + usageTokens,
+                );
+              }
+              const bucketIndex = buckets.findIndex((bucket) => createdAt >= bucket.startMs && createdAt < bucket.endMs);
+              if (bucketIndex < 0) return;
+              combinedTokens[bucketIndex] += usageTokens;
+              const isSquad = squadAgentIds.has(agentId);
+              const costUsd = Math.max(0, Number(readSettingsComputeTokens(thread, "totalCT", "totalCost") || 0)) / SETTINGS_CT_PER_DOLLAR;
+              if (isSquad) {
+                squadRuns[bucketIndex] += 1;
+                squadCostsUsd[bucketIndex] += costUsd;
+              } else {
+                agentRuns[bucketIndex] += 1;
+                agentCostsUsd[bucketIndex] += costUsd;
+              }
+            });
+          }
 
-          const totalAgentCostUsd = agentCostsUsd.reduce((sum, value) => sum + value, 0);
-          const totalSquadCostUsd = squadCostsUsd.reduce((sum, value) => sum + value, 0);
-          const hasCostData = totalAgentCostUsd + totalSquadCostUsd > 0;
-          const analytics = {
-            title: hasCostData ? "Daily cost by Agent Type" : "Agent activity",
-            ariaLabel: "Agent and squad activity over time",
-            loading: agentsHomeThreadsLoading,
-            error: agentsHomeThreadsError || null,
-            emptyState: "Agent usage appears here once agents start running.",
-            metrics: [
-              { id: "agents", label: "Agents", value: String(allOverviewAgents.filter((agent) => !isPlaygroundTeamAgent(agent)).length), color: "#8fc4ff" },
-              { id: "squads", label: "Squads", value: String(squadAgentIds.size), color: "#6750ff" },
-              { id: "agent-cost", label: "Spent on Agents", value: formatSettingsUsdCredits(totalAgentCostUsd), color: "#7effff" },
-              { id: "squad-cost", label: "Spent on Squads", value: formatSettingsUsdCredits(totalSquadCostUsd), color: "#4da3ff" },
-              { id: "total-cost", label: "Total cost", value: formatSettingsUsdCredits(totalAgentCostUsd + totalSquadCostUsd), color: "#fff" },
-            ],
-            labels: buckets.map((bucket) => bucket.label),
-            series: [
-              { id: "agents", label: "Agents", color: "#8fc4ff", values: hasCostData ? agentCostsUsd : agentRuns, valueKind: hasCostData ? "currency" : "count", type: "bar", stack: "agent-usage" },
-              { id: "squads", label: "Squads", color: "#6750ff", values: hasCostData ? squadCostsUsd : squadRuns, valueKind: hasCostData ? "currency" : "count", type: "bar", stack: "agent-usage" },
-            ],
-          };
+          const compactAnalyticsLoading = agentsOverviewAnalyticsState.scopeKey === agentsOverviewAnalyticsScopeKey
+            && agentsOverviewAnalyticsState.loadingPeriod === agentsHomeChartTimescale;
+          const compactAnalyticsError = agentsOverviewAnalyticsState.scopeKey === agentsOverviewAnalyticsScopeKey
+            ? String(agentsOverviewAnalyticsState.errorsByPeriod?.[agentsHomeChartTimescale] || "")
+            : "";
+          const analyticsLoading = !hasCompactAnalytics && (compactAnalyticsLoading || agentsHomeThreadsLoading);
+          const analyticsError = hasCompactAnalytics || analyticsLoading
+            ? ""
+            : (agentsHomeThreadsError || compactAnalyticsError);
+
+          const analytics = createAgentsOverviewAnalytics({
+            agentCount: allOverviewAgents.filter((agent) => !isPlaygroundTeamAgent(agent)).length,
+            squadCount: squadAgentIds.size,
+            loading: analyticsLoading,
+            error: analyticsError || null,
+            formatCurrency: formatSettingsUsdCredits,
+            buckets: buckets.map((bucket, index) => ({
+              label: hasCompactAnalytics ? String(compactAnalyticsSnapshot.buckets[index]?.label || bucket.label) : bucket.label,
+              agentRuns: agentRuns[index],
+              squadRuns: squadRuns[index],
+              agentCostUsd: agentCostsUsd[index],
+              squadCostUsd: squadCostsUsd[index],
+              tokens: combinedTokens[index],
+            })),
+          });
 
           const getCreator = (agent) => {
             if (agent?.isDefault === true || agent?.isSystem === true || isPlaygroundDefaultAgentConfigurationLocked(agent)) {
-              return { name: "Computer Agents", avatarUrl: RUNNER_TRANSPARENT_LOGO_URL, isSystem: true };
+              return { name: "Computer Agents", avatarUrl: COMPUTER_AGENTS_CREATOR_PROFILE_URL, isSystem: true };
             }
             const metadata = agent?.metadata && typeof agent.metadata === "object" && !Array.isArray(agent.metadata) ? agent.metadata : {};
             const nested = agent?.creator && typeof agent.creator === "object"
@@ -105729,7 +98503,7 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.overviewAction}              React.createElement
                 creatorFallback: getAccountInitials(creator.name),
                 creatorIsSystem: creator.isSystem,
                 lastUsedAt: Number.isFinite(lastUsedAt) ? lastUsedAt : 0,
-                lastUsedLabel: lastUsed ? formatPlaygroundFileDate(lastUsed) : (agentsHomeThreadsLoading ? "Loading..." : "Never"),
+                lastUsedLabel: lastUsed ? formatPlaygroundFileDate(lastUsed) : (analyticsLoading ? "Loading..." : "Never"),
                 lastUsedTitle: lastUsed ? formatPlaygroundExactDate(lastUsed) : "",
               };
             });
@@ -105741,6 +98515,7 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.overviewAction}              React.createElement
             period: agentsHomeChartTimescale,
             onPeriodChange: setAgentsHomeChartTimescale,
             analytics,
+            controlsPortalId: "playground-resource-overview-controls",
             loading: false,
             mutating: saveState.isSaving,
             onOpen: (row) => handleAgentSelect(row.id),
@@ -105815,14 +98590,6 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.overviewAction}              React.createElement
         ));
 
         if (embeddedInResources) {
-          const embeddedAgentBackgroundImageUrl = !agentCreationSetupOpen && !shouldShowAgentsHome && draftAgent
-            ? getPlaygroundAgentBackgroundImageUrl(draftAgent)
-            : "";
-          const embeddedAgentDetailMainPaneClassName = "playground-agents-detail-main-pane"
-            + (embeddedAgentBackgroundImageUrl ? " is-agent-background-active" : "");
-          const embeddedAgentDetailMainPaneStyle = embeddedAgentBackgroundImageUrl
-            ? { "--playground-agent-detail-bg-image": "url(" + JSON.stringify(embeddedAgentBackgroundImageUrl) + ")" }
-            : undefined;
           return React.createElement(React.Fragment, null,
             agentsTopNavActions,
             agentCreationSetupOpen
@@ -105837,7 +98604,7 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.overviewAction}              React.createElement
                 )
               : React.createElement("section", { className: "playground-environments-detail playground-plugins-detail playground-skills-page playground-resources-page playground-agents-detail-assistant-page" },
                   React.createElement("div", { className: agentDetailLayoutClass },
-                    React.createElement("div", { className: embeddedAgentDetailMainPaneClassName, style: embeddedAgentDetailMainPaneStyle },
+                    React.createElement("div", { className: "playground-agents-detail-main-pane" },
                       React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll", ref: agentResourcesDetailScrollRef },
                         React.createElement("div", { className: "playground-resources-detail-content" },
                           isLoadingCurrentAgent && !draftAgent
@@ -109860,20 +102627,6 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.overviewAction}              React.createElement
           );
         }
 
-        const skillsOverviewTopNavActions = skillsPageMode === "overview" && topNavActionsContainer
-          ? createPortal(React.createElement("button", {
-              type: "button",
-              className: "playground-top-nav-private-chat-button playground-skills-top-nav-action-button",
-              onClick: openSkillComposer,
-              title: "Create custom skill",
-              "aria-label": "Create custom skill",
-              disabled: skillComposerSaveState.isSaving || !baseSkillProjectId,
-            },
-              React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-              React.createElement("span", null, "Skill")
-            ), topNavActionsContainer)
-          : null;
-
         function renderSkillsOverviewPage() {
           const rows = displaySkills.map((skill) => {
             const updatedAt = Date.parse(String(skill?.updatedAt || skill?.createdAt || ""));
@@ -109891,7 +102644,6 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.overviewAction}              React.createElement
           });
 
           return React.createElement("section", { className: "playground-environments-detail playground-plugins-detail playground-skills-page" },
-            skillsOverviewTopNavActions,
             React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
               React.createElement(SkillsOverviewPage, {
                 rows,
@@ -109899,6 +102651,7 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.overviewAction}              React.createElement
                 onModeChange: handleSkillListModeChange,
                 period: skillsOverviewChartTimescale,
                 onPeriodChange: setSkillsOverviewChartTimescale,
+                controlsPortalId: "playground-tools-overview-controls",
                 loading: skillsLoading && !skillsLoaded,
                 mutating: skillSaveState.isSaving || skillComposerSaveState.isSaving,
                 onOpen: (skill) => handleSkillSelect(skill.id),
@@ -112124,8 +104877,7 @@ ${GUARDRAILS_DOMAIN_FRAGMENTS.runtime}      function createPlaygroundPlatformNav
             return false;
           }
         }, []);
-        const initialSidebarWorkspaceMode = "work";
-        const [sidebarOpen, setSidebarOpen] = useState(true);
+${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.layoutState}
         const [activePage, setActivePage] = useState("thread");
 ${METRONOME_APP_SCRIPT_FRAGMENTS.state}
         const [environmentsOpenToken, setEnvironmentsOpenToken] = useState(0);
@@ -112135,14 +104887,8 @@ ${METRONOME_APP_SCRIPT_FRAGMENTS.state}
           resourceType: "",
           resourceId: "",
         });
-${MARKETPLACE_APP_SCRIPT_FRAGMENTS.previewResources}        const [accountMenuOpen, setAccountMenuOpen] = useState(false);
-        const [accountMenuPlacement, setAccountMenuPlacement] = useState("sidebar");
-        const [renderedAccountMenu, setRenderedAccountMenu] = useState(false);
-        const [accountMenuPhase, setAccountMenuPhase] = useState("idle");
-        const [showPlaygroundOnboarding, setShowPlaygroundOnboarding] = useState(() => readCurrentSearchParam(PLAYGROUND_ONBOARDING_QUERY_PARAM) === "true");
+${MARKETPLACE_APP_SCRIPT_FRAGMENTS.previewResources}${APP_HEADER_APP_SCRIPT_FRAGMENTS.state}        const [showPlaygroundOnboarding, setShowPlaygroundOnboarding] = useState(() => readCurrentSearchParam(PLAYGROUND_ONBOARDING_QUERY_PARAM) === "true");
         const [showSubscriptionSuccessModal, setShowSubscriptionSuccessModal] = useState(() => readCurrentSearchParam(PLAYGROUND_SUBSCRIPTION_SUCCESS_QUERY_PARAM) === "true");
-        const [threadSearchOpen, setThreadSearchOpen] = useState(false);
-        const [threadSearchQuery, setThreadSearchQuery] = useState("");
         const [profileEditorOpen, setProfileEditorOpen] = useState(false);
         const [threadListMode, setThreadListMode] = useState("threads");
         const [threadsSectionCollapsed, setThreadsSectionCollapsed] = useState(false);
@@ -112361,7 +105107,7 @@ ${IMAGINE_APP_SCRIPT_FRAGMENTS.state}
             )));
           });
         }, []);
-        const [settingsSection, setSettingsSection] = useState("profile");
+${SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS.state}
         const [contentMode, setContentMode] = useState("chat");
         const [changesNavigationTarget, setChangesNavigationTarget] = useState(null);
         const computerAgentsMode = true;
@@ -112415,26 +105161,7 @@ ${IMAGINE_APP_SCRIPT_FRAGMENTS.state}
         const [settingsIsUnlinkingTelegram, setSettingsIsUnlinkingTelegram] = useState(false);
         const [statusIndicatorItems, setStatusIndicatorItems] = useState([]);
         const [dismissedStatusIndicatorIds, setDismissedStatusIndicatorIds] = useState([]);
-        const [notificationsOpen, setNotificationsOpen] = useState(false);
-        const [productNotifications, setProductNotifications] = useState([]);
-        const [readProductNotificationIds, setReadProductNotificationIds] = useState([]);
-        const [teamInvitationNotifications, setTeamInvitationNotifications] = useState([]);
-        const [readTeamInvitationNotificationIds, setReadTeamInvitationNotificationIds] = useState([]);
-        const [organizationInvitationNotifications, setOrganizationInvitationNotifications] = useState([]);
-        const [readOrganizationInvitationNotificationIds, setReadOrganizationInvitationNotificationIds] = useState([]);
-        const [permissionNotifications, setPermissionNotifications] = useState([]);
-	        const [readPermissionNotificationIds, setReadPermissionNotificationIds] = useState(() => (
-	          readStoredNotificationIds(PLAYGROUND_PERMISSION_NOTIFICATION_READ_STORAGE_KEY, "session")
-	        ));
-	        const [readHumanTaskNotificationIds, setReadHumanTaskNotificationIds] = useState(() => (
-	          readStoredNotificationIds(PLAYGROUND_HUMAN_TASK_NOTIFICATION_READ_STORAGE_KEY)
-	        ));
-	        const [emailVerificationNotificationDismissed, setEmailVerificationNotificationDismissed] = useState(false);
-        const [notificationsPageSearchQuery, setNotificationsPageSearchQuery] = useState("");
-        const [notificationsPageFilter, setNotificationsPageFilter] = useState("all");
-        const [notificationsPageSort, setNotificationsPageSort] = useState("newest");
-        const [notificationsPageToolbarPopover, setNotificationsPageToolbarPopover] = useState("");
-        const [taskRunStates, setTaskRunStates] = useState({});
+${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.notificationsState}        const [taskRunStates, setTaskRunStates] = useState({});
         const [threadFollowUpActionState, setThreadFollowUpActionState] = useState({
           action: "",
           error: "",
@@ -112495,37 +105222,7 @@ ${MODELS_APP_SCRIPT_FRAGMENTS.state}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.state}${G
         const [projectOverviewResourceViewMode, setProjectOverviewResourceViewMode] = useState("list");
         const [projectOverviewResourceToolbarPopover, setProjectOverviewResourceToolbarPopover] = useState("");
         const [projectOverviewResourceMenuId, setProjectOverviewResourceMenuId] = useState("");
-${MODELS_APP_SCRIPT_FRAGMENTS.resolvedCatalog}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.runtimeBeforeEvaluations}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.lifecycle}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.runtimeBetweenEvaluationsAndFineTuning}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.lifecycle}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.runtimeAfterFineTuning}        const [configureHomeTab, setConfigureHomeTab] = useState("overview");
-        const [configureUsageChartTab, setConfigureUsageChartTab] = useState("agents");
-        const [configureAnalyticsMenuOpen, setConfigureAnalyticsMenuOpen] = useState(false);
-        const [developHomeSection, setDevelopHomeSection] = useState("overview");
-        const [developHomeChartTimescale, setDevelopHomeChartTimescale] = useState("day");
-        const [developServerMetricsChartTab, setDevelopServerMetricsChartTab] = useState("hosting-requests");
-        const [developAnalyticsMenuOpen, setDevelopAnalyticsMenuOpen] = useState(false);
-        const [developApiKeysMenuOpen, setDevelopApiKeysMenuOpen] = useState(false);
-        const [developApiKeysSearchQuery, setDevelopApiKeysSearchQuery] = useState("");
-        const [developApiKeysSort, setDevelopApiKeysSort] = useState("name");
-        const [developApiKeysSortDirection, setDevelopApiKeysSortDirection] = useState("asc");
-        const [developApiKeysFilter, setDevelopApiKeysFilter] = useState("all");
-        const [developApiKeysToolbarPopover, setDevelopApiKeysToolbarPopover] = useState("");
-        const [developApiKeysSelectedIds, setDevelopApiKeysSelectedIds] = useState(() => new Set());
-        const [developApiKeyActionMenu, setDevelopApiKeyActionMenu] = useState(null);
-        const [developApiKeyActionMenuClosing, setDevelopApiKeyActionMenuClosing] = useState(false);
-        const developApiKeyActionMenuCloseTimerRef = useRef(null);
-        const [developApiKeyRevealModal, setDevelopApiKeyRevealModal] = useState(null);
-        const [settingsRevealableApiKeys, setSettingsRevealableApiKeys] = useState({});
-        const [developQuickstartLanguage, setDevelopQuickstartLanguage] = useState("javascript");
-        const [developServerOperationalMetrics, setDevelopServerOperationalMetrics] = useState(null);
-        const [developServerOperationalMetricsLoading, setDevelopServerOperationalMetricsLoading] = useState(false);
-        const [developServerOperationalMetricsError, setDevelopServerOperationalMetricsError] = useState("");
-        const [developServerOperationalMetricsPeriod, setDevelopServerOperationalMetricsPeriod] = useState("month");
-        const developServerOperationalMetricsLoadSequenceRef = useRef(0);
-        const developServerOperationalMetricsAbortRef = useRef(null);
-        const developServerOperationalMetricsRequestKeyRef = useRef("");
-${TEAMS_APP_SCRIPT_FRAGMENTS.statePrimary}${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.statePrimary}${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.stateDialogs}${TEAMS_APP_SCRIPT_FRAGMENTS.stateDialogs}${TEAMS_APP_SCRIPT_FRAGMENTS.roleLifecycle}${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.roleLifecycle}${TEAMS_APP_SCRIPT_FRAGMENTS.tableLifecycle}${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.tableLifecycle}${TEAMS_APP_SCRIPT_FRAGMENTS.dialogLifecycle}        const [sidebarWorkspaceMode, setSidebarWorkspaceMode] = useState(initialSidebarWorkspaceMode);
-        const [sidebarWorkspaceMenuOpen, setSidebarWorkspaceMenuOpen] = useState(false);
-        const [renderedSidebarWorkspaceMenu, setRenderedSidebarWorkspaceMenu] = useState(false);
-        const [sidebarWorkspaceMenuPhase, setSidebarWorkspaceMenuPhase] = useState("idle");
+${MODELS_APP_SCRIPT_FRAGMENTS.resolvedCatalog}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.runtimeBeforeEvaluations}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.lifecycle}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.runtimeBetweenEvaluationsAndFineTuning}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.lifecycle}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.runtimeAfterFineTuning}${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.state}${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.state}${API_KEYS_APP_SCRIPT_FRAGMENTS.uiState}${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.metricsState}${TEAMS_APP_SCRIPT_FRAGMENTS.statePrimary}${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.statePrimary}${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.stateDialogs}${TEAMS_APP_SCRIPT_FRAGMENTS.stateDialogs}${TEAMS_APP_SCRIPT_FRAGMENTS.roleLifecycle}${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.roleLifecycle}${TEAMS_APP_SCRIPT_FRAGMENTS.tableLifecycle}${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.tableLifecycle}${TEAMS_APP_SCRIPT_FRAGMENTS.dialogLifecycle}${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.modeState}
         const [selectedPluginId, setSelectedPluginId] = useState("");
         const [toolsSkillsHeaderState, setToolsSkillsHeaderState] = useState({
           mode: "overview",
@@ -112538,6 +105235,7 @@ ${TEAMS_APP_SCRIPT_FRAGMENTS.statePrimary}${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.s
         });
         const [isAgentVersionsDetailOpen, setIsAgentVersionsDetailOpen] = useState(false);
         const [resourcesBackRequestToken, setResourcesBackRequestToken] = useState(0);
+${CALENDAR_SHELL_SCRIPT_FRAGMENTS.state}
         const [tasksHeaderState, setTasksHeaderState] = useState({
           mode: "overview",
           title: "Projects",
@@ -112586,86 +105284,13 @@ ${TEAMS_APP_SCRIPT_FRAGMENTS.statePrimary}${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.s
         const [settingsChangePlanModalOpen, setSettingsChangePlanModalOpen] = useState(false);
         const [settingsTopUpModalOpen, setSettingsTopUpModalOpen] = useState(false);
         const [settingsResourceCapInfoOpen, setSettingsResourceCapInfoOpen] = useState(false);
-        const [settingsApiKeys, setSettingsApiKeys] = useState([]);
-        const [settingsApiKeysLoading, setSettingsApiKeysLoading] = useState(false);
-        const [settingsApiKeysError, setSettingsApiKeysError] = useState("");
-        const settingsApiKeysSnapshotRef = useRef({ keys: [], loadedAt: 0, scopeKey: "" });
-        const settingsApiKeysLoadPromiseRef = useRef(null);
-        const [settingsApiKeyDialogOpen, setSettingsApiKeyDialogOpen] = useState(false);
-        const [settingsNewKeyName, setSettingsNewKeyName] = useState("");
-        const [settingsNewKeyDescription, setSettingsNewKeyDescription] = useState("");
-        const [settingsNewKeyScopePreset, setSettingsNewKeyScopePreset] = useState("full");
-        const [settingsCreateKeyLoading, setSettingsCreateKeyLoading] = useState(false);
-        const [settingsNewlyCreatedKey, setSettingsNewlyCreatedKey] = useState("");
-        const [settingsRevokingKeyId, setSettingsRevokingKeyId] = useState("");
-        const [settingsTriggers, setSettingsTriggers] = useState([]);
+${API_KEYS_APP_SCRIPT_FRAGMENTS.dataState}        const [settingsTriggers, setSettingsTriggers] = useState([]);
         const [settingsTriggersLoading, setSettingsTriggersLoading] = useState(false);
         const [settingsTriggersError, setSettingsTriggersError] = useState("");
         const [settingsTriggersSuccess, setSettingsTriggersSuccess] = useState("");
         const pluginsNavActionsRef = useRef(null);
-        const sidebarWorkspaceMenuRef = useRef(null);
-        const sidebarWorkspaceMenuAnimationTimerRef = useRef(null);
-${MARKETPLACE_APP_SCRIPT_FRAGMENTS.lifecycle}        useEffect(() => {
-          if (sidebarWorkspaceMenuAnimationTimerRef.current !== null) {
-            window.clearTimeout(sidebarWorkspaceMenuAnimationTimerRef.current);
-            sidebarWorkspaceMenuAnimationTimerRef.current = null;
-          }
-
-          if (sidebarWorkspaceMenuOpen) {
-            setRenderedSidebarWorkspaceMenu(true);
-            setSidebarWorkspaceMenuPhase("enter");
-            sidebarWorkspaceMenuAnimationTimerRef.current = window.setTimeout(() => {
-              setSidebarWorkspaceMenuPhase("idle");
-              sidebarWorkspaceMenuAnimationTimerRef.current = null;
-            }, 180);
-            return;
-          }
-
-          if (!renderedSidebarWorkspaceMenu) {
-            setSidebarWorkspaceMenuPhase("idle");
-            return;
-          }
-
-          setSidebarWorkspaceMenuPhase("exit");
-          sidebarWorkspaceMenuAnimationTimerRef.current = window.setTimeout(() => {
-            setRenderedSidebarWorkspaceMenu(false);
-            setSidebarWorkspaceMenuPhase("idle");
-            sidebarWorkspaceMenuAnimationTimerRef.current = null;
-          }, 180);
-        }, [renderedSidebarWorkspaceMenu, sidebarWorkspaceMenuOpen]);
-        useEffect(() => {
-          return () => {
-            if (sidebarWorkspaceMenuAnimationTimerRef.current !== null) {
-              window.clearTimeout(sidebarWorkspaceMenuAnimationTimerRef.current);
-            }
-          };
-        }, []);
-        useEffect(() => {
-          if (!sidebarWorkspaceMenuOpen) {
-            return undefined;
-          }
-
-          function handleSidebarWorkspacePointerDown(event) {
-            const target = event?.target instanceof Node ? event.target : null;
-            if (!target || !sidebarWorkspaceMenuRef.current || sidebarWorkspaceMenuRef.current.contains(target)) {
-              return;
-            }
-            setSidebarWorkspaceMenuOpen(false);
-          }
-
-          function handleSidebarWorkspaceKeyDown(event) {
-            if (event.key === "Escape") {
-              setSidebarWorkspaceMenuOpen(false);
-            }
-          }
-
-          document.addEventListener("mousedown", handleSidebarWorkspacePointerDown);
-          document.addEventListener("keydown", handleSidebarWorkspaceKeyDown);
-          return () => {
-            document.removeEventListener("mousedown", handleSidebarWorkspacePointerDown);
-            document.removeEventListener("keydown", handleSidebarWorkspaceKeyDown);
-          };
-        }, [sidebarWorkspaceMenuOpen]);
+${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.refs}
+${MARKETPLACE_APP_SCRIPT_FRAGMENTS.lifecycle}${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.menuLifecycle}
         const [settingsSelectedTriggerId, setSettingsSelectedTriggerId] = useState("");
         const [settingsShowTriggerSecret, setSettingsShowTriggerSecret] = useState(false);
         const [settingsCopiedField, setSettingsCopiedField] = useState("");
@@ -112704,7 +105329,7 @@ ${MARKETPLACE_APP_SCRIPT_FRAGMENTS.lifecycle}        useEffect(() => {
         const profileImageInputRef = useRef(null);
         const settingsTriggerPromptTextareaRef = useRef(null);
         const authGateEmailInputRef = useRef(null);
-        const threadSearchInputRef = useRef(null);
+${APP_HEADER_APP_SCRIPT_FRAGMENTS.refs}
         const threadRenameInputRef = useRef(null);
         const threadNavMenuRef = useRef(null);
         const threadTaskListMenuRef = useRef(null);
@@ -112725,7 +105350,6 @@ ${INFERENCE_APP_SCRIPT_FRAGMENTS.refs}        const authRedirectStartedRef = use
         const threadSubagentDetailHostRef = useCallback((node) => {
           setThreadSubagentDetailHost(node || null);
         }, []);
-        const accountMenuAnimationTimerRef = useRef(null);
         const taskCompletionSyncInFlightRef = useRef(new Set());
         const taskCompletionSyncedThreadKeysRef = useRef(new Set());
         const taskReviewThreadStartKeysRef = useRef(new Set());
@@ -112874,11 +105498,7 @@ ${INFERENCE_APP_SCRIPT_FRAGMENTS.runtimeLifecycle}${MODELS_APP_SCRIPT_FRAGMENTS.
             : "Sign in";
         const accountInitials = getAccountInitials(accountName);
         const accountEmail = hasSessionAuth ? (sessionState.email || "") : (hasDemoAccess ? "demo@computer-agents.com" : "");
-        const notificationReadStorageKey = useMemo(
-          () => buildNotificationReadStorageKey(sessionState.userId, accountEmail),
-          [accountEmail, sessionState.userId]
-        );
-        const accountTierId = hasDemoAccess ? "enterprise" : normalizeSettingsTierId(sessionState.subscriptionTier);
+${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.notificationStorageKey}        const accountTierId = hasDemoAccess ? "enterprise" : normalizeSettingsTierId(sessionState.subscriptionTier);
         const accountTier = hasDemoAccess
           ? "Enterprise"
           : hasShellAccess && accountTierId
@@ -112897,465 +105517,7 @@ ${INFERENCE_APP_SCRIPT_FRAGMENTS.runtimeLifecycle}${MODELS_APP_SCRIPT_FRAGMENTS.
         ), [hasDemoAccess, sessionState.displayName, sessionState.email]);
         const showInitialThreadWelcome = activePage === "thread" && hasShellAccess && !currentThreadId;
         const isCurrentPrivateThread = privateThreadIds.includes(String(currentThreadId || "").trim());
-        const canFetchNotificationCenter =
-          hasRealAccess
-          && Boolean(effectiveApiKey);
-        function buildPermissionNotificationStatusReadId(thread) {
-          const safeThread = normalizeThreadItem(thread);
-          const threadId = typeof safeThread?.id === "string" ? safeThread.id.trim() : "";
-          if (!threadId) {
-            return "";
-          }
-          const timestamp = resolveThreadSortTimestamp(safeThread) || safeThread.startedAt || safeThread.createdAt || "";
-          const timestampMs = Date.parse(timestamp || "");
-          return "permission:" + threadId + ":status:" + (Number.isFinite(timestampMs) ? String(timestampMs) : "pending");
-        }
-
-        function getPermissionNotificationReadIds(notification) {
-          const readIds = Array.isArray(notification?.readIds)
-            ? notification.readIds
-            : [notification?.id];
-          return readIds
-            .map((id) => String(id || "").trim())
-            .filter(Boolean);
-        }
-
-        function buildPendingPermissionNotificationFallback(thread) {
-          const safeThread = normalizeThreadItem(thread);
-          const threadId = typeof safeThread?.id === "string" ? safeThread.id.trim() : "";
-          if (!threadId) {
-            return null;
-          }
-          const readId = buildPermissionNotificationStatusReadId(safeThread);
-          return {
-            id: readId || "permission:" + threadId + ":status:pending",
-            readIds: readId ? [readId] : [],
-            requestId: "",
-            requestIds: [],
-            requestCount: 0,
-            threadId,
-            threadTitle: safeThread.title || "Untitled thread",
-            toolName: "Permission pending",
-            reason: "",
-            createdAt: resolveThreadSortTimestamp(safeThread) || safeThread.startedAt || safeThread.createdAt || "",
-            isStatusFallback: true,
-          };
-        }
-
-        const pendingPermissionDecisionThreads = useMemo(() => (
-          realThreads
-            .map(normalizeThreadItem)
-            .filter((thread) => isPendingPermissionThreadDisplayStatus(thread.status))
-        ), [realThreads]);
-        const pendingPermissionNotificationThreads = useMemo(() => (
-          pendingPermissionDecisionThreads
-            .slice(0, 20)
-            .map((thread) => ({
-              id: thread.id,
-              title: thread.title || "Untitled thread",
-              status: thread.status,
-              createdAt: thread.createdAt,
-              updatedAt: thread.updatedAt,
-              startedAt: thread.startedAt,
-              nextRunAt: thread.nextRunAt,
-            }))
-        ), [pendingPermissionDecisionThreads]);
-        const pendingPermissionNotificationThreadKey = useMemo(() => (
-          pendingPermissionNotificationThreads
-            .map((thread) => [
-              thread.id,
-              thread.updatedAt || "",
-              thread.startedAt || "",
-              thread.createdAt || "",
-            ].join(":"))
-            .sort()
-            .join("|")
-        ), [pendingPermissionNotificationThreads]);
-	        const permissionNotificationItems = useMemo(() => {
-	          const byThreadId = new Map();
-          const pendingThreadIds = new Set();
-
-          pendingPermissionNotificationThreads.forEach((thread) => {
-            const threadId = typeof thread?.id === "string" ? thread.id.trim() : "";
-            if (!threadId) {
-              return;
-            }
-            pendingThreadIds.add(threadId);
-            const fallbackNotification = buildPendingPermissionNotificationFallback(thread);
-            if (fallbackNotification) {
-              byThreadId.set(threadId, fallbackNotification);
-            }
-          });
-
-          permissionNotifications.forEach((notification) => {
-            const threadId = typeof notification?.threadId === "string" ? notification.threadId.trim() : "";
-            if (!threadId || !pendingThreadIds.has(threadId)) {
-              return;
-            }
-            byThreadId.set(threadId, notification);
-          });
-
-          return Array.from(byThreadId.values()).sort((left, right) => {
-            const leftMs = Date.parse(left.createdAt || "");
-            const rightMs = Date.parse(right.createdAt || "");
-            return (Number.isFinite(rightMs) ? rightMs : 0) - (Number.isFinite(leftMs) ? leftMs : 0);
-	          });
-	        }, [pendingPermissionNotificationThreads, permissionNotifications]);
-	        const humanTaskNotificationItems = useMemo(() => {
-	          const ticketNumbersById = buildPlaygroundTaskTicketNumberMap(welcomeWidgetsState.tasks);
-	          return (Array.isArray(welcomeWidgetsState.tasks) ? welcomeWidgetsState.tasks : [])
-	            .map((task) => normalizePlaygroundTaskRecord(task))
-	            .filter((task) => task?.id && isPlaygroundHumanAttentionTask(task))
-	            .sort((left, right) => {
-              const leftNeedsReview = left.reviewRequired && isPlaygroundHumanAssigneeId(left.reviewerAgentId) ? 1 : 0;
-              const rightNeedsReview = right.reviewRequired && isPlaygroundHumanAssigneeId(right.reviewerAgentId) ? 1 : 0;
-              if (leftNeedsReview !== rightNeedsReview) {
-                return rightNeedsReview - leftNeedsReview;
-              }
-              const leftUpdatedAt = Date.parse(left.updatedAt || left.createdAt || "") || 0;
-              const rightUpdatedAt = Date.parse(right.updatedAt || right.createdAt || "") || 0;
-              return rightUpdatedAt - leftUpdatedAt;
-	            })
-	            .map((task) => {
-              const timestamp = Date.parse(task.updatedAt || task.createdAt || "") || 0;
-              const ticketNumber = ticketNumbersById[task.id] || task.ticketNumber || "000";
-              const isReviewRequest = task.reviewRequired && isPlaygroundHumanAssigneeId(task.reviewerAgentId);
-              return {
-                id: "human-task:" + task.id + ":" + String(timestamp || "current"),
-                kind: "human_task",
-                taskId: task.id,
-                task,
-                ticketNumber,
-                label: isReviewRequest ? "Review requested" : "Assigned to you",
-                text: ticketNumber + " " + (task.title || "Untitled Task"),
-                createdAt: task.updatedAt || task.createdAt || "",
-              };
-	            });
-	        }, [welcomeWidgetsState.tasks]);
-	        const notificationItems = useMemo(() => {
-	          const readProducts = new Set(readProductNotificationIds);
-	          const readPermissions = new Set(readPermissionNotificationIds);
-	          const readHumanTasks = new Set(readHumanTaskNotificationIds);
-	          const readTeamInvitations = new Set(readTeamInvitationNotificationIds);
-	          const readOrganizationInvitations = new Set(readOrganizationInvitationNotificationIds);
-	          const items = [];
-
-          permissionNotificationItems.forEach((notification) => {
-            const readIds = getPermissionNotificationReadIds(notification);
-            if (!notification?.id || readIds.some((id) => readPermissions.has(id))) {
-              return;
-            }
-            items.push({
-              ...notification,
-              kind: "permission",
-            });
-          });
-
-	          if (hasSessionAuth && accountEmail && !sessionState.emailVerified && !emailVerificationNotificationDismissed) {
-	            items.push({
-              id: "email-verification:" + accountEmail,
-              kind: "email_verification",
-              label: "Verify your email address",
-              text: "Your account email is not verified yet.",
-              createdAt: "",
-	            });
-	          }
-
-	          humanTaskNotificationItems.forEach((notification) => {
-	            if (!notification?.id || readHumanTasks.has(notification.id)) {
-              return;
-	            }
-	            items.push(notification);
-	          });
-
-	          teamInvitationNotifications.forEach((invitation) => {
-            const id = String(invitation?.id || "").trim();
-            if (!id || readTeamInvitations.has(id)) {
-              return;
-            }
-            items.push({
-              ...invitation,
-              id,
-              kind: "team_invitation",
-            });
-          });
-
-	          organizationInvitationNotifications.forEach((invitation) => {
-            const id = String(invitation?.id || "").trim();
-            if (!id || readOrganizationInvitations.has(id)) {
-              return;
-            }
-            items.push({
-              ...invitation,
-              id,
-              kind: "organization_invitation",
-            });
-          });
-
-	          productNotifications.forEach((notification) => {
-            const id = typeof notification?.id === "string" ? notification.id.trim() : "";
-            if (!id || readProducts.has(id)) {
-              return;
-            }
-            items.push({
-              ...notification,
-              id,
-              kind: "product",
-            });
-          });
-
-          return items;
-        }, [
-          accountEmail,
-          emailVerificationNotificationDismissed,
-	          hasSessionAuth,
-	          humanTaskNotificationItems,
-	          permissionNotificationItems,
-	          organizationInvitationNotifications,
-	          productNotifications,
-	          readHumanTaskNotificationIds,
-	          readOrganizationInvitationNotificationIds,
-	          readPermissionNotificationIds,
-          readProductNotificationIds,
-          readTeamInvitationNotificationIds,
-          sessionState.emailVerified,
-          teamInvitationNotifications,
-        ]);
-        const hasVisibleNotifications = notificationItems.length > 0;
-        function getNotificationPlainText(notification) {
-          const source = notification && typeof notification === "object" && !Array.isArray(notification) ? notification : {};
-          const directText = String(
-            source.title
-            || source.label
-            || source.text
-            || source.message
-            || source.body
-            || source.summary
-            || ""
-          ).trim();
-          if (directText) {
-            return directText;
-          }
-          const html = String(source.html || source.content || "").trim();
-          if (!html) {
-            return "";
-          }
-          try {
-            if (typeof document !== "undefined" && document.createElement) {
-              const element = document.createElement("div");
-              element.innerHTML = DOMPurify.sanitize(html, {
-                USE_PROFILES: { html: true },
-                FORBID_TAGS: ["script", "style", "iframe", "object", "embed", "form", "input"],
-              });
-              return String(element.textContent || element.innerText || "").trim();
-            }
-          } catch {}
-          return html.split("<").join(" ").split(">").join(" ").trim();
-        }
-
-        function buildNotificationSearchText(item) {
-          return [
-            item?.kindLabel,
-            item?.label,
-            item?.text,
-            item?.meta,
-            item?.statusLabel,
-            item?.threadTitle,
-            item?.toolName,
-            item?.reason,
-            item?.teamName,
-            item?.organizationName,
-          ].map((value) => String(value || "").toLowerCase()).join(" ");
-        }
-
-        const allNotificationPageItems = useMemo(() => {
-          const readProducts = new Set(readProductNotificationIds);
-          const readPermissions = new Set(readPermissionNotificationIds);
-          const readHumanTasks = new Set(readHumanTaskNotificationIds);
-          const readTeamInvitations = new Set(readTeamInvitationNotificationIds);
-          const readOrganizationInvitations = new Set(readOrganizationInvitationNotificationIds);
-          const items = [];
-
-          permissionNotificationItems.forEach((notification) => {
-            const readIds = getPermissionNotificationReadIds(notification);
-            const isRead = Boolean(readIds.length > 0 && readIds.every((id) => readPermissions.has(id)));
-            const metaText = [
-              notification.toolName || "Tool access",
-              notification.createdAt ? formatThreadSearchTimestamp(notification.createdAt) : "",
-            ].filter(Boolean).join(" · ");
-            items.push({
-              ...notification,
-              id: notification.id || ("permission:" + String(notification.threadId || "")),
-              kind: "permission",
-              kindLabel: "Permission request",
-              label: isRead ? "Permission request seen" : "Permission needed",
-              text: notification.threadTitle || "Untitled thread",
-              meta: metaText,
-              statusLabel: isRead ? "Seen" : "Needs decision",
-              unread: !isRead,
-              createdAt: notification.createdAt || "",
-            });
-          });
-
-          if (hasSessionAuth && accountEmail && !sessionState.emailVerified && !emailVerificationNotificationDismissed) {
-            items.push({
-              id: "email-verification:" + accountEmail,
-              kind: "email_verification",
-              kindLabel: "Account",
-              label: "Verify your email address",
-              text: "Your account email is not verified yet.",
-              meta: "Profile settings",
-              statusLabel: "Needs action",
-              unread: true,
-              createdAt: "",
-            });
-          }
-
-          humanTaskNotificationItems.forEach((notification) => {
-            items.push({
-              ...notification,
-              kindLabel: "Task",
-              statusLabel: readHumanTasks.has(notification.id) ? "Seen" : "Needs action",
-              unread: !readHumanTasks.has(notification.id),
-              meta: [
-                notification.ticketNumber ? ("Ticket " + notification.ticketNumber) : "",
-                notification.createdAt ? formatThreadSearchTimestamp(notification.createdAt) : "",
-              ].filter(Boolean).join(" · "),
-            });
-          });
-
-          teamInvitationNotifications.forEach((invitation) => {
-            const id = String(invitation?.id || "").trim();
-            if (!id) {
-              return;
-            }
-            items.push({
-              ...invitation,
-              id,
-              kind: "team_invitation",
-              kindLabel: "Team",
-              label: "Team invitation",
-              text: invitation.teamName || "Team",
-              meta: [
-                invitation.role ? ("Role: " + invitation.role) : "",
-                invitation.invitedByEmail ? ("From " + invitation.invitedByEmail) : "",
-                invitation.createdAt ? formatThreadSearchTimestamp(invitation.createdAt) : "",
-              ].filter(Boolean).join(" · "),
-              statusLabel: readTeamInvitations.has(id) ? "Seen" : "Needs decision",
-              unread: !readTeamInvitations.has(id),
-              createdAt: invitation.createdAt || "",
-            });
-          });
-
-          organizationInvitationNotifications.forEach((invitation) => {
-            const id = String(invitation?.id || "").trim();
-            if (!id) {
-              return;
-            }
-            items.push({
-              ...invitation,
-              id,
-              kind: "organization_invitation",
-              kindLabel: "Organization",
-              label: "Organization invitation",
-              text: invitation.organizationName || "Organization",
-              meta: [
-                invitation.role ? ("Role: " + invitation.role) : "",
-                invitation.invitedByEmail ? ("From " + invitation.invitedByEmail) : "",
-                invitation.createdAt ? formatThreadSearchTimestamp(invitation.createdAt) : "",
-              ].filter(Boolean).join(" · "),
-              statusLabel: readOrganizationInvitations.has(id) ? "Seen" : "Needs decision",
-              unread: !readOrganizationInvitations.has(id),
-              createdAt: invitation.createdAt || "",
-            });
-          });
-
-          productNotifications.forEach((notification) => {
-            const id = typeof notification?.id === "string" ? notification.id.trim() : "";
-            if (!id) {
-              return;
-            }
-            const text = getNotificationPlainText(notification) || "Product update";
-            items.push({
-              ...notification,
-              id,
-              kind: "product",
-              kindLabel: "Product",
-              label: "Product update",
-              text,
-              meta: notification.createdAt ? formatThreadSearchTimestamp(notification.createdAt) : "",
-              statusLabel: readProducts.has(id) ? "Read" : "Unread",
-              unread: !readProducts.has(id),
-              createdAt: notification.createdAt || "",
-            });
-          });
-
-          return items.sort((left, right) => {
-            const leftMs = Date.parse(left.createdAt || "");
-            const rightMs = Date.parse(right.createdAt || "");
-            return (Number.isFinite(rightMs) ? rightMs : 0) - (Number.isFinite(leftMs) ? leftMs : 0);
-          });
-        }, [
-          accountEmail,
-          emailVerificationNotificationDismissed,
-          hasSessionAuth,
-          humanTaskNotificationItems,
-          organizationInvitationNotifications,
-          permissionNotificationItems,
-          productNotifications,
-          readHumanTaskNotificationIds,
-          readOrganizationInvitationNotificationIds,
-          readPermissionNotificationIds,
-          readProductNotificationIds,
-          readTeamInvitationNotificationIds,
-          sessionState.emailVerified,
-          teamInvitationNotifications,
-        ]);
-
-        const visibleNotificationPageItems = useMemo(() => {
-          const query = String(notificationsPageSearchQuery || "").trim().toLowerCase();
-          const filteredItems = allNotificationPageItems.filter((item) => {
-            if (notificationsPageFilter === "unread" && !item.unread) {
-              return false;
-            }
-            if (notificationsPageFilter === "read" && item.unread) {
-              return false;
-            }
-            if (notificationsPageFilter === "permission" && item.kind !== "permission") {
-              return false;
-            }
-            if (notificationsPageFilter === "tasks" && item.kind !== "human_task") {
-              return false;
-            }
-            if (notificationsPageFilter === "team" && item.kind !== "team_invitation") {
-              return false;
-            }
-            if (notificationsPageFilter === "organization" && item.kind !== "organization_invitation") {
-              return false;
-            }
-            if (notificationsPageFilter === "product" && item.kind !== "product" && item.kind !== "email_verification") {
-              return false;
-            }
-            if (query && !buildNotificationSearchText(item).includes(query)) {
-              return false;
-            }
-            return true;
-          });
-          return filteredItems.slice().sort((left, right) => {
-            if (notificationsPageSort === "oldest") {
-              const leftMs = Date.parse(left.createdAt || "");
-              const rightMs = Date.parse(right.createdAt || "");
-              return (Number.isFinite(leftMs) ? leftMs : 0) - (Number.isFinite(rightMs) ? rightMs : 0);
-            }
-            if (notificationsPageSort === "type") {
-              return String(left.kindLabel || left.kind || "").localeCompare(String(right.kindLabel || right.kind || ""));
-            }
-            const leftMs = Date.parse(left.createdAt || "");
-            const rightMs = Date.parse(right.createdAt || "");
-            return (Number.isFinite(rightMs) ? rightMs : 0) - (Number.isFinite(leftMs) ? leftMs : 0);
-          });
-        }, [allNotificationPageItems, notificationsPageFilter, notificationsPageSearchQuery, notificationsPageSort]);
-        const permissionAttentionThreadIds = useMemo(() => {
+${CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationProjection}        const permissionAttentionThreadIds = useMemo(() => {
           const threadIds = new Set();
           pendingPermissionDecisionThreads.forEach((thread) => {
             const threadId = typeof thread?.id === "string" ? thread.id.trim() : "";
@@ -113546,217 +105708,7 @@ ${METRONOME_APP_SCRIPT_FRAGMENTS.originThreads}
           };
         }, [hasShellAccess, isDemoMode]);
 
-        useEffect(() => {
-          setReadProductNotificationIds(readStoredNotificationIds(notificationReadStorageKey));
-        }, [notificationReadStorageKey]);
-
-        useEffect(() => {
-          if (!canFetchNotificationCenter) {
-            setProductNotifications([]);
-            setTeamInvitationNotifications([]);
-            setOrganizationInvitationNotifications([]);
-            return;
-          }
-
-          let cancelled = false;
-
-          const loadProductNotifications = async () => {
-            try {
-              const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/notifications/in-app", {
-                method: "GET",
-                credentials: "include",
-                cache: "no-store",
-                headers: requestHeaders,
-              }, 2500);
-              if (!response.ok) {
-                if (!cancelled) {
-                  setProductNotifications([]);
-                  setTeamInvitationNotifications([]);
-                  setOrganizationInvitationNotifications([]);
-                }
-                return;
-              }
-              const items = Array.isArray(data?.data)
-                ? data.data
-                : Array.isArray(data?.notifications)
-                  ? data.notifications
-                  : [];
-              const normalizedItems = items.map(normalizeInAppNotificationRecord).filter(Boolean);
-              const teamInvitationItems = Array.isArray(data?.teamInvitations)
-                ? data.teamInvitations
-                : [];
-              const normalizedTeamInvitations = teamInvitationItems
-                .map(normalizeTeamInvitationNotificationRecord)
-                .filter(Boolean);
-              let normalizedOrganizationInvitations = [];
-              try {
-                const { response: organizationInvitationsResponse, data: organizationInvitationsData } = await fetchJsonWithTimeout(proxyBackendBase + "/organizations/invitations/pending", {
-                  method: "GET",
-                  credentials: "include",
-                  cache: "no-store",
-                  headers: baseAuthRequestHeaders,
-                }, 2500);
-                if (organizationInvitationsResponse.ok) {
-                  const organizationInvitationItems = Array.isArray(organizationInvitationsData?.data)
-                    ? organizationInvitationsData.data
-                    : Array.isArray(organizationInvitationsData?.invitations)
-                      ? organizationInvitationsData.invitations
-                      : [];
-                  normalizedOrganizationInvitations = organizationInvitationItems
-                    .map(normalizeOrganizationInvitationNotificationRecord)
-                    .filter(Boolean);
-                }
-              } catch {}
-              if (!cancelled) {
-                setProductNotifications(normalizedItems);
-                setTeamInvitationNotifications(normalizedTeamInvitations);
-                setOrganizationInvitationNotifications(normalizedOrganizationInvitations);
-              }
-            } catch {
-              if (!cancelled) {
-                setProductNotifications([]);
-                setTeamInvitationNotifications([]);
-                setOrganizationInvitationNotifications([]);
-              }
-            }
-          };
-
-          void loadProductNotifications();
-          const intervalId = window.setInterval(loadProductNotifications, 120000);
-          return () => {
-            cancelled = true;
-            window.clearInterval(intervalId);
-          };
-        }, [baseAuthRequestHeaders, canFetchNotificationCenter, notificationsOpen, proxyBackendBase, requestHeaders]);
-
-        useEffect(() => {
-          if (!canFetchNotificationCenter) {
-            setPermissionNotifications([]);
-            return;
-          }
-
-          const pendingThreads = pendingPermissionNotificationThreads;
-
-          if (pendingThreads.length === 0) {
-            setPermissionNotifications([]);
-            return;
-          }
-
-          let cancelled = false;
-          const controller = new AbortController();
-
-          void (async () => {
-            let nextIndex = 0;
-            const loadThreadPermissionNotifications = async (thread) => {
-              const fallbackNotification = buildPendingPermissionNotificationFallback(thread);
-              try {
-                const { response, data } = await fetchJsonWithTimeout(
-                  proxyBackendBase + "/threads/" + encodeURIComponent(thread.id) + "/permission-requests",
-                  {
-                    method: "GET",
-                    credentials: "include",
-                    cache: "no-store",
-                    headers: requestHeaders,
-                    signal: controller.signal,
-                  },
-                  3000
-                );
-                if (!response.ok) {
-                  return fallbackNotification ? [fallbackNotification] : [];
-                }
-                const requests = Array.isArray(data?.data)
-                  ? data.data
-                  : Array.isArray(data?.requests)
-                    ? data.requests
-                    : [];
-                const threadRequests = requests
-                  .map((request) => {
-                    const requestId = typeof request?.requestId === "string" ? request.requestId.trim() : "";
-                    if (!requestId) {
-                      return null;
-                    }
-                    const toolName = typeof request?.toolName === "string" && request.toolName.trim()
-                      ? request.toolName.trim()
-                      : "Tool access";
-                    const reason = typeof request?.reason === "string" ? request.reason.trim() : "";
-                    return {
-                      id: "permission:" + thread.id + ":" + requestId,
-                      requestId,
-                      threadId: thread.id,
-                      threadTitle: thread.title || "Untitled thread",
-                      toolName,
-                      reason,
-                      createdAt: typeof request?.createdAt === "string" ? request.createdAt : "",
-                    };
-                  })
-                  .filter(Boolean);
-                if (threadRequests.length === 0) {
-                  return fallbackNotification ? [fallbackNotification] : [];
-                }
-                const requestIds = threadRequests.map((request) => request.requestId).sort();
-                const notificationId = "permission:" + thread.id + ":" + requestIds.join("|");
-                const fallbackReadId = buildPermissionNotificationStatusReadId(thread);
-                const latestCreatedAt = threadRequests
-                  .map((request) => request.createdAt)
-                  .filter(Boolean)
-                  .sort((left, right) => {
-                    const leftMs = Date.parse(left || "");
-                    const rightMs = Date.parse(right || "");
-                    return (Number.isFinite(rightMs) ? rightMs : 0) - (Number.isFinite(leftMs) ? leftMs : 0);
-                  })[0] || "";
-                return [{
-                  id: notificationId,
-                  readIds: [notificationId, fallbackReadId].filter(Boolean),
-                  requestId: requestIds[0] || "",
-                  requestIds,
-                  requestCount: threadRequests.length,
-                  threadId: thread.id,
-                  threadTitle: thread.title,
-                  toolName: threadRequests.length === 1
-                    ? threadRequests[0].toolName
-                    : String(threadRequests.length) + " permissions",
-                  reason: threadRequests.map((request) => request.reason).filter(Boolean).join("\\n"),
-                  createdAt: latestCreatedAt,
-                }];
-              } catch {
-                return controller.signal.aborted ? [] : (fallbackNotification ? [fallbackNotification] : []);
-              }
-            };
-            const workerCount = Math.min(3, pendingThreads.length);
-            const workers = Array.from({ length: workerCount }, async () => {
-              const notifications = [];
-              while (!cancelled) {
-                const currentIndex = nextIndex;
-                nextIndex += 1;
-                if (currentIndex >= pendingThreads.length) {
-                  break;
-                }
-                notifications.push(...await loadThreadPermissionNotifications(pendingThreads[currentIndex]));
-              }
-              return notifications;
-            });
-            const results = await Promise.allSettled(workers);
-
-            if (cancelled) {
-              return;
-            }
-
-            const nextPermissionNotifications = results
-              .flatMap((result) => result.status === "fulfilled" ? result.value : [])
-              .sort((left, right) => {
-                const leftMs = Date.parse(left.createdAt || "");
-                const rightMs = Date.parse(right.createdAt || "");
-                return (Number.isFinite(rightMs) ? rightMs : 0) - (Number.isFinite(leftMs) ? leftMs : 0);
-              });
-            setPermissionNotifications(nextPermissionNotifications);
-          })();
-
-          return () => {
-            cancelled = true;
-            controller.abort();
-          };
-        }, [canFetchNotificationCenter, pendingPermissionNotificationThreadKey, proxyBackendBase, requestHeaders]);
-
+${CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationLoadLifecycle}
         useEffect(() => {
           try {
             if (latestInteractedProjectId) {
@@ -114117,86 +106069,9 @@ ${METRONOME_APP_SCRIPT_FRAGMENTS.originThreads}
           openOrganizationBillingPage("billing", "costs-plans");
         }
 
-        function openThreadSearch() {
-          setAccountMenuOpen(false);
-          setNotificationsOpen(false);
-          setProfileEditorOpen(false);
-          setThreadSearchQuery("");
-          setThreadSearchOpen(true);
-        }
+${APP_HEADER_APP_SCRIPT_FRAGMENTS.navigation}
 
-        function closeThreadSearch() {
-          setThreadSearchOpen(false);
-          setThreadSearchQuery("");
-        }
-
-        function handleThreadSearchCreate() {
-          closeThreadSearch();
-          handleNewThread();
-        }
-
-        function handleThreadSearchSelect(threadId) {
-          closeThreadSearch();
-          handleThreadSelect(threadId);
-        }
-
-        function handleThreadSearchFileSelect(fileResult) {
-          const normalizedEnvironmentId = String(fileResult?.environmentId || "").trim();
-          const entry = fileResult?.entry || null;
-          const normalizedPath = normalizeHistoryPath(entry?.path || "");
-          if (!normalizedEnvironmentId || !normalizedPath) {
-            return;
-          }
-
-          closeThreadSearch();
-          setSidebarWorkspaceMode("work");
-          setEnvironmentId(normalizedEnvironmentId);
-          setFilesPageNavigationRequest({
-            token: Date.now().toString(36) + Math.random().toString(36).slice(2),
-            environmentId: normalizedEnvironmentId,
-            path: normalizedPath,
-            isFolder: Boolean(entry?.isFolder),
-            contentMode: "files",
-          });
-          setActivePage("files");
-        }
-
-        useEffect(() => {
-          if (accountMenuAnimationTimerRef.current !== null) {
-            window.clearTimeout(accountMenuAnimationTimerRef.current);
-            accountMenuAnimationTimerRef.current = null;
-          }
-
-          if (accountMenuOpen) {
-            setRenderedAccountMenu(true);
-            setAccountMenuPhase("enter");
-            accountMenuAnimationTimerRef.current = window.setTimeout(() => {
-              setAccountMenuPhase("idle");
-              accountMenuAnimationTimerRef.current = null;
-            }, 180);
-            return;
-          }
-
-          if (!renderedAccountMenu) {
-            setAccountMenuPhase("idle");
-            return;
-          }
-
-          setAccountMenuPhase("exit");
-          accountMenuAnimationTimerRef.current = window.setTimeout(() => {
-            setRenderedAccountMenu(false);
-            setAccountMenuPhase("idle");
-            accountMenuAnimationTimerRef.current = null;
-          }, 180);
-        }, [accountMenuOpen, renderedAccountMenu]);
-
-        useEffect(() => {
-          return () => {
-            if (accountMenuAnimationTimerRef.current !== null) {
-              window.clearTimeout(accountMenuAnimationTimerRef.current);
-            }
-          };
-        }, []);
+${APP_HEADER_APP_SCRIPT_FRAGMENTS.lifecycle}
 
         useEffect(() => {
           if (isDemoMode || sessionState.status !== "unauthenticated") {
@@ -114284,81 +106159,12 @@ ${METRONOME_APP_SCRIPT_FRAGMENTS.originThreads}
           setShowPlaygroundOnboarding(true);
         }, [sessionState.onboardingCompleted, sessionState.status, showPlaygroundOnboarding]);
 
-        useEffect(() => {
-          if (!threadSearchOpen) {
-            return;
-          }
-
-          const focusFrame = window.requestAnimationFrame(() => {
-            if (threadSearchInputRef.current) {
-              threadSearchInputRef.current.focus();
-              threadSearchInputRef.current.select();
-            }
-          });
-
-          function handleKeyDown(event) {
-            if (event.key === "Escape") {
-              event.preventDefault();
-              closeThreadSearch();
-            }
-          }
-
-          window.addEventListener("keydown", handleKeyDown);
-          return () => {
-            window.cancelAnimationFrame(focusFrame);
-            window.removeEventListener("keydown", handleKeyDown);
-          };
-        }, [threadSearchOpen]);
-
-        useEffect(() => {
-          function handleKeyDown(event) {
-            if (!(event.metaKey || event.ctrlKey) || String(event.key || "").toLowerCase() !== "k") {
-              return;
-            }
-
-            event.preventDefault();
-            openThreadSearch();
-          }
-
-          window.addEventListener("keydown", handleKeyDown);
-          return () => window.removeEventListener("keydown", handleKeyDown);
-        }, []);
-
-        function openSettingsPage(sectionId) {
-          const nextSectionId = typeof sectionId === "string" && sectionId.trim()
-            ? sectionId.trim()
-            : "profile";
-          const normalizedSectionId = nextSectionId === "api" ? "profile" : nextSectionId;
-          if (normalizedSectionId === "inference") {
-            openInferencePage();
-            return;
-          }
-          if (normalizedSectionId === "costs-overview") {
-            openOrganizationBillingPage("usage");
-            return;
-          }
-          if (["costs-plans", "costs-plan-options", "costs-records"].includes(normalizedSectionId)) {
-            openOrganizationBillingPage("billing", normalizedSectionId);
-            return;
-          }
-          setAccountMenuOpen(false);
-          setNotificationsOpen(false);
-          setSidebarWorkspaceMode("configure");
-          setActivePage("settings");
-          setSettingsSection(normalizedSectionId === "password" || normalizedSectionId === "delete" ? "profile" : normalizedSectionId);
-        }
+${SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS.navigation}
 
 ${INFERENCE_APP_SCRIPT_FRAGMENTS.navigation}
 ${TEAMS_APP_SCRIPT_FRAGMENTS.navigation}
 ${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.navigation}
-        function openNotificationsPage() {
-          setAccountMenuOpen(false);
-          setNotificationsOpen(false);
-          setProfileEditorOpen(false);
-          setSidebarWorkspaceMode("configure");
-          setActivePage("configure");
-        }
-
+${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.notificationNavigation}
 ${TEAMS_DOMAIN_SCRIPT_FRAGMENTS.memberIdentity}
 ${ORGANIZATIONS_DOMAIN_SCRIPT_FRAGMENTS.organizationIdentity}
 ${ORGANIZATIONS_RUNTIME_SCRIPT_FRAGMENTS.loading}
@@ -114368,12 +106174,7 @@ ${TEAMS_RUNTIME_SCRIPT_FRAGMENTS.loading}${TEAMS_RUNTIME_SCRIPT_FRAGMENTS.member
 
 ${TEAMS_RUNTIME_SCRIPT_FRAGMENTS.administration}${TEAMS_RUNTIME_SCRIPT_FRAGMENTS.permissions}${TEAMS_RUNTIME_SCRIPT_FRAGMENTS.deleteTeam}${TEAMS_DOMAIN_SCRIPT_FRAGMENTS.resourceSharing}
 ${METRONOME_APP_SCRIPT_FRAGMENTS.teamSharing}
-${TEAMS_RUNTIME_SCRIPT_FRAGMENTS.sharing}        useEffect(() => {
-          if ((activePage === "settings" || activePage === "team" || activePage === "organization") && sidebarWorkspaceMode !== "configure") {
-            setSidebarWorkspaceMode("configure");
-          }
-        }, [activePage, sidebarWorkspaceMode]);
-
+${TEAMS_RUNTIME_SCRIPT_FRAGMENTS.sharing}${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.pageModeLifecycle}
 ${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.loadLifecycle}
 ${TEAMS_APP_SCRIPT_FRAGMENTS.loadLifecycle}
 ${IMAGINE_APP_SCRIPT_FRAGMENTS.lifecycle}
@@ -116361,7 +108162,7 @@ ${METRONOME_APP_SCRIPT_FRAGMENTS.runController}
                     view: authState.connectorBrowserView,
                   }
                 : null,
-              reopenSettingsTriggerComposer: authState.provider === "github" && activePage === "settings" && settingsSection === "webhooks" && settingsCreatingTrigger,
+              reopenSettingsTriggerComposer: false,
             });
             const explicitRedirectTo = typeof options?.redirectTo === "string" && options.redirectTo.trim()
               ? options.redirectTo.trim()
@@ -117724,81 +109525,7 @@ ${METRONOME_APP_SCRIPT_FRAGMENTS.runController}
           settingsProjectRoutingId,
         ]);
 
-        const loadSettingsApiKeys = useCallback(async function loadSettingsApiKeys(options = {}) {
-          if (!hasSessionAuth) {
-            settingsApiKeysSnapshotRef.current = { keys: [], loadedAt: 0, scopeKey: "" };
-            settingsApiKeysLoadPromiseRef.current = null;
-            setSettingsApiKeys([]);
-            setSettingsApiKeysLoading(false);
-            return;
-          }
-
-          const force = options?.force === true;
-          const scopeKey = String(sessionState.userId || "").trim() || "session";
-          let snapshot = settingsApiKeysSnapshotRef.current;
-          if (snapshot.scopeKey !== scopeKey) {
-            snapshot = { keys: [], loadedAt: 0, scopeKey };
-            settingsApiKeysSnapshotRef.current = snapshot;
-            settingsApiKeysLoadPromiseRef.current = null;
-            setSettingsApiKeys([]);
-          }
-          const cacheAgeMs = Date.now() - Number(snapshot.loadedAt || 0);
-          if (!force && snapshot.loadedAt > 0 && cacheAgeMs >= 0 && cacheAgeMs < 60_000) {
-            setSettingsApiKeys(snapshot.keys);
-            setSettingsApiKeysLoading(false);
-            return snapshot.keys;
-          }
-          if (settingsApiKeysLoadPromiseRef.current) {
-            if (!force) {
-              return settingsApiKeysLoadPromiseRef.current;
-            }
-            try {
-              await settingsApiKeysLoadPromiseRef.current;
-            } catch {}
-            snapshot = settingsApiKeysSnapshotRef.current;
-          }
-
-          const hasSnapshot = snapshot.loadedAt > 0;
-          setSettingsApiKeysLoading(!hasSnapshot);
-          setSettingsApiKeysError("");
-          const request = (async () => {
-            const response = await fetch("/api/aios/user/api-keys", {
-              method: "GET",
-              credentials: "include",
-              cache: "no-store",
-            });
-            const data = await response.json().catch(() => ({}));
-
-            if (!response.ok) {
-              throw new Error(data?.message || data?.error || "Failed to load API keys.");
-            }
-
-            const keys = Array.isArray(data?.keys) ? data.keys : [];
-            settingsApiKeysSnapshotRef.current = {
-              keys,
-              loadedAt: Date.now(),
-              scopeKey,
-            };
-            setSettingsApiKeys(keys);
-            return keys;
-          })();
-          settingsApiKeysLoadPromiseRef.current = request;
-          try {
-            return await request;
-          } catch (error) {
-            if (!hasSnapshot) {
-              setSettingsApiKeys([]);
-            }
-            setSettingsApiKeysError(error instanceof Error ? error.message : "Failed to load API keys.");
-            return hasSnapshot ? snapshot.keys : [];
-          } finally {
-            if (settingsApiKeysLoadPromiseRef.current === request) {
-              settingsApiKeysLoadPromiseRef.current = null;
-              setSettingsApiKeysLoading(false);
-            }
-          }
-        }, [hasSessionAuth, sessionState.userId]);
-
+${API_KEYS_RUNTIME_SCRIPT_FRAGMENTS.loading}
         const loadSettingsMarketingConsent = useCallback(async function loadSettingsMarketingConsent() {
           if (!hasSessionAuth) {
             setSettingsMarketingConsentStatus(null);
@@ -117920,7 +109647,7 @@ ${METRONOME_APP_SCRIPT_FRAGMENTS.runController}
           }
 
           if (sidebarPlanIsPaid) {
-            openSettingsPage("costs-plans");
+            openSettingsModal("costs-plans");
             return;
           }
 
@@ -118119,54 +109846,7 @@ ${METRONOME_APP_SCRIPT_FRAGMENTS.runController}
           }
         }
 
-        async function handleSettingsCreateApiKey() {
-          if (!hasSessionAuth) {
-            handleSignInWithComputerAgents();
-            return;
-          }
-
-          const keyName = String(settingsNewKeyName || "").trim();
-          if (!keyName) {
-            return;
-          }
-
-          setSettingsCreateKeyLoading(true);
-          setSettingsApiKeysError("");
-          try {
-            const response = await fetch("/api/aios/user/api-keys", {
-              method: "POST",
-              credentials: "include",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                name: keyName,
-                description: String(settingsNewKeyDescription || "").trim() || undefined,
-                permissions: SETTINGS_API_KEY_SCOPE_PRESETS[settingsNewKeyScopePreset]?.permissions || ["*"],
-              }),
-            });
-            const data = await response.json().catch(() => ({}));
-
-            if (!response.ok) {
-              throw new Error(data?.message || data?.error || "Failed to create API key.");
-            }
-
-            setSettingsNewlyCreatedKey(typeof data?.key === "string" ? data.key : "");
-            if (typeof data?.id === "string" && data.id.trim() && typeof data?.key === "string" && data.key.trim()) {
-              setSettingsRevealableApiKeys((current) => ({ ...current, [data.id.trim()]: data.key.trim() }));
-            }
-            setSettingsNewKeyName("");
-            setSettingsNewKeyDescription("");
-            setSettingsNewKeyScopePreset("full");
-            setSettingsApiKeyDialogOpen(false);
-            await loadSettingsApiKeys({ force: true });
-          } catch (error) {
-            setSettingsApiKeysError(error instanceof Error ? error.message : "Failed to create API key.");
-          } finally {
-            setSettingsCreateKeyLoading(false);
-          }
-        }
-
+${API_KEYS_RUNTIME_SCRIPT_FRAGMENTS.create}
         async function updateSettingsMarketingConsent(status) {
           if (!hasSessionAuth) {
             handleSignInWithComputerAgents();
@@ -118204,32 +109884,7 @@ ${METRONOME_APP_SCRIPT_FRAGMENTS.runController}
           }
         }
 
-        async function handleSettingsRevokeApiKey(keyId) {
-          if (!keyId) {
-            return;
-          }
-
-          setSettingsRevokingKeyId(keyId);
-          setSettingsApiKeysError("");
-          try {
-            const response = await fetch("/api/aios/user/api-keys/" + encodeURIComponent(keyId) + "/revoke", {
-              method: "POST",
-              credentials: "include",
-            });
-            const data = await response.json().catch(() => ({}));
-
-            if (!response.ok) {
-              throw new Error(data?.message || data?.error || "Failed to revoke API key.");
-            }
-
-            await loadSettingsApiKeys({ force: true });
-          } catch (error) {
-            setSettingsApiKeysError(error instanceof Error ? error.message : "Failed to revoke API key.");
-          } finally {
-            setSettingsRevokingKeyId("");
-          }
-        }
-
+${API_KEYS_RUNTIME_SCRIPT_FRAGMENTS.revoke}
         async function handleSettingsResendVerificationEmail() {
           if (!hasSessionAuth) {
             handleSignInWithComputerAgents();
@@ -119004,16 +110659,15 @@ ${METRONOME_APP_SCRIPT_FRAGMENTS.runController}
             return;
           }
 
-          if (nextActivePage) {
+          if (nextActivePage && nextActivePage !== "settings") {
             setActivePage(nextActivePage);
           }
 
-          if (nextActivePage === "settings" && nextSettingsSection) {
-            setSettingsSection(nextSettingsSection);
-          }
-
-          if (nextActivePage === "settings" && nextSettingsSection === "webhooks" && shouldReopenSettingsTriggerComposer) {
-            openSettingsTriggerComposer();
+          if (nextActivePage === "settings") {
+            openSettingsModal(nextSettingsSection || "profile");
+            if (nextSettingsSection === "webhooks" && shouldReopenSettingsTriggerComposer) {
+              openSettingsTriggerComposer();
+            }
           }
 
           clearPlaygroundIntegrationRedirectState();
@@ -119229,30 +110883,6 @@ ${INFERENCE_APP_SCRIPT_FRAGMENTS.loadLifecycle}
 	            }
 	            return;
 	          }
-
-          if (activePage !== "settings") {
-            return;
-          }
-
-          if (settingsSection === "costs-plans" || settingsSection === "costs-records" || settingsSection === "inference") {
-            void loadSettingsPlatformConfig();
-            void loadSettingsBudgetStatus();
-            void loadSettingsInvoices();
-            if (settingsSection === "costs-plans") {
-              void loadSettingsUsageData();
-            }
-            return;
-          }
-
-          if (settingsSection === "costs-overview") {
-            void loadSettingsBudgetStatus();
-            void loadSettingsUsageData();
-            return;
-          }
-
-          if (settingsSection === "webhooks") {
-            void loadSettingsTriggers();
-          }
         }, [
 	          activePage,
 	          billingOrganizationId,
@@ -119260,32 +110890,13 @@ ${INFERENCE_APP_SCRIPT_FRAGMENTS.loadLifecycle}
 	          organizationPageActiveTab,
 	          organizationPageBillingSection,
 	          organizationPageSelectedOrganizationId,
-          settingsSection,
-          loadSettingsApiKeys,
           loadSettingsBudgetStatus,
           loadSettingsInvoices,
           loadSettingsPlatformConfig,
-          loadSettingsTriggers,
           loadSettingsUsageData,
         ]);
 
-        useEffect(() => {
-          if ((activePage !== "develop" && activePage !== "develop-api-keys") || !hasSessionAuth) {
-            return;
-          }
-
-          void loadSettingsApiKeys();
-          if (activePage === "develop" && developHomeSection === "webhooks") {
-            void loadSettingsTriggers();
-          }
-        }, [
-          activePage,
-          developHomeSection,
-          hasSessionAuth,
-          loadSettingsApiKeys,
-          loadSettingsTriggers,
-        ]);
-
+${API_KEYS_RUNTIME_SCRIPT_FRAGMENTS.loadLifecycle}
         useEffect(() => {
           if (activePage !== "configure" || !hasSessionAuth) {
             return;
@@ -119316,23 +110927,6 @@ ${INFERENCE_APP_SCRIPT_FRAGMENTS.loadLifecycle}
 
           void loadSettingsBudgetStatus();
         }, [hasSessionAuth, loadSettingsBudgetStatus, settingsBudgetStatus, showInitialThreadWelcome]);
-
-        useEffect(() => {
-          if (activePage !== "settings" || settingsSection !== "integrations" || !hasSessionAuth) {
-            return;
-          }
-
-          void loadSettingsEmailStatus();
-          void loadSettingsDiscordStatus();
-          void loadSettingsTelegramStatus();
-        }, [
-          activePage,
-          hasSessionAuth,
-          settingsSection,
-          loadSettingsDiscordStatus,
-          loadSettingsEmailStatus,
-          loadSettingsTelegramStatus,
-        ]);
 
         useEffect(() => {
           if (activePage !== "tools" || !hasSessionAuth) {
@@ -119383,15 +110977,6 @@ ${INFERENCE_APP_SCRIPT_FRAGMENTS.loadLifecycle}
           } catch {
           }
         }, []);
-
-        useEffect(() => {
-          if (activePage === "settings" && (settingsSection === "integrations" || settingsSection === "webhooks")) {
-            const nextToolsView = settingsSection === "webhooks" ? "actions" : "tags";
-            setSidebarWorkspaceMode(getSidebarModeForToolsView(nextToolsView));
-            setToolsView(nextToolsView);
-            setActivePage("tools");
-          }
-        }, [activePage, settingsSection]);
 
         useEffect(() => {
           if (activePage !== "tools" || (toolsView !== "plugins" && toolsView !== "tags")) {
@@ -119463,7 +111048,7 @@ ${INFERENCE_APP_SCRIPT_FRAGMENTS.loadLifecycle}
         }, [activePage, pluginsNavPopover]);
 
 	        useEffect(() => {
-	          if (activePage !== "settings" || (settingsSection !== "profile" && settingsSection !== "password" && settingsSection !== "delete")) {
+	          if (!settingsModalOpen || settingsSection !== "profile") {
 	            return;
 	          }
 
@@ -119475,8 +111060,8 @@ ${INFERENCE_APP_SCRIPT_FRAGMENTS.loadLifecycle}
             void loadSettingsMarketingConsent();
           }
         }, [
-          activePage,
           hasSessionAuth,
+          settingsModalOpen,
           settingsSection,
           loadSettingsMarketingConsent,
         ]);
@@ -120183,9 +111768,7 @@ ${INFERENCE_APP_SCRIPT_FRAGMENTS.loadLifecycle}
         const settingsSelectedTrigger = useMemo(() => {
           return settingsTriggers.find((trigger) => trigger.id === settingsSelectedTriggerId) || null;
         }, [settingsSelectedTriggerId, settingsTriggers]);
-        const settingsManagedApiKeys = useMemo(() => settingsApiKeys.filter((apiKeyRecord) => isSettingsSystemManagedKey(apiKeyRecord)), [settingsApiKeys]);
-        const settingsDeveloperApiKeys = useMemo(() => settingsApiKeys.filter((apiKeyRecord) => !isSettingsSystemManagedKey(apiKeyRecord)), [settingsApiKeys]);
-        const speechToTextUrl = useMemo(() => {
+${API_KEYS_RUNTIME_SCRIPT_FRAGMENTS.projection}        const speechToTextUrl = useMemo(() => {
           try {
             const url = new URL(resolvedUpstreamUrl);
             url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
@@ -121653,479 +113236,8 @@ ${INFERENCE_APP_SCRIPT_FRAGMENTS.loadLifecycle}
           }
         }, [authRequestHeaders, hasRealAccess, proxyBackendBase, triggerPlatformSessionRecovery]);
 
-        const loadDevelopServerOperationalMetrics = useCallback(async function loadDevelopServerOperationalMetrics(options = {}) {
-          if (!hasRealAccess) {
-            setDevelopServerOperationalMetrics(null);
-            setDevelopServerOperationalMetricsError("");
-            return;
-          }
-
-          const rawTargetKind = String(options?.resourceKind || "").trim();
-          const targetKind = rawTargetKind ? canonicalizePlaygroundServerKind(rawTargetKind) : "";
-          const requestedPeriod = targetKind
-            ? normalizePlaygroundEnvironmentHomeChartPeriod(options?.period)
-            : "day";
-          const requestKey = (targetKind || "overview") + ":" + requestedPeriod;
-          const loadSequence = developServerOperationalMetricsLoadSequenceRef.current + 1;
-          developServerOperationalMetricsLoadSequenceRef.current = loadSequence;
-          developServerOperationalMetricsRequestKeyRef.current = requestKey;
-          if (developServerOperationalMetricsAbortRef.current) {
-            developServerOperationalMetricsAbortRef.current.abort();
-          }
-          const requestController = new AbortController();
-          developServerOperationalMetricsAbortRef.current = requestController;
-          const isCurrentLoad = () => (
-            !requestController.signal.aborted
-            && developServerOperationalMetricsLoadSequenceRef.current === loadSequence
-          );
-          const databaseResourceScopeKey = buildPlaygroundDatabaseListScopeKey(
-            proxyBackendBase,
-            authRequestHeaders,
-            databaseListIdentity
-          );
-
-          const buildOperationalBuckets = () => {
-            const isHourly = requestedPeriod === "day";
-            const bucketCount = isHourly ? 24 : requestedPeriod === "week" ? 7 : 30;
-            const bucketDurationMs = isHourly ? 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
-            const formatter = new Intl.DateTimeFormat("en-US", isHourly
-              ? { hour: "numeric" }
-              : requestedPeriod === "week"
-                ? { weekday: "short" }
-                : { month: "short", day: "numeric" });
-            const anchor = new Date();
-            if (isHourly) {
-              anchor.setUTCMinutes(0, 0, 0);
-            } else {
-              anchor.setUTCHours(0, 0, 0, 0);
-            }
-            const getBucketKey = (value) => {
-              const date = new Date(value);
-              if (!Number.isFinite(date.getTime())) {
-                return "";
-              }
-              return date.toISOString().slice(0, isHourly ? 13 : 10);
-            };
-            const buckets = Array.from({ length: bucketCount }, (_, index) => {
-              const date = new Date(anchor.getTime() - ((bucketCount - 1 - index) * bucketDurationMs));
-              return {
-                key: getBucketKey(date),
-                label: formatter.format(date),
-                startMs: date.getTime(),
-                hostingRequests: 0,
-                apiRequests: 0,
-                functionCalls: 0,
-                databaseReads: 0,
-                databaseWrites: 0,
-                agentRuntimeRuns: 0,
-                secretReads: 0,
-                authEvents: 0,
-                paymentCheckoutSessions: 0,
-                computeTokens: 0,
-                errors: 0,
-              };
-            });
-            return {
-              buckets,
-              bucketByKey: new Map(buckets.map((bucket) => [bucket.key, bucket])),
-              bucketIndexByKey: new Map(buckets.map((bucket, index) => [bucket.key, index])),
-              bucketDurationMs,
-              getBucketKey,
-            };
-          };
-          const readAnalyticsResponse = async (path) => {
-            const normalizedAnalyticsPath = String(path || "");
-            const isDatabaseAnalyticsPath = normalizedAnalyticsPath.startsWith("/databases/");
-            const isServerOverviewAnalyticsPath = normalizedAnalyticsPath.startsWith("/servers/analytics/overview");
-            if (isDatabaseAnalyticsPath || isServerOverviewAnalyticsPath) {
-              try {
-                return await fetchPlaygroundCachedDatabaseResourceJson(
-                  proxyBackendBase + path,
-                  authRequestHeaders,
-                  {
-                    scopeKey: databaseResourceScopeKey,
-                    ttlMs: PLAYGROUND_DATABASE_ANALYTICS_CACHE_TTL_MS,
-                    priority: "low",
-                    persist: isServerOverviewAnalyticsPath,
-                    staleWhileRevalidate: isServerOverviewAnalyticsPath,
-                  }
-                );
-              } catch {
-                return null;
-              }
-            }
-            const response = await fetch(proxyBackendBase + path, {
-              method: "GET",
-              headers: authRequestHeaders,
-              signal: requestController.signal,
-              priority: "low",
-            });
-            const data = await response.json().catch(() => ({}));
-            if (isUnauthorizedStatus(response.status)) {
-              triggerPlatformSessionRecovery();
-              return null;
-            }
-            if (!response.ok) {
-              return null;
-            }
-            return data;
-          };
-
-          setDevelopServerOperationalMetricsLoading(true);
-          setDevelopServerOperationalMetricsError("");
-          try {
-            const shouldLoadServerCatalog = targetKind !== "database";
-            const shouldLoadDatabaseCatalog = !targetKind || targetKind === "database";
-            const serverOverviewAnalyticsPath = "/servers/analytics/overview?period=" + encodeURIComponent(requestedPeriod);
-            const databaseOverviewAnalyticsPath = "/databases/analytics/overview?period=" + encodeURIComponent(requestedPeriod);
-            const [
-              { buckets, bucketByKey, bucketIndexByKey, bucketDurationMs, getBucketKey },
-              serverOverviewAnalytics,
-              databaseOverviewAnalytics,
-            ] = await Promise.all([
-              Promise.resolve(buildOperationalBuckets()),
-              shouldLoadServerCatalog
-                ? readAnalyticsResponse(serverOverviewAnalyticsPath)
-                : Promise.resolve(null),
-              shouldLoadDatabaseCatalog
-                ? readAnalyticsResponse(databaseOverviewAnalyticsPath)
-                : Promise.resolve(null),
-            ]);
-            const serverOverviewResources = Array.isArray(serverOverviewAnalytics?.analytics?.resources)
-              ? serverOverviewAnalytics.analytics.resources
-              : Array.isArray(serverOverviewAnalytics?.resources)
-                ? serverOverviewAnalytics.resources
-                : [];
-            const databaseOverviewResources = Array.isArray(databaseOverviewAnalytics?.analytics?.resources)
-              ? databaseOverviewAnalytics.analytics.resources
-              : Array.isArray(databaseOverviewAnalytics?.resources)
-                ? databaseOverviewAnalytics.resources
-                : [];
-            const servers = serverOverviewResources.map(normalizePlaygroundServerRecord);
-            const databases = databaseOverviewResources.map(normalizePlaygroundDatabaseRecord);
-            const activeServerRecords = servers.filter((server) => (
-              server?.id
-              && !["deleted"].includes(String(server?.status || server?.state || "").toLowerCase())
-            ));
-            const activeServers = activeServerRecords.filter((server) => canonicalizePlaygroundServerKind(server?.kind) !== "database");
-            const activeDatabases = databases.filter((database) => database?.id && String(database?.status || "").toLowerCase() !== "deleted");
-            const analyticsServers = targetKind && targetKind !== "database"
-              ? activeServers.filter((server) => canonicalizePlaygroundServerKind(server?.kind) === targetKind)
-              : activeServers;
-            const analyticsDatabases = targetKind && targetKind !== "database" ? [] : activeDatabases;
-            const metricResourceSeries = {
-              hostingRequests: [],
-              apiRequests: [],
-              functionCalls: [],
-              databaseReads: [],
-              databaseWrites: [],
-              agentRuntimeRuns: [],
-              secretReads: [],
-              authEvents: [],
-              paymentCheckoutSessions: [],
-              computeTokens: [],
-              errors: [],
-            };
-            const createMetricValues = () => buckets.map(() => 0);
-            const readAnalyticsNumber = (source, keys) => {
-              const candidates = Array.isArray(keys) ? keys : [keys];
-              for (const key of candidates) {
-                const value = Number(source?.[key]);
-                if (Number.isFinite(value)) {
-                  return value;
-                }
-              }
-              return 0;
-            };
-            const getResourceSeriesLabel = (resource, fallback) => {
-              const name = typeof resource?.name === "string" && resource.name.trim()
-                ? resource.name.trim()
-                : "";
-              if (name) {
-                return name;
-              }
-              const id = typeof resource?.id === "string" && resource.id.trim()
-                ? resource.id.trim()
-                : "";
-              return id || fallback;
-            };
-            const addToMetricValues = (entry, values, value) => {
-              const bucketKey = getBucketKey(entry?.bucketStart || entry?.timestamp || "");
-              const bucketIndex = bucketIndexByKey.get(bucketKey);
-              if (typeof bucketIndex !== "number") {
-                return;
-              }
-              values[bucketIndex] += Math.max(0, Number(value || 0));
-            };
-            const pushResourceMetricSeries = (key, resource, values, fallbackLabel) => {
-              if (!metricResourceSeries[key]) {
-                return;
-              }
-              const normalizedValues = Array.isArray(values) && values.length === buckets.length
-                ? values.map((value) => Math.max(0, Number(value || 0)))
-                : createMetricValues();
-              metricResourceSeries[key].push({
-                id: String(resource?.id || key + "-" + metricResourceSeries[key].length),
-                label: getResourceSeriesLabel(resource, fallbackLabel),
-                values: normalizedValues,
-                total: normalizedValues.reduce((sum, value) => sum + Math.max(0, Number(value || 0)), 0),
-              });
-            };
-
-            const addToBucket = (entry, field, value) => {
-              const bucketKey = getBucketKey(entry?.bucketStart || entry?.timestamp || "");
-              const bucket = bucketByKey.get(bucketKey);
-              if (!bucket) {
-                return;
-              }
-              bucket[field] += Math.max(0, Number(value || 0));
-            };
-
-            const serverById = new Map(analyticsServers.map((server) => [String(server?.id || ""), server]));
-            const scopedServerOverviewResources = targetKind && targetKind !== "database"
-              ? serverOverviewResources.filter((resource) => canonicalizePlaygroundServerKind(resource?.kind) === targetKind)
-              : serverOverviewResources;
-            const serverAnalyticsResults = scopedServerOverviewResources.map((resource) => ({
-              server: serverById.get(String(resource?.id || "")) || resource,
-              analytics: { charts: { traffic: Array.isArray(resource?.traffic) ? resource.traffic : [] } },
-            }));
-            const activeServerKindCounts = activeServerRecords.reduce((counts, server) => {
-              const kind = canonicalizePlaygroundServerKind(server?.kind);
-              counts[kind] = (counts[kind] || 0) + 1;
-              return counts;
-            }, {});
-            serverAnalyticsResults.forEach(({ server, analytics }) => {
-              const kind = canonicalizePlaygroundServerKind(server?.kind);
-              const trafficBuckets = Array.isArray(analytics?.charts?.traffic)
-                ? analytics.charts.traffic
-                : Array.isArray(analytics?.analytics?.charts?.traffic)
-                  ? analytics.analytics.charts.traffic
-                  : Array.isArray(analytics?.charts?.traffic24h)
-                    ? analytics.charts.traffic24h
-                    : Array.isArray(analytics?.analytics?.charts?.traffic24h)
-                      ? analytics.analytics.charts.traffic24h
-                      : [];
-              const requestValues = createMetricValues();
-              const errorValues = createMetricValues();
-              const computeTokenValues = createMetricValues();
-              trafficBuckets.forEach((entry) => {
-                const total = Math.max(0, Number(entry?.total || 0));
-                const errors = Math.max(0, Number(entry?.clientErrors || 0)) + Math.max(0, Number(entry?.serverErrors || 0));
-                const computeTokens = Math.max(0, readAnalyticsNumber(entry, [
-                  "computeTokens",
-                  "compute_tokens",
-                  "costCT",
-                  "costCt",
-                  "cost_ct",
-                  "ct",
-                  "totalComputeTokens",
-                  "total_compute_tokens",
-                ]));
-                if (kind === "web_app") {
-                  addToBucket(entry, "hostingRequests", total);
-                  addToMetricValues(entry, requestValues, total);
-                } else if (kind === "api") {
-                  addToBucket(entry, "apiRequests", total);
-                  addToMetricValues(entry, requestValues, total);
-                } else if (kind === "function") {
-                  addToBucket(entry, "functionCalls", total);
-                  addToMetricValues(entry, requestValues, total);
-                } else if (kind === "agent_runtime") {
-                  addToBucket(entry, "agentRuntimeRuns", total);
-                  addToMetricValues(entry, requestValues, total);
-                } else if (kind === "secrets") {
-                  addToBucket(entry, "secretReads", total);
-                  addToMetricValues(entry, requestValues, total);
-                } else if (kind === "auth") {
-                  addToBucket(entry, "authEvents", total);
-                  addToMetricValues(entry, requestValues, total);
-                } else if (kind === "payments") {
-                  addToBucket(entry, "paymentCheckoutSessions", total);
-                  addToMetricValues(entry, requestValues, total);
-                }
-                addToBucket(entry, "errors", errors);
-                addToBucket(entry, "computeTokens", computeTokens);
-                addToMetricValues(entry, errorValues, errors);
-                addToMetricValues(entry, computeTokenValues, computeTokens);
-              });
-              if (kind === "web_app") {
-                pushResourceMetricSeries("hostingRequests", server, requestValues, "Web app");
-              } else if (kind === "api") {
-                pushResourceMetricSeries("apiRequests", server, requestValues, "API");
-              } else if (kind === "function") {
-                pushResourceMetricSeries("functionCalls", server, requestValues, "Function");
-              } else if (kind === "agent_runtime") {
-                pushResourceMetricSeries("agentRuntimeRuns", server, requestValues, "Agent runtime");
-	            } else if (kind === "secrets") {
-	              pushResourceMetricSeries("secretReads", server, requestValues, "Secrets");
-	            } else if (kind === "auth") {
-	              pushResourceMetricSeries("authEvents", server, requestValues, "Authentication");
-	            } else if (kind === "payments") {
-	              pushResourceMetricSeries("paymentCheckoutSessions", server, requestValues, "Payments");
-	            }
-              pushResourceMetricSeries("errors", server, errorValues, "Resource");
-              pushResourceMetricSeries("computeTokens", server, computeTokenValues, "Resource");
-            });
-
-            const publishOperationalMetricsSnapshot = () => {
-              if (!isCurrentLoad()) {
-                return;
-              }
-              const labels = buckets.map((bucket) => bucket.label);
-              const buildSeries = (field) => buckets.map((bucket) => Math.max(0, Number(bucket[field] || 0)));
-              const activeScopedResources = targetKind === "database"
-                ? activeDatabases
-                : targetKind
-                  ? activeServerRecords.filter((server) => canonicalizePlaygroundServerKind(server?.kind) === targetKind)
-                  : [...activeServerRecords, ...activeDatabases];
-              const resourceCountSeries = buckets.map((bucket) => {
-                const bucketEndMs = Math.max(0, Number(bucket.startMs || 0)) + bucketDurationMs;
-                return activeScopedResources.reduce((count, resource) => {
-                  const createdAtMs = Date.parse(String(resource?.createdAt || ""));
-                  return count + (!Number.isFinite(createdAtMs) || createdAtMs <= bucketEndMs ? 1 : 0);
-                }, 0);
-              });
-              const sortResourceSeries = (items) => (Array.isArray(items) ? [...items] : [])
-                .sort((left, right) => {
-                  const leftTotal = Math.max(0, Number(left?.total || 0));
-                  const rightTotal = Math.max(0, Number(right?.total || 0));
-                  if (leftTotal !== rightTotal) {
-                    return rightTotal - leftTotal;
-                  }
-                  return String(left?.label || "").localeCompare(String(right?.label || ""));
-                })
-                .slice(0, 4);
-              const topResourceSeries = Object.fromEntries(
-                Object.entries(metricResourceSeries).map(([key, items]) => [key, sortResourceSeries(items)])
-              );
-              const scopedResourceCount = targetKind === "database"
-                ? activeDatabases.length
-                : targetKind
-                  ? activeServerKindCounts[targetKind] || 0
-                  : activeServerRecords.length + activeDatabases.length;
-              setDevelopServerOperationalMetrics({
-                labels,
-                loadedAt: new Date().toISOString(),
-                scopeKind: targetKind || "",
-                period: requestedPeriod,
-                resourceCount: scopedResourceCount,
-                resourceCounts: {
-                  webApps: activeServerKindCounts.web_app || 0,
-                  apis: activeServerKindCounts.api || 0,
-                  functions: activeServerKindCounts.function || 0,
-                  databases: activeDatabases.length,
-                  agentRuntimes: activeServerKindCounts.agent_runtime || 0,
-                  secrets: activeServerKindCounts.secrets || 0,
-                  auth: activeServerKindCounts.auth || 0,
-                  payments: activeServerKindCounts.payments || 0,
-                },
-                series: {
-                  hostingRequests: buildSeries("hostingRequests"),
-                  apiRequests: buildSeries("apiRequests"),
-                  functionCalls: buildSeries("functionCalls"),
-                  databaseReads: buildSeries("databaseReads"),
-                  databaseWrites: buildSeries("databaseWrites"),
-                  agentRuntimeRuns: buildSeries("agentRuntimeRuns"),
-                  secretReads: buildSeries("secretReads"),
-                  authEvents: buildSeries("authEvents"),
-                  paymentCheckoutSessions: buildSeries("paymentCheckoutSessions"),
-                  computeTokens: buildSeries("computeTokens"),
-                  resources: resourceCountSeries,
-                  errors: buildSeries("errors"),
-                },
-                topResourceSeries,
-                totals: {
-                  hostingRequests: buckets.reduce((sum, bucket) => sum + bucket.hostingRequests, 0),
-                  apiRequests: buckets.reduce((sum, bucket) => sum + bucket.apiRequests, 0),
-                  functionCalls: buckets.reduce((sum, bucket) => sum + bucket.functionCalls, 0),
-                  databaseReads: buckets.reduce((sum, bucket) => sum + bucket.databaseReads, 0),
-                  databaseWrites: buckets.reduce((sum, bucket) => sum + bucket.databaseWrites, 0),
-                  agentRuntimeRuns: buckets.reduce((sum, bucket) => sum + bucket.agentRuntimeRuns, 0),
-                  secretReads: buckets.reduce((sum, bucket) => sum + bucket.secretReads, 0),
-                  authEvents: buckets.reduce((sum, bucket) => sum + bucket.authEvents, 0),
-                  paymentCheckoutSessions: buckets.reduce((sum, bucket) => sum + bucket.paymentCheckoutSessions, 0),
-                  computeTokens: buckets.reduce((sum, bucket) => sum + bucket.computeTokens, 0),
-                  resources: scopedResourceCount,
-                  errors: buckets.reduce((sum, bucket) => sum + bucket.errors, 0),
-                },
-              });
-            };
-            const ingestDatabaseAnalytics = (database, analytics) => {
-              const operationBuckets = Array.isArray(analytics?.analytics?.charts?.operations)
-                ? analytics.analytics.charts.operations
-                : Array.isArray(analytics?.charts?.operations)
-                  ? analytics.charts.operations
-                  : Array.isArray(analytics?.analytics?.charts?.operations24h)
-                    ? analytics.analytics.charts.operations24h
-                    : Array.isArray(analytics?.charts?.operations24h)
-                      ? analytics.charts.operations24h
-                      : [];
-              const readValues = createMetricValues();
-              const writeValues = createMetricValues();
-              const errorValues = createMetricValues();
-              const computeTokenValues = createMetricValues();
-              operationBuckets.forEach((entry) => {
-                addToBucket(entry, "databaseReads", entry?.reads);
-                addToBucket(entry, "databaseWrites", entry?.writes);
-                addToBucket(entry, "errors", entry?.errors);
-                addToMetricValues(entry, readValues, entry?.reads);
-                addToMetricValues(entry, writeValues, entry?.writes);
-                addToMetricValues(entry, errorValues, entry?.errors);
-                const computeTokens = Math.max(0, readAnalyticsNumber(entry, [
-                  "computeTokens",
-                  "compute_tokens",
-                  "costCT",
-                  "costCt",
-                  "cost_ct",
-                  "ct",
-                  "totalComputeTokens",
-                  "total_compute_tokens",
-                ]));
-                addToBucket(entry, "computeTokens", computeTokens);
-                addToMetricValues(entry, computeTokenValues, computeTokens);
-              });
-              pushResourceMetricSeries("databaseReads", database, readValues, "Database");
-              pushResourceMetricSeries("databaseWrites", database, writeValues, "Database");
-              pushResourceMetricSeries("errors", database, errorValues, "Database");
-              pushResourceMetricSeries("computeTokens", database, computeTokenValues, "Database");
-            };
-            const databaseById = new Map(analyticsDatabases.map((database) => [String(database?.id || ""), database]));
-            databaseOverviewResources.forEach((resource) => {
-              const database = databaseById.get(String(resource?.id || "")) || resource;
-              ingestDatabaseAnalytics(database, {
-                analytics: { charts: { operations: Array.isArray(resource?.operations) ? resource.operations : [] } },
-              });
-            });
-            publishOperationalMetricsSnapshot();
-          } catch (error) {
-            if (isCurrentLoad() && error?.name !== "AbortError") {
-              developServerOperationalMetricsRequestKeyRef.current = "";
-              setDevelopServerOperationalMetricsError(error instanceof Error ? error.message : "Failed to load server activity.");
-              setDevelopServerOperationalMetrics(null);
-            }
-          } finally {
-            if (isCurrentLoad()) {
-              setDevelopServerOperationalMetricsLoading(false);
-            }
-            if (developServerOperationalMetricsAbortRef.current === requestController) {
-              developServerOperationalMetricsAbortRef.current = null;
-            }
-          }
-        }, [authRequestHeaders, databaseListIdentity, hasRealAccess, proxyBackendBase, triggerPlatformSessionRecovery]);
-
-        useEffect(() => {
-          if (activePage !== "develop" || !hasSessionAuth || developHomeSection !== "overview") {
-            return;
-          }
-
-          void loadDevelopServerOperationalMetrics();
-        }, [
-          activePage,
-          developHomeSection,
-          hasSessionAuth,
-          loadDevelopServerOperationalMetrics,
-        ]);
-
+${DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.operationalMetrics}
+${DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.homeMetricsLifecycle}
         function handleNewThread() {
           const previousThreadId = String(currentThreadId || "").trim();
           if (isPrivateThreadId(previousThreadId)) {
@@ -122850,64 +113962,9 @@ ${METRONOME_APP_SCRIPT_FRAGMENTS.runActions}
           setActivePage("tools");
         }
 
-        function openConfigureHome(options = {}) {
-          if (options.tab === "usage") {
-            openOrganizationBillingPage("usage");
-            return;
-          }
-          setAccountMenuOpen(false);
-          setProfileEditorOpen(false);
-          setConfigureHomeTab("overview");
-          if (!options.preserveSidebarMode) {
-            setSidebarWorkspaceMode("configure");
-          }
-          setResourcesHeaderState({
-            mode: "overview",
-            title: "",
-          });
-          setActivePage("configure");
-        }
-
-${MODELS_APP_SCRIPT_FRAGMENTS.navigation}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.navigation}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.navigation}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.navigation}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.navigation}        function openDevelopApiKeysPage(options = {}) {
-          setAccountMenuOpen(false);
-          setProfileEditorOpen(false);
-          if (!options.preserveSidebarMode) {
-            setSidebarWorkspaceMode("develop");
-          }
-          setDevelopApiKeysMenuOpen(false);
-          setDevelopApiKeysToolbarPopover("");
-          setResourcesHeaderState({
-            mode: "overview",
-            title: "",
-          });
-          setActivePage("develop-api-keys");
-          if (options.openCreateDialog) {
-            setSettingsApiKeyDialogOpen(true);
-          }
-        }
-
-        function openDevelopHome(options = {}) {
-          if (String(options.section || "").trim() === "api-keys") {
-            openDevelopApiKeysPage(options);
-            return;
-          }
-          setAccountMenuOpen(false);
-          setProfileEditorOpen(false);
-          if (!options.preserveSidebarMode) {
-            setSidebarWorkspaceMode("develop");
-          }
-          if (typeof options.section === "string" && options.section.trim()) {
-            setDevelopHomeSection(options.section.trim());
-          } else if (!options.preserveDevelopSection) {
-            setDevelopHomeSection("overview");
-          }
-          setResourcesHeaderState({
-            mode: "overview",
-            title: "",
-          });
-          setActivePage("develop");
-        }
-
+${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.navigation}
+${MODELS_APP_SCRIPT_FRAGMENTS.navigation}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.navigation}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.navigation}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.navigation}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.navigation}${API_KEYS_APP_SCRIPT_FRAGMENTS.navigation}
+${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.navigation}
         function isSidebarPageAvailableForMode(mode) {
           if (activePage === "thread") {
             return true;
@@ -122933,28 +113990,7 @@ ${MODELS_APP_SCRIPT_FRAGMENTS.navigation}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.navig
             || (activePage === "tools" && toolsView === "actions");
         }
 
-        function handleSidebarWorkspaceModeSelect(nextMode) {
-          const normalizedMode = nextMode === "develop" ? "develop" : nextMode === "configure" ? "configure" : "work";
-          setSidebarWorkspaceMode(normalizedMode);
-          setSidebarWorkspaceMenuOpen(false);
-
-          if (normalizedMode === "configure") {
-            openConfigureHome({ preserveSidebarMode: true });
-            return;
-          }
-
-          if (normalizedMode === "develop") {
-            openDevelopHome({ preserveSidebarMode: true });
-            return;
-          }
-
-          if (isSidebarPageAvailableForMode(normalizedMode)) {
-            return;
-          }
-
-          setActivePage("thread");
-        }
-
+${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.modeNavigation}
         function handleOpenPluginsShortcut() {
           openToolsView("plugins");
         }
@@ -123151,84 +114187,7 @@ ${MODELS_APP_SCRIPT_FRAGMENTS.navigation}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.navig
         }, [handleSettingsUsageBillingSave, settingsCanConfigureUsageBilling]);
 
 ${INFERENCE_APP_SCRIPT_FRAGMENTS.handlers}
-        function renderSettingsApiKeyCard(apiKeyRecord, options = {}) {
-          const isManaged = !!options.managed;
-          const createdBy = typeof apiKeyRecord?.metadata?.createdBy === "string"
-            ? apiKeyRecord.metadata.createdBy
-            : "";
-          const keyPreview = String(apiKeyRecord?.keyPrefix || "key") + "••••••••••••••••••••••••••••••••";
-
-          return React.createElement("div", {
-              key: apiKeyRecord.id,
-              className: "playground-settings-api-key-card" + (apiKeyRecord?.isActive ? "" : " is-revoked"),
-            },
-              React.createElement("div", { className: "playground-settings-api-key-header" },
-                React.createElement("div", { className: "playground-settings-api-key-title-wrap" },
-                  React.createElement("div", { className: "playground-settings-api-key-badges" },
-                    React.createElement("span", { className: "playground-settings-api-key-name" }, apiKeyRecord.name || (isManaged ? "System key" : "Developer key")),
-                    !apiKeyRecord?.isActive
-                      ? React.createElement("span", { className: "playground-settings-api-key-badge is-danger" }, "Revoked")
-                      : null,
-                    React.createElement("span", { className: "playground-settings-api-key-badge is-neutral" }, apiKeyRecord.keyType || "standard"),
-                    !isManaged
-                      ? React.createElement("span", { className: "playground-settings-api-key-badge is-primary" }, getSettingsApiKeyScopeLabel(apiKeyRecord.permissions))
-                      : null
-                  ),
-                  apiKeyRecord.description
-                    ? React.createElement("p", { className: "playground-settings-api-key-description" }, apiKeyRecord.description)
-                    : null,
-                  isManaged
-                    ? React.createElement("p", { className: "playground-settings-api-key-managed-copy" },
-                        "Managed automatically for app and web access" + (createdBy ? " via " + createdBy : "") + "."
-                      )
-                    : null
-                ),
-                !isManaged && apiKeyRecord?.isActive
-                  ? React.createElement("button", {
-                      type: "button",
-                      className: "playground-settings-api-key-revoke",
-                      disabled: settingsRevokingKeyId === apiKeyRecord.id,
-                      onClick: () => {
-                        void handleSettingsRevokeApiKey(apiKeyRecord.id);
-                      },
-                    }, settingsRevokingKeyId === apiKeyRecord.id
-                      ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-settings-records-spinner" })
-                      : React.createElement("span", null, "Revoke"))
-                  : null
-              ),
-              React.createElement("code", { className: "playground-settings-api-key-preview" }, keyPreview),
-              apiKeyRecord?.usageStats
-                ? React.createElement("div", { className: "playground-settings-api-key-stats" },
-                    React.createElement("div", { className: "playground-settings-api-key-stat" },
-                      React.createElement("div", { className: "playground-settings-api-key-stat-label" }, "24h Requests"),
-                      React.createElement("div", { className: "playground-settings-api-key-stat-value" }, String(apiKeyRecord.usageStats.last24h?.totalRequests || 0))
-                    ),
-                    React.createElement("div", { className: "playground-settings-api-key-stat" },
-                      React.createElement("div", { className: "playground-settings-api-key-stat-label" }, "30d Requests"),
-                      React.createElement("div", { className: "playground-settings-api-key-stat-value" }, String(apiKeyRecord.usageStats.last30d?.totalRequests || 0))
-                    ),
-                    React.createElement("div", { className: "playground-settings-api-key-stat" },
-                      React.createElement("div", { className: "playground-settings-api-key-stat-label" }, "30d Success"),
-                      React.createElement("div", { className: "playground-settings-api-key-stat-value" }, String(Math.round(apiKeyRecord.usageStats.last30d?.successRate || 0)) + "%")
-                    )
-                  )
-                : null,
-              React.createElement("div", { className: "playground-settings-api-key-meta" },
-                React.createElement("span", null, "Created: " + formatSettingsDate(apiKeyRecord.createdAt)),
-                apiKeyRecord?.lastUsedAt
-                  ? React.createElement("span", null, "Last used: " + formatSettingsDate(apiKeyRecord.lastUsedAt))
-                  : null,
-                apiKeyRecord?.expiresAt
-                  ? React.createElement("span", null, "Expires: " + formatSettingsDate(apiKeyRecord.expiresAt))
-                  : null,
-                apiKeyRecord?.usageStats?.lifetime
-                  ? React.createElement("span", null, "Lifetime requests: " + String(apiKeyRecord.usageStats.lifetime.totalRequests || 0))
-                  : null
-              )
-            );
-        }
-
-        function renderSettingsChip(label, tone = "muted") {
+${API_KEYS_PAGE_SCRIPT_FRAGMENTS.legacyCard}        function renderSettingsChip(label, tone = "muted") {
           return React.createElement("span", {
             className: "playground-settings-chip is-" + tone,
           }, label);
@@ -127549,7 +118508,7 @@ ${INFERENCE_APP_SCRIPT_FRAGMENTS.handlers}
           const toolsOverviewTitle = isActionsView ? "Actions" : isSkillsView ? "Skills" : isTagsView ? "Tags" : "Plugins";
           const toolsWorkspaceRoot = isActionsView ? "Develop" : "Configure";
 
-          return renderUnifiedTopNav({
+          return renderAppHeader({
             pathItems: isPluginsDetailView
               ? [
                   { label: toolsWorkspaceRoot },
@@ -127564,7 +118523,7 @@ ${INFERENCE_APP_SCRIPT_FRAGMENTS.handlers}
                   ]
                 : [{ label: toolsWorkspaceRoot }, { label: toolsOverviewTitle }],
             rightRef: pluginsNavActionsRef,
-            includeSearchDivider: isSkillsView,
+            includeSearchDivider: isSkillsView || ((isPluginsView || isTagsView) && !isPluginsDetailView),
             extraActions: React.createElement(React.Fragment, null,
               isActionsView && !settingsSelectedTrigger
                 ? React.createElement(React.Fragment, null,
@@ -127589,6 +118548,12 @@ ${INFERENCE_APP_SCRIPT_FRAGMENTS.handlers}
                       }, React.createElement(RefreshCw, { width: 16, height: 16, strokeWidth: 1.8 }))
                     )
                   )
+                : null,
+              ((isPluginsView || isTagsView) && !isPluginsDetailView) || (isSkillsView && !isSkillsDetailView)
+                ? React.createElement("div", {
+                    id: "playground-tools-overview-controls",
+                    className: "playground-tools-overview-controls-slot",
+                  })
                 : null,
               isSkillsView
                 ? React.createElement("div", {
@@ -127705,21 +118670,27 @@ ${INFERENCE_APP_SCRIPT_FRAGMENTS.handlers}
                   : undefined,
               };
             });
-            const openDevelopWebhooksFromOverview = () => {
-              setSelectedPluginId("");
-              openDevelopHome({ section: "webhooks" });
-            };
+            const overviewPage = React.createElement(OverviewPage, {
+              rows,
+              period: connectionsOverviewChartTimescale,
+              onPeriodChange: setConnectionsOverviewChartTimescale,
+              controlsPortalId: "playground-tools-overview-controls",
+              onOpen: (plugin) => setSelectedPluginId(plugin.id),
+              ...(isTagsView ? {
+                quickstartUrl: ${JSON.stringify(aiosOrigin + "/developers/quickstart")},
+                documentationUrl: ${JSON.stringify(aiosOrigin + "/developers/run-and-scale/webhooks")},
+                tutorialUrl: ${JSON.stringify(aiosOrigin + "/tutorials/event-driven-triggers")},
+              } : {}),
+            });
+
+            if (isTagsView) {
+              return React.createElement("section", {
+                className: "playground-environments-detail playground-plugins-detail playground-skills-page playground-resources-page playground-tags-overview-page is-develop-configure-page",
+              }, overviewPage);
+            }
 
             return React.createElement("section", { className: "playground-environments-detail playground-plugins-detail" },
-              React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
-                React.createElement(OverviewPage, {
-                  rows,
-                  period: connectionsOverviewChartTimescale,
-                  onPeriodChange: setConnectionsOverviewChartTimescale,
-                  onOpen: (plugin) => setSelectedPluginId(plugin.id),
-                  ...(isTagsView ? { onCreate: openDevelopWebhooksFromOverview } : {}),
-                })
-              )
+              React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" }, overviewPage)
             );
           }
 	          if (selectedPlugin) {
@@ -127831,2943 +118802,7 @@ ${INFERENCE_APP_SCRIPT_FRAGMENTS.handlers}
           return null;
         }
 
-        function renderSettingsPage(options = {}) {
-          const isEmbeddedSettingsPage = options.embedded === true;
-          const isOrganizationBillingSurface = options.organizationBilling === true;
-          const requestedSettingsSection = options.section || settingsSection;
-          const normalizedSettingsSection = requestedSettingsSection === "password" || requestedSettingsSection === "delete"
-            ? "profile"
-            : requestedSettingsSection;
-	          const billingSectionIds = ["costs-plans", "costs-plan-options", "costs-records", "costs-overview"];
-          const effectiveSettingsSection = normalizedSettingsSection === "api"
-            ? "profile"
-            : !isOrganizationBillingSurface && billingSectionIds.includes(normalizedSettingsSection)
-              ? "profile"
-              : normalizedSettingsSection;
-	          const navigateSettingsSection = typeof options.onSectionChange === "function"
-	            ? options.onSectionChange
-	            : setSettingsSection;
-	          const settingsTabs = [
-	            { id: "profile", label: "Profile", title: "Profile" },
-	          ];
-
-	          const selectedSection = effectiveSettingsSection === "inference"
-              ? { id: "inference", label: "Inference", title: "Inference" }
-              : effectiveSettingsSection === "costs-overview"
-                ? { id: "costs-overview", label: "Usage", title: "Usage Details" }
-              : settingsTabs.find((item) => item.id === effectiveSettingsSection) || settingsTabs[0];
-
-          const settingsDiscordAccountLabel = settingsDiscordStatus?.discordUsername || "";
-          const settingsTelegramAccountLabel = getSettingsTelegramDisplayName(settingsTelegramStatus);
-
-          const renderSettingsPlanTable = () => {
-            const fallbackTierInfo = {
-              id: "sandbox",
-              name: "Sandbox",
-              monthlyPrice: 0,
-              computeTokens: 100,
-              description: "Get started with basic usage. Perfect for trying out the platform.",
-            };
-            const userTier = settingsCurrentTierId || "sandbox";
-            const currentTierInfo = SETTINGS_PLAN_CATALOG.find((tier) => tier.id === userTier) || fallbackTierInfo;
-            const outlinedTierId = userTier === "sandbox" ? "builder" : userTier;
-            const hasPaidActiveSubscription = settingsSubscriptions.some((subscription) =>
-              ["active", "on_trial", "past_due"].includes(String(subscription.status || "").toLowerCase()) && !subscription.cancelled
-            );
-
-            return React.createElement("div", { className: "playground-settings-plan-table" },
-              getSettingsPlanOptions(userTier).map((plan) => {
-                const isCurrentTier = plan.id === userTier;
-                const isOutlined = plan.id === outlinedTierId;
-                const hasMonthlyPrice = typeof plan.monthlyPrice === "number" && Number.isFinite(plan.monthlyPrice);
-                const planFeatures = getSettingsPlanFeatures(plan.id, Number(plan.computeTokens || 0));
-                const activeSubscription = settingsSubscriptions.find((subscription) =>
-                  normalizeSettingsTierId(subscription.tier) === plan.id
-                  && ["active", "on_trial", "past_due"].includes(String(subscription.status || "").toLowerCase())
-                  && !subscription.cancelled
-                );
-                const cancelledSubscription = settingsSubscriptions.find((subscription) =>
-                  normalizeSettingsTierId(subscription.tier) === plan.id
-                  && subscription.cancelled
-                  && subscription.endsAt
-                  && new Date(subscription.endsAt) > new Date()
-                );
-                const currentPrice = Number(currentTierInfo.monthlyPrice || 0);
-                const isUpgrade = Number(plan.monthlyPrice || 0) > currentPrice;
-                let actionContent = null;
-
-                if (settingsBudgetStatus?.subscriptionSource === "apple" && userTier !== "sandbox") {
-                  actionContent = isCurrentTier
-                    ? React.createElement("div", { className: "playground-settings-plan-card-cta-static" }, "Current Plan")
-                    : React.createElement("div", { className: "playground-settings-plan-card-cta-static is-apple" }, "Manage on your iPhone or iPad");
-                } else if (isCurrentTier && activeSubscription) {
-                  actionContent = React.createElement("button", {
-                      type: "button",
-                      onClick: () => {
-                        void handleSettingsCancelSubscription(activeSubscription.id);
-                      },
-                      disabled: settingsSubscriptionActionId === activeSubscription.id,
-                      className: "playground-settings-plan-card-cta-button is-danger",
-                    },
-                      settingsSubscriptionActionId === activeSubscription.id
-                        ? React.createElement("span", null, "Cancelling...")
-                        : "Cancel Subscription"
-                    );
-                } else if (isCurrentTier && cancelledSubscription) {
-                  actionContent = React.createElement("button", {
-                      type: "button",
-                      onClick: () => {
-                        void handleSettingsReactivateSubscription(cancelledSubscription.id);
-                      },
-                      disabled: settingsSubscriptionActionId === cancelledSubscription.id,
-                      className: "playground-settings-plan-card-cta-button is-light",
-                    },
-                      settingsSubscriptionActionId === cancelledSubscription.id
-                        ? React.createElement("span", null, "Reactivating...")
-                        : "Resubscribe"
-                    );
-                } else if (isCurrentTier) {
-                  actionContent = React.createElement("div", { className: "playground-settings-plan-card-cta-static" }, "Current Plan");
-                } else if (plan.id === "enterprise") {
-                  actionContent = React.createElement(PlatformButton, {
-                    variant: "secondary",
-                    size: "medium",
-                    type: "button",
-                    onClick: openSettingsContactSales,
-                    className: "playground-settings-plan-card-cta-button is-light",
-                  }, "Contact Sales");
-                } else if (hasPaidActiveSubscription) {
-                  actionContent = React.createElement("button", {
-                      type: "button",
-                      onClick: () => {
-                        void handleSettingsChangePlan(plan.id);
-                      },
-                      disabled: settingsSubscriptionActionId === plan.id,
-                      className: isUpgrade
-                        ? "playground-settings-plan-card-cta-button is-light"
-                        : "playground-settings-plan-card-cta-button is-muted",
-                    },
-                      settingsSubscriptionActionId === plan.id
-                        ? React.createElement("span", null, "Loading...")
-                        : (isUpgrade ? "Upgrade to " + plan.name : "Downgrade to " + plan.name)
-                    );
-                } else {
-                  actionContent = React.createElement(PlatformButton, {
-                    variant: plan.id === "builder" ? "primary" : "secondary",
-                    size: "medium",
-                      type: "button",
-                      onClick: () => {
-                        void handleSettingsSubscribe(plan.id);
-                      },
-                      disabled: settingsCheckoutLoading,
-                      className: plan.id === "builder"
-                        ? "playground-settings-plan-card-cta-button is-primary"
-                        : "playground-settings-plan-card-cta-button is-light",
-                    },
-                      settingsCheckoutLoading
-                        ? React.createElement("span", null, "Loading...")
-                        : "Start with " + plan.name
-                    );
-                }
-
-                return React.createElement("section", {
-                    key: plan.id,
-                    className: "playground-settings-plan-table-card" + (isOutlined ? " is-outlined" : ""),
-                  },
-                    React.createElement("div", { className: "playground-settings-plan-table-heading" },
-                      React.createElement("div", { className: "playground-settings-plan-table-name" }, plan.name),
-                      isCurrentTier && cancelledSubscription
-                        ? React.createElement("span", { className: "playground-settings-plan-table-badge is-current" }, "Cancels " + formatSettingsDate(cancelledSubscription.endsAt))
-                        : isCurrentTier
-                          ? React.createElement("span", { className: "playground-settings-plan-table-badge is-current" }, "Current")
-                          : userTier === "sandbox" && plan.id === "builder"
-                            ? React.createElement("span", { className: "playground-settings-plan-table-badge" }, "Recommended")
-                            : null
-                    ),
-                    React.createElement("div", { className: "playground-settings-plan-table-price" },
-                      hasMonthlyPrice ? "$" + plan.monthlyPrice : "Custom",
-                      hasMonthlyPrice
-                        ? React.createElement("span", { className: "playground-settings-plan-table-price-unit" }, " " + (plan.billingLabel || "/ month"))
-                        : null
-                    ),
-                    React.createElement("div", { className: "playground-settings-plan-table-description" }, plan.description),
-                    React.createElement("div", { className: "playground-settings-plan-table-cta" }, actionContent),
-                    React.createElement("ul", { className: "playground-settings-plan-table-features" },
-                      planFeatures.map((feature, index) => {
-                        const FeatureIcon = feature.icon;
-                        return React.createElement("li", {
-                            key: plan.id + ":plan-table-feature:" + index,
-                            className: "playground-settings-plan-table-feature" + (index === 0 ? " is-emphasis" : ""),
-                          },
-                            React.createElement(FeatureIcon, { className: "playground-settings-plan-table-feature-icon", strokeWidth: 1.8 }),
-                            React.createElement("span", null, feature.text)
-                          );
-                      })
-                    )
-                  );
-              })
-            );
-          };
-
-          let detailContent = null;
-
-          switch (effectiveSettingsSection) {
-            case "costs-plans":
-              detailContent = (() => {
-                const fallbackTierInfo = {
-                  id: "sandbox",
-                  name: "Sandbox",
-                  monthlyPrice: 0,
-                  computeTokens: 100,
-                  description: "Get started with basic usage. Perfect for trying out the platform.",
-                };
-                const userTier = settingsCurrentTierId;
-                const tierInfo = SETTINGS_PLAN_CATALOG.find((tier) => tier.id === userTier) || fallbackTierInfo;
-                const includedTierQuotaCT = Math.max(
-                  settingsDollarsToComputeTokens(readSettingsUsdAmount(settingsBudgetStatus, ["includedCredits", "includedTierQuota"])),
-                  settingsDollarsToComputeTokens(readSettingsUsdAmount(settingsBudgetStatus, ["tierQuota"])),
-                  Number(tierInfo.computeTokens || fallbackTierInfo.computeTokens)
-                );
-                const topUpBalanceCT = Math.max(0, settingsDollarsToComputeTokens(readSettingsUsdAmount(settingsBudgetStatus, ["topUpBalance", "topUpCredits"])));
-                const hasTopUpBalance = topUpBalanceCT > 0;
-                const totalUsedCT = Math.max(
-                  Number(settingsUsageSummary?.totals?.totalCT || 0),
-                  settingsDollarsToComputeTokens(readSettingsUsdAmount(settingsBudgetStatus, ["currentPeriodUsage", "usage", "usedCredits"]))
-                );
-                const remainingPlanCT = Math.max(0, includedTierQuotaCT - totalUsedCT);
-                const totalRemainingCT = remainingPlanCT + topUpBalanceCT;
-                const totalBudgetCT = Math.max(totalRemainingCT, includedTierQuotaCT + topUpBalanceCT, 1);
-                const remainingPercent = totalBudgetCT > 0 ? clampSettingsPercentage((totalRemainingCT / totalBudgetCT) * 100) : 0;
-                const usagePercent = includedTierQuotaCT > 0 ? Math.round((totalUsedCT / includedTierQuotaCT) * 100) : 0;
-                const selectedTopUpPackage = SETTINGS_TOP_UP_CATALOG.find((pkg) => pkg.id === settingsSelectedTopUpId) || SETTINGS_TOP_UP_CATALOG[1] || SETTINGS_TOP_UP_CATALOG[0] || null;
-                const periodStartDate = settingsBudgetStatus?.periodStartDate ? new Date(settingsBudgetStatus.periodStartDate) : null;
-                const periodEndDate = settingsBudgetStatus?.periodEndDate ? new Date(settingsBudgetStatus.periodEndDate) : null;
-                const hasValidPeriodDates = Boolean(
-                  periodStartDate
-                  && periodEndDate
-                  && !Number.isNaN(periodStartDate.getTime())
-                  && !Number.isNaN(periodEndDate.getTime())
-                );
-                const budgetPeriodLabel = new Date().toLocaleDateString("en-US", { month: "long" }) + " Budget";
-                const daysUntilRefresh = hasValidPeriodDates
-                  ? Math.max(0, Math.ceil((periodEndDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000)))
-                  : null;
-                const resetCopy = hasValidPeriodDates
-                  ? (daysUntilRefresh <= 0
-                    ? tierInfo.name + " Plan, refreshing today."
-                    : tierInfo.name + " Plan, refreshing in " + daysUntilRefresh + " day" + (daysUntilRefresh === 1 ? "" : "s") + ".")
-                  : tierInfo.name + " Plan, refreshing with your next billing cycle.";
-                const hasPaidActiveSubscription = settingsSubscriptions.some((subscription) =>
-                  ["active", "on_trial", "past_due"].includes(String(subscription.status || "").toLowerCase()) && !subscription.cancelled
-                );
-                const currentCancelledSubscription = settingsSubscriptions.find((subscription) =>
-                  normalizeSettingsTierId(subscription?.tier) === userTier
-                  && subscription?.cancelled
-                  && (!subscription?.endsAt || new Date(subscription.endsAt) > new Date())
-                ) || null;
-                const currentCancelledSubscriptionCopy = currentCancelledSubscription?.endsAt
-                  ? "Your " + tierInfo.name + " subscription has been cancelled and remains active until " + formatSettingsDate(currentCancelledSubscription.endsAt) + "."
-                  : "Your " + tierInfo.name + " subscription has been cancelled and remains active until the end of the current billing period.";
-
-                const renderPlanCards = React.createElement("div", { className: "playground-settings-plan-grid" },
-                  getSettingsPlanOptions(userTier).map((plan) => {
-                    const isCurrentTier = plan.id === userTier;
-                    const isHighlighted = Boolean(plan.highlighted);
-                    const hasMonthlyPrice = typeof plan.monthlyPrice === "number" && Number.isFinite(plan.monthlyPrice);
-                    const planFeatures = getSettingsPlanFeatures(plan.id, Number(plan.computeTokens || 0));
-                    const activeSubscription = settingsSubscriptions.find((subscription) =>
-                      normalizeSettingsTierId(subscription.tier) === plan.id
-                      && ["active", "on_trial", "past_due"].includes(String(subscription.status || "").toLowerCase())
-                      && !subscription.cancelled
-                    );
-                    const cancelledSubscription = settingsSubscriptions.find((subscription) =>
-                      normalizeSettingsTierId(subscription.tier) === plan.id
-                      && subscription.cancelled
-                      && subscription.endsAt
-                      && new Date(subscription.endsAt) > new Date()
-                    );
-                    const currentPrice = Number(tierInfo.monthlyPrice || 0);
-                    const isUpgrade = Number(plan.monthlyPrice || 0) > currentPrice;
-                    let actionContent = null;
-
-                    if (settingsBudgetStatus?.subscriptionSource === "apple" && userTier !== "sandbox") {
-                      actionContent = isCurrentTier
-                        ? React.createElement("div", { className: "playground-settings-plan-card-cta-static" }, "Current Plan")
-                        : React.createElement("div", { className: "playground-settings-plan-card-cta-static is-apple" }, "Manage on your iPhone or iPad");
-                    } else if (isCurrentTier && activeSubscription) {
-                      actionContent = React.createElement("button", {
-                          type: "button",
-                          onClick: () => {
-                            setSettingsChangePlanModalOpen(false);
-                            void handleSettingsCancelSubscription(activeSubscription.id);
-                          },
-                          disabled: settingsSubscriptionActionId === activeSubscription.id,
-                          className: "playground-settings-plan-card-cta-button is-danger",
-                        },
-                          settingsSubscriptionActionId === activeSubscription.id
-                            ? React.createElement("span", null, "Cancelling...")
-                            : "Cancel Subscription"
-                        );
-                    } else if (isCurrentTier && cancelledSubscription) {
-                      actionContent = React.createElement("button", {
-                          type: "button",
-                          onClick: () => {
-                            setSettingsChangePlanModalOpen(false);
-                            void handleSettingsReactivateSubscription(cancelledSubscription.id);
-                          },
-                          disabled: settingsSubscriptionActionId === cancelledSubscription.id,
-                          className: "playground-settings-plan-card-cta-button is-light",
-                        },
-                          settingsSubscriptionActionId === cancelledSubscription.id
-                            ? React.createElement("span", null, "Reactivating...")
-                            : "Resubscribe"
-                        );
-                    } else if (isCurrentTier) {
-                      actionContent = React.createElement("div", { className: "playground-settings-plan-card-cta-static" }, "Current Plan");
-                    } else if (plan.id === "enterprise") {
-                      actionContent = React.createElement(PlatformButton, {
-                        variant: "secondary",
-                        size: "medium",
-                        type: "button",
-                        onClick: () => {
-                          setSettingsChangePlanModalOpen(false);
-                          openSettingsContactSales();
-                        },
-                        className: "playground-settings-plan-card-cta-button is-light",
-                      }, "Contact Sales");
-                    } else if (hasPaidActiveSubscription) {
-                      const actionClassName = isUpgrade
-                        ? (isHighlighted ? "playground-settings-plan-card-cta-button is-primary" : "playground-settings-plan-card-cta-button is-light")
-                        : "playground-settings-plan-card-cta-button is-muted";
-                      actionContent = React.createElement("button", {
-                          type: "button",
-                          onClick: () => {
-                            setSettingsChangePlanModalOpen(false);
-                            void handleSettingsChangePlan(plan.id);
-                          },
-                          disabled: settingsSubscriptionActionId === plan.id,
-                          className: actionClassName,
-                        },
-                          settingsSubscriptionActionId === plan.id
-                            ? React.createElement("span", null, "Loading...")
-                            : (isUpgrade ? "Upgrade to " + plan.name : "Downgrade to " + plan.name)
-                        );
-                    } else {
-                      actionContent = React.createElement(PlatformPrimaryButton, {
-                        size: "medium",
-                          type: "button",
-                          onClick: () => {
-                            setSettingsChangePlanModalOpen(false);
-                            void handleSettingsSubscribe(plan.id);
-                          },
-                          disabled: settingsCheckoutLoading,
-                          className: isHighlighted
-                            ? "playground-settings-plan-card-cta-button is-primary"
-                            : "playground-settings-plan-card-cta-button is-light",
-                        },
-                          settingsCheckoutLoading
-                            ? React.createElement("span", null, "Loading...")
-                            : "Start with " + plan.name
-                        );
-                    }
-
-                    return React.createElement("div", {
-                        key: plan.id,
-                        className: "playground-settings-plan-card-app"
-                          + (isHighlighted ? " is-highlighted" : "")
-                          + (isCurrentTier ? " is-current" : ""),
-                      },
-                        React.createElement("div", { className: "playground-settings-plan-card-header" },
-                          React.createElement("span", { className: "playground-settings-plan-card-title" }, plan.name),
-                          isCurrentTier && cancelledSubscription
-                            ? React.createElement("span", { className: "playground-settings-plan-card-badge is-cancelled" }, "Cancels " + formatSettingsDate(cancelledSubscription.endsAt))
-                            : isCurrentTier
-                              ? React.createElement("span", { className: "playground-settings-plan-card-badge" }, "Current Plan")
-                              : null
-                        ),
-                        React.createElement("div", { className: "playground-settings-plan-card-price" },
-                          hasMonthlyPrice ? "$" + plan.monthlyPrice : "Custom",
-                          hasMonthlyPrice
-                            ? React.createElement("span", { className: "playground-settings-plan-card-price-unit" }, " " + (plan.billingLabel || "/ month"))
-                            : null
-                        ),
-                        React.createElement("div", { className: "playground-settings-plan-card-description" }, plan.description),
-                        React.createElement("div", { className: "playground-settings-plan-card-cta" }, actionContent),
-                        React.createElement("ul", { className: "playground-settings-plan-card-features" },
-                          planFeatures.map((feature, index) => {
-                            const FeatureIcon = feature.icon;
-                            return React.createElement("li", {
-                                key: plan.id + ":" + index,
-                                className: "playground-settings-plan-card-feature" + (index === 0 ? " is-emphasis" : ""),
-                              },
-                                React.createElement(FeatureIcon, { className: "playground-settings-plan-card-feature-icon", width: 16, height: 16, strokeWidth: 1.8 }),
-                                React.createElement("span", null, feature.text)
-                              );
-                          })
-                        )
-                      );
-                  })
-                );
-
-                const plansMenu = React.createElement("div", {
-                    className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-settings-plans-menu-anchor",
-                    ref: settingsPlansMenuRef,
-                  },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-content-menu-button",
-                      "aria-label": "Plan settings",
-                      "aria-expanded": settingsPlansMenuOpen ? "true" : "false",
-                      onClick: () => setSettingsPlansMenuOpen((current) => !current),
-                    }, React.createElement(Settings2, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
-                    settingsPlansMenuOpen
-                      ? React.createElement(PlatformPopupSurface, {
-                          className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                          onClick: (event) => event.stopPropagation(),
-                        },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "tb-popup-row",
-                            onClick: () => {
-                              setSettingsPlansMenuOpen(false);
-                              navigateSettingsSection("costs-plan-options");
-                            },
-                          },
-                            React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, "Plans")
-                            )
-                          )
-                        )
-                      : null
-                  );
-
-                const changePlanModal = settingsChangePlanModalOpen
-                  ? React.createElement(PlatformModalBackdrop, {
-                      className: "playground-settings-modal-backdrop",
-                      onClick: () => setSettingsChangePlanModalOpen(false),
-                    },
-                        React.createElement(PlatformModalSurface, {
-                          className: "playground-settings-modal is-plan-selector",
-                          onClick: (event) => event.stopPropagation(),
-                        },
-                        React.createElement("div", { className: "playground-settings-modal-header" },
-                          React.createElement("div", null,
-                            React.createElement("div", { className: "playground-settings-card-title" }, "Change Plan"),
-                            React.createElement("div", { className: "playground-settings-muted-copy", style: { marginTop: "4px" } }, "Choose the subscription that fits your monthly compute budget.")
-                          ),
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-settings-icon-button",
-                            onClick: () => setSettingsChangePlanModalOpen(false),
-                          }, React.createElement(X, { width: 14, height: 14, strokeWidth: 1.8 }))
-                        ),
-                        renderSettingsBanner("error", settingsBillingError),
-                        renderSettingsBanner("success", settingsBillingSuccess),
-                        settingsBudgetStatus?.subscriptionSource === "apple" && settingsCurrentTierId !== "sandbox"
-                          ? React.createElement("div", { className: "playground-settings-plan-system-note", style: { marginBottom: "16px" } },
-                              React.createElement("div", { className: "playground-settings-plan-system-note-icon" }, "IOS"),
-                              React.createElement("div", null,
-                                React.createElement("div", { className: "playground-settings-plan-system-note-title" }, "Subscription managed through iPhone or iPad"),
-                                React.createElement("div", { className: "playground-settings-plan-system-note-copy" }, "To change or cancel your plan, open Agentic Compute Platform on your iPhone or iPad.")
-                              )
-                            )
-                          : null,
-                        renderPlanCards
-                      )
-                    )
-                  : null;
-
-                const topUpModal = settingsTopUpModalOpen && selectedTopUpPackage
-                  ? React.createElement(PlatformModalBackdrop, {
-                      className: "playground-tasks-project-modal-backdrop playground-settings-topup-modal-backdrop",
-                      onClick: () => setSettingsTopUpModalOpen(false),
-                    },
-                      React.createElement(PlatformModalSurface, {
-                          as: "form",
-                          className: "playground-tasks-project-modal playground-agent-composer-modal playground-settings-topup-modal",
-                          onClick: (event) => event.stopPropagation(),
-                          onSubmit: (event) => {
-                            event.preventDefault();
-                            setSettingsTopUpModalOpen(false);
-                            void handleSettingsBuyTopUp(selectedTopUpPackage.id);
-                          },
-                        },
-                        React.createElement("div", { className: "playground-tasks-project-modal-top" },
-                          React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
-                            React.createElement("div", {
-                              className: "playground-tasks-project-modal-icon-trigger",
-                              "aria-hidden": "true",
-                            }, React.createElement(Coins, { width: 18, height: 18, strokeWidth: 1.9 })),
-                            React.createElement("div", { className: "playground-settings-topup-modal-title-shell" },
-                              React.createElement("div", { className: "playground-settings-topup-modal-title" }, "Add USD credits"),
-                              React.createElement("div", { className: "playground-settings-topup-modal-subtitle" }, "Buy a one-time USD credit add-on without changing your subscription.")
-                            )
-                          ),
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-settings-icon-button playground-tasks-project-modal-close",
-                            onClick: () => setSettingsTopUpModalOpen(false),
-                            title: "Close",
-                            disabled: settingsTopUpActionId === selectedTopUpPackage.id,
-                          }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-                        ),
-                        React.createElement("div", { className: "playground-agent-composer-modal-body playground-settings-topup-modal-body" },
-                          renderSettingsBanner("error", settingsBillingError),
-                          renderSettingsBanner("success", settingsBillingSuccess),
-                          React.createElement("div", { className: "playground-settings-topup-note" }, "Purchased add-ons are consumed only after your included monthly plan credits are exhausted."),
-                          React.createElement("div", { className: "playground-settings-topup-package-grid" },
-                          SETTINGS_TOP_UP_CATALOG.map((pkg) => {
-                            const isSelected = pkg.id === selectedTopUpPackage.id;
-                            const packageCreditsUsd = readSettingsTopUpCreditsUsd(pkg);
-                            return React.createElement("button", {
-                                key: pkg.id,
-                                type: "button",
-                                onClick: () => setSettingsSelectedTopUpId(pkg.id),
-                                className: "playground-settings-topup-package-card" + (isSelected ? " is-selected" : ""),
-                                disabled: settingsTopUpActionId === selectedTopUpPackage.id,
-                              },
-                                React.createElement("span", { className: "playground-settings-topup-package-card-name" }, pkg.name),
-                                React.createElement("span", { className: "playground-settings-topup-package-card-tokens" }, formatSettingsUsdCredits(packageCreditsUsd) + " credits"),
-                                React.createElement("span", { className: "playground-settings-topup-package-card-price" }, "$" + pkg.price + " one-time"),
-                                React.createElement("span", { className: "playground-settings-topup-package-card-copy" }, pkg.description)
-                              );
-                          })
-                          ),
-                          React.createElement("div", { className: "playground-settings-topup-summary" },
-                            React.createElement("div", { className: "playground-settings-topup-summary-copy" },
-                              React.createElement("div", { className: "playground-settings-topup-summary-label" }, "Selected purchase"),
-                              React.createElement("div", { className: "playground-settings-topup-summary-value" }, formatSettingsUsdCredits(readSettingsTopUpCreditsUsd(selectedTopUpPackage)) + " credits for $" + selectedTopUpPackage.price),
-                              React.createElement("div", { className: "playground-settings-topup-summary-description" }, selectedTopUpPackage.description)
-                            ),
-                            React.createElement("div", { className: "playground-settings-topup-summary-badge" },
-                              React.createElement(Coins, { width: 14, height: 14, strokeWidth: 1.8 }),
-                              React.createElement("span", null, "One-time add-on")
-                            )
-                          )
-                        ),
-                        React.createElement("div", { className: "playground-tasks-project-modal-actions" },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-environments-action-button",
-                            onClick: () => setSettingsTopUpModalOpen(false),
-                            disabled: settingsTopUpActionId === selectedTopUpPackage.id,
-                          }, "Cancel"),
-                          React.createElement(PlatformPrimaryButton, {
-                            size: "medium",
-                              type: "submit",
-                              className: "playground-environments-action-button is-primary",
-                              disabled: settingsTopUpActionId === selectedTopUpPackage.id,
-                            },
-                              settingsTopUpActionId === selectedTopUpPackage.id
-                                ? React.createElement("span", null, "Loading...")
-                                : "Buy USD credits"
-                            )
-                          ),
-                      )
-                    )
-                  : null;
-
-                const renderSettingsModalPortal = (content) => {
-                  if (!content) {
-                    return null;
-                  }
-                  if (typeof document === "undefined" || !document.body) {
-                    return content;
-                  }
-                  return createPortal(content, document.body);
-                };
-
-                const settingsQuickLinks = [
-                  {
-                    id: "browse-models",
-                    title: "Browse Models",
-                    Icon: Grid3x3,
-                    onClick: () => {
-                      openModelsPage();
-                    },
-                  },
-                  {
-                    id: "configure-inference",
-                    title: "Configure Inference",
-                    Icon: HardDrive,
-                    onClick: openInferencePage,
-                  },
-                  {
-                    id: "change-plan",
-                    title: "Plans",
-                    Icon: DollarSign,
-                    onClick: () => navigateSettingsSection("costs-plan-options"),
-                  },
-                  {
-                    id: "api-reference",
-                    title: "API Reference",
-                    Icon: FileText,
-                    onClick: () => window.open("https://developers.computer-agents.com", "_blank", "noopener,noreferrer"),
-                  },
-                  {
-                    id: "pricing-overview",
-                    title: "Pricing Overview",
-                    Icon: ReceiptText,
-                    onClick: () => window.open("https://computer-agents.com/pricing", "_blank", "noopener,noreferrer"),
-                  },
-                ];
-
-                return React.createElement(React.Fragment, null,
-                  React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-settings-plans-navbar" },
-                    React.createElement("div", { className: "playground-environments-editor-navbar-title" },
-                      React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
-                        React.createElement("div", { className: "playground-settings-plans-title" }, tierInfo.name + " Plan")
-                      )
-                    ),
-                    React.createElement("div", { className: "playground-content-nav-center" }),
-                    React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" }, plansMenu)
-                  ),
-                  React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
-                    settingsBudgetLoading
-                      ? React.createElement("div", { className: "playground-settings-loading-state" },
-                          React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 }),
-                          React.createElement("span", { className: "playground-settings-muted-copy" }, "Loading")
-                        )
-                      : React.createElement("div", { className: "playground-settings-plan-app-shell" },
-                          renderSettingsBanner("error", settingsBillingError),
-                          renderSettingsBanner("success", settingsBillingSuccess),
-                          currentCancelledSubscription
-                            ? React.createElement("div", { className: "playground-settings-plan-system-note is-cancelled" },
-                                React.createElement("div", { className: "playground-settings-plan-system-note-icon" }, "$"),
-                                React.createElement("div", null,
-                                  React.createElement("div", { className: "playground-settings-plan-system-note-title" }, "Subscription cancelled"),
-                                  React.createElement("div", { className: "playground-settings-plan-system-note-copy" }, currentCancelledSubscriptionCopy)
-                                )
-                              )
-                            : null,
-                          React.createElement("div", { className: "playground-settings-plans-overview-grid" },
-                            React.createElement("section", { className: "playground-settings-plans-overview-section" },
-                              React.createElement("div", { className: "playground-settings-plans-overview-heading" }, "Usage"),
-                              React.createElement("div", { className: "playground-settings-plans-budget-card playground-computer-details-card" },
-                                React.createElement("div", { className: "playground-settings-plans-budget-card-top" },
-                                  React.createElement("div", { className: "playground-settings-plans-budget-copy" },
-                                    React.createElement("div", { className: "playground-settings-plans-budget-value" },
-                                      React.createElement("span", null, formatSettingsComputeTokens(totalRemainingCT))
-                                    )
-                                  ),
-                                  React.createElement("button", {
-                                    type: "button",
-                                    className: "playground-settings-plans-budget-icon-button is-plain",
-                                    onClick: () => openOrganizationBillingPage("usage"),
-                                    "aria-label": "View usage",
-                                  }, React.createElement(ChartNoAxesColumnIncreasing, { width: 16, height: 16, strokeWidth: 1.8 }))
-                                ),
-                                React.createElement("div", { className: "playground-settings-usage-balance-track" },
-                                  React.createElement("span", {
-                                    className: "playground-settings-usage-balance-fill is-neutral",
-                                    style: { width: String(remainingPercent) + "%" },
-                                  })
-                                ),
-                                React.createElement("div", { className: "playground-settings-plans-budget-reset" }, resetCopy),
-                                React.createElement("div", { className: "playground-settings-plans-budget-actions" },
-                                  React.createElement(PlatformPrimaryButton, {
-                                    size: "medium",
-                                    type: "button",
-                                    className: "playground-settings-plans-budget-action is-primary",
-                                    onClick: () => navigateSettingsSection("costs-plan-options"),
-                                  },
-                                    React.createElement(DollarSign, { width: 14, height: 14, strokeWidth: 1.8 }),
-                                    React.createElement("span", null, "Change Plan")
-                                  ),
-                                  React.createElement("button", {
-                                    type: "button",
-                                    className: "playground-settings-plans-budget-action",
-                                    onClick: () => setSettingsTopUpModalOpen(true),
-                                  },
-                                    React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }),
-                                    React.createElement("span", null, "Add credits")
-                                  ),
-                                  React.createElement("button", {
-                                    type: "button",
-                                    className: "playground-settings-plans-budget-icon-button is-plain is-trailing",
-                                    onClick: () => navigateSettingsSection("costs-records"),
-                                    "aria-label": "Billing records",
-                                  }, React.createElement(ReceiptText, { width: 15, height: 15, strokeWidth: 1.8 }))
-                                )
-                              )
-                            ),
-                            React.createElement("section", { className: "playground-settings-plans-overview-section" },
-                              React.createElement("div", { className: "playground-settings-plans-overview-heading" }, "Quick Links"),
-                              React.createElement("div", { className: "playground-settings-plans-quick-links-grid" },
-                                settingsQuickLinks.map((link) =>
-                                  React.createElement("button", {
-                                    key: link.id,
-                                    type: "button",
-                                    className: "playground-settings-plans-quick-link",
-                                    onClick: link.onClick,
-                                  },
-                                    React.createElement(getPlaygroundSafeIconComponent(link.Icon, Circle), { className: "playground-settings-plans-quick-link-icon", strokeWidth: 1.8 }),
-                                    React.createElement("span", { className: "playground-settings-plans-quick-link-label" }, link.title)
-                                  )
-                                )
-                              )
-                            )
-                          ),
-                          React.createElement("div", {
-                            className: "playground-settings-detail-stack",
-                            style: { marginTop: "4px" },
-                          },
-                            renderSettingsBanner("error", settingsPlatformConfigError),
-                            React.createElement("section", { className: "playground-settings-plans-resource-cap-section" },
-                              React.createElement("div", { className: "playground-settings-plans-resource-cap-heading" }, "Configure Usage Limits"),
-                              React.createElement("div", { className: "playground-tasks-detail-facts playground-settings-plans-resource-cap-facts" },
-                                React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-                                  React.createElement("div", { className: "playground-tasks-detail-fact" },
-                                    React.createElement("div", { className: "playground-tasks-detail-fact-label" },
-                                      React.createElement("div", { className: "playground-settings-plans-resource-cap-label", ref: settingsResourceCapInfoRef },
-                                        React.createElement("span", null, "Resource Usage Limit"),
-                                        React.createElement("button", {
-                                          type: "button",
-                                          className: "playground-settings-plans-resource-cap-info-trigger",
-                                          onClick: () => setSettingsResourceCapInfoOpen((current) => !current),
-                                          "aria-label": "What does Resource Usage Limit mean?",
-                                          "aria-expanded": settingsResourceCapInfoOpen ? "true" : "false",
-                                        }, React.createElement(CircleHelp, { width: 14, height: 14, strokeWidth: 1.9 })),
-                                        settingsResourceCapInfoOpen
-                                          ? React.createElement(PlatformPopupSurface, { className: "playground-settings-plans-resource-cap-info-popover" },
-                                              "Limits how much persistent resources like servers, functions, databases, and environments can spend each month, so more budget remains available for active agent threads."
-                                            )
-                                          : null
-                                      )
-                                    ),
-                                    React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                                      React.createElement("div", { className: "playground-settings-plans-resource-cap-control" },
-                                        React.createElement("input", {
-                                          id: "settings-resource-spend-cap",
-                                          type: "number",
-                                          min: "0",
-                                          step: "1",
-                                          className: "playground-settings-input playground-settings-plans-resource-cap-input",
-                                          value: settingsBillingPreferences.monthlyResourceSpendLimit > 0 ? settingsBillingPreferences.monthlyResourceSpendLimit : "",
-                                          onChange: (event) => {
-                                            const nextPreferences = {
-                                              ...settingsBillingPreferences,
-                                              monthlyResourceSpendLimit: normalizeSettingsSpendLimit(event.target.value),
-                                            };
-                                            queueSettingsResourceCapAutosave(nextPreferences, false);
-                                          },
-                                          disabled: !settingsCanConfigureUsageBilling || settingsPlatformConfigSaving,
-                                          placeholder: "None",
-                                        }),
-                                        React.createElement("span", { className: "playground-settings-plans-resource-cap-suffix" }, "USD / month")
-                                      )
-                                    )
-                                  ),
-                                  React.createElement("div", { className: "playground-tasks-detail-fact" },
-                                    React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Pause resources when the cap is reached"),
-                                    React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                                      React.createElement("button", {
-                                        type: "button",
-                                        className: "playground-environments-toggle" + (settingsBillingPreferences.pauseOnLimit ? " is-active" : ""),
-                                        onClick: () => {
-                                          if (!settingsCanConfigureUsageBilling || settingsPlatformConfigSaving) {
-                                            return;
-                                          }
-                                          const nextPreferences = {
-                                            ...settingsBillingPreferences,
-                                            pauseOnLimit: !settingsBillingPreferences.pauseOnLimit,
-                                          };
-                                          queueSettingsResourceCapAutosave(nextPreferences, true);
-                                        },
-                                        disabled: !settingsCanConfigureUsageBilling || settingsPlatformConfigSaving,
-                                        "aria-pressed": settingsBillingPreferences.pauseOnLimit,
-                                      }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
-                                    )
-                                  ),
-                                  React.createElement("div", { className: "playground-tasks-detail-fact" },
-                                    React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Send email alerts before you hit the limit"),
-                                    React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                                      React.createElement("button", {
-                                        type: "button",
-                                        className: "playground-environments-toggle" + (settingsBillingPreferences.emailAlerts ? " is-active" : ""),
-                                        onClick: () => {
-                                          if (!settingsCanConfigureUsageBilling || settingsPlatformConfigSaving) {
-                                            return;
-                                          }
-                                          const nextPreferences = {
-                                            ...settingsBillingPreferences,
-                                            emailAlerts: !settingsBillingPreferences.emailAlerts,
-                                          };
-                                          queueSettingsResourceCapAutosave(nextPreferences, true);
-                                        },
-                                        disabled: !settingsCanConfigureUsageBilling || settingsPlatformConfigSaving,
-                                        "aria-pressed": settingsBillingPreferences.emailAlerts,
-                                      }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
-                                    )
-                                  )
-                                )
-                              )
-                            )
-                          ),
-                          usagePercent >= 100 && !hasTopUpBalance
-                            ? React.createElement("div", { className: "playground-settings-plan-action-warning" },
-                                React.createElement("strong", null, "Action Required:"),
-                                " You've used all your included credits. Upgrade your plan or buy a one-time add-on to continue using agents."
-                              )
-                            : null,
-                          settingsBudgetStatus?.subscriptionSource === "apple" && settingsCurrentTierId !== "sandbox"
-                            ? React.createElement("div", { className: "playground-settings-plan-system-note" },
-                                React.createElement("div", { className: "playground-settings-plan-system-note-icon" }, "IOS"),
-                                React.createElement("div", null,
-                                  React.createElement("div", { className: "playground-settings-plan-system-note-title" }, "Subscription managed through iPhone or iPad"),
-                                  React.createElement("div", { className: "playground-settings-plan-system-note-copy" }, "To change or cancel your plan, open Agentic Compute Platform on your iPhone or iPad.")
-                                )
-                              )
-                            : null,
-                        )
-                  ),
-                  renderSettingsModalPortal(changePlanModal),
-                  renderSettingsModalPortal(topUpModal)
-                );
-              })();
-              break;
-            case "costs-plan-options":
-              detailContent = (() => {
-                return React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
-                  React.createElement("div", { className: "playground-settings-plan-app-shell" },
-                    renderSettingsBanner("error", settingsBillingError),
-                    renderSettingsBanner("success", settingsBillingSuccess),
-                    settingsBudgetStatus?.subscriptionSource === "apple" && settingsCurrentTierId !== "sandbox"
-                      ? React.createElement("div", { className: "playground-settings-plan-system-note" },
-                          React.createElement("div", { className: "playground-settings-plan-system-note-icon" }, "IOS"),
-                          React.createElement("div", null,
-                            React.createElement("div", { className: "playground-settings-plan-system-note-title" }, "Subscription managed through iPhone or iPad"),
-                            React.createElement("div", { className: "playground-settings-plan-system-note-copy" }, "To change or cancel your plan, open Agentic Compute Platform on your iPhone or iPad.")
-                          )
-                        )
-                      : null,
-                    renderSettingsPlanTable()
-                  )
-                );
-              })();
-              break;
-${INFERENCE_PAGE_CASE_SCRIPT}            case "costs-records":
-              detailContent = React.createElement(React.Fragment, null,
-                React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-settings-plans-navbar" },
-                  React.createElement("div", { className: "playground-environments-editor-navbar-title" },
-                    React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
-                      React.createElement("div", { className: "playground-settings-plans-title" }, "Billing Records")
-                    )
-                  ),
-                  React.createElement("div", { className: "playground-content-nav-center" }),
-                  React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" })
-                ),
-                React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll is-plans" },
-                  React.createElement("div", { className: "playground-settings-records-shell" },
-                    React.createElement(PlatformDataTable, {
-                      rows: settingsInvoices,
-                      getRowId: (invoice) => invoice.id,
-                      ariaLabel: "Billing records",
-                      className: "playground-settings-records-platform-table",
-                      surface: "plain",
-                      loading: settingsInvoicesLoading,
-                      emptyState: "No invoices yet. Invoices will appear here when you subscribe to a plan.",
-                      columns: [
-                        {
-                          id: "date",
-                          header: "Date",
-                          accessor: (invoice) => invoice.createdAt || "",
-                          width: "minmax(110px, 0.9fr)",
-                          cell: ({ row: invoice }) => new Date(invoice.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
-                        },
-                        {
-                          id: "description",
-                          header: "Description",
-                          accessor: (invoice) => invoice.variantName || invoice.productName || "Subscription invoice",
-                          width: "minmax(220px, 2fr)",
-                          cell: ({ row: invoice }) => {
-                            const billingReason = formatSettingsBillingReason(invoice.billingReason);
-                            return React.createElement("div", null,
-                              React.createElement("div", { className: "playground-settings-records-description-title" }, invoice.variantName || invoice.productName || "Subscription invoice"),
-                              billingReason ? React.createElement("div", { className: "playground-settings-records-description-copy" }, billingReason) : null
-                            );
-                          },
-                        },
-                        {
-                          id: "status",
-                          header: "Status",
-                          accessor: (invoice) => invoice.refunded ? "Refunded" : (invoice.statusFormatted || invoice.status || "Unknown"),
-                          width: "minmax(100px, 0.8fr)",
-                          cell: ({ row: invoice }) => React.createElement("span", {
-                            className: "playground-settings-records-status-badge" + (invoice.status === "paid" ? " is-success" : invoice.refunded ? " is-warning" : ""),
-                          }, invoice.refunded ? "Refunded" : (invoice.statusFormatted || invoice.status || "Unknown")),
-                        },
-                        {
-                          id: "amount",
-                          header: "Amount",
-                          accessor: (invoice) => Number(invoice.total || 0),
-                          width: "minmax(100px, 0.8fr)",
-                          align: "end",
-                          cell: ({ row: invoice }) => React.createElement("span", { className: "playground-settings-records-amount" }, invoice.totalFormatted || formatSettingsCurrency((Number(invoice.total) || 0) / 100)),
-                        },
-                        {
-                          id: "invoice",
-                          header: "Invoice",
-                          width: "minmax(80px, 0.6fr)",
-                          align: "end",
-                          cell: ({ row: invoice }) => invoice.invoiceUrl
-                            ? React.createElement("a", { href: invoice.invoiceUrl, target: "_blank", rel: "noopener noreferrer", className: "playground-settings-records-link" }, "View")
-                            : null,
-                        },
-                      ],
-                    })
-                  )
-                )
-              );
-              break;
-            case "costs-overview": {
-              detailContent = React.createElement(React.Fragment, null,
-                React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-settings-plans-navbar" },
-                  React.createElement("div", { className: "playground-environments-editor-navbar-title" },
-                    React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
-                      React.createElement("div", { className: "playground-settings-plans-title" }, "Usage Details")
-                    )
-                  ),
-                  React.createElement("div", { className: "playground-content-nav-center" }),
-                  React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" })
-                ),
-                React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll is-usage" },
-                (() => {
-                  const periodStart = settingsUsageSummary?.startDate ? new Date(settingsUsageSummary.startDate) : new Date();
-                  const periodEnd = settingsUsageSummary?.endDate ? new Date(settingsUsageSummary.endDate) : new Date();
-                  const formatPeriodDate = (date) => date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-                  const safeByDay = Array.isArray(settingsUsageSummary?.byDay) ? settingsUsageSummary.byDay : [];
-                  const safeTotals = settingsUsageSummary?.totals || { totalCT: 0, agentCT: 0, environmentCT: 0, totalThreads: 0 };
-                  const byDayMap = new Map();
-                  safeByDay.forEach((day) => {
-                    if (!day?.date) {
-                      return;
-                    }
-
-                    byDayMap.set(day.date, {
-                      totalCT: Number(day.totalCT || 0),
-                      agentCT: Number(day.agentCT || 0),
-                      environmentCT: Number(day.environmentCT || 0),
-                    });
-                  });
-                  const threadByDayMap = new Map();
-                  safeByDay.forEach((day) => {
-                    if (!day?.date) {
-                      return;
-                    }
-
-                    threadByDayMap.set(day.date, Number(day.threadCount || 0));
-                  });
-
-                  const rawPeriodDays = Math.ceil((periodEnd.getTime() - periodStart.getTime()) / (24 * 60 * 60 * 1000));
-                  const daysToShow = Math.max(1, Math.min(rawPeriodDays || 1, 31));
-                  const todayKey = new Date().toISOString().split("T")[0];
-                  const dailyData = [];
-                  for (let index = 0; index < daysToShow; index += 1) {
-                    const date = new Date(periodStart);
-                    date.setDate(date.getDate() + index);
-                    const dateKey = date.toISOString().split("T")[0];
-                    const dayData = byDayMap.get(dateKey);
-                    dailyData.push({
-                      date: dateKey,
-                      dailyCT: Number(dayData?.totalCT || 0),
-                      aiCT: Number(dayData?.agentCT || 0),
-                      runtimeCT: Number(dayData?.environmentCT || 0),
-                      threadCount: Number(threadByDayMap.get(dateKey) || 0),
-                      isFuture: dateKey > todayKey,
-                    });
-                  }
-
-                  const totalUsedCT = Number(safeTotals.totalCT || 0);
-                  const attributedSourceItems = [...settingsUsageBreakdown]
-                    .map((item) => ({
-                      ...item,
-                      totalCT: Number(item.totalCT || 0),
-                      channel: getSettingsSourceChannel(item.id),
-                      displayName: getSettingsSourceLabel(item.id),
-                    }))
-                    .filter((item) => item.totalCT > 0);
-                  const attributedCT = attributedSourceItems.reduce((sum, item) => sum + item.totalCT, 0);
-                  const unattributedCT = Math.max(0, totalUsedCT - attributedCT);
-                  const sourceItems = [
-                    ...attributedSourceItems,
-                    ...(unattributedCT > 0 ? [{
-                      id: "unattributed",
-                      name: "Unattributed",
-                      totalCT: unattributedCT,
-                      channel: "unattributed",
-                      displayName: "Unattributed",
-                    }] : []),
-                  ].sort((left, right) => right.totalCT - left.totalCT);
-                  const dailyLabels = dailyData.map((day) => {
-                    const date = new Date(day.date);
-                    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-                  });
-                  const resourceResidualSeries = dailyData.map((day) => Math.max(0, day.dailyCT - day.aiCT - day.runtimeCT));
-                  const resourceSeries = [
-                    {
-                      id: "inference",
-                      label: "LLM Inference",
-                      color: "rgb(143,196,255)",
-                      values: dailyData.map((day) => day.aiCT),
-                    },
-                    {
-                      id: "runtime",
-                      label: "Computers",
-                      color: "rgb(103,80,255)",
-                      values: dailyData.map((day) => day.runtimeCT),
-                    },
-                  ];
-                  if (resourceResidualSeries.some((value) => value > 0)) {
-                    resourceSeries.push({
-                      id: "other",
-                      label: "Other Runtime",
-                      color: "rgb(94,234,212)",
-                      values: resourceResidualSeries,
-                    });
-                  }
-
-                  const averageCtPerThreadValues = dailyData.map((day) =>
-                    day.threadCount > 0 ? Math.round(day.dailyCT / day.threadCount) : 0
-                  );
-                  const averageCtPerThreadOverall = safeTotals.totalThreads > 0
-                    ? Math.round(totalUsedCT / safeTotals.totalThreads)
-                    : 0;
-                  const maxAverageCtPerThread = Math.max(...averageCtPerThreadValues, 1);
-                  const resourceUsageRows = Array.isArray(settingsUsageResourceItems)
-                    ? [...settingsUsageResourceItems]
-                      .map((item) => ({
-                        ...item,
-                        totalCT: Number(item?.totalCT || 0),
-                        displayKind: formatSettingsUsageResourceKind(item?.kind || item?.resourceKind || item?.resourceType),
-                      }))
-                      .filter((item) => item.totalCT > 0)
-                      .sort((left, right) => right.totalCT - left.totalCT)
-                    : [];
-	                  const normalizeUsageChartLabel = (value, fallback) => {
-	                    const label = String(value || fallback || "Unknown").trim();
-	                    if (label.length <= 22) {
-	                      return label;
-	                    }
-	                    return label.slice(0, 19).trimEnd() + "...";
-	                  };
-	                  const agentNameById = new Map(
-	                    (Array.isArray(realAgents) ? realAgents : [])
-	                      .map((agent) => [
-	                        String(agent?.id || "").trim(),
-	                        String(agent?.name || agent?.displayName || agent?.id || "").trim(),
-	                      ])
-	                      .filter(([id, name]) => id && name)
-	                  );
-	                  const environmentNameById = new Map(
-	                    (Array.isArray(realEnvironments) ? realEnvironments : [])
-	                      .map((environment) => [
-	                        String(environment?.id || "").trim(),
-	                        String(environment?.name || environment?.displayName || environment?.id || "").trim(),
-	                      ])
-	                      .filter(([id, name]) => id && name)
-	                  );
-	                  const resolveUsageEntityLabel = (item, lookupMap, fallbackLabel) => {
-	                    const candidateIds = [
-	                      item?.id,
-	                      item?.agentId,
-	                      item?.environmentId,
-	                      item?.resourceId,
-	                    ].map((value) => String(value || "").trim()).filter(Boolean);
-	                    for (const candidateId of candidateIds) {
-	                      const resolvedName = lookupMap.get(candidateId);
-	                      if (resolvedName) {
-	                        return resolvedName;
-	                      }
-	                    }
-	                    return item?.displayName || item?.name || fallbackLabel || "Usage";
-	                  };
-	                  const readUsageRowComponent = (item, component, options = {}) => {
-	                    const totalCT = Math.max(0, Number(item?.totalCT || 0));
-	                    const agentCT = Math.max(0, Number(item?.agentCT || 0));
-                    const environmentCT = Math.max(0, Number(item?.environmentCT || 0));
-                    if (component === "agent") {
-                      return agentCT > 0 ? agentCT : (options.fallbackToTotal === false ? 0 : totalCT);
-                    }
-                    if (component === "environment") {
-                      return environmentCT;
-                    }
-                    if (component === "resource") {
-                      return environmentCT > 0 ? environmentCT : totalCT;
-                    }
-                    if (component === "skill") {
-                      return agentCT > 0 ? agentCT : totalCT;
-                    }
-                    return totalCT;
-                  };
-                  const buildUsageRows = (items, fallbackLabel, options = {}) => (Array.isArray(items) ? items : [])
-	                    .map((item) => {
-	                      const component = options.component || "total";
-	                      const value = readUsageRowComponent(item, component, options);
-	                      const resolvedLabel = typeof options.resolveLabel === "function"
-	                        ? options.resolveLabel(item)
-	                        : (item?.displayName || item?.name || item?.id);
-	                      const agentCT = component === "agent" || component === "skill"
-	                        ? value
-	                        : Math.max(0, Number(item?.agentCT || 0));
-                      const environmentCT = component === "environment" || component === "resource"
-                        ? value
-                        : Math.max(0, Number(item?.environmentCT || 0));
-	                      return {
-	                        id: String(item?.id || item?.resourceId || item?.name || fallbackLabel || "usage"),
-	                        label: normalizeUsageChartLabel(resolvedLabel, fallbackLabel),
-	                        fullLabel: resolvedLabel || fallbackLabel || "Usage",
-	                        totalCT: value,
-	                        agentCT,
-	                        environmentCT,
-                        threadCount: Math.max(0, Number(item?.threadCount || 0)),
-                      };
-                    })
-                    .filter((item) => item.totalCT > 0 || item.threadCount > 0)
-                    .sort((left, right) => right.totalCT - left.totalCT);
-                  const buildUsageBreakdownSeries = (rows, options = {}) => {
-                    const inferenceValues = rows.map((row) => Math.max(0, Number(row.agentCT || 0)));
-                    const computerValues = rows.map((row) => Math.max(0, Number(row.environmentCT || 0)));
-                    const otherValues = rows.map((row) => Math.max(0, Number(row.totalCT || 0) - Number(row.agentCT || 0) - Number(row.environmentCT || 0)));
-                    return [
-                      {
-                        id: "inference",
-                        label: options.inferenceLabel || "Inference",
-                        color: "rgb(143,196,255)",
-                        values: inferenceValues,
-                      },
-                      {
-                        id: "computers",
-                        label: options.environmentLabel || "Computers",
-                        color: "rgb(103,80,255)",
-                        values: computerValues,
-                      },
-                      {
-                        id: "other",
-                        label: "Other Runtime",
-                        color: "rgb(94,234,212)",
-                        values: otherValues,
-                      },
-                    ].filter((entry) => entry.values.some((value) => Number(value || 0) > 0));
-                  };
-                  const getSkillUsageCategory = (item) => {
-                    const haystack = String([
-                      item?.id,
-                      item?.name,
-                      item?.displayName,
-                    ].filter(Boolean).join(" ")).toLowerCase();
-                    if (/(image|gpt-image|imagen|nanobanana|dall[-_ ]?e)/.test(haystack)) {
-                      return { id: "image_generation", label: "Image Generation" };
-                    }
-                    if (/(video|seedance|grok[_ -]?imagine|text[_ -]?to[_ -]?video|image[_ -]?to[_ -]?video)/.test(haystack)) {
-                      return { id: "video_generation", label: "Video Generation" };
-                    }
-                    if (/(firecrawl|web[_ -]?search|scrape|crawl|parse|document)/.test(haystack)) {
-                      return { id: "web_search", label: "Web Search & Scraping" };
-                    }
-                    if (/(deep[_ -]?research|research)/.test(haystack)) {
-                      return { id: "deep_research", label: "Deep Research" };
-                    }
-                    if (/(mcp|tool|skill)/.test(haystack)) {
-                      return { id: "tools", label: "Tools" };
-                    }
-                    return { id: "other_skills", label: "Other Skills" };
-                  };
-                  const skillUsageMap = new Map();
-                  sourceItems.forEach((item) => {
-                    const category = getSkillUsageCategory(item);
-                    if (category.id === "other_skills") {
-                      return;
-                    }
-                    const existing = skillUsageMap.get(category.id) || {
-                      id: category.id,
-                      name: category.label,
-                      displayName: category.label,
-                      totalCT: 0,
-                      agentCT: 0,
-                      environmentCT: 0,
-                      threadCount: 0,
-                    };
-                    existing.totalCT += Number(item.totalCT || 0);
-                    existing.agentCT += Number(item.agentCT || 0) > 0 || Number(item.environmentCT || 0) > 0
-                      ? Number(item.agentCT || 0)
-                      : Number(item.totalCT || 0);
-                    existing.environmentCT += Number(item.environmentCT || 0);
-                    existing.threadCount += Number(item.threadCount || 0);
-                    skillUsageMap.set(category.id, existing);
-                  });
-                  resourceUsageRows.forEach((item) => {
-                    const kind = String(item?.kind || item?.resourceKind || item?.resourceType || "").trim().toLowerCase();
-                    if (kind !== "mcp") {
-                      return;
-                    }
-                    const existing = skillUsageMap.get("tools") || {
-                      id: "tools",
-                      name: "Tools",
-                      displayName: "Tools",
-                      totalCT: 0,
-                      agentCT: 0,
-                      environmentCT: 0,
-                      threadCount: 0,
-                    };
-                    const ctAmount = Number(item.agentCT || item.totalCT || 0);
-                    existing.totalCT += ctAmount;
-                    existing.agentCT += ctAmount;
-                    existing.threadCount += Number(item.threadCount || 0);
-                    skillUsageMap.set("tools", existing);
-                  });
-	                  const agentUsageRows = buildUsageRows(settingsUsageAgentItems, "Agent", {
-	                    component: "agent",
-	                    resolveLabel: (item) => resolveUsageEntityLabel(item, agentNameById, "Agent"),
-	                  });
-	                  const computerUsageRows = buildUsageRows(settingsUsageEnvironmentItems, "Computer", {
-	                    component: "environment",
-	                    fallbackToTotal: false,
-	                    resolveLabel: (item) => resolveUsageEntityLabel(item, environmentNameById, "Computer"),
-	                  });
-                  const resourceChartRows = buildUsageRows(
-                    resourceUsageRows.filter((item) => {
-                      const kind = String(item?.kind || item?.resourceKind || item?.resourceType || "").trim().toLowerCase();
-                      return !["llm", "thread_runtime", "computer", "mcp"].includes(kind);
-                    }),
-                    "Resource",
-                    { component: "resource" }
-                  );
-                  const skillUsageRows = buildUsageRows(Array.from(skillUsageMap.values()), "Skill", { component: "skill" });
-                  const getUsageSeriesMax = (labels, series) => Math.max(1, ...labels.map((_, index) =>
-                    series.reduce((sum, entry) => sum + Math.max(0, Number(entry.values[index] || 0)), 0)
-                  ));
-                  const buildUsageChartTab = (tab) => ({
-                    ...tab,
-                    yMax: getUsageSeriesMax(tab.labels, tab.series),
-                  });
-                  const usageChartTabs = [
-                    buildUsageChartTab({
-                      id: "overall",
-                      label: "Overall usage cost",
-                      value: formatSettingsComputeTokens(totalUsedCT),
-                      title: "Overall usage cost",
-                      labels: dailyLabels,
-                      series: resourceSeries,
-                      emptyText: "No usage in this period",
-                      ariaLabel: "Overall usage cost by day",
-                    }),
-                    buildUsageChartTab({
-                      id: "agents",
-                      label: "Usage by Agents",
-                      value: formatSettingsComputeTokens(Number(safeTotals.agentCT || 0) || agentUsageRows.reduce((sum, item) => sum + item.totalCT, 0)),
-                      title: "Usage by Agents",
-                      labels: agentUsageRows.map((item) => item.label),
-                      series: buildUsageBreakdownSeries(agentUsageRows, { inferenceLabel: "Inference" }),
-                      emptyText: "No agent usage in this period",
-                      ariaLabel: "Compute token usage by agent",
-                    }),
-                    buildUsageChartTab({
-                      id: "computers",
-                      label: "Usage by Computers",
-                      value: formatSettingsComputeTokens(computerUsageRows.reduce((sum, item) => sum + item.totalCT, 0)),
-                      title: "Usage by Computers",
-                      labels: computerUsageRows.map((item) => item.label),
-                      series: buildUsageBreakdownSeries(computerUsageRows, { environmentLabel: "Computers" }),
-                      emptyText: "No computer usage in this period",
-                      ariaLabel: "Compute token usage by computer",
-                    }),
-                    buildUsageChartTab({
-                      id: "resources",
-                      label: "Usage by Resources",
-                      value: formatSettingsComputeTokens(resourceChartRows.reduce((sum, item) => sum + item.totalCT, 0)),
-                      title: "Usage by Resources",
-                      labels: resourceChartRows.map((item) => item.label),
-                      series: buildUsageBreakdownSeries(resourceChartRows, { environmentLabel: "Resources" }),
-                      emptyText: "No resource usage in this period",
-                      ariaLabel: "Compute token usage by resource",
-                    }),
-                    buildUsageChartTab({
-                      id: "skills",
-                      label: "Usage by Skills",
-                      value: formatSettingsComputeTokens(skillUsageRows.reduce((sum, item) => sum + item.totalCT, 0)),
-                      title: "Usage by Skills",
-                      labels: skillUsageRows.map((item) => item.label),
-                      series: buildUsageBreakdownSeries(skillUsageRows, { inferenceLabel: "Skills" }),
-                      emptyText: "No skill usage in this period",
-                      ariaLabel: "Compute token usage by skill",
-                    }),
-                  ];
-                  const activeUsageChart = usageChartTabs.find((tab) => tab.id === settingsUsageChartTab) || usageChartTabs[0];
-                  const renderSettingsUsagePeriodControls = (className) =>
-                    React.createElement("div", { className },
-                      React.createElement("div", { className: "playground-settings-usage-period-heading" },
-                        React.createElement("div", { className: "playground-settings-usage-app-period" },
-                          formatPeriodDate(periodStart) + " - " + formatPeriodDate(periodEnd)
-                        )
-                      ),
-                      React.createElement("div", { className: "playground-settings-usage-nav" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-settings-usage-nav-button",
-                          onClick: () => setSettingsBillingPeriodOffset((current) => current - 1),
-                          title: "Previous period",
-                        }, React.createElement(ChevronLeft, { width: 16, height: 16, strokeWidth: 1.8 })),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-settings-usage-nav-current",
-                          onClick: () => setSettingsBillingPeriodOffset(0),
-                          disabled: settingsBillingPeriodOffset === 0,
-                        }, "Current"),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-settings-usage-nav-button",
-                          onClick: () => setSettingsBillingPeriodOffset((current) => Math.min(0, current + 1)),
-                          disabled: settingsBillingPeriodOffset >= 0,
-                          title: "Next period",
-                        }, React.createElement(ChevronRight, { width: 16, height: 16, strokeWidth: 1.8 }))
-                      )
-                    );
-
-                  return React.createElement("div", { className: "playground-settings-usage-app-shell" },
-                        React.createElement("div", { className: "playground-settings-usage-top-chart playground-environments-home-metrics" },
-                          React.createElement("div", { className: "playground-tasks-detail-facts" },
-                            React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-                              React.createElement("div", { className: "playground-database-overview" },
-                                React.createElement("div", { className: "playground-database-overview-chart-block playground-settings-usage-chart-block" },
-                                  React.createElement("div", { className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis playground-settings-usage-chart-kpis" },
-                                    usageChartTabs.map((tab) =>
-                                      React.createElement("button", {
-                                        key: tab.id,
-                                        type: "button",
-                                        className: "playground-project-overview-summary-kpi playground-settings-usage-chart-kpi" + (activeUsageChart.id === tab.id ? " is-active" : ""),
-                                        onClick: () => setSettingsUsageChartTab(tab.id),
-                                      },
-                                        React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
-                                          React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, tab.label)
-                                        ),
-                                        React.createElement("div", { className: "playground-project-overview-summary-kpi-value" }, tab.value)
-                                      )
-                                    )
-                                  ),
-                                  React.createElement("div", { className: "playground-settings-usage-chart-panel" },
-                                    React.createElement("div", { className: "playground-settings-usage-card-header" },
-                                      React.createElement("div", null,
-                                        React.createElement("div", { className: "playground-settings-usage-card-title" }, activeUsageChart.title)
-                                      )
-                                    ),
-                                    settingsUsageLoading
-                                      ? React.createElement("div", { className: "playground-settings-loading-state playground-settings-usage-chart-loading-frame" },
-                                          React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
-                                        )
-                                      : renderSettingsUsageMultiStackedChart({
-                                          labels: activeUsageChart.labels,
-                                          series: activeUsageChart.series,
-                                          yMax: activeUsageChart.yMax,
-                                          tickFormatter: formatSettingsAxisComputeTokens,
-                                          tall: true,
-                                          ariaLabel: activeUsageChart.ariaLabel,
-                                          emptyText: activeUsageChart.emptyText,
-                                        }),
-                                    React.createElement("div", {
-                                      className: "playground-settings-usage-inline-legend",
-                                      style: { justifyContent: "flex-start" },
-                                    },
-                                      activeUsageChart.series.map((entry) =>
-                                        React.createElement("div", { key: entry.id, className: "playground-settings-usage-legend-item" },
-                                          React.createElement("span", {
-                                            className: "playground-settings-usage-legend-swatch",
-                                            style: { background: entry.color },
-                                          }),
-                                          React.createElement("span", null, entry.label)
-                                        )
-                                      )
-                                    )
-                                  ),
-                                  renderSettingsUsagePeriodControls("playground-settings-usage-period-header is-chart-footer")
-                                )
-                              )
-                            )
-                          )
-                        ),
-                        React.createElement("section", { className: "playground-settings-usage-resource-table-wrap" },
-                          React.createElement("div", { className: "playground-settings-usage-card-header" },
-                            React.createElement("div", null,
-                              React.createElement("div", { className: "playground-settings-usage-card-title" }, "Consumers")
-                            )
-                          ),
-                          React.createElement(PlatformDataTable, {
-                            rows: resourceUsageRows,
-                            getRowId: (item) => String(item.id),
-                            ariaLabel: "Usage consumers",
-                            className: "playground-settings-usage-platform-table",
-                            surface: "plain",
-                            sticky: false,
-                            loading: settingsUsageLoading,
-                            emptyState: "No measured usage in this period.",
-                            columns: [
-                              {
-                                id: "resource",
-                                header: "Resource",
-                                accessor: (item) => item.name || "Unknown",
-                                width: "minmax(220px, 2fr)",
-                                cell: ({ row: item }) => React.createElement("div", { className: "playground-settings-usage-resource-name-cell" },
-                                  React.createElement("span", { className: "playground-settings-usage-resource-name" }, item.name || "Unknown"),
-                                  item.resourceId ? React.createElement("span", { className: "playground-settings-usage-resource-meta" }, item.resourceId) : null
-                                ),
-                              },
-                              { id: "type", header: "Type", accessor: (item) => item.displayKind, width: "minmax(120px, 1fr)" },
-                              {
-                                id: "cost",
-                                header: "Cost",
-                                accessor: (item) => Number(item.totalCT || 0),
-                                width: "minmax(100px, 0.8fr)",
-                                align: "end",
-                                cell: ({ row: item }) => formatSettingsComputeTokens(item.totalCT),
-                              },
-                            ],
-                          })
-                        )
-                      );
-                })()
-                )
-              );
-              break;
-            }
-            case "integrations":
-              detailContent = React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
-                React.createElement("div", { className: "playground-settings-integrations-shell" },
-                  React.createElement("h3", { className: "playground-settings-integrations-title" }, "Integrations"),
-                  React.createElement("p", { className: "playground-settings-integrations-subtitle" }, "Connect external services to your account"),
-                  React.createElement("div", { className: "playground-settings-integration-stack" },
-                    React.createElement("div", { className: "playground-settings-integration-card" },
-                      React.createElement("div", { className: "playground-settings-integration-card-row" },
-                        React.createElement("img", {
-                          src: "/img/logos/mailicon.webp",
-                          className: "playground-settings-integration-logo is-email",
-                          alt: "Email",
-                        }),
-                        React.createElement("div", { className: "playground-settings-integration-main" },
-                          React.createElement("div", { className: "playground-settings-integration-top" },
-                            React.createElement("h4", { className: "playground-settings-integration-title" }, "Email"),
-                            settingsEmailStatus?.linked && settingsEmailStatus?.verified
-                              ? React.createElement("div", { className: "playground-settings-integration-account-group" },
-                                  React.createElement("span", { className: "playground-settings-integration-account" },
-                                    React.createElement(Mail, { width: 12, height: 12, strokeWidth: 1.8 }),
-                                    React.createElement("span", null, settingsEmailStatus.email)
-                                  ),
-                                  React.createElement("button", {
-                                    type: "button",
-                                    onClick: () => {
-                                      void handleSettingsUnlinkEmail();
-                                    },
-                                    disabled: settingsIsUnlinkingEmail,
-                                    className: "playground-settings-integration-unlink",
-                                  },
-                                    settingsIsUnlinkingEmail
-                                      ? React.createElement(Loader2, { className: "playground-settings-records-spinner", strokeWidth: 1.8 })
-                                      : React.createElement(React.Fragment, null,
-                                          React.createElement(Unlink, { width: 12, height: 12, strokeWidth: 1.8 }),
-                                          React.createElement("span", null, "Unlink Email")
-                                        )
-                                  )
-                                )
-                              : settingsEmailStatus?.linked && !settingsEmailStatus?.verified
-                                ? React.createElement("span", { className: "playground-settings-records-status-badge is-warning" }, "Pending Verification")
-                                : null
-                          ),
-                          React.createElement("p", { className: "playground-settings-integration-copy" }, "Link your email to run tasks, upload files, and receive notifications via email."),
-                          settingsEmailLoading
-                            ? React.createElement("div", { className: "playground-settings-integration-loading" },
-                                React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
-                              )
-                            : settingsEmailStatus?.linked && settingsEmailStatus?.verified
-                              ? React.createElement("div", { className: "playground-settings-integration-body" },
-                                  React.createElement("p", { className: "playground-settings-integration-section-label" }, "Send emails to:"),
-                                  React.createElement("p", { className: "playground-settings-integration-email-address" }, "[agent-name]@agent.computer-agents.com"),
-                                  React.createElement("p", { className: "playground-settings-integration-section-label", style: { marginTop: "12px" } }, "What you can do:"),
-                                  React.createElement("ul", { className: "playground-settings-integration-list" },
-                                    React.createElement("li", null, "Send a task in the subject or body"),
-                                    React.createElement("li", null, "Attach files to include in your task"),
-                                    React.createElement("li", null, "Reply to continue a conversation"),
-                                    React.createElement("li", null, 'Type "help" in the body for commands')
-                                  )
-                                )
-                              : settingsShowEmailVerificationInput || (settingsEmailStatus?.linked && !settingsEmailStatus?.verified)
-                                ? React.createElement("div", { className: "playground-settings-integration-body" },
-                                    React.createElement("div", { className: "playground-settings-integration-notice is-warning" }, "A verification code has been sent to your email. Enter it below to complete linking."),
-                                    React.createElement("div", { className: "playground-settings-field", style: { marginTop: "12px" } },
-                                      React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-email-verification-code" }, "Verification Code"),
-                                      React.createElement("div", { className: "playground-settings-integration-form-row" },
-                                        React.createElement("input", {
-                                          id: "settings-email-verification-code",
-                                          type: "text",
-                                          value: settingsEmailVerificationCodeInput,
-                                          onChange: (event) => setSettingsEmailVerificationCodeInput(event.target.value),
-                                          placeholder: "Enter 6-digit code",
-                                          maxLength: 6,
-                                          className: "playground-settings-integration-input is-code",
-                                        }),
-                                        React.createElement("button", {
-                                          type: "button",
-                                          onClick: () => {
-                                            void handleSettingsVerifyEmailCode();
-                                          },
-                                          disabled: settingsIsVerifyingEmail || !settingsEmailVerificationCodeInput,
-                                          className: "playground-settings-integration-button is-email",
-                                        },
-                                          settingsIsVerifyingEmail
-                                            ? React.createElement(Loader2, { className: "playground-settings-records-spinner", strokeWidth: 1.8 })
-                                            : React.createElement("span", null, "Verify")
-                                        )
-                                      )
-                                    ),
-                                    React.createElement("button", {
-                                      type: "button",
-                                      onClick: () => {
-                                        void handleSettingsCancelEmailVerification();
-                                      },
-                                      className: "playground-settings-integration-secondary-link",
-                                    }, "Cancel and try a different email")
-                                  )
-                                : React.createElement("div", { className: "playground-settings-integration-body" },
-                                    React.createElement("div", { className: "playground-settings-field" },
-                                      React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-email-address-link" }, "Email Address"),
-                                      React.createElement("div", { className: "playground-settings-integration-form-row" },
-                                        React.createElement("input", {
-                                          id: "settings-email-address-link",
-                                          type: "email",
-                                          value: settingsEmailInput,
-                                          onChange: (event) => setSettingsEmailInput(event.target.value),
-                                          placeholder: "you@example.com",
-                                          className: "playground-settings-integration-input is-email",
-                                        }),
-                                        React.createElement("button", {
-                                          type: "button",
-                                          onClick: () => {
-                                            void handleSettingsLinkEmail();
-                                          },
-                                          disabled: settingsIsLinkingEmail || !settingsEmailInput,
-                                          className: "playground-settings-integration-button is-email",
-                                        },
-                                          settingsIsLinkingEmail
-                                            ? React.createElement(Loader2, { className: "playground-settings-records-spinner", strokeWidth: 1.8 })
-                                            : React.createElement(React.Fragment, null,
-                                                React.createElement(Link2, { width: 14, height: 14, strokeWidth: 1.8 }),
-                                                React.createElement("span", null, "Link")
-                                              )
-                                        )
-                                      ),
-                                      React.createElement("p", { className: "playground-settings-integration-helper" }, "If this matches your account email, it will be linked automatically.")
-                                    )
-                                  ),
-                          renderSettingsIntegrationMessage("error", settingsEmailError),
-                          renderSettingsIntegrationMessage("success", settingsEmailSuccess)
-                        )
-                      )
-                    ),
-                    React.createElement("div", { className: "playground-settings-integration-card" },
-                      React.createElement("div", { className: "playground-settings-integration-card-row" },
-                        React.createElement("div", { className: "playground-settings-integration-icon is-discord" },
-                          React.createElement("img", {
-                            src: "/img/logos/discord.svg",
-                            className: "playground-settings-integration-logo is-discord",
-                            alt: "Discord",
-                          })
-                        ),
-                        React.createElement("div", { className: "playground-settings-integration-main" },
-                          React.createElement("div", { className: "playground-settings-integration-top" },
-                            React.createElement("h4", { className: "playground-settings-integration-title" }, "Discord"),
-                            settingsDiscordStatus?.linked && settingsDiscordStatus?.verified
-                              ? React.createElement("div", { className: "playground-settings-integration-account-group" },
-                                  React.createElement("span", { className: "playground-settings-integration-account" },
-                                    React.createElement("span", { className: "playground-settings-integration-account-mark" }, "@"),
-                                    React.createElement("span", null, settingsDiscordAccountLabel)
-                                  ),
-                                  React.createElement("button", {
-                                    type: "button",
-                                    onClick: () => {
-                                      void handleSettingsUnlinkDiscord();
-                                    },
-                                    disabled: settingsIsUnlinkingDiscord,
-                                    className: "playground-settings-integration-unlink",
-                                  },
-                                    settingsIsUnlinkingDiscord
-                                      ? React.createElement(Loader2, { className: "playground-settings-records-spinner", strokeWidth: 1.8 })
-                                      : React.createElement(React.Fragment, null,
-                                          React.createElement(Unlink, { width: 12, height: 12, strokeWidth: 1.8 }),
-                                          React.createElement("span", null, "Unlink Discord")
-                                        )
-                                  )
-                                )
-                              : null
-                          ),
-                          React.createElement("p", { className: "playground-settings-integration-copy" }, "Link your Discord to run tasks and receive notifications via Discord slash commands."),
-                          settingsDiscordLoading
-                            ? React.createElement("div", { className: "playground-settings-integration-loading" },
-                                React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
-                              )
-                            : settingsDiscordStatus?.linked && settingsDiscordStatus?.verified
-                              ? React.createElement("div", { className: "playground-settings-integration-body" },
-                                  React.createElement("p", { className: "playground-settings-integration-section-label" }, "Available commands:"),
-                                  React.createElement("ul", { className: "playground-settings-integration-list" },
-                                    React.createElement("li", null,
-                                      React.createElement("code", { className: "playground-settings-integration-inline-code" }, "/run"),
-                                      " task:your task - Run a task with an agent"
-                                    ),
-                                    React.createElement("li", null,
-                                      React.createElement("code", { className: "playground-settings-integration-inline-code" }, "/status"),
-                                      " - Check your running tasks"
-                                    ),
-                                    React.createElement("li", null,
-                                      React.createElement("code", { className: "playground-settings-integration-inline-code" }, "/runs"),
-                                      " - List recent task runs"
-                                    ),
-                                    React.createElement("li", null,
-                                      React.createElement("code", { className: "playground-settings-integration-inline-code" }, "/agents"),
-                                      " - List your available agents"
-                                    ),
-                                    React.createElement("li", null,
-                                      React.createElement("code", { className: "playground-settings-integration-inline-code" }, "/envs"),
-                                      " - List your environments"
-                                    ),
-                                    React.createElement("li", null,
-                                      React.createElement("code", { className: "playground-settings-integration-inline-code" }, "/help"),
-                                      " - Show all available commands"
-                                    )
-                                  ),
-                                  settingsDiscordStatus?.verifiedAt
-                                    ? React.createElement("p", { className: "playground-settings-integration-helper" }, "Connected on " + new Date(settingsDiscordStatus.verifiedAt).toLocaleDateString())
-                                    : null
-                                )
-                              : React.createElement("div", { className: "playground-settings-integration-body" },
-                                  React.createElement("div", { className: "playground-settings-integration-actions" },
-                                    React.createElement("button", {
-                                      type: "button",
-                                      onClick: () => {
-                                        void handleSettingsLinkDiscord();
-                                      },
-                                      disabled: settingsIsLinkingDiscord,
-                                      className: "playground-settings-integration-button is-discord",
-                                    },
-                                      settingsIsLinkingDiscord
-                                        ? React.createElement(Loader2, { className: "playground-settings-records-spinner", strokeWidth: 1.8 })
-                                        : React.createElement(React.Fragment, null,
-                                            React.createElement(ExternalLink, { width: 14, height: 14, strokeWidth: 1.8 }),
-                                            React.createElement("span", null, "Connect Discord")
-                                          )
-                                    )
-                                  ),
-                                  React.createElement("p", { className: "playground-settings-integration-helper" }, "You'll be redirected to Discord to authorize the connection.")
-                                ),
-                          renderSettingsIntegrationMessage("error", settingsDiscordError),
-                          renderSettingsIntegrationMessage("success", settingsDiscordSuccess)
-                        )
-                      )
-                    ),
-                    React.createElement("div", { className: "playground-settings-integration-card" },
-                      React.createElement("div", { className: "playground-settings-integration-card-row" },
-                        React.createElement("div", { className: "playground-settings-integration-icon is-telegram" },
-                          React.createElement("img", {
-                            src: "/img/logos/telegram.svg",
-                            className: "playground-settings-integration-logo is-telegram",
-                            alt: "Telegram",
-                          })
-                        ),
-                        React.createElement("div", { className: "playground-settings-integration-main" },
-                          React.createElement("div", { className: "playground-settings-integration-top" },
-                            React.createElement("h4", { className: "playground-settings-integration-title" }, "Telegram"),
-                            settingsTelegramStatus?.linked && settingsTelegramStatus?.verified
-                              ? React.createElement("div", { className: "playground-settings-integration-account-group" },
-                                  React.createElement("span", { className: "playground-settings-integration-account" },
-                                    React.createElement("span", { className: "playground-settings-integration-account-mark" }, "@"),
-                                    React.createElement("span", null, settingsTelegramAccountLabel)
-                                  ),
-                                  React.createElement("button", {
-                                    type: "button",
-                                    onClick: () => {
-                                      void handleSettingsUnlinkTelegram();
-                                    },
-                                    disabled: settingsIsUnlinkingTelegram,
-                                    className: "playground-settings-integration-unlink",
-                                  },
-                                    settingsIsUnlinkingTelegram
-                                      ? React.createElement(Loader2, { className: "playground-settings-records-spinner", strokeWidth: 1.8 })
-                                      : React.createElement(React.Fragment, null,
-                                          React.createElement(Unlink, { width: 12, height: 12, strokeWidth: 1.8 }),
-                                          React.createElement("span", null, "Unlink Telegram")
-                                        )
-                                  )
-                                )
-                              : null
-                          ),
-                          React.createElement("p", { className: "playground-settings-integration-copy" }, "Link your Telegram to run tasks and receive notifications via Telegram bot commands."),
-                          settingsTelegramLoading
-                            ? React.createElement("div", { className: "playground-settings-integration-loading" },
-                                React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
-                              )
-                            : settingsTelegramStatus?.linked && settingsTelegramStatus?.verified
-                              ? React.createElement("div", { className: "playground-settings-integration-body" },
-                                  React.createElement("p", { className: "playground-settings-integration-section-label" }, "Available commands:"),
-                                  React.createElement("ul", { className: "playground-settings-integration-list" },
-                                    React.createElement("li", null,
-                                      React.createElement("code", { className: "playground-settings-integration-inline-code" }, "/run"),
-                                      " task - Run a task with an agent"
-                                    ),
-                                    React.createElement("li", null,
-                                      React.createElement("code", { className: "playground-settings-integration-inline-code" }, "/status"),
-                                      " - Check your running tasks"
-                                    ),
-                                    React.createElement("li", null,
-                                      React.createElement("code", { className: "playground-settings-integration-inline-code" }, "/runs"),
-                                      " - List recent task runs"
-                                    ),
-                                    React.createElement("li", null,
-                                      React.createElement("code", { className: "playground-settings-integration-inline-code" }, "/agents"),
-                                      " - List your available agents"
-                                    ),
-                                    React.createElement("li", null,
-                                      React.createElement("code", { className: "playground-settings-integration-inline-code" }, "/envs"),
-                                      " - List your environments"
-                                    ),
-                                    React.createElement("li", null,
-                                      React.createElement("code", { className: "playground-settings-integration-inline-code" }, "/help"),
-                                      " - Show all available commands"
-                                    )
-                                  ),
-                                  settingsTelegramStatus?.verifiedAt
-                                    ? React.createElement("p", { className: "playground-settings-integration-helper" }, "Connected on " + new Date(settingsTelegramStatus.verifiedAt).toLocaleDateString())
-                                    : null
-                                )
-                              : React.createElement("div", { className: "playground-settings-integration-body" },
-                                  React.createElement("p", { className: "playground-settings-integration-section-label" }, "To link your Telegram:"),
-                                  React.createElement("ol", { className: "playground-settings-integration-steps" },
-                                    React.createElement("li", null, "Open Telegram and search for ", React.createElement("code", null, "@aios_agent_bot")),
-                                    React.createElement("li", null, "Send ", React.createElement("code", null, "/link"), " to the bot"),
-                                    React.createElement("li", null, "Enter the verification code below")
-                                  ),
-                                  React.createElement("div", { className: "playground-settings-integration-form-row", style: { marginTop: "12px" } },
-                                    React.createElement("input", {
-                                      type: "text",
-                                      value: settingsTelegramVerificationCode,
-                                      onChange: (event) => setSettingsTelegramVerificationCode(event.target.value),
-                                      placeholder: "Enter verification code",
-                                      className: "playground-settings-integration-input",
-                                      maxLength: 6,
-                                      onKeyDown: (event) => {
-                                        if (event.key === "Enter") {
-                                          void handleSettingsVerifyTelegramCode();
-                                        }
-                                      },
-                                    }),
-                                    React.createElement("button", {
-                                      type: "button",
-                                      onClick: () => {
-                                        void handleSettingsVerifyTelegramCode();
-                                      },
-                                      disabled: settingsIsVerifyingTelegram || !settingsTelegramVerificationCode.trim(),
-                                      className: "playground-settings-integration-button is-telegram",
-                                    },
-                                      settingsIsVerifyingTelegram
-                                        ? React.createElement(Loader2, { className: "playground-settings-records-spinner", strokeWidth: 1.8 })
-                                        : React.createElement("span", null, "Verify")
-                                    )
-                                  )
-                                ),
-                          renderSettingsIntegrationMessage("error", settingsTelegramError),
-                          renderSettingsIntegrationMessage("success", settingsTelegramSuccess)
-                        )
-                      )
-                    )
-                  )
-                )
-              );
-              break;
-            case "webhooks": {
-              const canCreateSettingsTrigger = Boolean(
-                String(settingsTriggerForm.name || "").trim()
-                && String(settingsTriggerForm.event || "").trim()
-                && String(settingsTriggerForm.environmentId || "").trim()
-                && String(settingsTriggerForm.message || "").trim()
-                && (settingsTriggerForm.source !== "github" || githubStatus.connected)
-              );
-
-              const settingsTriggerComposerDialog = settingsCreatingTrigger
-                ? React.createElement(PlatformModalBackdrop, {
-                    className: "playground-tasks-project-modal-backdrop",
-                    onClick: closeSettingsTriggerComposer,
-                  },
-                    React.createElement(PlatformModalSurface, {
-                        as: "form",
-                        className: "playground-tasks-project-modal playground-agent-composer-modal playground-environment-composer-modal playground-settings-trigger-composer-modal",
-                        onClick: (event) => event.stopPropagation(),
-                        onKeyDown: handleComposerSubmitShortcut,
-                        onSubmit: (event) => {
-                          event.preventDefault();
-                          void handleSettingsCreateTrigger();
-                        },
-                      },
-                      React.createElement("div", { className: "playground-tasks-project-modal-top" },
-                        React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
-                          React.createElement("div", {
-                            className: "playground-tasks-project-modal-icon-trigger",
-                            "aria-hidden": "true",
-                          }, React.createElement(Webhook, { width: 18, height: 18, strokeWidth: 1.9 })),
-                          React.createElement("input", {
-                            className: "playground-tasks-project-modal-name-input",
-                            value: settingsTriggerForm.name,
-                            onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, name: event.target.value })),
-                            placeholder: "Webhook name",
-                            autoFocus: true,
-                            disabled: settingsTriggerSubmitting,
-                          })
-                        ),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-settings-icon-button playground-tasks-project-modal-close",
-                          onClick: closeSettingsTriggerComposer,
-                          title: "Close",
-                          disabled: settingsTriggerSubmitting,
-                        }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-                      ),
-                      React.createElement("div", { className: "playground-agent-composer-modal-body" },
-                        React.createElement("div", { className: "playground-settings-trigger-connect-card", style: { marginBottom: "4px" } },
-                          React.createElement("div", { className: "playground-environments-muted" }, "Need help setting up GitHub, GitLab, or webhook delivery?"),
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-environments-action-button",
-                            onClick: () => {
-                              window.open(${JSON.stringify(aiosOrigin + "/developers/run-and-scale/webhooks")}, "_blank", "noopener,noreferrer");
-                            },
-                            disabled: settingsTriggerSubmitting,
-                          },
-                            React.createElement(ExternalLink, { width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("span", null, "Open Docs")
-                          )
-                        ),
-                        React.createElement("div", { className: "playground-environment-composer-runtime-facts" },
-                          React.createElement("div", { className: "playground-tasks-detail-fact" },
-                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Source"),
-                            React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                              React.createElement("select", {
-                                className: "playground-environments-select playground-tasks-detail-fact-select playground-tasks-detail-priority-select",
-                                value: settingsTriggerForm.source,
-                                disabled: settingsTriggerSubmitting,
-                                onChange: (event) => setSettingsTriggerForm((current) => {
-                                  const nextSource = event.target.value;
-                                  const nextActionType = isSettingsTriggerActionSupportedForSource(nextSource, current.actionType)
-                                    ? current.actionType
-                                    : "send_message";
-                                  return {
-                                    ...current,
-                                    source: nextSource,
-                                    event: getSettingsTriggerDefaultEvent(nextSource, nextActionType),
-                                    actionType: nextActionType,
-                                    filterRepo: "",
-                                    filterBranch: "",
-                                  };
-                                }),
-                              },
-                                SETTINGS_TRIGGER_SOURCE_OPTIONS.map((option) =>
-                                  React.createElement("option", { key: option.value, value: option.value }, option.label)
-                                )
-                              )
-                            )
-                          ),
-                          React.createElement("div", { className: "playground-tasks-detail-fact" },
-                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Event"),
-                            React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                              settingsTriggerForm.source === "github" || settingsTriggerForm.source === "gitlab"
-                                ? React.createElement("select", {
-                                    className: "playground-environments-select playground-tasks-detail-fact-select playground-tasks-detail-priority-select",
-                                    value: settingsTriggerForm.event,
-                                    disabled: settingsTriggerSubmitting,
-                                    onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, event: event.target.value })),
-                                  },
-                                    getSettingsTriggerEventOptions(settingsTriggerForm.source, settingsTriggerForm.actionType).map((eventName) =>
-                                      React.createElement("option", { key: eventName, value: eventName }, eventName)
-                                    )
-                                  )
-                                : React.createElement("input", {
-                                    type: "text",
-                                    className: "playground-environments-input playground-tasks-detail-fact-select",
-                                    value: settingsTriggerForm.event,
-                                    disabled: settingsTriggerSubmitting,
-                                    onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, event: event.target.value })),
-                                    placeholder: "event_callback",
-                                  })
-                            )
-                          ),
-                          React.createElement("div", { className: "playground-tasks-detail-fact" },
-                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Computer"),
-                            React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                              React.createElement("select", {
-                                className: "playground-environments-select playground-tasks-detail-fact-select playground-tasks-detail-priority-select",
-                                value: settingsTriggerForm.environmentId,
-                                disabled: settingsTriggerSubmitting,
-                                onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, environmentId: event.target.value })),
-                              },
-                                React.createElement("option", { value: "" }, "Select computer"),
-                                runtimeEnvironments.map((environment) =>
-                                  React.createElement("option", { key: environment.id, value: environment.id }, environment.name || environment.id)
-                                )
-                              )
-                            )
-                          ),
-                          React.createElement("div", { className: "playground-tasks-detail-fact" },
-                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Action"),
-                            React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                              React.createElement("select", {
-                                className: "playground-environments-select playground-tasks-detail-fact-select playground-tasks-detail-priority-select",
-                                value: settingsTriggerForm.actionType,
-                                disabled: settingsTriggerSubmitting,
-                                onChange: (event) => setSettingsTriggerForm((current) => {
-                                  const nextActionType = event.target.value;
-                                  return {
-                                    ...current,
-                                    actionType: nextActionType,
-                                    event: getSettingsTriggerDefaultEvent(current.source, nextActionType),
-                                  };
-                                }),
-                              },
-                                SETTINGS_TRIGGER_ACTION_OPTIONS
-                                  .filter((option) => isSettingsTriggerActionSupportedForSource(settingsTriggerForm.source, option.value))
-                                  .map((option) =>
-                                    React.createElement("option", { key: option.value, value: option.value }, option.label)
-                                  )
-                              )
-                            )
-                          ),
-                          React.createElement("div", { className: "playground-tasks-detail-fact" },
-                            React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Agent"),
-                            React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                              React.createElement("select", {
-                                className: "playground-environments-select playground-tasks-detail-fact-select playground-tasks-detail-priority-select",
-                                value: settingsTriggerForm.agentId,
-                                disabled: settingsTriggerSubmitting,
-                                onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, agentId: event.target.value })),
-                              },
-                                React.createElement("option", { value: "" }, "Default agent"),
-                                runtimeAgents.map((agent) =>
-                                  React.createElement("option", { key: agent.id, value: agent.id }, agent.name || agent.id)
-                                )
-                              )
-                            )
-                          )
-                        ),
-                        React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-modal-description" },
-                          React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                            React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Prompt"),
-                            React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                              [
-                                { id: "bold", label: "Bold", icon: Bold },
-                                { id: "italic", label: "Italic", icon: Italic },
-                                { id: "underline", label: "Underline", icon: Underline },
-                                { id: "list", label: "List", icon: List },
-                              ].map((action) =>
-                                React.createElement("button", {
-                                  key: "settings-trigger-" + action.id,
-                                  type: "button",
-                                  className: "playground-tasks-detail-format-button",
-                                  title: action.label,
-                                  "aria-label": action.label,
-                                  disabled: settingsTriggerSubmitting,
-                                  onMouseDown: (event) => event.preventDefault(),
-                                  onClick: () => handleSettingsTriggerPromptMarkdownFormat(action.id),
-                                }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
-                              )
-                            )
-                          ),
-                          React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isSettingsTriggerPromptEditing ? " is-editing" : " is-preview") },
-                            !isSettingsTriggerPromptEditing
-                              ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                                  String(settingsTriggerForm.message || "").trim()
-                                    ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                                        content: settingsTriggerForm.message,
-                                        className: "playground-tasks-detail-description-preview tb-message-markdown",
-                                      })
-                                    : React.createElement("div", {
-                                        className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                                      }, getSettingsTriggerPromptPlaceholder(settingsTriggerForm.source, settingsTriggerForm.actionType))
-                                )
-                              : null,
-                            React.createElement("textarea", {
-                              ref: settingsTriggerPromptTextareaRef,
-                              className: "playground-tasks-detail-description-input " + (isSettingsTriggerPromptEditing ? "is-editing" : "is-preview"),
-                              rows: 1,
-                              placeholder: isSettingsTriggerPromptEditing
-                                ? getSettingsTriggerPromptPlaceholder(settingsTriggerForm.source, settingsTriggerForm.actionType)
-                                : "",
-                              value: settingsTriggerForm.message,
-                              disabled: settingsTriggerSubmitting,
-                              onFocus: () => setIsSettingsTriggerPromptEditing(true),
-                              onChange: (event) => {
-                                updateSettingsTriggerPromptField(event.target.value);
-                                resizeSettingsTriggerPromptTextarea(event.currentTarget);
-                              },
-                              onBlur: () => setIsSettingsTriggerPromptEditing(false),
-                            })
-                          ),
-                          settingsTriggerForm.actionType === "comment_pull_request"
-                            ? React.createElement("div", { className: "playground-environments-muted", style: { marginTop: 8 } }, "The assistant response will be posted back to the matching GitHub pull request as a comment.")
-                            : settingsTriggerForm.actionType === "comment_merge_request"
-                              ? React.createElement("div", { className: "playground-environments-muted", style: { marginTop: 8 } }, "The assistant response will be posted back to the matching GitLab merge request as a comment.")
-                            : null
-                        ),
-                        settingsTriggerForm.source === "github"
-                          ? React.createElement("div", { className: "playground-tasks-project-modal-field" },
-                              React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Filters"),
-                              !githubStatus.connected
-                                ? React.createElement("div", { className: "playground-settings-trigger-connect-card" },
-                                    React.createElement("div", { className: "playground-environments-muted" }, "Connect GitHub to choose one of your repositories for this webhook."),
-                                    React.createElement(PlatformPrimaryButton, {
-                                      size: "medium",
-                                      type: "button",
-                                      className: "playground-environments-action-button is-primary",
-                                      onClick: () => {
-                                        void handleGithubAuthConnect();
-                                      },
-                                      disabled: settingsTriggerSubmitting,
-                                    },
-                                      React.createElement("span", null, "Connect GitHub")
-                                    )
-                                  )
-                                : React.createElement(React.Fragment, null,
-                                    React.createElement("div", { className: "playground-settings-trigger-connect-card", style: { marginBottom: 8 } },
-                                      React.createElement("div", { className: "playground-environments-muted" }, "GitHub is connected. Choose a repository or log out of GitHub for this webhook."),
-                                      React.createElement("button", {
-                                        type: "button",
-                                        className: "playground-environments-action-button",
-                                        onClick: () => {
-                                          void handleGithubAuthDisconnect();
-                                        },
-                                        disabled: settingsTriggerSubmitting,
-                                      },
-                                        React.createElement("span", null, "Log out of GitHub")
-                                      )
-                                    ),
-                                    React.createElement("div", { className: "playground-environment-composer-runtime-facts" },
-                                      React.createElement("div", { className: "playground-tasks-detail-fact" },
-                                        React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Repository"),
-                                        React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                                          React.createElement("select", {
-                                            className: "playground-environments-select playground-tasks-detail-fact-select playground-tasks-detail-priority-select",
-                                            value: settingsTriggerForm.filterRepo,
-                                            disabled: settingsTriggerSubmitting || settingsTriggerGithubReposLoading,
-                                            onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, filterRepo: event.target.value })),
-                                          },
-                                            React.createElement("option", { value: "" },
-                                              settingsTriggerGithubReposLoading
-                                                ? "Loading repositories..."
-                                                : settingsTriggerGithubRepos.length === 0
-                                                  ? "No repositories found"
-                                                  : "Any connected repo"
-                                            ),
-                                            settingsTriggerGithubRepos.map((repo) =>
-                                              React.createElement("option", { key: repo.id, value: repo.fullName }, repo.fullName)
-                                            )
-                                          )
-                                        )
-                                      ),
-                                      React.createElement("div", { className: "playground-tasks-detail-fact" },
-                                        React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Branch Filter"),
-                                        React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                                          React.createElement("input", {
-                                            type: "text",
-                                            className: "playground-environments-input playground-tasks-detail-fact-select",
-                                            value: settingsTriggerForm.filterBranch,
-                                            disabled: settingsTriggerSubmitting,
-                                            onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, filterBranch: event.target.value })),
-                                            placeholder: "main",
-                                          })
-                                        )
-                                      ),
-                                      settingsTriggerGithubReposError
-                                        ? React.createElement("div", { className: "playground-environments-muted", style: { color: "#ffb0b0" } }, settingsTriggerGithubReposError)
-                                        : null
-                                    )
-                                  )
-                            )
-                          : settingsTriggerForm.source === "gitlab"
-                            ? React.createElement("div", { className: "playground-tasks-project-modal-field" },
-                                React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Filters"),
-                                React.createElement("div", { className: "playground-settings-trigger-connect-card", style: { marginBottom: 8 } },
-                                  React.createElement("div", { className: "playground-environments-muted" }, "Set a GitLab webhook secret in ACP, then configure the project webhook in GitLab. Add a GITLAB_TOKEN secret on the selected computer if you want ACP to comment back on merge requests.")
-                                ),
-                                React.createElement("div", { className: "playground-environment-composer-runtime-facts" },
-                                  React.createElement("div", { className: "playground-tasks-detail-fact" },
-                                    React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Project Filter"),
-                                    React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                                      React.createElement("input", {
-                                        type: "text",
-                                        className: "playground-environments-input playground-tasks-detail-fact-select",
-                                        value: settingsTriggerForm.filterRepo,
-                                        disabled: settingsTriggerSubmitting,
-                                        onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, filterRepo: event.target.value })),
-                                        placeholder: "group/project",
-                                      })
-                                    )
-                                  ),
-                                  React.createElement("div", { className: "playground-tasks-detail-fact" },
-                                    React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Branch Filter"),
-                                    React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                                      React.createElement("input", {
-                                        type: "text",
-                                        className: "playground-environments-input playground-tasks-detail-fact-select",
-                                        value: settingsTriggerForm.filterBranch,
-                                        disabled: settingsTriggerSubmitting,
-                                        onChange: (event) => setSettingsTriggerForm((current) => ({ ...current, filterBranch: event.target.value })),
-                                        placeholder: "main",
-                                      })
-                                    )
-                                  )
-                                )
-                              )
-                          : null
-                      ),
-                      settingsTriggersError
-                        ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, settingsTriggersError)
-                        : null,
-                      React.createElement("div", { className: "playground-tasks-project-modal-actions" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-environments-action-button",
-                          onClick: closeSettingsTriggerComposer,
-                          disabled: settingsTriggerSubmitting,
-                        }, "Cancel"),
-                        React.createElement(PlatformPrimaryButton, {
-                          size: "medium",
-                          type: "submit",
-                          className: "playground-environments-action-button is-primary",
-                          disabled: settingsTriggerSubmitting || !canCreateSettingsTrigger,
-                        }, settingsTriggerSubmitting ? "Creating..." : "Create Webhook")
-                      )
-                    )
-                  )
-                : null;
-
-              detailContent = React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
-                renderSettingsDetailHeader(
-                  "Webhooks",
-                  "Create triggers that launch agent work automatically when external events arrive.",
-                  React.createElement(React.Fragment, null,
-                    settingsSelectedTrigger
-                      ? React.createElement("button", {
-                          type: "button",
-                          className: "playground-environments-action-button",
-                          onClick: () => {
-                            setSettingsSelectedTriggerId("");
-                            setSettingsShowTriggerSecret(false);
-                          },
-                        }, React.createElement("span", null, "Back to List"))
-                      : React.createElement(PlatformPrimaryButton, {
-                        size: "medium",
-                          type: "button",
-                          className: "playground-environments-action-button is-primary",
-                          onClick: openSettingsTriggerComposer,
-                        },
-                          React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("span", null, "New Webhook")
-                        ),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-environments-action-button",
-                      onClick: () => {
-                        void loadSettingsTriggers();
-                      },
-                    },
-                      React.createElement(RefreshCw, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Refresh")
-                    )
-                  )
-                ),
-                renderSettingsBanner("error", settingsTriggersError),
-                renderSettingsBanner("success", settingsTriggersSuccess),
-                settingsSelectedTrigger
-                  ? (() => {
-                        const sourceMeta = getSettingsTriggerSourceMeta(settingsSelectedTrigger.source);
-                        const TriggerIcon = sourceMeta.icon;
-                        return React.createElement(React.Fragment, null,
-                          renderSettingsSectionCard(
-                            settingsSelectedTrigger.name || "Webhook",
-                            sourceMeta.label + " · " + (settingsSelectedTrigger.event || "event") + " · " + getSettingsTriggerActionLabel(settingsSelectedTrigger.action),
-                            React.createElement("div", { className: "playground-settings-card-stack" },
-                              React.createElement("div", { className: "playground-settings-inline-row" },
-                                React.createElement("div", { className: "playground-settings-inline-row-main" },
-                                  React.createElement("div", { className: "playground-settings-empty-icon is-inline" },
-                                    React.createElement(TriggerIcon, { width: 18, height: 18, strokeWidth: 1.8 })
-                                  ),
-                                  React.createElement("div", null,
-                                    React.createElement("div", { className: "playground-settings-emphasis" }, settingsSelectedTrigger.name || "Webhook"),
-                                    React.createElement("div", { className: "playground-settings-muted-copy" },
-                                      settingsSelectedTrigger.lastTriggeredAt
-                                        ? "Last triggered " + formatSettingsDateTime(settingsSelectedTrigger.lastTriggeredAt)
-                                        : "No runs yet"
-                                    )
-                                  )
-                                ),
-                                React.createElement("div", { className: "playground-settings-chip-row" },
-                                  renderSettingsChip(settingsSelectedTrigger.enabled ? "Enabled" : "Disabled", settingsSelectedTrigger.enabled ? "success" : "muted")
-                                )
-                              ),
-                              React.createElement("div", { className: "playground-settings-form-grid" },
-                                React.createElement("div", { className: "playground-settings-field" },
-                                  React.createElement("label", { className: "playground-settings-label" }, "Webhook URL"),
-                                  React.createElement("div", { className: "playground-settings-code-row" },
-                                    React.createElement("code", { className: "playground-settings-code" }, settingsSelectedTrigger.webhookUrl || "Unavailable"),
-                                    React.createElement("button", {
-                                      type: "button",
-                                      className: "playground-settings-icon-button",
-                                      onClick: () => {
-                                        void handleSettingsCopyField(settingsSelectedTrigger.webhookUrl, "trigger-url");
-                                      },
-                                    }, settingsCopiedField === "trigger-url" ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 }) : React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.8 }))
-                                  )
-                                ),
-                                React.createElement("div", { className: "playground-settings-field" },
-                                  React.createElement("label", { className: "playground-settings-label" }, "Webhook Secret"),
-                                  React.createElement("div", { className: "playground-settings-code-row" },
-                                    React.createElement("code", { className: "playground-settings-code" }, settingsShowTriggerSecret ? (settingsSelectedTrigger.webhookSecret || "Unavailable") : "••••••••••••••••••••"),
-                                    React.createElement("button", {
-                                      type: "button",
-                                      className: "playground-settings-icon-button",
-                                      onClick: () => setSettingsShowTriggerSecret((current) => !current),
-                                    }, settingsShowTriggerSecret ? React.createElement(EyeOff, { width: 14, height: 14, strokeWidth: 1.8 }) : React.createElement(Eye, { width: 14, height: 14, strokeWidth: 1.8 })),
-                                    React.createElement("button", {
-                                      type: "button",
-                                      className: "playground-settings-icon-button",
-                                      onClick: () => {
-                                        void handleSettingsCopyField(settingsSelectedTrigger.webhookSecret, "trigger-secret");
-                                      },
-                                    }, settingsCopiedField === "trigger-secret" ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 }) : React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.8 }))
-                                  )
-                                )
-                              )
-                            ),
-                            React.createElement("div", { className: "playground-settings-form-actions" },
-                              React.createElement("button", {
-                                type: "button",
-                                className: "playground-environments-action-button",
-                                disabled: settingsTriggerActionId === settingsSelectedTrigger.id,
-                                onClick: () => {
-                                  void handleSettingsToggleTrigger(settingsSelectedTrigger);
-                                },
-                              }, React.createElement("span", null, settingsTriggerActionId === settingsSelectedTrigger.id && settingsTriggerActionType === "toggle" ? "Updating..." : (settingsSelectedTrigger.enabled ? "Disable" : "Enable"))),
-                              React.createElement(PlatformPrimaryButton, {
-                                size: "medium",
-                                type: "button",
-                                className: "playground-environments-action-button is-primary",
-                                disabled: settingsTriggerActionId === settingsSelectedTrigger.id,
-                                onClick: () => {
-                                  void handleSettingsTestTrigger(settingsSelectedTrigger);
-                                },
-                              }, React.createElement("span", null, settingsTriggerActionId === settingsSelectedTrigger.id && settingsTriggerActionType === "test" ? "Testing..." : "Test Fire")),
-                              React.createElement("button", {
-                                type: "button",
-                                className: "playground-environments-action-button playground-settings-danger-action",
-                                disabled: settingsTriggerActionId === settingsSelectedTrigger.id,
-                                onClick: () => {
-                                  void handleSettingsDeleteTrigger(settingsSelectedTrigger);
-                                },
-                              }, React.createElement("span", null, settingsTriggerActionId === settingsSelectedTrigger.id && settingsTriggerActionType === "delete" ? "Deleting..." : "Delete"))
-                            )
-                          )
-                        );
-                      })()
-                    : renderSettingsSectionCard(
-                        "Webhook triggers",
-                        "Route GitHub, GitLab, Slack, and raw webhook events into agent executions.",
-                  settingsTriggersLoading
-                    ? React.createElement("div", { className: "playground-settings-loading-state" },
-                        React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
-                      )
-                    : visibleTriggers.length === 0
-                      ? (
-                        settingsTriggers.length === 0
-                          ? renderWebhookEmptyState()
-                          : React.createElement("div", { className: "playground-plugins-empty" }, "No webhooks match your search.")
-                      )
-                      : React.createElement("div", { className: "playground-settings-listing" },
-                          visibleTriggers.map((trigger) => {
-                                  const sourceMeta = getSettingsTriggerSourceMeta(trigger.source);
-                                  const TriggerIcon = sourceMeta.icon;
-                                  return React.createElement("button", {
-                                      key: trigger.id,
-                                      type: "button",
-                                      className: "playground-settings-trigger-card",
-                                      onClick: () => setSettingsSelectedTriggerId(trigger.id),
-                                    },
-                                      React.createElement("div", { className: "playground-settings-inline-row" },
-                                        React.createElement("div", { className: "playground-settings-inline-row-main" },
-                                          React.createElement("div", { className: "playground-settings-empty-icon is-inline" },
-                                            React.createElement(TriggerIcon, { width: 18, height: 18, strokeWidth: 1.8 })
-                                          ),
-                                          React.createElement("div", null,
-                                            React.createElement("div", { className: "playground-settings-emphasis" }, trigger.name || "Webhook"),
-                                            React.createElement("div", { className: "playground-settings-muted-copy" },
-                                              sourceMeta.label + " · " + (trigger.event || "event") + " · " + getSettingsTriggerActionLabel(trigger.action) + (trigger.lastTriggeredAt ? " · " + formatSettingsDate(trigger.lastTriggeredAt) : "")
-                                            )
-                                          )
-                                        ),
-                                        React.createElement("div", { className: "playground-settings-chip-row" },
-                                          renderSettingsChip(trigger.enabled ? "Active" : "Inactive", trigger.enabled ? "success" : "muted")
-                                        )
-                                      )
-                                    );
-                                })
-                              )
-                      ),
-                settingsTriggerComposerDialog
-              );
-              break;
-            }
-            case "api": {
-              const visibleApiKeys = settingsApiKeys.filter((apiKeyRecord) => apiKeyRecord?.isActive !== false);
-              const getSettingsApiKeyCreatorLabel = (apiKeyRecord) => typeof apiKeyRecord?.createdByLabel === "string" && apiKeyRecord.createdByLabel
-                ? apiKeyRecord.createdByLabel
-                : typeof apiKeyRecord?.metadata?.userEmail === "string" && apiKeyRecord.metadata.userEmail
-                  ? apiKeyRecord.metadata.userEmail
-                  : typeof apiKeyRecord?.metadata?.createdBy === "string" && apiKeyRecord.metadata.createdBy
-                    ? apiKeyRecord.metadata.createdBy
-                    : "—";
-              const apiKeysListContent = React.createElement(PlatformDataTable, {
-                rows: visibleApiKeys,
-                getRowId: (apiKeyRecord) => String(apiKeyRecord.id),
-                ariaLabel: "API keys",
-                className: "playground-settings-api-keys-platform-table",
-                surface: "plain",
-                sticky: false,
-                loading: settingsApiKeysLoading,
-                emptyState: renderSettingsEmptyState(Code, "No API keys yet", "Create an API key to start using the computer-agents API"),
-                columns: [
-                  {
-                    id: "name",
-                    header: "Name",
-                    accessor: (apiKeyRecord) => apiKeyRecord.name || "API Key",
-                    width: "minmax(160px, 1fr)",
-                    cell: ({ row: apiKeyRecord }) => React.createElement("div", { className: "playground-settings-api-keys-name-row" },
-                      React.createElement("span", { className: "playground-settings-api-keys-name" }, apiKeyRecord.name || "API Key"),
-                      apiKeyRecord?.isCurrentDefault
-                        ? React.createElement("span", { className: "playground-settings-api-keys-pill" }, "standard")
-                        : null
-                    ),
-                  },
-                  {
-                    id: "secret",
-                    header: "Secret key",
-                    accessor: (apiKeyRecord) => String(apiKeyRecord?.keyPrefix || "key") + "••••",
-                    width: "minmax(120px, 0.72fr)",
-                  },
-                  {
-                    id: "created",
-                    header: "Created",
-                    accessor: (apiKeyRecord) => Date.parse(String(apiKeyRecord.createdAt || "")) || 0,
-                    width: "minmax(100px, 0.62fr)",
-                    cell: ({ row: apiKeyRecord }) => formatSettingsDate(apiKeyRecord.createdAt),
-                  },
-                  {
-                    id: "last-used",
-                    header: "Last used",
-                    accessor: (apiKeyRecord) => Date.parse(String(apiKeyRecord.lastUsedAt || "")) || 0,
-                    width: "minmax(100px, 0.62fr)",
-                    hideBelow: 820,
-                    cell: ({ row: apiKeyRecord }) => apiKeyRecord?.lastUsedAt ? formatSettingsDate(apiKeyRecord.lastUsedAt) : "Never",
-                  },
-                  {
-                    id: "created-by",
-                    header: "Created by",
-                    accessor: getSettingsApiKeyCreatorLabel,
-                    width: "minmax(130px, 0.8fr)",
-                    hideBelow: 980,
-                  },
-                  {
-                    id: "permissions",
-                    header: "Permissions",
-                    accessor: (apiKeyRecord) => getSettingsApiKeyScopeLabel(apiKeyRecord.permissions),
-                    width: "minmax(120px, 0.72fr)",
-                    hideBelow: 680,
-                  },
-                ],
-                getRowActions: (apiKeyRecord) => apiKeyRecord?.canRevoke !== false && apiKeyRecord?.isActive
-                  ? [{
-                      id: "revoke",
-                      label: settingsRevokingKeyId === apiKeyRecord.id ? "Revoking" : "Revoke key",
-                      icon: settingsRevokingKeyId === apiKeyRecord.id ? Loader2 : Trash2,
-                      danger: true,
-                      disabled: settingsRevokingKeyId === apiKeyRecord.id,
-                      onSelect: () => void handleSettingsRevokeApiKey(apiKeyRecord.id),
-                    }]
-                  : [],
-              });
-
-              const apiKeyDialogContent = settingsApiKeyDialogOpen
-                ? React.createElement(PlatformModalBackdrop, {
-                    className: "playground-tasks-project-modal-backdrop playground-settings-api-key-modal-backdrop",
-                    onClick: () => setSettingsApiKeyDialogOpen(false),
-                  },
-                    React.createElement(PlatformModalSurface, {
-                        as: "form",
-                        className: "playground-tasks-project-modal playground-agent-composer-modal playground-settings-api-key-modal",
-                        onClick: (event) => event.stopPropagation(),
-                        onSubmit: (event) => {
-                          event.preventDefault();
-                          void handleSettingsCreateApiKey();
-                        },
-                      },
-                      React.createElement("div", { className: "playground-tasks-project-modal-top playground-settings-api-key-modal-top" },
-                        React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
-                          React.createElement("span", {
-                            className: "playground-tasks-project-modal-icon-trigger",
-                            "aria-hidden": "true",
-                          }, React.createElement(Code, { width: 18, height: 18, strokeWidth: 1.9 })),
-                          React.createElement("div", { className: "playground-settings-api-key-modal-title-shell" },
-                            React.createElement("div", { className: "playground-settings-api-key-modal-title" }, "Create API Key"),
-                            React.createElement("div", { className: "playground-settings-api-key-modal-subtitle" }, "Create a scoped key for SDKs, automation, or external apps.")
-                          )
-                        ),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-settings-icon-button playground-tasks-project-modal-close",
-                          onClick: () => setSettingsApiKeyDialogOpen(false),
-                          title: "Close",
-                        }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-                      ),
-                      React.createElement("div", { className: "playground-agent-composer-modal-body playground-settings-api-key-modal-body" },
-                        React.createElement("div", { className: "playground-tasks-project-modal-field" },
-                          React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Name *"),
-                          React.createElement("input", {
-                            id: "settings-new-key-name",
-                            className: "playground-environments-input",
-                            value: settingsNewKeyName,
-                            onChange: (event) => setSettingsNewKeyName(event.target.value),
-                            placeholder: "e.g., Development Key",
-                            autoFocus: true,
-                          })
-                        ),
-                        React.createElement("div", { className: "playground-tasks-project-modal-field" },
-                          React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Description (optional)"),
-                          React.createElement("textarea", {
-                            id: "settings-new-key-description",
-                            className: "playground-tasks-project-modal-textarea",
-                            value: settingsNewKeyDescription,
-                            onChange: (event) => setSettingsNewKeyDescription(event.target.value),
-                            placeholder: "e.g., For local development and testing",
-                          })
-                        ),
-                        React.createElement("div", { className: "playground-tasks-project-modal-field" },
-                          React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Permissions"),
-                          React.createElement("div", { className: "playground-settings-api-key-modal-scopes" },
-                            Object.entries(SETTINGS_API_KEY_SCOPE_PRESETS).map(([presetId, preset]) =>
-                              React.createElement("button", {
-                                  key: presetId,
-                                  type: "button",
-                                  className: "playground-settings-scope-option" + (settingsNewKeyScopePreset === presetId ? " is-active" : ""),
-                                  onClick: () => setSettingsNewKeyScopePreset(presetId),
-                                },
-                                  React.createElement("div", { className: "playground-settings-emphasis" }, preset.label),
-                                  React.createElement("div", { className: "playground-settings-muted-copy" }, preset.description)
-                                )
-                            )
-                          )
-                        ),
-                        settingsApiKeysError
-                          ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, settingsApiKeysError)
-                          : null,
-                        React.createElement("div", { className: "playground-tasks-project-modal-actions" },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-environments-action-button",
-                            onClick: () => setSettingsApiKeyDialogOpen(false),
-                            disabled: settingsCreateKeyLoading,
-                          }, "Cancel"),
-                          React.createElement(PlatformPrimaryButton, {
-                            size: "medium",
-                            type: "submit",
-                            className: "playground-environments-action-button is-primary",
-                            disabled: settingsCreateKeyLoading || !String(settingsNewKeyName || "").trim(),
-                          }, settingsCreateKeyLoading
-                            ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-settings-records-spinner" })
-                            : "Create Key")
-                        )
-                      )
-                    )
-                  )
-                : null;
-
-              const apiKeyDialog = apiKeyDialogContent
-                ? ((typeof document !== "undefined" && document.body)
-                    ? createPortal(apiKeyDialogContent, document.body)
-                    : apiKeyDialogContent)
-                : null;
-
-              detailContent = React.createElement(React.Fragment, null,
-                React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-settings-plans-navbar" },
-                  React.createElement("div", { className: "playground-environments-editor-navbar-title" },
-                    React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
-                      React.createElement("div", { className: "playground-settings-plans-title" }, "API Keys")
-                    )
-                  ),
-                  React.createElement("div", { className: "playground-content-nav-center" }),
-                  React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-settings-icon-button",
-                      onClick: () => setSettingsApiKeyDialogOpen(true),
-                      title: "Create API key",
-                      "aria-label": "Create API key",
-                    }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }))
-                  )
-                ),
-                React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
-                  React.createElement("div", { className: "playground-settings-account-shell is-wide" },
-                    settingsNewlyCreatedKey
-                      ? React.createElement("div", { className: "playground-settings-created-key-notice" },
-                          React.createElement("div", { className: "playground-settings-created-key-row" },
-                            React.createElement("div", { style: { minWidth: 0, flex: "1 1 auto" } },
-                              React.createElement("p", { className: "playground-settings-created-key-title" }, "API Key Created Successfully"),
-                              React.createElement("p", { className: "playground-settings-created-key-copy" }, "Copy this key now. You won't be able to see it again!"),
-                              React.createElement("div", { className: "playground-settings-code-row" },
-                                React.createElement("code", { className: "playground-settings-code" }, settingsNewlyCreatedKey),
-                                React.createElement("button", {
-                                  type: "button",
-                                  className: "playground-settings-icon-button",
-                                  onClick: () => {
-                                    void handleSettingsCopyField(settingsNewlyCreatedKey, "new-key");
-                                  },
-                                  title: "Copy to clipboard",
-                                }, settingsCopiedField === "new-key"
-                                  ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 })
-                                  : React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.8 }))
-                              )
-                            ),
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-settings-icon-button",
-                              onClick: () => setSettingsNewlyCreatedKey(""),
-                            }, React.createElement(X, { width: 14, height: 14, strokeWidth: 1.8 }))
-                          )
-                        )
-                      : null,
-                    renderSettingsInlineStatus("error", settingsApiKeysError),
-                    apiKeysListContent,
-                    apiKeyDialog
-                  )
-                )
-              );
-              break;
-            }
-            case "design":
-              detailContent = React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
-                renderSettingsDetailHeader(
-                  "Design",
-                  "Visual and interaction settings that change how the playground renders the Runner surface.",
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-environments-action-button",
-                    onClick: () => setSidebarOpen((current) => !current),
-                  }, React.createElement("span", null, sidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"))
-                ),
-                React.createElement("div", { className: "playground-environments-summary-grid" },
-                  renderSettingsSummaryCard("Runner Surface", [
-                    { label: "Input Mode", value: "Computer Agents" },
-                    { label: "Sidebar", value: sidebarOpen ? "Expanded" : "Collapsed" },
-                    { label: "Content Mode", value: contentMode === "changes" ? "Changes" : "Thread" },
-                    { label: "Welcome State", value: showInitialThreadWelcome ? "Visible" : "Hidden" },
-                  ]),
-                  React.createElement("div", { className: "playground-environments-summary-card" },
-                    React.createElement("div", { className: "playground-environments-summary-title" }, "Composer Mode"),
-                    React.createElement("div", { className: "playground-environments-toggle-row" },
-                      React.createElement("div", { className: "playground-environments-toggle-copy" },
-                        React.createElement("div", { className: "playground-environments-subtitle" }, "Computer Agents Mode"),
-                        React.createElement("div", { className: "playground-environments-muted" }, "The playground always uses the full cloud-style task input bar with agent and environment selectors.")
-                      ),
-                      React.createElement("div", {
-                        className: "playground-environments-toggle is-active",
-                        "aria-hidden": "true",
-                      }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
-                    )
-                  )
-                ),
-                renderSettingsNote(
-                  "Presentation only",
-                  React.createElement("span", null,
-                    "These controls only affect how the local playground shell renders Runner. They do not change saved agents, environments, or billing."
-                  )
-                )
-              );
-              break;
-	            case "profile":
-	              detailContent = React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
-	                React.createElement("div", { className: "playground-settings-account-shell is-wide" },
-	                  React.createElement("div", { className: "playground-settings-account-block" },
-	                    React.createElement("div", { className: "playground-settings-field", style: { maxWidth: "42rem" } },
-	                      React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-profile-email-address" }, "Email address"),
-	                      React.createElement("input", {
-                        id: "settings-profile-email-address",
-                        type: "email",
-                        className: "playground-settings-input",
-                        value: accountEmail || "",
-                        placeholder: "No email address available",
-                        disabled: true,
-                        style: { color: "rgba(255, 255, 255, 0.56)", cursor: "not-allowed" },
-                      }),
-                      accountEmail
-                        ? React.createElement("div", { className: "playground-settings-account-inline" },
-                            sessionState.emailVerified
-                              ? React.createElement(React.Fragment, null,
-                                  React.createElement(Check, { width: 12, height: 12, strokeWidth: 1.9 }),
-                                  React.createElement("span", null, "Email verified")
-                                )
-                              : React.createElement(React.Fragment, null,
-                                  React.createElement(AlertCircle, { width: 12, height: 12, strokeWidth: 1.9 }),
-                                  React.createElement("span", null, "Email not verified"),
-                                  React.createElement("span", { className: "playground-settings-account-bullet" }, "•"),
-                                  React.createElement("button", {
-                                    type: "button",
-                                    className: "playground-settings-account-link",
-                                    onClick: () => {
-                                      void handleSettingsResendVerificationEmail();
-                                    },
-                                    disabled: settingsVerificationResending || settingsVerificationResent,
-                                  }, settingsVerificationResending
-                                    ? "Sending..."
-                                    : (settingsVerificationResent ? "Sent!" : "Resend verification email"))
-                                )
-                          )
-                        : React.createElement("div", { className: "playground-settings-muted-copy" }, "No email address is linked to this session.")
-                    ),
-                    accountEmail && !sessionState.emailVerified
-                      ? React.createElement("div", {
-                          className: "playground-settings-integration-notice is-warning",
-                          style: { maxWidth: "42rem" },
-                        },
-                          React.createElement("div", { style: { fontWeight: 600, marginBottom: "4px" } }, "Verify your email address"),
-                          React.createElement("div", null, "Your account email is not verified yet. Verify it to secure your account and restore email-based actions."),
-                          settingsVerificationError
-                            ? React.createElement("div", {
-                                className: "playground-settings-inline-status is-error",
-                                style: { marginTop: "10px" },
-                              },
-                                React.createElement(AlertCircle, { width: 12, height: 12, strokeWidth: 1.9 }),
-                                React.createElement("span", null, settingsVerificationError)
-                              )
-                            : null
-                        )
-                      : null,
-                    React.createElement("div", { className: "playground-settings-field", style: { maxWidth: "42rem" } },
-                      React.createElement("label", { className: "playground-settings-label" }, "Marketing Emails"),
-                      React.createElement("div", { className: "playground-settings-muted-copy" }, "Get occasional product updates, launch announcements, and offer emails. You can unsubscribe anytime."),
-                      React.createElement("div", { className: "playground-settings-choice-row" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-settings-choice-button" + (settingsMarketingConsentStatus === "opted_in" ? " is-active" : ""),
-                          disabled: settingsMarketingConsentSaving || settingsMarketingConsentLoading,
-                          onClick: () => {
-                            void updateSettingsMarketingConsent("opted_in");
-                          },
-                        }, "Subscribed"),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-settings-choice-button" + (settingsMarketingConsentStatus === "opted_out" ? " is-active" : ""),
-                          disabled: settingsMarketingConsentSaving || settingsMarketingConsentLoading,
-                          onClick: () => {
-                            void updateSettingsMarketingConsent("opted_out");
-                          },
-                        }, "Not subscribed"),
-                        settingsMarketingConsentLoading || settingsMarketingConsentSaving
-                          ? React.createElement("span", { className: "playground-settings-choice-loading" },
-                              React.createElement(Loader2, { width: 12, height: 12, strokeWidth: 1.8, className: "playground-settings-records-spinner" }),
-                              React.createElement("span", null, "Saving...")
-                            )
-                          : null
-                      )
-                    ),
-                    !accountEmail && settingsVerificationError
-                      ? renderSettingsInlineStatus("error", settingsVerificationError)
-                      : null,
-                    renderSettingsInlineStatus("error", settingsMarketingConsentError),
-                    renderSettingsInlineStatus("success", settingsMarketingConsentSuccess),
-	                    React.createElement("div", { className: "playground-settings-account-divider" },
-	                      React.createElement("h3", { className: "playground-settings-records-title" }, "Password"),
-	                      React.createElement("p", { className: "playground-settings-records-subtitle" }, "Update your account password")
-	                    ),
-	                    React.createElement("div", { className: "playground-settings-field", style: { maxWidth: "32rem" } },
-	                      React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-password-current" }, "Current Password"),
-	                      React.createElement("input", {
-	                        id: "settings-password-current",
-	                        type: "password",
-	                        className: "playground-settings-input",
-	                        value: settingsPasswordForm.currentPassword,
-	                        onChange: (event) => setSettingsPasswordForm((current) => ({ ...current, currentPassword: event.target.value })),
-	                        placeholder: "••••••••",
-	                      })
-	                    ),
-	                    React.createElement("div", { className: "playground-settings-field", style: { maxWidth: "32rem" } },
-	                      React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-password-new" }, "New Password"),
-	                      React.createElement("input", {
-	                        id: "settings-password-new",
-	                        type: "password",
-	                        className: "playground-settings-input",
-	                        value: settingsPasswordForm.newPassword,
-	                        onChange: (event) => setSettingsPasswordForm((current) => ({ ...current, newPassword: event.target.value })),
-	                        placeholder: "••••••••",
-	                      })
-	                    ),
-	                    React.createElement("div", { className: "playground-settings-field", style: { maxWidth: "32rem" } },
-	                      React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-password-confirm" }, "Confirm New Password"),
-	                      React.createElement("input", {
-	                        id: "settings-password-confirm",
-	                        type: "password",
-	                        className: "playground-settings-input",
-	                        value: settingsPasswordForm.confirmPassword,
-	                        onChange: (event) => setSettingsPasswordForm((current) => ({ ...current, confirmPassword: event.target.value })),
-	                        placeholder: "••••••••",
-	                      })
-	                    ),
-	                    renderSettingsInlineStatus("error", settingsPasswordError),
-	                    renderSettingsInlineStatus("success", settingsPasswordSuccess),
-	                    React.createElement(PlatformPrimaryButton, {
-	                      size: "large",
-	                      type: "button",
-	                      className: "playground-settings-app-primary-button",
-	                      disabled: settingsPasswordLoading || !settingsPasswordForm.currentPassword || !settingsPasswordForm.newPassword || !settingsPasswordForm.confirmPassword,
-	                      onClick: () => {
-	                        void handleSettingsPasswordChange();
-	                      },
-	                    }, settingsPasswordLoading
-	                      ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-settings-records-spinner" })
-	                      : "Update Password"),
-	                    React.createElement("div", { className: "playground-settings-account-divider" },
-	                      React.createElement("h3", { className: "playground-settings-records-title" }, "Delete Account"),
-	                      React.createElement("p", { className: "playground-settings-records-subtitle" }, "Permanently remove the signed-in account and purge associated cloud data")
-	                    ),
-	                    renderSettingsNote(
-	                      "Warning",
-	                      React.createElement("span", null,
-	                        "This action permanently deletes threads, integrations, billing references, and account data. It cannot be undone."
-	                      ),
-	                      null,
-	                      { isDanger: true }
-	                    ),
-	                    renderSettingsBanner("error", settingsDeleteError),
-	                    React.createElement("div", { className: "playground-environments-summary-grid" },
-	                      renderSettingsSectionCard(
-	                        "Delete this account",
-	                        "Confirm the account password and type DELETE to continue.",
-	                        React.createElement("div", { className: "playground-settings-card-stack" },
-	                          React.createElement("div", { className: "playground-settings-field" },
-	                            React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-delete-confirm" }, "Type DELETE"),
-	                            React.createElement("input", {
-	                              id: "settings-delete-confirm",
-	                              className: "playground-settings-input playground-settings-input-danger",
-	                              value: settingsDeleteConfirmation,
-	                              onChange: (event) => setSettingsDeleteConfirmation(event.target.value),
-	                              placeholder: "DELETE",
-	                            })
-	                          ),
-	                          React.createElement("div", { className: "playground-settings-field" },
-	                            React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-delete-password" }, "Account Password"),
-	                            React.createElement("input", {
-	                              id: "settings-delete-password",
-	                              type: "password",
-	                              className: "playground-settings-input playground-settings-input-danger",
-	                              value: settingsDeletePassword,
-	                              onChange: (event) => setSettingsDeletePassword(event.target.value),
-	                              placeholder: "••••••••",
-	                            })
-	                          )
-	                        ),
-	                        React.createElement("button", {
-	                          type: "button",
-	                          className: "playground-settings-danger-button",
-	                          disabled: settingsDeleteLoading,
-	                          onClick: () => {
-	                            void handleSettingsDeleteAccount();
-	                          },
-	                        }, settingsDeleteLoading ? "Deleting..." : "Delete My Account")
-	                      ),
-	                      renderSettingsSummaryCard("Account at Risk", [
-	                        { label: "Name", value: accountName || "Unknown account" },
-	                        { label: "Email", value: accountEmail || "No email on file" },
-	                        { label: "Plan", value: formatSubscriptionTier(settingsCurrentTierId) },
-	                        { label: "Project", value: activeProjectId || "No project selected" },
-	                      ])
-	                    )
-	                  )
-	                )
-	              );
-              break;
-            case "password":
-              detailContent = React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
-                React.createElement("div", { className: "playground-settings-account-shell" },
-                  React.createElement("div", null,
-                    React.createElement("h3", { className: "playground-settings-records-title" }, "Change Password"),
-                    React.createElement("p", { className: "playground-settings-records-subtitle" }, "Update your account password")
-                  ),
-                  React.createElement("div", { className: "playground-settings-account-block" },
-                    React.createElement("div", { className: "playground-settings-field", style: { maxWidth: "32rem" } },
-                      React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-password-current" }, "Current Password"),
-                      React.createElement("input", {
-                        id: "settings-password-current",
-                        type: "password",
-                        className: "playground-settings-input",
-                        value: settingsPasswordForm.currentPassword,
-                        onChange: (event) => setSettingsPasswordForm((current) => ({ ...current, currentPassword: event.target.value })),
-                        placeholder: "••••••••",
-                      })
-                    ),
-                    React.createElement("div", { className: "playground-settings-field", style: { maxWidth: "32rem" } },
-                      React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-password-new" }, "New Password"),
-                      React.createElement("input", {
-                        id: "settings-password-new",
-                        type: "password",
-                        className: "playground-settings-input",
-                        value: settingsPasswordForm.newPassword,
-                        onChange: (event) => setSettingsPasswordForm((current) => ({ ...current, newPassword: event.target.value })),
-                        placeholder: "••••••••",
-                      })
-                    ),
-                    React.createElement("div", { className: "playground-settings-field", style: { maxWidth: "32rem" } },
-                      React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-password-confirm" }, "Confirm New Password"),
-                      React.createElement("input", {
-                        id: "settings-password-confirm",
-                        type: "password",
-                        className: "playground-settings-input",
-                        value: settingsPasswordForm.confirmPassword,
-                        onChange: (event) => setSettingsPasswordForm((current) => ({ ...current, confirmPassword: event.target.value })),
-                        placeholder: "••••••••",
-                      })
-                    ),
-                    renderSettingsInlineStatus("error", settingsPasswordError),
-                    renderSettingsInlineStatus("success", settingsPasswordSuccess),
-                    React.createElement(PlatformPrimaryButton, {
-                      size: "large",
-                      type: "button",
-                      className: "playground-settings-app-primary-button",
-                      disabled: settingsPasswordLoading || !settingsPasswordForm.currentPassword || !settingsPasswordForm.newPassword || !settingsPasswordForm.confirmPassword,
-                      onClick: () => {
-                        void handleSettingsPasswordChange();
-                      },
-                    }, settingsPasswordLoading
-                      ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-settings-records-spinner" })
-                      : "Update Password")
-                  )
-                )
-              );
-              break;
-            case "delete":
-              detailContent = React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
-                renderSettingsDetailHeader(
-                  "Delete Account",
-                  "Permanently remove the signed-in account and purge the associated cloud data.",
-                  hasSessionAuth
-                    ? React.createElement("button", {
-                        type: "button",
-                        className: "playground-environments-action-button",
-                        onClick: handleSignOutFromComputerAgents,
-                      },
-                        React.createElement(LogOut, { width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("span", null, "Sign Out")
-                      )
-                    : null
-                ),
-                renderSettingsNote(
-                  "Warning",
-                  React.createElement("span", null,
-                    "This action permanently deletes threads, integrations, billing references, and account data. It cannot be undone."
-                  ),
-                  null,
-                  { isDanger: true }
-                ),
-                renderSettingsBanner("error", settingsDeleteError),
-                React.createElement("div", { className: "playground-environments-summary-grid" },
-                  renderSettingsSectionCard(
-                    "Delete this account",
-                    "Confirm the account password and type DELETE to continue.",
-                    React.createElement("div", { className: "playground-settings-card-stack" },
-                      React.createElement("div", { className: "playground-settings-field" },
-                        React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-delete-confirm" }, "Type DELETE"),
-                        React.createElement("input", {
-                          id: "settings-delete-confirm",
-                          className: "playground-settings-input playground-settings-input-danger",
-                          value: settingsDeleteConfirmation,
-                          onChange: (event) => setSettingsDeleteConfirmation(event.target.value),
-                          placeholder: "DELETE",
-                        })
-                      ),
-                      React.createElement("div", { className: "playground-settings-field" },
-                        React.createElement("label", { className: "playground-settings-label", htmlFor: "settings-delete-password" }, "Account Password"),
-                        React.createElement("input", {
-                          id: "settings-delete-password",
-                          type: "password",
-                          className: "playground-settings-input playground-settings-input-danger",
-                          value: settingsDeletePassword,
-                          onChange: (event) => setSettingsDeletePassword(event.target.value),
-                          placeholder: "••••••••",
-                        })
-                      )
-                    ),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-settings-danger-button",
-                      disabled: settingsDeleteLoading,
-                      onClick: () => {
-                        void handleSettingsDeleteAccount();
-                      },
-                    }, settingsDeleteLoading ? "Deleting..." : "Delete My Account")
-                  ),
-                  renderSettingsSummaryCard("Account at Risk", [
-                    { label: "Name", value: accountName || "Unknown account" },
-                    { label: "Email", value: accountEmail || "No email on file" },
-                    { label: "Plan", value: formatSubscriptionTier(settingsCurrentTierId) },
-                    { label: "Project", value: activeProjectId || "No project selected" },
-                  ])
-                )
-              );
-              break;
-            default:
-              detailContent = React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
-                renderSettingsDetailHeader("Settings", "Select a settings area from the sidebar.")
-              );
-          }
-
-	          const settingsHeader = React.createElement("div", { className: "playground-settings-overview-header" },
-	            React.createElement("div", { className: "playground-environments-home-hero-title playground-settings-overview-title" }, selectedSection.title),
-	            activePage === "settings" && settingsTabs.length > 1
-                ? React.createElement("div", { className: "playground-agents-overview-tabs playground-resources-overview-tabs playground-settings-overview-tabs" },
-                    React.createElement("div", { className: "playground-project-overview-chart-tabs" },
-                      settingsTabs.map((tab) =>
-                        React.createElement("button", {
-                          key: tab.id,
-                          type: "button",
-                          className: "playground-project-overview-chart-tab" + (effectiveSettingsSection === tab.id ? " is-active" : ""),
-	                          onClick: () => navigateSettingsSection(tab.id),
-                          "aria-pressed": effectiveSettingsSection === tab.id ? "true" : "false",
-                        }, tab.label)
-                      )
-                    )
-                  )
-                : null
-	          );
-	          const normalizeSettingsDetailNodes = (content) => {
-	            const nodes = React.Children.toArray(content?.type === React.Fragment ? content.props.children : content);
-	            const filteredNodes = nodes.filter((node) =>
-	              !String(node?.props?.className || "").includes("playground-settings-plans-navbar")
-	            );
-	            if (filteredNodes.length === 1) {
-	              const onlyNode = filteredNodes[0];
-	              if (String(onlyNode?.props?.className || "").includes("playground-settings-detail-scroll")) {
-	                return React.Children.toArray(onlyNode.props.children);
-	              }
-	            }
-	            return filteredNodes;
-	          };
-	          const settingsScrollClassName = "playground-environments-detail-scroll playground-settings-detail-scroll"
-	            + (effectiveSettingsSection === "costs-overview" ? " is-usage" : "");
-
-	          return React.createElement("div", { className: "playground-settings-page" + (isEmbeddedSettingsPage ? " is-embedded" : "") },
-	            React.createElement("div", { className: settingsScrollClassName },
-	              isEmbeddedSettingsPage ? null : settingsHeader,
-	              normalizeSettingsDetailNodes(detailContent)
-	            )
-	          );
-        }
+${SETTINGS_MODAL_PAGE_SCRIPT}
 
 ${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.setup}${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.identityAndBilling}${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.overview}${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.members}${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.resources}${ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS.rolesAndView}
 ${TEAMS_PAGE_SCRIPT_FRAGMENTS.setup}${TEAMS_PAGE_SCRIPT_FRAGMENTS.overview}${TEAMS_PAGE_SCRIPT_FRAGMENTS.members}${TEAMS_PAGE_SCRIPT_FRAGMENTS.resourcesFoundation}${IMAGINE_APP_SCRIPT_FRAGMENTS.teamResourceNavigation}
@@ -131455,8 +119490,6 @@ ${TEAMS_PAGE_SCRIPT_FRAGMENTS.resourcesView}${TEAMS_PAGE_SCRIPT_FRAGMENTS.rolesA
 
         useEffect(() => {
           const isBillingOverviewOpen = (
-            activePage === "settings" && settingsSection === "costs-plans"
-          ) || (
             activePage === "organization"
             && organizationPageActiveTab === "billing"
             && organizationPageBillingSection === "costs-plans"
@@ -131605,119 +119638,7 @@ ${INFERENCE_APP_SCRIPT_FRAGMENTS.cleanup}          };
           return baseThreadItems.filter((thread) => !thread.isPinned);
         }, [baseThreadItems]);
 
-        const searchableThreadItems = useMemo(() => {
-          const uniqueThreads = new Map();
-          baseThreadItems
-            .slice()
-            .sort(compareThreadsByRecent)
-            .forEach((thread) => {
-              if (!thread?.id || uniqueThreads.has(thread.id)) {
-                return;
-              }
-              uniqueThreads.set(thread.id, thread);
-            });
-          return Array.from(uniqueThreads.values());
-        }, [baseThreadItems]);
-
-        const normalizedThreadSearchQuery = threadSearchQuery.trim().toLowerCase();
-        const threadSearchFileEnvironmentItems = useMemo(() => {
-          if (!hasRealAccess) {
-            return [];
-          }
-          return realEnvironments
-            .filter((environment) => String(environment?.id || "").trim())
-            .slice(0, 24);
-        }, [hasRealAccess, realEnvironments]);
-
-        useEffect(() => {
-          if (!threadSearchOpen || !hasRealAccess || !normalizedThreadSearchQuery) {
-            return;
-          }
-          threadSearchFileEnvironmentItems.forEach((environment) => {
-            void loadThreadSearchFileInventory(environment.id);
-          });
-        }, [
-          hasRealAccess,
-          loadThreadSearchFileInventory,
-          normalizedThreadSearchQuery,
-          threadSearchFileEnvironmentItems,
-          threadSearchOpen,
-        ]);
-
-        const filteredThreadSearchFileItems = useMemo(() => {
-          if (!normalizedThreadSearchQuery) {
-            return [];
-          }
-          const results = [];
-          threadSearchFileEnvironmentItems.forEach((environment) => {
-            const inventory = threadSearchFileInventoryByEnvironmentId[environment.id] || [];
-            const rows = buildPlaygroundEnvironmentSearchRows(inventory, threadSearchQuery, { filesOnly: true });
-            rows.slice(0, 12).forEach((row) => {
-              if (!row?.entry || row.entry.isFolder) {
-                return;
-              }
-              results.push({
-                key: environment.id + ":" + normalizeHistoryPath(row.entry.path || ""),
-                environmentId: environment.id,
-                environmentName: environment.name || "Computer",
-                entry: row.entry,
-              });
-            });
-          });
-          return results.slice(0, 24);
-        }, [
-          normalizedThreadSearchQuery,
-          threadSearchFileEnvironmentItems,
-          threadSearchFileInventoryByEnvironmentId,
-          threadSearchQuery,
-        ]);
-
-        const isThreadSearchFileLoading = Boolean(
-          normalizedThreadSearchQuery &&
-          threadSearchFileEnvironmentItems.some((environment) => (
-            threadSearchFileInventoryLoadingByEnvironmentId[environment.id] ||
-            !Array.isArray(threadSearchFileInventoryByEnvironmentId[environment.id])
-          ))
-        );
-
-        const filteredThreadSearchItems = useMemo(() => {
-          return searchableThreadItems.filter((thread) => {
-            if (!normalizedThreadSearchQuery) {
-              return true;
-            }
-
-            const haystack = [
-              thread.title || "",
-              thread.id || "",
-              thread.status || "",
-            ]
-              .join(" ")
-              .toLowerCase();
-
-            return haystack.includes(normalizedThreadSearchQuery);
-          });
-        }, [normalizedThreadSearchQuery, searchableThreadItems]);
-
-        const groupedThreadSearchItems = useMemo(() => {
-          const groupsByKey = new Map();
-
-          filteredThreadSearchItems.forEach((thread) => {
-            const bucket = getThreadSearchBucket(resolveThreadSortTimestamp(thread));
-            if (!groupsByKey.has(bucket.key)) {
-              groupsByKey.set(bucket.key, {
-                key: bucket.key,
-                label: bucket.label,
-                items: [],
-              });
-            }
-            groupsByKey.get(bucket.key).items.push(thread);
-          });
-
-          return ["today", "yesterday", "last-7-days", "last-30-days", "older"]
-            .map((key) => groupsByKey.get(key))
-            .filter(Boolean);
-        }, [filteredThreadSearchItems]);
-        const threadSearchTotalResultCount = filteredThreadSearchItems.length + filteredThreadSearchFileItems.length;
+${APP_HEADER_APP_SCRIPT_FRAGMENTS.searchProjection}
 
         const activeRunnerThreadId = useMemo(() => {
           return isRealThreadId(currentThreadId) ? currentThreadId : "";
@@ -132095,13 +120016,6 @@ ${INFERENCE_APP_SCRIPT_FRAGMENTS.cleanup}          };
             };
           }
 
-          if (activePage === "settings") {
-            return {
-              page: "settings",
-              sectionId: settingsSection,
-            };
-          }
-
 ${TEAMS_APP_SCRIPT_FRAGMENTS.historyCapture}
 ${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.historyCapture}
           if (activePage === "imagine") {
@@ -132114,13 +120028,7 @@ ${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.historyCapture}
             };
           }
 
-${MODELS_APP_SCRIPT_FRAGMENTS.historyCapture}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.historyCapture}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.historyCapture}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.historyCapture}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.historyCapture}          if (activePage === "develop") {
-            return {
-              page: "develop",
-              developSection: developHomeSection,
-            };
-          }
-
+${MODELS_APP_SCRIPT_FRAGMENTS.historyCapture}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.historyCapture}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.historyCapture}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.historyCapture}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.historyCapture}${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.historyCapture}
 ${INFERENCE_APP_SCRIPT_FRAGMENTS.historyCapture}
           return {
             page: activePage || "thread",
@@ -132324,7 +120232,9 @@ ${INFERENCE_APP_SCRIPT_FRAGMENTS.historyCapture}
           }
 
           if (entry.page === "settings") {
-            openSettingsPage(entry.sectionId || "profile");
+            setSidebarWorkspaceMode("configure");
+            setActivePage("configure");
+            openSettingsModal(entry.sectionId || "profile");
             return;
           }
 
@@ -132343,24 +120253,9 @@ ${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.historyRestore}
             return;
           }
 
-${MODELS_APP_SCRIPT_FRAGMENTS.historyRestore}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.historyRestore}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.historyRestore}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.historyRestore}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.historyRestore}          if (entry.page === "develop-api-keys") {
-            openDevelopApiKeysPage();
-            return;
-          }
-
-          if (entry.page === "develop") {
-            openDevelopHome({
-              section: entry.developSection || "overview",
-            });
-            return;
-          }
-
+${MODELS_APP_SCRIPT_FRAGMENTS.historyRestore}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.historyRestore}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.historyRestore}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.historyRestore}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.historyRestore}${API_KEYS_APP_SCRIPT_FRAGMENTS.historyRestore}${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.historyRestore}
 ${INFERENCE_APP_SCRIPT_FRAGMENTS.historyRestore}
-          if (entry.page === "configure") {
-            openConfigureHome();
-            return;
-          }
-
+${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.historyRestore}
           setActivePage(entry.page || "thread");
         }, []);
 
@@ -132440,93 +120335,18 @@ ${INFERENCE_APP_SCRIPT_FRAGMENTS.historyRestore}
           void loadSettingsPlatformConfig();
         }, [activePage, activeResourcesServerKind, activeResourcesView, hasSessionAuth, loadSettingsPlatformConfig]);
 
-        useEffect(() => {
-          if (
-            activePage === "resources"
-            && activeResourcesView === "servers"
-            && activeResourcesServerKind === "database"
-            && resourcesHeaderState.mode === "detail"
-            && resourcesHeaderState.resourceType === "database"
-          ) {
-            developServerOperationalMetricsLoadSequenceRef.current += 1;
-            if (developServerOperationalMetricsAbortRef.current) {
-              developServerOperationalMetricsAbortRef.current.abort();
-              developServerOperationalMetricsAbortRef.current = null;
-            }
-            setDevelopServerOperationalMetricsLoading(false);
-          }
-        }, [activePage, activeResourcesServerKind, activeResourcesView, resourcesHeaderState.mode, resourcesHeaderState.resourceId, resourcesHeaderState.resourceType]);
-
-        useEffect(() => {
-          if (
-            activePage !== "resources"
-            || activeResourcesView !== "servers"
-            || resourcesHeaderState.mode !== "overview"
-            || !activeResourcesServerKind
-            || !hasSessionAuth
-          ) {
-            return;
-          }
-          const rawMetricsScopeKind = String(developServerOperationalMetrics?.scopeKind || "").trim();
-          const metricsScopeKind = rawMetricsScopeKind ? canonicalizePlaygroundServerKind(rawMetricsScopeKind) : "";
-          const requestedMetricsPeriod = normalizePlaygroundEnvironmentHomeChartPeriod(developServerOperationalMetricsPeriod);
-          const requestedMetricsKey = activeResourcesServerKind + ":" + requestedMetricsPeriod;
-          if (
-            developServerOperationalMetricsLoading
-            && developServerOperationalMetricsRequestKeyRef.current === requestedMetricsKey
-          ) {
-            return;
-          }
-          const loadedMetricsPeriod = String(developServerOperationalMetrics?.period || "day").trim();
-          const loadedAt = Date.parse(String(developServerOperationalMetrics?.loadedAt || ""));
-          const shouldRefresh = metricsScopeKind !== activeResourcesServerKind
-            || loadedMetricsPeriod !== requestedMetricsPeriod
-            || !Number.isFinite(loadedAt)
-            || Date.now() - loadedAt > 60000;
-          if (!shouldRefresh) {
-            return;
-          }
-          void loadDevelopServerOperationalMetrics({
-            resourceKind: activeResourcesServerKind,
-            period: requestedMetricsPeriod,
-          });
-        }, [
-          activePage,
-          activeResourcesServerKind,
-          activeResourcesView,
-          developServerOperationalMetrics?.loadedAt,
-          developServerOperationalMetrics?.period,
-          developServerOperationalMetrics?.scopeKind,
-          developServerOperationalMetricsLoading,
-          developServerOperationalMetricsPeriod,
-          hasSessionAuth,
-          loadDevelopServerOperationalMetrics,
-          resourcesHeaderState.mode,
-        ]);
-
+${DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.resourceMetricsLifecycle}
         const selectedThreadTitle = useMemo(() => {
-          if (activePage === "settings") {
-            return "Settings";
-          }
           if (activePage === "tools" || activePage === "plugins" || activePage === "skills") {
             return "Tools";
           }
           if (activePage === "files") {
             return "Files";
           }
-          if (activePage === "configure") {
-            return "Configure";
-          }
-          if (activePage === "models") {
+${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.selectedTitle}          if (activePage === "models") {
             return "Models";
           }
-${MARKETPLACE_APP_SCRIPT_FRAGMENTS.selectedTitle}${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.selectedTitle}          if (activePage === "develop") {
-            return "Developers";
-          }
-          if (activePage === "develop-api-keys") {
-            return "API Keys";
-          }
-          if (isResourcesPage) {
+${MARKETPLACE_APP_SCRIPT_FRAGMENTS.selectedTitle}${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.selectedTitle}${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.selectedTitle}${API_KEYS_APP_SCRIPT_FRAGMENTS.selectedTitle}          if (isResourcesPage) {
             return "Resources";
           }
           if (activePage === "tasks") {
@@ -134534,7 +122354,7 @@ ${METRONOME_APP_SCRIPT_FRAGMENTS.sidebarState}
           });
           const welcomeUsageWidget = React.createElement(PlatformUsageWidget, {
               "aria-label": "Open usage cost details",
-              onActivate: () => openSettingsPage("costs-overview"),
+              onActivate: () => openSettingsModal("costs-overview"),
               percentageLabel: welcomeRemainingPercentageLabel,
               caption: settingsUsageLoading && welcomeTotalUsedCT === 0
                 ? "Loading"
@@ -134836,1115 +122656,19 @@ ${METRONOME_APP_SCRIPT_FRAGMENTS.sidebarState}
         }
 
 ${METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView}
-${METRONOME_APP_SCRIPT_FRAGMENTS.sidebarEntry}
-        function renderSidebarThreadRow(thread, options = {}) {
-          try {
-            const { pinned = false, metronomeChild = false } = options;
-            const {
-              safeThread,
-              taskPreview,
-              taskTicketNumber,
-              displayThreadTitle: rawDisplayThreadTitle,
-            } = getSidebarThreadTitleParts(thread);
-            const metronomeMeta = metronomeChild ? getThreadMetronomeMetadata(safeThread) : null;
-            const displayThreadTitle = metronomeChild && metronomeMeta?.nodeName
-              ? metronomeMeta.nodeName
-              : rawDisplayThreadTitle;
-            const safeThreadId = typeof safeThread.id === "string" && safeThread.id.trim() ? safeThread.id.trim() : generateId("thread");
-            const isActive = activeSidebarThreadId === safeThreadId;
-            const isRunning = String(safeThread?.status || "").trim().toLowerCase() === "running";
-            const needsPermissionAttention = isPendingPermissionThreadDisplayStatus(safeThread?.status) || permissionAttentionThreadIds.has(safeThreadId);
-            const canManageThread = hasRealAccess && isRealThreadId(safeThreadId);
-            const isMenuOpen = canManageThread && threadActionMenuState?.threadId === safeThreadId;
-            const isDeleting = threadMutationState.action === "delete" && threadMutationState.threadId === safeThreadId;
-            const isPinMutating = threadMutationState.action === "pin" && threadMutationState.threadId === safeThreadId;
-            const threadProjectId = typeof taskPreview?.projectId === "string" && taskPreview.projectId.trim()
-              ? taskPreview.projectId.trim()
-              : (typeof safeThread?.projectId === "string" ? safeThread.projectId.trim() : "");
-            const ThreadProjectIcon = Rocket;
-            const threadProjectTitle = typeof taskPreview?.projectName === "string" && taskPreview.projectName.trim()
-              ? taskPreview.projectName.trim()
-              : "Project";
-            const threadMetaText = threadMetaLabel(safeThread);
-            const threadLastActivityText = formatCompactThreadActivityTime(resolveThreadSortTimestamp(safeThread));
-            const handleSidebarThreadSelect = () => {
-              if (metronomeChild && safeThreadId && isRealThreadId(safeThreadId)) {
-                upsertRealThreadRecord(safeThread, { status: safeThread.status || "running" });
-              }
-              handleThreadSelect(safeThreadId);
-            };
+${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.threadList}
+${APP_HEADER_APP_SCRIPT_FRAGMENTS.searchModal}
+${APP_HEADER_APP_SCRIPT_FRAGMENTS.notificationsPopup}
+${APP_HEADER_APP_SCRIPT_FRAGMENTS.accountMenu}
 
-            return React.createElement("div", {
-              key: safeThreadId,
-              className: (pinned ? "sidebar-pinned-button" : "sidebar-thread-item") + (isActive ? " is-active" : "") + (needsPermissionAttention ? " has-permission-attention" : "") + (metronomeChild ? " is-metronome-child" : ""),
-            },
-              pinned
-                ? React.createElement(Pin, { className: "sidebar-pin-icon", strokeWidth: 1.75 })
-                : null,
-              React.createElement("button", {
-                type: "button",
-                className: "sidebar-thread-main",
-                onClick: handleSidebarThreadSelect,
-                "aria-label": "Open " + displayThreadTitle + (needsPermissionAttention ? ", permission needed" : ""),
-              },
-                React.createElement("div", { className: "sidebar-thread-content" },
-                  React.createElement("div", { className: "sidebar-thread-title-row" },
-                    threadProjectId
-                      ? React.createElement("span", {
-                          className: "sidebar-thread-project-icon",
-                          title: threadProjectTitle,
-                        }, React.createElement(ThreadProjectIcon, { strokeWidth: 1.85 }))
-                      : null,
-                    isRunning
-                      ? React.createElement(Loader2, { className: "sidebar-thread-running-indicator", strokeWidth: 1.9 })
-                      : null,
-                    needsPermissionAttention
-                      ? React.createElement("span", { className: "sidebar-thread-attention-dot", title: "Permission needed" })
-                      : null,
-                    React.createElement("span", { className: "sidebar-thread-title-copy" },
-                      taskTicketNumber
-                        ? React.createElement("span", { className: "sidebar-thread-ticket-number" }, taskTicketNumber)
-                        : null,
-                      React.createElement("span", { className: "sidebar-thread-title" }, displayThreadTitle)
-                    )
-                  )
-                )
-              ),
-              React.createElement("div", { className: "sidebar-thread-side" },
-                React.createElement("span", { className: "sidebar-thread-meta" },
-                  threadMetaText
-                    ? React.createElement("span", { className: "sidebar-thread-meta-neutral" }, threadMetaText)
-                    : null
-                ),
-                threadLastActivityText
-                  ? React.createElement("span", {
-                      className: "sidebar-thread-hover-meta",
-                      title: formatThreadSearchTimestamp(resolveThreadSortTimestamp(safeThread)) || "",
-                    }, threadLastActivityText)
-                  : null,
-                canManageThread
-                  ? React.createElement("button", {
-                      type: "button",
-                      className: "sidebar-thread-menu-button" + (isMenuOpen ? " is-open" : ""),
-                      onClick: (event) => openThreadActionMenu(event, safeThreadId),
-                      "aria-label": "Thread actions",
-                      "aria-expanded": isMenuOpen ? "true" : "false",
-                      disabled: isDeleting || isPinMutating,
-                    },
-                      isDeleting || isPinMutating
-                        ? React.createElement(Loader2, { className: "sidebar-thread-menu-icon is-spinning", strokeWidth: 1.85 })
-                        : React.createElement(EllipsisVertical, { className: "sidebar-thread-menu-icon", strokeWidth: 1.85 })
-                    )
-                  : null
-              )
-            );
-          } catch (error) {
-            const fallbackThread = normalizeThreadItem(thread);
-            const fallbackMetronomeMeta = options?.metronomeChild ? getThreadMetronomeMetadata(fallbackThread) : null;
-            const fallbackSafeThreadId = typeof fallbackThread.id === "string" && fallbackThread.id.trim() ? fallbackThread.id.trim() : generateId("thread");
-            const fallbackMetaText = threadMetaLabel(fallbackThread);
-            const {
-              taskTicketNumber,
-              displayThreadTitle: fallbackRawDisplayThreadTitle,
-            } = getSidebarThreadTitleParts(fallbackThread);
-            const displayThreadTitle = options?.metronomeChild && fallbackMetronomeMeta?.nodeName
-              ? fallbackMetronomeMeta.nodeName
-              : fallbackRawDisplayThreadTitle;
-            const canManageThread = hasRealAccess && isRealThreadId(fallbackSafeThreadId);
-            const isMenuOpen = canManageThread && threadActionMenuState?.threadId === fallbackSafeThreadId;
-            const isDeleting = threadMutationState.action === "delete" && threadMutationState.threadId === fallbackSafeThreadId;
-            const isPinMutating = threadMutationState.action === "pin" && threadMutationState.threadId === fallbackSafeThreadId;
-            const fallbackLastActivityText = formatCompactThreadActivityTime(resolveThreadSortTimestamp(fallbackThread));
-            const fallbackNeedsPermissionAttention = isPendingPermissionThreadDisplayStatus(fallbackThread?.status) || permissionAttentionThreadIds.has(fallbackSafeThreadId);
-            const handleFallbackSidebarThreadSelect = () => {
-              if (options?.metronomeChild && fallbackSafeThreadId && isRealThreadId(fallbackSafeThreadId)) {
-                upsertRealThreadRecord(fallbackThread, { status: fallbackThread.status || "running" });
-              }
-              handleThreadSelect(fallbackSafeThreadId);
-            };
-            console.error("Failed to render sidebar thread row", error, thread);
-            return React.createElement("div", {
-              key: fallbackSafeThreadId,
-              className: (options?.pinned ? "sidebar-pinned-button" : "sidebar-thread-item") + (activeSidebarThreadId === fallbackSafeThreadId ? " is-active" : "") + (fallbackNeedsPermissionAttention ? " has-permission-attention" : "") + (options?.metronomeChild ? " is-metronome-child" : ""),
-            },
-              options?.pinned
-                ? React.createElement(Pin, { className: "sidebar-pin-icon", strokeWidth: 1.75 })
-                : null,
-              React.createElement("button", {
-                type: "button",
-                className: "sidebar-thread-main",
-                onClick: handleFallbackSidebarThreadSelect,
-                "aria-label": "Open " + displayThreadTitle + (fallbackNeedsPermissionAttention ? ", permission needed" : ""),
-              },
-                React.createElement("div", { className: "sidebar-thread-content" },
-                  React.createElement("div", { className: "sidebar-thread-title-row" },
-                    fallbackNeedsPermissionAttention
-                      ? React.createElement("span", { className: "sidebar-thread-attention-dot", title: "Permission needed" })
-                      : null,
-                    React.createElement("span", { className: "sidebar-thread-title-copy" },
-                      taskTicketNumber
-                        ? React.createElement("span", { className: "sidebar-thread-ticket-number" }, taskTicketNumber)
-                        : null,
-                      React.createElement("span", { className: "sidebar-thread-title" }, displayThreadTitle)
-                    )
-                  )
-                )
-              ),
-              React.createElement("div", { className: "sidebar-thread-side" },
-                React.createElement("span", { className: "sidebar-thread-meta" },
-                  fallbackMetaText
-                    ? React.createElement("span", { className: "sidebar-thread-meta-neutral" }, fallbackMetaText)
-                    : null
-                ),
-                fallbackLastActivityText
-                  ? React.createElement("span", {
-                      className: "sidebar-thread-hover-meta",
-                      title: formatThreadSearchTimestamp(resolveThreadSortTimestamp(fallbackThread)) || "",
-                    }, fallbackLastActivityText)
-                  : null,
-                canManageThread
-                  ? React.createElement("button", {
-                      type: "button",
-                      className: "sidebar-thread-menu-button" + (isMenuOpen ? " is-open" : ""),
-                      onClick: (event) => openThreadActionMenu(event, fallbackSafeThreadId),
-                      "aria-label": "Thread actions",
-                      "aria-expanded": isMenuOpen ? "true" : "false",
-                      disabled: isDeleting || isPinMutating,
-                    },
-                      isDeleting || isPinMutating
-                        ? React.createElement(Loader2, { className: "sidebar-thread-menu-icon is-spinning", strokeWidth: 1.85 })
-                        : React.createElement(EllipsisVertical, { className: "sidebar-thread-menu-icon", strokeWidth: 1.85 })
-                    )
-                  : null
-              )
-            );
-          }
-        }
-
-        function renderThreadActionMenu() {
-          if (!threadActionMenuState || !threadActionTarget) {
-            return null;
-          }
-
-          const isPinned = Boolean(threadActionTarget.isPinned);
-          const hasProjectAssignment = Boolean(String(threadActionTarget.projectId || "").trim());
-          const isDeleting = threadMutationState.action === "delete" && threadMutationState.threadId === threadActionTarget.id;
-          const isPinMutating = threadMutationState.action === "pin" && threadMutationState.threadId === threadActionTarget.id;
-          const isProjectMutating = threadMutationState.action === "project" && threadMutationState.threadId === threadActionTarget.id;
-
-          return React.createElement(PlatformPopupDismissLayer, {
-              className: "sidebar-thread-popup-scrim",
-              onClick: closeThreadActionMenu,
-            },
-              React.createElement(PlatformPopupSurface, {
-                className: "sidebar-thread-popup",
-                style: {
-                  top: threadActionMenuState.top + "px",
-                  left: threadActionMenuState.left + "px",
-                },
-                onClick: (event) => event.stopPropagation(),
-              },
-                React.createElement("div", { className: "sidebar-thread-popup-title" }, "Thread"),
-                React.createElement("button", {
-                  type: "button",
-                  className: "sidebar-thread-popup-row",
-                  onClick: () => openThreadRenameDialog(threadActionTarget),
-                  disabled: isDeleting || isPinMutating || isProjectMutating,
-                },
-                  React.createElement(SquarePen, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
-                  React.createElement("span", { className: "sidebar-thread-popup-row-label" }, "Rename")
-                ),
-                React.createElement("button", {
-                  type: "button",
-                  className: "sidebar-thread-popup-row",
-                  onClick: () => handleOpenThreadProjectAction(threadActionTarget),
-                  disabled: isDeleting || isPinMutating || isProjectMutating,
-                },
-                  React.createElement(FolderOpen, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
-                  React.createElement("span", { className: "sidebar-thread-popup-row-label" },
-                    isProjectMutating
-                      ? (hasProjectAssignment ? "Removing from project..." : "Adding to project...")
-                      : (hasProjectAssignment ? "Remove from Project" : "Add to Project")
-                  )
-                ),
-                React.createElement("button", {
-                  type: "button",
-                  className: "sidebar-thread-popup-row",
-                  onClick: () => {
-                    void handleThreadPinToggle(threadActionTarget.id);
-                  },
-                  disabled: isDeleting || isPinMutating || isProjectMutating,
-                },
-                  React.createElement(Pin, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
-                  React.createElement("span", { className: "sidebar-thread-popup-row-label" }, isPinMutating ? (isPinned ? "Unpinning..." : "Pinning...") : (isPinned ? "Unpin" : "Pin"))
-                ),
-                React.createElement("button", {
-                  type: "button",
-                  className: "sidebar-thread-popup-row is-danger",
-                  onClick: () => {
-                    void handleThreadDelete(threadActionTarget.id);
-                  },
-                  disabled: isDeleting || isPinMutating || isProjectMutating,
-                },
-                  React.createElement(Trash2, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
-                  React.createElement("span", { className: "sidebar-thread-popup-row-label" }, isDeleting ? "Deleting..." : "Delete")
-                )
-              )
-            );
-        }
-
-${METRONOME_APP_SCRIPT_FRAGMENTS.runActionMenu}
-        function renderThreadRenameModal() {
-          if (!threadRenameState) {
-            return null;
-          }
-
-          return React.createElement(PlatformModalBackdrop, {
-              className: "sidebar-thread-rename-scrim",
-              onClick: closeThreadRenameDialog,
-            },
-              React.createElement(PlatformModalSurface, {
-                as: "form",
-                className: "sidebar-thread-rename-modal",
-                onClick: (event) => event.stopPropagation(),
-                onSubmit: (event) => {
-                  void handleThreadRenameSubmit(event);
-                },
-              },
-                React.createElement("div", { className: "sidebar-thread-rename-title" }, "Rename Thread"),
-                React.createElement("div", { className: "sidebar-thread-rename-copy" },
-                  "Choose a new title for this thread."
-                ),
-                React.createElement("input", {
-                  ref: threadRenameInputRef,
-                  className: "sidebar-thread-rename-input",
-                  value: threadRenameValue,
-                  onChange: (event) => setThreadRenameValue(event.target.value),
-                  placeholder: "Thread title",
-                  disabled: isThreadRenamePending,
-                }),
-                threadRenameError
-                  ? React.createElement("div", { className: "sidebar-thread-rename-error" }, threadRenameError)
-                  : null,
-                React.createElement("div", { className: "sidebar-thread-rename-actions" },
-                  React.createElement(PlatformSecondaryButton, {
-                    size: "large",
-                    type: "button",
-                    className: "sidebar-thread-rename-button is-secondary",
-                    onClick: closeThreadRenameDialog,
-                    disabled: isThreadRenamePending,
-                  }, "Cancel"),
-                  React.createElement(PlatformPrimaryButton, {
-                    size: "large",
-                    type: "submit",
-                    className: "sidebar-thread-rename-button is-primary",
-                    disabled: isThreadRenamePending,
-                  }, isThreadRenamePending ? "Saving..." : "Save")
-                )
-              )
-            );
-        }
-
-        function renderThreadProjectPickerModal() {
-          if (!threadProjectPickerState) {
-            return null;
-          }
-
-          const isProjectAssignPending = threadMutationState.action === "project"
-            && threadMutationState.threadId === threadProjectPickerState.threadId;
-          const availableProjects = threadProjectPickerProjects;
-
-          return React.createElement(PlatformModalBackdrop, {
-              className: "sidebar-thread-rename-scrim",
-              onClick: closeThreadProjectPickerDialog,
-            },
-              React.createElement(PlatformModalSurface, {
-                as: "form",
-                className: "sidebar-thread-rename-modal sidebar-thread-project-picker-modal",
-                onClick: (event) => event.stopPropagation(),
-                onSubmit: (event) => {
-                  void handleThreadProjectPickerSubmit(event);
-                },
-              },
-                React.createElement("div", { className: "sidebar-thread-rename-title" }, "Add to Project"),
-                React.createElement("div", { className: "sidebar-thread-rename-copy" },
-                  "Attach this thread to a project so it appears in project scope, including files and activity."
-                ),
-                threadProjectPickerLoading
-                  ? React.createElement("div", { className: "sidebar-thread-project-picker-empty" }, "Loading projects...")
-                  : availableProjects.length > 0
-                  ? React.createElement("div", { className: "sidebar-thread-project-picker-list" },
-                    availableProjects.map((project) => {
-                        const projectId = String(project?.id || "").trim();
-                        const isSelected = projectId === threadProjectPickerValue;
-                        return React.createElement("button", {
-                            key: projectId,
-                            type: "button",
-                            className: "sidebar-thread-project-picker-row" + (isSelected ? " is-selected" : ""),
-                            disabled: isProjectAssignPending,
-                            onClick: () => setThreadProjectPickerValue(projectId),
-                          },
-                            React.createElement("div", { className: "playground-tasks-project-row" },
-                              React.createElement("div", { className: "playground-tasks-project-row-main" },
-                                React.createElement("div", { className: "playground-tasks-project-row-title" }, project?.name || "Untitled Project")
-                              ),
-                              isSelected
-                                ? React.createElement(Check, { width: 15, height: 15, strokeWidth: 1.9, "aria-hidden": "true" })
-                                : null
-                            )
-                          );
-                      })
-                    )
-                  : React.createElement("div", { className: "sidebar-thread-project-picker-empty" },
-                      "No projects are available yet."
-                    ),
-                threadProjectPickerError
-                  ? React.createElement("div", { className: "sidebar-thread-rename-error" }, threadProjectPickerError)
-                  : null,
-                React.createElement("div", { className: "sidebar-thread-rename-actions" },
-                  React.createElement(PlatformSecondaryButton, {
-                    size: "large",
-                    type: "button",
-                    className: "sidebar-thread-rename-button is-secondary",
-                    onClick: closeThreadProjectPickerDialog,
-                    disabled: isProjectAssignPending,
-                  }, "Cancel"),
-                  React.createElement(PlatformPrimaryButton, {
-                    size: "large",
-                    type: "submit",
-                    className: "sidebar-thread-rename-button is-primary",
-                    disabled: isProjectAssignPending || threadProjectPickerLoading || availableProjects.length === 0 || !threadProjectPickerValue,
-                  }, isProjectAssignPending ? "Saving..." : "Add to Project")
-                )
-              )
-            );
-        }
-
-        function renderThreadSearchPalette() {
-          if (!threadSearchOpen) {
-            return null;
-          }
-
-          return React.createElement(PlatformModalBackdrop, {
-              className: "thread-search-scrim",
-              onClick: closeThreadSearch,
-            },
-              React.createElement(PlatformModalSurface, {
-                className: "thread-search-modal",
-                onClick: (event) => event.stopPropagation(),
-              },
-                React.createElement("div", { className: "thread-search-input-row" },
-                  React.createElement("input", {
-                    ref: threadSearchInputRef,
-                    className: "thread-search-input",
-                    type: "text",
-                    placeholder: "Search threads and files...",
-                    value: threadSearchQuery,
-                    onChange: (event) => setThreadSearchQuery(event.target.value),
-                  }),
-                  React.createElement(Search, { className: "thread-search-input-icon", strokeWidth: 1.9 })
-                ),
-                React.createElement("div", { className: "thread-search-body" },
-                  React.createElement("section", { className: "thread-search-section" },
-                    React.createElement("div", { className: "thread-search-section-header" },
-                      React.createElement("span", { className: "thread-search-section-label" }, "Actions"),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "thread-search-section-link",
-                        onClick: () => {
-                          setThreadSearchQuery("");
-                          if (threadSearchInputRef.current) {
-                            threadSearchInputRef.current.focus();
-                          }
-                        },
-                      }, "Show All")
-                    ),
-                  React.createElement("button", {
-                      type: "button",
-                      className: "thread-search-action-card",
-                      onClick: handleThreadSearchCreate,
-                    },
-                      React.createElement(SquarePen, { className: "thread-search-action-icon", strokeWidth: 1.9 }),
-                      React.createElement("span", { className: "thread-search-action-copy" }, "Create New Chat")
-                    )
-                  ),
-                  normalizedThreadSearchQuery
-                    ? React.createElement("section", { className: "thread-search-section" },
-                        React.createElement("div", { className: "thread-search-section-header" },
-                          React.createElement("span", { className: "thread-search-section-label" }, "Files")
-                        ),
-                        isThreadSearchFileLoading && filteredThreadSearchFileItems.length === 0
-                        ? React.createElement("div", { className: "thread-search-empty-state" }, "Searching files...")
-                        : filteredThreadSearchFileItems.length === 0
-                          ? React.createElement("div", { className: "thread-search-empty-state" }, "No files found.")
-                          : React.createElement("div", { className: "thread-search-result-list" },
-                              filteredThreadSearchFileItems.map((fileResult) => {
-                                const filePath = normalizeHistoryPath(fileResult.entry?.path || "");
-                                const fileName = fileResult.entry?.name || filePath.split("/").filter(Boolean).pop() || filePath || "Untitled file";
-                                return React.createElement("button", {
-                                  key: fileResult.key,
-                                  type: "button",
-                                  className: "thread-search-result",
-                                  onClick: () => handleThreadSearchFileSelect(fileResult),
-                                },
-                                  React.createElement(FileText, { className: "thread-search-result-icon", strokeWidth: 1.85 }),
-                                  React.createElement("span", { className: "thread-search-result-copy" },
-                                    React.createElement("span", { className: "thread-search-result-title" }, fileName),
-                                    React.createElement("span", { className: "thread-search-result-subtitle" }, "/" + filePath)
-                                  ),
-                                  React.createElement("span", { className: "thread-search-result-time" }, fileResult.environmentName)
-                                );
-                              })
-                            )
-                      )
-                    : null,
-                  isThreadsLoading && searchableThreadItems.length === 0
-                    ? React.createElement("div", { className: "thread-search-empty-state" }, "Loading conversations...")
-                    : groupedThreadSearchItems.length === 0
-                      ? React.createElement("div", { className: "thread-search-empty-state" }, "No conversations found.")
-                      : groupedThreadSearchItems.map((group) =>
-                          React.createElement("section", {
-                            key: group.key,
-                            className: "thread-search-section",
-                          },
-                            React.createElement("div", { className: "thread-search-section-header" },
-                              React.createElement("span", { className: "thread-search-section-label" }, group.label)
-                            ),
-                            React.createElement("div", { className: "thread-search-result-list" },
-                              group.items.map((thread) =>
-                                React.createElement("button", {
-                                  key: thread.id,
-                                  type: "button",
-                                  className: "thread-search-result" + (activeSidebarThreadId === thread.id ? " is-active" : ""),
-                                  onClick: () => handleThreadSearchSelect(thread.id),
-                                },
-                                  React.createElement("span", { className: "thread-search-result-title" }, thread.title),
-                                  React.createElement("span", { className: "thread-search-result-time" }, formatThreadSearchTimestamp(resolveThreadSortTimestamp(thread)))
-                                )
-                              )
-                            )
-                          )
-                        )
-                ),
-                React.createElement("div", { className: "thread-search-footer" },
-                  React.createElement("div", { className: "thread-search-footer-copy" },
-                    React.createElement(ArrowUpRight, { className: "thread-search-footer-icon", strokeWidth: 1.85 }),
-                    React.createElement("span", null, "Open result")
-                  ),
-                  React.createElement("div", { className: "thread-search-footer-meta" },
-                    React.createElement("span", null, threadSearchTotalResultCount + " result" + (threadSearchTotalResultCount === 1 ? "" : "s")),
-                    React.createElement("span", { className: "thread-search-footer-separator" }, "•"),
-                    React.createElement("span", null, "Esc close")
-                  )
-                )
-              )
-            );
-        }
-
-        function handleMarkAllNotificationsRead() {
-          const productIds = notificationItems
-            .filter((item) => item.kind === "product" && item.id)
-            .map((item) => item.id);
-	          const permissionIds = notificationItems
-	            .filter((item) => item.kind === "permission" && item.id)
-	            .flatMap((item) => getPermissionNotificationReadIds(item));
-	          const humanTaskIds = notificationItems
-	            .filter((item) => item.kind === "human_task" && item.id)
-	            .map((item) => item.id);
-	          const teamInvitationIds = notificationItems
-	            .filter((item) => item.kind === "team_invitation" && item.id)
-	            .map((item) => item.id);
-	          const organizationInvitationIds = notificationItems
-	            .filter((item) => item.kind === "organization_invitation" && item.id)
-	            .map((item) => item.id);
-
-          if (productIds.length > 0) {
-            setReadProductNotificationIds((current) => {
-              const next = Array.from(new Set([...current, ...productIds]));
-              writeStoredNotificationIds(notificationReadStorageKey, next);
-              return next;
-            });
-          }
-
-	          if (permissionIds.length > 0) {
-	            setReadPermissionNotificationIds((current) => {
-              const next = Array.from(new Set([...current, ...permissionIds]));
-              writeStoredNotificationIds(PLAYGROUND_PERMISSION_NOTIFICATION_READ_STORAGE_KEY, next, "session");
-              return next;
-	            });
-	          }
-
-	          if (humanTaskIds.length > 0) {
-	            setReadHumanTaskNotificationIds((current) => {
-              const next = Array.from(new Set([...current, ...humanTaskIds]));
-              writeStoredNotificationIds(PLAYGROUND_HUMAN_TASK_NOTIFICATION_READ_STORAGE_KEY, next);
-              return next;
-	            });
-	          }
-
-	          if (teamInvitationIds.length > 0) {
-	            setReadTeamInvitationNotificationIds((current) => (
-              Array.from(new Set([...current, ...teamInvitationIds]))
-	            ));
-	          }
-
-	          if (organizationInvitationIds.length > 0) {
-	            setReadOrganizationInvitationNotificationIds((current) => (
-              Array.from(new Set([...current, ...organizationInvitationIds]))
-	            ));
-	          }
-
-	          setEmailVerificationNotificationDismissed(true);
-	        }
-
-        function handleOpenEmailVerificationSettings() {
-          setNotificationsOpen(false);
-          openSettingsPage("profile");
-        }
-
-	        function handleOpenPermissionNotification(threadId) {
-	          setNotificationsOpen(false);
-	          handleThreadSelect(threadId);
-	        }
-
-	        function handleOpenHumanTaskNotification(item) {
-	          const taskRecord = item?.task || (Array.isArray(welcomeWidgetsState.tasks)
-	            ? welcomeWidgetsState.tasks.find((task) => task?.id === item?.taskId)
-	            : null);
-	          if (!taskRecord) {
-	            setNotificationsOpen(false);
-	            return;
-	          }
-	          setNotificationsOpen(false);
-	          handleOpenWelcomeWidgetTaskDetail(taskRecord);
-	        }
-
-        async function handleTeamInvitationDecision(item, action) {
-          const invitationId = String(item?.id || "").trim();
-          const normalizedAction = action === "accept" ? "accept" : "decline";
-          if (!invitationId) {
-            return;
-          }
-          if (normalizedAction === "accept") {
-            const confirmed = window.confirm("Join " + (item.teamName || "this team") + "?");
-            if (!confirmed) {
-              return;
-            }
-          }
-          setTeamPageActionId(invitationId + ":" + normalizedAction);
-          try {
-            const { response, data } = await fetchJsonWithTimeout(
-              proxyBackendBase + "/teams/invitations/" + encodeURIComponent(invitationId) + "/" + normalizedAction,
-              {
-                method: "POST",
-                credentials: "include",
-                cache: "no-store",
-                headers: {
-                  ...requestHeaders,
-                  "Content-Type": "application/json",
-                },
-                body: "{}",
-              },
-              8000
-            );
-            if (!response.ok) {
-              if (response.status === 402 || data?.requiredPlan === "team") {
-                setNotificationsOpen(false);
-                openSettingsPage("costs-plan-options");
-                return;
-              }
-              throw new Error(data?.message || data?.error || "Failed to update team invitation.");
-            }
-            setTeamInvitationNotifications((current) => current.filter((invitation) => invitation.id !== invitationId));
-            setReadTeamInvitationNotificationIds((current) => Array.from(new Set([...current, invitationId])));
-            setNotificationsOpen(false);
-            if (normalizedAction === "accept") {
-              openTeamPage();
-            }
-          } catch (error) {
-            window.alert(error instanceof Error ? error.message : "Failed to update team invitation.");
-          } finally {
-            setTeamPageActionId("");
-          }
-        }
-
-        async function handleOrganizationInvitationDecision(item, action) {
-          const invitationId = String(item?.id || "").trim();
-          const normalizedAction = action === "accept" ? "accept" : "decline";
-          if (!invitationId) {
-            return;
-          }
-          if (normalizedAction === "accept") {
-            const confirmed = window.confirm("Join " + (item.organizationName || "this organization") + "?");
-            if (!confirmed) {
-              return;
-            }
-          }
-          setOrganizationPageActionId(invitationId + ":" + normalizedAction);
-          try {
-            const { response, data } = await fetchJsonWithTimeout(
-              proxyBackendBase + "/organizations/invitations/" + encodeURIComponent(invitationId) + "/" + normalizedAction,
-              {
-                method: "POST",
-                credentials: "include",
-                cache: "no-store",
-                headers: {
-                  ...baseAuthRequestHeaders,
-                  "Content-Type": "application/json",
-                },
-                body: "{}",
-              },
-              8000
-            );
-            if (!response.ok) {
-              throw new Error(data?.message || data?.error || "Failed to update organization invitation.");
-            }
-            setOrganizationInvitationNotifications((current) => current.filter((invitation) => invitation.id !== invitationId));
-            setReadOrganizationInvitationNotificationIds((current) => Array.from(new Set([...current, invitationId])));
-            setNotificationsOpen(false);
-            if (normalizedAction === "accept") {
-              const organizationId = String(data?.organizationId || data?.data?.organizationId || item.organizationId || "").trim();
-              openOrganizationPage();
-              if (organizationId) {
-                setActiveOrganizationId(organizationId);
-                setOrganizationPageSelectedOrganizationId(organizationId);
-                void loadOrganizationPageData({ selectedOrganizationId: organizationId });
-              }
-            }
-          } catch (error) {
-            window.alert(error instanceof Error ? error.message : "Failed to update organization invitation.");
-          } finally {
-            setOrganizationPageActionId("");
-          }
-        }
-
-        function renderProductNotificationHtml(html) {
-          const sanitizedHtml = DOMPurify.sanitize(String(html || ""), {
-            USE_PROFILES: { html: true },
-            FORBID_TAGS: ["script", "style", "iframe", "object", "embed", "form", "input"],
-          });
-          return React.createElement("div", {
-            className: "notification-menu-product-html",
-            dangerouslySetInnerHTML: { __html: sanitizedHtml },
-          });
-        }
-
-        function renderNotificationItem(item) {
-	          if (item.kind === "permission") {
-            const metaText = item.createdAt ? formatThreadSearchTimestamp(item.createdAt) : "";
-            return React.createElement("button", {
-              key: item.id,
-              type: "button",
-              className: "notification-menu-item",
-              onClick: () => handleOpenPermissionNotification(item.threadId),
-            },
-              React.createElement(AlertCircle, { className: "notification-menu-icon is-warning", strokeWidth: 1.8 }),
-              React.createElement("div", { className: "notification-menu-copy" },
-                React.createElement("div", { className: "notification-menu-label" }, "Permission needed"),
-                React.createElement("div", { className: "notification-menu-text" }, item.threadTitle || "Untitled thread"),
-                React.createElement("div", { className: "notification-menu-meta" },
-                  [item.toolName || "Tool access", metaText].filter(Boolean).join(" · ")
-                )
-              )
-	            );
-	          }
-
-	          if (item.kind === "human_task") {
-	            const metaText = item.createdAt ? formatThreadSearchTimestamp(item.createdAt) : "";
-	            return React.createElement("button", {
-              key: item.id,
-              type: "button",
-              className: "notification-menu-item",
-              onClick: () => handleOpenHumanTaskNotification(item),
-	            },
-              React.createElement(ListTodo, { className: "notification-menu-icon is-warning", strokeWidth: 1.8 }),
-              React.createElement("div", { className: "notification-menu-copy" },
-                React.createElement("div", { className: "notification-menu-label" }, item.label || "Task needs you"),
-                React.createElement("div", { className: "notification-menu-text" }, item.text || "Open task"),
-                React.createElement("div", { className: "notification-menu-meta" },
-                  [item.ticketNumber ? ("Ticket " + item.ticketNumber) : "", metaText].filter(Boolean).join(" · ")
-                )
-              )
-	            );
-	          }
-
-	          if (item.kind === "email_verification") {
-            return React.createElement("button", {
-              key: item.id,
-              type: "button",
-              className: "notification-menu-item",
-              onClick: handleOpenEmailVerificationSettings,
-            },
-              React.createElement(Mail, { className: "notification-menu-icon is-warning", strokeWidth: 1.8 }),
-              React.createElement("div", { className: "notification-menu-copy" },
-                React.createElement("div", { className: "notification-menu-label" }, item.label),
-                React.createElement("div", { className: "notification-menu-text" }, item.text),
-                React.createElement("div", { className: "notification-menu-meta" }, "Open profile settings")
-              )
-            );
-          }
-
-          if (item.kind === "team_invitation") {
-            const metaText = item.createdAt ? formatThreadSearchTimestamp(item.createdAt) : "";
-            const isAccepting = teamPageActionId === item.id + ":accept";
-            const isDeclining = teamPageActionId === item.id + ":decline";
-            return React.createElement("div", {
-              key: item.id,
-              className: "notification-menu-item notification-menu-team-invitation",
-            },
-              React.createElement(UsersRound, { className: "notification-menu-icon", strokeWidth: 1.8 }),
-              React.createElement("div", { className: "notification-menu-copy" },
-                React.createElement("div", { className: "notification-menu-label" }, "Team invitation"),
-                React.createElement("div", { className: "notification-menu-text" }, item.teamName || "Team"),
-                React.createElement("div", { className: "notification-menu-meta" },
-                  [
-                    item.role ? ("Role: " + item.role) : "",
-                    item.invitedByEmail ? ("From " + item.invitedByEmail) : "",
-                    metaText,
-                  ].filter(Boolean).join(" · ")
-                ),
-                React.createElement("div", { className: "notification-menu-actions" },
-                  React.createElement(PlatformPrimaryButton, {
-                    size: "medium",
-                    type: "button",
-                    className: "notification-menu-action-button is-primary",
-                    onClick: () => handleTeamInvitationDecision(item, "accept"),
-                    disabled: Boolean(teamPageActionId),
-                  }, isAccepting ? "Accepting..." : "Accept"),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "notification-menu-action-button",
-                    onClick: () => handleTeamInvitationDecision(item, "decline"),
-                    disabled: Boolean(teamPageActionId),
-                  }, isDeclining ? "Declining..." : "Decline")
-                )
-              )
-            );
-          }
-
-          if (item.kind === "organization_invitation") {
-            const metaText = item.createdAt ? formatThreadSearchTimestamp(item.createdAt) : "";
-            const isAccepting = organizationPageActionId === item.id + ":accept";
-            const isDeclining = organizationPageActionId === item.id + ":decline";
-            return React.createElement("div", {
-              key: item.id,
-              className: "notification-menu-item notification-menu-team-invitation",
-            },
-              React.createElement(Building2, { className: "notification-menu-icon", strokeWidth: 1.8 }),
-              React.createElement("div", { className: "notification-menu-copy" },
-                React.createElement("div", { className: "notification-menu-label" }, "Organization invitation"),
-                React.createElement("div", { className: "notification-menu-text" }, item.organizationName || "Organization"),
-                React.createElement("div", { className: "notification-menu-meta" },
-                  [
-                    item.role ? ("Role: " + item.role) : "",
-                    item.invitedByEmail ? ("From " + item.invitedByEmail) : "",
-                    metaText,
-                  ].filter(Boolean).join(" · ")
-                ),
-                React.createElement("div", { className: "notification-menu-actions" },
-                  React.createElement(PlatformPrimaryButton, {
-                    size: "medium",
-                    type: "button",
-                    className: "notification-menu-action-button is-primary",
-                    onClick: () => handleOrganizationInvitationDecision(item, "accept"),
-                    disabled: Boolean(organizationPageActionId),
-                  }, isAccepting ? "Accepting..." : "Accept"),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "notification-menu-action-button",
-                    onClick: () => handleOrganizationInvitationDecision(item, "decline"),
-                    disabled: Boolean(organizationPageActionId),
-                  }, isDeclining ? "Declining..." : "Decline")
-                )
-              )
-            );
-          }
-
-          const metaText = item.createdAt ? formatThreadSearchTimestamp(item.createdAt) : "";
-          return React.createElement("div", {
-            key: item.id,
-            className: "notification-menu-item",
-          },
-            React.createElement(Bell, { className: "notification-menu-icon", strokeWidth: 1.8 }),
-            React.createElement("div", { className: "notification-menu-copy" },
-              renderProductNotificationHtml(item.html),
-              metaText ? React.createElement("div", { className: "notification-menu-meta" }, metaText) : null
-            )
-          );
-        }
-
-	        function renderNotificationMenu() {
-	          if (!notificationsOpen) {
-	            return null;
-	          }
-
-          return React.createElement(PlatformPopupDismissLayer, {
-            className: "notification-menu-scrim",
-            onClick: () => setNotificationsOpen(false),
-          },
-            React.createElement(PlatformPopupSurface, {
-              className: "notification-menu",
-              role: "dialog",
-              "aria-label": "Notifications",
-              onClick: (event) => event.stopPropagation(),
-            },
-              React.createElement("div", { className: "notification-menu-header" },
-                React.createElement("h2", { className: "notification-menu-title" }, "Notifications")
-              ),
-              React.createElement("div", { className: "notification-menu-body" },
-                notificationItems.length > 0
-                  ? notificationItems.map(renderNotificationItem)
-                  : React.createElement("div", { className: "notification-menu-empty" }, "No notifications")
-              ),
-              React.createElement("div", { className: "notification-menu-footer" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "notification-menu-mark-read notification-menu-view-all",
-                  onClick: openNotificationsPage,
-                }, "View all"),
-                React.createElement("button", {
-                  type: "button",
-                  className: "notification-menu-mark-read",
-                  onClick: handleMarkAllNotificationsRead,
-                  disabled: notificationItems.length === 0,
-                }, "Mark all as read")
-              )
-            )
-	          );
-	        }
-
-        function getNotificationPageIcon(item) {
-          if (item.kind === "permission") return AlertCircle;
-          if (item.kind === "human_task") return ListTodo;
-          if (item.kind === "team_invitation") return UsersRound;
-          if (item.kind === "organization_invitation") return Building2;
-          if (item.kind === "email_verification") return Mail;
-          return Bell;
-        }
-
-        function handleOpenNotificationPageItem(item) {
-          if (!item) {
-            return;
-          }
-          if (item.kind === "permission" && item.threadId) {
-            handleOpenPermissionNotification(item.threadId);
-            return;
-          }
-          if (item.kind === "human_task") {
-            handleOpenHumanTaskNotification(item);
-            return;
-          }
-          if (item.kind === "team_invitation") {
-            openTeamPage();
-            return;
-          }
-          if (item.kind === "organization_invitation") {
-            openOrganizationPage();
-            if (item.organizationId) {
-              setOrganizationPageSelectedOrganizationId(String(item.organizationId || "").trim());
-            }
-            return;
-          }
-          if (item.kind === "email_verification") {
-            handleOpenEmailVerificationSettings();
-          }
-        }
-
-
-        function renderConfigureNotificationsSection() {
-          const hasNoNotifications = allNotificationPageItems.length === 0;
-          const emptyTitle = hasNoNotifications ? "No notifications yet" : "No matching notifications";
-          const emptyDescription = hasNoNotifications
-            ? "Notifications come from agent activity, permission requests, team invitations, and product updates."
-            : "Try adjusting your search or filter settings.";
-
-          const notificationColumns = [
-            {
-              id: "notification",
-              header: "Notification",
-              accessor: (item) => item.label || item.kindLabel || "Notification",
-              sortable: true,
-              width: "minmax(280px, 1.8fr)",
-              cell: ({ row: item }) => {
-                const Icon = getNotificationPageIcon(item);
-                return React.createElement("div", { className: "playground-notifications-table-main" },
-                  React.createElement("span", { className: "playground-notifications-table-icon-shell", "aria-hidden": "true" },
-                    React.createElement(Icon, { className: "playground-notifications-table-icon", strokeWidth: 1.8 })
-                  ),
-                  React.createElement("span", { className: "playground-notifications-table-copy" },
-                    React.createElement("span", { className: "playground-agents-overview-name-title playground-notifications-table-title" }, item.label || item.kindLabel || "Notification"),
-                    React.createElement("span", { className: "playground-agents-overview-name-description playground-notifications-table-meta" }, item.text || item.meta || "Open notification")
-                  )
-                );
-              },
-            },
-            {
-              id: "type",
-              header: "Type",
-              accessor: (item) => item.kindLabel || "Notification",
-              sortable: true,
-              width: "minmax(130px, 0.75fr)",
-              hideBelow: 780,
-              cell: ({ row: item }) => React.createElement("div", { className: "playground-agents-overview-table-value" }, item.kindLabel || "Notification"),
-            },
-            {
-              id: "status",
-              header: "Status",
-              accessor: (item) => item.statusLabel || (item.unread ? "Unread" : "Read"),
-              sortable: true,
-              width: "minmax(120px, 0.65fr)",
-              hideBelow: 620,
-              cell: ({ row: item }) => React.createElement("span", { className: "playground-notifications-status-pill" + (item.unread ? " is-unread" : "") }, item.statusLabel || (item.unread ? "Unread" : "Read")),
-            },
-            {
-              id: "time",
-              header: "Time",
-              accessor: (item) => {
-                const timestamp = Date.parse(item.createdAt || "");
-                return Number.isFinite(timestamp) ? timestamp : 0;
-              },
-              sortable: true,
-              sortDescFirst: true,
-              width: "minmax(130px, 0.7fr)",
-              align: "end",
-              cell: ({ row: item }) => React.createElement("div", { className: "playground-agents-overview-table-value" }, item.createdAt ? formatThreadSearchTimestamp(item.createdAt) : "—"),
-            },
-          ];
-          const notificationSort = notificationsPageSort === "oldest"
-            ? { id: "time", direction: "asc" }
-            : notificationsPageSort === "type"
-              ? { id: "type", direction: "asc" }
-              : { id: "time", direction: "desc" };
-          const canOpenNotification = (item) => item.kind === "permission"
-            || item.kind === "human_task"
-            || item.kind === "team_invitation"
-            || item.kind === "organization_invitation"
-            || item.kind === "email_verification";
-          const notificationFilters = [{
-            id: "notification-kind",
-            label: "Filter",
-            value: notificationsPageFilter,
-            onChange: setNotificationsPageFilter,
-            options: [
-              { id: "all", label: "All notifications" },
-              { id: "unread", label: "Unread" },
-              { id: "read", label: "Read" },
-              { id: "permission", label: "Permission requests" },
-              { id: "tasks", label: "Tasks" },
-              { id: "team", label: "Teams" },
-              { id: "organization", label: "Organizations" },
-              { id: "product", label: "Product" },
-            ],
-          }];
-          const notificationsTable = React.createElement(PlatformDataTable, {
-            rows: visibleNotificationPageItems,
-            columns: notificationColumns,
-            getRowId: (item) => item.kind + ":" + item.id,
-            ariaLabel: "Notifications",
-            className: "playground-notifications-platform-data-table",
-            sorting: {
-              value: notificationSort,
-              manual: true,
-              onChange: (next) => {
-                if (!next) {
-                  setNotificationsPageSort("newest");
-                } else if (next.id === "type") {
-                  setNotificationsPageSort("type");
-                } else {
-                  setNotificationsPageSort(next.direction === "asc" ? "oldest" : "newest");
-                }
-              },
-            },
-            toolbar: {
-              search: {
-                value: notificationsPageSearchQuery,
-                onChange: setNotificationsPageSearchQuery,
-                placeholder: "Search notifications",
-                manual: true,
-              },
-              filters: notificationFilters,
-              showSort: true,
-              primaryAction: {
-                label: "Mark all read",
-                icon: Check,
-                onClick: handleMarkAllNotificationsRead,
-                disabled: notificationItems.length === 0,
-              },
-            },
-            onRowActivate: (item) => {
-              if (canOpenNotification(item)) handleOpenNotificationPageItem(item);
-            },
-            isRowDisabled: (item) => !canOpenNotification(item),
-            getRowActions: (item) => {
-              if (item.kind === "team_invitation") {
-                return [
-                  { id: "accept", label: "Accept", icon: Check, disabled: Boolean(teamPageActionId), onSelect: () => handleTeamInvitationDecision(item, "accept") },
-                  { id: "decline", label: "Decline", icon: X, disabled: Boolean(teamPageActionId), onSelect: () => handleTeamInvitationDecision(item, "decline") },
-                ];
-              }
-              if (item.kind === "organization_invitation") {
-                return [
-                  { id: "accept", label: "Accept", icon: Check, disabled: Boolean(organizationPageActionId), onSelect: () => handleOrganizationInvitationDecision(item, "accept") },
-                  { id: "decline", label: "Decline", icon: X, disabled: Boolean(organizationPageActionId), onSelect: () => handleOrganizationInvitationDecision(item, "decline") },
-                ];
-              }
-              return canOpenNotification(item)
-                ? [{ id: "open", label: "Open", icon: ChevronRight, onSelect: () => handleOpenNotificationPageItem(item) }]
-                : [];
-            },
-            emptyState: React.createElement("div", { className: "playground-plugins-empty playground-notifications-empty" },
-              React.createElement("div", { className: "playground-notifications-empty-title" }, emptyTitle),
-              React.createElement("div", { className: "playground-notifications-empty-description" }, emptyDescription)
-            ),
-            noResultsState: React.createElement("div", { className: "playground-plugins-empty playground-notifications-empty" },
-              React.createElement("div", { className: "playground-notifications-empty-title" }, "No matching notifications"),
-              React.createElement("div", { className: "playground-notifications-empty-description" }, "Try adjusting your search or filter settings.")
-            ),
-          });
-
-          return React.createElement("section", { className: "playground-configure-notifications-section playground-notifications-scroll" },
-            React.createElement("div", { className: "playground-configure-notifications-heading" },
-              React.createElement("h2", { className: "playground-develop-server-metrics-title playground-configure-notifications-title" }, "Notifications"),
-              React.createElement("div", { className: "playground-notifications-subtitle" }, "Review product updates, human tasks, team invitations, and permission requests.")
-            ),
-            React.createElement("section", {
-                className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-configure-notifications-table-section",
-              },
-              notificationsTable
-            )
-          );
-        }
-
-	        function renderSettingsPageNav() {
-	          return renderUnifiedTopNav({
-	            className: "playground-settings-top-navbar",
-	            pathItems: [{ label: "Configure" }, { label: "Settings" }],
-	          });
-	        }
+${CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationActions}
+${CONFIGURE_HOME_PAGE_SCRIPT_FRAGMENTS.notificationsSection}
 
 ${TEAMS_APP_SCRIPT_FRAGMENTS.topNavigation}
 ${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.topNavigation}
-        function renderConfigureHomeNav() {
-          return renderUnifiedTopNav({
-            className: "playground-configure-navbar",
-            pathItems: [{ label: "Configure" }, { label: "Overview" }],
-          });
-        }
-
-${MODELS_APP_SCRIPT_FRAGMENTS.topNavigation}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.topNavigation}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.topNavigation}${INFERENCE_APP_SCRIPT_FRAGMENTS.topNavigation}        function renderDevelopHomeNav() {
-          return renderUnifiedTopNav({
-            className: "playground-develop-navbar",
-            pathItems: [{ label: "Develop" }, { label: "Overview" }],
-          });
-        }
-
-        function renderDevelopApiKeysNav() {
-          return renderUnifiedTopNav({
-            className: "playground-develop-navbar playground-develop-api-keys-navbar",
-            pathItems: [{ label: "Develop", onClick: () => openDevelopHome() }, { label: "API Keys" }],
-          });
-        }
-
+${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation}
+${MODELS_APP_SCRIPT_FRAGMENTS.topNavigation}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.topNavigation}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.topNavigation}${INFERENCE_APP_SCRIPT_FRAGMENTS.topNavigation}${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.topNavigation}
+${API_KEYS_APP_SCRIPT_FRAGMENTS.topNavigation}
         function renderResourcesPageNav() {
           const isResourcesDetailView = resourcesHeaderState.mode === "detail";
           const activeDevelopServerPageItem = activeResourcesView === "servers"
@@ -135985,17 +122709,25 @@ ${MODELS_APP_SCRIPT_FRAGMENTS.topNavigation}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.t
                     ]
               );
 
-          return renderUnifiedTopNav({
+          return renderAppHeader({
             className: "playground-resources-page",
             pathItems: resourcesPathItems,
             includeSearchDivider: activeResourcesView === "agents"
               || activeResourcesView === "computers"
               || (activeResourcesView === "servers" && Boolean(activeResourcesServerKind)),
             hideCommonActions: isResourcesVersionsDrawerOpen,
-            extraActions: React.createElement("div", {
-              id: "playground-resources-nav-actions",
-              className: "playground-resources-nav-actions-slot",
-            }),
+            extraActions: React.createElement(React.Fragment, null,
+              !isResourcesDetailView
+                ? React.createElement("div", {
+                    id: "playground-resource-overview-controls",
+                    className: "playground-resource-overview-controls-slot",
+                  })
+                : null,
+              React.createElement("div", {
+                id: "playground-resources-nav-actions",
+                className: "playground-resources-nav-actions-slot",
+              })
+            ),
           });
         }
 
@@ -136941,7 +123673,7 @@ ${MODELS_APP_SCRIPT_FRAGMENTS.topNavigation}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.t
               ? "backlog"
               : "overview";
 
-          return renderUnifiedTopNav({
+          return renderAppHeader({
             className: "playground-tasks-unified-navbar",
             includeSearchDivider: true,
             pathItems: isProjectDetailView
@@ -137000,7 +123732,7 @@ ${MODELS_APP_SCRIPT_FRAGMENTS.topNavigation}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.t
         }
 
         function renderFilesPageNav() {
-          return renderUnifiedTopNav({
+          return renderAppHeader({
             className: "playground-files-unified-navbar",
             pathItems: filesPageTopNav?.pathItems || [{ label: "Create" }, { label: "Files" }],
             hidePath: filesPageTopNav?.hidePath === true,
@@ -137014,9 +123746,9 @@ ${MODELS_APP_SCRIPT_FRAGMENTS.topNavigation}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.t
 ${IMAGINE_APP_SCRIPT_FRAGMENTS.topNavigation}
 ${METRONOME_APP_SCRIPT_FRAGMENTS.modeSwitch}
         function renderInitialThreadWelcomeNav() {
-          return renderUnifiedTopNav({
+          return renderAppHeader({
             className: "playground-thread-welcome-navbar",
-            pathItems: [{ label: "Create", Icon: PencilRuler }, { label: "Home", Icon: House }],
+            pathItems: [{ label: "Create" }, { label: "New Thread" }],
             includeGhost: true,
             ghostVariant: "private-chat",
             includeSearchDivider: true,
@@ -137024,6 +123756,7 @@ ${METRONOME_APP_SCRIPT_FRAGMENTS.modeSwitch}
         }
 
 ${METRONOME_APP_SCRIPT_FRAGMENTS.topNavActions}
+${CALENDAR_SHELL_SCRIPT_FRAGMENTS.topNavigation}
         function renderGenericPageNav() {
           const isMetronomeEditor = activePage === "metronome" && metronomeTopNavState?.mode === "editor";
           const metronomePathItems = isMetronomeEditor
@@ -137033,9 +123766,9 @@ ${METRONOME_APP_SCRIPT_FRAGMENTS.topNavActions}
                 { label: metronomeTopNavState?.title || "Untitled Metronome" },
               ]
             : [{ label: "Create" }, { label: "Metronome" }];
-          return renderUnifiedTopNav({
+          return renderAppHeader({
             pathItems: activePage === "calendar"
-              ? [{ label: "Create" }, { label: "Calendar" }]
+              ? [{ label: "Create" }, { label: calendarTopNavState?.label || "Calendar" }]
               : activePage === "imagine"
                 ? [{ label: "Create" }, { label: "Imagine" }]
               : activePage === "metronome"
@@ -137047,9 +123780,11 @@ ${METRONOME_APP_SCRIPT_FRAGMENTS.topNavActions}
               : isMetronomeEditor
                 ? renderMetronomeModeSwitch()
                 : null,
-            includeSearchDivider: isMetronomeEditor,
+            includeSearchDivider: activePage === "calendar" || isMetronomeEditor,
             extraActions: activePage === "imagine"
               ? renderImagineTopNavControls()
+              : activePage === "calendar"
+                ? renderCalendarTopNavActions()
               : isMetronomeEditor
                 ? renderMetronomeTopNavActions()
                 : null,
@@ -137185,7 +123920,7 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.hostProps}                  embeddedInResources:
                   versionsDrawerPortalId: "playground-agent-versions-drawer-root",
                   onResourcesHeaderChange: setResourcesHeaderState,
                   onVersionsSidebarOpenChange: setIsAgentVersionsDetailOpen,
-                  onOpenSettingsUsage: () => openSettingsPage("costs-overview"),
+                  onOpenSettingsUsage: () => openSettingsModal("costs-overview"),
                   backRequestToken: resourcesBackRequestToken,
                 })
               : hasDemoAccess
@@ -137333,2101 +124068,23 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.hostProps}                  embeddedInResources:
                 onDevelopServerMetricsChartTabChange: setDevelopServerMetricsChartTab,
                 developAnalyticsMenuOpen,
                 onDevelopAnalyticsMenuOpenChange: setDevelopAnalyticsMenuOpen,
-                onOpenSettingsUsage: () => openSettingsPage("costs-overview"),
-                onOpenSettingsApi: () => openSettingsPage("api"),
+                onOpenSettingsUsage: () => openSettingsModal("costs-overview"),
+                onOpenSettingsApi: () => openSettingsModal("api"),
               })
             : hasDemoAccess
               ? renderDemoFeaturePage("environments")
               : renderAuthGate();
         }
 
-${MODELS_APP_SCRIPT_FRAGMENTS.pageView}${GUARDRAILS_PAGE_RUNTIME_SCRIPT}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.pageView}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.pageView}        function renderConfigureHomePage() {
-          const connectedPluginsCount = [githubStatus, gmailStatus, googleDriveStatus, oneDriveStatus, notionStatus]
-            .filter((status) => Boolean(status?.connected || status?.status === "connected")).length;
-
-          const formatConfigureOverviewCount = (value) => {
-            const numericValue = Math.max(0, Math.round(Number(value || 0)));
-            return numericValue.toLocaleString("en-US");
-          };
-          const configureOverviewCards = [
-            {
-              id: "agents",
-              title: "Agents",
-              description: "Agents available for workspace runs.",
-              value: formatConfigureOverviewCount(runtimeAgents.length),
-              Icon: Bot,
-              onClick: () => openResourcesView("agents"),
-            },
-            {
-              id: "computers",
-              title: "Computers",
-              description: "Persistent workspaces agents can use.",
-              value: formatConfigureOverviewCount(runtimeEnvironments.length),
-              Icon: Monitor,
-              onClick: () => openResourcesView("computers"),
-            },
-            {
-              id: "skills",
-              title: "Skills",
-              description: "Capabilities agents can call during work.",
-              value: formatConfigureOverviewCount(demoSkills.length),
-              Icon: Sparkles,
-              onClick: () => openToolsView("skills"),
-            },
-          ];
-          const renderConfigureOverviewCards = () =>
-            React.createElement("section", { className: "playground-configure-overview-cards", "aria-label": "Workspace resources" },
-              configureOverviewCards.map((card) =>
-                React.createElement("button", {
-                    key: card.id,
-                    type: "button",
-                    className: "playground-configure-overview-card",
-                    onClick: card.onClick,
-                  },
-	                  React.createElement("div", { className: "playground-configure-overview-card-top" },
-	                    React.createElement("span", { className: "playground-configure-overview-card-icon", "aria-hidden": "true" },
-	                      React.createElement(getPlaygroundSafeIconComponent(card.Icon, Circle), { strokeWidth: 1.8 })
-	                    ),
-                    React.createElement(ArrowUpRight, { className: "playground-configure-overview-card-arrow", strokeWidth: 1.8 })
-                  ),
-                  React.createElement("div", { className: "playground-configure-overview-card-copy" },
-                    React.createElement("div", { className: "playground-configure-overview-card-value" }, card.value),
-                    React.createElement("div", { className: "playground-configure-overview-card-title" }, card.title),
-                    React.createElement("div", { className: "playground-configure-overview-card-description" }, card.description)
-                  )
-                )
-              )
-            );
-
-          return React.createElement("div", { className: "playground-configure-home playground-develop-home" },
-            React.createElement("div", { className: "playground-configure-home-inner playground-develop-home-inner" },
-              React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header" },
-                React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title" }, "Configure your Workspace"),
-                React.createElement("div", { className: "playground-project-overview-summary-title-actions playground-develop-header-actions" },
-                  React.createElement(PlatformSecondaryButton, {
-                    type: "button",
-                    className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button",
-                    onClick: () => window.open(${JSON.stringify(aiosOrigin + "/pricing")}, "_blank", "noopener,noreferrer"),
-                  }, "Pricing", React.createElement(ArrowUpRight, { width: 14, height: 14, strokeWidth: 1.8 })),
-                  React.createElement(PlatformSecondaryButton, {
-                    type: "button",
-                    className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button",
-                    onClick: openDocsPage,
-                  }, "Documentation", React.createElement(ArrowUpRight, { width: 14, height: 14, strokeWidth: 1.8 }))
-                )
-              ),
-	              renderConfigureOverviewCards(),
-	              renderConfigureNotificationsSection()
-            )
-          );
-        }
-
-        function renderApiKeysManagementPanel() {
-          const normalizedApiKeySearchQuery = String(developApiKeysSearchQuery || "").trim().toLowerCase();
-          const activeApiKeys = settingsApiKeys.filter((apiKeyRecord) => apiKeyRecord?.isActive !== false);
-          const getApiKeyCreatedByLabel = (apiKeyRecord) => (
-            typeof apiKeyRecord?.createdByLabel === "string" && apiKeyRecord.createdByLabel
-              ? apiKeyRecord.createdByLabel
-              : typeof apiKeyRecord?.metadata?.userEmail === "string" && apiKeyRecord.metadata.userEmail
-                ? apiKeyRecord.metadata.userEmail
-                : typeof apiKeyRecord?.metadata?.createdBy === "string" && apiKeyRecord.metadata.createdBy
-                  ? apiKeyRecord.metadata.createdBy
-                  : "—"
-          );
-          const isStandardApiKey = (apiKeyRecord) => Boolean(
-            apiKeyRecord?.isCurrentDefault || isSettingsSystemManagedKey(apiKeyRecord)
-          );
-          const visibleApiKeys = activeApiKeys
-            .filter((apiKeyRecord) => {
-              if (developApiKeysFilter === "standard" && !isStandardApiKey(apiKeyRecord)) {
-                return false;
-              }
-              if (developApiKeysFilter === "scoped" && isStandardApiKey(apiKeyRecord)) {
-                return false;
-              }
-              if (!normalizedApiKeySearchQuery) {
-                return true;
-              }
-              return [
-                apiKeyRecord?.name,
-                apiKeyRecord?.keyPrefix,
-                getApiKeyCreatedByLabel(apiKeyRecord),
-                getSettingsApiKeyScopeLabel(apiKeyRecord?.permissions),
-              ].some((value) => String(value || "").toLowerCase().includes(normalizedApiKeySearchQuery));
-            })
-            .sort((left, right) => {
-              let comparison = 0;
-              if (developApiKeysSort === "created") {
-                comparison = Date.parse(String(left?.createdAt || "")) - Date.parse(String(right?.createdAt || ""));
-              } else if (developApiKeysSort === "last-used") {
-                comparison = Date.parse(String(left?.lastUsedAt || "")) - Date.parse(String(right?.lastUsedAt || ""));
-              } else {
-                comparison = String(left?.name || "API Key").localeCompare(String(right?.name || "API Key"), undefined, {
-                  numeric: true,
-                  sensitivity: "base",
-                });
-              }
-              const normalizedComparison = Number.isFinite(comparison) ? comparison : 0;
-              return developApiKeysSortDirection === "desc" ? -normalizedComparison : normalizedComparison;
-            });
-          const apiKeySortOptions = [
-            { id: "name-asc", label: "Name (A-Z)", sort: "name", direction: "asc" },
-            { id: "created-desc", label: "Newest First", sort: "created", direction: "desc" },
-            { id: "created-asc", label: "Oldest First", sort: "created", direction: "asc" },
-            { id: "last-used-desc", label: "Recently Used", sort: "last-used", direction: "desc" },
-          ];
-          const apiKeyFilterOptions = [
-            { id: "all", label: "All API Keys", description: "Show every active API key" },
-            { id: "standard", label: "Standard", description: "Show system-managed and default keys" },
-            { id: "scoped", label: "Scoped", description: "Show keys created with custom access" },
-          ];
-          const visibleApiKeyIds = visibleApiKeys.map((apiKeyRecord) => String(apiKeyRecord?.id || "").trim()).filter(Boolean);
-          const allVisibleApiKeysSelected = visibleApiKeyIds.length > 0 && visibleApiKeyIds.every((keyId) => developApiKeysSelectedIds.has(keyId));
-          const someVisibleApiKeysSelected = !allVisibleApiKeysSelected && visibleApiKeyIds.some((keyId) => developApiKeysSelectedIds.has(keyId));
-
-
-          const toggleAllVisibleApiKeys = () => {
-            setDevelopApiKeysSelectedIds((current) => {
-              const next = new Set(current);
-              if (allVisibleApiKeysSelected) visibleApiKeyIds.forEach((keyId) => next.delete(keyId));
-              else visibleApiKeyIds.forEach((keyId) => next.add(keyId));
-              return next;
-            });
-          };
-
-          const closeApiKeyActionMenu = (options = {}) => {
-            if (!developApiKeyActionMenu) return;
-            if (developApiKeyActionMenuCloseTimerRef.current !== null && typeof window !== "undefined") {
-              window.clearTimeout(developApiKeyActionMenuCloseTimerRef.current);
-              developApiKeyActionMenuCloseTimerRef.current = null;
-            }
-            if (options.animate === false || typeof window === "undefined") {
-              setDevelopApiKeyActionMenuClosing(false);
-              setDevelopApiKeyActionMenu(null);
-              return;
-            }
-            setDevelopApiKeyActionMenuClosing(true);
-            developApiKeyActionMenuCloseTimerRef.current = window.setTimeout(() => {
-              developApiKeyActionMenuCloseTimerRef.current = null;
-              setDevelopApiKeyActionMenuClosing(false);
-              setDevelopApiKeyActionMenu(null);
-            }, 90);
-          };
-
-
-          const openApiKeyRevealModal = async (apiKeyRecord) => {
-            const keyId = String(apiKeyRecord?.id || "").trim();
-            if (!keyId) return;
-            const locallyAvailableKey = String(
-              settingsRevealableApiKeys[keyId]
-              || (apiKeyRecord?.isCurrentDefault ? resolvedSessionApiKey : "")
-              || ""
-            ).trim();
-            setDevelopApiKeyRevealModal({ apiKeyRecord, key: locallyAvailableKey, loading: !locallyAvailableKey, error: "" });
-            if (locallyAvailableKey) return;
-            try {
-              const response = await fetch("/api/aios/user/api-keys/" + encodeURIComponent(keyId) + "/reveal", {
-                method: "GET",
-                credentials: "include",
-                cache: "no-store",
-              });
-              const data = await response.json().catch(() => ({}));
-              if (!response.ok) throw new Error(data?.message || data?.error || "Failed to reveal API key.");
-              const revealedKey = typeof data?.key === "string" ? data.key.trim() : "";
-              if (!revealedKey) throw new Error("The API key value is unavailable.");
-              setSettingsRevealableApiKeys((current) => ({ ...current, [keyId]: revealedKey }));
-              setDevelopApiKeyRevealModal((current) => current?.apiKeyRecord?.id === keyId
-                ? { ...current, key: revealedKey, loading: false, error: "" }
-                : current);
-            } catch (error) {
-              setDevelopApiKeyRevealModal((current) => current?.apiKeyRecord?.id === keyId
-                ? { ...current, loading: false, error: error instanceof Error ? error.message : "Failed to reveal API key." }
-                : current);
-            }
-          };
-
-
-          const apiKeyDialogContent = settingsApiKeyDialogOpen
-            ? React.createElement(PlatformModalBackdrop, {
-                className: "playground-tasks-project-modal-backdrop playground-settings-api-key-modal-backdrop",
-                onClick: () => setSettingsApiKeyDialogOpen(false),
-              },
-                React.createElement(PlatformModalSurface, {
-                    as: "form",
-                    className: "playground-tasks-project-modal playground-agent-composer-modal playground-settings-api-key-modal",
-                    onClick: (event) => event.stopPropagation(),
-                    onSubmit: (event) => {
-                      event.preventDefault();
-                      void handleSettingsCreateApiKey();
-                    },
-                  },
-                  React.createElement("div", { className: "playground-tasks-project-modal-top playground-settings-api-key-modal-top" },
-                    React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
-                      React.createElement("span", {
-                        className: "playground-tasks-project-modal-icon-trigger",
-                        "aria-hidden": "true",
-                      }, React.createElement(Code, { width: 18, height: 18, strokeWidth: 1.9 })),
-                      React.createElement("div", { className: "playground-settings-api-key-modal-title-shell" },
-                        React.createElement("div", { className: "playground-settings-api-key-modal-title" }, "Create API Key"),
-                        React.createElement("div", { className: "playground-settings-api-key-modal-subtitle" }, "Create a scoped key for SDKs, automation, or external apps.")
-                      )
-                    ),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-settings-icon-button playground-tasks-project-modal-close",
-                      onClick: () => setSettingsApiKeyDialogOpen(false),
-                      title: "Close",
-                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-                  ),
-                  React.createElement("div", { className: "playground-agent-composer-modal-body playground-settings-api-key-modal-body" },
-                    React.createElement("div", { className: "playground-tasks-project-modal-field" },
-                      React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Name *"),
-                      React.createElement("input", {
-                        id: "settings-new-key-name",
-                        className: "playground-environments-input",
-                        value: settingsNewKeyName,
-                        onChange: (event) => setSettingsNewKeyName(event.target.value),
-                        placeholder: "e.g., Development Key",
-                        autoFocus: true,
-                      })
-                    ),
-                    React.createElement("div", { className: "playground-tasks-project-modal-field" },
-                      React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Description (optional)"),
-                      React.createElement("textarea", {
-                        id: "settings-new-key-description",
-                        className: "playground-tasks-project-modal-textarea",
-                        value: settingsNewKeyDescription,
-                        onChange: (event) => setSettingsNewKeyDescription(event.target.value),
-                        placeholder: "e.g., For local development and testing",
-                      })
-                    ),
-                    React.createElement("div", { className: "playground-tasks-project-modal-field" },
-                      React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Permissions"),
-                      React.createElement("div", { className: "playground-settings-api-key-modal-scopes" },
-                        Object.entries(SETTINGS_API_KEY_SCOPE_PRESETS).map(([presetId, preset]) =>
-                          React.createElement("button", {
-                              key: presetId,
-                              type: "button",
-                              className: "playground-settings-scope-option" + (settingsNewKeyScopePreset === presetId ? " is-active" : ""),
-                              onClick: () => setSettingsNewKeyScopePreset(presetId),
-                            },
-                              React.createElement("div", { className: "playground-settings-emphasis" }, preset.label),
-                              React.createElement("div", { className: "playground-settings-muted-copy" }, preset.description)
-                            )
-                        )
-                      )
-                    ),
-                    settingsApiKeysError
-                      ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, settingsApiKeysError)
-                      : null,
-                    React.createElement("div", { className: "playground-tasks-project-modal-actions" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-environments-action-button",
-                        onClick: () => setSettingsApiKeyDialogOpen(false),
-                        disabled: settingsCreateKeyLoading,
-                      }, "Cancel"),
-                      React.createElement(PlatformPrimaryButton, {
-                        size: "medium",
-                        type: "submit",
-                        className: "playground-environments-action-button is-primary",
-                        disabled: settingsCreateKeyLoading || !String(settingsNewKeyName || "").trim(),
-                      }, settingsCreateKeyLoading
-                        ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-settings-records-spinner" })
-                        : "Create Key")
-                    )
-                  )
-                )
-              )
-            : null;
-
-          const apiKeyDialog = apiKeyDialogContent
-            ? ((typeof document !== "undefined" && document.body)
-                ? createPortal(apiKeyDialogContent, document.body)
-                : apiKeyDialogContent)
-            : null;
-
-
-          const apiKeyRevealDialogContent = developApiKeyRevealModal
-            ? React.createElement(PlatformModalBackdrop, {
-                className: "playground-tasks-project-modal-backdrop playground-settings-api-key-modal-backdrop",
-                onClick: () => setDevelopApiKeyRevealModal(null),
-              },
-                React.createElement(PlatformModalSurface, {
-                    className: "playground-tasks-project-modal playground-agent-composer-modal playground-settings-api-key-modal playground-api-key-reveal-modal",
-                    role: "dialog",
-                    "aria-modal": "true",
-                    "aria-labelledby": "playground-api-key-reveal-title",
-                    onClick: (event) => event.stopPropagation(),
-                  },
-                  React.createElement("div", { className: "playground-tasks-project-modal-top playground-settings-api-key-modal-top" },
-                    React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
-                      React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
-                        React.createElement(Eye, { width: 18, height: 18, strokeWidth: 1.9 })
-                      ),
-                      React.createElement("div", { className: "playground-settings-api-key-modal-title-shell" },
-                        React.createElement("div", { id: "playground-api-key-reveal-title", className: "playground-settings-api-key-modal-title" }, developApiKeyRevealModal.apiKeyRecord?.name || "API Key"),
-                        React.createElement("div", { className: "playground-settings-api-key-modal-subtitle" }, "Use this key to authenticate SDK and API requests.")
-                      )
-                    ),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-settings-icon-button playground-tasks-project-modal-close",
-                      onClick: () => setDevelopApiKeyRevealModal(null),
-                      title: "Close",
-                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-                  ),
-                  React.createElement("div", { className: "playground-agent-composer-modal-body playground-settings-api-key-modal-body" },
-                    developApiKeyRevealModal.loading
-                      ? React.createElement("div", { className: "playground-files-state" },
-                          React.createElement(Loader2, { className: "playground-files-state-loader", width: 16, height: 16, strokeWidth: 1.75 }),
-                          React.createElement("span", null, "Loading API key")
-                        )
-                      : developApiKeyRevealModal.key
-                        ? React.createElement(React.Fragment, null,
-                            React.createElement("div", { className: "playground-settings-code-row" },
-                              React.createElement("code", { className: "playground-settings-code" }, developApiKeyRevealModal.key),
-                              React.createElement("button", {
-                                type: "button",
-                                className: "playground-settings-icon-button",
-                                onClick: () => void handleSettingsCopyField(developApiKeyRevealModal.key, "revealed-api-key"),
-                                title: "Copy API key",
-                              }, settingsCopiedField === "revealed-api-key"
-                                ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 })
-                                : React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.8 }))
-                            ),
-                            React.createElement("div", { className: "playground-settings-muted-copy" }, "Keep this key private. Anyone with it can access resources allowed by its permissions.")
-                          )
-                        : React.createElement("div", { className: "playground-api-key-reveal-error" }, developApiKeyRevealModal.error || "The API key value is unavailable.")
-                  )
-                )
-              )
-            : null;
-          const apiKeyRevealDialog = apiKeyRevealDialogContent && typeof document !== "undefined" && document.body
-            ? createPortal(apiKeyRevealDialogContent, document.body)
-            : apiKeyRevealDialogContent;
-
-          const apiKeyColumns = [
-            {
-              id: "name",
-              header: "Name",
-              accessor: (apiKeyRecord) => apiKeyRecord?.name || "API Key",
-              sortable: true,
-              width: "minmax(190px, 1.25fr)",
-              cell: ({ row: apiKeyRecord }) => React.createElement("div", { className: "playground-resources-overview-name-cell" },
-                React.createElement("div", { className: "playground-resources-overview-name-copy" },
-                  React.createElement("div", { className: "playground-settings-api-keys-name-row" },
-                    React.createElement("span", { className: "playground-resources-overview-name-title" }, apiKeyRecord.name || "API Key"),
-                    isStandardApiKey(apiKeyRecord)
-                      ? React.createElement("span", { className: "playground-settings-api-keys-pill" }, "standard")
-                      : null
-                  )
-                )
-              ),
-            },
-            {
-              id: "secret",
-              header: "Secret key",
-              accessor: (apiKeyRecord) => apiKeyRecord?.keyPrefix || "key",
-              width: "minmax(125px, 0.85fr)",
-              cell: ({ row: apiKeyRecord }) => React.createElement("div", { className: "playground-agents-overview-table-value playground-develop-api-keys-secret" }, String(apiKeyRecord?.keyPrefix || "key") + "••••"),
-            },
-            {
-              id: "created",
-              header: "Created",
-              accessor: (apiKeyRecord) => Date.parse(String(apiKeyRecord?.createdAt || "")) || 0,
-              sortable: true,
-              sortDescFirst: true,
-              width: "minmax(120px, 0.72fr)",
-              cell: ({ row: apiKeyRecord }) => React.createElement("div", { className: "playground-agents-overview-table-value" }, formatSettingsDate(apiKeyRecord.createdAt)),
-            },
-            {
-              id: "last-used",
-              header: "Last used",
-              accessor: (apiKeyRecord) => Date.parse(String(apiKeyRecord?.lastUsedAt || "")) || 0,
-              sortable: true,
-              sortDescFirst: true,
-              width: "minmax(120px, 0.72fr)",
-              hideBelow: 780,
-              cell: ({ row: apiKeyRecord }) => React.createElement("div", { className: "playground-agents-overview-table-value" }, apiKeyRecord?.lastUsedAt ? formatSettingsDate(apiKeyRecord.lastUsedAt) : "Never"),
-            },
-            {
-              id: "created-by",
-              header: "Created by",
-              accessor: getApiKeyCreatedByLabel,
-              sortable: true,
-              width: "minmax(130px, 0.8fr)",
-              hideBelow: 960,
-              cell: ({ row: apiKeyRecord }) => {
-                const createdByLabel = getApiKeyCreatedByLabel(apiKeyRecord);
-                return React.createElement("div", { className: "playground-agents-overview-table-value", title: createdByLabel }, createdByLabel);
-              },
-            },
-            {
-              id: "permissions",
-              header: "Permissions",
-              accessor: (apiKeyRecord) => getSettingsApiKeyScopeLabel(apiKeyRecord?.permissions),
-              sortable: true,
-              width: "minmax(140px, 0.9fr)",
-              hideBelow: 680,
-              cell: ({ row: apiKeyRecord }) => React.createElement("div", { className: "playground-agents-overview-table-value" }, getSettingsApiKeyScopeLabel(apiKeyRecord.permissions)),
-            },
-          ];
-          const apiKeysPlatformTable = React.createElement(PlatformDataTable, {
-            rows: visibleApiKeys,
-            columns: apiKeyColumns,
-            getRowId: (apiKeyRecord) => String(apiKeyRecord?.id || ""),
-            ariaLabel: "API keys",
-            className: "playground-api-keys-platform-data-table",
-            sorting: {
-              value: { id: developApiKeysSort, direction: developApiKeysSortDirection },
-              manual: true,
-              onChange: (next) => {
-                if (!next) {
-                  setDevelopApiKeysSort("name");
-                  setDevelopApiKeysSortDirection("asc");
-                  return;
-                }
-                setDevelopApiKeysSort(next.id === "created" || next.id === "last-used" ? next.id : "name");
-                setDevelopApiKeysSortDirection(next.direction);
-              },
-            },
-            selection: {
-              enabled: true,
-              value: developApiKeysSelectedIds,
-              onChange: ({ selectedIds }) => setDevelopApiKeysSelectedIds(new Set(selectedIds)),
-              ariaLabel: (apiKeyRecord) => "Select " + (apiKeyRecord.name || "API key"),
-            },
-            toolbar: {
-              search: {
-                value: developApiKeysSearchQuery,
-                onChange: setDevelopApiKeysSearchQuery,
-                placeholder: "Search API keys",
-                manual: true,
-              },
-              filters: [{
-                id: "api-key-kind",
-                label: "Filter",
-                value: developApiKeysFilter,
-                onChange: setDevelopApiKeysFilter,
-                options: apiKeyFilterOptions,
-              }],
-              showSort: true,
-              primaryAction: {
-                label: "New API Key",
-                icon: Plus,
-                onClick: () => setSettingsApiKeyDialogOpen(true),
-              },
-            },
-            getRowActions: (apiKeyRecord) => [
-              {
-                id: "view",
-                label: "View key",
-                icon: Eye,
-                onSelect: () => void openApiKeyRevealModal(apiKeyRecord),
-              },
-              {
-                id: "delete",
-                label: "Delete",
-                icon: Trash2,
-                danger: true,
-                disabled: apiKeyRecord?.canRevoke === false || settingsRevokingKeyId === apiKeyRecord?.id,
-                onSelect: () => void handleSettingsRevokeApiKey(apiKeyRecord?.id),
-              },
-            ],
-            loading: settingsApiKeysLoading,
-            error: settingsApiKeysError || null,
-            emptyState: "No API keys available.",
-            noResultsState: "No matching API keys found.",
-          });
-
-          const apiKeysToolbar = React.createElement("div", {
-              className: "playground-agents-overview-sticky-table-header playground-develop-resource-overview-sticky-table-header playground-develop-api-keys-sticky-table-header",
-            },
-            React.createElement("div", {
-                className: "playground-plugins-search-row playground-resources-overview-search-row playground-develop-server-kind-table-toolbar playground-develop-resource-overview-toolbar-row playground-develop-api-keys-table-toolbar",
-              },
-              React.createElement("div", { className: "playground-develop-server-kind-table-controls" },
-                React.createElement("div", { className: "playground-plugins-search-shell playground-develop-server-kind-search-shell" },
-                  React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("input", {
-                    type: "search",
-                    value: developApiKeysSearchQuery,
-                    onChange: (event) => setDevelopApiKeysSearchQuery(event.target.value),
-                    className: "playground-plugins-search",
-                    placeholder: "Search API keys",
-                  })
-                ),
-                React.createElement("div", { className: "playground-plugins-toolbar-controls" },
-                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-control-button is-bare is-backlog-sort" + (developApiKeysToolbarPopover === "sort" || developApiKeysSort !== "name" || developApiKeysSortDirection !== "asc" ? " is-active" : ""),
-                      onClick: () => setDevelopApiKeysToolbarPopover((current) => current === "sort" ? "" : "sort"),
-                    },
-                      React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Sort")
-                    ),
-                    developApiKeysToolbarPopover === "sort"
-                      ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                          apiKeySortOptions.map((option) => {
-                            const isSelected = developApiKeysSort === option.sort && developApiKeysSortDirection === option.direction;
-                            return React.createElement("button", {
-                                key: option.id,
-                                type: "button",
-                                className: "tb-popup-row tb-popup-row-select" + (isSelected ? " selected" : ""),
-                                onClick: () => {
-                                  setDevelopApiKeysSort(option.sort);
-                                  setDevelopApiKeysSortDirection(option.direction);
-                                  setDevelopApiKeysToolbarPopover("");
-                                },
-                              },
-                              React.createElement("span", { className: "tb-popup-check-slot" },
-                                isSelected ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 }) : null
-                              ),
-                              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                React.createElement("span", null, option.label)
-                              )
-                            );
-                          })
-                        )
-                      : null
-                  ),
-                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-control-button is-bare is-backlog-filter" + (developApiKeysToolbarPopover === "filter" || developApiKeysFilter !== "all" ? " is-active" : ""),
-                      onClick: () => setDevelopApiKeysToolbarPopover((current) => current === "filter" ? "" : "filter"),
-                    },
-                      React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Filter")
-                    ),
-                    developApiKeysToolbarPopover === "filter"
-                      ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-agents-list-action-menu playground-agents-overview-toolbar-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                          apiKeyFilterOptions.map((option) =>
-                            React.createElement("button", {
-                                key: option.id,
-                                type: "button",
-                                className: "tb-popup-row tb-popup-row-select" + (developApiKeysFilter === option.id ? " selected" : ""),
-                                onClick: () => {
-                                  setDevelopApiKeysFilter(option.id);
-                                  setDevelopApiKeysToolbarPopover("");
-                                },
-                              },
-                              React.createElement("span", { className: "tb-popup-check-slot" },
-                                developApiKeysFilter === option.id
-                                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                  : null
-                              ),
-                              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                React.createElement("span", null, option.label),
-                                React.createElement("span", null, option.description)
-                              )
-                            )
-                          )
-                        )
-                      : null
-                  )
-                )
-              ),
-              React.createElement("button", {
-                type: "button",
-                className: "playground-top-nav-private-chat-button playground-agents-nav-create-button playground-agents-overview-toolbar-create-button playground-resources-overview-create-button",
-                onClick: () => setSettingsApiKeyDialogOpen(true),
-              },
-                React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("span", null, "New API Key")
-              )
-            )
-          );
-
-
-          const newlyCreatedKeyNotice = settingsNewlyCreatedKey
-            ? React.createElement("div", { className: "playground-settings-created-key-notice playground-develop-api-keys-created-notice" },
-                React.createElement("div", { className: "playground-settings-created-key-row" },
-                  React.createElement("div", { style: { minWidth: 0, flex: "1 1 auto" } },
-                    React.createElement("p", { className: "playground-settings-created-key-title" }, "API Key Created Successfully"),
-                    React.createElement("p", { className: "playground-settings-created-key-copy" }, "Copy this key now or view it again from the API keys table."),
-                    React.createElement("div", { className: "playground-settings-code-row" },
-                      React.createElement("code", { className: "playground-settings-code" }, settingsNewlyCreatedKey),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-settings-icon-button",
-                        onClick: () => {
-                          void handleSettingsCopyField(settingsNewlyCreatedKey, "new-key");
-                        },
-                        title: "Copy to clipboard",
-                      }, settingsCopiedField === "new-key"
-                        ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 })
-                        : React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.8 }))
-                    )
-                  ),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-settings-icon-button",
-                    onClick: () => setSettingsNewlyCreatedKey(""),
-                    "aria-label": "Dismiss created API key",
-                  }, React.createElement(X, { width: 14, height: 14, strokeWidth: 1.8 }))
-                )
-              )
-            : null;
-
-          return React.createElement(React.Fragment, null,
-            React.createElement("section", {
-                className: "playground-environments-detail playground-plugins-detail playground-skills-page playground-resources-page is-develop-server-kind-page playground-agents-overview-page playground-resource-type-overview-page playground-develop-api-keys-page",
-              },
-              React.createElement("div", { className: "playground-environments-detail-scroll playground-environments-home-scroll" },
-                React.createElement("div", { className: "playground-environments-home-content" },
-                  React.createElement("section", { className: "playground-environments-home-hero playground-develop-server-kind-hero playground-develop-api-keys-hero" },
-                    React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header playground-develop-server-kind-header playground-develop-api-keys-page-header" },
-                      React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title" }, "Configure your API Keys"),
-                      React.createElement("div", { className: "playground-project-overview-summary-title-actions playground-develop-header-actions" },
-                        React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-develop-server-metrics-menu-shell" },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-content-menu-button",
-                            "aria-label": "API key options",
-                            "aria-expanded": developApiKeysMenuOpen ? "true" : "false",
-                            onClick: () => setDevelopApiKeysMenuOpen((current) => !current),
-                          }, React.createElement(Ellipsis, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
-                          developApiKeysMenuOpen
-                            ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                                React.createElement("button", {
-                                  type: "button",
-                                  className: "tb-popup-row",
-                                  onClick: () => {
-                                    setDevelopApiKeysMenuOpen(false);
-                                    openSettingsPage("costs-overview");
-                                  },
-                                },
-                                  React.createElement(ChartNoAxesColumnIncreasing, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                    React.createElement("span", null, "View Usage")
-                                  )
-                                )
-                              )
-                            : null
-                        )
-                      )
-                    ),
-                    newlyCreatedKeyNotice,
-                    renderSettingsInlineStatus("error", settingsApiKeysError),
-                    React.createElement("section", {
-                        className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-overview-list-section playground-team-grid-table-section playground-resources-overview-section playground-develop-resource-overview-table-section playground-develop-api-keys-table-section is-servers-overview is-develop-server-kind-list",
-                      },
-                      apiKeysPlatformTable
-                    )
-                  )
-                )
-              )
-            ),
-            apiKeyDialog,
-            apiKeyRevealDialog
-          );
-        }
-
-        function renderDevelopHomePage() {
-          const totalUsedCT = readSettingsComputeTokens(settingsUsageSummary?.totals || {}, "totalCT", "totalCost");
-          const apiKeyCount = Array.isArray(settingsApiKeys) ? settingsApiKeys.filter((key) => !key?.revokedAt).length : 0;
-          const activeServerCount = Array.isArray(realServers)
-            ? realServers.filter((server) => String(server?.status || server?.state || "").toLowerCase() !== "deleted").length
-            : 0;
-          const activeDevelopServers = Array.isArray(realServers)
-            ? realServers.filter((server) => (
-                server?.id
-                && String(server?.status || server?.state || "").toLowerCase() !== "deleted"
-              ))
-            : [];
-          const activeDevelopServerKindCounts = activeDevelopServers.reduce((counts, server) => {
-            const kind = canonicalizePlaygroundServerKind(server?.kind);
-            counts[kind] = (counts[kind] || 0) + 1;
-            return counts;
-          }, {});
-          const activeDevelopDatabaseCount = Math.max(0, Math.round(Number(developServerOperationalMetrics?.resourceCounts?.databases || 0)));
-          const quickstartSnippets = {
-            javascript: [
-              "import { ComputerAgentsClient } from 'computer-agents';",
-              "",
-              "const client = new ComputerAgentsClient();",
-              "",
-              "const result = await client.run('Build a CRM pipeline board', {",
-              "  onEvent: (event) => console.log(event.type)",
-              "});",
-              "",
-              "console.log(result.content);",
-            ],
-            python: [
-              "from computer_agents import ComputerAgentsClient",
-              "",
-              "client = ComputerAgentsClient()",
-              "",
-              "result = client.run(",
-              "    'Build a CRM pipeline board',",
-              "    on_event=lambda event: print(event['type']),",
-              ")",
-              "",
-              "print(result.content)",
-            ],
-          };
-          const activeQuickstartLanguage = quickstartSnippets[developQuickstartLanguage] ? developQuickstartLanguage : "javascript";
-          const quickstartLines = quickstartSnippets[activeQuickstartLanguage];
-          const renderDevelopCodeTokens = (line) => {
-            const parts = [];
-            const pattern = /('(?:[^'\\\\]|\\\\.)*'|"(?:[^"\\\\]|\\\\.)*"|\\b(?:import|from|const|new|await|lambda|print)\\b|\\b(?:ComputerAgentsClient|client|result)\\b|\\b(?:run|onEvent|on_event|console|log|content|event|type)\\b)/g;
-            let cursor = 0;
-            let match;
-            while ((match = pattern.exec(line))) {
-              if (match.index > cursor) {
-                parts.push(line.slice(cursor, match.index));
-              }
-              const token = match[0];
-              const tokenClass = token.startsWith("'") || token.startsWith('"')
-                ? "is-string"
-                : /^(import|from|const|new|await|lambda|print)$/.test(token)
-                  ? "is-keyword"
-                  : /^(run|onEvent|on_event|console|log|content|event|type)$/.test(token)
-                    ? "is-property"
-                    : "is-identifier";
-              parts.push(React.createElement("span", {
-                key: String(match.index) + ":" + token,
-                className: "playground-develop-docs-code-token " + tokenClass,
-              }, token));
-              cursor = match.index + token.length;
-            }
-            if (cursor < line.length) {
-              parts.push(line.slice(cursor));
-            }
-            return parts.length ? parts : "\u00a0";
-          };
-          const renderCodeLine = (line, index) =>
-            React.createElement("div", { key: String(index) + ":" + line, className: "playground-develop-docs-code-line" },
-              React.createElement("span", { className: "playground-develop-docs-code-line-number" }, String(index + 1)),
-              React.createElement("span", null, renderDevelopCodeTokens(line))
-            );
-          const coreConceptCards = [
-            {
-              title: "Threads",
-              description: "Run work in persistent histories with streaming, editable turns, and resumable state.",
-              href: "/developers/core-concepts#threads",
-              image: "/img/001-docs/thread.jpg",
-            },
-            {
-              title: "Computers",
-              description: "Give ACP stateful execution machines with runtimes, GUI access, snapshots, and forks.",
-              href: "/developers/core-concepts#computers",
-              image: "/img/001-docs/computer.jpg",
-            },
-            {
-              title: "Projects",
-              description: "Coordinate mission control, tickets, resources, schedules, and agents in one workspace.",
-              href: "/developers/core-concepts#projects",
-              image: "/img/001-docs/projects.jpg",
-            },
-          ];
-          const openDevelopApiKeysSection = (options = {}) => {
-            openDevelopApiKeysPage(options);
-          };
-          const openDevelopWebhooksSection = () => {
-            setDevelopHomeSection("webhooks");
-          };
-          const tabs = [
-            { id: "overview", label: "Overview", onClick: () => setDevelopHomeSection("overview") },
-            { id: "webhooks", label: "Webhooks", onClick: openDevelopWebhooksSection },
-          ];
-          const quickLinks = [
-            { label: "Create an API Key", Icon: Key, onClick: () => openDevelopApiKeysSection({ openCreateDialog: true }) },
-            {
-              label: "Browse Models",
-              Icon: Grid3x3,
-              onClick: () => {
-                openModelsPage();
-              },
-            },
-${INFERENCE_APP_SCRIPT_FRAGMENTS.configureHomeEntry}            { label: "Webhooks", Icon: Webhook, onClick: openDevelopWebhooksSection },
-            { label: "API Reference", Icon: ReceiptText, onClick: () => window.open(${JSON.stringify(aiosOrigin + "/developers")}, "_blank", "noopener,noreferrer") },
-            { label: "Pricing Overview", Icon: Coins, onClick: () => window.open(${JSON.stringify(aiosOrigin + "/pricing")}, "_blank", "noopener,noreferrer") },
-          ];
-          const handleCopyQuickstart = () => {
-            try {
-              void navigator.clipboard?.writeText(quickstartLines.join("\\n"));
-            } catch {}
-          };
-          const formatDevelopOperationalMetricValue = (value) => {
-            const numericValue = Math.max(0, Math.round(Number.isFinite(Number(value)) ? Number(value) : 0));
-            if (numericValue >= 1000000) {
-              return (numericValue / 1000000).toFixed(numericValue >= 10000000 ? 0 : 1).replace(".0", "") + "M";
-            }
-            if (numericValue >= 1000) {
-              return (numericValue / 1000).toFixed(numericValue >= 10000 ? 0 : 1).replace(".0", "") + "k";
-            }
-            return numericValue.toLocaleString("en-US");
-          };
-          const buildDevelopMetricHourLabels = () => {
-            const formatter = new Intl.DateTimeFormat("en-US", { hour: "numeric" });
-            const anchor = new Date();
-            anchor.setMinutes(0, 0, 0);
-            return Array.from({ length: 24 }, (_, index) => {
-              const date = new Date(anchor);
-              date.setHours(anchor.getHours() - (23 - index));
-              return formatter.format(date);
-            });
-          };
-          const developOperationalLabels = Array.isArray(developServerOperationalMetrics?.labels) && developServerOperationalMetrics.labels.length
-            ? developServerOperationalMetrics.labels
-            : buildDevelopMetricHourLabels();
-          const getDevelopOperationalSeries = (key) => {
-            const values = developServerOperationalMetrics?.series?.[key];
-            return Array.isArray(values) && values.length === developOperationalLabels.length
-              ? values.map((value) => Math.max(0, Number(value || 0)))
-              : developOperationalLabels.map(() => 0);
-          };
-          const developOperationalMetricTabs = [
-            {
-              id: "hosting-requests",
-              key: "hostingRequests",
-              label: "Hosting Requests",
-              title: "Hosting Requests",
-              tone: "requests",
-              legend: "Web apps",
-              serverKind: "web_app",
-              resourceCountKey: "webApps",
-              resourceFallbackCount: activeDevelopServerKindCounts.web_app || 0,
-              resourceSingular: "Web App",
-              resourcePlural: "Web Apps",
-              emptyText: "No hosting requests in the last 24 hours",
-            },
-            {
-              id: "api-requests",
-              key: "apiRequests",
-              label: "API Requests",
-              title: "API Requests",
-              tone: "success",
-              legend: "APIs",
-              serverKind: "api",
-              resourceCountKey: "apis",
-              resourceFallbackCount: activeDevelopServerKindCounts.api || 0,
-              resourceSingular: "API",
-              resourcePlural: "APIs",
-              emptyText: "No API requests in the last 24 hours",
-            },
-            {
-              id: "function-calls",
-              key: "functionCalls",
-              label: "Function Calls",
-              title: "Function Calls",
-              tone: "latency",
-              legend: "Functions",
-              serverKind: "function",
-              resourceCountKey: "functions",
-              resourceFallbackCount: activeDevelopServerKindCounts.function || 0,
-              resourceSingular: "Function",
-              resourcePlural: "Functions",
-              emptyText: "No function calls in the last 24 hours",
-            },
-            {
-              id: "database-reads",
-              key: "databaseReads",
-              label: "Database Reads",
-              title: "Database Reads",
-              tone: "reads",
-              legend: "Reads",
-              serverKind: "database",
-              resourceCountKey: "databases",
-              resourceFallbackCount: activeDevelopDatabaseCount,
-              resourceSingular: "Database",
-              resourcePlural: "Databases",
-              emptyText: "No database reads in the last 24 hours",
-            },
-            {
-              id: "database-writes",
-              key: "databaseWrites",
-              label: "Database Writes",
-              title: "Database Writes",
-              tone: "writes",
-              legend: "Writes",
-              serverKind: "database",
-              resourceCountKey: "databases",
-              resourceFallbackCount: activeDevelopDatabaseCount,
-              resourceSingular: "Database",
-              resourcePlural: "Databases",
-              emptyText: "No database writes in the last 24 hours",
-            },
-          ];
-          const activeDevelopOperationalMetric = developOperationalMetricTabs.find((tab) => tab.id === developServerMetricsChartTab)
-            || developOperationalMetricTabs[0];
-          const openActiveDevelopOperationalResourceComposer = () => {
-            const normalizedServerKind = normalizePlaygroundServerOverviewKind(activeDevelopOperationalMetric?.serverKind) || "web_app";
-            openResourcesView("servers", { serverKind: normalizedServerKind });
-            handleCreateServer(normalizedServerKind);
-          };
-          const renderDevelopOperationalMetricsChart = () => {
-            const activeSeriesValues = getDevelopOperationalSeries(activeDevelopOperationalMetric.key);
-            const activeResourceCount = Math.max(0, Math.round(Number(
-              developServerOperationalMetrics?.resourceCounts?.[activeDevelopOperationalMetric.resourceCountKey]
-              ?? activeDevelopOperationalMetric.resourceFallbackCount
-              ?? 0
-            ) || 0));
-            const activeResourceLabel = activeResourceCount === 1
-              ? activeDevelopOperationalMetric.resourceSingular
-              : activeDevelopOperationalMetric.resourcePlural;
-            return React.createElement("section", { className: "playground-develop-server-metrics playground-settings-usage-top-chart playground-environments-home-metrics" },
-              React.createElement("div", { className: "playground-develop-server-metrics-toolbar" },
-                React.createElement("div", { className: "playground-develop-server-metrics-resource-pill" },
-                  React.createElement("span", { className: "playground-develop-server-metrics-resource-count" }, formatDevelopOperationalMetricValue(activeResourceCount)),
-                  React.createElement("span", { className: "playground-develop-server-metrics-resource-label" }, activeResourceLabel),
-                  React.createElement(ChevronRight, { width: 14, height: 14, strokeWidth: 1.8 })
-                ),
-                React.createElement(PlatformSecondaryButton, {
-                  type: "button",
-                  className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button playground-develop-server-metrics-add-button",
-                  onClick: openActiveDevelopOperationalResourceComposer,
-                }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }), "Add Resource")
-              ),
-              React.createElement("div", { className: "playground-develop-server-metrics-title-row" },
-                React.createElement("h2", { className: "playground-develop-server-metrics-title" }, "Analytics"),
-                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-develop-server-metrics-menu-shell" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-content-menu-button",
-                    "aria-label": "Analytics options",
-                    "aria-expanded": developAnalyticsMenuOpen ? "true" : "false",
-                    onClick: () => setDevelopAnalyticsMenuOpen((current) => !current),
-                  }, React.createElement(Ellipsis, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
-                  developAnalyticsMenuOpen
-                    ? React.createElement(PlatformPopupSurface, {
-                        className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                      },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "tb-popup-row",
-                          onClick: () => {
-                            setDevelopAnalyticsMenuOpen(false);
-                            openSettingsPage("costs-overview");
-                          },
-                        },
-                          React.createElement(ChartNoAxesColumnIncreasing, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                            React.createElement("span", null, "Show Usage")
-                          )
-                        )
-                      )
-                    : null
-                )
-              ),
-              React.createElement("div", { className: "playground-tasks-detail-facts" },
-                React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-                  React.createElement("div", { className: "playground-database-overview" },
-                    React.createElement("div", { className: "playground-database-overview-chart-block playground-settings-usage-chart-block playground-develop-server-metrics-chart-block" },
-                      React.createElement("div", { className: "playground-project-overview-summary-kpis playground-project-overview-chart-kpis playground-settings-usage-chart-kpis playground-develop-server-metrics-kpis" },
-                        developOperationalMetricTabs.map((tab) =>
-                          React.createElement("button", {
-                            key: tab.id,
-                            type: "button",
-                            className: "playground-project-overview-summary-kpi playground-settings-usage-chart-kpi playground-develop-server-metrics-kpi" + (activeDevelopOperationalMetric.id === tab.id ? " is-active" : ""),
-                            onClick: () => setDevelopServerMetricsChartTab(tab.id),
-                          },
-                            React.createElement("div", { className: "playground-project-overview-summary-kpi-heading" },
-                              React.createElement("div", { className: "playground-project-overview-summary-kpi-label" }, tab.label)
-                            ),
-                            React.createElement("div", { className: "playground-project-overview-summary-kpi-value" },
-                              formatDevelopOperationalMetricValue(developServerOperationalMetrics?.totals?.[tab.key] || 0)
-                            )
-                          )
-                        )
-                      ),
-                      React.createElement("div", { className: "playground-settings-usage-chart-panel playground-develop-server-metrics-panel" },
-                        developServerOperationalMetricsLoading
-                          ? React.createElement("div", { className: "playground-settings-loading-state playground-settings-usage-chart-loading-frame" },
-                              React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
-                            )
-                          : renderPlaygroundTelemetryTimeseriesChart({
-                              labels: developOperationalLabels,
-                              series: [{
-                                key: activeDevelopOperationalMetric.key,
-                                tone: activeDevelopOperationalMetric.tone,
-                                values: activeSeriesValues,
-                              }],
-                              emptyText: activeDevelopOperationalMetric.emptyText,
-                              ariaLabel: activeDevelopOperationalMetric.title + " over time",
-                              chartHeight: 288,
-                              buildLinePath: buildSettingsSvgLinePath,
-                              getSeriesValue: (entry, _label, index) => entry?.values?.[index],
-                              getXAxisLabel: (label) => String(label || ""),
-                              formatAxisValue: formatDevelopOperationalMetricValue,
-                            }),
-                        React.createElement("div", {
-                          className: "playground-develop-server-metrics-footer",
-                        },
-                          React.createElement("div", { className: "playground-develop-server-metrics-footer-left playground-develop-server-metrics-legend" },
-                            React.createElement("div", { className: "playground-settings-usage-legend-item" },
-                              React.createElement("span", { className: "playground-settings-usage-legend-swatch is-" + activeDevelopOperationalMetric.tone }),
-                              React.createElement("span", null, activeDevelopOperationalMetric.legend)
-                            ),
-                            developServerOperationalMetricsError
-                              ? React.createElement("span", { className: "playground-develop-server-metrics-error" }, developServerOperationalMetricsError)
-                              : React.createElement("span", { className: "playground-develop-server-metrics-source" },
-                                  formatDevelopOperationalMetricValue(developServerOperationalMetrics?.resourceCount || 0) + " resources monitored"
-                                )
-                          ),
-                          React.createElement("div", { className: "playground-environments-home-comparison-timescale playground-develop-server-metrics-timescale" },
-                            React.createElement("select", {
-                              className: "playground-environments-home-comparison-timescale-select",
-                              value: "24h",
-                              "aria-label": "Server metrics period",
-                              onChange: () => {},
-                            },
-                              React.createElement("option", { value: "24h" }, "Last 24 hours")
-                            )
-                          )
-                        )
-                      )
-                    )
-                  )
-                )
-              )
-            );
-          };
-
-          const developHomeTimescaleOptions = [
-            { id: "day", label: "1D" },
-            { id: "week", label: "1W" },
-            { id: "month", label: "1M" },
-          ];
-          const activeDevelopHomeTimescaleId = developHomeTimescaleOptions.some((option) => option.id === developHomeChartTimescale)
-            ? developHomeChartTimescale
-            : "day";
-          const developHomeTimescaleControl = React.createElement("div", {
-              className: "playground-project-overview-progress-combo-ranges",
-              role: "group",
-              "aria-label": "Develop analytics time frame",
-            },
-            developHomeTimescaleOptions.map((option) =>
-              React.createElement("button", {
-                key: option.id,
-                type: "button",
-                className: "playground-project-overview-progress-combo-range" + (activeDevelopHomeTimescaleId === option.id ? " is-active" : ""),
-                onClick: () => setDevelopHomeChartTimescale(option.id),
-                "aria-pressed": activeDevelopHomeTimescaleId === option.id ? "true" : "false",
-              }, option.label)
-            )
-          );
-          const developHomeAnalyticsOptions = React.createElement("div", {
-              className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-develop-server-metrics-menu-shell",
-            },
-            React.createElement("button", {
-              type: "button",
-              className: "playground-content-menu-button",
-              "aria-label": "Develop options",
-              "aria-expanded": developAnalyticsMenuOpen ? "true" : "false",
-              onClick: () => setDevelopAnalyticsMenuOpen((current) => !current),
-            }, React.createElement(Ellipsis, { className: "playground-content-menu-icon", strokeWidth: 1.75 })),
-            developAnalyticsMenuOpen
-              ? React.createElement(PlatformPopupSurface, {
-                  className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                },
-                  developHomeSection === "overview"
-                    ? React.createElement("button", {
-                        type: "button",
-                        className: "tb-popup-row",
-                        onClick: () => {
-                          setDevelopAnalyticsMenuOpen(false);
-                          openSettingsPage("costs-overview");
-                        },
-                      },
-                        React.createElement(ChartNoAxesColumnIncreasing, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                          React.createElement("span", null, "Show Usage")
-                        )
-                      )
-                    : null,
-                  React.createElement("button", {
-                    type: "button",
-                    className: "tb-popup-row",
-                    onClick: () => {
-                      setDevelopAnalyticsMenuOpen(false);
-                      window.open(${JSON.stringify(aiosOrigin + "/pricing")}, "_blank", "noopener,noreferrer");
-                    },
-                  },
-                    React.createElement(Coins, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                      React.createElement("span", null, "API Pricing")
-                    )
-                  ),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "tb-popup-row",
-                    onClick: () => {
-                      setDevelopAnalyticsMenuOpen(false);
-                      openDocsPage();
-                    },
-                  },
-                    React.createElement(BookOpen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                      React.createElement("span", null, "Documentation")
-                    )
-                  )
-                )
-              : null
-          );
-          const developHomeServerActivityKeys = [
-            "hostingRequests",
-            "apiRequests",
-            "functionCalls",
-            "agentRuntimeRuns",
-            "secretReads",
-            "authEvents",
-            "paymentCheckoutSessions",
-          ];
-          const developHomeDatabaseActivityKeys = ["databaseReads", "databaseWrites"];
-          const sumDevelopOperationalTotals = (keys) => keys.reduce((sum, key) => (
-            sum + Math.max(0, Number(developServerOperationalMetrics?.totals?.[key] || 0))
-          ), 0);
-          const sumDevelopOperationalSeries = (keys) => developOperationalLabels.map((_, index) => (
-            keys.reduce((sum, key) => sum + Math.max(0, Number(getDevelopOperationalSeries(key)?.[index] || 0)), 0)
-          ));
-          const developHomeServerActivityValues = sumDevelopOperationalSeries(developHomeServerActivityKeys);
-          const developHomeDatabaseActivityValues = sumDevelopOperationalSeries(developHomeDatabaseActivityKeys);
-          const developHomeResourceCount = Math.max(0, Math.round(Number(
-            developServerOperationalMetrics?.resourceCount
-            ?? (activeServerCount + activeDevelopDatabaseCount)
-            ?? 0
-          ) || 0));
-          const developHomeOverviewKpis = [
-            {
-              id: "develop-resources",
-              label: "Resources",
-              color: "#7effff",
-              value: formatDevelopOperationalMetricValue(developHomeResourceCount),
-            },
-            {
-              id: "develop-server-operations",
-              label: "Server Operations",
-              color: "rgb(143, 196, 255)",
-              value: formatDevelopOperationalMetricValue(sumDevelopOperationalTotals(developHomeServerActivityKeys)),
-            },
-            {
-              id: "develop-database-operations",
-              label: "Database Operations",
-              color: "rgb(103, 80, 255)",
-              value: formatDevelopOperationalMetricValue(sumDevelopOperationalTotals(developHomeDatabaseActivityKeys)),
-            },
-            {
-              id: "develop-errors",
-              label: "Errors",
-              color: "#f53b3a",
-              value: formatDevelopOperationalMetricValue(developServerOperationalMetrics?.totals?.errors || 0),
-            },
-            {
-              id: "develop-cost",
-              label: "Usage cost",
-              color: "#9ff6ce",
-              value: formatDevelopOperationalMetricValue(developServerOperationalMetrics?.totals?.computeTokens || 0),
-            },
-          ];
-          const developHomeOverviewChartSeries = [
-            {
-              id: "server-operations",
-              label: "Server Operations",
-              color: "rgb(143, 196, 255)",
-              values: developHomeServerActivityValues,
-            },
-            {
-              id: "database-operations",
-              label: "Database Operations",
-              color: "rgb(103, 80, 255)",
-              values: developHomeDatabaseActivityValues,
-            },
-          ];
-          const hasDevelopHomeOverviewActivity = developHomeOverviewChartSeries.some((series) => (
-            series.values.some((value) => Math.max(0, Number(value || 0)) > 0)
-          ));
-          const renderDevelopHomeOverviewAnalyticsSection = () =>
-            React.createElement("div", {
-              className: "playground-environments-home-metrics playground-develop-server-metrics playground-develop-server-kind-metrics playground-develop-home-overview-metrics",
-            },
-              React.createElement("section", {
-                className: "playground-project-overview-progress-combo-card playground-agents-detail-progress-combo-card playground-evaluations-analytics-card playground-agents-overview-analytics-card playground-resource-type-overview-analytics-card playground-develop-home-overview-analytics-card",
-              },
-                React.createElement("div", { className: "playground-project-overview-progress-combo-metrics" },
-                  developHomeOverviewKpis.map((item) =>
-                    React.createElement("div", { key: item.id, className: "playground-project-overview-progress-combo-metric" },
-                      React.createElement("div", { className: "playground-project-overview-progress-combo-metric-label" },
-                        React.createElement("span", {
-                          className: "playground-project-overview-progress-combo-metric-dot is-" + item.id,
-                          style: { background: item.color },
-                          "aria-hidden": "true",
-                        }),
-                        React.createElement("span", null, item.label)
-                      ),
-                      React.createElement("div", { className: "playground-project-overview-progress-combo-metric-value" }, item.value)
-                    )
-                  )
-                ),
-                React.createElement("div", { className: "playground-project-overview-progress-combo-chart playground-develop-home-overview-chart" },
-                  developServerOperationalMetricsLoading
-                    ? React.createElement("div", { className: "playground-settings-loading-state playground-settings-usage-chart-loading-frame" },
-                        React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
-                      )
-                    : developServerOperationalMetricsError
-                      ? React.createElement("div", { className: "playground-settings-usage-chart-empty" }, developServerOperationalMetricsError)
-                      : hasDevelopHomeOverviewActivity
-                        ? renderSettingsUsageMultiStackedChart({
-                            labels: developOperationalLabels,
-                            series: developHomeOverviewChartSeries,
-                            tickFormatter: formatDevelopOperationalMetricValue,
-                            tall: true,
-                            ariaLabel: "Develop resource activity over time",
-                          })
-                        : React.createElement("div", { className: "playground-settings-usage-chart-empty is-tall" }, "No resource activity yet")
-                )
-              )
-            );
-
-          return React.createElement("div", { className: "playground-develop-home" },
-            React.createElement("div", { className: "playground-develop-home-inner" },
-              React.createElement("section", { className: "playground-environments-home-hero playground-develop-server-kind-hero playground-develop-home-hero" },
-                React.createElement("div", { className: "playground-project-overview-summary-title-row playground-develop-header playground-develop-server-kind-header playground-develop-home-hero-header" },
-                  React.createElement("h1", { className: "playground-project-overview-summary-title playground-develop-title" }, "Develop your Workspace"),
-                  React.createElement("div", { className: "playground-project-overview-summary-title-actions playground-develop-header-actions" },
-                    developHomeSection === "overview" ? developHomeTimescaleControl : null,
-                    developHomeAnalyticsOptions
-                  )
-                ),
-                React.createElement("div", { className: "playground-agents-overview-tabs playground-project-overview-tabs playground-develop-tabs playground-develop-home-tabs" },
-                  React.createElement("div", { className: "playground-project-overview-chart-tabs" },
-                    tabs.map((tab) =>
-                      React.createElement("button", {
-                        key: tab.id,
-                        type: "button",
-                        className: "playground-project-overview-chart-tab playground-develop-tab" + (tab.id === developHomeSection ? " is-active" : ""),
-                        onClick: tab.onClick || undefined,
-                      }, tab.label)
-                    )
-                  )
-                ),
-                developHomeSection === "overview" ? renderDevelopHomeOverviewAnalyticsSection() : null
-              ),
-              developHomeSection === "webhooks"
-                  ? React.createElement("div", { className: "playground-plugins-page playground-develop-webhooks-page" },
-                      renderWebhookActionsPanel({ embedded: true, searchQuery: "", showEmbeddedListActions: false })
-                    )
-                : React.createElement(React.Fragment, null,
-              React.createElement("section", { className: "playground-develop-docs-quickstart-card" },
-                React.createElement("div", { className: "playground-develop-docs-quickstart-inner" },
-                  React.createElement("div", null,
-                    React.createElement("h2", { className: "playground-develop-docs-quickstart-title" }, "Developer quickstart"),
-                    React.createElement("p", { className: "playground-develop-docs-quickstart-text" },
-                      "Start ACP in minutes. Create a project, get a computer, run a thread, and ship your first working workflow."
-                    ),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-develop-docs-quickstart-button",
-                      onClick: () => window.open(${JSON.stringify(aiosOrigin + "/developers/quickstart")}, "_blank", "noopener,noreferrer"),
-                    }, "Get started")
-                  ),
-                  React.createElement("div", { className: "playground-develop-docs-code-card" },
-                    React.createElement("div", { className: "playground-develop-docs-code-toolbar" },
-                      React.createElement("div", { className: "playground-develop-docs-code-tabs" },
-                        Object.entries({ javascript: "javascript", python: "python" }).map(([language, label]) =>
-                          React.createElement("button", {
-                            key: language,
-                            type: "button",
-                            className: "playground-develop-docs-code-tab" + (activeQuickstartLanguage === language ? " is-active" : ""),
-                            onClick: () => setDevelopQuickstartLanguage(language),
-                          }, label)
-                        )
-                      ),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-develop-docs-code-copy",
-                        "aria-label": "Copy quickstart code",
-                        title: "Copy quickstart code",
-                        onClick: handleCopyQuickstart,
-                      }, React.createElement(Copy, { width: 16, height: 16, strokeWidth: 1.9 }))
-                    ),
-                    React.createElement("pre", { className: "playground-develop-docs-code-body" },
-                      quickstartLines.map(renderCodeLine)
-                    )
-                  )
-                )
-              ),
-              React.createElement("section", { className: "playground-develop-docs-concepts" },
-                React.createElement("div", { className: "playground-develop-docs-concepts-header" },
-                  React.createElement("div", null,
-                    React.createElement("h2", { className: "playground-develop-docs-concepts-title" }, "Core concepts"),
-                    React.createElement("p", { className: "playground-develop-docs-concepts-copy" },
-                      "Understand the primitives that define how ACP organizes work, persists state, and executes actions."
-                    )
-                  ),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-develop-docs-concepts-view-all",
-                    onClick: () => window.open(${JSON.stringify(aiosOrigin + "/developers/core-concepts")}, "_blank", "noopener,noreferrer"),
-                  }, "View all")
-                ),
-                React.createElement("div", { className: "playground-develop-docs-concepts-grid" },
-                  coreConceptCards.map((card) =>
-                    React.createElement("button", {
-                      key: card.title,
-                      type: "button",
-                      className: "playground-develop-docs-concept-card",
-                      onClick: () => window.open(${JSON.stringify(aiosOrigin)} + card.href, "_blank", "noopener,noreferrer"),
-                    },
-                      React.createElement("div", {
-                        className: "playground-develop-docs-concept-art",
-                        style: {
-                          backgroundImage: "linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.18)), url(" + card.image + ")",
-                        },
-                      }),
-                      React.createElement("div", { className: "playground-develop-docs-concept-copy" },
-                        React.createElement("div", { className: "playground-develop-docs-concept-title" }, card.title),
-                        React.createElement("div", { className: "playground-develop-docs-concept-description" }, card.description)
-                      )
-                    )
-                  )
-                )
-              ),
-              React.createElement("div", { className: "playground-develop-bottom-grid" },
-                React.createElement("section", { className: "playground-develop-section" },
-                  React.createElement("h2", { className: "playground-develop-section-title" }, "Usage"),
-                  React.createElement("div", { className: "playground-develop-usage-card" },
-                    React.createElement("div", { className: "playground-develop-usage-top" },
-                      React.createElement("div", null,
-                        React.createElement("div", { className: "playground-develop-usage-label" }, "Current period"),
-                        React.createElement("div", { className: "playground-develop-usage-value" }, formatSettingsComputeTokens(totalUsedCT))
-                      ),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-develop-usage-icon",
-                        onClick: () => openSettingsPage("costs-overview"),
-                        "aria-label": "Open usage details",
-                      }, React.createElement(ChartNoAxesColumnIncreasing, { width: 20, height: 20, strokeWidth: 1.8 }))
-                    ),
-                    React.createElement("div", { className: "playground-develop-usage-actions" },
-                      React.createElement(PlatformPrimaryButton, {
-                        type: "button",
-                        className: "playground-develop-secondary-button is-primary",
-                        onClick: () => openDevelopApiKeysSection({ openCreateDialog: true }),
-                      }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }), "Create API Key"),
-                      React.createElement(PlatformSecondaryButton, {
-                        type: "button",
-                        className: "playground-develop-secondary-button",
-                        onClick: () => openResourcesView("servers", { serverKind: "web_app" }),
-                      }, String(activeServerCount) + " resources"),
-                      React.createElement(PlatformSecondaryButton, {
-                        type: "button",
-                        className: "playground-develop-secondary-button",
-                        onClick: () => openDevelopApiKeysSection(),
-                      }, String(apiKeyCount) + " keys")
-                    )
-                  )
-                ),
-                React.createElement("section", { className: "playground-develop-section" },
-                  React.createElement("h2", { className: "playground-develop-section-title" }, "Quick Links"),
-	                  React.createElement("div", { className: "playground-develop-quick-links" },
-	                    quickLinks.map((link) => {
-	                      const Icon = getPlaygroundSafeIconComponent(link.Icon, Circle);
-	                      return React.createElement("button", {
-                        key: link.label,
-                        type: "button",
-                        className: "playground-develop-quick-link",
-                        onClick: link.onClick,
-                      },
-                        React.createElement(Icon, { className: "playground-develop-quick-link-icon", strokeWidth: 1.8 }),
-                        React.createElement("span", { className: "playground-develop-quick-link-label" }, link.label)
-                      );
-                    })
-                  )
-                )
-              )
-              )
-            )
-          );
-        }
-
-        function handleStatusIndicatorDismiss(id) {
-          if (String(id || "").startsWith("task-run:")) {
-            const taskId = String(id || "").slice("task-run:".length);
-            setTaskRunStates((current) => {
-              if (!taskId || !current[taskId]) {
-                return current;
-              }
-              const next = { ...current };
-              delete next[taskId];
-              return next;
-            });
-            removeStatusIndicatorItem(id);
-            return;
-          }
-          setDismissedStatusIndicatorIds((current) => current.includes(id) ? current : [...current, id]);
-        }
-
-        function renderStatusIndicators() {
-          return React.createElement(StatusIndicatorStack, {
-            items: statusIndicatorItems,
-            emptyText: "No cloud integrations connected",
-            dismissedIds: dismissedStatusIndicatorIds,
-            onDismiss: handleStatusIndicatorDismiss,
-          });
-        }
-
-        function getSidebarWorkspaceOptions() {
-          return [
-            {
-              id: "work",
-              label: "Create",
-              description: "Threads, projects, files",
-              Icon: PencilRuler,
-            },
-            {
-              id: "configure",
-              label: "Configure",
-              description: "Agents, computers, plugins, skills",
-              Icon: SlidersHorizontal,
-            },
-            {
-              id: "develop",
-              label: "Develop",
-              description: "Servers, actions, code",
-              Icon: Code2,
-            },
-          ];
-        }
-
-        function getSidebarWorkspaceOption(mode) {
-          return getSidebarWorkspaceOptions().find((option) => option.id === mode) || getSidebarWorkspaceOptions()[0];
-        }
-
-        function renderTopNavSearchButton() {
-          return React.createElement("button", {
-            type: "button",
-            className: "playground-content-menu-button",
-            "aria-label": "Search",
-            title: "Search",
-            onClick: openThreadSearch,
-          },
-            React.createElement(Search, { className: "playground-content-menu-icon", strokeWidth: 1.8 })
-          );
-        }
-
-        function toggleAccountMenuFrom(placement) {
-          const normalizedPlacement = placement === "top-nav" ? "top-nav" : "sidebar";
-          setAccountMenuPlacement(normalizedPlacement);
-          setAccountMenuOpen((current) => accountMenuPlacement === normalizedPlacement ? !current : true);
-        }
-
-        function renderTopNavNotificationButton() {
-          return React.createElement("button", {
-            type: "button",
-            className: "playground-content-menu-button" + (hasVisibleNotifications ? " has-notifications" : ""),
-            "aria-label": "Notifications",
-            "aria-expanded": notificationsOpen ? "true" : "false",
-            onClick: () => setNotificationsOpen((current) => !current),
-          },
-            React.createElement(Bell, { className: "playground-content-menu-icon", strokeWidth: 1.8 })
-          );
-        }
-
-        function renderTopNavGhostButton(options = {}) {
-          const isPrivateChatVariant = options.variant === "private-chat";
-          return React.createElement("button", {
-            type: "button",
-            className: isPrivateChatVariant
-              ? "playground-top-nav-private-chat-button" + (runnerComposerPrivateMode ? " is-active" : "")
-              : "playground-content-menu-button" + (runnerComposerPrivateMode ? " is-private-active" : ""),
-            "aria-label": isPrivateChatVariant ? "Private Chat" : "Ghost mode",
-            "aria-pressed": runnerComposerPrivateMode ? "true" : "false",
-            title: runnerComposerPrivateMode ? "Private mode active" : "Private mode",
-            onClick: handleGhostModeToggle,
-          },
-            React.createElement(Ghost, { className: isPrivateChatVariant ? "" : "playground-content-menu-icon", strokeWidth: 1.8 }),
-            isPrivateChatVariant ? React.createElement("span", null, "Private Chat") : null
-          );
-        }
-
-        function renderTopNavAccountButton() {
-          return React.createElement("button", {
-            type: "button",
-            className: "playground-top-nav-account-button",
-            onClick: () => toggleAccountMenuFrom("top-nav"),
-            "aria-label": "Open account menu",
-            "aria-expanded": accountMenuOpen && accountMenuPlacement === "top-nav" ? "true" : "false",
-            title: hasShellAccess ? accountName : "Sign in",
-          },
-            renderAccountAvatar("playground-top-nav-avatar", "playground-top-nav-avatar-image", accountInitials, accountAvatarUrl)
-          );
-        }
-
-        function renderTopNavCommonActions(options = {}) {
-          return React.createElement(React.Fragment, null,
-            options.includeGhost ? renderTopNavGhostButton({ variant: options.ghostVariant || "" }) : null,
-            options.includeSearchDivider ? React.createElement("span", { className: "playground-top-nav-search-divider", "aria-hidden": "true" }) : null,
-            renderTopNavSearchButton(),
-            renderTopNavNotificationButton(),
-            renderTopNavAccountButton()
-          );
-        }
-
-        function renderTopNavSidebarToggle() {
-          return React.createElement("button", {
-            type: "button",
-            className: "playground-top-nav-sidebar-toggle",
-            "aria-label": sidebarOpen ? "Collapse sidebar" : "Expand sidebar",
-            "aria-pressed": sidebarOpen ? "false" : "true",
-            title: sidebarOpen ? "Collapse sidebar" : "Expand sidebar",
-            onClick: () => setSidebarOpen((current) => !current),
-          },
-            React.createElement(PanelLeft, { className: "playground-top-nav-sidebar-toggle-icon", strokeWidth: 1.7 })
-          );
-        }
-
-        function getTopNavPathItemIcon(label) {
-          const normalizedLabel = String(label || "").trim().toLowerCase();
-          if (normalizedLabel === "create") return PencilRuler;
-          if (normalizedLabel === "home") return House;
-          if (normalizedLabel === "imagine") return Clapperboard;
-          if (normalizedLabel === "projects") return Rocket;
-          if (normalizedLabel === "files") return FolderOpen;
-          if (normalizedLabel === "metronome") return Metronome;
-          if (normalizedLabel === "calendar") return CalendarIcon;
-          if (normalizedLabel === "configure") return SlidersHorizontal;
-          if (normalizedLabel === "develop") return Code2;
-          if (normalizedLabel === "overview") return LayoutGrid;
-          if (normalizedLabel === "usage") return Coins;
-          if (normalizedLabel === "api keys") return Key;
-          if (normalizedLabel === "actions") return Webhook;
-          if (normalizedLabel === "web apps") return Globe;
-          if (normalizedLabel === "apis") return Code2;
-          if (normalizedLabel === "functions") return FunctionSquare;
-          if (normalizedLabel === "databases") return Database;
-          if (normalizedLabel === "authentication") return UsersRound;
-          if (normalizedLabel === "agent runtime") return Bot;
-          if (normalizedLabel === "voice agents") return AudioLines;
-          if (normalizedLabel === "secrets") return Shield;
-          if (normalizedLabel === "payments") return ReceiptText;
-          if (normalizedLabel === "agents") return Bot;
-          if (normalizedLabel === "computers") return Monitor;
-          if (normalizedLabel === "tags") return Tag;
-          if (normalizedLabel === "plugins") return Package;
-          if (normalizedLabel === "skills") return Layers;
-          if (normalizedLabel === "teams") return UsersRound;
-          if (normalizedLabel === "settings") return Settings2;
-          if (normalizedLabel === "organization" || normalizedLabel === "organizations") return Building2;
-          if (normalizedLabel === "models") return Brain;
-${MARKETPLACE_APP_SCRIPT_FRAGMENTS.topNavIcon}          if (normalizedLabel === "inference") return Cpu;
-          if (normalizedLabel === "guardrails") return Shield;
-          if (normalizedLabel === "evaluations") return ChartColumnIncreasing;
-          if (normalizedLabel === "fine-tuning") return TestTubeDiagonal;
-          return null;
-        }
-
-        function renderTopNavPath(pathItems) {
-          const safeItems = (Array.isArray(pathItems) ? pathItems : [])
-            .map((item) => {
-              if (typeof item === "string") {
-                return { label: item };
-              }
-              return item && typeof item === "object" ? item : null;
-            })
-            .filter((item) => String(item?.label || "").trim());
-          const effectiveItems = safeItems.length > 0 ? safeItems : [{ label: selectedThreadTitle || "Home" }];
-
-          return React.createElement("div", { className: "playground-top-nav-path", "aria-label": "Page path" },
-            effectiveItems.map((item, index) => {
-              const label = String(item.label || "").trim();
-              const isCurrent = index === effectiveItems.length - 1;
-              const key = String(index) + ":" + label;
-              const isClickable = typeof item.onClick === "function" && (!isCurrent || item.allowCurrentClick === true);
-              const itemIcon = item.Icon || getTopNavPathItemIcon(label);
-              const ItemIcon = itemIcon ? getPlaygroundSafeIconComponent(itemIcon, Circle) : null;
-              const itemContent = React.createElement(React.Fragment, null,
-                ItemIcon
-                  ? React.createElement(ItemIcon, {
-                      className: "playground-top-nav-path-icon",
-                      strokeWidth: 1.8,
-                      "aria-hidden": "true",
-                    })
-                  : null,
-                React.createElement("span", { className: "playground-top-nav-path-label" }, label)
-              );
-              const itemNode = isClickable
-                ? React.createElement("button", {
-                    type: "button",
-                    className: "playground-top-nav-path-item" + (isCurrent ? " is-current" : ""),
-                    onClick: item.onClick,
-                    title: label,
-                  }, itemContent)
-                : React.createElement("span", {
-                    className: "playground-top-nav-path-item" + (isCurrent ? " is-current" : ""),
-                    title: label,
-                  }, itemContent);
-              return React.createElement(React.Fragment, { key },
-                index > 0
-                  ? React.createElement(ChevronRight, {
-                      className: "playground-top-nav-path-separator",
-                      width: 12,
-                      height: 12,
-                      strokeWidth: 1.8,
-                      "aria-hidden": "true",
-                    })
-                  : null,
-                itemNode
-              );
-            })
-          );
-        }
-
-        function renderUnifiedTopNav(options = {}) {
-          const extraActions = Array.isArray(options.extraActions)
-            ? options.extraActions
-            : options.extraActions
-              ? [options.extraActions]
-              : [];
-          const hidePath = options.hidePath === true;
-          const hideCommonActions = options.hideCommonActions === true;
-          return React.createElement("div", {
-              className: [
-                "playground-content-nav",
-                "playground-tools-navbar",
-                "playground-unified-top-navbar",
-                options.className || "",
-              ].filter(Boolean).join(" "),
-            },
-            React.createElement("div", { className: "playground-environments-editor-navbar-title playground-tools-navbar-title" },
-              React.createElement("div", { className: "playground-environments-editor-navbar-copy" },
-                options.hideSidebarToggle === true ? null : renderTopNavSidebarToggle(),
-                hidePath ? null : renderTopNavPath(options.pathItems),
-                !hidePath && options.leftExtra
-                  ? React.createElement(React.Fragment, null,
-                      React.createElement("span", { className: "playground-top-nav-path-separator playground-top-nav-left-extra-separator", "aria-hidden": "true" }, "›"),
-                      React.createElement("div", { className: "playground-top-nav-left-extra" }, options.leftExtra)
-                    )
-                  : null
-              )
-            ),
-            React.createElement("div", { className: "playground-content-nav-center" }, options.center || null),
-            React.createElement("div", {
-                className: "playground-content-nav-right playground-environments-editor-navbar-actions playground-tools-navbar-actions" + (options.rightClassName ? " " + options.rightClassName : ""),
-                ref: options.rightRef || null,
-              },
-              ...extraActions,
-              hideCommonActions
-                ? null
-                : renderTopNavCommonActions({
-                    includeGhost: options.includeGhost === true,
-                    ghostVariant: options.ghostVariant || "",
-                    includeSearchDivider: options.includeSearchDivider === true,
-                  })
-            )
-          );
-        }
-
-	        function renderSidebarWorkspaceSwitcher() {
-	          const activeOption = getSidebarWorkspaceOption(sidebarWorkspaceMode);
-	          const ActiveIcon = getPlaygroundSafeIconComponent(activeOption.Icon, Circle);
-	          const workspaceMenuAnimation = sidebarWorkspaceMenuPhase === "enter"
-	            ? "down-in"
-	            : sidebarWorkspaceMenuPhase === "exit"
-	              ? "down-out"
-	              : false;
-
-          return React.createElement(PlatformPopup, {
-            open: renderedSidebarWorkspaceMenu,
-            rootRef: sidebarWorkspaceMenuRef,
-            rootClassName: "sidebar-workspace-switcher",
-            animation: workspaceMenuAnimation,
-            surfaceClassName: "sidebar-workspace-menu",
-            surfaceProps: {
-              role: "menu",
-              "aria-label": "Workspace area",
-            },
-            trigger: React.createElement("button", {
-              type: "button",
-              className: "sidebar-workspace-trigger" + (sidebarWorkspaceMenuOpen ? " is-open" : ""),
-              onClick: () => setSidebarWorkspaceMenuOpen((current) => !current),
-              "aria-label": "Switch workspace area",
-              "aria-expanded": sidebarWorkspaceMenuOpen ? "true" : "false",
-            },
-              React.createElement("span", { className: "sidebar-workspace-icon-shell" },
-                React.createElement(ActiveIcon, { className: "sidebar-workspace-icon", strokeWidth: 1.8 })
-              ),
-              React.createElement("span", { className: "sidebar-workspace-label" }, activeOption.label),
-              React.createElement(ChevronsUpDown, { className: "sidebar-workspace-trigger-chevron", strokeWidth: 1.8 })
-            ),
-          },
-            getSidebarWorkspaceOptions().map((option) => {
-              const OptionIcon = getPlaygroundSafeIconComponent(option.Icon, Circle);
-              const isActive = option.id === sidebarWorkspaceMode;
-              return React.createElement("button", {
-                key: option.id,
-                type: "button",
-                role: "menuitemradio",
-                "aria-checked": isActive ? "true" : "false",
-                className: "sidebar-workspace-option" + (isActive ? " is-active" : ""),
-                onClick: () => handleSidebarWorkspaceModeSelect(option.id),
-              },
-                React.createElement("span", { className: "sidebar-workspace-icon-shell" },
-                  React.createElement(OptionIcon, { className: "sidebar-workspace-icon", strokeWidth: 1.8 })
-                ),
-                React.createElement("span", { className: "sidebar-workspace-option-copy" },
-                  React.createElement("span", { className: "sidebar-workspace-option-label" }, option.label)
-                ),
-                isActive
-                  ? React.createElement(Check, { className: "sidebar-workspace-option-check", strokeWidth: 1.9 })
-                  : null
-              );
-            })
-          );
-        }
-
-        function getSidebarNavigationItems() {
-          if (sidebarWorkspaceMode === "configure") {
-            return [
-              {
-                id: "configure-home",
-                label: "Home",
-                Icon: House,
-                active: activePage === "configure",
-                onClick: () => openConfigureHome(),
-              },
-              {
-                id: "settings",
-                label: "Settings",
-                Icon: Settings2,
-                active: activePage === "settings",
-                onClick: () => openSettingsPage(),
-              },
-${TEAMS_APP_SCRIPT_FRAGMENTS.sidebarEntry}${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.sidebarEntry}              {
-                id: "configure-resources-label",
-                type: "subtitle",
-                label: "Resources",
-              },
-              {
-                id: "agents",
-                label: "Agents",
-                Icon: Bot,
-                active: isResourcesPage && activeResourcesView === "agents",
-                onClick: () => openResourcesView("agents"),
-              },
-              {
-                id: "computers",
-                label: "Computers",
-                Icon: Monitor,
-                active: isResourcesPage && activeResourcesView === "computers",
-                onClick: () => openResourcesView("computers"),
-              },
-              {
-                id: "tags",
-                label: "Tags",
-                Icon: Tag,
-                active: activePage === "tools" && toolsView === "tags",
-                onClick: handleOpenTagsShortcut,
-              },
-              {
-                id: "plugins",
-                label: "Plugins",
-                Icon: Cable,
-                active: activePage === "tools" && toolsView === "plugins",
-                onClick: handleOpenPluginsShortcut,
-              },
-              {
-                id: "skills",
-                label: "Skills",
-                Icon: Layers,
-                active: activePage === "tools" && toolsView === "skills",
-                onClick: handleOpenSkillsShortcut,
-              },
-              {
-                id: "configure-governance-label",
-                type: "subtitle",
-                label: "Governance",
-              },
-${EVALUATIONS_APP_SCRIPT_FRAGMENTS.sidebarEntry}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.sidebarEntry}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.sidebarEntry}
-              {
-                id: "configure-infrastructure-label",
-                type: "subtitle",
-                label: "Infrastructure",
-              },
-${MODELS_APP_SCRIPT_FRAGMENTS.sidebarEntry}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.sidebarEntry}${INFERENCE_APP_SCRIPT_FRAGMENTS.sidebarEntry}            ];
-          }
-
-          if (sidebarWorkspaceMode === "develop") {
-            const developServerPageItems = getDevelopServerPageItems().filter((item) => item.kind !== "api");
-            const buildDevelopServerSidebarItem = (item) => ({
-              id: "server-" + item.id,
-              label: item.label,
-              Icon: item.Icon,
-              active: isResourcesPage && activeResourcesView === "servers" && activeResourcesServerKind === item.kind,
-              onClick: () => openResourcesView("servers", { serverKind: item.kind }),
-            });
-            const agentDevelopServerPageItems = developServerPageItems.filter((item) => item.kind === "agent_runtime" || item.kind === "voice_agent");
-            const mainDevelopServerPageItems = developServerPageItems.filter((item) => item.kind !== "agent_runtime" && item.kind !== "voice_agent");
-            return [
-              {
-                id: "develop-home",
-                label: "Home",
-                Icon: House,
-                active: activePage === "develop",
-                onClick: () => openDevelopHome(),
-              },
-              {
-                id: "develop-api-keys",
-                label: "API Keys",
-                Icon: Key,
-                active: activePage === "develop-api-keys",
-                onClick: () => openDevelopApiKeysPage(),
-              },
-              {
-                id: "develop-resources-label",
-                type: "subtitle",
-                label: "Resources",
-              },
-              ...mainDevelopServerPageItems.map((item) => buildDevelopServerSidebarItem(item)),
-              {
-                id: "develop-agents-label",
-                type: "subcategory",
-                label: "Agents",
-              },
-              ...agentDevelopServerPageItems.map((item) => buildDevelopServerSidebarItem(item)),
-            ];
-          }
-
-          return [
-            {
-              id: "new-thread",
-              label: "New Thread",
-              Icon: SquarePen,
-              onClick: hasShellAccess ? handleNewThread : handleSignInWithComputerAgents,
-            },
-${IMAGINE_APP_SCRIPT_FRAGMENTS.sidebarEntry}
-            {
-              id: "projects",
-              label: "Projects",
-              Icon: Rocket,
-              active: activePage === "tasks",
-              onClick: handleOpenTasksShortcut,
-            },
-            {
-              id: "files",
-              label: "Files",
-              Icon: FolderOpen,
-              active: activePage === "files",
-              onClick: handleOpenFilesShortcut,
-            },
-            {
-              id: "metronome",
-              label: "Metronome",
-              Icon: Metronome,
-              active: activePage === "metronome",
-              onClick: openMetronomePage,
-            },
-            {
-              id: "calendar",
-              label: "Calendar",
-              Icon: CalendarIcon,
-              active: activePage === "calendar",
-              onClick: openCalendarPage,
-            },
-          ];
-        }
-
-        function getSidebarFooterNavigationItems() {
-          return [];
-        }
-
-        function renderSidebarNavigationButton(item) {
-          if (item?.type === "subtitle") {
-            return React.createElement("div", {
-              key: item.id,
-              className: "sidebar-action-subtitle",
-            }, item.label);
-          }
-          if (item?.type === "subcategory") {
-            return React.createElement("div", {
-              key: item.id,
-              className: "sidebar-action-subtitle",
-            }, item.label);
-          }
-          const Icon = getPlaygroundSafeIconComponent(item.Icon, Circle);
-          return React.createElement("button", {
-            key: item.id,
-            type: "button",
-            className: "sidebar-action-button" + (item.active ? " is-active" : "") + (item.id === "search" ? " sidebar-search-trigger" : ""),
-            onClick: item.onClick,
-          },
-            item.id === "search"
-              ? React.createElement(React.Fragment, null,
-                  React.createElement("div", { className: "sidebar-search-trigger-main" },
-                    React.createElement(Icon, { className: "sidebar-search-trigger-icon", strokeWidth: 1.5 }),
-                    React.createElement("span", { className: "sidebar-search-trigger-copy" }, item.label)
-                  ),
-                  React.createElement("span", { className: "sidebar-search-trigger-shortcut" }, item.shortcut || "")
-                )
-              : React.createElement(React.Fragment, null,
-                  React.createElement(Icon, { className: "sidebar-action-icon", strokeWidth: 1.5 }),
-                  React.createElement("span", null, item.label)
-                )
-          );
-        }
-
-        function renderExpandedSidebarContent() {
-          const shouldRenderSidebarThreads = sidebarWorkspaceMode === "work";
-          const shouldShowSidebarThreadSection = shouldRenderSidebarThreads && (isThreadsLoading || pinnedThreadItems.length > 0 || baseThreadItems.length > 0 || displayedSidebarThreadEntries.length > 0);
-          const sidebarNavigationItems = getSidebarNavigationItems();
-          const sidebarFooterNavigationItems = getSidebarFooterNavigationItems();
-          const sidebarOrganizationDisplay = getActiveSidebarOrganizationDisplay();
-          return React.createElement(React.Fragment, null,
-            React.createElement("div", { className: "playground-sidebar-top" },
-              React.createElement("button", {
-                type: "button",
-                className: "playground-sidebar-brand",
-                onClick: () => setSidebarOpen(false),
-                "aria-label": "Collapse sidebar",
-                title: "Collapse sidebar",
-              },
-                React.createElement("img", {
-                  className: "playground-sidebar-brand-logo",
-                  src: RUNNER_TRANSPARENT_LOGO_URL,
-                  alt: "Runner",
-                }),
-                React.createElement(PanelLeftClose, { className: "playground-sidebar-brand-close-icon", strokeWidth: 1.5 })
-              )
-            ),
-            React.createElement("div", { className: "sidebar-workspace-row" },
-              renderSidebarWorkspaceSwitcher()
-            ),
-            React.createElement("div", { className: "sidebar-action-list" },
-              sidebarNavigationItems.map(renderSidebarNavigationButton)
-            ),
-            shouldRenderSidebarThreads && !threadsSectionCollapsed && pinnedThreadItems.length > 0
-              ? React.createElement("div", { className: "sidebar-pinned-list" },
-                  pinnedThreadItems.map((thread) => renderSidebarThreadRow(thread, { pinned: true }))
-                )
-              : null,
-            shouldShowSidebarThreadSection
-              ? React.createElement("div", { className: "sidebar-thread-section" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "sidebar-thread-section-header" + (threadsSectionCollapsed ? " is-collapsed" : ""),
-                    onClick: () => setThreadsSectionCollapsed((current) => !current),
-                    "aria-expanded": threadsSectionCollapsed ? "false" : "true",
-                  },
-                    React.createElement("div", { className: "sidebar-thread-section-title" }, "Threads"),
-                    React.createElement(ChevronDown, { className: "sidebar-thread-section-chevron", strokeWidth: 1.8 })
-                  ),
-                  !threadsSectionCollapsed
-                    ? React.createElement("div", { className: "sidebar-thread-scroll" },
-                        displayedThreadItems.length === 0
-                          ? baseThreadItems.length === 0
-                            ? React.createElement("div", { className: "sidebar-empty-state" }, sidebarEmptyStateCopy)
-                            : null
-                          : React.createElement("div", { className: "sidebar-thread-list" },
-                              displayedSidebarThreadEntries.map((entry) => (
-                                entry?.kind === "metronome-run"
-                                  ? renderSidebarMetronomeRunEntry(entry)
-                                  : renderSidebarThreadRow(entry.thread)
-                              )),
-                              hasMoreThreadItems
-                                ? React.createElement("button", {
-                                    type: "button",
-                                    className: "sidebar-show-more",
-                                    onClick: () => void handleShowMoreThreads()
-                                  }, "Show more threads")
-                                : null
-                            )
-                      )
-                    : null
-                )
-              : null,
-            React.createElement("div", { className: "sidebar-footer" },
-              renderStatusIndicators(),
-              sidebarFooterNavigationItems.map(renderSidebarNavigationButton),
-              React.createElement("div", { className: "sidebar-organization-card", "aria-label": "Current organization and plan" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "sidebar-organization-main",
-                  onClick: handleSidebarPlanAction,
-                  disabled: settingsCheckoutLoading && !sidebarPlanIsPaid,
-                  title: sidebarOrganizationDisplay.name + " · " + sidebarPlanName,
-                },
-                  React.createElement("span", { className: "sidebar-organization-copy" },
-                    React.createElement("span", { className: "sidebar-organization-name" }, sidebarOrganizationDisplay.name),
-                    React.createElement("span", { className: "sidebar-organization-plan" }, sidebarPlanName)
-                  )
-                ),
-                React.createElement("button", {
-                  type: "button",
-                  className: "sidebar-organization-menu-button" + (accountMenuOpen && accountMenuPlacement === "sidebar" ? " is-open" : ""),
-                  onClick: () => toggleAccountMenuFrom("sidebar"),
-                  "aria-label": "Open account menu",
-                  "aria-expanded": accountMenuOpen && accountMenuPlacement === "sidebar" ? "true" : "false",
-                  title: "Account menu",
-                },
-                  React.createElement(EllipsisVertical, { className: "sidebar-organization-menu-icon", strokeWidth: 1.8 })
-                )
-              )
-            )
-          );
-        }
-
-        function renderCollapsedSidebarRail() {
-          const sidebarNavigationItems = getSidebarNavigationItems();
-          const sidebarFooterNavigationItems = getSidebarFooterNavigationItems();
-          return React.createElement(React.Fragment, null,
-            React.createElement("div", { className: "sidebar-rail-top" },
-              React.createElement("button", {
-                type: "button",
-                className: "sidebar-rail-logo-button",
-                onClick: () => setSidebarOpen(true),
-                "aria-label": "Open sidebar",
-                title: "Open sidebar"
-              },
-                React.createElement("img", {
-                  className: "sidebar-rail-logo",
-                  src: RUNNER_TRANSPARENT_LOGO_URL,
-                  alt: "Runner"
-                }),
-                React.createElement(PanelLeftOpen, { className: "sidebar-rail-logo-open-icon", strokeWidth: 1.5 })
-              )
-            ),
-            React.createElement("div", { className: "sidebar-rail-actions" },
-              sidebarNavigationItems.filter((item) => item?.type !== "subtitle" && item?.type !== "subcategory").map((item) => {
-                const Icon = getPlaygroundSafeIconComponent(item.Icon, Circle);
-                return React.createElement("button", {
-                  key: item.id,
-                  type: "button",
-                  className: "sidebar-rail-button" + (item.active ? " is-active" : ""),
-                  onClick: item.onClick,
-                  "aria-label": item.label,
-                  title: item.label,
-                }, React.createElement(Icon, { className: "sidebar-rail-icon", strokeWidth: 1.5 }));
-              })
-            ),
-            React.createElement("div", { className: "sidebar-rail-footer" },
-              sidebarFooterNavigationItems.filter((item) => item?.type !== "subtitle" && item?.type !== "subcategory").map((item) => {
-                const Icon = getPlaygroundSafeIconComponent(item.Icon, Circle);
-                return React.createElement("button", {
-                  key: item.id,
-                  type: "button",
-                  className: "sidebar-rail-button" + (item.active ? " is-active" : ""),
-                  onClick: item.onClick,
-                  "aria-label": item.label,
-                  title: item.label,
-                }, React.createElement(Icon, { className: "sidebar-rail-icon", strokeWidth: 1.5 }));
-              }),
-              React.createElement("button", {
-                type: "button",
-                className: "sidebar-rail-button sidebar-rail-plan",
-                onClick: handleSidebarPlanAction,
-                "aria-label": sidebarPlanActionLabel,
-                title: sidebarPlanActionLabel
-              },
-                React.createElement(ReceiptText, { className: "sidebar-rail-icon", strokeWidth: 1.5 })
-              )
-            )
-          );
-        }
-
+${MODELS_APP_SCRIPT_FRAGMENTS.pageView}${GUARDRAILS_PAGE_RUNTIME_SCRIPT}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.pageView}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.pageView}${CONFIGURE_HOME_PAGE_SCRIPT_FRAGMENTS.home}
+${API_KEYS_PAGE_SCRIPT_FRAGMENTS.management}
+${DEVELOP_HOME_PAGE_SCRIPT}
+${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.statusIndicators}
+${APP_HEADER_APP_SCRIPT_FRAGMENTS.breadcrumbBar}
+${APP_HEADER_APP_SCRIPT_FRAGMENTS.appHeader}
+${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.modeSelector}
+${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.navigationItems}
+${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.sidebar}
         const renderedPlaygroundOnboarding = showPlaygroundOnboarding
           ? React.createElement(PlaygroundOnboardingModal, {
               open: showPlaygroundOnboarding,
@@ -139489,108 +124146,21 @@ ${IMAGINE_APP_SCRIPT_FRAGMENTS.sidebarEntry}
           );
         }
 
-        const accountMenuAnimationClass = accountMenuPhase === "enter"
-          ? "account-menu-animate-up-in"
-          : accountMenuPhase === "exit"
-            ? "account-menu-animate-up-out"
-            : "";
 	        return (
           React.createElement(React.Fragment, null,
             renderedPlaygroundOnboarding,
             renderedSubscriptionSuccessModal,
             renderedComposerAgentUpgradeModal,
-            renderThreadSearchPalette(),
-            renderNotificationMenu(),
+            renderAppHeaderSearchModal(),
+            renderAppHeaderNotificationsPopup(),
             renderThreadActionMenu(),
             renderMetronomeRunActionMenu(),
             renderThreadRenameModal(),
             renderThreadProjectPickerModal(),
             renderWelcomeProjectPickerModal(),
             renderTopNavIssueComposerDialog(),
-            renderedAccountMenu
-              ? React.createElement(PlatformPopupDismissLayer, {
-                  className: "account-menu-scrim",
-                  onClick: () => setAccountMenuOpen(false)
-                },
-                  React.createElement(PlatformPopupSurface, {
-                    className: ("account-menu" + (accountMenuPlacement === "top-nav" ? " is-top-nav" : (sidebarOpen ? " is-sidebar-open" : "")) + (accountMenuAnimationClass ? " " + accountMenuAnimationClass : "")),
-                    onClick: (event) => event.stopPropagation()
-                  },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "account-menu-account-button",
-                      onClick: hasSessionAuth ? openProfileEditor : handleSignInWithComputerAgents,
-                    },
-                      renderAccountAvatar("account-menu-avatar", "account-menu-avatar-image", accountInitials, accountAvatarUrl),
-                      React.createElement("div", { className: "account-menu-account-copy" },
-                        React.createElement("div", { className: "account-menu-account-name" }, hasShellAccess ? accountName : "Sign in to Agentic Compute Platform"),
-                        React.createElement("div", { className: "account-menu-account-email" },
-                          hasSessionAuth
-                            ? (accountEmail || "Connected account")
-                            : hasDemoAccess
-                              ? "Seeded demo workspace. Sign in to switch to a live account."
-                              : "Use your existing Agentic Compute Platform account"
-                        )
-                      ),
-                      React.createElement(ChevronRight, { className: "account-menu-item-chevron", strokeWidth: 1.8 })
-                    ),
-                    React.createElement("div", { className: "account-menu-section" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "account-menu-item",
-                        onClick: openSettingsPage,
-                      },
-                        React.createElement(Settings2, { className: "account-menu-item-icon", strokeWidth: 1.8 }),
-                        React.createElement("span", { className: "account-menu-item-label" }, "Settings")
-                      ),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "account-menu-item",
-                        onClick: openCalendarPage,
-                      },
-                        React.createElement(CalendarIcon, { className: "account-menu-item-icon", strokeWidth: 1.8 }),
-                        React.createElement("span", { className: "account-menu-item-label" }, "Calendar")
-                      ),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "account-menu-item",
-                        onClick: openHelpPage,
-                      },
-                        React.createElement(CircleHelp, { className: "account-menu-item-icon", strokeWidth: 1.8 }),
-                        React.createElement("span", { className: "account-menu-item-label" }, "Help"),
-                        React.createElement(ChevronRight, { className: "account-menu-item-chevron", strokeWidth: 1.8 })
-                      ),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "account-menu-item",
-                        onClick: openDocsPage,
-                      },
-                        React.createElement(FileText, { className: "account-menu-item-icon", strokeWidth: 1.8 }),
-                        React.createElement("span", { className: "account-menu-item-label" }, "Docs"),
-                        React.createElement(ChevronRight, { className: "account-menu-item-chevron", strokeWidth: 1.8 })
-                      ),
-                      React.createElement("div", { className: "account-menu-divider" }),
-                      hasSessionAuth
-                        ? React.createElement("button", {
-                            type: "button",
-                            className: "account-menu-item is-signout",
-                            onClick: handleSignOutFromComputerAgents,
-                          },
-                            React.createElement(LogOut, { className: "account-menu-item-icon", strokeWidth: 1.8 }),
-                            React.createElement("span", { className: "account-menu-item-label" }, "Sign out")
-                          )
-                        : React.createElement("button", {
-                            type: "button",
-                            className: "account-menu-item is-signout",
-                            onClick: handleSignInWithComputerAgents,
-                          },
-                            React.createElement(LogIn, { className: "account-menu-item-icon", strokeWidth: 1.8 }),
-                            React.createElement("span", { className: "account-menu-item-label" }, "Sign in")
-                          )
-                    )
-                  )
-                )
-              : null,
+            renderSettingsModal(),
+            renderAppHeaderAccountMenu(),
             profileEditorOpen
               ? React.createElement(PlatformModalBackdrop, {
                   className: "profile-editor-scrim",
@@ -139694,16 +124264,7 @@ ${IMAGINE_APP_SCRIPT_FRAGMENTS.sidebarEntry}
                 )
               : null,
 	            React.createElement("div", { className: "playground-shell" + (sidebarOpen ? "" : " sidebar-collapsed") + (isProjectShellContext ? " is-projects-page" : "") + (isAgentShellContext ? " is-agents-page" : "") + (isProjectThreadPage ? " is-project-thread-page" : "") + (showInitialThreadWelcome ? " is-initial-thread-page" : "") },
-	              React.createElement("aside", { className: "playground-sidebar" + (sidebarOpen ? "" : " is-collapsed") },
-	                React.createElement("div", {
-	                  className: "playground-sidebar-panel",
-	                  "aria-hidden": sidebarOpen ? "false" : "true",
-	                }, renderExpandedSidebarContent()),
-	                React.createElement("div", {
-	                  className: "playground-sidebar-rail",
-	                  "aria-hidden": sidebarOpen ? "true" : "false",
-	                }, renderCollapsedSidebarRail())
-	              ),
+	              renderAppSidebar(),
 	              React.createElement("main", { className: "playground-main" },
 	                React.createElement("div", { className: "playground-content-shell" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") + (isResourcesSideDetailOpen ? " is-resources-side-detail-open" : "") + (isMetronomeNodeDetailOpen ? " is-metronome-node-detail-open" : "") },
 	                  activePage === "tools"
@@ -139728,8 +124289,6 @@ ${IMAGINE_APP_SCRIPT_FRAGMENTS.sidebarEntry}
 	                      ? renderDevelopApiKeysNav()
 	                    : isResourcesPage
 	                      ? renderResourcesPageNav()
-	                    : activePage === "settings"
-	                      ? renderSettingsPageNav()
 	                    : activePage === "team"
 	                      ? renderTeamPageNav()
 	                    : activePage === "organization"
@@ -139746,11 +124305,10 @@ ${IMAGINE_APP_SCRIPT_FRAGMENTS.sidebarEntry}
 	                      ? renderGenericPageNav()
 	                    : activePage === "calendar"
 	                      ? renderGenericPageNav()
-	                    : React.createElement("div", { className: "playground-content-nav" },
-                        React.createElement("div", { className: "playground-content-nav-left" },
-                          renderTopNavSidebarToggle(),
-                          activeEvaluationThreadContext
-                            ? renderTopNavPath([
+	                    : renderAppHeader({
+	                        className: "playground-thread-navbar",
+	                        pathItems: activeEvaluationThreadContext
+                            ? [
                                 {
                                   label: "Evaluations",
                                   onClick: () => {
@@ -139778,11 +124336,9 @@ ${IMAGINE_APP_SCRIPT_FRAGMENTS.sidebarEntry}
                                     }
                                   },
                                 },
-                              ])
-                            : React.createElement("div", { className: "playground-content-title" }, selectedThreadTitle)
-                        ),
-                        React.createElement("div", { className: "playground-content-nav-center" },
-                          activePage === "thread" && !isThreadSideDetailOpen
+                              ]
+                            : [{ label: selectedThreadTitle || "Current thread" }],
+                        center: activePage === "thread" && !isThreadSideDetailOpen
                             ? React.createElement(PlatformSwitch, {
                                 className: "playground-thread-details-mode-switch",
                                 ariaLabel: "Thread view",
@@ -139796,10 +124352,10 @@ ${IMAGINE_APP_SCRIPT_FRAGMENTS.sidebarEntry}
                                   setContentMode(nextMode === "changes" ? "changes" : "chat");
                                 },
                               })
-                            : null
-                        ),
-                        React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions playground-tools-navbar-actions" },
-                          activePage === "thread" && !isThreadSideDetailOpen
+                            : null,
+                        hideCommonActions: activePage !== "thread" || isThreadSideDetailOpen,
+                        includeSearchDivider: true,
+                        extraActions: activePage === "thread" && !isThreadSideDetailOpen
                             ? React.createElement(React.Fragment, null,
                                 shouldShowThreadTaskListButton
                                   ? React.createElement("div", {
@@ -140026,16 +124582,12 @@ ${IMAGINE_APP_SCRIPT_FRAGMENTS.sidebarEntry}
                                         : null
                                     )
                                   : null
-                                ),
-                                renderTopNavCommonActions({ includeSearchDivider: true })
+                                )
                               )
-                            : null
-                        )
-                      ),
+                            : null,
+	                    }),
 	                  React.createElement("div", { className: "playground-content-body" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") + (isMetronomeNodeDetailOpen ? " is-metronome-node-detail-open" : "") + (isResourcesVersionsDrawerOpen ? " is-agent-versions-detail-open" : "") + (activePage === "files" || activePage === "guardrails" || activePage === "evaluations" || activePage === "fine-tuning" ? " is-files-page" : "") + (activePage === "guardrails" ? " is-guardrails-page" : "") + (activePage === "evaluations" ? " is-evaluations-page" : "") + (activePage === "fine-tuning" ? " is-fine-tuning-page" : "") + (activePage === "imagine" ? " is-imagine-page" : "") + (activePage === "metronome" ? " is-metronome-page" : "") + (activePage === "tasks" ? " is-tasks-page" : "") + (activePage === "calendar" ? " is-calendar-page" : "") },
-	                    activePage === "settings"
-	                      ? renderSettingsPage()
-	                      : activePage === "team"
+	                    activePage === "team"
 	                        ? hasRealAccess
 	                          ? renderTeamPage()
 	                          : hasDemoAccess
@@ -140085,7 +124637,7 @@ ${IMAGINE_APP_SCRIPT_FRAGMENTS.sidebarEntry}
 	                            : renderAuthGate()
 	                      : activePage === "inference"
 	                        ? hasRealAccess
-	                          ? renderSettingsPage()
+	                          ? renderSettingsSurface({ section: "inference" })
 	                          : hasDemoAccess
 	                            ? renderDemoFeaturePage("resources")
 	                            : renderAuthGate()
@@ -140569,6 +125121,8 @@ ${IMAGINE_APP_SCRIPT_FRAGMENTS.sidebarEntry}
                             standaloneMode: activePage === "calendar" ? "calendar" : "",
                             useUnifiedProjectNav: activePage === "tasks",
                             onTasksHeaderChange: setTasksHeaderState,
+                            onCalendarTopNavStateChange: setCalendarTopNavState,
+                            calendarTopNavActionsRef,
                             onProjectIssueCreateHandlerChange: handleProjectIssueCreateHandlerChange,
                             projectNavBackRequestToken: tasksProjectBackRequestToken,
                             projectNavViewRequest: tasksProjectViewRequest,
@@ -148405,6 +132959,14 @@ const organizationsService = createOrganizationsService({
   proxyUpstreamJsonRequest,
 });
 
+const configureHomeService = createConfigureHomeService({
+  proxyUpstreamGet,
+});
+
+const apiKeysService = createApiKeysService({
+  proxyAiosJsonRequest,
+});
+
 const projectsService = createProjectsService({
   fetchAiosApi,
   fetchAiosCloud,
@@ -148492,6 +133054,14 @@ const server = http.createServer((req, res) => {
   }
 
   if (organizationsService.handleRequest(req, res, url)) {
+    return;
+  }
+
+  if (configureHomeService.handleRequest(req, res, url)) {
+    return;
+  }
+
+  if (apiKeysService.handleRequest(req, res, url)) {
     return;
   }
 
@@ -148738,28 +133308,6 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (req.method === "GET" && url.pathname === "/api/aios/user/api-keys") {
-    void proxyAiosJsonRequest(req, res, "/api/user/api-keys", "GET");
-    return;
-  }
-
-  if (req.method === "POST" && url.pathname === "/api/aios/user/api-keys") {
-    void proxyAiosJsonRequest(req, res, "/api/user/api-keys", "POST");
-    return;
-  }
-
-  const userApiKeyRevokeMatch = url.pathname.match(/^\/api\/aios\/user\/api-keys\/([^/]+)\/revoke$/);
-  if (req.method === "POST" && userApiKeyRevokeMatch) {
-    void proxyAiosJsonRequest(req, res, `/api/user/api-keys/${userApiKeyRevokeMatch[1]}/revoke`, "POST");
-    return;
-  }
-
-  const userApiKeyRevealMatch = url.pathname.match(/^\/api\/aios\/user\/api-keys\/([^/]+)\/reveal$/);
-  if (req.method === "GET" && userApiKeyRevealMatch) {
-    void proxyAiosJsonRequest(req, res, `/api/user/api-keys/${userApiKeyRevealMatch[1]}/reveal`, "GET");
-    return;
-  }
-
   if (req.method === "GET" && url.pathname === "/api/aios/lemonsqueezy/invoices") {
     void proxyAiosJsonRequest(req, res, "/api/lemonsqueezy/invoices" + url.search, "GET");
     return;
@@ -148817,11 +133365,6 @@ const server = http.createServer((req, res) => {
 
   if (req.method === "GET" && url.pathname === "/api/aios/github/repos") {
     void proxyAiosJsonRequest(req, res, "/api/github/repos", "GET");
-    return;
-  }
-
-  if (req.method === "GET" && url.pathname === "/api/real/notifications/in-app") {
-    void proxyUpstreamGet(req, res, "/notifications/in-app", { emptyOn404: true });
     return;
   }
 
@@ -149906,6 +134449,11 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (req.method === "GET" && url.pathname === "/api/real/agents/analytics/overview") {
+    void proxyUpstreamGet(req, res, "/agents/analytics/overview" + (url.search || ""));
+    return;
+  }
+
   if (req.method === "GET" && url.pathname === "/api/real/agents") {
     void proxyUpstreamGet(req, res, "/agents");
     return;
@@ -150070,7 +134618,7 @@ const server = http.createServer((req, res) => {
   }
 
   if (req.method === "GET" && url.pathname === "/api/real/environments/analytics/overview") {
-    void sendEnvironmentOverviewAnalytics(req, res);
+    void proxyUpstreamGet(req, res, "/environments/analytics/overview");
     return;
   }
 

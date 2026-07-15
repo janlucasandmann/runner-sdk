@@ -86,7 +86,7 @@ export const METRONOME_PAGE_OVERVIEW_SCRIPT = String.raw`
                     ? (creatorName || workflowCreator?.email || creatorId || "User")
                   : (currentUserName || currentUserEmail || "Me");
               const creatorAvatarUrl = isBuiltInWorkflow
-                ? METRONOME_RUNNER_TRANSPARENT_LOGO_URL
+                ? METRONOME_COMPUTER_AGENTS_CREATOR_PROFILE_URL
                 : isAgentCreator
                   ? (workflowCreator?.avatarUrl || getMetronomeProfileImageUrl(creatorAgent) || "")
                   : isSharedUserCreator
