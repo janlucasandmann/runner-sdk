@@ -49,7 +49,7 @@ export function createAppSidebarThreadListScript(options = {}) {
               React.createElement("button", {
                 type: "button",
                 className: "sidebar-thread-main",
-                onClick: handleSidebarThreadSelect,
+                onClick: () => requestPlatformNavigation(handleSidebarThreadSelect),
                 "aria-label": "Open " + displayThreadTitle + (needsPermissionAttention ? ", permission needed" : ""),
               },
                 React.createElement("div", { className: "sidebar-thread-content" },
@@ -138,7 +138,7 @@ export function createAppSidebarThreadListScript(options = {}) {
               React.createElement("button", {
                 type: "button",
                 className: "sidebar-thread-main",
-                onClick: handleFallbackSidebarThreadSelect,
+                onClick: () => requestPlatformNavigation(handleFallbackSidebarThreadSelect),
                 "aria-label": "Open " + displayThreadTitle + (fallbackNeedsPermissionAttention ? ", permission needed" : ""),
               },
                 React.createElement("div", { className: "sidebar-thread-content" },

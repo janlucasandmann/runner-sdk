@@ -56,6 +56,11 @@ assert.match(EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.refs, /agentEvaluationRunModal/)
 assert.match(EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.state, /agentDetailEvaluation/);
 assert.match(EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.lifecycle, /agentDetailEvaluationRunModalOpen/);
 assert.match(EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.view, /agentEvaluationSets/);
+assert.equal(
+  EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.view.match(/variant: "minimalistic-ui"/g)?.length,
+  2,
+);
+assert.doesNotMatch(EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.view, /pagination\s*:/);
 assert.match(EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.modal, /renderAgentEvaluationRunModal/);
 assert.match(EVALUATIONS_AGENT_STYLE_FRAGMENTS.page, /playground-agents-detail-evaluations-section/);
 

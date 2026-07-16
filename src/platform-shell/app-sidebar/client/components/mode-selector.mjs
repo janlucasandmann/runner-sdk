@@ -27,17 +27,19 @@ export const APP_SIDEBAR_MODE_SELECTOR_SCRIPT = `        function getAppSidebarM
 
         function renderAppSidebarModeSelector() {
           const activeOption = getAppSidebarModeOption(sidebarWorkspaceMode);
-          const modeMenuAnimation = sidebarWorkspaceMenuPhase === "enter"
+          const shouldRenderModeMenu = sidebarWorkspaceMenuOpen || renderedSidebarWorkspaceMenu;
+          const modeMenuAnimation = sidebarWorkspaceMenuOpen
             ? "down-in"
-            : sidebarWorkspaceMenuPhase === "exit"
+            : renderedSidebarWorkspaceMenu
               ? "down-out"
               : false;
 
           return React.createElement(PlatformPopup, {
-            open: renderedSidebarWorkspaceMenu,
+            open: shouldRenderModeMenu,
             rootRef: sidebarWorkspaceMenuRef,
             rootClassName: "app-sidebar-mode-selector",
             animation: modeMenuAnimation,
+            variant: "minimal",
             surfaceClassName: "app-sidebar-mode-menu",
             surfaceProps: {
               role: "menu",
@@ -63,7 +65,13 @@ export const APP_SIDEBAR_MODE_SELECTOR_SCRIPT = `        function getAppSidebarM
                 role: "menuitemradio",
                 "aria-checked": isActive ? "true" : "false",
                 className: "app-sidebar-mode-option" + (isActive ? " is-active" : ""),
-                onClick: () => handleSidebarWorkspaceModeSelect(option.id),
+                onClick: () => {
+                  if (isActive) {
+                    setSidebarWorkspaceMenuOpen(false);
+                    return;
+                  }
+                  requestPlatformNavigation(() => handleSidebarWorkspaceModeSelect(option.id));
+                },
               },
                 React.createElement("span", { className: "app-sidebar-mode-icon-shell" },
                   React.createElement(OptionIcon, { className: "app-sidebar-mode-icon", strokeWidth: 1.8 })

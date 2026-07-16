@@ -138,13 +138,20 @@ export const APP_SIDEBAR_COMPONENT_SCRIPT = `        function renderExpandedSide
               )
             ),
             React.createElement("div", { className: "sidebar-rail-actions" },
-              sidebarNavigationItems.filter((item) => item?.type !== "subtitle" && item?.type !== "subcategory").map((item) => {
+              sidebarNavigationItems.map((item) => {
+                if (item?.type === "subtitle" || item?.type === "subcategory") {
+                  return React.createElement("div", {
+                    key: item.id,
+                    className: "sidebar-rail-section-spacer",
+                    "aria-hidden": "true",
+                  });
+                }
                 const Icon = getPlaygroundSafeIconComponent(item.Icon, Circle);
                 return React.createElement("button", {
                   key: item.id,
                   type: "button",
                   className: "sidebar-rail-button" + (item.active ? " is-active" : ""),
-                  onClick: item.onClick,
+                  onClick: () => handleSidebarNavigationItemClick(item),
                   "aria-label": item.label,
                   title: item.label,
                 }, React.createElement(Icon, { className: "sidebar-rail-icon", strokeWidth: 1.5 }));
@@ -157,20 +164,11 @@ export const APP_SIDEBAR_COMPONENT_SCRIPT = `        function renderExpandedSide
                   key: item.id,
                   type: "button",
                   className: "sidebar-rail-button" + (item.active ? " is-active" : ""),
-                  onClick: item.onClick,
+                  onClick: () => handleSidebarNavigationItemClick(item),
                   "aria-label": item.label,
                   title: item.label,
                 }, React.createElement(Icon, { className: "sidebar-rail-icon", strokeWidth: 1.5 }));
               }),
-              React.createElement("button", {
-                type: "button",
-                className: "sidebar-rail-button sidebar-rail-plan",
-                onClick: handleSidebarPlanAction,
-                "aria-label": sidebarPlanActionLabel,
-                title: sidebarPlanActionLabel
-              },
-                React.createElement(ReceiptText, { className: "sidebar-rail-icon", strokeWidth: 1.5 })
-              ),
               React.createElement("button", {
                 type: "button",
                 className: "sidebar-rail-account" + (accountMenuOpen && accountMenuPlacement === "sidebar" ? " is-open" : ""),

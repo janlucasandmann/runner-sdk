@@ -95,7 +95,7 @@ assert.match(demoServerSource, /\$\{MARKETPLACE_PAGE_CSS\}/);
 assert.match(demoServerSource, /\$\{MARKETPLACE_PAGE_SCRIPT\}/);
 assert.match(demoServerSource, /\$\{MARKETPLACE_DOMAIN_SCRIPT_FRAGMENTS\.catalog\}/);
 assert.match(demoServerSource, /\$\{MARKETPLACE_APP_SCRIPT_FRAGMENTS\.pageView\}/);
-assert.match(demoServerSource, /\$\{MARKETPLACE_APP_SCRIPT_FRAGMENTS\.sidebarEntry\}/);
+assert.match(demoServerSource, /configureInfrastructureEntries:[^\n]*MARKETPLACE_APP_SCRIPT_FRAGMENTS\.sidebarEntry/);
 assert.doesNotMatch(demoServerSource, /demo-resource-templates(?:-page)?\.mjs/);
 assert.doesNotMatch(demoServerSource, /function openResourceTemplatesPage\(/);
 assert.doesNotMatch(demoServerSource, /function renderResourceTemplatesPage\(/);

@@ -35,7 +35,24 @@
 
 `layout="content"` is the default and grows with its rows. `layout="fill"` uses its intrinsic content height up to a constrained flex parent's remaining height and animates between intrinsic heights as its rendered rows change. Once that maximum is reached, only the row body scrolls; the toolbar, column header, and pagination remain outside the scroll viewport. Every parent in a fill-height chain must provide `min-height: 0`.
 
+`variant="minimalistic-ui"` provides the flat header, borderless rows, expanded row viewport, and compact footer treatment used by resource overview pages. `ResourceOverviewPage` selects this variant by default; pass `variant="default"` in its table configuration when a resource requires the standard framed table.
+
 Passing `pagination={{}}` enables client pagination with 20 rows per page and 10, 20, and 50-row options. Use `value` and `onChange` for controlled state. For server pagination, set `manual: true` and provide `totalCount`. Resource overview pages enable pagination by default; pass `pagination={false}` through their table configuration to opt out.
+
+For embedded section tables, omit `toolbar`, set `pagination={false}`, and leave `footer` undefined. This keeps the persistent column-title row and data rows while removing the overview control strip and bottom chrome:
+
+```tsx
+<PlatformDataTable
+  rows={permissions}
+  columns={columns}
+  getRowId={(permission) => permission.id}
+  ariaLabel="Ring 1 permissions"
+  variant="minimalistic-ui"
+  surface="plain"
+  sticky={false}
+  pagination={false}
+/>
+```
 
 Columns own only resource-specific accessors and cell presentation. Page modules retain data fetching, mutations, navigation, and domain-specific action definitions.
 

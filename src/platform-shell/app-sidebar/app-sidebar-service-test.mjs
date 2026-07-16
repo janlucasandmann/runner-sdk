@@ -31,6 +31,10 @@ assert.deepEqual(Object.keys(fragments), [
 ]);
 assert.ok(fragments.modeSelector.includes("function renderAppSidebarModeSelector"));
 assert.ok(fragments.modeSelector.includes("React.createElement(PlatformPopup,"));
+assert.ok(fragments.modeSelector.includes('variant: "minimal"'));
+assert.match(fragments.modeSelector, /const shouldRenderModeMenu = sidebarWorkspaceMenuOpen \|\| renderedSidebarWorkspaceMenu/);
+assert.match(fragments.modeSelector, /open: shouldRenderModeMenu/);
+assert.doesNotMatch(fragments.modeState, /sidebarWorkspaceMenuPhase/);
 assert.ok(fragments.modeSelector.includes('label: "Create"'));
 assert.ok(fragments.modeSelector.includes('label: "Configure"'));
 assert.ok(fragments.modeSelector.includes('label: "Develop"'));
@@ -41,8 +45,12 @@ assert.match(
   fragments.navigationItems,
   /id: "new-thread"[\s\S]*id: "projects"[\s\S]*id: "files"[\s\S]*id: "create-services-label"[\s\S]*label: "Services"[\s\S]*id: "create-test"/,
 );
+assert.match(fragments.navigationItems, /function handleSidebarNavigationItemClick\(item\)/);
+assert.match(fragments.navigationItems, /requestPlatformNavigation\(item\?\.onClick\)/);
+assert.doesNotMatch(fragments.navigationItems, /if \(item\.active\)/);
 assert.ok(fragments.sidebar.includes("renderAppSidebarModeSelector()"));
 assert.ok(fragments.sidebar.includes("function renderAppSidebar()"));
+assert.match(fragments.sidebar, /onClick: \(\) => handleSidebarNavigationItemClick\(item\)/);
 assert.ok(fragments.sidebar.includes('className: "app-sidebar-top-actions"'));
 assert.ok(fragments.sidebar.includes("onClick: openThreadSearch"));
 assert.ok(fragments.sidebar.includes("onClick: () => setSidebarOpen(false)"));
@@ -51,6 +59,8 @@ assert.doesNotMatch(fragments.sidebar, /React\.createElement\(PanelLeftClose,/);
 assert.ok(fragments.sidebar.includes('className: "sidebar-organization-profile-button"'));
 assert.ok(fragments.sidebar.includes('renderAccountAvatar("sidebar-organization-avatar"'));
 assert.ok(fragments.sidebar.includes('className: "sidebar-rail-account"'));
+assert.ok(fragments.sidebar.includes('className: "sidebar-rail-section-spacer"'));
+assert.ok(!fragments.sidebar.includes("sidebar-rail-plan"));
 assert.ok(fragments.sidebar.includes("sidebar-organization-menu-button"));
 assert.ok(!fragments.sidebar.includes("playground-sidebar-brand-close-icon"));
 assert.doesNotMatch(fragments.sidebar, /sidebar-workspace-row/);
@@ -80,6 +90,9 @@ assert.match(styles.foundation, /\.sidebar-action-subtitle[\s\S]*color: rgba\(25
 assert.match(styles.foundation, /\.sidebar-action-subtitle[\s\S]*font-size: 11px;/);
 assert.match(styles.foundation, /\.sidebar-action-subtitle,\s*\.sidebar-thread-section-title[\s\S]*font-size: 11px;[\s\S]*font-weight: 400;/);
 assert.match(styles.foundation, /\.sidebar-thread-section-chevron[\s\S]*color: rgba\(255, 255, 255, 0\.5\);/);
+assert.match(styles.foundation, /\.sidebar-rail-section-spacer[\s\S]*height: 8px;/);
+assert.match(styles.foundation, /\.sidebar-rail-button\.is-active[\s\S]*border-radius: 8px;/);
+assert.doesNotMatch(styles.foundation, /\.sidebar-rail-plan/);
 assert.doesNotMatch(styles.foundation, /\.sidebar-workspace-trigger/);
 assert.match(styles.foundation, /\.metronome-test/);
 

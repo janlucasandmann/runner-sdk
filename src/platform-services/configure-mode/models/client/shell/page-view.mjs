@@ -21,6 +21,10 @@ export function createModelsAppPageViewScript({ pricingUrl = "" } = {}) {
             agentModelOptions: resolvedModelsPageAgentModelOptions,
             pricingUrl: ${JSON.stringify(pricingUrl)},
             onOpenSkillSettings: (skillId) => openToolsView("skills", { skillId, preserveSidebarMode: true }),
+            onCreateAgent: (modelId) => openAgentCreationInResources({
+              modelId,
+              sidebarMode: "configure",
+            }),
           });
         }
 

@@ -644,7 +644,7 @@ export const FILES_FOUNDATION_CSS = `
         color: #fff;
         font-size: 18px;
         line-height: 1.15;
-        font-weight: 500;
+        font-weight: 400;
         letter-spacing: -0.04em;
       }
 
@@ -693,7 +693,7 @@ export const FILES_FOUNDATION_CSS = `
         z-index: 10070;
       }
 
-      .playground-files-library-search {
+      .playground-files-library-search:not(.platform-search) {
         --playground-files-library-search-border: linear-gradient(
           -10deg,
           rgba(200, 200, 200, 0.25),
@@ -719,7 +719,7 @@ export const FILES_FOUNDATION_CSS = `
         backdrop-filter: blur(50px);
       }
 
-      .playground-files-library-search::before {
+      .playground-files-library-search:not(.platform-search)::before {
         content: "";
         pointer-events: none;
         position: absolute;
@@ -735,7 +735,7 @@ export const FILES_FOUNDATION_CSS = `
         mask-size: auto, auto;
       }
 
-      .playground-files-library-search > * {
+      .playground-files-library-search:not(.platform-search) > * {
         position: relative;
         z-index: 1;
       }
@@ -761,6 +761,10 @@ export const FILES_FOUNDATION_CSS = `
 
       .playground-files-library-search-input::placeholder {
         color: rgba(255, 255, 255, 0.5);
+      }
+
+      .playground-files-library-search.platform-search {
+        width: min(360px, 40vw);
       }
 
       .playground-files-library-search-popover {

@@ -17,4 +17,10 @@ export const MARKETPLACE_APP_NAVIGATION_SCRIPT = `        function openResourceT
           setActivePage("resource-templates");
         }
 
+        function openResourceTemplatesOverviewPage() {
+          setResourceTemplateSelectedId("");
+          setResourceTemplatePublishId("");
+          openResourceTemplatesPage({ type: "all" });
+        }
+
 `;

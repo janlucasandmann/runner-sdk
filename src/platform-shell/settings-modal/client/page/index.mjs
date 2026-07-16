@@ -2721,30 +2721,9 @@ ${apiKeysLegacySettingsCase}            case "design":
               maxWidth: "900px",
               maxHeight: "calc(100dvh - 48px)",
               className: "playground-shell-settings-modal",
-              ariaLabelledBy: "playground-settings-modal-title",
+              title: "Settings",
+              closeButtonLabel: "Close settings",
             },
-            React.createElement(PlatformModalHeader, { className: "playground-shell-settings-modal-header" },
-              React.createElement("div", { className: "playground-shell-settings-modal-title-shell" },
-                React.createElement(Settings2, {
-                  className: "playground-shell-settings-modal-title-icon",
-                  strokeWidth: 1.8,
-                  "aria-hidden": "true",
-                }),
-                React.createElement("h2", {
-                  id: "playground-settings-modal-title",
-                  className: "playground-shell-settings-modal-title",
-                }, "Settings")
-              ),
-              React.createElement("button", {
-                type: "button",
-                className: "playground-shell-settings-modal-close",
-                onClick: closeSettingsModal,
-                "aria-label": "Close settings",
-              }, React.createElement(X, {
-                className: "playground-shell-settings-modal-close-icon",
-                strokeWidth: 1.8,
-              }))
-            ),
             React.createElement(PlatformModalBody, { className: "playground-shell-settings-modal-body" },
               renderSettingsSurface({
                 embedded: true,

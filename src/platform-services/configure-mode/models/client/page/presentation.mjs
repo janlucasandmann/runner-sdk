@@ -1,73 +1,23 @@
 export const MODELS_PAGE_PRESENTATION_SCRIPT = String.raw`      function renderPlaygroundManagedModelProviderIcon(tabId, model) {
-        if (normalizePlaygroundManagedModelsTab(tabId) === "agent") {
-          const providerIcon = getPlaygroundAgentModelProviderIcon(model);
-          return providerIcon
-            ? React.createElement("span", { className: "playground-agents-model-provider-icon-shell playground-agents-overview-table-model-icon", "aria-hidden": "true" },
-                React.createElement("img", {
-                  src: providerIcon.src,
-                  alt: "",
-                  draggable: "false",
-                  className: "playground-agents-model-provider-icon" + (providerIcon.className ? " " + providerIcon.className : ""),
-                })
-              )
-            : React.createElement("span", { className: "playground-agents-model-provider-icon-shell playground-agents-overview-table-model-icon", "aria-hidden": "true" },
-                React.createElement(Bot, { width: 16, height: 16, strokeWidth: 1.8 })
-              );
-        }
-        if (normalizePlaygroundManagedModelsTab(tabId) === "image") {
-          const normalizedProvider = String(model?.provider || "").trim().toLowerCase();
-          const providerIcon = normalizedProvider.includes("google")
-            ? { src: "/img/05-model-provider-icons/gemini.png", alt: "Google", className: "" }
-            : normalizedProvider.includes("openai")
-              ? { src: "/img/05-model-provider-icons/openai.svg", alt: "OpenAI", className: "is-openai" }
-              : getPlaygroundAgentModelProviderIcon({
-                  id: model?.baseModelId || model?.id,
-                  providerType: model?.provider || "",
-                  source: "managed",
-                  contextWindow: "Images",
-                });
-          return providerIcon
-            ? React.createElement("span", { className: "playground-agents-model-provider-icon-shell playground-agents-overview-table-model-icon", "aria-hidden": "true" },
-                React.createElement("img", {
-                  src: providerIcon.src,
-                  alt: "",
-                  draggable: "false",
-                  className: "playground-agents-model-provider-icon" + (providerIcon.className ? " " + providerIcon.className : ""),
-                })
-              )
-            : React.createElement("span", { className: "playground-agents-model-provider-icon-shell playground-agents-overview-table-model-icon", "aria-hidden": "true" },
-                React.createElement(ImageIcon, { width: 16, height: 16, strokeWidth: 1.8 })
-              );
-        }
-        const Icon = tabId === "image" ? ImageIcon : tabId === "video" ? Film : Telescope;
-        if (normalizePlaygroundManagedModelsTab(tabId) === "video") {
-          const normalizedProvider = String(model?.provider || "").trim().toLowerCase();
-          const providerIcon = normalizedProvider.includes("bytedance")
-            ? { src: "/img/05-model-provider-icons/bytedance.svg", alt: "ByteDance", className: "" }
-            : normalizedProvider.includes("xai") || normalizedProvider.includes("x.ai")
-              ? { src: "/img/05-model-provider-icons/xai.svg", alt: "xAI", className: "" }
-              : null;
-          if (providerIcon) {
-            return React.createElement("span", { className: "playground-agents-model-provider-icon-shell playground-agents-overview-table-model-icon", "aria-hidden": "true" },
-              React.createElement("img", {
-                src: providerIcon.src,
-                alt: "",
-                draggable: "false",
-                className: "playground-agents-model-provider-icon" + (providerIcon.className ? " " + providerIcon.className : ""),
-              })
-            );
-          }
-        }
-        if (normalizePlaygroundManagedModelsTab(tabId) === "deep_research") {
+        const normalizedTabId = normalizePlaygroundManagedModelsTab(tabId);
+        const providerIcon = getPlaygroundManagedModelProviderIconMeta(normalizedTabId, model);
+        if (providerIcon) {
           return React.createElement("span", { className: "playground-agents-model-provider-icon-shell playground-agents-overview-table-model-icon", "aria-hidden": "true" },
             React.createElement("img", {
-              src: "/img/05-model-provider-icons/gemini.png",
+              src: providerIcon.src,
               alt: "",
               draggable: "false",
-              className: "playground-agents-model-provider-icon",
+              className: "playground-agents-model-provider-icon" + (providerIcon.className ? " " + providerIcon.className : ""),
             })
           );
         }
+        const Icon = normalizedTabId === "agent"
+          ? Bot
+          : normalizedTabId === "image"
+            ? ImageIcon
+            : normalizedTabId === "video"
+              ? Film
+              : Telescope;
         return React.createElement("span", { className: "playground-agents-model-provider-icon-shell playground-agents-overview-table-model-icon", "aria-hidden": "true" },
           React.createElement(Icon, { width: 16, height: 16, strokeWidth: 1.8 })
         );
@@ -214,6 +164,18 @@ export const MODELS_PAGE_PRESENTATION_SCRIPT = String.raw`      function renderP
               speed: String(entry?.speed || "").trim() || "Custom",
               source: String(entry?.source || "managed").trim(),
               providerType: String(entry?.providerType || "").trim(),
+              provider: String(entry?.provider || "").trim(),
+              location: String(entry?.location || "").trim(),
+              runtimeModelId: String(entry?.runtimeModelId || "").trim(),
+              hosting: String(entry?.hosting || "").trim(),
+              dataHandling: String(entry?.dataHandling || "").trim(),
+              documentationUrl: String(entry?.documentationUrl || "").trim(),
+              capabilities: Array.isArray(entry?.capabilities) ? entry.capabilities.slice() : [],
+              availability: entry?.availability
+                && typeof entry.availability === "object"
+                && !Array.isArray(entry.availability)
+                ? { ...entry.availability }
+                : null,
               locked: Boolean(entry?.locked),
             }))
             .filter((entry) => entry.id && entry.label);

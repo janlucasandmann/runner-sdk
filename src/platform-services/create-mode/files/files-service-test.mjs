@@ -19,10 +19,14 @@ assert.match(FILES_PREVIEW_COMPONENTS_SCRIPT, /function PlaygroundCodeEditorPrev
 assert.match(FILES_PAGE_RUNTIME_SCRIPT, /function PlaygroundImageSelectionMaskOverlay/);
 assert.match(FILES_PAGE_RUNTIME_SCRIPT, /function PlaygroundFilesPage/);
 assert.match(FILES_PAGE_RUNTIME_SCRIPT, /function renderFilesBrowserContent/);
+assert.match(FILES_PAGE_RUNTIME_SCRIPT, /React\.createElement\(PlatformSwitch/);
+assert.match(FILES_PAGE_RUNTIME_SCRIPT, /React\.createElement\(PlatformSearch/);
+assert.match(FILES_PAGE_RUNTIME_SCRIPT, /React\.createElement\(PlatformButtonSelector/);
 assert.match(FILES_STYLE_FRAGMENTS.foundation, /\.playground-files-page/);
 assert.match(FILES_STYLE_FRAGMENTS.foundation, /\.playground-files-browser[\s\S]*margin: 0;[\s\S]*border: 0;[\s\S]*border-radius: 0;/);
 assert.match(FILES_STYLE_FRAGMENTS.preview, /\.playground-files-image-mask-overlay/);
 assert.match(FILES_STYLE_FRAGMENTS.editor, /\.playground-code-preview-editor-shell/);
+assert.match(FILES_STYLE_FRAGMENTS.responsive, /@media \(max-width: 980px\)[\s\S]*\.playground-files-shell/);
 
 const demoServerSource = await fs.readFile(
   new URL("../../../../examples/demo-server.mjs", import.meta.url),
@@ -31,9 +35,11 @@ const demoServerSource = await fs.readFile(
 assert.match(demoServerSource, /from "\.\.\/src\/platform-services\/create-mode\/files\/index\.mjs"/);
 assert.match(demoServerSource, /filesService\.handleRequest\(req, res, url\)/);
 assert.match(demoServerSource, /\$\{FILES_PAGE_RUNTIME_SCRIPT\}/);
+assert.match(demoServerSource, /import \{ PlatformSearch \} from "\/dist\/platform-ui\/components\/ui\/search\/index\.js"/);
 assert.doesNotMatch(demoServerSource, /^\s*function PlaygroundFilesPage/m);
 assert.doesNotMatch(demoServerSource, /^\s*function PlaygroundFileIcon/m);
 assert.doesNotMatch(demoServerSource, /^\s*\.playground-files-page\s*\{/m);
+assert.doesNotMatch(demoServerSource, /^\s*\.playground-files-shell\s*\{/m);
 assert.doesNotMatch(demoServerSource, /const environmentFilesUploadMatch/);
 assert.doesNotMatch(demoServerSource, /const serverFilesMatch/);
 assert.doesNotMatch(demoServerSource, /async function proxyEnvironmentHtmlPreview/);

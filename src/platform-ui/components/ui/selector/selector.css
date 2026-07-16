@@ -1,0 +1,283 @@
+.platform-selector {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+  color: #fff;
+}
+
+.platform-selector.is-full-width {
+  width: 100%;
+}
+
+.platform-selector__trigger {
+  min-width: 0;
+  min-height: var(--platform-control-height, 32px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.86);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+}
+
+.platform-selector.is-full-width .platform-selector__trigger {
+  width: 100%;
+}
+
+.platform-selector.is-align-end .platform-selector__trigger {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.platform-selector__trigger:hover:not(:disabled),
+.platform-selector__trigger:focus-visible {
+  color: #fff;
+}
+
+.platform-selector__trigger:focus-visible {
+  outline: none;
+}
+
+.platform-selector__trigger:disabled {
+  cursor: default;
+}
+
+.platform-selector.is-disabled {
+  opacity: 0.5;
+}
+
+.platform-selector__value {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-selector__chevrons {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  color: rgba(255, 255, 255, 0.46);
+}
+
+.platform-selector__popup {
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: max(100%, 180px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.platform-selector__popup.is-portaled {
+  min-width: 180px;
+}
+
+.platform-selector.is-align-end .platform-selector__popup {
+  right: 0;
+  left: auto;
+}
+
+.platform-selector__popup::-webkit-scrollbar {
+  display: none;
+}
+
+.platform-selector__option {
+  position: relative;
+  z-index: 6;
+  width: 100%;
+  min-height: 36px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 14px;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.76);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.platform-selector__option.has-leading {
+  grid-template-columns: auto minmax(0, 1fr) 14px;
+}
+
+.platform-selector__option:hover:not(:disabled),
+.platform-selector__option:focus-visible,
+.platform-selector__option.is-selected {
+  background: rgba(255, 255, 255, 0.075);
+  color: #fff;
+}
+
+.platform-selector__option:focus-visible {
+  outline: none;
+}
+
+.platform-selector__option:disabled {
+  opacity: 0.42;
+  cursor: default;
+}
+
+.platform-selector__option-leading,
+.platform-selector__option-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.platform-selector__option-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.platform-selector__option-label,
+.platform-selector__option-description {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-selector__option-label {
+  color: inherit;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.platform-selector__option-description {
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.platform-selector__option-check {
+  width: 14px;
+  height: 14px;
+  color: #fff;
+}
+
+.platform-selector__state {
+  position: relative;
+  z-index: 6;
+  padding: 13px 14px;
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.platform-button-selector {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+  transition: opacity 160ms ease;
+}
+
+.platform-button-selector.is-disabled {
+  opacity: 0.5;
+}
+
+.platform-button-selector.is-disabled .platform-button:disabled {
+  opacity: 1 !important;
+}
+
+.platform-button-selector__group {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+}
+
+.platform-button-selector__group.is-secondary .platform-button-selector__action.platform-button {
+  padding-right: var(--platform-button-padding-inline) !important;
+  border-right: 0 !important;
+}
+
+.platform-button-selector__group.is-secondary .platform-button-selector__popup-trigger.platform-button {
+  border-left: 0 !important;
+}
+
+.platform-button-selector:not(.is-disabled) .platform-button-selector__group.is-primary:hover > .platform-button {
+  background: rgba(255, 255, 255, 0.9) !important;
+}
+
+.platform-button-selector:not(.is-disabled) .platform-button-selector__group.is-secondary:hover > .platform-button {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #fff !important;
+}
+
+.platform-button-selector__button.platform-button,
+.platform-button-selector__action.platform-button {
+  min-width: 0;
+}
+
+.platform-button-selector__button.platform-button {
+  max-width: 100%;
+}
+
+.platform-button-selector__leading,
+.platform-button-selector__label {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
+.platform-button-selector__leading {
+  flex: 0 0 auto;
+}
+
+.platform-button-selector__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-button-selector__action.platform-button {
+  border-radius: 8px 0 0 8px !important;
+}
+
+.platform-button-selector .platform-button-selector__popup-trigger.platform-button {
+  width: 28px;
+  min-width: 28px;
+  padding: 0 !important;
+  border-radius: 0 8px 8px 0 !important;
+}
+
+.platform-button-selector__divider {
+  position: relative;
+  z-index: 2;
+  width: 1px;
+  height: 14px;
+  flex: 0 0 1px;
+  margin-right: -1px;
+  margin-left: -1px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.platform-button-selector__group.is-primary .platform-button-selector__divider {
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.platform-button-selector.is-primary.is-disabled .platform-button-selector__divider {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.platform-button-selector__popup.is-portaled {
+  min-width: 180px;
+}

@@ -6,11 +6,15 @@ export {
   PlatformModalHeader,
   PlatformModalSurface,
 } from "./platform-modal.js";
+export { PlatformUnsavedChangesModal } from "./platform-unsaved-changes-modal.js";
 
 export type {
   PlatformModalBackdropProps,
   PlatformModalCloseReason,
+  PlatformModalHeaderProps,
   PlatformModalProps,
   PlatformModalSize,
+  PlatformModalVariant,
   PlatformModalSurfaceProps,
 } from "./platform-modal.js";
+export type { PlatformUnsavedChangesModalProps } from "./platform-unsaved-changes-modal.js";

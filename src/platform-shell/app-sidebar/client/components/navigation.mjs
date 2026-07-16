@@ -17,14 +17,14 @@ ${configurePrimaryEntries}              {
                 label: "Agents",
                 Icon: Bot,
                 active: isResourcesPage && activeResourcesView === "agents",
-                onClick: () => openResourcesView("agents"),
+                onClick: handleOpenAgentsShortcut,
               },
               {
                 id: "computers",
                 label: "Computers",
                 Icon: Monitor,
                 active: isResourcesPage && activeResourcesView === "computers",
-                onClick: () => openResourcesView("computers"),
+                onClick: handleOpenEnvironmentsShortcut,
               },
               {
                 id: "tags",
@@ -68,7 +68,7 @@ ${configureInfrastructureEntries}            ];
               label: item.label,
               Icon: item.Icon,
               active: isResourcesPage && activeResourcesView === "servers" && activeResourcesServerKind === item.kind,
-              onClick: () => openResourcesView("servers", { serverKind: item.kind }),
+              onClick: () => openResourcesView("servers", { serverKind: item.kind, forceOverview: true }),
             });
             const agentDevelopServerPageItems = developServerPageItems.filter((item) => item.kind === "agent_runtime" || item.kind === "voice_agent");
             const mainDevelopServerPageItems = developServerPageItems.filter((item) => item.kind !== "agent_runtime" && item.kind !== "voice_agent");
@@ -121,20 +121,24 @@ ${createPrimaryEntries}
               label: "Metronome",
               Icon: Metronome,
               active: activePage === "metronome",
-              onClick: openMetronomePage,
+              onClick: openMetronomeOverviewPage,
             },
             {
               id: "calendar",
               label: "Calendar",
               Icon: CalendarIcon,
               active: activePage === "calendar",
-              onClick: openCalendarPage,
+              onClick: openCalendarOverviewPage,
             },
           ];
         }
 
         function getSidebarFooterNavigationItems() {
           return [];
+        }
+
+        function handleSidebarNavigationItemClick(item) {
+          requestPlatformNavigation(item?.onClick);
         }
 
         function renderSidebarNavigationButton(item) {
@@ -155,7 +159,7 @@ ${createPrimaryEntries}
             key: item.id,
             type: "button",
             className: "sidebar-action-button" + (item.active ? " is-active" : "") + (item.id === "search" ? " sidebar-search-trigger" : ""),
-            onClick: item.onClick,
+            onClick: () => handleSidebarNavigationItemClick(item),
           },
             item.id === "search"
               ? React.createElement(React.Fragment, null,

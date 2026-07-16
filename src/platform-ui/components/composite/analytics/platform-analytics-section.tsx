@@ -5,24 +5,44 @@ export function PlatformAnalyticsSection({
   analytics,
   chartType = "line",
   className = "",
+  variant = "default",
+  title,
+  headerActions,
+  chartContent,
 }: PlatformAnalyticsSectionProps) {
+  const resolvedTitle = title ?? analytics.title;
+  const hasHeader = variant === "framed" && Boolean(resolvedTitle || headerActions);
+
   return (
     <section
-      className={`platform-analytics${className ? ` ${className}` : ""}`}
-      aria-label={analytics.ariaLabel || analytics.title || "Analytics"}
+      className={`platform-analytics is-${variant}${className ? ` ${className}` : ""}`}
+      aria-label={analytics.ariaLabel || analytics.title || (typeof title === "string" ? title : "Analytics")}
+      data-platform-analytics-variant={variant}
     >
+      {hasHeader ? (
+        <div className="platform-analytics__header">
+          {resolvedTitle ? <h2 className="platform-analytics__title">{resolvedTitle}</h2> : null}
+          {headerActions ? <div className="platform-analytics__header-actions">{headerActions}</div> : null}
+        </div>
+      ) : null}
       <div className="platform-analytics__metrics">
         {analytics.metrics.map((metric) => (
           <div key={metric.id} className="platform-analytics__metric">
             <div className="platform-analytics__metric-label">
-              <span className="platform-analytics__metric-dot" style={{ backgroundColor: metric.color || "#fff" }} aria-hidden="true" />
+              <span
+                className="platform-analytics__metric-dot"
+                style={{ backgroundColor: metric.color || "#fff", color: metric.color || "#fff" }}
+                aria-hidden="true"
+              />
               <span>{metric.label}</span>
             </div>
             <div className="platform-analytics__metric-value">{metric.value}</div>
           </div>
         ))}
       </div>
-      <PlatformAnalyticsChart analytics={analytics} chartType={chartType} />
+      <div className="platform-analytics__chart">
+        {chartContent ?? <PlatformAnalyticsChart analytics={analytics} chartType={chartType} />}
+      </div>
     </section>
   );
 }

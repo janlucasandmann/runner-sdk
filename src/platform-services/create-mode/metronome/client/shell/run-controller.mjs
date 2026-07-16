@@ -27,6 +27,14 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
           setActivePage("metronome");
         }
 
+        function openMetronomeOverviewPage() {
+          const goOverview = metronomeTopNavActionsRef.current?.goOverview;
+          if (typeof goOverview === "function") {
+            goOverview();
+          }
+          openMetronomePage();
+        }
+
         function createMetronomeRunTraceThreadId(key) {
           const normalizedKey = String(key || "").trim();
           return normalizedKey ? "metronome-run:" + normalizedKey : "";

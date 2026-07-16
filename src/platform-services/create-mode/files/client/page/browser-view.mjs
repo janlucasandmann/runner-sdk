@@ -1,28 +1,28 @@
 export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
         function renderFilesModeSwitch() {
-          return React.createElement("div", { className: "content-mode-switch playground-files-topbar-mode-switch" },
-            React.createElement("button", {
-              type: "button",
-              className: "content-mode-button" + (contentMode === "files" ? " is-active" : ""),
-              onClick: () => {
+          return React.createElement(PlatformSwitch, {
+            className: "playground-files-topbar-mode-switch",
+            value: contentMode === "changes" ? "changes" : "files",
+            options: [
+              { value: "files", label: "Files" },
+              { value: "changes", label: "Changes" },
+            ],
+            ariaLabel: "Files view",
+            onValueChange: (nextMode) => {
+              if (nextMode === "files") {
                 setContentMode("files");
                 setChangesViewMode("timeline");
                 setToolbarPopover("");
-              },
-            }, "Files"),
-            React.createElement("button", {
-              type: "button",
-              className: "content-mode-button" + (contentMode === "changes" ? " is-active" : ""),
-              onClick: () => {
-                setContentMode("changes");
-                setIsPreviewOpen(false);
-                setIsPreviewMaximized(false);
-                setIsFileChatOpen(false);
-                setChangesViewMode("timeline");
-                setToolbarPopover("");
-              },
-            }, "Changes")
-          );
+                return;
+              }
+              setContentMode("changes");
+              setIsPreviewOpen(false);
+              setIsPreviewMaximized(false);
+              setIsFileChatOpen(false);
+              setChangesViewMode("timeline");
+              setToolbarPopover("");
+            },
+          });
         }
 
         function renderFilesSearchPopover(extraClassName = "") {
@@ -78,11 +78,9 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
             );
         }
 
-        function renderFilesCreateMenu(extraClassName = "") {
-          return React.createElement(PlatformPopupSurface, {
-              className: "playground-files-toolbar-menu" + (extraClassName ? " " + extraClassName : ""),
-            },
-              React.createElement("button", {
+        function renderFilesCreateMenuItems() {
+          return React.createElement(React.Fragment, null,
+            React.createElement("button", {
                 type: "button",
                 className: "playground-files-toolbar-menu-item",
                 onClick: () => void handleCreateFile(currentPath),
@@ -118,7 +116,50 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
                   React.createElement("span", null, "Add files to this location")
                 )
               )
+          );
+        }
+
+        function renderFilesCreateMenu(extraClassName = "") {
+          return React.createElement(PlatformPopupSurface, {
+              className: "playground-files-toolbar-menu" + (extraClassName ? " " + extraClassName : ""),
+            },
+              renderFilesCreateMenuItems()
             );
+        }
+
+        function renderFilesAppHeaderCreateSelector() {
+          if (isChangesMode) {
+            return null;
+          }
+          return React.createElement(PlatformButtonSelector, {
+              mode: "popup",
+              buttonVariant: "primary",
+              buttonSize: "small",
+              label: "New",
+              leading: React.createElement(Plus, {
+                width: 14,
+                height: 14,
+                strokeWidth: 1.8,
+                "aria-hidden": "true",
+              }),
+              open: toolbarPopover === "create",
+              onOpenChange: (nextOpen) => {
+                if (nextOpen) {
+                  setToolbarPopover("create");
+                  closeContextMenu();
+                } else if (toolbarPopover === "create") {
+                  setToolbarPopover("");
+                }
+              },
+              popupAriaLabel: "Create or upload files",
+              popupAlignment: "right",
+              popupRole: "menu",
+              popupWidth: 248,
+              popupClassName: "playground-files-app-header-create-menu",
+              disabled: !selectedEnvironmentId,
+            },
+            renderFilesCreateMenuItems()
+          );
         }
 
         function renderAnimatedFilesCreateMenu(extraClassName = "") {
@@ -271,44 +312,28 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
                         React.createElement("span", null, scopedProjectComputerName)
                       )
                     )
-                  : "Files on " + selectedComputerLabel
+                  : selectedComputerLabel
               ),
               React.createElement("div", { className: "playground-files-library-actions" },
                 React.createElement("div", { className: "playground-files-library-search-anchor" },
-                  React.createElement("label", { className: "playground-files-library-search" },
-                    React.createElement(Search, { className: "playground-files-library-search-icon", strokeWidth: 1.8 }),
-                    React.createElement("input", {
-                      ref: searchPopupInputRef,
-                      type: "text",
-                      className: "playground-files-library-search-input",
-                      placeholder: "Search files",
-                      value: searchPopupQuery,
-                      onFocus: () => {
-                        if (toolbarPopover === "search") {
-                          setToolbarPopover("");
-                        }
-                      },
-                      onChange: (event) => {
-                        setSearchPopupQuery(event.target.value);
-                        if (toolbarPopover) {
-                          setToolbarPopover("");
-                        }
-                      },
-                    })
-                  )
-                ),
-                React.createElement("div", { className: "playground-files-library-new-anchor" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-library-new-button",
-                    onClick: () => toggleToolbarPopover("create"),
-                  },
-                    React.createElement("span", null, "New"),
-                    React.createElement(ChevronDown, { width: 18, height: 18, strokeWidth: 1.8 })
-                  ),
-                  shouldRenderFilesToolbarMenu("create")
-                    ? renderAnimatedFilesCreateMenu("playground-files-toolbar-menu-align-right")
-                    : null
+                  React.createElement(PlatformSearch, {
+                    ref: searchPopupInputRef,
+                    className: "playground-files-library-search",
+                    placeholder: "Search files",
+                    "aria-label": "Search files",
+                    value: searchPopupQuery,
+                    onFocus: () => {
+                      if (toolbarPopover === "search") {
+                        setToolbarPopover("");
+                      }
+                    },
+                    onChange: (event) => {
+                      setSearchPopupQuery(event.target.value);
+                      if (toolbarPopover) {
+                        setToolbarPopover("");
+                      }
+                    },
+                  })
                 )
               )
             ),
@@ -393,6 +418,7 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
             : undefined,
           left: isPreviewMaximized ? null : renderFilesEnvironmentSelector(),
           center: isPreviewMaximized ? null : renderFilesModeSwitch(),
+          extraActions: isPreviewMaximized ? null : renderFilesAppHeaderCreateSelector(),
           environmentId: selectedEnvironmentId,
           path: currentPath,
           contentMode: isChangesMode ? "changes" : "files",
@@ -408,6 +434,9 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
           hasPreviewPanel,
           isPreviewMaximized,
           isChangesMode,
+          isCreatingFile,
+          isCreatingFolder,
+          isUploadingFiles,
           orderedEnvironments,
           projectFilterScope,
           projectFilterScopeLabel,
@@ -630,29 +659,7 @@ export const FILES_PAGE_BROWSER_VIEW_SCRIPT = `
                         : null
                     )
                   ),
-                  React.createElement("div", { className: "content-mode-switch playground-files-topbar-mode-switch" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "content-mode-button" + (contentMode === "files" ? " is-active" : ""),
-                      onClick: () => {
-                        setContentMode("files");
-                        setChangesViewMode("timeline");
-                        setToolbarPopover("");
-                      },
-                    }, "Files"),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "content-mode-button" + (contentMode === "changes" ? " is-active" : ""),
-                      onClick: () => {
-                        setContentMode("changes");
-                        setIsPreviewOpen(false);
-                        setIsPreviewMaximized(false);
-                        setIsFileChatOpen(false);
-                        setChangesViewMode("timeline");
-                        setToolbarPopover("");
-                      },
-                    }, "Changes")
-                  ),
+                  renderFilesModeSwitch(),
                   React.createElement("div", { className: "playground-files-topbar-actions" },
                     showBrowserMinimizeButton
                       ? React.createElement("button", {

@@ -31,6 +31,8 @@ assert.doesNotMatch(fragments.breadcrumbBar, /playground-top-nav-path-icon/);
 assert.match(fragments.breadcrumbBar, /\["create", "configure", "develop"\]\.includes\(firstItemLabel\)/);
 assert.match(fragments.breadcrumbBar, /safeItems\.slice\(1\)/);
 assert.match(fragments.appHeader, /function renderAppHeader\(/);
+assert.match(fragments.appHeader, /React\.createElement\(PlatformSecondaryButton,/);
+assert.match(fragments.appHeader, /className: "playground-top-nav-private-chat-control"/);
 assert.doesNotMatch(fragments.appHeader, /function renderAppHeaderSearchButton\(/);
 assert.doesNotMatch(fragments.appHeader, /function renderAppHeaderSidebarToggle\(/);
 assert.doesNotMatch(fragments.appHeader, /function renderAppHeaderAccountButton\(/);

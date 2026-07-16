@@ -1,0 +1,110 @@
+// @vitest-environment jsdom
+
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { userEvent } from "@testing-library/user-event";
+import { GitBranch, Rocket } from "lucide-react";
+import { PlatformButtonSelector } from "./platform-button-selector.js";
+
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
+
+describe("PlatformButtonSelector", () => {
+  it("opens the shared portaled selector popup from the full secondary button", async () => {
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
+    const { container } = render(
+      <PlatformButtonSelector
+        mode="popup"
+        buttonVariant="secondary"
+        label="Version 2"
+        leading={<GitBranch />}
+        popupAriaLabel="Choose version"
+        onOpenChange={onOpenChange}
+      >
+        <button type="button" role="menuitem">Version 1</button>
+      </PlatformButtonSelector>,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Choose version" });
+    const chevronTrigger = screen.getByRole("button", { name: "Choose version options" });
+    expect(trigger.dataset.platformButtonVariant).toBe("secondary");
+    expect(chevronTrigger.dataset.platformButtonVariant).toBe("secondary");
+    expect(container.querySelector(".platform-button-selector.is-mode-popup")).not.toBeNull();
+    expect(container.querySelector(".platform-button-selector__divider")).not.toBeNull();
+
+    await user.click(trigger);
+
+    const popup = screen.getByRole("menu", { name: "Choose version" });
+    expect(onOpenChange).toHaveBeenCalledWith(true);
+    expect(popup.classList.contains("is-minimal")).toBe(true);
+    expect(popup.classList.contains("is-portaled")).toBe(true);
+    expect(popup.parentElement).toBe(document.body);
+    expect(container.querySelector(".platform-popup-surface")).toBeNull();
+
+    await user.click(chevronTrigger);
+    expect(screen.queryByRole("menu", { name: "Choose version" })).toBeNull();
+  });
+
+  it("separates the primary action from the split popup trigger", async () => {
+    const user = userEvent.setup();
+    const onAction = vi.fn();
+    render(
+      <PlatformButtonSelector
+        mode="split-action"
+        buttonVariant="primary"
+        label="Save & Publish"
+        leading={<Rocket />}
+        actionAriaLabel="Save and publish"
+        popupAriaLabel="Version options"
+        onAction={onAction}
+      >
+        <button type="button" role="menuitem">Save Version</button>
+      </PlatformButtonSelector>,
+    );
+
+    const action = screen.getByRole("button", { name: "Save and publish" });
+    const popupTrigger = screen.getByRole("button", { name: "Version options" });
+    expect(action.dataset.platformButtonVariant).toBe("primary");
+    expect(popupTrigger.dataset.platformButtonVariant).toBe("primary");
+
+    await user.click(action);
+    expect(onAction).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("menu", { name: "Version options" })).toBeNull();
+
+    await user.click(popupTrigger);
+    expect(screen.getByRole("menu", { name: "Version options" })).not.toBeNull();
+  });
+
+  it("dismisses the portaled popup without swallowing popup interactions", async () => {
+    const user = userEvent.setup();
+    const onMenuAction = vi.fn();
+    render(
+      <div>
+        <PlatformButtonSelector
+          mode="popup"
+          label="Versions"
+          popupAriaLabel="Choose version"
+        >
+          <button type="button" role="menuitem" onClick={onMenuAction}>Version 1</button>
+        </PlatformButtonSelector>
+        <button type="button">Outside</button>
+      </div>,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Choose version" });
+    await user.click(trigger);
+    await user.click(screen.getByRole("menuitem", { name: "Version 1" }));
+    expect(onMenuAction).toHaveBeenCalledTimes(1);
+
+    fireEvent.mouseDown(screen.getByRole("button", { name: "Outside" }));
+    expect(screen.queryByRole("menu", { name: "Choose version" })).toBeNull();
+
+    await user.click(trigger);
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(screen.queryByRole("menu", { name: "Choose version" })).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+  });
+});

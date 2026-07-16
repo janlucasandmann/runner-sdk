@@ -2,6 +2,7 @@ import {
   createElement,
   forwardRef,
   useEffect,
+  useId,
   useRef,
   useState,
   type CSSProperties,
@@ -12,9 +13,11 @@ import {
   type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
+import { X } from "lucide-react";
 
-export type PlatformModalSize = "compact" | "small" | "medium" | "large" | "wide" | "full";
-export type PlatformModalCloseReason = "backdrop" | "escape";
+export type PlatformModalVariant = "small" | "medium" | "large";
+export type PlatformModalSize = PlatformModalVariant | "compact" | "wide" | "full";
+export type PlatformModalCloseReason = "backdrop" | "escape" | "close-button";
 
 export interface PlatformModalSurfaceProps extends HTMLAttributes<HTMLElement> {
   as?: ElementType;
@@ -34,8 +37,10 @@ export interface PlatformModalBackdropProps extends HTMLAttributes<HTMLDivElemen
 
 export interface PlatformModalProps {
   open: boolean;
+  title: ReactNode;
+  description?: ReactNode;
   children?: ReactNode;
-  onClose?: (reason: PlatformModalCloseReason) => void;
+  onClose: (reason: PlatformModalCloseReason) => void;
   onExited?: () => void;
   closeOnBackdrop?: boolean;
   closeOnEscape?: boolean;
@@ -56,6 +61,12 @@ export interface PlatformModalProps {
   animationDurationMs?: number;
   className?: string;
   backdropClassName?: string;
+  headerClassName?: string;
+  titleClassName?: string;
+  descriptionClassName?: string;
+  closeButtonClassName?: string;
+  closeButtonLabel?: string;
+  closeButtonDisabled?: boolean;
   surfaceRef?: Ref<HTMLElement>;
   backdropRef?: Ref<HTMLDivElement>;
   surfaceProps?: Omit<PlatformModalSurfaceProps, "as" | "children" | "className" | "size" | "visible" | "closing">;
@@ -64,6 +75,19 @@ export interface PlatformModalProps {
   ariaLabel?: string;
   ariaLabelledBy?: string;
   ariaDescribedBy?: string;
+}
+
+export interface PlatformModalHeaderProps extends Omit<HTMLAttributes<HTMLDivElement>, "title" | "onClose"> {
+  title?: ReactNode;
+  description?: ReactNode;
+  titleId?: string;
+  descriptionId?: string;
+  titleClassName?: string;
+  descriptionClassName?: string;
+  onClose?: () => void;
+  closeButtonClassName?: string;
+  closeButtonLabel?: string;
+  closeButtonDisabled?: boolean;
 }
 
 const FOCUSABLE_SELECTOR = [
@@ -186,6 +210,8 @@ export const PlatformModalSurface = forwardRef<HTMLElement, PlatformModalSurface
 
 export function PlatformModal({
   open,
+  title,
+  description,
   children,
   onClose,
   onExited,
@@ -208,6 +234,12 @@ export function PlatformModal({
   animationDurationMs = 75,
   className = "",
   backdropClassName = "",
+  headerClassName = "",
+  titleClassName = "",
+  descriptionClassName = "",
+  closeButtonClassName = "",
+  closeButtonLabel = "Close modal",
+  closeButtonDisabled = false,
   surfaceRef,
   backdropRef,
   surfaceProps = {},
@@ -217,12 +249,15 @@ export function PlatformModal({
   ariaLabelledBy,
   ariaDescribedBy,
 }: PlatformModalProps) {
+  const generatedId = useId().replace(/:/g, "");
   const [present, setPresent] = useState(open);
   const [automaticVisible, setAutomaticVisible] = useState(false);
   const localSurfaceRef = useRef<HTMLElement | null>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
   const resolvedVisible = controlledVisible ?? automaticVisible;
   const resolvedClosing = closing || (!open && present);
+  const titleId = ariaLabelledBy || `platform-modal-title-${generatedId}`;
+  const descriptionId = ariaDescribedBy || `platform-modal-description-${generatedId}`;
 
   useEffect(() => {
     if (open) {
@@ -265,7 +300,7 @@ export function PlatformModal({
   useEffect(() => {
     if (!present || typeof document === "undefined") return;
     const handleKeyDown = (event: globalThis.KeyboardEvent) => {
-      if (event.key === "Escape" && closeOnEscape && onClose) {
+      if (event.key === "Escape" && closeOnEscape && typeof onClose === "function") {
         event.preventDefault();
         event.stopPropagation();
         onClose("escape");
@@ -318,7 +353,7 @@ export function PlatformModal({
           !event.defaultPrevented
           && event.target === event.currentTarget
           && closeOnBackdrop
-          && onClose
+          && typeof onClose === "function"
         ) {
           onClose("backdrop");
         }
@@ -342,14 +377,29 @@ export function PlatformModal({
         role={role}
         aria-modal="true"
         aria-label={ariaLabel}
-        aria-labelledby={ariaLabelledBy}
-        aria-describedby={ariaDescribedBy}
+        aria-labelledby={ariaLabel ? undefined : titleId}
+        aria-describedby={description != null ? descriptionId : ariaDescribedBy}
         tabIndex={surfaceTabIndex ?? -1}
         onClick={(event) => {
           event.stopPropagation();
           surfaceOnClick?.(event);
         }}
       >
+        {title != null ? (
+          <PlatformModalHeader
+            className={headerClassName}
+            title={title}
+            description={description}
+            titleId={titleId}
+            descriptionId={descriptionId}
+            titleClassName={titleClassName}
+            descriptionClassName={descriptionClassName}
+            onClose={typeof onClose === "function" ? () => onClose("close-button") : undefined}
+            closeButtonClassName={closeButtonClassName}
+            closeButtonLabel={closeButtonLabel}
+            closeButtonDisabled={closeButtonDisabled}
+          />
+        ) : null}
         {children}
       </PlatformModalSurface>
     </PlatformModalBackdrop>
@@ -359,8 +409,60 @@ export function PlatformModal({
   return portal && target ? createPortal(modal, target) : modal;
 }
 
-export function PlatformModalHeader({ className = "", ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div {...props} className={joinClassNames("platform-modal-header", className)} />;
+export function PlatformModalHeader({
+  title,
+  description,
+  titleId,
+  descriptionId,
+  titleClassName = "",
+  descriptionClassName = "",
+  onClose,
+  closeButtonClassName = "",
+  closeButtonLabel = "Close modal",
+  closeButtonDisabled = false,
+  className = "",
+  children,
+  ...props
+}: PlatformModalHeaderProps) {
+  if (title == null) {
+    return (
+      <div {...props} className={joinClassNames("platform-modal-header", className)}>
+        {children}
+      </div>
+    );
+  }
+  return (
+    <div {...props} className={joinClassNames("platform-modal-header", className)}>
+      <div className="platform-modal-header__copy">
+        <h2
+          id={titleId}
+          className={joinClassNames("platform-modal-header__title", titleClassName)}
+        >
+          {title}
+        </h2>
+        {description != null ? (
+          <p
+            id={descriptionId}
+            className={joinClassNames("platform-modal-header__description", descriptionClassName)}
+          >
+            {description}
+          </p>
+        ) : null}
+      </div>
+      {onClose ? (
+        <button
+          type="button"
+          className={joinClassNames("platform-modal-header__close", closeButtonClassName)}
+          aria-label={closeButtonLabel}
+          onClick={onClose}
+          disabled={closeButtonDisabled}
+        >
+          <X width={16} height={16} strokeWidth={2} aria-hidden="true" />
+        </button>
+      ) : null}
+      {children}
+    </div>
+  );
 }
 
 export function PlatformModalBody({ className = "", ...props }: HTMLAttributes<HTMLDivElement>) {

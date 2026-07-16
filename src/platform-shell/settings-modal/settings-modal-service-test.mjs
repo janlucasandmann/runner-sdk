@@ -11,6 +11,7 @@ assert.deepEqual(Object.keys(SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS), ["state", "na
 assert.match(SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS.state, /settingsModalOpen/);
 assert.match(SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS.navigation, /function openSettingsModal/);
 assert.match(SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS.navigation, /openOrganizationBillingPage/);
+assert.match(SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS.navigation, /openDevelopWebhooksPage/);
 assert.match(SETTINGS_MODAL_CSS, /\.playground-shell-settings-modal\.platform-modal-surface/);
 
 const pageScript = createSettingsModalPageScript({
@@ -21,7 +22,8 @@ const pageScript = createSettingsModalPageScript({
 assert.match(pageScript, /function renderSettingsSurface/);
 assert.match(pageScript, /function renderSettingsModal/);
 assert.match(pageScript, /React\.createElement\(PlatformModal,/);
-assert.match(pageScript, /React\.createElement\(PlatformModalHeader,/);
+assert.match(pageScript, /title: "Settings"/);
+assert.match(pageScript, /closeButtonLabel: "Close settings"/);
 assert.match(pageScript, /React\.createElement\(PlatformModalBody,/);
 assert.doesNotMatch(pageScript, /function renderSettingsPage/);
 assert.doesNotThrow(() => new Function(`

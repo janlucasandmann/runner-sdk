@@ -16,5 +16,9 @@ export const FINE_TUNING_APP_NAVIGATION_SCRIPT = String.raw`        function ope
           setActivePage("fine-tuning");
         }
 
-`;
+        function openFineTuningOverviewPage() {
+          setSelectedFineTuningJobId("");
+          openFineTuningPage({ mode: "overview" });
+        }
 
+`;

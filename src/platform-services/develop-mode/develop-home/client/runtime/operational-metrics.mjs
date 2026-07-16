@@ -7,9 +7,7 @@ export const DEVELOP_HOME_OPERATIONAL_METRICS_SCRIPT = `        const loadDevelo
 
           const rawTargetKind = String(options?.resourceKind || "").trim();
           const targetKind = rawTargetKind ? canonicalizePlaygroundServerKind(rawTargetKind) : "";
-          const requestedPeriod = targetKind
-            ? normalizePlaygroundEnvironmentHomeChartPeriod(options?.period)
-            : "day";
+          const requestedPeriod = normalizePlaygroundEnvironmentHomeChartPeriod(options?.period);
           const requestKey = (targetKind || "overview") + ":" + requestedPeriod;
           const loadSequence = developServerOperationalMetricsLoadSequenceRef.current + 1;
           developServerOperationalMetricsLoadSequenceRef.current = loadSequence;
@@ -63,6 +61,7 @@ export const DEVELOP_HOME_OPERATIONAL_METRICS_SCRIPT = `        const loadDevelo
                 databaseReads: 0,
                 databaseWrites: 0,
                 agentRuntimeRuns: 0,
+                voiceCalls: 0,
                 secretReads: 0,
                 authEvents: 0,
                 paymentCheckoutSessions: 0,
@@ -115,6 +114,40 @@ export const DEVELOP_HOME_OPERATIONAL_METRICS_SCRIPT = `        const loadDevelo
             }
             return data;
           };
+          const readFirstAnalyticsArray = (candidates) => {
+            const match = (Array.isArray(candidates) ? candidates : []).find(Array.isArray);
+            return Array.isArray(match) ? match : [];
+          };
+          const readOverviewResources = (payload) => readFirstAnalyticsArray([
+            payload?.analytics?.resources,
+            payload?.data?.analytics?.resources,
+            payload?.data?.resources,
+            payload?.resources,
+            Array.isArray(payload?.data) ? payload.data : null,
+          ]);
+          const readOverviewResourceRecord = (resource) => {
+            const record = resource?.server || resource?.database || resource?.resource || resource;
+            return record && typeof record === "object" && !Array.isArray(record) ? record : {};
+          };
+          const readResourceChartBuckets = (resource, primaryKey, legacyKey) => {
+            const record = readOverviewResourceRecord(resource);
+            return readFirstAnalyticsArray([
+              resource?.[primaryKey],
+              resource?.charts?.[primaryKey],
+              resource?.analytics?.charts?.[primaryKey],
+              resource?.data?.charts?.[primaryKey],
+              record?.[primaryKey],
+              record?.charts?.[primaryKey],
+              record?.analytics?.charts?.[primaryKey],
+              resource?.[legacyKey],
+              resource?.charts?.[legacyKey],
+              resource?.analytics?.charts?.[legacyKey],
+              resource?.data?.charts?.[legacyKey],
+              record?.[legacyKey],
+              record?.charts?.[legacyKey],
+              record?.analytics?.charts?.[legacyKey],
+            ]);
+          };
 
           setDevelopServerOperationalMetricsLoading(true);
           setDevelopServerOperationalMetricsError("");
@@ -136,18 +169,14 @@ export const DEVELOP_HOME_OPERATIONAL_METRICS_SCRIPT = `        const loadDevelo
                 ? readAnalyticsResponse(databaseOverviewAnalyticsPath)
                 : Promise.resolve(null),
             ]);
-            const serverOverviewResources = Array.isArray(serverOverviewAnalytics?.analytics?.resources)
-              ? serverOverviewAnalytics.analytics.resources
-              : Array.isArray(serverOverviewAnalytics?.resources)
-                ? serverOverviewAnalytics.resources
-                : [];
-            const databaseOverviewResources = Array.isArray(databaseOverviewAnalytics?.analytics?.resources)
-              ? databaseOverviewAnalytics.analytics.resources
-              : Array.isArray(databaseOverviewAnalytics?.resources)
-                ? databaseOverviewAnalytics.resources
-                : [];
-            const servers = serverOverviewResources.map(normalizePlaygroundServerRecord);
-            const databases = databaseOverviewResources.map(normalizePlaygroundDatabaseRecord);
+            const serverOverviewResources = readOverviewResources(serverOverviewAnalytics);
+            const databaseOverviewResources = readOverviewResources(databaseOverviewAnalytics);
+            const servers = serverOverviewResources.map((resource) => (
+              normalizePlaygroundServerRecord(readOverviewResourceRecord(resource))
+            ));
+            const databases = databaseOverviewResources.map((resource) => (
+              normalizePlaygroundDatabaseRecord(readOverviewResourceRecord(resource))
+            ));
             const activeServerRecords = servers.filter((server) => (
               server?.id
               && !["deleted"].includes(String(server?.status || server?.state || "").toLowerCase())
@@ -165,6 +194,7 @@ export const DEVELOP_HOME_OPERATIONAL_METRICS_SCRIPT = `        const loadDevelo
               databaseReads: [],
               databaseWrites: [],
               agentRuntimeRuns: [],
+              voiceCalls: [],
               secretReads: [],
               authEvents: [],
               paymentCheckoutSessions: [],
@@ -182,6 +212,15 @@ export const DEVELOP_HOME_OPERATIONAL_METRICS_SCRIPT = `        const loadDevelo
               }
               return 0;
             };
+            const readAnalyticsBucketTimestamp = (entry) => (
+              entry?.bucketStart
+              || entry?.bucket_start
+              || entry?.timestamp
+              || entry?.time
+              || entry?.createdAt
+              || entry?.created_at
+              || ""
+            );
             const getResourceSeriesLabel = (resource, fallback) => {
               const name = typeof resource?.name === "string" && resource.name.trim()
                 ? resource.name.trim()
@@ -195,7 +234,7 @@ export const DEVELOP_HOME_OPERATIONAL_METRICS_SCRIPT = `        const loadDevelo
               return id || fallback;
             };
             const addToMetricValues = (entry, values, value) => {
-              const bucketKey = getBucketKey(entry?.bucketStart || entry?.timestamp || "");
+              const bucketKey = getBucketKey(readAnalyticsBucketTimestamp(entry));
               const bucketIndex = bucketIndexByKey.get(bucketKey);
               if (typeof bucketIndex !== "number") {
                 return;
@@ -218,7 +257,7 @@ export const DEVELOP_HOME_OPERATIONAL_METRICS_SCRIPT = `        const loadDevelo
             };
 
             const addToBucket = (entry, field, value) => {
-              const bucketKey = getBucketKey(entry?.bucketStart || entry?.timestamp || "");
+              const bucketKey = getBucketKey(readAnalyticsBucketTimestamp(entry));
               const bucket = bucketByKey.get(bucketKey);
               if (!bucket) {
                 return;
@@ -228,11 +267,18 @@ export const DEVELOP_HOME_OPERATIONAL_METRICS_SCRIPT = `        const loadDevelo
 
             const serverById = new Map(analyticsServers.map((server) => [String(server?.id || ""), server]));
             const scopedServerOverviewResources = targetKind && targetKind !== "database"
-              ? serverOverviewResources.filter((resource) => canonicalizePlaygroundServerKind(resource?.kind) === targetKind)
+              ? serverOverviewResources.filter((resource) => (
+                  canonicalizePlaygroundServerKind(readOverviewResourceRecord(resource)?.kind) === targetKind
+                ))
               : serverOverviewResources;
             const serverAnalyticsResults = scopedServerOverviewResources.map((resource) => ({
-              server: serverById.get(String(resource?.id || "")) || resource,
-              analytics: { charts: { traffic: Array.isArray(resource?.traffic) ? resource.traffic : [] } },
+              server: serverById.get(String(readOverviewResourceRecord(resource)?.id || ""))
+                || readOverviewResourceRecord(resource),
+              analytics: {
+                charts: {
+                  traffic: readResourceChartBuckets(resource, "traffic", "traffic24h"),
+                },
+              },
             }));
             const activeServerKindCounts = activeServerRecords.reduce((counts, server) => {
               const kind = canonicalizePlaygroundServerKind(server?.kind);
@@ -254,8 +300,21 @@ export const DEVELOP_HOME_OPERATIONAL_METRICS_SCRIPT = `        const loadDevelo
               const errorValues = createMetricValues();
               const computeTokenValues = createMetricValues();
               trafficBuckets.forEach((entry) => {
-                const total = Math.max(0, Number(entry?.total || 0));
-                const errors = Math.max(0, Number(entry?.clientErrors || 0)) + Math.max(0, Number(entry?.serverErrors || 0));
+                const total = Math.max(0, readAnalyticsNumber(entry, [
+                  "total",
+                  "requests",
+                  "requestCount",
+                  "request_count",
+                  "totalRequests",
+                  "total_requests",
+                ]));
+                const errors = Math.max(0, readAnalyticsNumber(entry, [
+                  "clientErrors",
+                  "client_errors",
+                ])) + Math.max(0, readAnalyticsNumber(entry, [
+                  "serverErrors",
+                  "server_errors",
+                ]));
                 const computeTokens = Math.max(0, readAnalyticsNumber(entry, [
                   "computeTokens",
                   "compute_tokens",
@@ -277,6 +336,9 @@ export const DEVELOP_HOME_OPERATIONAL_METRICS_SCRIPT = `        const loadDevelo
                   addToMetricValues(entry, requestValues, total);
                 } else if (kind === "agent_runtime") {
                   addToBucket(entry, "agentRuntimeRuns", total);
+                  addToMetricValues(entry, requestValues, total);
+                } else if (kind === "voice_agent") {
+                  addToBucket(entry, "voiceCalls", total);
                   addToMetricValues(entry, requestValues, total);
                 } else if (kind === "secrets") {
                   addToBucket(entry, "secretReads", total);
@@ -301,6 +363,8 @@ export const DEVELOP_HOME_OPERATIONAL_METRICS_SCRIPT = `        const loadDevelo
                 pushResourceMetricSeries("functionCalls", server, requestValues, "Function");
               } else if (kind === "agent_runtime") {
                 pushResourceMetricSeries("agentRuntimeRuns", server, requestValues, "Agent runtime");
+              } else if (kind === "voice_agent") {
+                pushResourceMetricSeries("voiceCalls", server, requestValues, "Voice agent");
 	            } else if (kind === "secrets") {
 	              pushResourceMetricSeries("secretReads", server, requestValues, "Secrets");
 	            } else if (kind === "auth") {
@@ -360,6 +424,7 @@ export const DEVELOP_HOME_OPERATIONAL_METRICS_SCRIPT = `        const loadDevelo
                   functions: activeServerKindCounts.function || 0,
                   databases: activeDatabases.length,
                   agentRuntimes: activeServerKindCounts.agent_runtime || 0,
+                  voiceAgents: activeServerKindCounts.voice_agent || 0,
                   secrets: activeServerKindCounts.secrets || 0,
                   auth: activeServerKindCounts.auth || 0,
                   payments: activeServerKindCounts.payments || 0,
@@ -371,6 +436,7 @@ export const DEVELOP_HOME_OPERATIONAL_METRICS_SCRIPT = `        const loadDevelo
                   databaseReads: buildSeries("databaseReads"),
                   databaseWrites: buildSeries("databaseWrites"),
                   agentRuntimeRuns: buildSeries("agentRuntimeRuns"),
+                  voiceCalls: buildSeries("voiceCalls"),
                   secretReads: buildSeries("secretReads"),
                   authEvents: buildSeries("authEvents"),
                   paymentCheckoutSessions: buildSeries("paymentCheckoutSessions"),
@@ -386,6 +452,7 @@ export const DEVELOP_HOME_OPERATIONAL_METRICS_SCRIPT = `        const loadDevelo
                   databaseReads: buckets.reduce((sum, bucket) => sum + bucket.databaseReads, 0),
                   databaseWrites: buckets.reduce((sum, bucket) => sum + bucket.databaseWrites, 0),
                   agentRuntimeRuns: buckets.reduce((sum, bucket) => sum + bucket.agentRuntimeRuns, 0),
+                  voiceCalls: buckets.reduce((sum, bucket) => sum + bucket.voiceCalls, 0),
                   secretReads: buckets.reduce((sum, bucket) => sum + bucket.secretReads, 0),
                   authEvents: buckets.reduce((sum, bucket) => sum + bucket.authEvents, 0),
                   paymentCheckoutSessions: buckets.reduce((sum, bucket) => sum + bucket.paymentCheckoutSessions, 0),
@@ -436,9 +503,14 @@ export const DEVELOP_HOME_OPERATIONAL_METRICS_SCRIPT = `        const loadDevelo
             };
             const databaseById = new Map(analyticsDatabases.map((database) => [String(database?.id || ""), database]));
             databaseOverviewResources.forEach((resource) => {
-              const database = databaseById.get(String(resource?.id || "")) || resource;
+              const resourceRecord = readOverviewResourceRecord(resource);
+              const database = databaseById.get(String(resourceRecord?.id || "")) || resourceRecord;
               ingestDatabaseAnalytics(database, {
-                analytics: { charts: { operations: Array.isArray(resource?.operations) ? resource.operations : [] } },
+                analytics: {
+                  charts: {
+                    operations: readResourceChartBuckets(resource, "operations", "operations24h"),
+                  },
+                },
               });
             });
             publishOperationalMetricsSnapshot();

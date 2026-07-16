@@ -717,6 +717,45 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   font-size: var(--platform-popup-font-size) !important;
 }
 
+.platform-popup-surface .tb-popup-row {
+  position: relative;
+  z-index: 6;
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 160ms ease, color 160ms ease, opacity 160ms ease;
+}
+
+.platform-popup-surface .tb-popup-row:hover:not(:disabled),
+.platform-popup-surface .tb-popup-row:focus-visible,
+.platform-popup-surface .tb-popup-row.selected,
+.platform-popup-surface .tb-popup-row.is-selected {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.platform-popup-surface .tb-popup-row:focus-visible {
+  outline: none;
+}
+
+.platform-popup-surface .tb-popup-row:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.platform-popup-surface .tb-popup-row:disabled:hover:not(.is-selected) {
+  background: transparent;
+}
+
 .platform-popup-surface :where(button, a, [role="button"], [role="menuitem"]) svg,
 .platform-popup-surface :where(.tb-popup-icon, .tb-popup-chevron, .tb-popup-check) {
   width: var(--platform-popup-icon-size);
@@ -727,8 +766,25 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   position: fixed;
 }
 
+.platform-popup-surface.is-portaled {
+  z-index: var(--platform-popup-portal-z-index, 12060);
+}
+
 .platform-popup-surface.is-inline {
   position: relative;
+}
+
+.platform-popup-surface.is-minimal {
+  border: 1px solid rgba(255, 255, 255, 0.075) !important;
+  border-radius: 10px !important;
+  background: #1a1a1a !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.platform-popup-surface.is-minimal::before {
+  content: none;
+  display: none;
 }
 
 .platform-popup-surface::before {
@@ -818,19 +874,304 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 
+.platform-selector {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+  color: #fff;
+}
+
+.platform-selector.is-full-width {
+  width: 100%;
+}
+
+.platform-selector__trigger {
+  min-width: 0;
+  min-height: var(--platform-control-height, 32px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.86);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+}
+
+.platform-selector.is-full-width .platform-selector__trigger {
+  width: 100%;
+}
+
+.platform-selector.is-align-end .platform-selector__trigger {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.platform-selector__trigger:hover:not(:disabled),
+.platform-selector__trigger:focus-visible {
+  color: #fff;
+}
+
+.platform-selector__trigger:focus-visible {
+  outline: none;
+}
+
+.platform-selector__trigger:disabled {
+  cursor: default;
+}
+
+.platform-selector.is-disabled {
+  opacity: 0.5;
+}
+
+.platform-selector__value {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-selector__chevrons {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  color: rgba(255, 255, 255, 0.46);
+}
+
+.platform-selector__popup {
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: max(100%, 180px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.platform-selector__popup.is-portaled {
+  min-width: 180px;
+}
+
+.platform-selector.is-align-end .platform-selector__popup {
+  right: 0;
+  left: auto;
+}
+
+.platform-selector__popup::-webkit-scrollbar {
+  display: none;
+}
+
+.platform-selector__option {
+  position: relative;
+  z-index: 6;
+  width: 100%;
+  min-height: 36px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 14px;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.76);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.platform-selector__option.has-leading {
+  grid-template-columns: auto minmax(0, 1fr) 14px;
+}
+
+.platform-selector__option:hover:not(:disabled),
+.platform-selector__option:focus-visible,
+.platform-selector__option.is-selected {
+  background: rgba(255, 255, 255, 0.075);
+  color: #fff;
+}
+
+.platform-selector__option:focus-visible {
+  outline: none;
+}
+
+.platform-selector__option:disabled {
+  opacity: 0.42;
+  cursor: default;
+}
+
+.platform-selector__option-leading,
+.platform-selector__option-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.platform-selector__option-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.platform-selector__option-label,
+.platform-selector__option-description {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-selector__option-label {
+  color: inherit;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.platform-selector__option-description {
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.platform-selector__option-check {
+  width: 14px;
+  height: 14px;
+  color: #fff;
+}
+
+.platform-selector__state {
+  position: relative;
+  z-index: 6;
+  padding: 13px 14px;
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.platform-button-selector {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+  transition: opacity 160ms ease;
+}
+
+.platform-button-selector.is-disabled {
+  opacity: 0.5;
+}
+
+.platform-button-selector.is-disabled .platform-button:disabled {
+  opacity: 1 !important;
+}
+
+.platform-button-selector__group {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+}
+
+.platform-button-selector__group.is-secondary .platform-button-selector__action.platform-button {
+  padding-right: var(--platform-button-padding-inline) !important;
+  border-right: 0 !important;
+}
+
+.platform-button-selector__group.is-secondary .platform-button-selector__popup-trigger.platform-button {
+  border-left: 0 !important;
+}
+
+.platform-button-selector:not(.is-disabled) .platform-button-selector__group.is-primary:hover > .platform-button {
+  background: rgba(255, 255, 255, 0.9) !important;
+}
+
+.platform-button-selector:not(.is-disabled) .platform-button-selector__group.is-secondary:hover > .platform-button {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #fff !important;
+}
+
+.platform-button-selector__button.platform-button,
+.platform-button-selector__action.platform-button {
+  min-width: 0;
+}
+
+.platform-button-selector__button.platform-button {
+  max-width: 100%;
+}
+
+.platform-button-selector__leading,
+.platform-button-selector__label {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
+.platform-button-selector__leading {
+  flex: 0 0 auto;
+}
+
+.platform-button-selector__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-button-selector__action.platform-button {
+  border-radius: 8px 0 0 8px !important;
+}
+
+.platform-button-selector .platform-button-selector__popup-trigger.platform-button {
+  width: 28px;
+  min-width: 28px;
+  padding: 0 !important;
+  border-radius: 0 8px 8px 0 !important;
+}
+
+.platform-button-selector__divider {
+  position: relative;
+  z-index: 2;
+  width: 1px;
+  height: 14px;
+  flex: 0 0 1px;
+  margin-right: -1px;
+  margin-left: -1px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.platform-button-selector__group.is-primary .platform-button-selector__divider {
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.platform-button-selector.is-primary.is-disabled .platform-button-selector__divider {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.platform-button-selector__popup.is-portaled {
+  min-width: 180px;
+}
+
+
 .platform-search {
   box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: 9px;
   width: 100%;
-  min-width: 0;
-  height: 28px;
-  min-height: 28px;
+  min-width: 300px;
+  height: 32px;
+  min-height: 32px;
   padding: 0 14px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.28);
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.5);
   cursor: text;
   transition: border-color 160ms ease, color 160ms ease, opacity 160ms ease;
@@ -954,36 +1295,35 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .platform-modal-surface {
-  --platform-modal-border: var(
-    --tb-task-input-border,
-    var(
-      --tb-runner-input-border,
-      linear-gradient(
-        -10deg,
-        rgba(200, 200, 200, 0.25),
-        rgba(255, 255, 255, 0.1),
-        rgba(255, 255, 255, 0.15),
-        rgba(255, 255, 255, 0.375)
-      )
-    )
-  );
   position: relative;
-  width: min(820px, calc(100vw - 48px));
+  box-sizing: border-box;
+  width: min(640px, calc(100vw - 48px));
   max-height: calc(100dvh - 48px);
-  padding: var(--platform-modal-padding, 0 16px);
+  padding: 24px;
   overflow: visible;
-  border: 0 !important;
-  border-radius: var(--platform-modal-radius, 25px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.075) !important;
+  border-radius: 15px !important;
   outline: none;
-  background: var(--platform-modal-background, rgba(30, 30, 30, 0.5)) !important;
+  background: #1a1a1a !important;
   box-shadow: var(--platform-modal-shadow, 0 24px 70px rgba(0, 0, 0, 0.48)) !important;
-  -webkit-backdrop-filter: var(--platform-modal-backdrop-filter, blur(20px)) !important;
-  backdrop-filter: var(--platform-modal-backdrop-filter, blur(20px)) !important;
   transform-origin: center;
   opacity: 0.5;
   transform: scale(0.5);
   transition: opacity 75ms linear, transform 75ms linear;
   will-change: opacity, transform;
+}
+
+.platform-modal-surface *,
+.platform-modal-surface {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.platform-modal-surface *::-webkit-scrollbar,
+.platform-modal-surface::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .platform-modal-surface.is-visible {
@@ -1000,23 +1340,23 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .platform-modal-surface.is-size-compact {
-  width: min(400px, calc(100vw - 48px));
+  width: min(360px, calc(100vw - 48px));
 }
 
 .platform-modal-surface.is-size-small {
-  width: min(520px, calc(100vw - 48px));
+  width: min(400px, calc(100vw - 48px));
 }
 
 .platform-modal-surface.is-size-medium {
-  width: min(820px, calc(100vw - 48px));
+  width: min(640px, calc(100vw - 48px));
 }
 
 .platform-modal-surface.is-size-large {
-  width: min(1040px, calc(100vw - 48px));
+  width: min(880px, calc(100vw - 48px));
 }
 
 .platform-modal-surface.is-size-wide {
-  width: min(1280px, calc(100vw - 48px));
+  width: min(1120px, calc(100vw - 48px));
 }
 
 .platform-modal-surface.is-size-full {
@@ -1026,39 +1366,72 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   max-height: none;
 }
 
-.platform-modal-surface::before {
-  content: "" !important;
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  display: block !important;
-  border-radius: inherit;
-  padding: 1px;
-  background: var(--platform-modal-border) !important;
-  mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-  mask-clip: content-box, border-box;
-  mask-composite: exclude;
-  mask-origin: content-box, border-box;
-  mask-repeat: repeat, repeat;
-  mask-size: auto, auto;
-}
-
-.platform-modal-surface::after {
-  content: none !important;
-  display: none !important;
-}
-
 .platform-modal-header,
 .platform-modal-footer {
   display: flex;
-  align-items: center;
   gap: 12px;
 }
 
 .platform-modal-header {
+  align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 14px;
+  flex: 0 0 auto;
+  min-width: 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 12px;
+}
+
+.platform-modal-header__copy {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.platform-modal-header__title {
+  margin: 0;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.platform-modal-header__description {
+  max-width: 680px;
+  margin: 4px 0 0;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.platform-modal-header__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  margin: -3px -3px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 120ms ease;
+}
+
+.platform-modal-header__close:hover,
+.platform-modal-header__close:focus-visible {
+  background: transparent;
+  color: #fff;
+  opacity: 0.68;
+  outline: none;
+}
+
+.platform-modal-header__close:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 .platform-modal-body {
@@ -1066,8 +1439,9 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .platform-modal-footer {
+  align-items: center;
   justify-content: flex-end;
-  margin-top: 16px;
+  margin-top: 12px;
 }
 
 @media (max-width: 640px) {
@@ -16106,21 +16480,15 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 
 
 .platform-button {
-  --platform-button-border: linear-gradient(
-    -10deg,
-    rgba(200, 200, 200, 0.25),
-    rgba(255, 255, 255, 0.1),
-    rgba(255, 255, 255, 0.15),
-    rgba(255, 255, 255, 0.375)
-  );
   --platform-button-height: 28px;
   --platform-button-padding-inline: 14px;
-  --platform-button-gap: 8px;
+  --platform-button-gap: 6px;
   --platform-button-font-size: 12px;
   --platform-button-font-weight: 400;
   position: relative;
   z-index: 0;
   isolation: isolate;
+  box-sizing: border-box;
   height: var(--platform-button-height) !important;
   min-height: var(--platform-button-height) !important;
   display: inline-flex;
@@ -16131,7 +16499,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   padding: 0 var(--platform-button-padding-inline) !important;
   overflow: hidden;
   border: 0 !important;
-  border-radius: 999px !important;
+  border-radius: 8px !important;
   outline: none;
   color: rgba(255, 255, 255, 0.9);
   font: inherit;
@@ -16142,23 +16510,6 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   white-space: nowrap;
   cursor: pointer;
   transition: background-color 160ms ease, color 160ms ease, filter 160ms ease, opacity 160ms ease;
-}
-
-.platform-button::before {
-  content: "";
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: var(--platform-button-border);
-  mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-  mask-clip: content-box, border-box;
-  mask-composite: exclude;
-  mask-origin: content-box, border-box;
-  mask-repeat: repeat, repeat;
-  mask-size: auto, auto;
 }
 
 .platform-button > * {
@@ -16172,20 +16523,32 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   flex: 0 0 auto;
 }
 
+.platform-button:has(svg) {
+  padding-left: 10px !important;
+}
+
 .platform-button.is-primary {
-  background: linear-gradient(to top, #082673, #1d59be) !important;
-  color: #fff !important;
+  background: #fff !important;
+  color: #000 !important;
 }
 
 .platform-button.is-primary:hover:not(:disabled) {
-  filter: brightness(1.06);
+  background: rgba(255, 255, 255, 0.9) !important;
+  filter: none;
 }
 
 .platform-button.is-secondary {
+  padding-right: calc(var(--platform-button-padding-inline) - 1px) !important;
+  padding-left: calc(var(--platform-button-padding-inline) - 1px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
   background: transparent !important;
   color: rgba(255, 255, 255, 0.9) !important;
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
+}
+
+.platform-button.is-secondary:has(svg) {
+  padding-left: 9px !important;
 }
 
 .platform-button.is-secondary:hover:not(:disabled),
@@ -16214,7 +16577,6 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 .platform-button.is-size-compact {
   --platform-button-height: 26px;
   --platform-button-padding-inline: 10px;
-  --platform-button-gap: 6px;
   --platform-button-font-size: 10px;
 }
 

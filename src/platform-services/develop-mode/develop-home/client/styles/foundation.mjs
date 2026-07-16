@@ -25,4 +25,14 @@ export const DEVELOP_HOME_FOUNDATION_CSS = `      .playground-develop-home {
         gap: 24px;
       }
 
+      .playground-develop-overview-controls-slot,
+      .playground-develop-webhooks-overview-controls-slot {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 4px;
+        flex-wrap: nowrap;
+        white-space: nowrap;
+      }
+
 `;

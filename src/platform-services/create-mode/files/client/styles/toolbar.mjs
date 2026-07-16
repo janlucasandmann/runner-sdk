@@ -685,7 +685,7 @@ export const FILES_TOOLBAR_CSS = `
         gap: 10px;
         padding: 10px 12px;
         border: 0;
-        border-radius: 12px;
+        border-radius: 0;
         background: transparent;
         color: rgba(255, 255, 255, 0.9);
         text-align: left;

@@ -4,8 +4,6 @@ export const API_KEYS_NAVIGATION_SCRIPT = `        function openDevelopApiKeysPa
           if (!options.preserveSidebarMode) {
             setSidebarWorkspaceMode("develop");
           }
-          setDevelopApiKeysMenuOpen(false);
-          setDevelopApiKeysToolbarPopover("");
           setResourcesHeaderState({
             mode: "overview",
             title: "",

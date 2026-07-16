@@ -18,4 +18,9 @@ export const GUARDRAILS_APP_NAVIGATION_SCRIPT = `        function openGuardrails
           setActivePage("guardrails");
         }
 
+        function openGuardrailsOverviewPage() {
+          setSelectedGuardrailSetId("");
+          openGuardrailsPage({ mode: "overview" });
+        }
+
 `;

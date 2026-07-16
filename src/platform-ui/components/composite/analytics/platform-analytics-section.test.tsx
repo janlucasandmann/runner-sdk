@@ -29,6 +29,33 @@ describe("PlatformAnalyticsSection", () => {
     expect(screen.getByText("Runs")).not.toBeNull();
     expect(screen.getByText("24,000")).not.toBeNull();
     expect(screen.getByText("No usage yet.")).not.toBeNull();
+    expect(screen.queryByRole("heading", { name: "Usage" })).toBeNull();
+  });
+
+  it("renders the framed analytics composition with title, actions, KPIs, and custom chart content", () => {
+    const { container } = render(
+      <PlatformAnalyticsSection
+        variant="framed"
+        title="Analytics"
+        headerActions={<button type="button">Download chart</button>}
+        chartContent={<div data-testid="specialized-chart">Specialized chart</div>}
+        analytics={{
+          ariaLabel: "Agent analytics",
+          metrics: [{ id: "runs", label: "Total Runs", value: "24", color: "#7effff" }],
+          labels: ["Mon"],
+          series: [{ id: "runs", label: "Runs", values: [24], color: "#7effff" }],
+        }}
+      />,
+    );
+
+    const section = screen.getByLabelText("Agent analytics");
+    expect(section.classList.contains("is-framed")).toBe(true);
+    expect(section.getAttribute("data-platform-analytics-variant")).toBe("framed");
+    expect(screen.getByRole("heading", { name: "Analytics", level: 2 })).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Download chart" })).not.toBeNull();
+    expect(screen.getByText("Total Runs")).not.toBeNull();
+    expect(screen.getByTestId("specialized-chart")).not.toBeNull();
+    expect(container.querySelector(".platform-analytics__header-actions")).not.toBeNull();
   });
 
   it("owns the analytics loading state", () => {

@@ -23,6 +23,7 @@ export type {
   PlatformDataTableSortingConfig,
   PlatformDataTableSurface,
   PlatformDataTableToolbarConfig,
+  PlatformDataTableVariant,
   PlatformDataTableViewConfig,
   PlatformDataTableViewOption,
 } from "./data-table-types.js";

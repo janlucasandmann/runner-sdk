@@ -24,7 +24,7 @@ const APP_HEADER_BREADCRUMB_BAR_TEMPLATE = `        function renderAppHeaderBrea
                 ? React.createElement("button", {
                     type: "button",
                     className: "playground-top-nav-path-item" + (isCurrent ? " is-current" : ""),
-                    onClick: item.onClick,
+                    onClick: () => requestPlatformNavigation(item.onClick),
                     title: label,
                   }, itemContent)
                 : React.createElement("span", {

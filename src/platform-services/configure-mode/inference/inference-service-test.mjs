@@ -128,7 +128,7 @@ assert.match(demoServerSource, /\$\{INFERENCE_DOMAIN_SCRIPT_FRAGMENTS\.settings\
 assert.match(demoServerSource, /\$\{INFERENCE_APP_SCRIPT_FRAGMENTS\.runtimeLifecycle\}/);
 assert.match(demoServerSource, /\$\{INFERENCE_APP_SCRIPT_FRAGMENTS\.handlers\}/);
 assert.match(demoServerSource, /inferencePageCaseScript: INFERENCE_PAGE_CASE_SCRIPT/);
-assert.match(demoServerSource, /\$\{INFERENCE_APP_SCRIPT_FRAGMENTS\.sidebarEntry\}/);
+assert.match(demoServerSource, /configureInfrastructureEntries:[^\n]*INFERENCE_APP_SCRIPT_FRAGMENTS\.sidebarEntry/);
 assert.doesNotMatch(demoServerSource, /function normalizeDemoSettingsInferenceSettings\(/);
 assert.doesNotMatch(demoServerSource, /function normalizeSettingsLocalRunnerListPayload\(/);
 assert.doesNotMatch(demoServerSource, /function openInferencePage\(/);

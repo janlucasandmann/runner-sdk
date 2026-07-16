@@ -35,6 +35,58 @@ export const MODELS_PAGE_CATALOG_SCRIPT = String.raw`
         "qwen3.5-397b-a17b": "High",
         "grok-4.5": "Highest",
       };
+      const PLAYGROUND_MANAGED_MODEL_AVAILABILITY_BY_ID = {
+        "kimi-k2.6": {
+          modelProvider: "Moonshot AI",
+          deliveryProvider: "Cloudflare Workers AI",
+          hosting: "Cloudflare-hosted",
+          location: "Cloudflare global network",
+          runtimeModelId: "@cf/moonshotai/kimi-k2.6",
+          dataHandling: "Cloudflare Workers AI data policy",
+          documentationUrl: "https://developers.cloudflare.com/workers-ai/models/kimi-k2.6/",
+          capabilities: ["Function calling", "Reasoning", "Vision", "Structured outputs"],
+        },
+        "kimi-k2.7-code": {
+          modelProvider: "Moonshot AI",
+          deliveryProvider: "Cloudflare Workers AI",
+          hosting: "Cloudflare-hosted",
+          location: "Cloudflare global network",
+          runtimeModelId: "@cf/moonshotai/kimi-k2.7-code",
+          dataHandling: "Cloudflare Workers AI data policy",
+          documentationUrl: "https://developers.cloudflare.com/workers-ai/models/kimi-k2.7-code/",
+          capabilities: ["Function calling", "Reasoning", "Vision", "Structured outputs", "Long-horizon coding"],
+        },
+        "glm-5.2": {
+          modelProvider: "Z.ai",
+          deliveryProvider: "Cloudflare Workers AI",
+          hosting: "Cloudflare-hosted",
+          location: "Cloudflare global network",
+          runtimeModelId: "@cf/zai-org/glm-5.2",
+          dataHandling: "Cloudflare Workers AI data policy",
+          documentationUrl: "https://developers.cloudflare.com/workers-ai/models/glm-5.2/",
+          capabilities: ["Function calling", "Reasoning", "Agentic coding", "Long-horizon planning"],
+        },
+        "minimax-m3": {
+          modelProvider: "MiniMax",
+          deliveryProvider: "Cloudflare AI",
+          hosting: "Third-party model",
+          location: "Provider-managed; region not exposed",
+          runtimeModelId: "minimax/m3",
+          dataHandling: "Zero data retention",
+          documentationUrl: "https://developers.cloudflare.com/ai/models/minimax/m3/",
+          capabilities: ["Agentic coding", "Tool use", "Multilingual", "Long context"],
+        },
+        "qwen3.5-397b-a17b": {
+          modelProvider: "Alibaba Qwen",
+          deliveryProvider: "Cloudflare AI",
+          hosting: "Third-party model",
+          location: "Provider-managed; region not exposed",
+          runtimeModelId: "alibaba/qwen3.5-397b-a17b",
+          dataHandling: "Zero data retention",
+          documentationUrl: "https://developers.cloudflare.com/ai/models/alibaba/qwen3.5-397b-a17b/",
+          capabilities: ["Reasoning", "Coding", "Multimodal", "Mixture of experts"],
+        },
+      };
 
       function formatPlaygroundManagedLegacyCtPrice(value, unitLabel) {
         const numericValue = Math.max(0, Number(value || 0));

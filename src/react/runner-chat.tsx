@@ -25081,23 +25081,13 @@ export function RunnerChat({
           open
           visible
           size="small"
-          ariaLabel="Report an issue"
+          title="Report an issue"
           backdropClassName="tb-popup-modal-scrim"
           className="tb-popup-modal tb-report-issue-modal"
           onClose={closeReportIssueModal}
+          closeButtonLabel="Close report issue dialog"
+          closeButtonDisabled={isReportIssueSubmitting}
         >
-            <div className="tb-popup-modal-header tb-report-issue-modal-header">
-              <div className="tb-popup-note-title">Report an issue</div>
-              <button
-                type="button"
-                className="tb-report-issue-close-button"
-                aria-label="Close report issue dialog"
-                onClick={closeReportIssueModal}
-                disabled={isReportIssueSubmitting}
-              >
-                <LucideX className="tb-report-issue-close-icon" strokeWidth={2} />
-              </button>
-            </div>
             <div className="tb-report-issue-modal-body">
               <label className="tb-report-issue-field">
                 <span className="tb-report-issue-label">Feedback type</span>
@@ -25162,26 +25152,24 @@ export function RunnerChat({
           open
           visible
           size="medium"
-          ariaLabel="Fork thread"
+          title="Fork Thread"
+          description={
+            pendingForkConfiguration.source === "message"
+              ? "Choose where the forked thread should run before opening the new chat. The selected user message will be staged in the composer and not sent automatically."
+              : pendingForkConfiguration.stagedPrompt.trim()
+                ? "Choose where the forked thread should run before opening the new chat. Your /fork prompt will be sent in the new thread after the fork is created."
+                : "Choose where the forked thread should run before opening the new chat. The full conversation will be copied into the new thread."
+          }
           backdropClassName="tb-popup-modal-scrim"
           className="tb-popup-modal tb-fork-thread-modal"
           onClose={() => {
             if (forkingTurnId) return;
             cancelPendingForkConfiguration();
           }}
+          closeButtonLabel="Close fork thread dialog"
+          closeButtonDisabled={Boolean(forkingTurnId)}
         >
-            <div className="tb-popup-modal-header">
-              <div className="tb-popup-note-title">Fork Thread</div>
-            </div>
             <div className="tb-fork-thread-modal-body">
-              <div className="tb-popup-note-body">
-                {pendingForkConfiguration.source === "message"
-                  ? "Choose where the forked thread should run before opening the new chat. The selected user message will be staged in the composer and not sent automatically."
-                  : pendingForkConfiguration.stagedPrompt.trim()
-                    ? "Choose where the forked thread should run before opening the new chat. Your /fork prompt will be sent in the new thread after the fork is created."
-                    : "Choose where the forked thread should run before opening the new chat. The full conversation will be copied into the new thread."}
-              </div>
-
               <div className="tb-fork-thread-section">
                 <div className="tb-fork-thread-section-header">
                   <div className="tb-fork-thread-section-title">Environment</div>
@@ -25466,17 +25454,13 @@ export function RunnerChat({
           open
           visible
           size="small"
-          ariaLabel="File changes detected"
+          title="File changes detected"
+          description="The following files were changed by this message or later messages. Do you want to keep those workspace changes when rerunning from the edited message?"
           backdropClassName="tb-popup-modal-scrim"
           className="tb-popup-modal tb-edit-confirmation-modal"
           onClose={() => setPendingEditConfirmation(null)}
+          closeButtonLabel="Close file changes dialog"
         >
-            <div className="tb-popup-modal-header">
-              <div className="tb-popup-note-title">File changes detected</div>
-            </div>
-            <div className="tb-popup-note-body">
-              The following files were changed by this message or later messages. Do you want to keep those workspace changes when rerunning from the edited message?
-            </div>
             {pendingEditConfirmation.changedFiles.length > 0 ? (
               <div className="tb-edit-confirmation-files">
                 {pendingEditConfirmation.changedFiles.map((file) => (
@@ -25540,10 +25524,11 @@ export function RunnerChat({
                 visible
                 portal={false}
                 size="full"
-                ariaLabel="Attach files"
+                title="Attach files"
                 backdropClassName="tb-file-browser-scrim"
                 className="tb-file-browser-modal"
                 onClose={closeFileBrowserModal}
+                closeButtonLabel="Close file browser"
               >
                   <div className="tb-file-browser-body">
                     <div className="tb-file-browser-sidebar">
@@ -25859,15 +25844,13 @@ export function RunnerChat({
                 visible
                 portal={false}
                 size="compact"
-                ariaLabel="API key required"
+                title="API key required"
+                description="Enter an API key in the playground sidebar to browse workspace files."
                 backdropClassName="tb-file-browser-scrim"
                 className="tb-file-browser-api-key-modal"
                 onClose={closeFileBrowserApiKeyPrompt}
+                closeButtonLabel="Close API key dialog"
               >
-                  <div className="tb-popup-note">
-                    <div className="tb-popup-note-title">API key required</div>
-                    <div className="tb-popup-note-body">Enter an API key in the playground sidebar to browse workspace files.</div>
-                  </div>
                   <div className="tb-file-browser-api-key-footer">
                     <PlatformSecondaryButton type="button" className="tb-file-browser-footer-button tb-file-browser-footer-button-secondary" onClick={closeFileBrowserApiKeyPrompt}>
                       Close

@@ -5,6 +5,7 @@ export type PlatformDataTableSortDirection = "asc" | "desc";
 export type PlatformDataTableAlignment = "start" | "center" | "end";
 export type PlatformDataTableSurface = "default" | "plain" | "glass";
 export type PlatformDataTableLayout = "content" | "fill";
+export type PlatformDataTableVariant = "default" | "minimalistic-ui";
 
 export interface PlatformDataTableSortState {
   id: string;
@@ -202,6 +203,7 @@ export interface PlatformDataTableProps<TData> {
   className?: string;
   surface?: PlatformDataTableSurface;
   layout?: PlatformDataTableLayout;
+  variant?: PlatformDataTableVariant;
   sticky?: boolean;
   stickyTop?: number | string;
   rowMinHeight?: number;

@@ -12,13 +12,17 @@ export const APP_HEADER_NAVIGATION_SCRIPT = `        function openThreadSearch()
         }
 
         function handleThreadSearchCreate() {
-          closeThreadSearch();
-          handleNewThread();
+          requestPlatformNavigation(() => {
+            closeThreadSearch();
+            handleNewThread();
+          });
         }
 
         function handleThreadSearchSelect(threadId) {
-          closeThreadSearch();
-          handleThreadSelect(threadId);
+          requestPlatformNavigation(() => {
+            closeThreadSearch();
+            handleThreadSelect(threadId);
+          });
         }
 
         function handleThreadSearchFileSelect(fileResult) {
@@ -29,16 +33,18 @@ export const APP_HEADER_NAVIGATION_SCRIPT = `        function openThreadSearch()
             return;
           }
 
-          closeThreadSearch();
-          setSidebarWorkspaceMode("work");
-          setEnvironmentId(normalizedEnvironmentId);
-          setFilesPageNavigationRequest({
-            token: Date.now().toString(36) + Math.random().toString(36).slice(2),
-            environmentId: normalizedEnvironmentId,
-            path: normalizedPath,
-            isFolder: Boolean(entry?.isFolder),
-            contentMode: "files",
+          requestPlatformNavigation(() => {
+            closeThreadSearch();
+            setSidebarWorkspaceMode("work");
+            setEnvironmentId(normalizedEnvironmentId);
+            setFilesPageNavigationRequest({
+              token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+              environmentId: normalizedEnvironmentId,
+              path: normalizedPath,
+              isFolder: Boolean(entry?.isFolder),
+              contentMode: "files",
+            });
+            setActivePage("files");
           });
-          setActivePage("files");
         }
 `;

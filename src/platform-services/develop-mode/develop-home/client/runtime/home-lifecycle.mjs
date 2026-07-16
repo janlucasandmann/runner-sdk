@@ -1,13 +1,17 @@
 export const DEVELOP_HOME_METRICS_LIFECYCLE_SCRIPT = `        useEffect(() => {
-          if (activePage !== "develop" || !hasSessionAuth || developHomeSection !== "overview") {
+          if (activePage !== "develop" || !hasSessionAuth) {
             return;
           }
 
-          void loadDevelopServerOperationalMetrics();
+          void loadDevelopServerOperationalMetrics({
+            period: developHomeChartTimescale,
+          });
+          void loadSettingsUsageData();
         }, [
           activePage,
-          developHomeSection,
+          developHomeChartTimescale,
           hasSessionAuth,
           loadDevelopServerOperationalMetrics,
+          loadSettingsUsageData,
         ]);
 `;

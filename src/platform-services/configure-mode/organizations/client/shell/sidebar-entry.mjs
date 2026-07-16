@@ -3,6 +3,6 @@ export const ORGANIZATIONS_SIDEBAR_ENTRY_SCRIPT = `              {
                 label: "Organizations",
                 Icon: Building2,
                 active: activePage === "organization",
-                onClick: () => openOrganizationPage(),
+                onClick: () => openOrganizationOverviewPage(),
               },
 `;

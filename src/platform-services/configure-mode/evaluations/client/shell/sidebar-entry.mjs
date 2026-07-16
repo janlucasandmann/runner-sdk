@@ -3,6 +3,6 @@ export const EVALUATIONS_APP_SIDEBAR_ENTRY_SCRIPT = `              {
                 label: "Evaluations",
                 Icon: ChartColumnIncreasing,
                 active: activePage === "evaluations",
-                onClick: () => openEvaluationsPage(),
+                onClick: () => openEvaluationsOverviewPage(),
               },
 `;

@@ -8,6 +8,7 @@ const developModeRoot = path.join(packageRoot, "src", "platform-services", "deve
 const legacyResourceRoot = path.join(packageRoot, "src", "platform-ui", "resources");
 const requiredResources = ["agents", "computers", "plugins", "skills", "tags"];
 const requiredDevelopServices = [
+  "api-keys",
   "web-apps",
   "apis",
   "functions",
@@ -61,11 +62,28 @@ for (const resource of requiredResources) {
 for (const file of [
   "src/platform-ui/pages/details/index.ts",
   "src/platform-ui/pages/details/resource-detail-page.tsx",
+  "src/platform-ui/pages/permissions/index.ts",
+  "src/platform-ui/pages/permissions/README.md",
+  "src/platform-ui/pages/permissions/permission-catalog.ts",
+  "src/platform-ui/pages/permissions/permission-model.ts",
+  "src/platform-ui/pages/permissions/permission-policy.ts",
+  "src/platform-ui/pages/permissions/permission-ring-visuals.tsx",
+  "src/platform-ui/pages/permissions/permission-types.ts",
+  "src/platform-ui/pages/permissions/platform-permissions-page.test.tsx",
+  "src/platform-ui/pages/permissions/platform-permissions-page.tsx",
+  "src/platform-ui/pages/permissions/platform-role-permissions-page.tsx",
+  "src/platform-ui/pages/permissions/permission-page.css",
   "src/platform-ui/components/composite/detail-tab-bar/index.ts",
   "src/platform-ui/components/composite/detail-sidebar/index.ts",
   "src/platform-ui/components/composite/instructions-editor/index.ts",
   "src/platform-resources/agents/detail/index.ts",
+  "src/platform-resources/agents/detail/README.md",
   "src/platform-resources/agents/detail/agent-detail-page.tsx",
+  "src/platform-resources/agents/detail/agent-permissions-page.tsx",
+  "src/platform-resources/agents/detail/agent-permissions-page.test.tsx",
+  "src/platform-resources/agents/detail/agent-publish-control.tsx",
+  "src/platform-resources/agents/detail/agent-publish-control.css",
+  "src/platform-services/configure-mode/configure-home/client/page/configure-home-overview-page.tsx",
 ]) {
   if (!await pathExists(path.join(packageRoot, file))) {
     failures.push(`${file} is missing`);
@@ -138,11 +156,77 @@ for (const retiredIdentifier of [
 if (await pathExists(path.join(packageRoot, "img", "agent-backgrounds"))) {
   failures.push("img/agent-backgrounds must not exist; agent detail pages no longer render wallpapers");
 }
+if (!demoServerSource.includes("React.createElement(AgentPublishControl")) {
+  failures.push("examples/demo-server.mjs must consume the modular AgentPublishControl");
+}
+if (demoServerSource.includes("renderAgentPublishControlTrigger")) {
+  failures.push("examples/demo-server.mjs must not own the AgentPublishControl trigger");
+}
+if (!demoServerSource.includes("React.createElement(PlatformPermissionsPage")) {
+  failures.push("examples/demo-server.mjs must consume the modular PlatformPermissionsPage");
+}
+if (!demoServerSource.includes("React.createElement(PlatformRolePermissionsPage")) {
+  failures.push("examples/demo-server.mjs must consume the modular PlatformRolePermissionsPage");
+}
+if (!demoServerSource.includes("permissions: {")) {
+  failures.push("examples/demo-server.mjs must bind agent permissions through AgentDetailPage");
+}
+if (!/key: "agent-insights-threads-" \+ selectedAgentThreadId,[\s\S]{0,240}?variant: "minimalistic-ui"/.test(demoServerSource)) {
+  failures.push("agent detail Insights must use the minimalistic PlatformDataTable variant");
+}
+const agentInsightsTableStart = demoServerSource.indexOf('key: "agent-insights-threads-" + selectedAgentThreadId');
+const agentInsightsTableToolbar = agentInsightsTableStart >= 0
+  ? demoServerSource.indexOf("toolbar:", agentInsightsTableStart)
+  : -1;
+if (
+  agentInsightsTableStart < 0
+  || agentInsightsTableToolbar < 0
+  || demoServerSource.slice(agentInsightsTableStart, agentInsightsTableToolbar).includes("pagination:")
+) {
+  failures.push("agent detail Insights must not render a table pagination footer");
+}
+for (const retiredPermissionRenderer of [
+  "const PLAYGROUND_PERMISSION_ACCESS_OPTIONS =",
+  "const PLAYGROUND_PERMISSION_RING_DEFINITIONS =",
+  "const PLAYGROUND_PERMISSION_ACTION_DEFINITIONS =",
+  "function normalizePlaygroundPermissionSet",
+  "function renderPlaygroundPermissionsPage",
+  "function renderPlaygroundPermissionMiniRingIcon",
+  "function updateAgentPermissionRingAccess",
+  "function updateAgentPermissionActionRing",
+  "function updateAgentPermissionActionAccess",
+  "const agentPermissionsContent =",
+  "const agentPermissionsSection =",
+  "function PlaygroundPermissionRingsChart",
+  "function drawPlaygroundPermissionMiniRingIcon",
+  "function renderPlaygroundPermissionAccessSelect",
+  "function renderPlaygroundPermissionPanel",
+  "function renderPlaygroundPermissionRingSelect",
+  "function renderPlaygroundPermissionRingsOverview",
+  "function renderAgentPermissionAccessSelect",
+  "function renderAgentPermissionRingSelect",
+  "function renderAgentPermissionsList",
+  ".playground-permission-rings-overview {",
+]) {
+  if (demoServerSource.includes(retiredPermissionRenderer)) {
+    failures.push(`examples/demo-server.mjs still owns retired permission-page UI: ${retiredPermissionRenderer}`);
+  }
+}
+
+const agentDetailPageSource = await fs.readFile(
+  path.join(packageRoot, "src", "platform-resources", "agents", "detail", "agent-detail-page.tsx"),
+  "utf8",
+);
+if (!agentDetailPageSource.includes("AgentPermissionsPage")) {
+  failures.push("AgentDetailPage must own its permissions-tab composition");
+}
 
 const packageJson = JSON.parse(await fs.readFile(path.join(packageRoot, "package.json"), "utf8"));
 const canonicalExport = packageJson.exports?.["./platform-resources"];
 const compatibilityExport = packageJson.exports?.["./platform-ui/resources"];
 const developModeExport = packageJson.exports?.["./platform-services/develop-mode"];
+const permissionsPageExport = packageJson.exports?.["./platform-ui/pages/permissions"];
+const permissionsPageStylesExport = packageJson.exports?.["./platform-ui/pages/permissions/styles.css"];
 const expectedModulePath = "./dist/platform-resources/index.js";
 if (canonicalExport?.default !== expectedModulePath) {
   failures.push("package export ./platform-resources must target dist/platform-resources/index.js");
@@ -152,6 +236,12 @@ if (compatibilityExport?.default !== expectedModulePath) {
 }
 if (developModeExport?.default !== "./dist/platform-services/develop-mode/index.js") {
   failures.push("package export ./platform-services/develop-mode must target the develop-mode service output");
+}
+if (permissionsPageExport?.default !== "./dist/platform-ui/pages/permissions/index.js") {
+  failures.push("package export ./platform-ui/pages/permissions must target the canonical permissions page output");
+}
+if (permissionsPageStylesExport?.default !== "./dist/platform-ui/pages/permissions/permission-page.css") {
+  failures.push("package export ./platform-ui/pages/permissions/styles.css must target the canonical permissions stylesheet");
 }
 
 if (failures.length > 0) {

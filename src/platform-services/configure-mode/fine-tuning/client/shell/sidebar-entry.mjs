@@ -3,7 +3,6 @@ export const FINE_TUNING_APP_SIDEBAR_ENTRY_SCRIPT = String.raw`              {
                 label: "Fine-Tuning",
                 Icon: TestTubeDiagonal,
                 active: activePage === "fine-tuning",
-                onClick: () => openFineTuningPage(),
+                onClick: () => openFineTuningOverviewPage(),
               },
 `;
-

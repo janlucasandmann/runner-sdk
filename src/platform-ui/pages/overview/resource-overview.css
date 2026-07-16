@@ -4,10 +4,10 @@
   height: 100%;
   min-height: 0;
   margin: 0 auto;
-  padding: 42px;
+  padding: 42px 42px 10px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 24px;
   overflow: hidden;
   overscroll-behavior: contain;
   color: #fff;
@@ -51,6 +51,11 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+.resource-overview-table.is-agents .agents-overview-tab-bar {
+  width: auto;
+  max-width: 100%;
 }
 
 .resource-overview-segmented {
@@ -107,7 +112,7 @@
 .resource-overview-identity__visual.is-connection > svg { width: 17px; height: 17px; color: #fff; }
 .resource-overview-identity__visual.is-size-compact.is-connection > svg { width: 16px; height: 16px; }
 .resource-overview-identity__visual.is-connection img { object-fit: contain; }
-.resource-overview-identity__title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; font-weight: 500; }
+.resource-overview-identity__title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; font-weight: 400; }
 .resource-overview-value { color: rgba(255, 255, 255, 0.62); font-weight: 400; }
 .resource-overview-status { color: rgba(255, 255, 255, 0.48); font-weight: 400; }
 .resource-overview-status.is-active { color: #fff; }
@@ -231,7 +236,7 @@
 .tags-overview-guide__link:focus-visible svg { color: #fff; }
 
 @media (max-width: 760px) {
-  .resource-overview-page { padding: 18px 12px 20px; gap: 14px; }
+  .resource-overview-page { padding: 18px 12px 10px; gap: 14px; }
 
   .tags-overview-guide__cards {
     grid-template-columns: none;

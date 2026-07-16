@@ -33,17 +33,66 @@ export const GUARDRAILS_AGENT_PAGE_ACTIONS_SCRIPT = `          function renderAg
           }
           function renderAgentGuardrailTable() {
             return React.createElement(PlatformDataTable, {
-              rows: visibleAgentGuardrailSets,
+              rows: filteredAgentGuardrailSets,
               getRowId: (set) => set.id,
               ariaLabel: "Agent guardrails",
               className: "playground-agent-guardrails-platform-table",
               surface: "plain",
+              variant: "minimalistic-ui",
               sticky: false,
+              sorting: {
+                defaultValue: { id: "updated", direction: "desc" },
+              },
+              toolbar: {
+                title: "Guardrails",
+                search: {
+                  value: agentGuardrailSearchQuery,
+                  onChange: setAgentGuardrailSearchQuery,
+                  placeholder: "Search guardrails",
+                  ariaLabel: "Search agent guardrails",
+                  getSearchText: getAgentGuardrailSearchText,
+                },
+                filters: [
+                  {
+                    id: "prompts",
+                    label: "Prompts",
+                    value: agentGuardrailFilterMode,
+                    options: [
+                      { id: "all", label: "All Guardrails", description: "Show every guardrail imported on this agent" },
+                      { id: "with-prompts", label: "With Prompts", description: "Only show guardrails containing prompts" },
+                      { id: "without-prompts", label: "Without Prompts", description: "Only show guardrails without prompts" },
+                    ],
+                    onChange: setAgentGuardrailFilterMode,
+                  },
+                ],
+                trailing: React.createElement("div", {
+                    className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell playground-agents-detail-guardrail-import-shell",
+                  },
+                  React.createElement(PlatformPrimaryButton, {
+                    size: "small",
+                    type: "button",
+                    className: "platform-data-table__primary-action",
+                    onClick: () => setAgentGuardrailImportPopoverOpen((current) => !current),
+                    disabled: Boolean(isDefaultAgentConfigurationLocked),
+                    title: "Add guardrail",
+                    "aria-label": "Add guardrail",
+                  },
+                    React.createElement(Plus, { className: "platform-data-table__primary-action-icon", width: 15, height: 15, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Add Guardrail")
+                  ),
+                  agentGuardrailImportPopoverOpen ? renderAgentGuardrailImportMenu() : null
+                ),
+              },
+              emptyState: agentGuardrailFilterMode === "all"
+                ? "No guardrails imported yet."
+                : "No guardrails match this prompt filter.",
+              noResultsState: "No matching guardrails on this agent.",
               columns: [
                 {
                   id: "name",
                   header: "Name",
                   accessor: (set) => set.name || "Untitled Guardrail Set",
+                  sortable: true,
                   width: "minmax(180px, 1.5fr)",
                   cell: ({ row: set }) => React.createElement("div", { className: "playground-agents-detail-guardrail-resource-title" },
                     React.createElement("span", { className: "playground-agents-detail-guardrail-icon", "aria-hidden": "true" },
@@ -56,6 +105,8 @@ export const GUARDRAILS_AGENT_PAGE_ACTIONS_SCRIPT = `          function renderAg
                   id: "prompts",
                   header: "Prompts",
                   accessor: (set) => Array.isArray(set.prompts) ? set.prompts.length : 0,
+                  sortable: true,
+                  sortDescFirst: true,
                   width: "minmax(80px, 0.65fr)",
                   cell: ({ row: set }) => {
                     const count = Array.isArray(set.prompts) ? set.prompts.length : 0;
@@ -66,6 +117,7 @@ export const GUARDRAILS_AGENT_PAGE_ACTIONS_SCRIPT = `          function renderAg
                   id: "description",
                   header: "Description",
                   accessor: (set) => String(set.description || "").trim() || "—",
+                  sortable: true,
                   width: "minmax(180px, 1.5fr)",
                   hideBelow: 720,
                 },
@@ -73,6 +125,8 @@ export const GUARDRAILS_AGENT_PAGE_ACTIONS_SCRIPT = `          function renderAg
                   id: "updated",
                   header: "Updated",
                   accessor: (set) => set.updatedAt || set.createdAt || "",
+                  sortable: true,
+                  sortDescFirst: true,
                   width: "minmax(100px, 0.8fr)",
                   align: "end",
                   cell: ({ row: set }) => formatAgentGuardrailDate(set.updatedAt || set.createdAt),

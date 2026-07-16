@@ -14,3 +14,7 @@ export {
   createAppSidebarScriptFragments,
   createAppSidebarStyleFragments,
 } from "./app-sidebar/index.mjs";
+
+export {
+  PLATFORM_NAVIGATION_GUARD_APP_SCRIPT_FRAGMENTS,
+} from "./navigation-guard/index.mjs";

@@ -16,36 +16,35 @@
 }
 
 .platform-modal-surface {
-  --platform-modal-border: var(
-    --tb-task-input-border,
-    var(
-      --tb-runner-input-border,
-      linear-gradient(
-        -10deg,
-        rgba(200, 200, 200, 0.25),
-        rgba(255, 255, 255, 0.1),
-        rgba(255, 255, 255, 0.15),
-        rgba(255, 255, 255, 0.375)
-      )
-    )
-  );
   position: relative;
-  width: min(820px, calc(100vw - 48px));
+  box-sizing: border-box;
+  width: min(640px, calc(100vw - 48px));
   max-height: calc(100dvh - 48px);
-  padding: var(--platform-modal-padding, 0 16px);
+  padding: 24px;
   overflow: visible;
-  border: 0 !important;
-  border-radius: var(--platform-modal-radius, 25px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.075) !important;
+  border-radius: 15px !important;
   outline: none;
-  background: var(--platform-modal-background, rgba(30, 30, 30, 0.5)) !important;
+  background: #1a1a1a !important;
   box-shadow: var(--platform-modal-shadow, 0 24px 70px rgba(0, 0, 0, 0.48)) !important;
-  -webkit-backdrop-filter: var(--platform-modal-backdrop-filter, blur(20px)) !important;
-  backdrop-filter: var(--platform-modal-backdrop-filter, blur(20px)) !important;
   transform-origin: center;
   opacity: 0.5;
   transform: scale(0.5);
   transition: opacity 75ms linear, transform 75ms linear;
   will-change: opacity, transform;
+}
+
+.platform-modal-surface *,
+.platform-modal-surface {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.platform-modal-surface *::-webkit-scrollbar,
+.platform-modal-surface::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .platform-modal-surface.is-visible {
@@ -62,23 +61,23 @@
 }
 
 .platform-modal-surface.is-size-compact {
-  width: min(400px, calc(100vw - 48px));
+  width: min(360px, calc(100vw - 48px));
 }
 
 .platform-modal-surface.is-size-small {
-  width: min(520px, calc(100vw - 48px));
+  width: min(400px, calc(100vw - 48px));
 }
 
 .platform-modal-surface.is-size-medium {
-  width: min(820px, calc(100vw - 48px));
+  width: min(640px, calc(100vw - 48px));
 }
 
 .platform-modal-surface.is-size-large {
-  width: min(1040px, calc(100vw - 48px));
+  width: min(880px, calc(100vw - 48px));
 }
 
 .platform-modal-surface.is-size-wide {
-  width: min(1280px, calc(100vw - 48px));
+  width: min(1120px, calc(100vw - 48px));
 }
 
 .platform-modal-surface.is-size-full {
@@ -88,39 +87,72 @@
   max-height: none;
 }
 
-.platform-modal-surface::before {
-  content: "" !important;
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  display: block !important;
-  border-radius: inherit;
-  padding: 1px;
-  background: var(--platform-modal-border) !important;
-  mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-  mask-clip: content-box, border-box;
-  mask-composite: exclude;
-  mask-origin: content-box, border-box;
-  mask-repeat: repeat, repeat;
-  mask-size: auto, auto;
-}
-
-.platform-modal-surface::after {
-  content: none !important;
-  display: none !important;
-}
-
 .platform-modal-header,
 .platform-modal-footer {
   display: flex;
-  align-items: center;
   gap: 12px;
 }
 
 .platform-modal-header {
+  align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 14px;
+  flex: 0 0 auto;
+  min-width: 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 12px;
+}
+
+.platform-modal-header__copy {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.platform-modal-header__title {
+  margin: 0;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.platform-modal-header__description {
+  max-width: 680px;
+  margin: 4px 0 0;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.platform-modal-header__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  margin: -3px -3px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 120ms ease;
+}
+
+.platform-modal-header__close:hover,
+.platform-modal-header__close:focus-visible {
+  background: transparent;
+  color: #fff;
+  opacity: 0.68;
+  outline: none;
+}
+
+.platform-modal-header__close:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 .platform-modal-body {
@@ -128,8 +160,9 @@
 }
 
 .platform-modal-footer {
+  align-items: center;
   justify-content: flex-end;
-  margin-top: 16px;
+  margin-top: 12px;
 }
 
 @media (max-width: 640px) {

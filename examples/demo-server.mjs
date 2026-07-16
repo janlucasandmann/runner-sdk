@@ -87,6 +87,7 @@ import {
 } from "../src/platform-services/configure-mode/configure-home/index.mjs";
 import {
   APP_HEADER_STYLE_FRAGMENTS,
+  PLATFORM_NAVIGATION_GUARD_APP_SCRIPT_FRAGMENTS,
   SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS,
   SETTINGS_MODAL_CSS,
   createAppHeaderScriptFragments,
@@ -14323,577 +14324,6 @@ ${FILES_STYLE_FRAGMENTS.contextMenu}
         padding-bottom: 4px;
       }
 
-      .playground-agents-permissions-list {
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-      }
-
-      .playground-agents-permissions-section {
-        margin-top: 10px;
-      }
-
-      .playground-agents-permissions-title {
-        margin-bottom: 10px;
-        padding-bottom: 12px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      .playground-agents-permissions-card {
-        padding: 0;
-        border: 0;
-        border-radius: 0;
-        background: transparent;
-      }
-
-      .playground-permission-rings-overview {
-        --playground-permission-ring-border: linear-gradient(
-          -10deg,
-          rgba(200, 200, 200, 0.25),
-          rgba(255, 255, 255, 0.1),
-          rgba(255, 255, 255, 0.15),
-          rgba(255, 255, 255, 0.375)
-        );
-        position: relative;
-        overflow: visible;
-        display: grid;
-        grid-template-columns: 170px minmax(0, 1fr);
-        align-items: center;
-        gap: 22px;
-        min-width: 0;
-        margin-bottom: 42px;
-        padding: 20px;
-        border: 0;
-        border-radius: 15px;
-        background: transparent;
-        -webkit-backdrop-filter: blur(50px);
-        backdrop-filter: blur(50px);
-      }
-
-      .playground-permission-rings-overview::before {
-        content: "";
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        padding: 1px;
-        background: var(--playground-permission-ring-border);
-        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-        mask-clip: content-box, border-box;
-        mask-composite: exclude;
-        mask-origin: content-box, border-box;
-        mask-repeat: repeat, repeat;
-        mask-size: auto, auto;
-      }
-
-      .playground-permission-rings-visual {
-        position: relative;
-        width: 148px;
-        height: 148px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        justify-self: center;
-      }
-
-      .playground-permission-rings-chart {
-        position: relative;
-        width: 148px;
-        height: 148px;
-      }
-
-      .playground-permission-rings-canvas {
-        display: block;
-        width: 100% !important;
-        height: 100% !important;
-      }
-
-      .playground-permission-rings-icon {
-        position: absolute;
-        left: 50%;
-        top: var(--permission-ring-icon-top, 50%);
-        z-index: 2;
-        width: 11px;
-        height: 11px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: rgba(0, 0, 0, 0.78);
-        pointer-events: none;
-        transform: translate(-50%, -50%);
-      }
-
-      .playground-permission-rings-icon svg {
-        width: 100%;
-        height: 100%;
-      }
-
-      .playground-permission-rings-copy {
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-      }
-
-      .playground-permission-ring-summary-row {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        align-items: center;
-        gap: 18px;
-        min-height: 56px;
-        padding: 12px 0;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-      }
-
-      .playground-permission-ring-summary-row:first-child {
-        border-top: 0;
-      }
-
-      .playground-permission-ring-summary-copy {
-        min-width: 0;
-      }
-
-      .playground-permission-ring-summary-title-row {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        max-width: 100%;
-        min-width: 0;
-      }
-
-      .playground-permission-ring-summary-title {
-        color: rgba(255, 255, 255, 0.94);
-        font-size: 13px;
-        font-weight: 500;
-        line-height: 1.25;
-      }
-
-      .playground-permission-ring-summary-info {
-        position: relative;
-        z-index: 40;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 18px;
-        height: 18px;
-        flex: 0 0 18px;
-        border: 0;
-        border-radius: 999px;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.42);
-        padding: 0;
-        cursor: help;
-      }
-
-      .playground-permission-ring-summary-info:hover,
-      .playground-permission-ring-summary-info:focus-visible {
-        color: rgba(255, 255, 255, 0.84);
-      }
-
-      .playground-permission-ring-summary-info::after {
-        content: attr(data-tooltip);
-        pointer-events: none;
-        position: absolute;
-        z-index: 140;
-        left: 50%;
-        bottom: calc(100% + 8px);
-        width: min(280px, 72vw);
-        padding: 9px 10px;
-        border-radius: 8px;
-        background: rgba(32, 32, 34, 0.98);
-        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.34);
-        color: rgba(255, 255, 255, 0.78);
-        font-size: 11px;
-        font-weight: 400;
-        line-height: 1.4;
-        white-space: normal;
-        opacity: 0;
-        visibility: hidden;
-        transform: translate(-50%, 4px);
-        transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s ease;
-      }
-
-      .playground-permission-ring-summary-info:hover::after,
-      .playground-permission-ring-summary-info:focus-visible::after {
-        opacity: 1;
-        visibility: visible;
-        transform: translate(-50%, 0);
-      }
-
-      .playground-agents-permission-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 14px;
-        min-width: 0;
-        padding: 8px 0;
-      }
-
-      .playground-permissions-panel {
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-        min-width: 0;
-        overflow: visible;
-      }
-
-      .playground-permissions-panel > .playground-permission-rings-overview {
-        margin-bottom: 42px;
-      }
-
-      .playground-permissions-panel-details {
-        min-width: 0;
-        padding: 0;
-        border: 0;
-        border-radius: 0;
-        background: transparent;
-      }
-
-      .playground-agents-permission-ring-card {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-        padding: 16px;
-        border-radius: 15px;
-        background: rgba(255, 255, 255, 0.05);
-      }
-
-      .playground-agents-permissions-list.is-details-only {
-        gap: 18px;
-      }
-
-      .playground-agents-permission-ring-card.is-details-only {
-        padding: 0;
-        border-radius: 0;
-        background: transparent;
-      }
-
-      .playground-agents-permission-ring-card.is-details-only::before {
-        content: none;
-      }
-
-      .playground-agents-permission-ring-card.is-details-only .playground-agents-permission-action-row:first-child {
-        border-top: 0;
-      }
-
-      .playground-agents-permission-ring-card.is-details-only:last-child {
-        margin-bottom: 24px;
-      }
-
-      .playground-agents-permission-detail-ring-title-row {
-        display: grid;
-        grid-template-columns: minmax(220px, 1fr) minmax(310px, auto);
-        align-items: center;
-        gap: 16px;
-        width: 100%;
-        margin-bottom: 4px;
-        padding-bottom: 12px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        color: rgba(255, 255, 255, 0.88);
-        font-size: 12px;
-        font-weight: 500;
-        line-height: 1.2;
-      }
-
-      .playground-agents-permission-detail-ring-title-label {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        min-width: 0;
-      }
-
-      .playground-agents-permission-detail-column-headings {
-        display: inline-flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 16px;
-        min-width: 0;
-        color: rgba(255, 255, 255, 0.46);
-        font-size: 11px;
-        font-weight: 500;
-        line-height: 1.2;
-      }
-
-      .playground-agents-permission-detail-column-headings span {
-        display: inline-flex;
-        justify-content: flex-end;
-        text-align: right;
-        white-space: nowrap;
-      }
-
-      .playground-agents-permission-detail-column-headings span:first-child {
-        min-width: 104px;
-      }
-
-      .playground-agents-permission-detail-column-headings span:last-child {
-        min-width: 126px;
-      }
-
-      .playground-permission-mini-ring-icon {
-        position: relative;
-        display: inline-flex;
-        width: 24px;
-        height: 24px;
-        align-items: center;
-        justify-content: center;
-        flex: 0 0 auto;
-        color: var(--permission-mini-ring-icon-color, rgba(255, 255, 255, 0.72));
-        border: 0;
-        border-radius: 999px;
-        background: transparent;
-        overflow: visible;
-      }
-
-      .playground-permission-mini-ring-canvas {
-        position: absolute;
-        inset: 0;
-        z-index: 1;
-        display: block;
-        width: 100% !important;
-        height: 100% !important;
-        pointer-events: none;
-      }
-
-      .playground-permission-mini-ring-icon svg {
-        position: relative;
-        z-index: 2;
-        width: 10px;
-        height: 10px;
-      }
-
-      .playground-agents-permission-ring-summary-icons {
-        display: inline-flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 7px;
-        min-width: 0;
-      }
-
-      .playground-agents-permission-ring-summary-icon {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        flex: 0 0 auto;
-      }
-
-      .playground-agents-permission-ring-summary-icons .playground-permission-mini-ring-icon {
-        width: 26px;
-        height: 26px;
-      }
-
-      .playground-agents-permission-ring-card::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        padding: 1px;
-        border-radius: inherit;
-        background: linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0.04) 42%, rgba(255,255,255,0.12));
-        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-        -webkit-mask-composite: xor;
-        mask-composite: exclude;
-        pointer-events: none;
-      }
-
-      .playground-agents-permission-ring-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 14px;
-      }
-
-      .playground-agents-permission-ring-kicker {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        min-width: 0;
-        color: rgba(255, 255, 255, 0.68);
-        font-size: 11px;
-        font-weight: 500;
-      }
-
-      .playground-agents-permission-ring-index {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 22px;
-        height: 22px;
-        border-radius: 999px;
-        background: rgba(102, 166, 255, 0.14);
-        color: #66a6ff;
-        font-size: 11px;
-        font-weight: 500;
-      }
-
-      .playground-agents-permission-ring-copy {
-        max-width: 760px;
-      }
-
-      .playground-agents-permission-ring-title {
-        color: rgba(255, 255, 255, 0.94);
-        font-size: 13px;
-        font-weight: 500;
-        line-height: 1.25;
-      }
-
-      .playground-agents-permission-ring-description {
-        margin-top: 5px;
-        color: rgba(255, 255, 255, 0.58);
-        font-size: 12px;
-        line-height: 1.45;
-      }
-
-      .playground-agents-permission-actions {
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-      }
-
-      .playground-agents-permission-action-row {
-        display: grid;
-        grid-template-columns: minmax(220px, 1fr) minmax(310px, auto);
-        align-items: center;
-        gap: 16px;
-        min-width: 0;
-        padding: 12px 0;
-      }
-
-      .playground-agents-permission-action-badge {
-        display: inline-flex;
-        align-items: center;
-        margin-left: 8px;
-        padding: 2px 6px;
-        border-radius: 999px;
-        background: rgba(102, 166, 255, 0.12);
-        color: #66a6ff;
-        font-size: 10px;
-        font-weight: 500;
-        line-height: 1.2;
-        vertical-align: middle;
-      }
-
-      .playground-agents-permission-copy {
-        min-width: 170px;
-        flex: 1 1 210px;
-      }
-
-      .playground-agents-permission-title {
-        color: rgba(255, 255, 255, 0.92);
-        font-size: 12px;
-        font-weight: 600;
-        line-height: 1.25;
-      }
-
-      .playground-agents-permission-description {
-        margin-top: 3px;
-        color: rgba(255, 255, 255, 0.56);
-        font-size: 11px;
-        line-height: 1.35;
-      }
-
-      .playground-agents-permission-options {
-        display: inline-flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 16px;
-        flex: 0 0 auto;
-        min-width: 0;
-        margin-left: auto;
-      }
-
-      .playground-agents-permission-select-shell {
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        justify-content: flex-end;
-        min-width: 126px;
-      }
-
-      .playground-agents-permission-select-shell.is-ring {
-        min-width: 104px;
-      }
-
-      .playground-agents-permission-select-shell::after {
-        content: "";
-        position: absolute;
-        right: 1px;
-        top: 50%;
-        width: 6px;
-        height: 6px;
-        margin-top: -5px;
-        border-right: 1.5px solid rgba(255, 255, 255, 0.68);
-        border-bottom: 1.5px solid rgba(255, 255, 255, 0.68);
-        transform: rotate(45deg);
-        pointer-events: none;
-      }
-
-      .playground-agents-permission-select {
-        appearance: none;
-        width: 100%;
-        min-width: 0;
-        padding: 0 18px 0 0;
-        border: 0;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.86);
-        font-family: inherit;
-        font-size: 12px;
-        font-weight: 400;
-        line-height: 1.35;
-        text-align: right;
-        text-align-last: right;
-        outline: none;
-        cursor: pointer;
-      }
-
-      .playground-agents-permission-select:hover,
-      .playground-agents-permission-select:focus {
-        color: rgba(255, 255, 255, 0.96);
-      }
-
-      .playground-agents-permission-select option {
-        color: #111;
-      }
-
-      .playground-agents-permission-effective-access {
-        min-width: 92px;
-        color: rgba(255, 255, 255, 0.46);
-        font-size: 11px;
-        line-height: 1.35;
-        text-align: right;
-      }
-
-      @media (max-width: 820px) {
-        .playground-agents-permission-row,
-        .playground-agents-permission-action-row {
-          display: flex;
-          align-items: stretch;
-          flex-direction: column;
-        }
-
-        .playground-agents-permission-copy,
-        .playground-agents-permission-options,
-        .playground-agents-permission-select-shell {
-          min-width: 0;
-          width: 100%;
-        }
-
-        .playground-agents-permission-options {
-          align-items: stretch;
-          flex-direction: column;
-          gap: 10px;
-        }
-
-        .playground-agents-permission-select {
-          text-align: left;
-          text-align-last: left;
-        }
-
-        .playground-agents-permission-effective-access {
-          min-width: 0;
-          text-align: left;
-        }
-      }
-
       .playground-agents-profile-section {
         display: flex;
         flex-direction: column;
@@ -15693,20 +15123,11 @@ ${FILES_STYLE_FRAGMENTS.contextMenu}
 	      }
 
 	      .playground-server-detail-navbar.is-function-detail-navbar,
-	      .playground-server-detail-navbar.is-database-detail-navbar,
 	      .playground-server-detail-navbar.is-auth-detail-navbar,
 	      .playground-server-detail-navbar.is-secrets-detail-navbar,
 	      .playground-server-detail-navbar.is-agent-runtime-detail-navbar {
 	        align-items: flex-start;
 	      }
-
-      .playground-server-detail-navbar .playground-database-title-input {
-        flex: 0 1 auto;
-        width: auto;
-        max-width: min(60vw, 680px);
-        field-sizing: content;
-        margin-bottom: 6px;
-      }
 
       .playground-server-detail-navbar .playground-database-navbar-back-button {
         align-self: center;
@@ -15716,38 +15137,13 @@ ${FILES_STYLE_FRAGMENTS.contextMenu}
         color: rgba(255, 255, 255, 0.7);
       }
 
-      .playground-server-detail-navbar .playground-database-navbar-copy {
-        flex: 0 1 auto;
-        flex-direction: row;
-        align-items: center;
-        gap: 6px;
-      }
-
-      .playground-database-export-split-shell.playground-tasks-toolbar-popup-shell {
+      .playground-database-export-shell.playground-tasks-toolbar-popup-shell {
         z-index: 74;
         display: inline-flex;
         align-items: center;
       }
 
-      .playground-database-export-split-button.playground-agents-detail-publish-split-control {
-        border: 0;
-        background: linear-gradient(to top, #082673, #1D59BE);
-        color: #fff;
-        cursor: pointer;
-      }
-
-      .playground-database-export-split-button.playground-agents-detail-publish-split-control:hover,
-      .playground-database-export-split-button.playground-agents-detail-publish-split-control:focus-visible,
-      .playground-database-export-split-button.playground-agents-detail-publish-split-control.is-active {
-        background: linear-gradient(to top, #082673, #1D59BE);
-      }
-
-      .playground-database-export-split-button .playground-agents-detail-publish-main,
-      .playground-database-export-split-button .playground-agents-detail-publish-chevron {
-        pointer-events: none;
-      }
-
-      .playground-database-export-split-shell .playground-database-export-menu {
+      .playground-database-export-shell .playground-database-export-menu {
         top: calc(100% + 8px);
         right: 0;
         left: auto;
@@ -21213,8 +20609,7 @@ ${GUARDRAILS_STYLE_FRAGMENTS.versionChanges}      .playground-version-changes-he
         filter: brightness(0) invert(1);
       }
 
-      .playground-tasks-project-modal.playground-agents-model-picker-modal {
-        width: min(800px, calc(100vw - 48px));
+      .playground-agents-model-picker-modal {
         max-height: min(700px, calc(100vh - 48px));
         display: flex;
         flex-direction: column;
@@ -21222,26 +20617,12 @@ ${GUARDRAILS_STYLE_FRAGMENTS.versionChanges}      .playground-version-changes-he
         scrollbar-width: none;
       }
 
-      .playground-agents-model-picker-modal .playground-tasks-project-modal-top {
-        gap: 14px;
-        align-items: flex-start;
-      }
-
-      .playground-agents-model-picker-top-copy {
-        flex: 1 1 auto;
-        width: 100%;
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-
       .playground-agents-model-picker-search-row {
         width: 100%;
         display: flex;
         align-items: center;
         gap: 10px;
-        margin-top: -2px;
+        margin: 0 0 12px;
       }
 
       .playground-agents-model-picker-search-field {
@@ -21292,6 +20673,8 @@ ${GUARDRAILS_STYLE_FRAGMENTS.versionChanges}      .playground-version-changes-he
       }
 
       .playground-agents-model-picker-modal .playground-agents-model-picker-body {
+        flex: 1 1 auto;
+        min-height: 0;
         gap: 18px;
         max-height: min(488px, calc(100vh - 260px));
         overflow: auto;
@@ -21341,14 +20724,6 @@ ${GUARDRAILS_STYLE_FRAGMENTS.versionChanges}      .playground-version-changes-he
         line-height: 1.5;
         color: rgba(255, 255, 255, 0.56);
         text-align: center;
-      }
-
-      .playground-agents-model-picker-actions {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 10px;
-        margin-top: 18px;
       }
 
       .playground-agents-model-picker-card {
@@ -29674,6 +29049,7 @@ ${API_KEYS_STYLE_FRAGMENTS.page}
       .playground-agents-page .playground-agents-detail-main-pane .playground-environments-detail-scroll,
       .playground-agents-detail-assistant-page .playground-agents-detail-main-pane > .playground-environments-detail-scroll.playground-settings-detail-scroll {
         padding: 0 44px 56px;
+        overflow-x: hidden;
       }
 
       .playground-agents-detail-assistant-page .playground-agents-detail-main-pane .playground-environments-detail-scroll.playground-environments-editor-scroll {
@@ -29894,6 +29270,10 @@ ${API_KEYS_STYLE_FRAGMENTS.page}
         max-width: 100%;
         -webkit-backdrop-filter: blur(20px);
         backdrop-filter: blur(20px);
+      }
+
+      .playground-agents-detail-version-selector-button.platform-button {
+        max-width: min(260px, 52vw);
       }
 
       .playground-agents-detail-top-controls-actions.playground-agents-detail-sidebar-controls {
@@ -30233,8 +29613,6 @@ ${API_KEYS_STYLE_FRAGMENTS.page}
       }
 
       .playground-agents-detail-version-selector-footer {
-        margin-top: 4px;
-        padding-top: 6px;
         border-top: 1px solid rgba(255, 255, 255, 0.1);
       }
 
@@ -31648,7 +31026,7 @@ ${GUARDRAILS_STYLE_FRAGMENTS.agentIntegration}      .playground-project-overview
       }
 
       .playground-agents-detail-sidebar-owner-row.is-compact.playground-project-overview-sidebar-row {
-        grid-template-columns: minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1fr) 14px;
         min-height: 32px;
       }
 
@@ -31790,12 +31168,6 @@ ${GUARDRAILS_STYLE_FRAGMENTS.agentIntegration}      .playground-project-overview
         scrollbar-width: none;
       }
 
-      .playground-agents-detail-owner-popup-shell.playground-platform-popup-shell .playground-platform-popup-menu {
-        background: rgba(30, 30, 30, 0.9);
-        -webkit-backdrop-filter: none;
-        backdrop-filter: none;
-      }
-
       .playground-agents-detail-owner-popup-shell .playground-agents-detail-owner-menu::-webkit-scrollbar {
         display: none;
       }
@@ -31808,20 +31180,20 @@ ${GUARDRAILS_STYLE_FRAGMENTS.agentIntegration}      .playground-project-overview
         padding: 8px 12px;
       }
 
-      .playground-agents-detail-owner-option-copy {
+      .playground-agents-detail-owner-option .platform-selector__option-copy {
         min-width: 0;
         display: flex;
         flex-direction: column;
         gap: 2px;
       }
 
-      .playground-agents-detail-owner-option-copy span:first-child {
+      .playground-agents-detail-owner-option .platform-selector__option-label {
         color: rgba(255, 255, 255, 0.92);
         font-size: 12px;
         font-weight: 500;
       }
 
-      .playground-agents-detail-owner-option-copy span:last-child {
+      .playground-agents-detail-owner-option .platform-selector__option-description {
         color: rgba(255, 255, 255, 0.48);
         font-size: 10px;
         font-weight: 400;
@@ -32222,7 +31594,7 @@ ${GUARDRAILS_STYLE_FRAGMENTS.agentIntegration}      .playground-project-overview
         display: inline-flex;
         align-items: center;
         justify-content: flex-end;
-        gap: 4px;
+        gap: 8px;
         flex-wrap: nowrap;
         white-space: nowrap;
       }
@@ -32234,7 +31606,7 @@ ${GUARDRAILS_STYLE_FRAGMENTS.agentIntegration}      .playground-project-overview
         display: inline-flex;
         align-items: center;
         justify-content: flex-end;
-        gap: 4px;
+        gap: 8px;
         flex-wrap: nowrap;
         white-space: nowrap;
       }
@@ -35755,91 +35127,9 @@ ${METRONOME_SHELL_STYLE_FRAGMENTS.runTrace}
         }
       }
 
+${FILES_STYLE_FRAGMENTS.responsive}
+
       @media (max-width: 980px) {
-        .playground-files-shell {
-          grid-template-columns: minmax(0, 1fr);
-          height: auto;
-          transition: none;
-        }
-        .playground-files-shell.has-preview {
-          grid-template-columns: minmax(0, 1fr);
-        }
-        .playground-files-shell.is-browser-minimized,
-        .playground-files-shell.is-browser-minimized.has-preview,
-        .playground-files-shell.is-browser-minimized.has-preview.has-file-chat {
-          grid-template-columns: minmax(0, 1fr);
-        }
-        .playground-files-browser,
-        .playground-files-preview,
-        .playground-files-chat-sidebar {
-          min-height: 220px;
-        }
-        .playground-files-browser {
-          border: 0;
-        }
-        .playground-files-shell.is-browser-minimized .playground-files-browser {
-          visibility: visible;
-          pointer-events: auto;
-        }
-        .playground-files-topbar {
-          flex-wrap: wrap;
-        }
-        .playground-files-control-row {
-          flex-wrap: wrap;
-        }
-        .playground-files-topbar-actions,
-        .playground-files-control-actions,
-        .playground-files-path-strip {
-          width: 100%;
-        }
-        .playground-files-topbar-actions {
-          justify-content: flex-end;
-        }
-        .playground-files-path-strip {
-          justify-content: space-between;
-        }
-        .playground-files-preview {
-          max-width: none;
-          max-height: 0;
-          padding: 0;
-          transform: translateY(16px);
-        }
-        .playground-files-shell.has-preview .playground-files-preview {
-          max-height: 720px;
-          padding: 0;
-          transform: translateY(0);
-          border-left: 0;
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .playground-files-chat-sidebar {
-          max-width: none;
-          max-height: 0;
-          padding: 0;
-          transform: translateY(16px);
-        }
-        .playground-files-shell.has-file-chat .playground-files-chat-sidebar {
-          max-height: 720px;
-          padding: 0;
-          transform: translateY(0);
-          border-left: 0;
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .playground-files-chat-resize-handle,
-        .playground-files-browser-minimized-toggle {
-          display: none;
-        }
-        .playground-files-search-popover {
-          position: fixed;
-          left: 12px;
-          right: 12px;
-          width: auto;
-          top: 76px;
-          max-height: min(420px, calc(100vh - 96px));
-        }
-        .playground-files-toolbar-menu,
-        .playground-files-toolbar-menu-wide {
-          max-width: calc(100vw - 24px);
-        }
         .playground-environments-shell {
           grid-template-columns: minmax(0, 1fr);
         }
@@ -36047,6 +35337,7 @@ ${SETTINGS_MODAL_CSS}
     <link rel="stylesheet" href="/dist/platform-ui/components/ui/button/button.css" />
     <link rel="stylesheet" href="/dist/platform-ui/components/ui/label/label.css" />
     <link rel="stylesheet" href="/dist/platform-ui/components/ui/search/search.css" />
+    <link rel="stylesheet" href="/dist/platform-ui/components/ui/selector/selector.css" />
     <link rel="stylesheet" href="/dist/platform-ui/components/ui/switch/switch.css" />
 
     <script type="importmap">
@@ -36115,15 +35406,45 @@ ${CALENDAR_BROWSER_FOUNDATION_FRAGMENTS.calendarImport}
 	      import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, KeyRound, LassoSelect, Layers, LayoutDashboard, LayoutGrid, LibraryBig, Lightbulb, Link2, List, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Underline, Undo2, Unlink, User, UserRound, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
 	      import { RunnerClient } from "/dist/index.js";
 	      import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
+	      import { PlatformAnalyticsSection } from "/dist/platform-ui/components/composite/analytics/index.js";
+	      import { PlatformCodePreviewBox } from "/dist/platform-ui/components/composite/code-preview-box/index.js";
 	      import { PlatformDataTable } from "/dist/platform-ui/components/composite/data-table/index.js";
+	      import { PlatformDetailTabBar } from "/dist/platform-ui/components/composite/detail-tab-bar/index.js";
+	      import { ConfigureHomeOverviewPage } from "/dist/platform-services/configure-mode/configure-home/client/page/configure-home-overview-page.js";
+	      import { ModelsOverviewPage } from "/dist/platform-services/configure-mode/models/client/page/models-overview-page.js";
 	      import { PlatformInstructionsEditor } from "/dist/platform-ui/components/composite/instructions-editor/index.js";
 	      import { PlatformButton, PlatformPrimaryButton, PlatformSecondaryButton } from "/dist/platform-ui/components/ui/button/index.js";
+	      import { PlatformSearch } from "/dist/platform-ui/components/ui/search/index.js";
+	      import { PlatformButtonSelector, PlatformSelector } from "/dist/platform-ui/components/ui/selector/index.js";
 	      import { PlatformPopup, PlatformPopupDismissLayer, PlatformPopupSurface } from "/dist/platform-ui/components/composite/popup/index.js";
-	      import { PlatformModal, PlatformModalBackdrop, PlatformModalBody, PlatformModalHeader, PlatformModalSurface } from "/dist/platform-ui/components/composite/modal/index.js";
+	      import { PlatformModal, PlatformModalBackdrop, PlatformModalBody, PlatformModalFooter, PlatformModalHeader, PlatformModalSurface, PlatformUnsavedChangesModal } from "/dist/platform-ui/components/composite/modal/index.js";
 	      import { PlatformSwitch } from "/dist/platform-ui/components/ui/switch/index.js";
 	      import { PlatformCalendarWidget, PlatformProjectWidget, PlatformProjectWidgetEmpty, PlatformProjectWidgetEmptyState, PlatformProjectWidgetTask, PlatformProjectWidgetTaskList, PlatformUsageWidget } from "/dist/platform-ui/components/composite/widgets/index.js";
-		      import { AgentDetailPage, AgentsOverviewAnalyticsRequestError, AgentsOverviewPage, ComputersOverviewAnalyticsRequestError, ComputersOverviewPage, PluginsOverviewPage, SkillsOverviewPage, TagsOverviewPage, createAgentsOverviewAnalytics, fetchAgentsOverviewAnalytics, fetchComputersOverviewAnalytics, invalidateAgentsOverviewAnalytics, invalidateComputersOverviewAnalytics, readCachedAgentsOverviewAnalytics, readCachedComputersOverviewAnalytics } from "/dist/platform-resources/index.js";
-	      import { DevelopResourceOverviewRoute, DevelopVoiceAgentsOverviewPage, createDevelopResourceOverviewRows, createDevelopVoiceAgentOverviewRows } from "/dist/platform-services/develop-mode/index.js";
+	      import {
+	        PlatformPermissionMiniRingIcon,
+	        PlatformPermissionsPage,
+	        PlatformRolePermissionsPage,
+	        PLATFORM_PERMISSION_ACCESS_OPTIONS as PLAYGROUND_PERMISSION_ACCESS_OPTIONS,
+	        PLATFORM_PERMISSION_ACTION_DEFINITIONS as PLAYGROUND_PERMISSION_ACTION_DEFINITIONS,
+	        PLATFORM_PERMISSION_RING_DEFINITIONS as PLAYGROUND_PERMISSION_RING_DEFINITIONS,
+	        PLATFORM_PERMISSION_RING_IDS as PLAYGROUND_PERMISSION_RING_IDS,
+	        buildPlatformPermissionActionPolicy as buildPlaygroundPermissionActionPolicy,
+	        createPlatformDefaultPermissionActions as createPlaygroundDefaultPermissionActions,
+	        createPlatformDefaultPermissionRings as createPlaygroundDefaultPermissionRings,
+	        createPlatformDefaultPermissionSet as createPlaygroundDefaultPermissionSet,
+	        createPlatformFullAccessPermissionSet as createPlaygroundFullAccessPermissionSet,
+	        getPlatformPermissionAccessLabel as getPlaygroundPermissionAccessLabel,
+	        getPlatformPermissionActionDefinitionById as getPlaygroundPermissionActionDefinition,
+	        getPlatformPermissionActionExplicitAccessByDefinition as getPlaygroundPermissionActionExplicitAccess,
+	        getPlatformPermissionRingAccessById as getPlaygroundPermissionRingAccess,
+	        getPlatformPermissionRingDefinitionById as getPlaygroundPermissionRingDefinition,
+	        isPlatformPermissionRecord as isPlaygroundPermissionRecord,
+	        normalizePlatformPermissionAccessValue as normalizePlaygroundPermissionAccess,
+	        normalizePlatformPermissionRingId as normalizePlaygroundPermissionRingId,
+	        normalizePlatformPermissionSet as normalizePlaygroundPermissionSet,
+	      } from "/dist/platform-ui/pages/permissions/index.js";
+		      import { AgentDetailPage, AgentPermissionMeters, AgentPermissionRingIcons, AgentPermissionsPage, AgentPublishControl, AgentsOverviewAnalyticsRequestError, AgentsOverviewPage, ComputersOverviewAnalyticsRequestError, ComputersOverviewPage, PluginsOverviewPage, SkillsOverviewPage, TagsOverviewPage, createAgentsOverviewAnalytics, fetchAgentsOverviewAnalytics, fetchComputersOverviewAnalytics, getAgentPermissionSummary, invalidateAgentsOverviewAnalytics, invalidateComputersOverviewAnalytics, readCachedAgentsOverviewAnalytics, readCachedComputersOverviewAnalytics } from "/dist/platform-resources/index.js";
+	      import { ApiKeysOverviewAnalyticsRequestError, DevelopApiKeysOverviewPage, DevelopHomeOverviewPage, DevelopResourceOverviewRoute, DevelopVoiceAgentsOverviewPage, DevelopWebhooksOverviewPage, createApiKeysOverviewAnalytics, createDevelopResourceOverviewRows, createDevelopVoiceAgentOverviewRows, fetchApiKeysOverviewAnalytics, invalidateApiKeysOverviewAnalytics, readCachedApiKeysOverviewAnalytics } from "/dist/platform-services/develop-mode/index.js";
 	      import { openGoogleDrivePicker } from "/examples/google-drive-picker.mjs";
 
 	      function getPlaygroundSafeIconComponent(Icon, fallbackIcon = Circle) {
@@ -39313,9 +38634,11 @@ ${API_KEYS_DOMAIN_SCRIPT_FRAGMENTS.helpers}
       function renderPlaygroundThreadOverviewTable({
         threads = [],
         rowOptions = {},
+        tableOptions = {},
       } = {}) {
         const safeThreads = Array.isArray(threads) ? threads : [];
         const selectable = Boolean(rowOptions.selectable);
+        const sortable = tableOptions.sortable !== false;
         const selectedIds = rowOptions.selectedIds instanceof Set
           ? rowOptions.selectedIds
           : new Set(Array.isArray(rowOptions.selectedIds) ? rowOptions.selectedIds.map((id) => String(id || "").trim()).filter(Boolean) : []);
@@ -39338,18 +38661,49 @@ ${API_KEYS_DOMAIN_SCRIPT_FRAGMENTS.helpers}
           }
           if (typeof rowOptions.onOpenThread === "function") rowOptions.onOpenThread(threadId, safeThread, thread);
         };
+        const readThreadDateLabel = (thread) => {
+          const safeThread = readThreadContext(thread).safeThread;
+          return String(typeof rowOptions.getDateLabel === "function"
+            ? rowOptions.getDateLabel(thread, safeThread)
+            : (typeof formatThreadSearchTimestamp === "function"
+                ? formatThreadSearchTimestamp(typeof resolveThreadSortTimestamp === "function" ? resolveThreadSortTimestamp(safeThread) : (thread?.updatedAt || thread?.createdAt || ""))
+                : "")
+          ).trim() || "—";
+        };
+        const readThreadSortTimestamp = (thread) => {
+          const safeThread = readThreadContext(thread).safeThread;
+          const value = typeof resolveThreadSortTimestamp === "function"
+            ? resolveThreadSortTimestamp(safeThread)
+            : (safeThread?.updatedAt || safeThread?.createdAt || thread?.updatedAt || thread?.createdAt || "");
+          const timestamp = new Date(value || 0).getTime();
+          return Number.isFinite(timestamp) ? timestamp : 0;
+        };
         const dataTable = React.createElement(PlatformDataTable, {
+          key: tableOptions.key,
           rows: safeThreads,
           getRowId: (thread) => readThreadContext(thread).threadId,
-          ariaLabel: "Threads",
-          className: "playground-thread-overview-platform-table",
-          surface: "plain",
-          sticky: false,
+          ariaLabel: tableOptions.ariaLabel || "Threads",
+          className: ["playground-thread-overview-platform-table", tableOptions.className || ""].filter(Boolean).join(" "),
+          surface: tableOptions.surface || "plain",
+          layout: tableOptions.layout || "content",
+          variant: tableOptions.variant || "minimalistic-ui",
+          sticky: Boolean(tableOptions.sticky),
+          stickyTop: tableOptions.stickyTop,
+          rowMinHeight: tableOptions.rowMinHeight,
+          sorting: tableOptions.sorting,
+          pagination: tableOptions.pagination === undefined ? false : tableOptions.pagination,
+          toolbar: tableOptions.toolbar,
+          loading: Boolean(tableOptions.loading),
+          error: tableOptions.error || undefined,
+          emptyState: tableOptions.emptyState || "No threads yet.",
+          noResultsState: tableOptions.noResultsState || "No matching threads.",
+          footer: tableOptions.footer,
           columns: [
             {
               id: "title",
               header: "Title",
               accessor: (thread) => readThreadContext(thread).displayThreadTitle,
+              sortable,
               width: "minmax(180px, 1.7fr)",
               cell: ({ row: thread }) => React.createElement("div", { className: "playground-plugin-row-title" }, readThreadContext(thread).displayThreadTitle),
             },
@@ -39387,14 +38741,12 @@ ${API_KEYS_DOMAIN_SCRIPT_FRAGMENTS.helpers}
             {
               id: "date",
               header: "Date",
-              accessor: (thread) => String(typeof rowOptions.getDateLabel === "function"
-                ? rowOptions.getDateLabel(thread, readThreadContext(thread).safeThread)
-                : (typeof formatThreadSearchTimestamp === "function"
-                    ? formatThreadSearchTimestamp(typeof resolveThreadSortTimestamp === "function" ? resolveThreadSortTimestamp(readThreadContext(thread).safeThread) : (thread?.updatedAt || thread?.createdAt || ""))
-                    : "")
-              ).trim() || "—",
+              accessor: readThreadSortTimestamp,
+              sortable,
+              sortDescFirst: true,
               width: "minmax(100px, 0.85fr)",
               align: "end",
+              cell: ({ row: thread }) => readThreadDateLabel(thread),
             },
           ],
           selection: selectable ? {
@@ -39425,10 +38777,12 @@ ${API_KEYS_DOMAIN_SCRIPT_FRAGMENTS.helpers}
           isRowActionOpen: (thread) => Boolean(typeof rowOptions.isActionOpen === "function" && rowOptions.isActionOpen(readThreadContext(thread).threadId, readThreadContext(thread).safeThread, thread)),
           getRowAriaLabel: (thread) => "Open thread " + readThreadContext(thread).displayThreadTitle,
         });
-        return React.createElement("div", { className: "playground-thread-overview-table-shell" },
-          rowOptions.toolbarContent || null,
-          dataTable
-        );
+        return rowOptions.toolbarContent
+          ? React.createElement("div", { className: "playground-thread-overview-table-shell" },
+              rowOptions.toolbarContent,
+              dataTable
+            )
+          : dataTable;
       }
 
 ${METRONOME_SHELL_RUNTIME_SCRIPT}
@@ -41323,13 +40677,6 @@ ${METRONOME_SHELL_RUNTIME_SCRIPT}
         });
       }
 
-      const PLAYGROUND_PERMISSION_ACCESS_OPTIONS = [
-        { id: "full_access", label: "Full access" },
-        { id: "ask_for_permission", label: "Ask permission" },
-        { id: "read_only", label: "Read only" },
-        { id: "no_access", label: "No access" },
-      ];
-
       const PLAYGROUND_TEAM_ROLE_DEFINITIONS = [
         {
           id: "owner",
@@ -41392,610 +40739,6 @@ ${ORGANIZATIONS_DOMAIN_SCRIPT_FRAGMENTS.roleDefinitions}      const PLAYGROUND_T
       }
 
 ${ORGANIZATIONS_DOMAIN_SCRIPT_FRAGMENTS.roleIdentity}
-      const PLAYGROUND_PERMISSION_RING_DEFINITIONS = [
-        {
-          id: "ring_1",
-          number: 1,
-          label: "Ring 1",
-          shortLabel: "Local",
-          title: "Local workspace",
-          description: "Actions that stay inside the selected computer, including local files, shell commands, and local skill runs.",
-          defaultAccess: "full_access",
-        },
-        {
-          id: "ring_2",
-          number: 2,
-          label: "Ring 2",
-          shortLabel: "Shared",
-          title: "Shared workspace",
-          description: "Actions that affect shared Computer Agents resources or send private messages outside the current computer.",
-          defaultAccess: "ask_for_permission",
-        },
-        {
-          id: "ring_3",
-          number: 3,
-          label: "Ring 3",
-          shortLabel: "Public",
-          title: "Public and irreversible",
-          description: "Actions that publish publicly, write to external systems, move money, or expose secrets.",
-          defaultAccess: "ask_for_permission",
-        },
-      ];
-
-      const PLAYGROUND_PERMISSION_RING_IDS = PLAYGROUND_PERMISSION_RING_DEFINITIONS.map((ring) => ring.id);
-
-      const PLAYGROUND_PERMISSION_ACTION_DEFINITIONS = [
-        {
-          id: "workspace_read",
-          ringId: "ring_1",
-          label: "Read workspace",
-          description: "Read files, directories, logs, and local workspace context.",
-        },
-        {
-          id: "workspace_write",
-          ringId: "ring_1",
-          label: "Edit workspace",
-          description: "Create, update, delete, move, or download files inside the selected computer.",
-        },
-        {
-          id: "local_shell",
-          ringId: "ring_1",
-          label: "Run local commands",
-          description: "Run bash or runtime commands that execute inside the selected computer.",
-        },
-        {
-          id: "local_skill_run",
-          ringId: "ring_1",
-          label: "Run local skills",
-          description: "Use installed skills that operate within the selected computer context.",
-        },
-        {
-          id: "external_read",
-          ringId: "ring_2",
-          label: "Read external sources",
-          description: "Fetch public web pages, package metadata, documentation, or other read-only external context.",
-        },
-        {
-          id: "shared_resource_write",
-          ringId: "ring_2",
-          label: "Edit shared resources",
-          description: "Change shared projects, files, resources, comments, tickets, calendars, or team-visible state.",
-        },
-        {
-          id: "send_email",
-          ringId: "ring_2",
-          label: "Send private messages",
-          description: "Send email, Slack, or other direct messages to known recipients.",
-        },
-        {
-          id: "team_agent_delegation",
-          ringId: "ring_2",
-          label: "Delegate to agents",
-          description: "Create, invoke, or coordinate other agents and team agents.",
-        },
-        {
-          id: "team_workspace_view",
-          ringId: "ring_1",
-          label: "View team workspace",
-          description: "View team members, invitations, shared resources, team activity, and role configuration.",
-          subjectTypes: ["team", "team_role"],
-        },
-        {
-          id: "team_member_invite",
-          ringId: "ring_2",
-          label: "Invite team members",
-          description: "Invite humans or agents into the team and assign an initial role.",
-          subjectTypes: ["team", "team_role"],
-        },
-        {
-          id: "team_member_remove",
-          ringId: "ring_2",
-          label: "Remove team members",
-          description: "Remove humans or agents from the team membership roster.",
-          subjectTypes: ["team", "team_role"],
-        },
-        {
-          id: "team_role_update",
-          ringId: "ring_2",
-          label: "Change member roles",
-          description: "Promote, demote, or otherwise change the role assigned to a team member.",
-          subjectTypes: ["team", "team_role"],
-        },
-        {
-          id: "team_shared_resource_manage",
-          ringId: "ring_2",
-          label: "Manage shared resources",
-          description: "Add, remove, or edit projects, computers, agents, templates, and other resources shared with the team.",
-          subjectTypes: ["team", "team_role"],
-        },
-        {
-          id: "team_permission_request_review",
-          ringId: "ring_2",
-          label: "Review permission requests",
-          description: "Approve or deny team-scoped permission requests from humans and agents.",
-          subjectTypes: ["team", "team_role"],
-        },
-        {
-          id: "team_settings_update",
-          ringId: "ring_3",
-          label: "Edit team settings",
-          description: "Rename the team, change governance settings, delete the team, or alter role permission pages.",
-          subjectTypes: ["team", "team_role"],
-        },
-        {
-          id: "organization_workspace_view",
-          ringId: "ring_1",
-          label: "View organization workspace",
-          description: "View organization members, resources, usage, billing, and role configuration.",
-          subjectTypes: ["organization_role"],
-        },
-        {
-          id: "organization_member_invite",
-          ringId: "ring_2",
-          label: "Invite organization members",
-          description: "Invite people into the organization and assign an initial role.",
-          subjectTypes: ["organization_role"],
-        },
-        {
-          id: "organization_member_remove",
-          ringId: "ring_2",
-          label: "Remove organization members",
-          description: "Remove people from the organization membership roster.",
-          subjectTypes: ["organization_role"],
-        },
-        {
-          id: "organization_role_update",
-          ringId: "ring_2",
-          label: "Change member roles",
-          description: "Promote, demote, or otherwise change organization member roles.",
-          subjectTypes: ["organization_role"],
-        },
-        {
-          id: "organization_resource_manage",
-          ringId: "ring_2",
-          label: "Manage organization resources",
-          description: "Create, edit, operate, or remove resources owned by the organization.",
-          subjectTypes: ["organization_role"],
-        },
-        {
-          id: "organization_billing_manage",
-          ringId: "ring_3",
-          label: "Manage usage and billing",
-          description: "Manage credits, budgets, reservations, usage controls, and billing operations.",
-          subjectTypes: ["organization_role"],
-        },
-        {
-          id: "organization_settings_update",
-          ringId: "ring_3",
-          label: "Edit organization settings",
-          description: "Rename the organization and change governance or role-permission settings.",
-          subjectTypes: ["organization_role"],
-        },
-        {
-          id: "project_rules_view",
-          ringId: "ring_1",
-          label: "View project rules",
-          description: "Read project rules that guide agents, tickets, and shared execution behavior.",
-          subjectTypes: ["project", "project_team_role"],
-        },
-        {
-          id: "project_rules_edit",
-          ringId: "ring_2",
-          label: "Edit project rules",
-          description: "Create, update, or remove project rules used by agents and collaborators.",
-          subjectTypes: ["project", "project_team_role"],
-        },
-        {
-          id: "project_access_manage",
-          ringId: "ring_3",
-          label: "Manage project access",
-          description: "Add teams, remove teams, or change project role permission pages.",
-          subjectTypes: ["project", "project_team_role"],
-        },
-        {
-          id: "database_schema_read",
-          ringId: "ring_1",
-          label: "View schema",
-          description: "View collections, fields, indexes, and database metadata.",
-          subjectTypes: ["database"],
-        },
-        {
-          id: "database_data_read",
-          ringId: "ring_1",
-          label: "Read data",
-          description: "Read documents and values stored in this database.",
-          subjectTypes: ["database"],
-        },
-        {
-          id: "database_query",
-          ringId: "ring_1",
-          label: "Run queries",
-          description: "Filter, sort, aggregate, and search database records.",
-          subjectTypes: ["database"],
-        },
-        {
-          id: "database_export",
-          ringId: "ring_2",
-          label: "Export data",
-          description: "Download or transmit database records outside the database.",
-          subjectTypes: ["database"],
-        },
-        {
-          id: "database_document_create",
-          ringId: "ring_2",
-          label: "Create documents",
-          description: "Add new documents and values to existing collections.",
-          subjectTypes: ["database"],
-        },
-        {
-          id: "database_document_update",
-          ringId: "ring_2",
-          label: "Update documents",
-          description: "Change existing documents, fields, and values.",
-          subjectTypes: ["database"],
-        },
-        {
-          id: "database_document_delete",
-          ringId: "ring_3",
-          label: "Delete documents",
-          description: "Permanently delete documents or fields from the database.",
-          subjectTypes: ["database"],
-        },
-        {
-          id: "database_schema_manage",
-          ringId: "ring_3",
-          label: "Manage schema",
-          description: "Create, rename, or delete collections and change database structure.",
-          subjectTypes: ["database"],
-        },
-        {
-          id: "database_access_manage",
-          ringId: "ring_3",
-          label: "Manage access",
-          description: "Share the database and change permissions for teams and collaborators.",
-          subjectTypes: ["database"],
-        },
-        {
-          id: "server_source_read",
-          ringId: "ring_1",
-          label: "View source",
-          description: "View source files, configuration, versions, and deployment metadata.",
-          subjectTypes: ["server"],
-        },
-        {
-          id: "server_invoke",
-          ringId: "ring_1",
-          label: "Invoke resource",
-          description: "Open a web app or invoke a function through its deployed endpoint.",
-          subjectTypes: ["server"],
-        },
-        {
-          id: "server_logs_read",
-          ringId: "ring_1",
-          label: "View usage and logs",
-          description: "View analytics, request logs, runtime output, and deployment history.",
-          subjectTypes: ["server"],
-        },
-        {
-          id: "server_source_write",
-          ringId: "ring_2",
-          label: "Edit source",
-          description: "Create, update, rename, or delete source files and configuration.",
-          subjectTypes: ["server"],
-        },
-        {
-          id: "server_connection_manage",
-          ringId: "ring_2",
-          label: "Manage connections",
-          description: "Connect or disconnect databases, auth, runtimes, secrets, and payments resources.",
-          subjectTypes: ["server"],
-        },
-        {
-          id: "server_deploy",
-          ringId: "ring_3",
-          label: "Publish deployments",
-          description: "Create versions, publish changes, roll back, or change public deployment settings.",
-          subjectTypes: ["server"],
-        },
-        {
-          id: "server_access_manage",
-          ringId: "ring_3",
-          label: "Manage access",
-          description: "Share this resource with teams and change their permission policies.",
-          subjectTypes: ["server"],
-        },
-        {
-          id: "server_delete",
-          ringId: "ring_3",
-          label: "Delete resource",
-          description: "Permanently delete this function or web app and its managed deployment.",
-          subjectTypes: ["server"],
-        },
-        {
-          id: "managed_resource_mutation",
-          ringId: "ring_2",
-          label: "Change managed resources",
-          description: "Create or update Computer Agents databases, functions, web apps, secrets, auth, or other managed resources.",
-        },
-        {
-          id: "public_deploy",
-          ringId: "ring_3",
-          label: "Publish deployments",
-          description: "Deploy or publish public web apps, functions, workflows, or other externally reachable services.",
-        },
-        {
-          id: "github_write",
-          ringId: "ring_3",
-          label: "Write to GitHub",
-          description: "Push commits, create pull requests, merge code, or otherwise write to GitHub repositories.",
-        },
-        {
-          id: "payment_action",
-          ringId: "ring_3",
-          label: "Move money",
-          description: "Create charges, refunds, checkout links, subscriptions, or payment-provider changes.",
-        },
-        {
-          id: "public_message",
-          ringId: "ring_3",
-          label: "Publish public messages",
-          description: "Post to public channels, social accounts, websites, or customer-visible feeds.",
-        },
-        {
-          id: "secret_export",
-          ringId: "ring_3",
-          label: "Expose secrets",
-          description: "Copy, export, transmit, or reveal secrets and credentials outside the secure resource boundary.",
-        },
-      ];
-
-      const PLAYGROUND_PERMISSION_ACTION_IDS = PLAYGROUND_PERMISSION_ACTION_DEFINITIONS.map((action) => action.id);
-
-      const PLAYGROUND_PERMISSION_RESOURCE_TYPES = [
-        "agents",
-        "skills",
-        "servers",
-        "computers",
-        "files",
-        "directories",
-        "projects",
-      ];
-
-      const PLAYGROUND_PERMISSION_RESOURCE_LABELS = {
-        agents: {
-          title: "Agents",
-          description: "Other agents and delegation targets",
-        },
-        skills: {
-          title: "Skills",
-          description: "Installed skills and built-in capabilities",
-        },
-        servers: {
-          title: "Servers",
-          description: "MCP servers, app backends, and services",
-        },
-        computers: {
-          title: "Computers",
-          description: "Cloud computers and runtime environments",
-        },
-        files: {
-          title: "Files",
-          description: "Personal computer files",
-        },
-        directories: {
-          title: "Directories",
-          description: "Workspace folders and subtrees",
-        },
-        projects: {
-          title: "Projects",
-          description: "Project scopes and planning context",
-        },
-      };
-
-      function isPlaygroundPermissionRecord(value) {
-        return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-      }
-
-      function normalizePlaygroundPermissionAccess(value, fallback = "full_access") {
-        return PLAYGROUND_PERMISSION_ACCESS_OPTIONS.some((option) => option.id === value)
-          ? value
-          : fallback;
-      }
-
-      function normalizePlaygroundPermissionRingId(value, fallback = "ring_1") {
-        return PLAYGROUND_PERMISSION_RING_IDS.includes(value) ? value : fallback;
-      }
-
-      function createPlaygroundDefaultPermissionRings() {
-        return PLAYGROUND_PERMISSION_RING_DEFINITIONS.reduce((rings, ring) => {
-          rings[ring.id] = {
-            defaultAccess: ring.defaultAccess,
-          };
-          return rings;
-        }, {});
-      }
-
-      function createPlaygroundDefaultPermissionActions() {
-        return PLAYGROUND_PERMISSION_ACTION_DEFINITIONS.reduce((actions, action) => {
-          actions[action.id] = {
-            ringId: action.ringId,
-          };
-          return actions;
-        }, {});
-      }
-
-      function normalizePlaygroundPermissionRings(value) {
-        const rings = createPlaygroundDefaultPermissionRings();
-        const inputRings = isPlaygroundPermissionRecord(value) ? value : {};
-
-        PLAYGROUND_PERMISSION_RING_DEFINITIONS.forEach((ring) => {
-          const ringValue = inputRings[ring.id];
-          if (typeof ringValue === "string") {
-            rings[ring.id] = {
-              defaultAccess: normalizePlaygroundPermissionAccess(ringValue, ring.defaultAccess),
-            };
-            return;
-          }
-          if (!isPlaygroundPermissionRecord(ringValue)) {
-            return;
-          }
-          rings[ring.id] = {
-            defaultAccess: normalizePlaygroundPermissionAccess(ringValue.defaultAccess, ring.defaultAccess),
-          };
-        });
-
-        return rings;
-      }
-
-      function normalizePlaygroundPermissionActions(value) {
-        const actions = createPlaygroundDefaultPermissionActions();
-        const inputActions = isPlaygroundPermissionRecord(value) ? value : {};
-
-        PLAYGROUND_PERMISSION_ACTION_DEFINITIONS.forEach((action) => {
-          const actionValue = inputActions[action.id];
-          if (typeof actionValue === "string") {
-            const access = normalizePlaygroundPermissionAccess(actionValue, "");
-            actions[action.id] = {
-              ringId: action.ringId,
-              ...(access ? { access } : {}),
-            };
-            return;
-          }
-          if (!isPlaygroundPermissionRecord(actionValue)) {
-            return;
-          }
-          const normalizedRingId = normalizePlaygroundPermissionRingId(actionValue.ringId, action.ringId);
-          const normalizedAccess = normalizePlaygroundPermissionAccess(actionValue.access, "");
-          actions[action.id] = {
-            ringId: normalizedRingId,
-            ...(normalizedAccess ? { access: normalizedAccess } : {}),
-          };
-        });
-
-        return actions;
-      }
-
-      function createPlaygroundDefaultPermissionResources(defaultAccess = "full_access") {
-        return PLAYGROUND_PERMISSION_RESOURCE_TYPES.reduce((resources, resourceType) => {
-          resources[resourceType] = {
-            defaultAccess,
-            rules: [],
-          };
-          return resources;
-        }, {});
-      }
-
-      function normalizePlaygroundPermissionRules(value, fallbackAccess) {
-        if (!Array.isArray(value)) {
-          return [];
-        }
-
-        return value
-          .map((rule) => {
-            if (!isPlaygroundPermissionRecord(rule)) {
-              return null;
-            }
-            return {
-              id: typeof rule.id === "string" && rule.id.trim() ? rule.id.trim() : undefined,
-              targetId: typeof rule.targetId === "string" && rule.targetId.trim() ? rule.targetId.trim() : undefined,
-              path: typeof rule.path === "string" && rule.path.trim() ? rule.path.trim() : undefined,
-              access: normalizePlaygroundPermissionAccess(rule.access, fallbackAccess),
-              note: typeof rule.note === "string" && rule.note.trim() ? rule.note.trim() : undefined,
-            };
-          })
-          .filter(Boolean);
-      }
-
-      function normalizePlaygroundPermissionSubjectType(value, fallback = "agent") {
-        const normalized = String(value || "").trim();
-        return normalized === "agent"
-          || normalized === "project"
-          || normalized === "project_team_role"
-          || normalized === "team"
-          || normalized === "team_role"
-          || normalized === "organization_role"
-          || normalized === "database"
-          || normalized === "server"
-          || normalized === "human_user"
-          ? normalized
-          : fallback;
-      }
-
-      function createPlaygroundDefaultPermissionSet(subjectType = "agent") {
-        const normalizedSubjectType = normalizePlaygroundPermissionSubjectType(subjectType, "agent");
-        return {
-          version: 1,
-          subjectType: normalizedSubjectType,
-          defaultAccess: "full_access",
-          rings: createPlaygroundDefaultPermissionRings(),
-          actions: createPlaygroundDefaultPermissionActions(),
-          resources: createPlaygroundDefaultPermissionResources("full_access"),
-        };
-      }
-
-      function createPlaygroundFullAccessPermissionSet(subjectType = "agent") {
-        const permissionSet = createPlaygroundDefaultPermissionSet(subjectType);
-        permissionSet.defaultAccess = "full_access";
-        PLAYGROUND_PERMISSION_RING_IDS.forEach((ringId) => {
-          permissionSet.rings[ringId] = {
-            ...(permissionSet.rings[ringId] || {}),
-            defaultAccess: "full_access",
-          };
-        });
-        PLAYGROUND_PERMISSION_ACTION_DEFINITIONS.forEach((action) => {
-          permissionSet.actions[action.id] = {
-            ...(permissionSet.actions[action.id] || {}),
-            ringId: normalizePlaygroundPermissionRingId(action.ringId, "ring_1"),
-            access: "full_access",
-          };
-        });
-        permissionSet.resources = createPlaygroundDefaultPermissionResources("full_access");
-        return permissionSet;
-      }
-
-      function normalizePlaygroundPermissionSet(value, subjectType = "agent") {
-        const normalizedFallbackSubjectType = normalizePlaygroundPermissionSubjectType(subjectType, "agent");
-        const fallback = createPlaygroundDefaultPermissionSet(normalizedFallbackSubjectType);
-        if (!isPlaygroundPermissionRecord(value)) {
-          return fallback;
-        }
-        const normalizedSubjectType = normalizePlaygroundPermissionSubjectType(value.subjectType, normalizedFallbackSubjectType);
-
-        const defaultAccess = normalizePlaygroundPermissionAccess(value.defaultAccess, fallback.defaultAccess);
-        const rings = normalizePlaygroundPermissionRings(value.rings);
-        const actions = normalizePlaygroundPermissionActions(value.actions);
-        const resources = createPlaygroundDefaultPermissionResources(defaultAccess);
-        const inputResources = isPlaygroundPermissionRecord(value.resources) ? value.resources : {};
-
-        PLAYGROUND_PERMISSION_RESOURCE_TYPES.forEach((resourceType) => {
-          const resourceValue = inputResources[resourceType];
-          if (typeof resourceValue === "string") {
-            resources[resourceType] = {
-              defaultAccess: normalizePlaygroundPermissionAccess(resourceValue, defaultAccess),
-              rules: [],
-            };
-            return;
-          }
-          if (!isPlaygroundPermissionRecord(resourceValue)) {
-            return;
-          }
-          const resourceDefaultAccess = normalizePlaygroundPermissionAccess(resourceValue.defaultAccess, defaultAccess);
-          resources[resourceType] = {
-            defaultAccess: resourceDefaultAccess,
-            rules: normalizePlaygroundPermissionRules(resourceValue.rules, resourceDefaultAccess),
-          };
-        });
-
-        return {
-          version: 1,
-          subjectType: normalizedSubjectType,
-          defaultAccess,
-          rings,
-          actions,
-          resources,
-        };
-      }
-
       function createPlaygroundTeamRolePermissionSet(roleId) {
         const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
         if (normalizedRoleId === "owner") {
@@ -42183,787 +40926,6 @@ ${ORGANIZATIONS_DOMAIN_SCRIPT_FRAGMENTS.roleIdentity}
       }
 
 ${ORGANIZATIONS_DOMAIN_SCRIPT_FRAGMENTS.rolePermissions}
-      function getPlaygroundPermissionRingDefinition(ringId) {
-        const normalizedRingId = normalizePlaygroundPermissionRingId(ringId, "ring_1");
-        return PLAYGROUND_PERMISSION_RING_DEFINITIONS.find((ring) => ring.id === normalizedRingId)
-          || PLAYGROUND_PERMISSION_RING_DEFINITIONS[0];
-      }
-
-      function getPlaygroundPermissionActionDefinition(actionId) {
-        return PLAYGROUND_PERMISSION_ACTION_DEFINITIONS.find((action) => action.id === actionId) || null;
-      }
-
-      function getPlaygroundPermissionActionRingId(permissionSet, actionDefinition) {
-        if (!actionDefinition) {
-          return "ring_1";
-        }
-        const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, permissionSet?.subjectType || "agent");
-        const actionPolicy = normalizedPermissionSet.actions?.[actionDefinition.id] || null;
-        return normalizePlaygroundPermissionRingId(actionPolicy?.ringId, actionDefinition.ringId);
-      }
-
-      function getPlaygroundPermissionRingAccess(permissionSet, ringId) {
-        const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, permissionSet?.subjectType || "agent");
-        const ringDefinition = getPlaygroundPermissionRingDefinition(ringId);
-        return normalizePlaygroundPermissionAccess(
-          normalizedPermissionSet.rings?.[ringDefinition.id]?.defaultAccess,
-          ringDefinition.defaultAccess || normalizedPermissionSet.defaultAccess
-        );
-      }
-
-      function getPlaygroundPermissionActionAccess(permissionSet, actionDefinition) {
-        if (!actionDefinition) {
-          return "full_access";
-        }
-        const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, permissionSet?.subjectType || "agent");
-        const actionPolicy = normalizedPermissionSet.actions?.[actionDefinition.id] || null;
-        const actionRingId = getPlaygroundPermissionActionRingId(normalizedPermissionSet, actionDefinition);
-        const inheritedAccess = getPlaygroundPermissionRingAccess(normalizedPermissionSet, actionRingId);
-        return normalizePlaygroundPermissionAccess(actionPolicy?.access, inheritedAccess);
-      }
-
-      function getPlaygroundPermissionActionExplicitAccess(permissionSet, actionDefinition) {
-        const resolvedActionDefinition = typeof actionDefinition === "string"
-          ? getPlaygroundPermissionActionDefinition(actionDefinition)
-          : actionDefinition;
-        if (!resolvedActionDefinition) {
-          return "";
-        }
-        const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, permissionSet?.subjectType || "agent");
-        const actionPolicy = normalizedPermissionSet.actions?.[resolvedActionDefinition.id] || {};
-        const rawAccess = typeof actionPolicy.access === "string"
-          ? normalizePlaygroundPermissionAccess(actionPolicy.access, "")
-          : "";
-        if (!rawAccess) {
-          return "";
-        }
-        const actionRingId = getPlaygroundPermissionActionRingId(normalizedPermissionSet, resolvedActionDefinition);
-        const inheritedAccess = getPlaygroundPermissionRingAccess(normalizedPermissionSet, actionRingId);
-        return rawAccess === inheritedAccess ? "" : rawAccess;
-      }
-
-      function buildPlaygroundPermissionActionPolicy(permissionSet, actionDefinition, currentActionPolicy = {}, nextAccess = "", nextRingId = "") {
-        const resolvedActionDefinition = typeof actionDefinition === "string"
-          ? getPlaygroundPermissionActionDefinition(actionDefinition)
-          : actionDefinition;
-        if (!resolvedActionDefinition) {
-          return currentActionPolicy || {};
-        }
-        const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, permissionSet?.subjectType || "agent");
-        const normalizedRingId = normalizePlaygroundPermissionRingId(
-          nextRingId || currentActionPolicy?.ringId,
-          resolvedActionDefinition.ringId
-        );
-        const inheritedAccess = getPlaygroundPermissionRingAccess(normalizedPermissionSet, normalizedRingId);
-        const normalizedAccess = normalizePlaygroundPermissionAccess(nextAccess, "");
-        const nextPolicy = {
-          ...(currentActionPolicy || {}),
-          ringId: normalizedRingId,
-        };
-        if (normalizedAccess && normalizedAccess !== inheritedAccess) {
-          nextPolicy.access = normalizedAccess;
-        } else {
-          delete nextPolicy.access;
-        }
-        return nextPolicy;
-      }
-
-      function getPlaygroundPermissionAccessLabel(access) {
-        return PLAYGROUND_PERMISSION_ACCESS_OPTIONS.find((option) => option.id === access)?.label || "Custom";
-      }
-
-      function getPlaygroundPermissionAccessColor(access) {
-        switch (normalizePlaygroundPermissionAccess(access, "no_access")) {
-          case "full_access":
-            return "rgba(255, 255, 255, 1)";
-          case "ask_for_permission":
-            return "rgba(255, 255, 255, 0.66)";
-          case "read_only":
-            return "rgba(255, 255, 255, 0.33)";
-          case "no_access":
-          default:
-            return "rgba(255, 255, 255, 0.10)";
-        }
-      }
-
-      function getPlaygroundPermissionAccessProgress(access) {
-        switch (normalizePlaygroundPermissionAccess(access, "no_access")) {
-          case "full_access":
-            return 100;
-          case "ask_for_permission":
-            return 66;
-          case "read_only":
-            return 33;
-          case "no_access":
-          default:
-            return 0;
-        }
-      }
-
-      const PLAYGROUND_PERMISSION_RING_CHART_ORDER = ["ring_3", "ring_2", "ring_1"];
-      const PLAYGROUND_PERMISSION_RING_CHART_GRADIENTS = {
-        ring_1: [[82, 188, 67], [29, 225, 163]],
-        ring_2: [[17, 95, 251], [78, 162, 255]],
-        ring_3: [[180, 8, 55], [226, 30, 82]],
-      };
-      const PLAYGROUND_PERMISSION_MINI_RING_ICON_GRADIENTS = {
-        ring_1: [[31, 130, 72], [29, 225, 163]],
-        ring_2: [[7, 61, 188], [78, 162, 255]],
-        ring_3: [[126, 4, 39], [226, 30, 82]],
-      };
-      const PLAYGROUND_PERMISSION_RING_CHART_SIZE = 148;
-      const PLAYGROUND_PERMISSION_RING_CHART_LINE_WIDTH = 17;
-      const PLAYGROUND_PERMISSION_RING_CHART_GAP = 1;
-      const PLAYGROUND_PERMISSION_RING_CHART_OUTER_PADDING = 3;
-      const PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE = -Math.PI / 2 - 0.18;
-      const PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_START_OFFSET = -0.18;
-      const PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_END_OFFSET = 0.32;
-      const PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_CLIP_OFFSET = 0.14;
-      const PLAYGROUND_PERMISSION_RING_CHART_ICONS = {
-        ring_1: ArrowDownToLine,
-        ring_2: UserRound,
-        ring_3: ArrowUpFromLine,
-      };
-      const PLAYGROUND_PERMISSION_MINI_RING_ICON_SIZE = 24;
-      const PLAYGROUND_PERMISSION_MINI_RING_ICON_LINE_WIDTH = 1;
-      const PLAYGROUND_PERMISSION_MINI_RING_ICON_PADDING = 2.9;
-
-      function getPlaygroundPermissionRingChartRadius(size, index) {
-        return size / 2
-          - PLAYGROUND_PERMISSION_RING_CHART_LINE_WIDTH / 2
-          - PLAYGROUND_PERMISSION_RING_CHART_OUTER_PADDING
-          - index * (PLAYGROUND_PERMISSION_RING_CHART_LINE_WIDTH + PLAYGROUND_PERMISSION_RING_CHART_GAP);
-      }
-
-      function getPlaygroundPermissionRingChartIconTop(index) {
-        const radius = getPlaygroundPermissionRingChartRadius(PLAYGROUND_PERMISSION_RING_CHART_SIZE, index);
-        return PLAYGROUND_PERMISSION_RING_CHART_SIZE / 2 - radius;
-      }
-
-      function getPlaygroundPermissionRingRgba(color, alpha) {
-        return "rgba(" + color[0] + ", " + color[1] + ", " + color[2] + ", " + alpha + ")";
-      }
-
-      function getPlaygroundPermissionRingGradientColors(ringId, gradientMap = PLAYGROUND_PERMISSION_RING_CHART_GRADIENTS) {
-        return gradientMap[ringId] || PLAYGROUND_PERMISSION_RING_CHART_GRADIENTS[ringId] || [[255, 255, 255], [255, 255, 255]];
-      }
-
-      function getPlaygroundPermissionRingStartColor(ringId, alpha = 1) {
-        const colors = getPlaygroundPermissionRingGradientColors(ringId);
-        return getPlaygroundPermissionRingRgba(colors[0], alpha);
-      }
-
-      function getPlaygroundPermissionRingEndColor(ringId, alpha = 1) {
-        const colors = getPlaygroundPermissionRingGradientColors(ringId);
-        return getPlaygroundPermissionRingRgba(colors[1], alpha);
-      }
-
-      function getPlaygroundPermissionRingIconColor(ringId, alpha = 1) {
-        return getPlaygroundPermissionRingEndColor(ringId, alpha);
-      }
-
-      function getPlaygroundPermissionRingIconComponent(ringId) {
-        return PLAYGROUND_PERMISSION_RING_CHART_ICONS[ringId] || Shield;
-      }
-
-      function createPlaygroundPermissionRingGradient(ctx, width, height, ringId, alpha = 1, progress = 0.72, gradientMap = PLAYGROUND_PERMISSION_RING_CHART_GRADIENTS) {
-        const colors = getPlaygroundPermissionRingGradientColors(ringId, gradientMap);
-        if (typeof ctx.createConicGradient === "function") {
-          const gradient = ctx.createConicGradient(PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE, width / 2, height / 2);
-          const endStop = Math.max(0.001, Math.min(0.94, Number(progress) || 0.72));
-          const holdStop = Math.min(0.965, Math.max(endStop + 0.03, endStop));
-          gradient.addColorStop(0, getPlaygroundPermissionRingRgba(colors[0], alpha));
-          gradient.addColorStop(endStop, getPlaygroundPermissionRingRgba(colors[1], alpha));
-          gradient.addColorStop(holdStop, getPlaygroundPermissionRingRgba(colors[1], alpha));
-          gradient.addColorStop(0.985, getPlaygroundPermissionRingRgba(colors[0], alpha));
-          gradient.addColorStop(1, getPlaygroundPermissionRingRgba(colors[0], alpha));
-          return gradient;
-        }
-
-        const gradient = ctx.createLinearGradient(width / 2, 0, width / 2, height);
-        gradient.addColorStop(0, getPlaygroundPermissionRingRgba(colors[0], alpha));
-        gradient.addColorStop(1, getPlaygroundPermissionRingRgba(colors[1], alpha));
-        return gradient;
-      }
-
-      function easeOutPlaygroundPermissionRingChart(value) {
-        return 1 - Math.pow(1 - value, 4);
-      }
-
-      function getPlaygroundPermissionRingChartProgressById(ringAccessById = {}) {
-        return PLAYGROUND_PERMISSION_RING_CHART_ORDER.reduce((result, ringId) => {
-          result[ringId] = getPlaygroundPermissionAccessProgress(ringAccessById[ringId]);
-          return result;
-        }, {});
-      }
-
-      function drawPlaygroundPermissionRingChart(canvas, progressById = {}) {
-        if (!canvas) {
-          return;
-        }
-
-        const rect = canvas.getBoundingClientRect();
-        const width = Math.max(1, Math.round(rect.width || PLAYGROUND_PERMISSION_RING_CHART_SIZE));
-        const height = Math.max(1, Math.round(rect.height || PLAYGROUND_PERMISSION_RING_CHART_SIZE));
-        const dpr = Math.max(1, window.devicePixelRatio || 1);
-        const targetWidth = Math.round(width * dpr);
-        const targetHeight = Math.round(height * dpr);
-        if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
-          canvas.width = targetWidth;
-          canvas.height = targetHeight;
-        }
-
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-          return;
-        }
-
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        ctx.clearRect(0, 0, width, height);
-
-        const size = Math.min(width, height);
-        const centerX = width / 2;
-        const centerY = height / 2;
-        const lineWidth = PLAYGROUND_PERMISSION_RING_CHART_LINE_WIDTH;
-
-        PLAYGROUND_PERMISSION_RING_CHART_ORDER.forEach((ringId, index) => {
-          const radius = getPlaygroundPermissionRingChartRadius(size, index);
-          const progress = Math.max(0, Math.min(100, Number(progressById[ringId]) || 0)) / 100;
-          const activeGradient = createPlaygroundPermissionRingGradient(ctx, width, height, ringId, 1, progress);
-          const trackGradient = createPlaygroundPermissionRingGradient(ctx, width, height, ringId, 0.1);
-
-          ctx.save();
-          ctx.lineWidth = lineWidth;
-          ctx.lineCap = "round";
-          ctx.strokeStyle = trackGradient;
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.restore();
-
-          if (progress <= 0) {
-            return;
-          }
-
-          const endAngle = PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE + Math.PI * 2 * Math.min(progress, 1);
-
-          ctx.save();
-          ctx.lineWidth = lineWidth;
-          ctx.strokeStyle = activeGradient;
-          ctx.lineCap = "butt";
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, radius, PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE, endAngle);
-          ctx.stroke();
-          ctx.restore();
-
-          if (progress < 0.999) {
-            const startCapX = centerX + Math.cos(PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE) * radius;
-            const startCapY = centerY + Math.sin(PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE) * radius;
-            const endCapX = centerX + Math.cos(endAngle) * radius;
-            const endCapY = centerY + Math.sin(endAngle) * radius;
-
-            ctx.save();
-            ctx.fillStyle = getPlaygroundPermissionRingStartColor(ringId, 1);
-            ctx.beginPath();
-            ctx.arc(startCapX, startCapY, lineWidth / 2, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-
-            ctx.save();
-            ctx.fillStyle = getPlaygroundPermissionRingEndColor(ringId, 1);
-            ctx.beginPath();
-            ctx.arc(endCapX, endCapY, lineWidth / 2, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-          }
-
-          if (progress < 0.999) {
-            return;
-          }
-
-          const fullCapStartAngle = PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE + PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_START_OFFSET;
-          const fullCapEndAngle = PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE + PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_END_OFFSET;
-          const capClipAngle = PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE + PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_CLIP_OFFSET;
-          const capClipX = centerX + Math.cos(capClipAngle) * radius;
-
-          ctx.save();
-          ctx.beginPath();
-          ctx.rect(capClipX + lineWidth * 0.08, 0, width - capClipX, height);
-          ctx.clip();
-          ctx.lineWidth = lineWidth;
-          ctx.lineCap = "round";
-          ctx.strokeStyle = getPlaygroundPermissionRingEndColor(ringId, 1);
-          ctx.shadowColor = "rgba(0, 0, 0, 0.45)";
-          ctx.shadowBlur = Math.max(5, lineWidth * 0.55);
-          ctx.shadowOffsetX = Math.max(2, lineWidth * 0.24);
-          ctx.shadowOffsetY = Math.max(1, lineWidth * 0.14);
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, radius, fullCapStartAngle, fullCapEndAngle);
-          ctx.stroke();
-          ctx.restore();
-
-          ctx.save();
-          ctx.lineWidth = lineWidth;
-          ctx.lineCap = "round";
-          ctx.strokeStyle = getPlaygroundPermissionRingEndColor(ringId, 1);
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, radius, fullCapStartAngle, fullCapEndAngle);
-          ctx.stroke();
-          ctx.restore();
-        });
-      }
-
-      function drawPlaygroundPermissionMiniRingIcon(canvas, ringId, progressValue = 100) {
-        if (!canvas) {
-          return;
-        }
-
-        const normalizedRingId = normalizePlaygroundPermissionRingId(ringId, "ring_1");
-        const rect = canvas.getBoundingClientRect();
-        const width = Math.max(1, Math.round(rect.width || PLAYGROUND_PERMISSION_MINI_RING_ICON_SIZE));
-        const height = Math.max(1, Math.round(rect.height || PLAYGROUND_PERMISSION_MINI_RING_ICON_SIZE));
-        const dpr = Math.max(1, window.devicePixelRatio || 1);
-        const targetWidth = Math.round(width * dpr);
-        const targetHeight = Math.round(height * dpr);
-        if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
-          canvas.width = targetWidth;
-          canvas.height = targetHeight;
-        }
-
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-          return;
-        }
-
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        ctx.clearRect(0, 0, width, height);
-
-        const size = Math.min(width, height);
-        const centerX = width / 2;
-        const centerY = height / 2;
-        const lineWidth = Math.max(1, size * (PLAYGROUND_PERMISSION_MINI_RING_ICON_LINE_WIDTH / PLAYGROUND_PERMISSION_MINI_RING_ICON_SIZE));
-        const padding = Math.max(2, size * (PLAYGROUND_PERMISSION_MINI_RING_ICON_PADDING / PLAYGROUND_PERMISSION_MINI_RING_ICON_SIZE));
-        const radius = Math.max(1, size / 2 - lineWidth / 2 - padding);
-        const progress = Math.max(0, Math.min(100, Number(progressValue) || 0)) / 100;
-        const trackGradient = createPlaygroundPermissionRingGradient(ctx, width, height, normalizedRingId, 0.12, 1, PLAYGROUND_PERMISSION_MINI_RING_ICON_GRADIENTS);
-        const activeGradient = createPlaygroundPermissionRingGradient(ctx, width, height, normalizedRingId, 1, progress, PLAYGROUND_PERMISSION_MINI_RING_ICON_GRADIENTS);
-
-        ctx.save();
-        ctx.lineWidth = lineWidth;
-        ctx.strokeStyle = trackGradient;
-        ctx.lineCap = "butt";
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE, PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE + Math.PI * 2);
-        ctx.stroke();
-        ctx.restore();
-
-        if (progress <= 0) {
-          return;
-        }
-
-        const endAngle = PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE + Math.PI * 2 * Math.min(progress, 1);
-
-        ctx.save();
-        ctx.lineWidth = lineWidth;
-        ctx.strokeStyle = activeGradient;
-        ctx.lineCap = progress < 0.999 ? "round" : "butt";
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE, endAngle);
-        ctx.stroke();
-        ctx.restore();
-
-        if (progress < 0.999) {
-          return;
-        }
-
-        const fullCapStartAngle = PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE + PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_START_OFFSET;
-        const fullCapEndAngle = PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE + PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_END_OFFSET;
-        const capClipAngle = PLAYGROUND_PERMISSION_RING_CHART_START_ANGLE + PLAYGROUND_PERMISSION_RING_CHART_FULL_CAP_CLIP_OFFSET;
-        const capClipX = centerX + Math.cos(capClipAngle) * radius;
-
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(capClipX + lineWidth * 0.08, 0, width - capClipX, height);
-        ctx.clip();
-        ctx.lineWidth = lineWidth;
-        ctx.lineCap = "round";
-        ctx.strokeStyle = getPlaygroundPermissionRingEndColor(normalizedRingId, 1);
-        ctx.shadowColor = "rgba(0, 0, 0, 0.45)";
-        ctx.shadowBlur = Math.max(3, lineWidth * 0.8);
-        ctx.shadowOffsetX = Math.max(1, lineWidth * 0.24);
-        ctx.shadowOffsetY = Math.max(0.5, lineWidth * 0.14);
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, fullCapStartAngle, fullCapEndAngle);
-        ctx.stroke();
-        ctx.restore();
-
-        ctx.save();
-        ctx.lineWidth = lineWidth;
-        ctx.lineCap = "round";
-        ctx.strokeStyle = getPlaygroundPermissionRingEndColor(normalizedRingId, 1);
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, fullCapStartAngle, fullCapEndAngle);
-        ctx.stroke();
-        ctx.restore();
-      }
-
-      function PlaygroundPermissionMiniRingIcon({ ringId, access } = {}) {
-        const normalizedRingId = normalizePlaygroundPermissionRingId(ringId, "ring_1");
-        const normalizedAccess = access == null ? "" : normalizePlaygroundPermissionAccess(access, "no_access");
-        const ringProgress = normalizedAccess ? getPlaygroundPermissionAccessProgress(normalizedAccess) : 100;
-        const canvasRef = useRef(null);
-        const RingIcon = getPlaygroundPermissionRingIconComponent(normalizedRingId);
-
-        useEffect(() => {
-          const redraw = () => drawPlaygroundPermissionMiniRingIcon(canvasRef.current, normalizedRingId, ringProgress);
-          redraw();
-          window.addEventListener("resize", redraw);
-          return () => window.removeEventListener("resize", redraw);
-        }, [normalizedRingId, ringProgress]);
-
-        return React.createElement("span", {
-            className: "playground-permission-mini-ring-icon is-" + normalizedRingId.replace("_", "-"),
-            "aria-hidden": "true",
-            style: {
-              "--permission-mini-ring-icon-color": getPlaygroundPermissionRingIconColor(normalizedRingId, 1),
-            },
-          },
-          React.createElement("canvas", {
-            ref: canvasRef,
-            className: "playground-permission-mini-ring-canvas",
-          }),
-          React.createElement(RingIcon, { strokeWidth: 2.4 })
-        );
-      }
-
-      function PlaygroundPermissionRingsChart({ ringAccessById, animationKey = 0 } = {}) {
-        const canvasRef = useRef(null);
-        const animationFrameRef = useRef(null);
-        const displayProgressRef = useRef({});
-        const previousProgressRef = useRef(null);
-        const previousAnimationKeyRef = useRef(animationKey);
-        const ringAccessSignature = JSON.stringify(ringAccessById || {});
-
-        useEffect(() => {
-          const redraw = () => drawPlaygroundPermissionRingChart(canvasRef.current, displayProgressRef.current);
-          window.addEventListener("resize", redraw);
-          return () => {
-            window.removeEventListener("resize", redraw);
-            if (animationFrameRef.current) {
-              window.cancelAnimationFrame(animationFrameRef.current);
-              animationFrameRef.current = null;
-            }
-          };
-        }, []);
-
-        useEffect(() => {
-          const canvas = canvasRef.current;
-          if (!canvas) {
-            return;
-          }
-
-          const nextProgress = getPlaygroundPermissionRingChartProgressById(ringAccessById || {});
-          const shouldResetAnimation = previousAnimationKeyRef.current !== animationKey;
-          const previousProgress = shouldResetAnimation ? null : previousProgressRef.current;
-          const changedRingIds = previousProgress
-            ? PLAYGROUND_PERMISSION_RING_CHART_ORDER.filter((ringId) => previousProgress[ringId] !== nextProgress[ringId])
-            : PLAYGROUND_PERMISSION_RING_CHART_ORDER;
-
-          if (!previousProgress) {
-            displayProgressRef.current = PLAYGROUND_PERMISSION_RING_CHART_ORDER.reduce((result, ringId) => {
-              result[ringId] = 0;
-              return result;
-            }, {});
-          }
-
-          previousProgressRef.current = nextProgress;
-          previousAnimationKeyRef.current = animationKey;
-          if (changedRingIds.length === 0) {
-            drawPlaygroundPermissionRingChart(canvas, displayProgressRef.current);
-            return;
-          }
-
-          if (animationFrameRef.current) {
-            window.cancelAnimationFrame(animationFrameRef.current);
-            animationFrameRef.current = null;
-          }
-
-          const fromProgress = changedRingIds.reduce((result, ringId) => {
-            result[ringId] = displayProgressRef.current[ringId] ?? 0;
-            return result;
-          }, {});
-          const animationStartedAt = performance.now();
-          const animationDuration = 260;
-
-          const animate = (timestamp) => {
-            const elapsed = timestamp - animationStartedAt;
-            const progress = Math.min(1, Math.max(0, elapsed / animationDuration));
-            const easedProgress = easeOutPlaygroundPermissionRingChart(progress);
-
-            PLAYGROUND_PERMISSION_RING_CHART_ORDER.forEach((ringId) => {
-              if (!changedRingIds.includes(ringId)) {
-                displayProgressRef.current[ringId] = nextProgress[ringId];
-                return;
-              }
-
-              const from = fromProgress[ringId] ?? 0;
-              const to = nextProgress[ringId] ?? 0;
-              displayProgressRef.current[ringId] = from + (to - from) * easedProgress;
-            });
-
-            drawPlaygroundPermissionRingChart(canvas, displayProgressRef.current);
-
-            if (progress < 1) {
-              animationFrameRef.current = window.requestAnimationFrame(animate);
-            } else {
-              displayProgressRef.current = { ...nextProgress };
-              drawPlaygroundPermissionRingChart(canvas, displayProgressRef.current);
-              animationFrameRef.current = null;
-            }
-          };
-
-          animationFrameRef.current = window.requestAnimationFrame(animate);
-        }, [ringAccessSignature, animationKey]);
-
-        return React.createElement("div", { className: "playground-permission-rings-chart" },
-          React.createElement("canvas", {
-            ref: canvasRef,
-            className: "playground-permission-rings-canvas",
-            role: "img",
-            "aria-label": "Permission ring access levels",
-          }),
-          PLAYGROUND_PERMISSION_RING_CHART_ORDER.map((ringId, index) => {
-            const RingIcon = getPlaygroundPermissionRingIconComponent(ringId);
-            return React.createElement("span", {
-                key: ringId,
-                className: "playground-permission-rings-icon is-" + ringId,
-                style: {
-                  "--permission-ring-icon-top": getPlaygroundPermissionRingChartIconTop(index) + "px",
-                },
-              },
-              React.createElement(RingIcon, { strokeWidth: 2.6 })
-            );
-          })
-        );
-      }
-
-      function renderPlaygroundPermissionAccessSelect({ value, onChange, ariaLabel, includeInherit = false, inheritedAccess = "", disabled = false }) {
-        const selectedValue = includeInherit && !value
-          ? normalizePlaygroundPermissionAccess(inheritedAccess)
-          : normalizePlaygroundPermissionAccess(value);
-        return React.createElement("label", {
-            className: "playground-agents-permission-select-shell",
-            "aria-label": ariaLabel,
-          },
-          React.createElement("select", {
-              className: "playground-agents-permission-select",
-              value: selectedValue,
-              onChange: (event) => {
-                if (typeof onChange === "function") {
-                  onChange(event.target.value);
-                }
-              },
-              disabled: Boolean(disabled),
-            },
-            PLAYGROUND_PERMISSION_ACCESS_OPTIONS.map((option) =>
-              React.createElement("option", { key: option.id, value: option.id }, option.label)
-            )
-          )
-        );
-      }
-
-      function renderPlaygroundPermissionRingSelect({ value, onChange, ariaLabel, disabled = false }) {
-        return React.createElement("label", {
-            className: "playground-agents-permission-select-shell is-ring",
-            "aria-label": ariaLabel,
-          },
-          React.createElement("select", {
-              className: "playground-agents-permission-select",
-              value: normalizePlaygroundPermissionRingId(value, "ring_1"),
-              onChange: (event) => {
-                if (typeof onChange === "function") {
-                  onChange(event.target.value);
-                }
-              },
-              disabled: Boolean(disabled),
-            },
-            PLAYGROUND_PERMISSION_RING_DEFINITIONS.map((ring) =>
-              React.createElement("option", { key: ring.id, value: ring.id }, ring.label + " · " + ring.shortLabel)
-            )
-          )
-        );
-      }
-
-      function renderPlaygroundPermissionRingsOverview(permissionSet, handlers = {}) {
-        const subjectType = normalizePlaygroundPermissionSubjectType(handlers.subjectType || permissionSet?.subjectType, "agent");
-        const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, subjectType);
-        const isDisabled = Boolean(handlers.disabled);
-        const onRingAccessChange = !isDisabled && typeof handlers.onRingAccessChange === "function"
-          ? handlers.onRingAccessChange
-          : null;
-        const ringAccessById = PLAYGROUND_PERMISSION_RING_DEFINITIONS.reduce((result, ring) => {
-          result[ring.id] = getPlaygroundPermissionRingAccess(normalizedPermissionSet, ring.id);
-          return result;
-        }, {});
-
-        return React.createElement("section", {
-            className: "playground-permission-rings-overview",
-          },
-          React.createElement("div", { className: "playground-permission-rings-visual", "aria-hidden": "true" },
-            React.createElement(PlaygroundPermissionRingsChart, { ringAccessById, animationKey: handlers.animationKey || 0 })
-          ),
-          React.createElement("div", { className: "playground-permission-rings-copy" },
-            PLAYGROUND_PERMISSION_RING_DEFINITIONS.map((ring) => {
-              const ringAccess = ringAccessById[ring.id];
-              return React.createElement("div", { key: ring.id, className: "playground-permission-ring-summary-row" },
-                React.createElement("div", { className: "playground-permission-ring-summary-copy" },
-                  React.createElement("div", { className: "playground-permission-ring-summary-title-row" },
-                    renderPlaygroundPermissionMiniRingIcon(ring.id),
-                    React.createElement("div", { className: "playground-permission-ring-summary-title" }, ring.label + " · " + ring.title),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-permission-ring-summary-info",
-                      "aria-label": ring.description,
-                      "data-tooltip": ring.description,
-                    }, React.createElement(Info, { width: 12, height: 12, strokeWidth: 1.8 }))
-                  )
-                ),
-                renderPlaygroundPermissionAccessSelect({
-                  value: ringAccess,
-                  onChange: (nextAccess) => onRingAccessChange?.(ring.id, nextAccess),
-                  ariaLabel: ring.label + " default permissions",
-                  disabled: isDisabled || !onRingAccessChange,
-                })
-              );
-            })
-          )
-        );
-      }
-
-      function renderPlaygroundPermissionPanel(permissionSet, handlers = {}) {
-        const subjectType = normalizePlaygroundPermissionSubjectType(handlers.subjectType || permissionSet?.subjectType, "agent");
-        const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, subjectType);
-        const className = [
-          "playground-permissions-panel",
-          handlers.className || "",
-        ].filter(Boolean).join(" ");
-        return React.createElement("section", { className },
-          renderPlaygroundPermissionRingsOverview(normalizedPermissionSet, handlers),
-          React.createElement("div", { className: "playground-permissions-panel-details" },
-            renderAgentPermissionsList(normalizedPermissionSet, {
-              ...handlers,
-              detailsOnly: true,
-            })
-          )
-        );
-      }
-
-      function renderPlaygroundPermissionMiniRingIcon(activeRingId, access = undefined) {
-        const normalizedRingId = normalizePlaygroundPermissionRingId(activeRingId, "ring_1");
-        return React.createElement(PlaygroundPermissionMiniRingIcon, { ringId: normalizedRingId, access });
-      }
-
-      function renderAgentPermissionsList(permissionSet, handlers = {}) {
-        const subjectType = normalizePlaygroundPermissionSubjectType(handlers.subjectType || permissionSet?.subjectType, "agent");
-        const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, subjectType);
-        const isDisabled = Boolean(handlers.disabled);
-        const isDetailsOnly = Boolean(handlers.detailsOnly);
-        const onRingAccessChange = !isDisabled && typeof handlers.onRingAccessChange === "function"
-          ? handlers.onRingAccessChange
-          : null;
-        const onActionRingChange = !isDisabled && typeof handlers.onActionRingChange === "function"
-          ? handlers.onActionRingChange
-          : null;
-        const onActionAccessChange = !isDisabled && typeof handlers.onActionAccessChange === "function"
-          ? handlers.onActionAccessChange
-          : null;
-        const visiblePermissionActions = PLAYGROUND_PERMISSION_ACTION_DEFINITIONS.filter((action) => {
-          if (subjectType === "team" || subjectType === "team_role" || subjectType === "organization_role" || subjectType === "database") {
-            return Array.isArray(action.subjectTypes) && action.subjectTypes.includes(subjectType);
-          }
-          return !Array.isArray(action.subjectTypes) || action.subjectTypes.includes(subjectType);
-        });
-
-        return React.createElement("div", { className: "playground-agents-permissions-list" + (isDetailsOnly ? " is-details-only" : "") },
-          PLAYGROUND_PERMISSION_RING_DEFINITIONS.map((ring) => {
-            const ringAccess = getPlaygroundPermissionRingAccess(normalizedPermissionSet, ring.id);
-            const ringActions = visiblePermissionActions.filter((action) =>
-              getPlaygroundPermissionActionRingId(normalizedPermissionSet, action) === ring.id
-            );
-            return React.createElement("section", { className: "playground-agents-permission-ring-card" + (isDetailsOnly ? " is-details-only" : ""), key: ring.id },
-              isDetailsOnly
-                ? React.createElement("div", { className: "playground-agents-permission-detail-ring-title-row" },
-                    React.createElement("div", { className: "playground-agents-permission-detail-ring-title-label" },
-                      renderPlaygroundPermissionMiniRingIcon(ring.id),
-                      React.createElement("span", null, ring.label)
-                    ),
-                    React.createElement("div", { className: "playground-agents-permission-detail-column-headings", "aria-hidden": "true" },
-                      React.createElement("span", null, "Ring"),
-                      React.createElement("span", null, "Permission")
-                    )
-                  )
-                : React.createElement(React.Fragment, null,
-                    React.createElement("div", { className: "playground-agents-permission-ring-header" },
-                      React.createElement("div", { className: "playground-agents-permission-ring-kicker" },
-                        React.createElement("span", { className: "playground-agents-permission-ring-index" }, String(ring.number)),
-                        React.createElement("span", null, ring.label + " · " + ring.shortLabel)
-                      ),
-                      renderPlaygroundPermissionAccessSelect({
-                        value: ringAccess,
-                        onChange: (nextAccess) => onRingAccessChange?.(ring.id, nextAccess),
-                        ariaLabel: ring.label + " default permissions",
-                        disabled: isDisabled || !onRingAccessChange,
-                      })
-                    ),
-                    React.createElement("div", { className: "playground-agents-permission-ring-copy" },
-                      React.createElement("div", { className: "playground-agents-permission-ring-title" }, ring.title),
-                      React.createElement("div", { className: "playground-agents-permission-ring-description" }, ring.description)
-                    )
-                  ),
-              React.createElement("div", { className: "playground-agents-permission-actions" },
-                ringActions.map((action) => {
-                  const actionPresentation = handlers.actionPresentation?.[action.id] || null;
-                  const actionLabel = String(actionPresentation?.label || action.label);
-                  const actionDescription = String(actionPresentation?.description || action.description);
-                  const actionPolicy = normalizedPermissionSet.actions?.[action.id] || {};
-                  const actionRingId = getPlaygroundPermissionActionRingId(normalizedPermissionSet, action);
-                  const inheritedAccess = getPlaygroundPermissionRingAccess(normalizedPermissionSet, actionRingId);
-                  const explicitAccess = getPlaygroundPermissionActionExplicitAccess(normalizedPermissionSet, action);
-                  const effectiveAccess = getPlaygroundPermissionActionAccess(normalizedPermissionSet, action);
-                  return React.createElement("div", { className: "playground-agents-permission-action-row", key: action.id },
-                    React.createElement("div", { className: "playground-agents-permission-copy" },
-                      React.createElement("div", { className: "playground-agents-permission-title" },
-                        actionLabel,
-                        explicitAccess
-                          ? React.createElement("span", { className: "playground-agents-permission-action-badge" }, "Override")
-                          : null
-                      ),
-                      React.createElement("div", { className: "playground-agents-permission-description" }, actionDescription)
-                    ),
-                    React.createElement("div", { className: "playground-agents-permission-options" },
-                      renderPlaygroundPermissionRingSelect({
-                        value: actionRingId,
-                        onChange: (nextRingId) => onActionRingChange?.(action.id, nextRingId),
-                        ariaLabel: actionLabel + " ring",
-                        disabled: isDisabled || !onActionRingChange,
-                      }),
-                      renderPlaygroundPermissionAccessSelect({
-                        value: explicitAccess,
-                        inheritedAccess,
-                        includeInherit: true,
-                        onChange: (nextAccess) => onActionAccessChange?.(action.id, nextAccess),
-                        ariaLabel: actionLabel + " permissions",
-                        disabled: isDisabled || !onActionAccessChange,
-                      })
-                    )
-                  );
-                })
-              )
-            );
-          })
-        );
-      }
-
       function normalizePlaygroundPackages(packages) {
         const source = packages && typeof packages === "object" ? packages : {};
         return {
@@ -49623,7 +47585,9 @@ ${FILES_DOMAIN_FRAGMENTS.filename}
       }
 
       function renderTracePermissionRingIcon(ring) {
-        return renderPlaygroundPermissionMiniRingIcon(getTracePermissionRingId(ring));
+        return React.createElement(PlatformPermissionMiniRingIcon, {
+          ringId: getTracePermissionRingId(ring),
+        });
       }
 
       function getTraceRingDescription(ring) {
@@ -52531,8 +50495,6 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
         const [databaseDocumentViewMode, setDatabaseDocumentViewMode] = useState("preview");
         const [databaseJsonEditorModule, setDatabaseJsonEditorModule] = useState(null);
         const [databaseJsonEditorModuleError, setDatabaseJsonEditorModuleError] = useState("");
-        const [databaseQuickstartEditorModule, setDatabaseQuickstartEditorModule] = useState(null);
-        const [databaseQuickstartEditorModuleError, setDatabaseQuickstartEditorModuleError] = useState("");
         const [serverPreviewEditorModule, setServerPreviewEditorModule] = useState(null);
         const [serverPreviewEditorModuleError, setServerPreviewEditorModuleError] = useState("");
         const [databaseCollectionComposerState, setDatabaseCollectionComposerState] = useState({
@@ -58505,33 +56467,6 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
             databasePermissionSaveTimerRef.current = null;
           }
         }, []);
-
-        useEffect(() => {
-          if (databaseDetailTab !== "usage" || databaseQuickstartEditorModule || databaseQuickstartEditorModuleError) {
-            return undefined;
-          }
-
-          let cancelled = false;
-          void loadPlaygroundCodeEditorModule()
-            .then((module) => {
-              if (cancelled || !module) return;
-              setDatabaseQuickstartEditorModule(module);
-              setDatabaseQuickstartEditorModuleError("");
-              void module.loader?.init?.()
-                .then((monaco) => {
-                  if (!cancelled) ensurePlaygroundCodeEditorTheme(monaco);
-                })
-                .catch(() => {});
-            })
-            .catch((error) => {
-              if (cancelled) return;
-              setDatabaseQuickstartEditorModuleError(error instanceof Error ? error.message : "Failed to load editor.");
-            });
-
-          return () => {
-            cancelled = true;
-          };
-        }, [databaseDetailTab, databaseQuickstartEditorModule, databaseQuickstartEditorModuleError]);
 
         useEffect(() => {
           if (databaseDocumentViewMode !== "json" || databaseJsonEditorModule || databaseJsonEditorModuleError) {
@@ -74197,61 +72132,52 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
             ? getServerTeamRolePermissionSet(draftServer, serverPermissionTeam.id, selectedServerRoleDefinition.id)
             : null;
           const serverTeamRolePages = serverPermissionTeam
-            ? React.createElement("div", { className: "playground-team-role-pages playground-project-team-role-pages playground-database-team-role-pages" },
-                React.createElement("div", { className: "playground-team-role-list playground-project-team-role-list", role: "tablist", "aria-label": serverKindLabel + " team roles" },
-                  PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => React.createElement("button", {
-                    key: role.id,
-                    type: "button",
-                    role: "tab",
-                    className: "playground-team-role-card" + (selectedServerRoleDefinition.id === role.id ? " is-active" : ""),
-                    "aria-selected": selectedServerRoleDefinition.id === role.id ? "true" : "false",
-                    onClick: () => setServerPermissionRoleId(role.id),
-                  },
-                    React.createElement("span", { className: "playground-team-role-card-title" }, role.label),
-                    React.createElement("span", { className: "playground-team-role-card-description" }, role.description),
-                    React.createElement("span", { className: "playground-team-role-card-meta" }, serverKindLabel + " access")
-                  ))
+            ? React.createElement(PlatformRolePermissionsPage, {
+                roles: PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => ({
+                  id: role.id,
+                  label: role.label,
+                  description: role.description,
+                  meta: serverKindLabel + " access",
+                })),
+                value: selectedServerRoleDefinition.id,
+                onValueChange: setServerPermissionRoleId,
+                roleAriaLabel: serverKindLabel + " team roles",
+                roleKicker: serverKindLabel + " role",
+                roleDescription: serverKindLabel + "-scoped permissions for "
+                  + selectedServerRoleDefinition.label.toLowerCase() + "s in "
+                  + (serverPermissionTeam.name || "this team") + ".",
+                readOnly: selectedServerRoleDefinition.id === "owner",
+                className: "playground-project-team-role-pages playground-database-team-role-pages",
+                roleListClassName: "playground-project-team-role-list",
+                permissionPageClassName: "playground-project-team-role-permission-page",
+                permissionHeaderClassName: "playground-project-team-role-permission-header",
+                permissionSet: selectedServerRolePermissionSet,
+                accessOptions: PLAYGROUND_PERMISSION_ACCESS_OPTIONS,
+                ringDefinitions: PLAYGROUND_PERMISSION_RING_DEFINITIONS,
+                actionDefinitions: PLAYGROUND_PERMISSION_ACTION_DEFINITIONS,
+                subjectType: "server",
+                actionPresentation: serverPermissionActionPresentation,
+                animationKey: serverPermissionChartAnimationKey,
+                disabled: isSelectedServerTemplatePreview,
+                onRingAccessChange: (ringId, access) => updateServerTeamRolePermissionRingAccess(
+                  serverPermissionTeam.id,
+                  selectedServerRoleDefinition.id,
+                  ringId,
+                  access
                 ),
-                React.createElement("div", {
-                    className: "playground-team-role-permission-page playground-project-team-role-permission-page"
-                      + (selectedServerRoleDefinition.id === "owner" ? " is-read-only" : ""),
-                  },
-                  React.createElement("div", { className: "playground-team-role-permission-header playground-project-team-role-permission-header" },
-                    React.createElement("div", null,
-                      React.createElement("div", { className: "playground-team-role-permission-kicker" }, serverKindLabel + " role"),
-                      React.createElement("h2", { className: "playground-team-role-permission-title" }, selectedServerRoleDefinition.label),
-                      React.createElement("p", { className: "playground-team-role-permission-copy" },
-                        serverKindLabel + "-scoped permissions for " + selectedServerRoleDefinition.label.toLowerCase()
-                          + "s in " + (serverPermissionTeam.name || "this team") + "."
-                      )
-                    )
-                  ),
-                  renderPlaygroundPermissionPanel(selectedServerRolePermissionSet, {
-                    subjectType: "server",
-                    actionPresentation: serverPermissionActionPresentation,
-                    animationKey: serverPermissionChartAnimationKey,
-                    disabled: isSelectedServerTemplatePreview || selectedServerRoleDefinition.id === "owner",
-                    onRingAccessChange: (ringId, access) => updateServerTeamRolePermissionRingAccess(
-                      serverPermissionTeam.id,
-                      selectedServerRoleDefinition.id,
-                      ringId,
-                      access
-                    ),
-                    onActionRingChange: (actionId, ringId) => updateServerTeamRolePermissionActionRing(
-                      serverPermissionTeam.id,
-                      selectedServerRoleDefinition.id,
-                      actionId,
-                      ringId
-                    ),
-                    onActionAccessChange: (actionId, access) => updateServerTeamRolePermissionActionAccess(
-                      serverPermissionTeam.id,
-                      selectedServerRoleDefinition.id,
-                      actionId,
-                      access
-                    ),
-                  })
-                )
-              )
+                onActionRingChange: (actionId, ringId) => updateServerTeamRolePermissionActionRing(
+                  serverPermissionTeam.id,
+                  selectedServerRoleDefinition.id,
+                  actionId,
+                  ringId
+                ),
+                onActionAccessChange: (actionId, access) => updateServerTeamRolePermissionActionAccess(
+                  serverPermissionTeam.id,
+                  selectedServerRoleDefinition.id,
+                  actionId,
+                  access
+                ),
+              })
             : null;
           const serverSettingsPermissionContent = serverPermissionTeamId
             ? React.createElement("section", {
@@ -74273,7 +72199,8 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
                 )
               ),
               serverPermissionTeamId === "all-agents"
-                ? renderPlaygroundPermissionPanel(getServerPermissionSet(draftServer), {
+                ? React.createElement(PlatformPermissionsPage, {
+                    permissionSet: getServerPermissionSet(draftServer),
                     subjectType: "server",
                     actionPresentation: serverPermissionActionPresentation,
                     animationKey: serverPermissionChartAnimationKey,
@@ -76839,35 +74766,62 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
             writes24h: 0,
             deletes24h: 0,
           };
-          const databaseDetailKpis = [
-            {
-              id: "collections",
-              value: formatDatabaseTelemetryTotal(resolvedDatabaseAnalyticsSummary.totalCollections ?? currentDatabaseCollections.length),
-              label: "Collections",
-              Icon: Database,
-            },
-            {
-              id: "documents",
-              value: formatDatabaseTelemetryTotal(resolvedDatabaseAnalyticsSummary.totalDocuments ?? collectionStats),
-              label: "Documents",
-              Icon: FileText,
-            },
-            {
-              id: "reads",
-	          value: formatDatabaseTelemetryTotal(resolvedDatabaseAnalyticsSummary.reads ?? resolvedDatabaseAnalyticsSummary.reads24h ?? 0),
-              label: "Reads",
-              Icon: Eye,
-            },
-            {
-              id: "writes",
-              value: formatDatabaseTelemetryTotal(
-	            Number(resolvedDatabaseAnalyticsSummary.writes ?? resolvedDatabaseAnalyticsSummary.writes24h ?? 0)
-	              + Number(resolvedDatabaseAnalyticsSummary.deletes ?? resolvedDatabaseAnalyticsSummary.deletes24h ?? 0)
-              ),
-              label: "Writes / Deletes",
-              Icon: SquarePen,
-            },
-          ];
+          const databaseDetailAnalytics = {
+            title: "Database usage",
+            ariaLabel: "Database reads and writes over time",
+            loading: isDatabaseAnalyticsLoading && !activeDatabaseAnalytics,
+            emptyState: "No database operation data yet.",
+            metrics: [
+              {
+                id: "collections",
+                value: formatDatabaseTelemetryTotal(resolvedDatabaseAnalyticsSummary.totalCollections ?? currentDatabaseCollections.length),
+                label: "Collections",
+                color: "#7effff",
+              },
+              {
+                id: "documents",
+                value: formatDatabaseTelemetryTotal(resolvedDatabaseAnalyticsSummary.totalDocuments ?? collectionStats),
+                label: "Documents",
+                color: "rgb(143, 196, 255)",
+              },
+              {
+                id: "reads",
+                value: formatDatabaseTelemetryTotal(resolvedDatabaseAnalyticsSummary.reads ?? resolvedDatabaseAnalyticsSummary.reads24h ?? 0),
+                label: "Reads",
+                color: "rgb(103, 80, 255)",
+              },
+              {
+                id: "writes",
+                value: formatDatabaseTelemetryTotal(
+                  Number(resolvedDatabaseAnalyticsSummary.writes ?? resolvedDatabaseAnalyticsSummary.writes24h ?? 0)
+                    + Number(resolvedDatabaseAnalyticsSummary.deletes ?? resolvedDatabaseAnalyticsSummary.deletes24h ?? 0)
+                ),
+                label: "Writes / Deletes",
+                color: "#f53b3a",
+              },
+            ],
+            labels: resolvedDatabaseDetailOperationBuckets.map((bucket) => bucket?.label || ""),
+            series: [
+              {
+                id: "database-reads",
+                label: "Reads",
+                color: "rgb(143, 196, 255)",
+                values: resolvedDatabaseDetailOperationBuckets.map((bucket) => Number(bucket?.reads || 0)),
+                type: "line",
+                valueKind: "count",
+              },
+              {
+                id: "database-writes",
+                label: "Writes",
+                color: "rgb(103, 80, 255)",
+                values: resolvedDatabaseDetailOperationBuckets.map((bucket) =>
+                  Number(bucket?.writes || 0) + Number(bucket?.deletes || 0)
+                ),
+                type: "line",
+                valueKind: "count",
+              },
+            ],
+          };
           const documentIsDirty = databaseDocumentEditorState.value !== databaseDocumentEditorState.initialValue;
           const parsedDocumentData = parsePlaygroundDatabaseDocumentObject(databaseDocumentEditorState.value);
           const databaseFieldTypeLabels = {
@@ -76886,66 +74840,17 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
             React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
             React.createElement("div", { className: "playground-tasks-detail-fact-control" }, control)
           );
-          const databaseDetailTimescaleControl = React.createElement("div", {
-              className: "playground-project-overview-progress-combo-ranges playground-database-detail-usage-ranges",
-              role: "group",
-              "aria-label": "Database analytics time frame",
-            },
-            [
-              { id: "day", label: "1D" },
-              { id: "week", label: "1W" },
-              { id: "month", label: "1M" },
-            ].map((option) =>
-              React.createElement("button", {
-                key: option.id,
-                type: "button",
-                className: "playground-project-overview-progress-combo-range"
-                  + (normalizedDatabaseDetailChartTimescale === option.id ? " is-active" : ""),
-                onClick: () => setDatabaseDetailChartTimescale(option.id),
-                "aria-pressed": normalizedDatabaseDetailChartTimescale === option.id ? "true" : "false",
-              }, option.label)
-            )
-          );
-          const renderDatabaseDetailOperationChart = () => React.createElement(PlaygroundResourceOperationsChart, {
-            ariaLabel: "Database reads and writes over time",
-            labels: resolvedDatabaseDetailOperationBuckets.map((bucket) => bucket?.label || ""),
-            series: [
-              {
-                id: "database-reads",
-                label: "Reads",
-                color: "rgb(143, 196, 255)",
-                values: resolvedDatabaseDetailOperationBuckets.map((bucket) => Number(bucket?.reads || 0)),
-              },
-              {
-                id: "database-writes",
-                label: "Writes",
-                color: "rgb(103, 80, 255)",
-                values: resolvedDatabaseDetailOperationBuckets.map((bucket) => Number(bucket?.writes || 0) + Number(bucket?.deletes || 0)),
-              },
+          const databaseDetailTimescaleControl = React.createElement(PlatformSwitch, {
+            className: "playground-database-detail-usage-ranges",
+            value: normalizedDatabaseDetailChartTimescale,
+            options: [
+              { value: "day", label: "24H" },
+              { value: "week", label: "7D" },
+              { value: "month", label: "30D" },
             ],
-            emptyText: isDatabaseAnalyticsLoading ? "Loading database activity..." : "No operation data yet",
-            loadingLabel: "Loading database activity",
-            isLoading: isDatabaseAnalyticsLoading && !activeDatabaseAnalytics,
+            onValueChange: setDatabaseDetailChartTimescale,
+            ariaLabel: "Database analytics time frame",
           });
-          const databaseDetailKpiColors = ["#7effff", "rgb(143,196,255)", "rgb(103,80,255)", "#f53b3a"];
-          const renderDatabaseDetailChartKpis = (items) => React.createElement("div", {
-              className: "playground-project-overview-progress-combo-metrics",
-            },
-            (Array.isArray(items) ? items : []).map((item, index) =>
-              React.createElement("div", { key: item.id, className: "playground-project-overview-progress-combo-metric" },
-                React.createElement("div", { className: "playground-project-overview-progress-combo-metric-label" },
-                  React.createElement("span", {
-                    className: "playground-project-overview-progress-combo-metric-dot is-" + item.id,
-                    style: { background: databaseDetailKpiColors[index % databaseDetailKpiColors.length] },
-                    "aria-hidden": "true",
-                  }),
-                  React.createElement("span", null, item.label)
-                ),
-                React.createElement("div", { className: "playground-project-overview-progress-combo-metric-value" }, item.value)
-              )
-            )
-          );
-
           const canUndoDatabaseDescription = Array.isArray(databaseDescriptionHistory.past) && databaseDescriptionHistory.past.length > 0;
           const canRedoDatabaseDescription = Array.isArray(databaseDescriptionHistory.future) && databaseDescriptionHistory.future.length > 0;
           const renderDatabaseDescriptionToolbarButton = (action) =>
@@ -77060,20 +74965,11 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
             React.createElement("div", { className: "playground-database-detail-usage-header-actions" },
               databaseDetailTimescaleControl
             ),
-            React.createElement("div", {
-                className: "playground-environments-home-metrics playground-develop-server-metrics playground-develop-server-kind-metrics playground-resource-type-overview-metrics playground-database-detail-usage-metrics",
-              },
-              React.createElement("section", {
-                  className: "playground-project-overview-progress-combo-card playground-agents-detail-progress-combo-card playground-evaluations-analytics-card playground-agents-overview-analytics-card playground-resource-type-overview-analytics-card playground-database-detail-usage-analytics-card",
-                },
-                renderDatabaseDetailChartKpis(databaseDetailKpis),
-                React.createElement("div", { className: "playground-project-overview-progress-combo-chart" },
-                  React.createElement("div", { className: "playground-resource-type-overview-chart-card" },
-                    renderDatabaseDetailOperationChart()
-                  )
-                )
-              )
-            ),
+            React.createElement(PlatformAnalyticsSection, {
+              analytics: databaseDetailAnalytics,
+              chartType: "line",
+              className: "playground-database-detail-usage-analytics",
+            }),
             React.createElement("div", { className: "playground-server-detail-fact-rows playground-database-detail-usage-fact-rows" },
               renderDatabaseFactRow("ID",
                 React.createElement("span", {
@@ -77788,28 +75684,20 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
 	            }, "Delete database")
 	          );
 	          const normalizedDatabaseDetailTab = ["data", "usage", "settings"].includes(databaseDetailTab) ? databaseDetailTab : "data";
-	          const databaseDetailTabs = React.createElement("div", { className: "playground-agents-overview-tabs playground-agents-detail-tabs playground-server-detail-tabs" },
-	            React.createElement("div", { className: "playground-project-overview-chart-tabs" },
-	              [
-	                { id: "data", label: "Data", Icon: Database },
-	                { id: "usage", label: "Usage", Icon: ChartColumnIncreasing },
-	                { id: "settings", label: "Settings", Icon: Settings },
-	              ].map((tab) => {
-	                const TabIcon = tab.Icon;
-	                return React.createElement("button", {
-	                    key: tab.id,
-	                    type: "button",
-	                    className: "playground-project-overview-chart-tab" + (normalizedDatabaseDetailTab === tab.id ? " is-active" : ""),
-	                    onClick: () => setDatabaseDetailTab(tab.id),
-	                    "aria-pressed": normalizedDatabaseDetailTab === tab.id ? "true" : "false",
-	                    "aria-label": tab.label,
-	                  },
-	                  TabIcon ? React.createElement(TabIcon, { className: "playground-agents-detail-tab-icon", strokeWidth: 1.7 }) : null,
-	                  React.createElement("span", null, tab.label)
-	                );
-	              })
-	            )
-	          );
+	          const databaseDetailTabPanelId = "playground-database-detail-tab-panel";
+	          const databaseDetailTabs = React.createElement(PlatformDetailTabBar, {
+	            tabs: [
+	              { id: "data", label: "Data", icon: Database },
+	              { id: "usage", label: "Usage", icon: ChartColumnIncreasing },
+	              { id: "settings", label: "Settings", icon: Settings },
+	            ],
+	            value: normalizedDatabaseDetailTab,
+	            onValueChange: setDatabaseDetailTab,
+	            ariaLabel: "Database sections",
+	            panelId: databaseDetailTabPanelId,
+	            showDivider: true,
+	            className: "playground-database-detail-tabs",
+	          });
 	          const databaseApiBaseUrl = ${JSON.stringify(defaultUpstreamOrigin)};
 	          const databaseApiResourceUrl = databaseApiBaseUrl + "/databases/" + encodeURIComponent(draftDatabase.id || "database_id") + "/collections";
 	          const databaseQuickstartSnippets = {
@@ -77837,95 +75725,30 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
 	          const activeDatabaseQuickstartLanguage = databaseQuickstartSnippets[databaseQuickstartLanguage]
 	            ? databaseQuickstartLanguage
 	            : "javascript";
-	          const databaseQuickstartLines = databaseQuickstartSnippets[activeDatabaseQuickstartLanguage];
-	          const databaseQuickstartCode = databaseQuickstartLines.join("\\n");
-	          const DatabaseQuickstartEditorComponent = databaseQuickstartEditorModule?.default || null;
-	          const databaseApiQuickstartSection = React.createElement("section", {
-	              className: "playground-develop-docs-quickstart-card playground-database-api-quickstart-card",
+	          const databaseQuickstartCode = databaseQuickstartSnippets[activeDatabaseQuickstartLanguage].join("\\n");
+	          const databaseApiQuickstartSection = React.createElement(PlatformCodePreviewBox, {
+	            title: "Database API",
+	            description: "Read collections and documents from this database with the Computer Agents API.",
+	            action: {
+	              label: "API reference",
+	              onClick: () => window.open(${JSON.stringify(aiosOrigin + "/developers")}, "_blank", "noopener,noreferrer"),
 	            },
-	            React.createElement("div", { className: "playground-develop-docs-quickstart-inner" },
-	              React.createElement("div", null,
-	                React.createElement("h2", { className: "playground-develop-docs-quickstart-title" }, "Database API"),
-	                React.createElement("p", { className: "playground-develop-docs-quickstart-text" },
-	                  "Read collections and documents from this database with the Computer Agents API."
-	                ),
-	                React.createElement("button", {
-	                  type: "button",
-	                  className: "playground-develop-docs-quickstart-button",
-	                  onClick: () => window.open(${JSON.stringify(aiosOrigin + "/developers")}, "_blank", "noopener,noreferrer"),
-	                }, "API reference")
-	              ),
-	              React.createElement("div", { className: "playground-develop-docs-code-card" },
-	                React.createElement("div", { className: "playground-develop-docs-code-toolbar" },
-	                  React.createElement("div", { className: "playground-develop-docs-code-tabs" },
-	                    Object.entries({ javascript: "javascript", python: "python" }).map(([language, label]) =>
-	                      React.createElement("button", {
-	                        key: language,
-	                        type: "button",
-	                        className: "playground-develop-docs-code-tab" + (activeDatabaseQuickstartLanguage === language ? " is-active" : ""),
-	                        onClick: () => setDatabaseQuickstartLanguage(language),
-	                      }, label)
-	                    )
-	                  ),
-	                  React.createElement("button", {
-	                    type: "button",
-	                    className: "playground-develop-docs-code-copy",
-	                    "aria-label": "Copy database API code",
-	                    title: "Copy database API code",
-	                    onClick: () => {
-	                      try {
-	                        void navigator.clipboard?.writeText(databaseQuickstartLines.join("\\n"));
-	                      } catch {}
-	                    },
-	                  }, React.createElement(Copy, { width: 16, height: 16, strokeWidth: 1.9 }))
-	                ),
-	                React.createElement("div", {
-	                    className: "playground-database-api-quickstart-editor-shell playground-code-preview-editor-shell",
-	                  },
-	                  DatabaseQuickstartEditorComponent
-	                    ? React.createElement(DatabaseQuickstartEditorComponent, {
-	                        path: "database-api-quickstart-" + String(draftDatabase.id || "database") + "."
-	                          + (activeDatabaseQuickstartLanguage === "python" ? "py" : "js"),
-	                        height: "220px",
-	                        language: activeDatabaseQuickstartLanguage === "python" ? "python" : "javascript",
-	                        theme: PLAYGROUND_CODE_EDITOR_THEME_NAME,
-	                        value: databaseQuickstartCode,
-	                        beforeMount: ensurePlaygroundCodeEditorTheme,
-	                        options: {
-	                          automaticLayout: true,
-	                          minimap: { enabled: false },
-	                          scrollBeyondLastLine: false,
-	                          readOnly: true,
-	                          domReadOnly: true,
-	                          fontSize: 12,
-	                          lineHeight: 18,
-	                          lineNumbersMinChars: 2,
-	                          renderLineHighlight: "none",
-	                          overviewRulerBorder: false,
-	                          hideCursorInOverviewRuler: true,
-	                          folding: false,
-	                          glyphMargin: false,
-	                          wordWrap: "off",
-	                          padding: { top: 10, bottom: 10 },
-	                          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-	                        },
-	                      })
-	                    : React.createElement("div", {
-	                        className: "playground-database-api-quickstart-editor-loading",
-	                      },
-	                      databaseQuickstartEditorModuleError
-	                        ? React.createElement("span", null, databaseQuickstartEditorModuleError)
-	                        : React.createElement(PlaygroundDotLoader, {
-	                            count: 9,
-	                            dotSize: 2,
-	                            color: "rgba(255,255,255,0.72)",
-	                            ariaLabel: "Loading code editor",
-	                          })
-	                    )
-	                )
-	              )
-	            )
-	          );
+	            languages: [
+	              { value: "javascript", label: "javascript", editorLanguage: "javascript" },
+	              { value: "python", label: "python", editorLanguage: "python" },
+	            ],
+	            language: activeDatabaseQuickstartLanguage,
+	            onLanguageChange: setDatabaseQuickstartLanguage,
+	            code: databaseQuickstartCode,
+	            mode: "editor",
+	            codePath: "database-api-quickstart-" + String(draftDatabase.id || "database") + "."
+	              + (activeDatabaseQuickstartLanguage === "python" ? "py" : "js"),
+	            codeHeight: "220px",
+	            copyLabel: "Copy database API code",
+	            editorTheme: PLAYGROUND_CODE_EDITOR_THEME_NAME,
+	            editorBeforeMount: ensurePlaygroundCodeEditorTheme,
+	            className: "playground-database-api-quickstart-card",
+	          });
 	          const databaseUsageTabContent = React.createElement(React.Fragment, null,
 	            databaseDetailsSection,
 	            databaseApiQuickstartSection
@@ -78408,62 +76231,51 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
 	            ? getDatabaseTeamRolePermissionSet(draftDatabase, selectedDatabasePermissionTeam.id, selectedDatabaseRoleDefinition.id)
 	            : null;
 	          const databaseTeamRolePages = selectedDatabasePermissionTeam && selectedDatabasePermissionTeam.id !== "all_agents"
-	            ? React.createElement("div", { className: "playground-team-role-pages playground-project-team-role-pages playground-database-team-role-pages" },
-	                React.createElement("div", { className: "playground-team-role-list playground-project-team-role-list", role: "tablist", "aria-label": "Database team roles" },
-	                  PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) =>
-	                    React.createElement("button", {
-	                      key: role.id,
-	                      type: "button",
-	                      role: "tab",
-	                      className: "playground-team-role-card" + (selectedDatabaseRoleDefinition.id === role.id ? " is-active" : ""),
-	                      "aria-selected": selectedDatabaseRoleDefinition.id === role.id ? "true" : "false",
-	                      onClick: () => setDatabasePermissionRoleId(role.id),
-	                    },
-	                      React.createElement("span", { className: "playground-team-role-card-title" }, role.label),
-	                      React.createElement("span", { className: "playground-team-role-card-description" }, role.description),
-	                      React.createElement("span", { className: "playground-team-role-card-meta" }, "Database access")
-	                    )
-	                  )
+	            ? React.createElement(PlatformRolePermissionsPage, {
+	                roles: PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => ({
+	                  id: role.id,
+	                  label: role.label,
+	                  description: role.description,
+	                  meta: "Database access",
+	                })),
+	                value: selectedDatabaseRoleDefinition.id,
+	                onValueChange: setDatabasePermissionRoleId,
+	                roleAriaLabel: "Database team roles",
+	                roleKicker: "Database role",
+	                roleDescription: "Database-scoped permissions for "
+	                  + selectedDatabaseRoleDefinition.label.toLowerCase() + "s in "
+	                  + (selectedDatabasePermissionTeam.name || "this team") + ".",
+	                readOnly: selectedDatabaseRoleDefinition.id === "owner",
+	                className: "playground-project-team-role-pages playground-database-team-role-pages",
+	                roleListClassName: "playground-project-team-role-list",
+	                permissionPageClassName: "playground-project-team-role-permission-page",
+	                permissionHeaderClassName: "playground-project-team-role-permission-header",
+	                permissionSet: selectedDatabaseRolePermissionSet,
+	                accessOptions: PLAYGROUND_PERMISSION_ACCESS_OPTIONS,
+	                ringDefinitions: PLAYGROUND_PERMISSION_RING_DEFINITIONS,
+	                actionDefinitions: PLAYGROUND_PERMISSION_ACTION_DEFINITIONS,
+	                subjectType: "database",
+	                animationKey: databasePermissionChartAnimationKey,
+	                disabled: isDatabaseTemplatePreview,
+	                onRingAccessChange: (ringId, nextAccess) => updateDatabaseTeamRolePermissionRingAccess(
+	                  selectedDatabasePermissionTeam.id,
+	                  selectedDatabaseRoleDefinition.id,
+	                  ringId,
+	                  nextAccess
 	                ),
-	                React.createElement("div", {
-	                    className: "playground-team-role-permission-page playground-project-team-role-permission-page"
-	                      + (selectedDatabaseRoleDefinition.id === "owner" ? " is-read-only" : ""),
-	                  },
-	                  React.createElement("div", { className: "playground-team-role-permission-header playground-project-team-role-permission-header" },
-	                    React.createElement("div", null,
-	                      React.createElement("div", { className: "playground-team-role-permission-kicker" }, "Database role"),
-	                      React.createElement("h2", { className: "playground-team-role-permission-title" }, selectedDatabaseRoleDefinition.label),
-	                      React.createElement("p", { className: "playground-team-role-permission-copy" },
-	                        "Database-scoped permissions for " + selectedDatabaseRoleDefinition.label.toLowerCase() + "s in "
-	                          + (selectedDatabasePermissionTeam.name || "this team") + "."
-	                      )
-	                    )
-	                  ),
-	                  renderPlaygroundPermissionPanel(selectedDatabaseRolePermissionSet, {
-	                    subjectType: "database",
-	                    animationKey: databasePermissionChartAnimationKey,
-	                    disabled: isDatabaseTemplatePreview || selectedDatabaseRoleDefinition.id === "owner",
-	                    onRingAccessChange: (ringId, nextAccess) => updateDatabaseTeamRolePermissionRingAccess(
-	                      selectedDatabasePermissionTeam.id,
-	                      selectedDatabaseRoleDefinition.id,
-	                      ringId,
-	                      nextAccess
-	                    ),
-	                    onActionRingChange: (actionId, nextRingId) => updateDatabaseTeamRolePermissionActionRing(
-	                      selectedDatabasePermissionTeam.id,
-	                      selectedDatabaseRoleDefinition.id,
-	                      actionId,
-	                      nextRingId
-	                    ),
-	                    onActionAccessChange: (actionId, nextAccess) => updateDatabaseTeamRolePermissionActionAccess(
-	                      selectedDatabasePermissionTeam.id,
-	                      selectedDatabaseRoleDefinition.id,
-	                      actionId,
-	                      nextAccess
-	                    ),
-	                  })
-	                )
-	              )
+	                onActionRingChange: (actionId, nextRingId) => updateDatabaseTeamRolePermissionActionRing(
+	                  selectedDatabasePermissionTeam.id,
+	                  selectedDatabaseRoleDefinition.id,
+	                  actionId,
+	                  nextRingId
+	                ),
+	                onActionAccessChange: (actionId, nextAccess) => updateDatabaseTeamRolePermissionActionAccess(
+	                  selectedDatabasePermissionTeam.id,
+	                  selectedDatabaseRoleDefinition.id,
+	                  actionId,
+	                  nextAccess
+	                ),
+	              })
 	            : null;
 	          const databaseSettingsPermissionContent = selectedDatabasePermissionTeam
 	            ? React.createElement("section", {
@@ -78485,7 +76297,8 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
 	                )
 	              ),
 	              selectedDatabasePermissionTeam.id === "all_agents"
-	                ? renderPlaygroundPermissionPanel(draftDatabase.permissionSet, {
+	                ? React.createElement(PlatformPermissionsPage, {
+	                  permissionSet: normalizePlaygroundPermissionSet(draftDatabase.permissionSet, "database"),
 	                  subjectType: "database",
 	                  animationKey: databasePermissionChartAnimationKey,
 	                  disabled: isDatabaseTemplatePreview,
@@ -78519,91 +76332,7 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
 
 	          return React.createElement(React.Fragment, null,
 	            React.createElement("div", { className: databaseEditorMainClassName },
-	              React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-environments-editor-navbar playground-server-detail-navbar is-database-detail-navbar" },
-	                React.createElement("div", { className: "playground-environments-editor-navbar-title" },
-	                  React.createElement("div", { className: "playground-environments-editor-navbar-copy playground-database-navbar-copy" },
-	                    React.createElement("button", {
-	                      type: "button",
-	                      className: "playground-resource-detail-back-button playground-database-navbar-back-button",
-	                      onClick: showEnvironmentsHome,
-	                      title: "Back to Databases",
-	                      "aria-label": "Back to Databases",
-	                    }, "\u2190"),
-	                    React.createElement("input", {
-	                      type: "text",
-	                      className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input playground-database-title-input",
-                      value: draftDatabase.name || "",
-                      placeholder: "Database",
-                      "aria-label": "Database name",
-                      title: draftDatabase.name || "Database",
-                      readOnly: isDatabaseTemplatePreview,
-                      "aria-readonly": isDatabaseTemplatePreview ? "true" : undefined,
-                      onChange: (event) => {
-                        if (isDatabaseTemplatePreview) return;
-                        updateDatabaseField("name", event.target.value);
-                      },
-                      onBlur: () => {
-                        if (isDatabaseTemplatePreview) return;
-                        if (String(draftDatabase.name || "").trim()) {
-                          void handleDatabaseSave();
-                        }
-                      },
-                    })
-                  )
-                ),
-                React.createElement("div", { className: "playground-content-nav-center" }),
-                React.createElement("div", { className: "playground-content-nav-right playground-environments-editor-navbar-actions" },
-                  renderPlaygroundPlatformPopup({
-                    open: databaseExportMenuOpen,
-                    shellRef: databaseExportMenuRef,
-                    shellClassName: "playground-agents-detail-publish-split-shell playground-database-export-split-shell",
-                    menuClassName: "playground-agents-detail-publish-menu playground-database-export-menu",
-                    trigger: React.createElement("button", {
-                        type: "button",
-                        className: "playground-metronome-create-button playground-metronome-publish-button playground-agents-detail-header-publish-button playground-agents-detail-publish-split-control playground-metronome-detail-header-publish-button playground-database-export-split-button"
-                          + (databaseExportMenuOpen ? " is-active" : ""),
-                        onClick: () => setDatabaseExportMenuOpen((current) => !current),
-                        disabled: isDatabaseTemplatePreview || databaseExporting || !draftDatabase.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID,
-                        title: "Export database",
-                        "aria-label": "Export database",
-                        "aria-haspopup": "menu",
-                        "aria-expanded": databaseExportMenuOpen ? "true" : "false",
-                      },
-                      React.createElement("span", { className: "playground-agents-detail-publish-main" },
-                        databaseExporting
-                          ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
-                          : React.createElement(Download, { width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("span", null, databaseExporting ? "Exporting..." : "Export")
-                      ),
-                      React.createElement("span", { className: "playground-agents-detail-publish-divider", "aria-hidden": "true" }),
-                      React.createElement("span", { className: "playground-agents-detail-publish-chevron", "aria-hidden": "true" },
-                        React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
-                      )
-                    ),
-                    menuProps: {
-                      role: "menu",
-                      onClick: (event) => event.stopPropagation(),
-                    },
-                    children: [
-                      { id: "json", label: "Export as JSON", Icon: Braces },
-                      { id: "csv", label: "Export as CSV", Icon: FileText },
-                      { id: "xml", label: "Export as XML", Icon: CodeXml },
-                    ].map((option) => React.createElement("button", {
-                        key: option.id,
-                        type: "button",
-                        role: "menuitem",
-                        className: "tb-popup-row",
-                        onClick: () => void handleExportDatabase(option.id),
-                      },
-                      React.createElement(option.Icon, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                        React.createElement("span", null, option.label)
-                      )
-                    )),
-                  })
-                )
-              ),
-              React.createElement("div", { className: databaseEditorScrollClassName },
+	              React.createElement("div", { className: databaseEditorScrollClassName },
                 React.createElement("div", { className: databaseDetailContentClassName },
                   databaseSaveState.error
                     ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, databaseSaveState.error)
@@ -78611,9 +76340,18 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
                   React.createElement("div", { className: "playground-database-detail-header-area" },
                     databaseDetailTabs
                   ),
-                  React.createElement("div", { className: databaseDetailTabPanelClassName },
-                    databaseEditorTabContent
-                  )
+	                  React.createElement("div", {
+	                      id: databaseDetailTabPanelId,
+	                      role: "tabpanel",
+	                      className: databaseDetailTabPanelClassName,
+	                      "aria-label": normalizedDatabaseDetailTab === "data"
+	                        ? "Database data"
+	                        : normalizedDatabaseDetailTab === "settings"
+	                          ? "Database settings"
+	                          : "Database usage",
+	                    },
+	                    databaseEditorTabContent
+	                  )
                 )
               )
             ),
@@ -81952,6 +79690,67 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
           }
           return "Web App";
         };
+        const renderDatabaseExportControl = () => {
+          const activeDatabase = draftDatabase?.id === selectedDatabaseId ? draftDatabase : null;
+          const normalizedDatabaseId = String(activeDatabase?.id || "").trim();
+          const exportDisabled = Boolean(
+            isSelectedDatabaseTemplatePreview
+            || isPlaygroundResourceTemplatePreviewRecord(activeDatabase)
+            || databaseExporting
+            || !normalizedDatabaseId
+            || normalizedDatabaseId === PLAYGROUND_DATABASE_DRAFT_ID
+          );
+
+          return renderPlaygroundPlatformPopup({
+            open: databaseExportMenuOpen,
+            shellRef: databaseExportMenuRef,
+            shellClassName: "playground-database-export-shell",
+            menuClassName: "playground-database-export-menu",
+            trigger: React.createElement(PlatformPrimaryButton, {
+                size: "small",
+                active: databaseExportMenuOpen,
+                onClick: () => {
+                  setDatabaseActionsPopoverOpen(false);
+                  setDatabaseExportMenuOpen((current) => !current);
+                },
+                disabled: exportDisabled,
+                title: "Export database",
+                "aria-label": "Export database",
+                "aria-haspopup": "menu",
+                "aria-expanded": databaseExportMenuOpen ? "true" : "false",
+              },
+              databaseExporting
+                ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-files-state-loader" })
+                : React.createElement(Download, { width: 14, height: 14, strokeWidth: 1.8 }),
+              React.createElement("span", null, databaseExporting ? "Exporting..." : "Export"),
+              React.createElement("span", {
+                className: "playground-agents-detail-publish-divider",
+                "aria-hidden": "true",
+              }),
+              React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" })
+            ),
+            menuProps: {
+              role: "menu",
+              onClick: (event) => event.stopPropagation(),
+            },
+            children: [
+              { id: "json", label: "Export as JSON", Icon: Braces },
+              { id: "csv", label: "Export as CSV", Icon: FileText },
+              { id: "xml", label: "Export as XML", Icon: CodeXml },
+            ].map((option) => React.createElement("button", {
+                key: option.id,
+                type: "button",
+                role: "menuitem",
+                className: "tb-popup-row",
+                onClick: () => void handleExportDatabase(option.id),
+              },
+              React.createElement(option.Icon, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                React.createElement("span", null, option.label)
+              )
+            )),
+          });
+        };
         const renderCurrentResourceSettingsControl = (buttonClassName) => {
           const normalizedButtonClassName = String(buttonClassName || "playground-files-header-icon-button").trim();
           if (isServersMode && selectedServerId) {
@@ -82112,7 +79911,10 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
                 "aria-label": "Database actions",
                 "aria-haspopup": "menu",
                 "aria-expanded": databaseActionsPopoverOpen ? "true" : "false",
-                onClick: () => setDatabaseActionsPopoverOpen((current) => !current),
+                onClick: () => {
+                  setDatabaseExportMenuOpen(false);
+                  setDatabaseActionsPopoverOpen((current) => !current);
+                },
                 disabled: databaseSaveState.isSaving,
               }, React.createElement(Ellipsis, { width: 16, height: 16, strokeWidth: 1.8 })),
               databaseActionsPopoverOpen
@@ -82181,7 +79983,13 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
           if (!isServersMode && shouldShowEnvironmentHome) {
             return null;
           }
-          if (isServersMode && normalizedEmbeddedServerKind === "voice_agent") {
+          if (
+            isServersMode
+            && (
+              normalizedEmbeddedServerKind === "voice_agent"
+              || (shouldShowEnvironmentHome && normalizedEmbeddedServerKind === "database")
+            )
+          ) {
             return null;
           }
           if (isServersMode && shouldShowEnvironmentHome && normalizedEmbeddedServerKind) {
@@ -82266,7 +80074,13 @@ ${FILES_PAGE_RUNTIME_SCRIPT}
           );
         };
         const renderResourcesTopActionControl = (buttonClassName) => {
-          if (isServersMode && !shouldShowEnvironmentHome && (selectedServerId || selectedDatabaseId)) {
+          if (isServersMode && !shouldShowEnvironmentHome && selectedDatabaseId) {
+            return React.createElement(React.Fragment, null,
+              renderDatabaseExportControl(),
+              renderCurrentResourceSettingsControl(buttonClassName)
+            );
+          }
+          if (isServersMode && !shouldShowEnvironmentHome && selectedServerId) {
             return renderCurrentResourceSettingsControl(buttonClassName);
           }
           return renderCurrentResourceCreateControl(buttonClassName);
@@ -83626,6 +81440,7 @@ ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.props}        onWorkspaceTeamsRequest,
         focusedAgentId = "",
         focusedAgentSelectionToken = "",
         createAgentRequestToken = 0,
+        createAgentModelId = "",
         subscriptionTierId = "",
         onPreferredAgentChange,
         onPreferredEnvironmentChange,
@@ -83643,6 +81458,8 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.props}        embeddedInResources = false,
         onResourcesHeaderChange,
         onVersionsSidebarOpenChange,
         onOpenSettingsUsage,
+        onNavigationGuardChange,
+        onNavigationRequest,
         backRequestToken = 0,
       }) {
         const searchPopupInputRef = useRef(null);
@@ -83659,10 +81476,6 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.props}        embeddedInResources = false,
         const agentComposerInstructionsTextareaRef = useRef(null);
         const agentProfileAvatarPickerRef = useRef(null);
         const agentActionsPopoverRef = useRef(null);
-        const agentPublishMenuRef = useRef(null);
-        const agentVersionSelectorMenuRef = useRef(null);
-        const agentTagsMenuRef = useRef(null);
-        const agentOwnerPopoverRef = useRef(null);
         const agentVersionDescriptionTextareaRef = useRef(null);
         const agentVersionModalCloseTimerRef = useRef(null);
         const agentVersionModalFrameRef = useRef(null);
@@ -83731,10 +81544,8 @@ ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.refs}        const agentApiEnvironmentPopov
         const [agentsObservabilitySort, setAgentsObservabilitySort] = useState("newest");
         const [agentsObservabilityVisibleThreadLimit, setAgentsObservabilityVisibleThreadLimit] = useState(20);
         const [agentDetailThreadSearchQuery, setAgentDetailThreadSearchQuery] = useState("");
-        const [agentDetailThreadSortMode, setAgentDetailThreadSortMode] = useState("recent-desc");
+        const [agentDetailThreadSorting, setAgentDetailThreadSorting] = useState(() => ({ id: "date", direction: "desc" }));
         const [agentDetailThreadFilterMode, setAgentDetailThreadFilterMode] = useState("all");
-        const [agentDetailThreadToolbarPopover, setAgentDetailThreadToolbarPopover] = useState("");
-        const [agentDetailVisibleThreadCount, setAgentDetailVisibleThreadCount] = useState(5);
 ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.state}${GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.state}        const [selectedAgentsObservabilityThreadId, setSelectedAgentsObservabilityThreadId] = useState("");
         const [agentsObservabilityThreadDetailsById, setAgentsObservabilityThreadDetailsById] = useState({});
         const [loadingAgentId, setLoadingAgentId] = useState("");
@@ -83841,8 +81652,6 @@ ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.lifecycle}        const [saveState, setSave
         const [agentAssistantThreadByAgentId, setAgentAssistantThreadByAgentId] = useState({});
         const [agentPublishMenuOpen, setAgentPublishMenuOpen] = useState(false);
         const [agentVersionSelectorMenuOpen, setAgentVersionSelectorMenuOpen] = useState(false);
-        const [agentTagsMenuOpen, setAgentTagsMenuOpen] = useState(false);
-        const [agentTagInputValue, setAgentTagInputValue] = useState("");
         const [agentVersionsHeaderMenuOpen, setAgentVersionsHeaderMenuOpen] = useState(false);
         const [agentCreationSetupOpen, setAgentCreationSetupOpen] = useState(false);
         const [agentCreationSetupError, setAgentCreationSetupError] = useState("");
@@ -83948,6 +81757,9 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.resolvedCatalog}        const isFreeAgentPlan = 
                     }
                     return savedAgent;
                   });
+                  if (!hasQueuedFollowUp) {
+                    rememberAgentVersionBaseline(savedAgent, { force: true });
+                  }
                 }
 
                 setSaveState({
@@ -84349,29 +82161,6 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLoader}
           return Array.from(new Set(
             source.map((teamId) => String(teamId || "").trim()).filter(Boolean)
           ));
-        }
-        function normalizeAgentTagLabel(value) {
-          return String(value || "").trim().replace(/\s+/g, " ");
-        }
-        function getAgentTagLabels(agentRecord) {
-          const metadata = getAgentMetadataRecord(agentRecord);
-          const source = Array.isArray(metadata.tags)
-            ? metadata.tags
-            : Array.isArray(metadata.labels)
-              ? metadata.labels
-              : Array.isArray(agentRecord?.tags)
-                ? agentRecord.tags
-                : [];
-          const seen = new Set();
-          return source
-            .map((tag) => normalizeAgentTagLabel(tag))
-            .filter((tag) => {
-              if (!tag) return false;
-              const key = tag.toLowerCase();
-              if (seen.has(key)) return false;
-              seen.add(key);
-              return true;
-            });
         }
         function normalizeAgentWorkspaceTeamOption(team) {
           const source = team && typeof team === "object" && !Array.isArray(team) ? team : {};
@@ -85253,24 +83042,27 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLoader}
           }
           handledBackRequestTokenRef.current = backRequestToken;
           if (!isHomeViewActive) {
-            showAgentsHome();
+            performShowAgentsHome();
           }
         }, [backRequestToken, embeddedInResources, isHomeViewActive]);
 
         function resetEditorAuxiliaryState() {
           editorDirtyRef.current = false;
+          agentVersionDraftTouchedRef.current = false;
+          setAgentProfileAvatarPickerOpen(false);
           setAgentActionsPopoverOpen(false);
+          setAgentOwnerPopoverOpen(false);
           setAgentPublishMenuOpen(false);
+          setAgentVersionSelectorMenuOpen(false);
           setAgentVersionsHeaderMenuOpen(false);
           setAgentModelPopover("");
+          setAgentVoicePopoverOpen(false);
+          finishCloseAgentModelPicker();
           setAgentVersionsSidebarOpen(false);
           finishCloseAgentVersionModal();
           setAgentVersionChangesState(null);
           setOpenAgentVersionMenuId("");
-          setAgentApiModalOpen(false);
-          setAgentApiModalVisible(false);
-          setAgentApiModalClosing(false);
-          setCopiedAgentApiSnippet("");
+          finishCloseAgentApiModal();
           setAgentVersionState({
             status: "idle",
             message: "",
@@ -85282,6 +83074,37 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLoader}
             error: "",
             message: "",
           });
+        }
+
+        function requestAgentNavigation(continuation) {
+          if (typeof continuation !== "function") {
+            return false;
+          }
+          if (typeof onNavigationRequest === "function") {
+            return onNavigationRequest(continuation);
+          }
+          continuation();
+          return true;
+        }
+
+        function discardUnsavedAgentDraft() {
+          clearAgentAutosaveQueue();
+          editorDirtyRef.current = false;
+          agentVersionDraftTouchedRef.current = false;
+          const normalizedDraftAgentId = String(draftAgent?.id || "").trim();
+          if (!normalizedDraftAgentId || normalizedDraftAgentId === PLAYGROUND_AGENT_DRAFT_ID) {
+            setDraftAgent(null);
+            return;
+          }
+          const savedAgent = agentDetailsById[normalizedDraftAgentId]
+            || orderedAgents.find((agent) => String(agent?.id || "").trim() === normalizedDraftAgentId)
+            || null;
+          if (!savedAgent) {
+            return;
+          }
+          const normalizedSavedAgent = normalizePlaygroundAgentRecord(savedAgent);
+          setDraftAgent(normalizedSavedAgent);
+          rememberAgentVersionBaseline(normalizedSavedAgent, { force: true });
         }
 
         function resizeAgentDescriptionTextarea(textarea) {
@@ -85575,306 +83398,7 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLoader}
           setAgentVoicePopoverOpen(false);
         }
 
-        function updateAgentTagLabels(nextLabels) {
-          const normalizedLabels = [];
-          const seen = new Set();
-          (Array.isArray(nextLabels) ? nextLabels : []).forEach((label) => {
-            const normalized = normalizeAgentTagLabel(label);
-            if (!normalized) return;
-            const key = normalized.toLowerCase();
-            if (seen.has(key)) return;
-            seen.add(key);
-            normalizedLabels.push(normalized);
-          });
-          updateDraftAgent((current) => {
-            const metadata = {
-              ...getAgentMetadataRecord(current),
-              tags: normalizedLabels,
-              labels: normalizedLabels,
-            };
-            return {
-              ...current,
-              tags: normalizedLabels,
-              metadata,
-            };
-          });
-        }
-
-        function updateAgentPermissionAccess(resourceType, access) {
-          if (!PLAYGROUND_PERMISSION_RESOURCE_TYPES.includes(resourceType)) {
-            return;
-          }
-          const nextAccess = normalizePlaygroundPermissionAccess(access);
-          updateDraftAgent((current) => {
-            const currentPermissionSet = normalizePlaygroundPermissionSet(current?.permissionSet, "agent");
-            const currentResources = currentPermissionSet.resources || {};
-            const currentPolicy = currentResources[resourceType] || {
-              defaultAccess: currentPermissionSet.defaultAccess,
-              rules: [],
-            };
-            return {
-              ...current,
-              permissionSet: {
-                ...currentPermissionSet,
-                version: 1,
-                subjectType: "agent",
-                resources: {
-                  ...currentResources,
-                  [resourceType]: {
-                    ...currentPolicy,
-                    defaultAccess: nextAccess,
-                    rules: Array.isArray(currentPolicy.rules) ? currentPolicy.rules : [],
-                  },
-                },
-              },
-              };
-            });
-        }
-
-        function updateAgentPermissionRingAccess(ringId, access) {
-          const normalizedRingId = normalizePlaygroundPermissionRingId(ringId, "");
-          if (!normalizedRingId) {
-            return;
-          }
-          const nextAccess = normalizePlaygroundPermissionAccess(access);
-          updateDraftAgent((current) => {
-            const currentPermissionSet = normalizePlaygroundPermissionSet(current?.permissionSet, "agent");
-            const currentRings = currentPermissionSet.rings || createPlaygroundDefaultPermissionRings();
-            const currentRingPolicy = currentRings[normalizedRingId] || {
-              defaultAccess: getPlaygroundPermissionRingDefinition(normalizedRingId).defaultAccess,
-            };
-            return {
-              ...current,
-              permissionSet: {
-                ...currentPermissionSet,
-                version: 1,
-                subjectType: "agent",
-                rings: {
-                  ...currentRings,
-                  [normalizedRingId]: {
-                    ...currentRingPolicy,
-                    defaultAccess: nextAccess,
-                  },
-                },
-              },
-            };
-          });
-        }
-
-        function updateAgentPermissionActionRing(actionId, ringId) {
-          const actionDefinition = getPlaygroundPermissionActionDefinition(actionId);
-          if (!actionDefinition) {
-            return;
-          }
-          const nextRingId = normalizePlaygroundPermissionRingId(ringId, actionDefinition.ringId);
-          updateDraftAgent((current) => {
-            const currentPermissionSet = normalizePlaygroundPermissionSet(current?.permissionSet, "agent");
-            const currentActions = currentPermissionSet.actions || createPlaygroundDefaultPermissionActions();
-            const currentActionPolicy = currentActions[actionDefinition.id] || {
-              ringId: actionDefinition.ringId,
-            };
-            const explicitAccess = getPlaygroundPermissionActionExplicitAccess(currentPermissionSet, actionDefinition);
-            return {
-              ...current,
-              permissionSet: {
-                ...currentPermissionSet,
-                version: 1,
-                subjectType: "agent",
-                actions: {
-                  ...currentActions,
-                  [actionDefinition.id]: buildPlaygroundPermissionActionPolicy(
-                    currentPermissionSet,
-                    actionDefinition,
-                    currentActionPolicy,
-                    explicitAccess,
-                    nextRingId
-                  ),
-                },
-              },
-            };
-          });
-        }
-
-        function updateAgentPermissionActionAccess(actionId, access) {
-          const actionDefinition = getPlaygroundPermissionActionDefinition(actionId);
-          if (!actionDefinition) {
-            return;
-          }
-          const shouldInherit = !String(access || "").trim();
-          const nextAccess = shouldInherit ? "" : normalizePlaygroundPermissionAccess(access);
-          updateDraftAgent((current) => {
-            const currentPermissionSet = normalizePlaygroundPermissionSet(current?.permissionSet, "agent");
-            const currentActions = currentPermissionSet.actions || createPlaygroundDefaultPermissionActions();
-            const currentActionPolicy = currentActions[actionDefinition.id] || {
-              ringId: actionDefinition.ringId,
-            };
-            const nextPolicy = buildPlaygroundPermissionActionPolicy(
-              currentPermissionSet,
-              actionDefinition,
-              currentActionPolicy,
-              shouldInherit ? "" : nextAccess
-            );
-            return {
-              ...current,
-              permissionSet: {
-                ...currentPermissionSet,
-                version: 1,
-                subjectType: "agent",
-                actions: {
-                  ...currentActions,
-                  [actionDefinition.id]: nextPolicy,
-                },
-              },
-            };
-          });
-        }
-
-        function getAgentPermissionAccessLabel(access) {
-          return PLAYGROUND_PERMISSION_ACCESS_OPTIONS.find((option) => option.id === access)?.label || "Custom";
-        }
-
-        function getAgentPermissionSummary(permissionSet) {
-          const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, "agent");
-          return PLAYGROUND_PERMISSION_RING_DEFINITIONS.map((ring) =>
-            ring.shortLabel + ": " + getAgentPermissionAccessLabel(getPlaygroundPermissionRingAccess(normalizedPermissionSet, ring.id))
-          ).join(" / ");
-        }
-
-        function renderAgentPermissionAccessSelect({ value, onChange, ariaLabel, includeInherit = false, inheritedAccess = "", disabled = false }) {
-          const selectedValue = includeInherit && !value
-            ? normalizePlaygroundPermissionAccess(inheritedAccess)
-            : normalizePlaygroundPermissionAccess(value);
-          return React.createElement("label", {
-              className: "playground-agents-permission-select-shell",
-              "aria-label": ariaLabel,
-            },
-            React.createElement("select", {
-                className: "playground-agents-permission-select",
-                value: selectedValue,
-                onChange: (event) => onChange(event.target.value),
-                disabled: Boolean(disabled),
-              },
-              PLAYGROUND_PERMISSION_ACCESS_OPTIONS.map((option) =>
-                React.createElement("option", { key: option.id, value: option.id }, option.label)
-              )
-            )
-          );
-        }
-
-        function renderAgentPermissionRingSelect({ value, onChange, ariaLabel, disabled = false }) {
-          return React.createElement("label", {
-              className: "playground-agents-permission-select-shell is-ring",
-              "aria-label": ariaLabel,
-            },
-            React.createElement("select", {
-                className: "playground-agents-permission-select",
-                value: normalizePlaygroundPermissionRingId(value, "ring_1"),
-                onChange: (event) => onChange(event.target.value),
-                disabled: Boolean(disabled),
-              },
-              PLAYGROUND_PERMISSION_RING_DEFINITIONS.map((ring) =>
-                React.createElement("option", { key: ring.id, value: ring.id }, ring.label + " · " + ring.shortLabel)
-              )
-            )
-          );
-        }
-
-        function renderAgentPermissionsList(permissionSet, handlers = {}) {
-          const subjectType = normalizePlaygroundPermissionSubjectType(handlers.subjectType || permissionSet?.subjectType, "agent");
-          const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, subjectType);
-          const isDisabled = Boolean(handlers.disabled);
-          const isDetailsOnly = Boolean(handlers.detailsOnly);
-          const onRingAccessChange = !isDisabled && typeof handlers.onRingAccessChange === "function"
-            ? handlers.onRingAccessChange
-            : updateAgentPermissionRingAccess;
-          const onActionRingChange = !isDisabled && typeof handlers.onActionRingChange === "function"
-            ? handlers.onActionRingChange
-            : updateAgentPermissionActionRing;
-          const onActionAccessChange = !isDisabled && typeof handlers.onActionAccessChange === "function"
-            ? handlers.onActionAccessChange
-            : updateAgentPermissionActionAccess;
-
-          return React.createElement("div", { className: "playground-agents-permissions-list" + (isDetailsOnly ? " is-details-only" : "") },
-            PLAYGROUND_PERMISSION_RING_DEFINITIONS.map((ring) => {
-              const ringAccess = getPlaygroundPermissionRingAccess(normalizedPermissionSet, ring.id);
-              const ringActions = PLAYGROUND_PERMISSION_ACTION_DEFINITIONS.filter((action) =>
-                getPlaygroundPermissionActionRingId(normalizedPermissionSet, action) === ring.id
-              );
-              return React.createElement("section", { className: "playground-agents-permission-ring-card" + (isDetailsOnly ? " is-details-only" : ""), key: ring.id },
-                isDetailsOnly
-                  ? React.createElement("div", { className: "playground-agents-permission-detail-ring-title-row" },
-                      React.createElement("div", { className: "playground-agents-permission-detail-ring-title-label" },
-                        renderPlaygroundPermissionMiniRingIcon(ring.id),
-                        React.createElement("span", null, ring.label)
-                      ),
-                      React.createElement("div", { className: "playground-agents-permission-detail-column-headings", "aria-hidden": "true" },
-                        React.createElement("span", null, "Ring"),
-                        React.createElement("span", null, "Permission")
-                      )
-                    )
-                  : React.createElement(React.Fragment, null,
-                      React.createElement("div", { className: "playground-agents-permission-ring-header" },
-                        React.createElement("div", { className: "playground-agents-permission-ring-kicker" },
-                          React.createElement("span", { className: "playground-agents-permission-ring-index" }, String(ring.number)),
-                          React.createElement("span", null, ring.label + " · " + ring.shortLabel)
-                        ),
-                        renderAgentPermissionAccessSelect({
-	                          value: ringAccess,
-	                          onChange: (nextAccess) => onRingAccessChange(ring.id, nextAccess),
-	                          ariaLabel: ring.label + " default permissions",
-	                          disabled: isDisabled,
-	                        })
-                      ),
-                      React.createElement("div", { className: "playground-agents-permission-ring-copy" },
-                        React.createElement("div", { className: "playground-agents-permission-ring-title" }, ring.title),
-                        React.createElement("div", { className: "playground-agents-permission-ring-description" }, ring.description)
-                      )
-                    ),
-                React.createElement("div", { className: "playground-agents-permission-actions" },
-                  ringActions.map((action) => {
-                    const actionPolicy = normalizedPermissionSet.actions?.[action.id] || {};
-                    const actionRingId = getPlaygroundPermissionActionRingId(normalizedPermissionSet, action);
-                    const inheritedAccess = getPlaygroundPermissionRingAccess(normalizedPermissionSet, actionRingId);
-                    const explicitAccess = getPlaygroundPermissionActionExplicitAccess(normalizedPermissionSet, action);
-                    const effectiveAccess = getPlaygroundPermissionActionAccess(normalizedPermissionSet, action);
-                    return React.createElement("div", { className: "playground-agents-permission-action-row", key: action.id },
-                      React.createElement("div", { className: "playground-agents-permission-copy" },
-                        React.createElement("div", { className: "playground-agents-permission-title" },
-                          action.label,
-                          explicitAccess
-                            ? React.createElement("span", { className: "playground-agents-permission-action-badge" }, "Override")
-                            : null
-                        ),
-                        React.createElement("div", { className: "playground-agents-permission-description" }, action.description)
-                      ),
-                      React.createElement("div", { className: "playground-agents-permission-options" },
-                        renderAgentPermissionRingSelect({
-	                          value: actionRingId,
-	                          onChange: (nextRingId) => onActionRingChange(action.id, nextRingId),
-	                          ariaLabel: action.label + " ring",
-	                          disabled: isDisabled,
-	                        }),
-	                        renderAgentPermissionAccessSelect({
-	                          value: explicitAccess,
-	                          inheritedAccess,
-	                          includeInherit: true,
-	                          onChange: (nextAccess) => onActionAccessChange(action.id, nextAccess),
-	                          ariaLabel: action.label + " permissions",
-	                          disabled: isDisabled,
-	                        }),
-                        React.createElement("span", { className: "playground-agents-permission-effective-access" },
-                          getAgentPermissionAccessLabel(effectiveAccess)
-                        )
-                      )
-                    );
-                  })
-                )
-              );
-            })
-          );
-        }
-
-        function updateAgentProfileMetadata(updater) {
+         function updateAgentProfileMetadata(updater) {
           updateDraftAgent((current) => {
             const nextMetadata = current?.metadata && typeof current.metadata === "object" && !Array.isArray(current.metadata)
               ? { ...current.metadata }
@@ -85971,6 +83495,7 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLoader}
             setAgentListMode(getPlaygroundAgentListMode(savedAgent));
             setSelectedAgentId(savedAgent.id);
             setDraftAgent(savedAgent);
+            rememberAgentVersionBaseline(savedAgent, { force: true });
             setSaveState({
               isSaving: false,
               error: "",
@@ -86526,36 +84051,35 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLoader}
           }
         }
 
-        function showAgentsHome() {
+        function performShowAgentsHome() {
+          discardUnsavedAgentDraft();
+          resetEditorAuxiliaryState();
+          finishCloseAgentSendToTeamModal();
+          finishCloseAgentAddSquadModal();
+          finishCloseAgentCreationPermissionModal();
           setToolbarPopover("");
           setSearchPopupQuery("");
           setAgentListActionMenuState(null);
-          setAgentActionsPopoverOpen(false);
+          setAgentBulkActionMenuState(null);
           setAgentComposerOpen(false);
           setAgentRenameState(null);
           setAgentRenameValue("");
           setAgentRenameError("");
-          setAgentVersionsHeaderMenuOpen(false);
-          setAgentVersionsSidebarOpen(false);
-          finishCloseAgentVersionModal();
-          setOpenAgentVersionMenuId("");
-          setAgentVersionState({
-            status: "idle",
-            message: "",
-            error: "",
-          });
           setAgentsHomeActiveCreationCommand("");
           setAgentsHomeCreationCommandRequest(null);
           setAgentCreationSetupOpen(false);
           setAgentCreationSetupError("");
           setAgentCreationSetupSubmitting(false);
-          setAgentCreationPermissionModalOpen(false);
           setAgentCreationInstructionRunRequest(null);
           setAgentCreationInstructionContext(null);
           setAgentAssistantOpen(false);
           setAgentAssistantCommandRequest(null);
           setAgentsObservabilityToolbarPopover("");
           setIsHomeViewActive(true);
+        }
+
+        function showAgentsHome() {
+          requestAgentNavigation(performShowAgentsHome);
         }
 
         function stageAgentsHomeCreationCommand(commandType) {
@@ -86884,6 +84408,7 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLoader}
           setAgentListMode("agents");
           setSelectedAgentId(savedAgent.id);
           setDraftAgent(savedAgent);
+          rememberAgentVersionBaseline(savedAgent, { force: true });
           setIsHomeViewActive(false);
           return savedAgent;
         }
@@ -87008,10 +84533,6 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLoader}
           const selectedSetupModel = getPlaygroundAgentModelMeta((setupDraft.model || "claude-haiku-4-5"), resolvedAgentModelOptions);
           const setupPermissionSet = normalizePlaygroundPermissionSet(setupDraft.permissionSet, "agent");
           const setupPermissionSummary = getAgentPermissionSummary(setupPermissionSet);
-          const setupPermissionRingAccessById = PLAYGROUND_PERMISSION_RING_DEFINITIONS.reduce((result, ring) => {
-            result[ring.id] = getPlaygroundPermissionRingAccess(setupPermissionSet, ring.id);
-            return result;
-          }, {});
           const avatarPhotoUrl = agentProfilePhotoUrl;
           const isSubmitting = Boolean(agentCreationSetupSubmitting || saveState.isSaving);
           const isAgentCreatorReady = Boolean(agentCreationAssistantAgent?.id && !agentCreationAssistantPreparing && !agentCreationAssistantError);
@@ -87099,23 +84620,6 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLoader}
             )
           );
 
-          const renderSetupPermissionRings = () => React.createElement("span", {
-              className: "playground-agents-permission-ring-summary-icons",
-              "aria-hidden": "true",
-            },
-            PLAYGROUND_PERMISSION_RING_DEFINITIONS.map((ring) => {
-              const ringAccess = setupPermissionRingAccessById[ring.id];
-              const ringAccessLabel = getPlaygroundPermissionAccessLabel(ringAccess);
-              return React.createElement("span", {
-                  key: ring.id,
-                  className: "playground-agents-permission-ring-summary-icon",
-                  title: ring.label + ": " + ringAccessLabel,
-                },
-                renderPlaygroundPermissionMiniRingIcon(ring.id, ringAccess)
-              );
-            })
-          );
-
           const renderSetupPermissionButton = () => React.createElement("button", {
               type: "button",
               className: "playground-environments-runtime-value-button playground-agents-model-picker-trigger playground-tasks-detail-select-trigger playground-agents-creation-permission-button",
@@ -87126,7 +84630,11 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLoader}
             },
             React.createElement("span", { className: "playground-agents-model-picker-trigger-copy" },
               React.createElement("span", { className: "playground-agents-model-picker-trigger-labels" },
-                renderSetupPermissionRings()
+                React.createElement(AgentPermissionRingIcons, {
+                  permissionSet: setupPermissionSet,
+                  className: "playground-agents-permission-ring-summary-icons",
+                  itemClassName: "playground-agents-permission-ring-summary-icon",
+                })
               )
             ),
             React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", width: 14, height: 14, strokeWidth: 1.8 })
@@ -87324,7 +84832,14 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLoader}
               ),
               React.createElement("div", { className: "playground-tasks-issue-modal-body playground-agents-permission-modal-body" },
                 React.createElement("div", { className: "playground-agents-permissions-card" },
-                  renderAgentPermissionsList(draftAgent?.permissionSet, { detailsOnly: true })
+                  React.createElement(AgentPermissionsPage, {
+                    permissionSet: draftAgent?.permissionSet,
+                    showOverview: false,
+                    showEffectiveAccess: true,
+                    onPermissionSetChange: (permissionSet) => {
+                      updateDraftAgent((current) => ({ ...current, permissionSet }));
+                    },
+                  })
                 )
               ),
               React.createElement("div", { className: "playground-tasks-project-modal-actions" },
@@ -87375,10 +84890,8 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLoader}
         useEffect(() => {
           setAgentDetailTab("general");
           setAgentDetailThreadSearchQuery("");
-          setAgentDetailThreadSortMode("recent-desc");
+          setAgentDetailThreadSorting({ id: "date", direction: "desc" });
           setAgentDetailThreadFilterMode("all");
-          setAgentDetailThreadToolbarPopover("");
-          setAgentDetailVisibleThreadCount(5);
         }, [selectedAgentId]);
 
         useEffect(() => {
@@ -87420,27 +84933,30 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLoader}
             return;
           }
           lastAppliedFocusedAgentSelectionTokenRef.current = normalizedFocusedAgentSelectionToken;
+          requestAgentNavigation(() => {
+            discardUnsavedAgentDraft();
 
-          const focusedAgent =
-            allKnownAgents.find((agent) => agent?.id === normalizedFocusedAgentId)
-            || agents.find((agent) => agent?.id === normalizedFocusedAgentId)
-            || null;
+            const focusedAgent =
+              allKnownAgents.find((agent) => agent?.id === normalizedFocusedAgentId)
+              || agents.find((agent) => agent?.id === normalizedFocusedAgentId)
+              || null;
 
-	          if (focusedAgent) {
-	            setAgentListMode(getPlaygroundAgentListMode(focusedAgent));
-	          }
-          setIsHomeViewActive(false);
-          setAgentCreationSetupOpen(false);
-          setAgentCreationSetupError("");
-          setAgentCreationPermissionModalOpen(false);
-          setAgentCreationInstructionRunRequest(null);
-          setAgentCreationInstructionContext(null);
-          setSelectedAgentId(normalizedFocusedAgentId);
-          setToolbarPopover("");
-          setSearchPopupQuery("");
-          setAgentRenameState(null);
-          setAgentRenameValue("");
-          setAgentRenameError("");
+            if (focusedAgent) {
+              setAgentListMode(getPlaygroundAgentListMode(focusedAgent));
+            }
+            setIsHomeViewActive(false);
+            setAgentCreationSetupOpen(false);
+            setAgentCreationSetupError("");
+            setAgentCreationPermissionModalOpen(false);
+            setAgentCreationInstructionRunRequest(null);
+            setAgentCreationInstructionContext(null);
+            setSelectedAgentId(normalizedFocusedAgentId);
+            setToolbarPopover("");
+            setSearchPopupQuery("");
+            setAgentRenameState(null);
+            setAgentRenameValue("");
+            setAgentRenameError("");
+          });
         }, [
           agents,
           allKnownAgents,
@@ -87895,33 +85411,6 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLoader}
         }, [agentOwnerCandidateRows, agentOwnerPopoverOpen]);
 
         useEffect(() => {
-          if (!agentOwnerPopoverOpen) {
-            return undefined;
-          }
-
-          function handleAgentOwnerPopoverPointerDown(event) {
-            const target = event?.target instanceof Node ? event.target : null;
-            if (!target || !agentOwnerPopoverRef.current || agentOwnerPopoverRef.current.contains(target)) {
-              return;
-            }
-            setAgentOwnerPopoverOpen(false);
-          }
-
-          function handleAgentOwnerPopoverEscape(event) {
-            if (event.key === "Escape") {
-              setAgentOwnerPopoverOpen(false);
-            }
-          }
-
-          document.addEventListener("mousedown", handleAgentOwnerPopoverPointerDown);
-          window.addEventListener("keydown", handleAgentOwnerPopoverEscape);
-          return () => {
-            document.removeEventListener("mousedown", handleAgentOwnerPopoverPointerDown);
-            window.removeEventListener("keydown", handleAgentOwnerPopoverEscape);
-          };
-        }, [agentOwnerPopoverOpen]);
-
-        useEffect(() => {
           if (!agentSendTeamModalOpen) {
             return undefined;
           }
@@ -88194,87 +85683,6 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLifecycle}
         }, [agentActionsPopoverOpen]);
 
         useEffect(() => {
-          if (!agentPublishMenuOpen) {
-            return undefined;
-          }
-
-          function handleAgentPublishMenuPointerDown(event) {
-            const target = event?.target instanceof Node ? event.target : null;
-            if (!target || !agentPublishMenuRef.current || agentPublishMenuRef.current.contains(target)) {
-              return;
-            }
-            setAgentPublishMenuOpen(false);
-          }
-
-          function handleAgentPublishMenuEscape(event) {
-            if (event.key === "Escape") {
-              setAgentPublishMenuOpen(false);
-            }
-          }
-
-          document.addEventListener("mousedown", handleAgentPublishMenuPointerDown);
-          window.addEventListener("keydown", handleAgentPublishMenuEscape);
-          return () => {
-            document.removeEventListener("mousedown", handleAgentPublishMenuPointerDown);
-            window.removeEventListener("keydown", handleAgentPublishMenuEscape);
-          };
-        }, [agentPublishMenuOpen]);
-
-        useEffect(() => {
-          if (!agentVersionSelectorMenuOpen) {
-            return undefined;
-          }
-
-          function handleAgentVersionSelectorMenuPointerDown(event) {
-            const target = event?.target instanceof Node ? event.target : null;
-            if (!target || !agentVersionSelectorMenuRef.current || agentVersionSelectorMenuRef.current.contains(target)) {
-              return;
-            }
-            setAgentVersionSelectorMenuOpen(false);
-          }
-
-          function handleAgentVersionSelectorMenuEscape(event) {
-            if (event.key === "Escape") {
-              setAgentVersionSelectorMenuOpen(false);
-            }
-          }
-
-          document.addEventListener("mousedown", handleAgentVersionSelectorMenuPointerDown);
-          window.addEventListener("keydown", handleAgentVersionSelectorMenuEscape);
-          return () => {
-            document.removeEventListener("mousedown", handleAgentVersionSelectorMenuPointerDown);
-            window.removeEventListener("keydown", handleAgentVersionSelectorMenuEscape);
-          };
-        }, [agentVersionSelectorMenuOpen]);
-
-        useEffect(() => {
-          if (!agentTagsMenuOpen) {
-            return undefined;
-          }
-
-          function handleAgentTagsMenuPointerDown(event) {
-            const target = event?.target instanceof Node ? event.target : null;
-            if (!target || !agentTagsMenuRef.current || agentTagsMenuRef.current.contains(target)) {
-              return;
-            }
-            setAgentTagsMenuOpen(false);
-          }
-
-          function handleAgentTagsMenuEscape(event) {
-            if (event.key === "Escape") {
-              setAgentTagsMenuOpen(false);
-            }
-          }
-
-          document.addEventListener("mousedown", handleAgentTagsMenuPointerDown);
-          window.addEventListener("keydown", handleAgentTagsMenuEscape);
-          return () => {
-            document.removeEventListener("mousedown", handleAgentTagsMenuPointerDown);
-            window.removeEventListener("keydown", handleAgentTagsMenuEscape);
-          };
-        }, [agentTagsMenuOpen]);
-
-        useEffect(() => {
           if (!agentRenameState || !agentRenameInputRef.current) {
             return undefined;
           }
@@ -88536,15 +85944,8 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLifecycle}
           });
         }, [backendUrl, currentUserEmail, currentUserId, loadAgentsHomeThreads, requestHeaders, threadMutationSignal]);
 
-	        function handleAgentSelect(agentId) {
-	          if (draftAgent?.id && draftAgent.id !== PLAYGROUND_AGENT_DRAFT_ID && editorDirtyRef.current) {
-	            agentAutosaveQueuedRef.current = normalizePlaygroundAgentRecord(draftAgent);
-	            if (agentAutosaveTimerRef.current) {
-              window.clearTimeout(agentAutosaveTimerRef.current);
-              agentAutosaveTimerRef.current = 0;
-            }
-            void flushQueuedAgentAutosave();
-          }
+        function performAgentSelect(agentId) {
+          discardUnsavedAgentDraft();
           setToolbarPopover("");
           setSearchPopupQuery("");
           setAgentListActionMenuState(null);
@@ -88564,6 +85965,17 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLifecycle}
           });
           setIsHomeViewActive(false);
           setSelectedAgentId(agentId);
+        }
+
+        function handleAgentSelect(agentId) {
+          const normalizedAgentId = String(agentId || "").trim();
+          if (!normalizedAgentId) {
+            return;
+          }
+          if (!isHomeViewActive && normalizedAgentId === String(selectedAgentId || "").trim()) {
+            return;
+          }
+          requestAgentNavigation(() => performAgentSelect(normalizedAgentId));
         }
 
         function handleAgentListModeChange(nextMode) {
@@ -88781,64 +86193,68 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLifecycle}
           if (!canCreateAgentOnCurrentPlan()) {
             return;
           }
-          const normalizedKind = kind === "team" ? "team" : "single";
-          const seedDraft = buildAgentComposerSeedDraft(normalizedKind, options?.draft || null);
-          resetEditorAuxiliaryState();
-          setToolbarPopover("");
-          setSearchPopupQuery("");
-          setAgentListActionMenuState(null);
-          closeAgentModelPicker();
-          setAgentListMode(normalizedKind === "team" ? "teams" : "agents");
-          setAgentComposerOpen(false);
-          setAgentComposerDraft(buildPlaygroundDefaultAgentDraft());
-          setAgentComposerSaveState({
-            isSaving: false,
-            error: "",
-          });
-          setDraftAgent(normalizedKind === "single" ? { ...seedDraft, name: "" } : seedDraft);
-          selectedAgentIdRef.current = PLAYGROUND_AGENT_DRAFT_ID;
-          setSelectedAgentId(PLAYGROUND_AGENT_DRAFT_ID);
-          setIsHomeViewActive(false);
-          setAgentCreationInstructionRunRequest(null);
-          setAgentCreationInstructionContext(null);
-          if (normalizedKind === "single") {
-            setAgentCreationSetupOpen(true);
-            setAgentCreationSetupError("");
-            setAgentCreationSetupSubmitting(false);
-            setAgentCreationSetupResetToken((current) => current + 1);
+          requestAgentNavigation(() => {
+            const normalizedKind = kind === "team" ? "team" : "single";
+            const seedDraft = buildAgentComposerSeedDraft(normalizedKind, options?.draft || null);
+            resetEditorAuxiliaryState();
+            setToolbarPopover("");
+            setSearchPopupQuery("");
+            setAgentListActionMenuState(null);
+            closeAgentModelPicker();
+            setAgentListMode(normalizedKind === "team" ? "teams" : "agents");
+            setAgentComposerOpen(false);
+            setAgentComposerDraft(buildPlaygroundDefaultAgentDraft());
+            setAgentComposerSaveState({
+              isSaving: false,
+              error: "",
+            });
+            setDraftAgent(normalizedKind === "single" ? { ...seedDraft, name: "" } : seedDraft);
+            selectedAgentIdRef.current = PLAYGROUND_AGENT_DRAFT_ID;
+            setSelectedAgentId(PLAYGROUND_AGENT_DRAFT_ID);
+            setIsHomeViewActive(false);
+            setAgentCreationInstructionRunRequest(null);
+            setAgentCreationInstructionContext(null);
+            if (normalizedKind === "single") {
+              setAgentCreationSetupOpen(true);
+              setAgentCreationSetupError("");
+              setAgentCreationSetupSubmitting(false);
+              setAgentCreationSetupResetToken((current) => current + 1);
+              setAgentCreationPermissionModalOpen(false);
+              setAgentAssistantOpen(false);
+              setAgentAssistantCommandRequest(null);
+              return;
+            }
+            setAgentCreationSetupOpen(false);
             setAgentCreationPermissionModalOpen(false);
-            setAgentAssistantOpen(false);
+            setAgentAssistantOpen(true);
             setAgentAssistantCommandRequest(null);
-            return;
-          }
-          setAgentCreationSetupOpen(false);
-          setAgentCreationPermissionModalOpen(false);
-          setAgentAssistantOpen(true);
-          setAgentAssistantCommandRequest(null);
+          });
         }
 
         function openAgentComposer(kind = "single", options = {}) {
           if (!canCreateAgentOnCurrentPlan()) {
             return;
           }
-          const draftOverrides = options && typeof options === "object" ? options.draft : null;
-          resetEditorAuxiliaryState();
-          setToolbarPopover("");
-          setSearchPopupQuery("");
-          setAgentListActionMenuState(null);
-          closeAgentModelPicker();
-          setAgentListMode(kind === "team" ? "teams" : "agents");
-          setAgentCreationSetupOpen(false);
-          setAgentCreationSetupError("");
-          setAgentCreationPermissionModalOpen(false);
-          setAgentComposerDraft(buildAgentComposerSeedDraft(kind, draftOverrides));
-          setAgentComposerSaveState({
-            isSaving: false,
-            error: "",
+          requestAgentNavigation(() => {
+            const draftOverrides = options && typeof options === "object" ? options.draft : null;
+            resetEditorAuxiliaryState();
+            setToolbarPopover("");
+            setSearchPopupQuery("");
+            setAgentListActionMenuState(null);
+            closeAgentModelPicker();
+            setAgentListMode(kind === "team" ? "teams" : "agents");
+            setAgentCreationSetupOpen(false);
+            setAgentCreationSetupError("");
+            setAgentCreationPermissionModalOpen(false);
+            setAgentComposerDraft(buildAgentComposerSeedDraft(kind, draftOverrides));
+            setAgentComposerSaveState({
+              isSaving: false,
+              error: "",
+            });
+            setIsAgentComposerInstructionsEditing(false);
+            setAgentComposerModelPopover("");
+            setAgentComposerOpen(true);
           });
-          setIsAgentComposerInstructionsEditing(false);
-          setAgentComposerModelPopover("");
-          setAgentComposerOpen(true);
         }
 
         function closeAgentComposer() {
@@ -88856,11 +86272,14 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLifecycle}
           setAgentComposerModelPopover("");
         }
 
-        function handleCreateAgent() {
+        function handleCreateAgent(modelId = "") {
           if (!canCreateAgentOnCurrentPlan()) {
             return;
           }
-          openAgentDraftDetail("single");
+          const normalizedModelId = typeof modelId === "string" ? modelId.trim() : "";
+          openAgentDraftDetail("single", normalizedModelId
+            ? { draft: { model: normalizedModelId } }
+            : {});
         }
 
         function handleCreateTeam() {
@@ -88876,8 +86295,8 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLifecycle}
             return;
           }
           lastAppliedCreateAgentRequestTokenRef.current = normalizedToken;
-          handleCreateAgent();
-        }, [createAgentRequestToken]);
+          handleCreateAgent(createAgentModelId);
+        }, [createAgentModelId, createAgentRequestToken]);
 
         function openAgentModelPicker(target) {
           if (agentModelPickerCloseTimerRef.current) {
@@ -89275,14 +86694,17 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLifecycle}
             );
           };
 
-          return renderPlaygroundPlatformModal({
+          return React.createElement(PlatformModal, {
             open: Boolean(agentModelPickerState),
             visible: agentModelPickerVisible,
             closing: agentModelPickerClosing,
             onClose: () => closeAgentModelPicker(),
-            backdropClassName: "playground-tasks-project-issue-backdrop playground-agents-model-picker-backdrop",
-            className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal playground-agents-model-picker-modal",
-            ariaLabel: "Select model",
+            closeOnEscape: !agentModelPickerState.isProviderFilterOpen,
+            backdropClassName: "playground-agents-model-picker-backdrop",
+            className: "playground-agents-model-picker-modal",
+            size: "large",
+            title: "Select Model",
+            closeButtonLabel: "Close model selector",
             surfaceProps: {
               onClick: (event) => {
                 const target = event?.target instanceof Element ? event.target : null;
@@ -89295,69 +86717,53 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLifecycle}
               },
             },
             children: React.createElement(React.Fragment, null,
-              React.createElement("div", { className: "playground-tasks-project-modal-top" },
-                  React.createElement("div", { className: "playground-agents-model-picker-top-copy" },
-                  React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
-                    React.createElement("div", {
-                      className: "playground-content-title playground-tasks-project-modal-name-input",
-                      style: { display: "flex", alignItems: "center" },
-                    }, "Select Model"),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-settings-icon-button playground-tasks-project-modal-close",
-                      onClick: () => closeAgentModelPicker(),
-                      title: "Close",
-                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+              React.createElement("div", { className: "playground-agents-model-picker-search-row" },
+                React.createElement("div", { className: "playground-agents-model-picker-search-field" },
+                  React.createElement(Search, { className: "playground-agents-model-picker-search-icon", strokeWidth: 1.8 }),
+                  React.createElement("input", {
+                    type: "text",
+                    className: "playground-settings-input playground-agents-model-picker-search-input",
+                    value: agentModelPickerState.searchQuery || "",
+                    onChange: (event) => setAgentModelPickerState((current) => current ? {
+                      ...current,
+                      searchQuery: event.target.value,
+                      isProviderFilterOpen: false,
+                    } : current),
+                    placeholder: "Search models",
+                    autoFocus: true,
+                  })
+                ),
+                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-agents-model-picker-filter-anchor" },
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-files-control-button playground-agents-model-picker-filter-button" + ((agentModelPickerState.isProviderFilterOpen || activeProviderFilters.length > 0) ? " is-active" : ""),
+                    onClick: toggleProviderFilterMenu,
+                  },
+                    React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Filter")
                   ),
-                  React.createElement("div", { className: "playground-agents-model-picker-search-row" },
-                    React.createElement("div", { className: "playground-agents-model-picker-search-field" },
-                      React.createElement(Search, { className: "playground-agents-model-picker-search-icon", strokeWidth: 1.8 }),
-                      React.createElement("input", {
-                        type: "text",
-                        className: "playground-settings-input playground-agents-model-picker-search-input",
-                        value: agentModelPickerState.searchQuery || "",
-                        onChange: (event) => setAgentModelPickerState((current) => current ? {
-                          ...current,
-                          searchQuery: event.target.value,
-                          isProviderFilterOpen: false,
-                        } : current),
-                        placeholder: "Search models",
-                        autoFocus: true,
-                      })
-                    ),
-                    React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-agents-model-picker-filter-anchor" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-control-button playground-agents-model-picker-filter-button" + ((agentModelPickerState.isProviderFilterOpen || activeProviderFilters.length > 0) ? " is-active" : ""),
-                        onClick: toggleProviderFilterMenu,
-                      },
-                        React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("span", null, "Filter")
-                      ),
-                      agentModelPickerState.isProviderFilterOpen
-                        ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                            React.createElement("div", { className: "playground-files-toolbar-menu-title" }, activeProviderFilters.length > 0 ? "Provider filters" : "All providers"),
-                            providerFilterOptions.map((option) =>
-                              React.createElement("button", {
-                                  key: option.id,
-                                  type: "button",
-                                  className: "playground-files-toolbar-menu-item" + (activeProviderFilters.includes(option.id) ? " is-active" : ""),
-                                  onClick: () => toggleProviderFilter(option.id),
-                                },
-                                  React.createElement("span", { className: "playground-files-toolbar-menu-check" }, activeProviderFilters.includes(option.id) ? "•" : ""),
-                                  React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
-                                    React.createElement("span", null, option.label),
-                                    React.createElement("span", null, option.description)
-                                  )
-                                )
+                  agentModelPickerState.isProviderFilterOpen
+                    ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
+                        React.createElement("div", { className: "playground-files-toolbar-menu-title" }, activeProviderFilters.length > 0 ? "Provider filters" : "All providers"),
+                        providerFilterOptions.map((option) =>
+                          React.createElement("button", {
+                              key: option.id,
+                              type: "button",
+                              className: "playground-files-toolbar-menu-item" + (activeProviderFilters.includes(option.id) ? " is-active" : ""),
+                              onClick: () => toggleProviderFilter(option.id),
+                            },
+                            React.createElement("span", { className: "playground-files-toolbar-menu-check" }, activeProviderFilters.includes(option.id) ? "•" : ""),
+                            React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                              React.createElement("span", null, option.label),
+                              React.createElement("span", null, option.description)
                             )
                           )
-                        : null
-                    )
-                  )
+                        )
+                      )
+                    : null
                 )
               ),
-              React.createElement("div", { className: "playground-tasks-issue-modal-body playground-agents-model-picker-body" },
+              React.createElement(PlatformModalBody, { className: "playground-agents-model-picker-body" },
                 groupedVisibleModelOptions.length > 0
                   ? React.createElement("div", { className: "playground-agents-model-picker-groups" },
                       groupedVisibleModelOptions.map((group) =>
@@ -89373,16 +86779,15 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLifecycle}
                       "No models match your search."
                     )
               ),
-              React.createElement("div", { className: "playground-tasks-project-modal-actions playground-agents-model-picker-actions" },
-                React.createElement("button", {
+              React.createElement(PlatformModalFooter, { className: "playground-agents-model-picker-actions" },
+                React.createElement(PlatformSecondaryButton, {
+                  size: "medium",
                   type: "button",
-                  className: "playground-environments-action-button",
                   onClick: () => closeAgentModelPicker(),
                 }, "Cancel"),
                 React.createElement(PlatformPrimaryButton, {
                   size: "medium",
                   type: "button",
-                  className: "playground-environments-action-button is-primary",
                   onClick: confirmModelSelection,
                   disabled: !pendingModelId || pendingModelId === activeModelId,
                 }, "Confirm")
@@ -91798,12 +89203,14 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLifecycle}
           }
         }
 
-        function openAgentOwnerPopover() {
-          if (!draftAgent) {
-            return;
+        function handleAgentOwnerPopoverOpenChange(nextOpen) {
+          if (nextOpen) {
+            if (!draftAgent) {
+              return;
+            }
+            requestAgentWorkspaceTeams();
           }
-          requestAgentWorkspaceTeams();
-          setAgentOwnerPopoverOpen((current) => !current);
+          setAgentOwnerPopoverOpen(Boolean(nextOpen));
         }
 
         function handleAgentOwnerSelect(ownerIdentity) {
@@ -92658,6 +90065,7 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLifecycle}
             setAgentListMode(getPlaygroundAgentListMode(savedAgent));
             setSelectedAgentId(savedAgent.id);
             setDraftAgent(savedAgent);
+            rememberAgentVersionBaseline(savedAgent, { force: true });
             setSaveState({
               isSaving: false,
               error: "",
@@ -93349,6 +90757,40 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLifecycle}
           });
         }
 
+        const hasUnsavedAgentChanges = Boolean(
+          !isHomeViewActive
+          && draftAgent
+          && editorDirtyRef.current
+          && (
+            draftAgent.id === PLAYGROUND_AGENT_DRAFT_ID
+              ? agentVersionDraftTouchedRef.current
+              : hasDraftAgentVersionChanges()
+          )
+        );
+
+        useEffect(() => {
+          if (typeof onNavigationGuardChange !== "function") {
+            return;
+          }
+          const agentName = String(draftAgent?.name || "").trim() || "this agent";
+          onNavigationGuardChange(hasUnsavedAgentChanges
+            ? {
+                id: "agent-details-unsaved-changes",
+                active: true,
+                title: "Leave without saving?",
+                description: "Your changes to " + agentName + " have not been saved. If you leave now, they will be lost.",
+              }
+            : null
+          );
+        }, [draftAgent?.id, draftAgent?.name, hasUnsavedAgentChanges, onNavigationGuardChange]);
+
+        useEffect(() => {
+          if (typeof onNavigationGuardChange !== "function") {
+            return undefined;
+          }
+          return () => onNavigationGuardChange(null);
+        }, [onNavigationGuardChange]);
+
         function isDraftAgentSelectedVersionPublished() {
           const selectedVersion = getDraftAgentSelectedVersion();
           return Boolean(selectedVersion && selectedVersion.status === "active");
@@ -93373,7 +90815,7 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLifecycle}
             {
               id: "save-new-version",
               label: "Save to new Version",
-              Icon: GitBranchPlus,
+              icon: GitBranchPlus,
               shortcut: "⇧⌘S",
               disabled: !agentVersionHasChanges,
               onClick: () => openCreateAgentVersionModal(),
@@ -93381,7 +90823,7 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLifecycle}
             {
               id: "revert",
               label: "Revert to last saved Version",
-              Icon: Undo2,
+              icon: Undo2,
               disabled: !agentVersionHasChanges,
               onClick: handleRevertDraft,
             },
@@ -93390,7 +90832,7 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLifecycle}
             actions.push({
               id: "version-history",
               label: "Version history",
-              Icon: History,
+              icon: History,
               disabled: false,
               onClick: () => {
                 setAgentPublishMenuOpen(false);
@@ -93485,7 +90927,6 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLifecycle}
           setAgentActionsPopoverOpen(false);
           setAgentPublishMenuOpen(false);
           setAgentVersionSelectorMenuOpen(false);
-          setAgentTagsMenuOpen(false);
           setAgentVersionsHeaderMenuOpen(false);
           setAgentAssistantOpen(false);
           setOpenAgentVersionMenuId("");
@@ -93501,7 +90942,6 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLifecycle}
           setAgentVersionsSidebarOpen(false);
           setAgentPublishMenuOpen(false);
           setAgentVersionSelectorMenuOpen(false);
-          setAgentTagsMenuOpen(false);
           setAgentVersionsHeaderMenuOpen(false);
           finishCloseAgentVersionModal();
           setOpenAgentVersionMenuId("");
@@ -93723,7 +91163,6 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLifecycle}
           }
           setAgentPublishMenuOpen(false);
           setAgentVersionSelectorMenuOpen(false);
-          setAgentTagsMenuOpen(false);
           setAgentVersionsHeaderMenuOpen(false);
           await commitVersionedAgentRecord(publishResult.resource, {
             operation: "save-publish",
@@ -95401,105 +92840,73 @@ ${GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.versionDiffPayload}        function buildAge
               : "";
             const ownerMenuIsLoading = agentOwnerPopoverOpen && agentOwnerMissingTeamIds.length > 0;
             const currentOwnerKeys = new Set(getAgentIdentityMatchKeys(agentOwnerIdentity, agentOwnerIdentity));
-            return renderPlaygroundPlatformPopup({
+            const ownerOptions = enrichedAgentOwnerCandidateRows.map((candidate) => {
+              const candidateKeys = getAgentIdentityMatchKeys(candidate, candidate);
+              const candidateKey = String(candidate.userId || candidate.email || candidate.id || candidateKeys[0] || "").trim().toLowerCase();
+              const trustedCandidateName = getTrustedDisplayName(candidate.name, candidate.email);
+              const candidateLabel = trustedCandidateName || candidate.email || "Team member";
+              const candidateDetail = candidate.email && candidateLabel.toLowerCase() !== candidate.email.toLowerCase()
+                ? candidate.email
+                : (Array.isArray(candidate.teamNames) ? candidate.teamNames.join(", ") : "");
+              return {
+                value: candidateKey || candidateLabel.toLowerCase(),
+                label: candidateLabel,
+                description: candidateDetail || undefined,
+                ariaLabel: candidateDetail ? candidateLabel + ", " + candidateDetail : candidateLabel,
+                leading: renderAgentOwnerAvatar(
+                  "playground-agents-detail-owner-option-avatar",
+                  "playground-agents-detail-owner-option-avatar-image",
+                  getAccountInitials(candidateLabel),
+                  candidate.avatarUrl || ""
+                ),
+                candidate,
+                candidateKeys,
+              };
+            });
+            const selectedOwnerOption = ownerOptions.find((option) =>
+              option.candidateKeys.some((key) => currentOwnerKeys.has(key))
+            ) || null;
+            return React.createElement(PlatformSelector, {
+              value: selectedOwnerOption?.value || "",
+              options: ownerOptions,
               open: agentOwnerPopoverOpen,
-              shellRef: agentOwnerPopoverRef,
-              shellClassName: "playground-agents-detail-owner-popup-shell",
-              menuClassName: "playground-agents-detail-owner-menu",
-              trigger: React.createElement("button", {
-                  key: "Owner",
-                  type: "button",
-                  className: "playground-project-overview-sidebar-row playground-agents-detail-sidebar-owner-row"
-                    + (isCompact ? " is-compact" : ""),
-                  onClick: openAgentOwnerPopover,
-                  "aria-label": "Choose agent owner",
-                  "aria-expanded": agentOwnerPopoverOpen ? "true" : "false",
+              onOpenChange: handleAgentOwnerPopoverOpenChange,
+              onValueChange: (nextValue) => {
+                const selectedOwner = ownerOptions.find((option) => option.value === nextValue)?.candidate;
+                if (selectedOwner) handleAgentOwnerSelect(selectedOwner);
+              },
+              ariaLabel: "Choose agent owner",
+              label: React.createElement("span", {
+                  className: "playground-project-overview-sidebar-row-value playground-agents-detail-owner-value",
                 },
-                isCompact
-                  ? null
-                  : React.createElement("div", { className: "playground-project-overview-sidebar-row-label" }, "Owner"),
-                React.createElement("div", { className: "playground-project-overview-sidebar-row-value playground-agents-detail-owner-value" },
-                  React.createElement("span", { className: "playground-team-member-cell playground-agents-detail-owner-member-cell" },
-                    renderAgentOwnerAvatar(
-                      "playground-team-member-avatar",
-                      "playground-team-member-avatar-image",
-                      getAccountInitials(ownerLabel),
-                      ownerIdentityForDisplay?.avatarUrl || ""
-                    ),
-                    React.createElement("span", { className: "playground-team-member-copy" },
-                      React.createElement("span", {
-                        className: "playground-team-table-title",
-                        title: ownerDetail ? ownerLabel + " · " + ownerDetail : ownerLabel,
-                      }, ownerLabel)
-                    )
+                React.createElement("span", { className: "playground-team-member-cell playground-agents-detail-owner-member-cell" },
+                  renderAgentOwnerAvatar(
+                    "playground-team-member-avatar",
+                    "playground-team-member-avatar-image",
+                    getAccountInitials(ownerLabel),
+                    ownerIdentityForDisplay?.avatarUrl || ""
                   ),
-                  React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+                  React.createElement("span", { className: "playground-team-member-copy" },
+                    React.createElement("span", {
+                      className: "playground-team-table-title",
+                      title: ownerDetail ? ownerLabel + " · " + ownerDetail : ownerLabel,
+                    }, ownerLabel)
+                  )
                 )
               ),
-              menuProps: {
-                role: "menu",
-                onClick: (event) => event.stopPropagation(),
-              },
-              children: React.createElement(React.Fragment, null,
-                agentOwnerLookupTeamIds.length === 0
-                  ? React.createElement("div", { className: "playground-agents-detail-owner-menu-empty" }, "Loading team members...")
-                  : enrichedAgentOwnerCandidateRows.length > 0
-                    ? enrichedAgentOwnerCandidateRows.map((candidate) => {
-                        const candidateKeys = getAgentIdentityMatchKeys(candidate, candidate);
-                        const candidateKey = String(candidate.userId || candidate.email || candidate.id || candidateKeys[0] || "").trim().toLowerCase();
-                        const isSelected = candidateKeys.some((key) => currentOwnerKeys.has(key));
-                        const trustedCandidateName = getTrustedDisplayName(candidate.name, candidate.email);
-                        const candidateLabel = trustedCandidateName || candidate.email || "Team member";
-                        const candidateDetail = candidate.email && candidateLabel.toLowerCase() !== candidate.email.toLowerCase()
-                          ? candidate.email
-                          : (Array.isArray(candidate.teamNames) ? candidate.teamNames.join(", ") : "");
-                        return React.createElement("button", {
-                            key: candidateKey || candidateLabel,
-                            type: "button",
-                            className: "tb-popup-row playground-agents-detail-owner-option" + (isSelected ? " is-selected" : ""),
-                            role: "menuitem",
-                            onClick: () => handleAgentOwnerSelect(candidate),
-                          },
-                          renderAgentOwnerAvatar(
-                            "playground-agents-detail-owner-option-avatar",
-                            "playground-agents-detail-owner-option-avatar-image",
-                            getAccountInitials(candidateLabel),
-                            candidate.avatarUrl || ""
-                          ),
-                          React.createElement("span", { className: "playground-agents-detail-owner-option-copy" },
-                            React.createElement("span", null, candidateLabel),
-                            candidateDetail
-                              ? React.createElement("span", null, candidateDetail)
-                              : null
-                          ),
-                          isSelected
-                            ? React.createElement(Check, { width: 13, height: 13, strokeWidth: 1.8 })
-                            : null
-                        );
-                      })
-                    : React.createElement("div", { className: "playground-agents-detail-owner-menu-empty" },
-                        ownerMenuIsLoading ? "Loading team members..." : "No team members available."
-                      )
-              )
+              alignment: "end",
+              fullWidth: true,
+              loading: ownerOptions.length === 0 && (workspaceTeamsLoading || ownerMenuIsLoading),
+              loadingContent: "Loading team members...",
+              emptyContent: "No team members available.",
+              popupWidth: 260,
+              popupMaxHeight: "min(320px, calc(100vh - 180px))",
+              className: "playground-agents-detail-owner-popup-shell",
+              triggerClassName: "playground-project-overview-sidebar-row playground-agents-detail-sidebar-owner-row"
+                + (isCompact ? " is-compact" : ""),
+              popupClassName: "playground-agents-detail-owner-menu",
+              optionClassName: "playground-agents-detail-owner-option",
             });
-          };
-          const renderAgentPermissionRings = (permissionSet) => {
-            const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, "agent");
-            return React.createElement("span", {
-                className: "playground-agents-detail-permission-rings",
-                "aria-hidden": "true",
-              },
-              PLAYGROUND_PERMISSION_RING_DEFINITIONS.map((ring) => {
-                const ringAccess = getPlaygroundPermissionRingAccess(normalizedPermissionSet, ring.id);
-                return React.createElement("span", {
-                    key: ring.id,
-                    className: "playground-agents-detail-permission-ring",
-                    title: ring.label + ": " + getPlaygroundPermissionAccessLabel(ringAccess),
-                  },
-                  renderPlaygroundPermissionMiniRingIcon(ring.id, ringAccess)
-                );
-              })
-            );
           };
           const renderAgentPermissionRow = () => {
             const permissionSummary = getAgentPermissionSummary(draftAgent.permissionSet);
@@ -95513,7 +92920,9 @@ ${GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.versionDiffPayload}        function buildAge
               },
               React.createElement("div", { className: "playground-project-overview-sidebar-row-label" }, "Permissions"),
               React.createElement("div", { className: "playground-project-overview-sidebar-row-value playground-agents-detail-sidebar-permission-value" },
-                renderAgentPermissionRings(draftAgent.permissionSet)
+                React.createElement(AgentPermissionRingIcons, {
+                  permissionSet: draftAgent.permissionSet,
+                })
               )
             );
           };
@@ -95627,16 +93036,11 @@ ${GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.versionDiffPayload}        function buildAge
             && !isDefaultAgentConfigurationLocked
           );
           const isAgentVersionControlBusy = saveState.isSaving || agentVersionState.status === "loading";
-          const agentVersionHasChanges = hasDraftAgentVersionChanges();
-          const isAgentPublishControlDisabled = Boolean(!draftAgent || isAgentVersionControlBusy || !agentVersionHasChanges);
-          const isAgentPublishMenuDisabled = isAgentPublishControlDisabled;
-          const agentVersionPopupActions = getAgentVersionPopupActions({ includeVersionHistory: false });
           const agentDetailVersions = readDraftAgentVersions();
           const selectedAgentDetailVersion = getDraftAgentSelectedVersion() || getDraftAgentActiveVersion() || agentDetailVersions[0] || null;
           const activeAgentDetailVersion = getDraftAgentActiveVersion();
           const selectedAgentDetailVersionId = String(selectedAgentDetailVersion?.id || "").trim();
           const activeAgentDetailVersionId = String(activeAgentDetailVersion?.id || "").trim();
-          const agentTagLabels = getAgentTagLabels(draftAgent);
           const getAgentDetailVersionTitle = (version) => {
             if (!version) return "No versions";
             return String(version.label || ("Version " + (version.version || ""))).trim() || "Version";
@@ -95651,77 +93055,38 @@ ${GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.versionDiffPayload}        function buildAge
             const formattedTimestamp = timestamp ? formatPlaygroundFileDate(timestamp) : "";
             return status + (formattedTimestamp ? " · " + formattedTimestamp : "");
           };
-          const renderAgentVersionCountLabel = () => {
-            const versionCountLabel = String(agentDetailVersions.length) + " " + (agentDetailVersions.length === 1 ? "Version" : "Versions");
-            return React.createElement("div", {
-                className: "playground-agents-version-count-label",
-                title: versionCountLabel,
-                "aria-label": versionCountLabel,
-              },
-              React.createElement(GitBranch, { className: "playground-agents-version-count-icon", strokeWidth: 1.8 }),
-              React.createElement("span", null, versionCountLabel)
-            );
-          };
-          const renderAgentVersionSelector = () => {
-            const hasVersions = agentDetailVersions.length > 0;
-            const currentTitle = getAgentDetailVersionTitle(selectedAgentDetailVersion);
-            const selectorDisabled = isAgentVersionControlBusy;
-            const canCreateVersionFromSelector = Boolean(canShowAgentDetailHeaderPublish && !isAgentVersionControlBusy);
-            const toggleSelectorMenu = (event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              if (selectorDisabled) {
-                return;
-              }
-              setAgentPublishMenuOpen(false);
-              setAgentVersionsHeaderMenuOpen(false);
-              setAgentTagsMenuOpen(false);
-              setAgentVersionSelectorMenuOpen((current) => !current);
-            };
-            return React.createElement("div", { className: "playground-agents-detail-version-selector-row" },
-              renderPlaygroundPlatformPopup({
-                open: agentVersionSelectorMenuOpen,
-                shellRef: agentVersionSelectorMenuRef,
-                shellClassName: "playground-agents-detail-publish-split-shell playground-agents-detail-version-selector-shell",
-                menuClassName: "playground-agents-detail-publish-menu playground-agents-detail-version-selector-menu",
-                trigger: React.createElement("div", {
-                    className: "playground-metronome-create-button playground-metronome-publish-button playground-agents-detail-header-publish-button playground-agents-detail-publish-split-control playground-agents-detail-version-selector-control"
-                      + (agentVersionSelectorMenuOpen ? " is-active" : "")
-                      + (selectorDisabled ? " is-disabled" : ""),
-                  },
-                  React.createElement("button", {
-                      type: "button",
-                      className: "playground-agents-detail-publish-main playground-agents-detail-version-selector-main",
-                      title: currentTitle,
-                      "aria-label": "Choose agent version",
-                      "aria-haspopup": "menu",
-                      "aria-expanded": agentVersionSelectorMenuOpen ? "true" : "false",
-                      disabled: selectorDisabled,
-                      onClick: toggleSelectorMenu,
-                    },
-                    React.createElement(GitBranch, { className: "playground-agents-detail-version-selector-icon", strokeWidth: 1.8 }),
-                    React.createElement("span", { className: "playground-agents-detail-version-selector-label" }, currentTitle)
-                  ),
-                  React.createElement("span", { className: "playground-agents-detail-publish-divider", "aria-hidden": "true" }),
-                  React.createElement("button", {
-                      type: "button",
-                      className: "playground-agents-detail-publish-chevron",
-                      title: "Choose agent version",
-                      "aria-label": "Choose agent version",
-                      "aria-haspopup": "menu",
-                      "aria-expanded": agentVersionSelectorMenuOpen ? "true" : "false",
-                      disabled: selectorDisabled,
-                      onClick: toggleSelectorMenu,
-                    },
-                    React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
-                  )
-                ),
-                menuProps: {
-                  role: "menu",
-                  onClick: (event) => event.stopPropagation(),
-                },
-                children: React.createElement(React.Fragment, null,
-                  React.createElement("div", { className: "playground-agents-detail-version-selector-list", role: "group", "aria-label": "Agent versions" },
+	          const renderAgentVersionSelector = () => {
+	            const hasVersions = agentDetailVersions.length > 0;
+	            const currentTitle = getAgentDetailVersionTitle(selectedAgentDetailVersion);
+	            const selectorDisabled = isAgentVersionControlBusy;
+	            const canCreateVersionFromSelector = Boolean(canShowAgentDetailHeaderPublish && !isAgentVersionControlBusy);
+	            return React.createElement(PlatformButtonSelector, {
+	                mode: "popup",
+	                buttonVariant: "secondary",
+	                buttonSize: "small",
+	                open: agentVersionSelectorMenuOpen,
+	                onOpenChange: (nextOpen) => {
+	                  if (nextOpen) {
+	                    setAgentPublishMenuOpen(false);
+	                    setAgentVersionsHeaderMenuOpen(false);
+	                  }
+	                  setAgentVersionSelectorMenuOpen(nextOpen);
+	                },
+	                label: currentTitle,
+	                leading: React.createElement(GitBranch, { className: "playground-agents-detail-version-selector-icon", strokeWidth: 1.8 }),
+	                popupAriaLabel: "Choose agent version",
+	                disabled: selectorDisabled,
+	                active: agentVersionSelectorMenuOpen,
+	                popupAlignment: "right",
+	                popupRole: "menu",
+	                popupWidth: 284,
+	                popupMaxHeight: "min(340px, calc(100vh - 190px))",
+	                className: "playground-agents-detail-version-selector-shell",
+	                buttonClassName: "playground-agents-detail-version-selector-button",
+	                popupClassName: "playground-agents-detail-publish-menu playground-agents-detail-version-selector-menu",
+	              },
+	              React.createElement(React.Fragment, null,
+	                  React.createElement("div", { className: "playground-agents-detail-version-selector-list", role: "group", "aria-label": "Agent versions" },
                     hasVersions
                       ? agentDetailVersions.map((version, index) => {
                           const versionId = String(version?.id || "").trim() || "version-" + index;
@@ -95792,176 +93157,11 @@ ${GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.versionDiffPayload}        function buildAge
                       React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
                         React.createElement("span", null, "Version history")
                       )
-                    )
-                  )
-                )
-              }),
-              renderAgentVersionCountLabel(),
-              renderAgentTagsControl()
-            );
-          };
-          const handleAgentTagSubmit = (event) => {
-            event.preventDefault();
-            const nextLabel = normalizeAgentTagLabel(agentTagInputValue);
-            if (!nextLabel) {
-              return;
-            }
-            const existingKey = nextLabel.toLowerCase();
-            if (agentTagLabels.some((label) => label.toLowerCase() === existingKey)) {
-              setAgentTagInputValue("");
-              return;
-            }
-            updateAgentTagLabels([...agentTagLabels, nextLabel]);
-            setAgentTagInputValue("");
-          };
-          const removeAgentTagLabel = (labelToRemove) => {
-            const removeKey = normalizeAgentTagLabel(labelToRemove).toLowerCase();
-            if (!removeKey) {
-              return;
-            }
-            updateAgentTagLabels(agentTagLabels.filter((label) => label.toLowerCase() !== removeKey));
-          };
-          const renderAgentTagsControl = () => renderPlaygroundPlatformPopup({
-            open: agentTagsMenuOpen,
-            shellRef: agentTagsMenuRef,
-            shellClassName: "playground-agents-tags-control-shell playground-tasks-toolbar-popup-shell",
-            menuClassName: "playground-agents-tags-menu",
-            trigger: React.createElement("button", {
-                type: "button",
-                className: "playground-agents-tags-control-button" + (agentTagsMenuOpen ? " is-active" : ""),
-                "aria-label": "Edit agent tags",
-                "aria-haspopup": "menu",
-                "aria-expanded": agentTagsMenuOpen ? "true" : "false",
-                onClick: (event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  setAgentPublishMenuOpen(false);
-                  setAgentVersionSelectorMenuOpen(false);
-                  setAgentVersionsHeaderMenuOpen(false);
-                  setAgentTagsMenuOpen((current) => !current);
-                },
-              },
-              React.createElement(Tag, { className: "playground-agents-tags-control-icon", strokeWidth: 1.8 }),
-              React.createElement("span", null, "Tags"),
-              React.createElement("span", { className: "playground-agents-tags-count" }, String(agentTagLabels.length))
-            ),
-            menuProps: {
-              role: "menu",
-              onClick: (event) => event.stopPropagation(),
-            },
-            children: React.createElement("div", { className: "playground-agents-tags-menu-content" },
-              React.createElement("form", {
-                  className: "playground-agents-tags-form",
-                  onSubmit: handleAgentTagSubmit,
-                },
-                React.createElement("input", {
-                  type: "text",
-                  className: "playground-agents-tags-input",
-                  value: agentTagInputValue,
-                  placeholder: "Add label",
-                  "aria-label": "Add agent tag",
-                  onChange: (event) => setAgentTagInputValue(event.target.value),
-                  onKeyDown: (event) => event.stopPropagation(),
-                }),
-                React.createElement("button", {
-                  type: "submit",
-                  className: "playground-agents-tags-add-button",
-                  disabled: !normalizeAgentTagLabel(agentTagInputValue),
-                  "aria-label": "Add tag",
-                }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }))
-              ),
-              agentTagLabels.length > 0
-                ? React.createElement("div", { className: "playground-agents-tags-list" },
-                    agentTagLabels.map((label) =>
-                      React.createElement("span", { key: label, className: "playground-agents-tags-chip" },
-                        React.createElement("span", { className: "playground-agents-tags-chip-label" }, label),
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-agents-tags-chip-remove",
-                          "aria-label": "Remove " + label,
-                          onClick: () => removeAgentTagLabel(label),
-                        }, React.createElement(X, { width: 12, height: 12, strokeWidth: 2 }))
-                      )
-                    )
-                  )
-                : React.createElement("div", { className: "playground-agents-tags-empty" }, "No tags yet.")
-            )
-          });
-          const renderAgentPublishSplitButton = () => renderPlaygroundPlatformPopup({
-            open: agentPublishMenuOpen,
-            shellRef: agentPublishMenuRef,
-            shellClassName: "playground-agents-detail-publish-split-shell",
-            menuClassName: "playground-agents-detail-publish-menu",
-	            trigger: React.createElement("div", {
-	                className: "playground-metronome-create-button playground-metronome-publish-button playground-agents-detail-header-publish-button playground-agents-detail-publish-split-control"
-	                  + (agentVersionsSidebarOpen ? " is-active" : "")
-	                  + (isAgentPublishControlDisabled ? " is-disabled" : ""),
-	              },
-	              React.createElement("button", {
-	                  type: "button",
-	                  className: "playground-agents-detail-publish-main",
-	                  title: "Save and publish agent changes",
-	                  "aria-label": "Save and publish agent changes",
-		                  disabled: isAgentPublishControlDisabled,
-		                  onClick: () => {
-		                    setAgentPublishMenuOpen(false);
-                        setAgentVersionSelectorMenuOpen(false);
-                        setAgentTagsMenuOpen(false);
-		                    setAgentVersionsHeaderMenuOpen(false);
-		                    void saveAndPublishCurrentAgentVersion();
-		                  },
-	                },
-	                React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                React.createElement("span", null, "Save & Publish")
-	              ),
-              React.createElement("span", { className: "playground-agents-detail-publish-divider", "aria-hidden": "true" }),
-              React.createElement("button", {
-                  type: "button",
-                  className: "playground-agents-detail-publish-chevron",
-                  title: "Version save options",
-                  "aria-label": "Version save options",
-                  "aria-haspopup": "menu",
-                  "aria-expanded": agentPublishMenuOpen ? "true" : "false",
-                  disabled: isAgentPublishMenuDisabled,
-                  onClick: (event) => {
-                    event.stopPropagation();
-                    setAgentVersionSelectorMenuOpen(false);
-                    setAgentTagsMenuOpen(false);
-                    setAgentPublishMenuOpen((current) => !current);
-                  },
-                },
-                React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
-              )
-            ),
-            menuProps: {
-                role: "menu",
-                onClick: (event) => event.stopPropagation(),
-            },
-            children: React.createElement(React.Fragment, null,
-              agentVersionPopupActions.map((action) => React.createElement("button", {
-                  key: action.label,
-	                  type: "button",
-	                  className: "tb-popup-row",
-	                  role: "menuitem",
-                  disabled: isAgentPublishMenuDisabled || action.disabled,
-                  onClick: () => {
-                    setAgentPublishMenuOpen(false);
-                    void action.onClick();
-                  },
-                },
-	                React.createElement(getPlaygroundSafeIconComponent(action.Icon, Circle), { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
-	                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-	                  React.createElement("span", null, action.label)
-	                ),
-	                action.shortcut
-	                  ? React.createElement("span", {
-	                      className: "playground-agents-detail-publish-menu-shortcut",
-	                      "aria-hidden": "true",
-	                    }, action.shortcut)
-	                  : null
-	              ))
-            )
-          });
+	                    )
+	                  )
+	                )
+	              );
+	          };
           const renderAgentSidebarToggleButton = () => React.createElement("button", {
               type: "button",
               className: "playground-project-overview-sidebar-toggle",
@@ -96055,16 +93255,8 @@ ${GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.versionDiffPayload}        function buildAge
               )
             )
           );
-          const agentDetailSidebarControls = React.createElement("div", { className: "playground-agents-detail-sidebar-controls playground-agents-detail-top-controls-actions" },
-            canShowAgentDetailHeaderPublish
-              ? renderAgentPublishSplitButton()
-              : null,
-            renderAgentSidebarToggleButton()
-          );
-          const agentDetailTopControls = React.createElement(React.Fragment, null,
-            renderAgentVersionSelector(),
-            agentDetailSidebarControls
-          );
+          const agentDetailTabBarActions = renderAgentVersionSelector();
+          const agentDetailSidebarToggle = renderAgentSidebarToggleButton();
 
           const renderAgentReadonlyModelValue = (modelMeta) => {
             const providerIcon = getPlaygroundAgentModelProviderIcon(modelMeta);
@@ -96608,10 +93800,51 @@ ${GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.versionDiffPayload}        function buildAge
             link.download = "agent-analytics.png";
             link.click();
           };
-          const agentUsageChartSection = React.createElement("section", { className: "playground-project-overview-progress-combo-card playground-agents-detail-progress-combo-card" },
-            React.createElement("div", { className: "playground-project-overview-progress-combo-topbar" },
-              React.createElement("h2", { className: "playground-project-overview-progress-combo-title" }, "Analytics"),
-              React.createElement("div", { className: "playground-project-overview-progress-combo-actions" },
+          const agentDetailAnalyticsMetricColors = {
+            "total-runs": "#7effff",
+            cost: "rgb(95, 112, 230)",
+            "avg-ct": "#4da3ff",
+            "success-rate": "#54e5a6",
+          };
+          const agentDetailAnalyticsModel = {
+            title: "Analytics",
+            ariaLabel: "Agent analytics",
+            metrics: agentDetailPerformanceKpis.map((item) => ({
+              id: item.id,
+              label: item.label,
+              value: item.value,
+              color: agentDetailAnalyticsMetricColors[item.id] || "rgba(255, 255, 255, 0.72)",
+            })),
+            labels: agentDetailPerformanceBuckets.map((bucket) => String(bucket?.label || "")),
+            series: [
+              {
+                id: "cost",
+                label: "Cost",
+                values: agentDetailPerformanceBuckets.map((bucket) => Math.max(0, Number(bucket?.totalCT || 0))),
+                color: "rgb(95, 112, 230)",
+                type: "bar",
+                axis: "secondary",
+                valueKind: "tokens",
+              },
+              {
+                id: "runs",
+                label: "Runs",
+                values: agentDetailPerformanceSeries.find((entry) => entry.id === "runs")?.values || [],
+                color: "#7effff",
+                type: "line",
+                axis: "primary",
+                valueKind: "count",
+              },
+            ],
+            loading: agentsHomeThreadsLoading,
+            emptyState: "No agent usage yet.",
+          };
+          const agentUsageChartSection = React.createElement(PlatformAnalyticsSection, {
+              variant: "framed",
+              className: "playground-agents-detail-analytics",
+              analytics: agentDetailAnalyticsModel,
+              title: "Analytics",
+              headerActions: React.createElement(React.Fragment, null,
                 React.createElement("div", { className: "playground-project-overview-progress-combo-ranges", role: "group", "aria-label": "Performance range" },
                   agentDetailPerformanceRangeOptions.map((option) =>
                     React.createElement("button", {
@@ -96630,21 +93863,8 @@ ${GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.versionDiffPayload}        function buildAge
                   title: "Download chart",
                   "aria-label": "Download analytics chart",
                 }, React.createElement(Download, { width: 15, height: 15, strokeWidth: 1.8 }))
-              )
-            ),
-            React.createElement("div", { className: "playground-project-overview-progress-combo-metrics" },
-              agentDetailPerformanceKpis.map((item) =>
-                React.createElement("div", { key: item.id, className: "playground-project-overview-progress-combo-metric" },
-                  React.createElement("div", { className: "playground-project-overview-progress-combo-metric-label" },
-                    React.createElement("span", { className: "playground-project-overview-progress-combo-metric-dot is-" + item.id, "aria-hidden": "true" }),
-                    React.createElement("span", null, item.label)
-                  ),
-                  React.createElement("div", { className: "playground-project-overview-progress-combo-metric-value" }, item.value)
-                )
-              )
-            ),
-            React.createElement("div", { className: "playground-project-overview-progress-combo-chart" },
-              agentsHomeThreadsLoading
+              ),
+              chartContent: agentsHomeThreadsLoading
                 ? React.createElement("div", { className: "playground-project-overview-progress-combo-chart-frame" },
                     React.createElement("div", {
                         className: "playground-overview-chart-loading",
@@ -96659,8 +93879,8 @@ ${GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.versionDiffPayload}        function buildAge
                     maxDailyCt: maxAgentDetailPerformanceDailyCt,
                     maxRunValue: maxAgentDetailPerformanceValue,
                     series: agentDetailPerformanceSeries,
-                  })
-            )
+                  }),
+            }
           );
 
           const renderAgentAboutRow = (key, icon, content, options = {}) => {
@@ -96682,44 +93902,6 @@ ${GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.versionDiffPayload}        function buildAge
                 ? React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" }, icon)
                 : null,
               React.createElement("span", { className: "playground-project-overview-sidebar-resource-label playground-agents-detail-about-value" }, content)
-            );
-          };
-          const renderAgentPermissionBars = () => {
-            const normalizedPermissionSet = normalizePlaygroundPermissionSet(draftAgent.permissionSet, "agent");
-            return React.createElement("div", { className: "playground-agents-detail-permission-bars" },
-              PLAYGROUND_PERMISSION_RING_DEFINITIONS.map((ring) => {
-                const ringAccess = getPlaygroundPermissionRingAccess(normalizedPermissionSet, ring.id);
-                const progress = getPlaygroundPermissionAccessProgress(ringAccess);
-                const accessLabel = getPlaygroundPermissionAccessLabel(ringAccess);
-                return React.createElement("button", {
-                    key: ring.id,
-                    type: "button",
-                    className: "playground-agents-detail-permission-meter is-" + ring.id.replace("_", "-"),
-                    title: ring.shortLabel + ": " + accessLabel,
-                    "aria-label": "Open permissions tab. " + ring.shortLabel + ": " + accessLabel,
-                    onClick: () => setAgentDetailTab("permissions"),
-                  },
-                  React.createElement("span", {
-                    className: "playground-agents-detail-permission-meter-track",
-                    "aria-hidden": "true",
-                    style: {
-                      "--agent-permission-bar-progress": progress + "%",
-                      "--agent-permission-bar-active": getPlaygroundPermissionRingEndColor(ring.id, 1),
-                      "--agent-permission-bar-muted": getPlaygroundPermissionRingEndColor(ring.id, 0.2),
-                    },
-                  }),
-                  React.createElement("span", { className: "playground-agents-detail-permission-meter-copy" },
-                    React.createElement("span", {
-                      className: "playground-agents-detail-permission-meter-swatch",
-                      "aria-hidden": "true",
-                      style: {
-                        "--agent-permission-bar-active": getPlaygroundPermissionRingEndColor(ring.id, 1),
-                      },
-                    }),
-                    React.createElement("span", { className: "playground-agents-detail-permission-meter-title" }, ring.shortLabel)
-                  )
-                );
-              })
             );
           };
           const agentPropertiesSidebar = React.createElement(React.Fragment, null,
@@ -96802,38 +93984,20 @@ ${GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.versionDiffPayload}        function buildAge
               React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
                 React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Permissions")
               ),
-              renderAgentPermissionBars()
+              React.createElement(AgentPermissionMeters, {
+                permissionSet: draftAgent.permissionSet,
+                onOpenPermissions: () => setAgentDetailTab("permissions"),
+              })
             )
           );
 
-          const agentPermissionsContent = renderPlaygroundPermissionPanel(draftAgent.permissionSet, {
-            subjectType: "agent",
-            animationKey: agentPermissionChartAnimationKey,
-            onRingAccessChange: updateAgentPermissionRingAccess,
-            onActionRingChange: updateAgentPermissionActionRing,
-            onActionAccessChange: updateAgentPermissionActionAccess,
-          });
-          const agentPermissionsSection = React.createElement("section", {
-              className: "playground-agents-permissions-section",
-              key: "permissions",
-              "data-section-id": "permissions",
-            },
-            agentPermissionsContent
-          );
-${GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.page}          const agentDetailThreadSortOptions = [
-            { id: "recent-desc", label: "Recently Updated", description: "Show the newest thread activity first" },
-            { id: "created-desc", label: "Newest Created", description: "Show newly created threads first" },
-            { id: "title-asc", label: "Title (A-Z)", description: "Sort threads alphabetically" },
-          ];
-          const agentDetailThreadFilterOptions = [
+${GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.page}          const agentDetailThreadFilterOptions = [
             { id: "all", label: "All Threads", description: "Show every agent thread" },
             { id: "running", label: "Running", description: "Only show threads still in progress" },
             { id: "permission", label: "Needs Permission", description: "Only show threads waiting for approval" },
             { id: "completed", label: "Completed", description: "Only show finished threads" },
             { id: "failed", label: "Failed", description: "Only show failed or cancelled threads" },
           ];
-          const activeAgentDetailThreadSortOption = agentDetailThreadSortOptions.find((option) => option.id === agentDetailThreadSortMode) || agentDetailThreadSortOptions[0];
-          const activeAgentDetailThreadFilterOption = agentDetailThreadFilterOptions.find((option) => option.id === agentDetailThreadFilterMode) || agentDetailThreadFilterOptions[0];
           const agentDetailThreadsAgentsById = allKnownAgents.reduce((map, agent) => {
             if (agent?.id) {
               map[agent.id] = agent;
@@ -96847,7 +94011,6 @@ ${GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.page}          const agentDetailThreadSortOp
             }
             return map;
           }, {});
-          const normalizedAgentDetailThreadSearch = String(agentDetailThreadSearchQuery || "").trim().toLowerCase();
           const selectedAgentThreadId = String(draftAgent.id || "").trim();
           const getAgentDetailThreadRecordObject = (value) =>
             value && typeof value === "object" && !Array.isArray(value) ? value : {};
@@ -97270,82 +94433,41 @@ ${GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.page}          const agentDetailThreadSortOp
               }
               return readAgentDetailThreadAgentId(thread) === selectedAgentThreadId;
             });
-          const agentDetailFilteredThreads = agentDetailAllThreadRows
-            .filter((thread) => {
-              const status = resolveThreadDisplayStatus(thread?.status, thread?.completedAt || thread?.finishedAt || thread?.endedAt);
-              const normalizedStatus = String(status || "").trim().toLowerCase();
-              if (agentDetailThreadFilterMode === "running" && !isRunningThreadDisplayStatus(normalizedStatus)) {
-                return false;
-              }
-              if (agentDetailThreadFilterMode === "permission" && !isPendingPermissionThreadDisplayStatus(normalizedStatus)) {
-                return false;
-              }
-              if (agentDetailThreadFilterMode === "completed" && !isCompletedThreadStatus(normalizedStatus)) {
-                return false;
-              }
-              if (agentDetailThreadFilterMode === "failed" && !["failed", "cancelled", "canceled"].includes(normalizedStatus)) {
-                return false;
-              }
-              if (!normalizedAgentDetailThreadSearch) {
-                return true;
-              }
-              const threadParts = getSidebarThreadTitleParts(thread);
-              const safeThread = threadParts.safeThread || thread;
-              const threadActor = getPlaygroundThreadActorInfo(safeThread, agentDetailThreadsAgentsById, "No agent");
-              const taskPreview = getThreadTaskPreview(safeThread);
-              const haystack = [
-                threadParts.displayThreadTitle || safeThread?.title || "",
-                safeThread?.id || "",
-                threadParts.taskTicketNumber || "",
-                threadActor?.name || "",
-                status || "",
-                taskPreview?.runKind || "",
-                getAgentDetailThreadSourceLabel(thread),
-                getAgentDetailThreadEnvironmentLabel(thread),
-                getAgentDetailThreadTriggeredByLabel(thread),
-                formatThreadSearchTimestamp(resolveThreadSortTimestamp(safeThread)) || "",
-              ].join(" ").toLowerCase();
-              return haystack.includes(normalizedAgentDetailThreadSearch);
-            })
-            .sort((left, right) => {
-              if (agentDetailThreadSortMode === "title-asc") {
-                return String(getSidebarThreadTitleParts(left).displayThreadTitle || left?.title || "")
-                  .localeCompare(String(getSidebarThreadTitleParts(right).displayThreadTitle || right?.title || ""));
-              }
-              if (agentDetailThreadSortMode === "created-desc") {
-                const leftCreatedAt = Date.parse(String(left?.createdAt || ""));
-                const rightCreatedAt = Date.parse(String(right?.createdAt || ""));
-                const leftValue = Number.isFinite(leftCreatedAt) ? leftCreatedAt : 0;
-                const rightValue = Number.isFinite(rightCreatedAt) ? rightCreatedAt : 0;
-                return rightValue - leftValue;
-              }
-              return compareThreadsByRecent(left, right);
-            });
-          const visibleAgentDetailThreads = agentDetailFilteredThreads.slice(0, Math.max(5, Number(agentDetailVisibleThreadCount) || 5));
-          const hasMoreAgentDetailThreads = agentDetailFilteredThreads.length > visibleAgentDetailThreads.length;
-          const hasAgentDetailThreadListFilters = Boolean(
-            normalizedAgentDetailThreadSearch
-            || agentDetailThreadFilterMode !== "all"
-          );
-          function renderAgentDetailThreadToolbarOption({ option, active, onClick }) {
-            return React.createElement("button", {
-                key: option.id,
-                type: "button",
-                className: "tb-popup-row tb-popup-row-select" + (active ? " selected" : ""),
-                onClick,
-              },
-              React.createElement("span", { className: "tb-popup-check-slot" },
-                active
-                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                  : null
-              ),
-              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                React.createElement("span", null, option.label),
-                option.description
-                  ? React.createElement("span", null, option.description)
-                  : null
-              )
-            );
+          const agentDetailFilteredThreads = agentDetailAllThreadRows.filter((thread) => {
+            const status = resolveThreadDisplayStatus(thread?.status, thread?.completedAt || thread?.finishedAt || thread?.endedAt);
+            const normalizedStatus = String(status || "").trim().toLowerCase();
+            if (agentDetailThreadFilterMode === "running") {
+              return isRunningThreadDisplayStatus(normalizedStatus);
+            }
+            if (agentDetailThreadFilterMode === "permission") {
+              return isPendingPermissionThreadDisplayStatus(normalizedStatus);
+            }
+            if (agentDetailThreadFilterMode === "completed") {
+              return isCompletedThreadStatus(normalizedStatus);
+            }
+            if (agentDetailThreadFilterMode === "failed") {
+              return ["failed", "cancelled", "canceled"].includes(normalizedStatus);
+            }
+            return true;
+          });
+          function getAgentDetailThreadSearchText(thread) {
+            const threadParts = getSidebarThreadTitleParts(thread);
+            const safeThread = threadParts.safeThread || thread;
+            const status = resolveThreadDisplayStatus(safeThread?.status, safeThread?.completedAt || safeThread?.finishedAt || safeThread?.endedAt);
+            const threadActor = getPlaygroundThreadActorInfo(safeThread, agentDetailThreadsAgentsById, "No agent");
+            const taskPreview = getThreadTaskPreview(safeThread);
+            return [
+              threadParts.displayThreadTitle || safeThread?.title || "",
+              safeThread?.id || "",
+              threadParts.taskTicketNumber || "",
+              threadActor?.name || "",
+              status || "",
+              taskPreview?.runKind || "",
+              getAgentDetailThreadSourceLabel(thread),
+              getAgentDetailThreadEnvironmentLabel(thread),
+              getAgentDetailThreadTriggeredByLabel(thread),
+              formatThreadSearchTimestamp(resolveThreadSortTimestamp(safeThread)) || "",
+            ].join(" ");
           }
           const agentDetailThreadTableRowOptions = {
             getSourceLabel: getAgentDetailThreadSourceLabel,
@@ -97372,103 +94494,44 @@ ${GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.page}          const agentDetailThreadSortOp
               key: "threads",
               "data-section-id": "threads",
             },
-            React.createElement("div", { className: "playground-plugins-section-header" },
-              React.createElement("div", { className: "playground-plugins-section-copy" },
-                React.createElement("h3", { className: "playground-plugins-section-title" }, "Threads")
-              )
-            ),
-            React.createElement("div", { className: "playground-plugins-search-row" },
-              React.createElement("div", { className: "playground-plugins-search-shell" },
-                React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("input", {
-                  type: "search",
-                  value: agentDetailThreadSearchQuery,
-                  onChange: (event) => {
-                    setAgentDetailThreadSearchQuery(event.target.value);
-                    setAgentDetailVisibleThreadCount(5);
+            renderPlaygroundThreadOverviewTable({
+              threads: agentDetailFilteredThreads,
+              rowOptions: agentDetailThreadTableRowOptions,
+              tableOptions: {
+                key: "agent-insights-threads-" + selectedAgentThreadId,
+                ariaLabel: "Threads for " + (draftAgent.name || "agent"),
+                variant: "minimalistic-ui",
+                sorting: {
+                  value: agentDetailThreadSorting,
+                  onChange: setAgentDetailThreadSorting,
+                },
+                toolbar: {
+                  title: "Threads",
+                  search: {
+                    value: agentDetailThreadSearchQuery,
+                    onChange: setAgentDetailThreadSearchQuery,
+                    placeholder: "Search threads",
+                    ariaLabel: "Search agent threads",
+                    getSearchText: getAgentDetailThreadSearchText,
                   },
-                  className: "playground-plugins-search",
-                  placeholder: "Search threads",
-                  "aria-label": "Search agent threads",
-                })
-              ),
-              React.createElement("div", { className: "playground-plugins-toolbar-controls" },
-                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-control-button is-bare is-backlog-sort" + (agentDetailThreadToolbarPopover === "sort" || agentDetailThreadSortMode !== "recent-desc" ? " is-active" : ""),
-                    onClick: () => setAgentDetailThreadToolbarPopover((current) => current === "sort" ? "" : "sort"),
-                    title: activeAgentDetailThreadSortOption.label,
-                  },
-                    React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Sort")
-                  ),
-                  agentDetailThreadToolbarPopover === "sort"
-                    ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                        agentDetailThreadSortOptions.map((option) =>
-                          renderAgentDetailThreadToolbarOption({
-                            option,
-                            active: agentDetailThreadSortMode === option.id,
-                            onClick: () => {
-                              setAgentDetailThreadSortMode(option.id);
-                              setAgentDetailThreadToolbarPopover("");
-                              setAgentDetailVisibleThreadCount(5);
-                            },
-                          })
-                        )
-                      )
-                    : null
-                ),
-                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-control-button is-bare is-backlog-filter" + (agentDetailThreadToolbarPopover === "filter" || agentDetailThreadFilterMode !== "all" ? " is-active" : ""),
-                    onClick: () => setAgentDetailThreadToolbarPopover((current) => current === "filter" ? "" : "filter"),
-                    title: activeAgentDetailThreadFilterOption.label,
-                  },
-                    React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Filter")
-                  ),
-                  agentDetailThreadToolbarPopover === "filter"
-                    ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                        agentDetailThreadFilterOptions.map((option) =>
-                          renderAgentDetailThreadToolbarOption({
-                            option,
-                            active: agentDetailThreadFilterMode === option.id,
-                            onClick: () => {
-                              setAgentDetailThreadFilterMode(option.id);
-                              setAgentDetailThreadToolbarPopover("");
-                              setAgentDetailVisibleThreadCount(5);
-                            },
-                          })
-                        )
-                      )
-                    : null
-                )
-              ),
-              React.createElement("button", {
-                type: "button",
-                className: "playground-files-control-button playground-project-overview-toolbar-action",
-                onClick: () => setAgentDetailVisibleThreadCount((current) => current + 10),
-                disabled: !hasMoreAgentDetailThreads,
-                style: !hasMoreAgentDetailThreads ? { opacity: 0.5 } : undefined,
+                  filters: [
+                    {
+                      id: "status",
+                      label: "Status",
+                      value: agentDetailThreadFilterMode,
+                      options: agentDetailThreadFilterOptions,
+                      onChange: setAgentDetailThreadFilterMode,
+                    },
+                  ],
+                },
+                loading: agentsHomeThreadsLoading && agentDetailAllThreadRows.length === 0,
+                error: agentsHomeThreadsError && agentDetailAllThreadRows.length === 0 ? agentsHomeThreadsError : undefined,
+                emptyState: agentDetailThreadFilterMode === "all"
+                  ? "No agent threads yet."
+                  : "No matching agent threads.",
+                noResultsState: "No matching agent threads.",
               },
-                React.createElement(List, { width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("span", null, "Show more")
-              )
-            ),
-            agentsHomeThreadsError
-              ? React.createElement("div", { className: "playground-tasks-secondary-copy" }, agentsHomeThreadsError)
-              : agentDetailFilteredThreads.length > 0
-                ? renderPlaygroundThreadOverviewTable({
-                    threads: visibleAgentDetailThreads,
-                    rowOptions: agentDetailThreadTableRowOptions,
-                  })
-                : React.createElement("div", { className: "playground-tasks-secondary-copy" },
-                    agentsHomeThreadsLoading
-                      ? "Loading threads..."
-                      : (hasAgentDetailThreadListFilters ? "No matching agent threads." : "No agent threads yet.")
-                  )
+            })
           );
 ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.view}          const normalizedAgentDetailTab = agentDetailTab === "threads" ? "insights" : agentDetailTab;
 
@@ -97553,7 +94616,7 @@ ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.view}          const normalizedAgentDetailT
             agentThreadsSection
           );
           const agentDetailActiveSection = normalizedAgentDetailTab === "permissions"
-            ? agentPermissionsSection
+            ? null
             : normalizedAgentDetailTab === "guardrails"
               ? agentGuardrailsSection
             : normalizedAgentDetailTab === "evaluation"
@@ -97568,12 +94631,20 @@ ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.view}          const normalizedAgentDetailT
 		                );
           const agentDetailWorkspaceSection = React.createElement(AgentDetailPage, {
               header: agentProfileSection,
-              actions: agentDetailTopControls,
+              tabBarActions: agentDetailTabBarActions,
+              sidebarToggle: agentDetailSidebarToggle,
               sidebar: agentPropertiesSidebar,
               activeTab: normalizedAgentDetailTab,
               onTabChange: setAgentDetailTab,
               sidebarCollapsed: agentDetailSidebarCollapsed,
               sidebarPopoverOpen: Boolean(agentModelPopover || agentOwnerPopoverOpen || agentVoicePopoverOpen),
+              permissions: {
+                permissionSet: draftAgent.permissionSet,
+                animationKey: agentPermissionChartAnimationKey,
+                onPermissionSetChange: (permissionSet) => {
+                  updateDraftAgent((current) => ({ ...current, permissionSet }));
+                },
+              },
               ariaLabel: (isTeamAgent ? "Squad" : "Agent") + " details for " + (draftAgent.name || "Untitled"),
               sidebarAriaLabel: isTeamAgent ? "Squad settings" : "Agent settings",
             },
@@ -97674,9 +94745,15 @@ ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.modal}            )
           window.addEventListener("keydown", handleAgentVersionKeyboardShortcut, true);
           return () => window.removeEventListener("keydown", handleAgentVersionKeyboardShortcut, true);
         }, [canShowAgentVersions, draftAgent, saveState.isSaving, agentVersionState.status, agentVersionModal]);
-        const agentsTopNavActions = topNavActionsContainer && !agentVersionsSidebarOpen
+        const agentsTopNavActions = topNavActionsContainer
+          && !shouldShowAgentsHome
+          && !agentCreationSetupOpen
+          && !agentVersionsSidebarOpen
           ? createPortal(
               React.createElement(React.Fragment, null,
+                !agentVersionChangesState
+                  ? renderAgentPublishAction()
+                  : null,
                 canShowAgentActions
                   ? React.createElement("div", {
                       className: "playground-tasks-toolbar-popup-shell",
@@ -98031,9 +95108,10 @@ ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.modal}            )
           );
         }
 
-        function renderAgentVersionChangesPublishAction() {
+        function renderAgentPublishAction() {
           const canShowPublish = Boolean(
-            !agentCreationSetupOpen
+            !shouldShowAgentsHome
+            && !agentCreationSetupOpen
             && draftAgent?.id
             && draftAgent.id !== PLAYGROUND_AGENT_DRAFT_ID
             && !draftAgent.isSystem
@@ -98047,81 +95125,19 @@ ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.modal}            )
           const versionHasChanges = hasDraftAgentVersionChanges();
           const isPublishControlDisabled = Boolean(!draftAgent || isVersionControlBusy || !versionHasChanges);
           const isPublishMenuDisabled = isPublishControlDisabled;
-          const versionPopupActions = getAgentVersionPopupActions({ includeVersionHistory: false });
-          return renderPlaygroundPlatformPopup({
-            open: agentPublishMenuOpen,
-            shellRef: agentPublishMenuRef,
-            shellClassName: "playground-agents-detail-publish-split-shell",
-            menuClassName: "playground-agents-detail-publish-menu",
-            trigger: React.createElement("div", {
-                className: "playground-metronome-create-button playground-metronome-publish-button playground-agents-detail-header-publish-button playground-agents-detail-publish-split-control"
-                  + (agentVersionsSidebarOpen ? " is-active" : "")
-                  + (isPublishControlDisabled ? " is-disabled" : ""),
-              },
-              React.createElement("button", {
-                  type: "button",
-                  className: "playground-agents-detail-publish-main",
-                  title: "Save and publish agent changes",
-                  "aria-label": "Save and publish agent changes",
-                  disabled: isPublishControlDisabled,
-                  onClick: () => {
-                    setAgentPublishMenuOpen(false);
-                    setAgentVersionSelectorMenuOpen(false);
-                    setAgentTagsMenuOpen(false);
-                    setAgentVersionsHeaderMenuOpen(false);
-                    void saveAndPublishCurrentAgentVersion();
-                  },
-                },
-                React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("span", null, "Save & Publish")
-              ),
-              React.createElement("span", { className: "playground-agents-detail-publish-divider", "aria-hidden": "true" }),
-              React.createElement("button", {
-                  type: "button",
-                  className: "playground-agents-detail-publish-chevron",
-                  title: "Version save options",
-                  "aria-label": "Version save options",
-                  "aria-haspopup": "menu",
-                  "aria-expanded": agentPublishMenuOpen ? "true" : "false",
-                  disabled: isPublishMenuDisabled,
-                  onClick: (event) => {
-                    event.stopPropagation();
-                    setAgentVersionSelectorMenuOpen(false);
-                    setAgentTagsMenuOpen(false);
-                    setAgentPublishMenuOpen((current) => !current);
-                  },
-                },
-                React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
-              )
-            ),
-            menuProps: {
-              role: "menu",
-              onClick: (event) => event.stopPropagation(),
+	          const versionPopupActions = getAgentVersionPopupActions({ includeVersionHistory: false });
+	          return React.createElement(AgentPublishControl, {
+	            open: agentPublishMenuOpen,
+	            actions: versionPopupActions,
+            active: agentVersionsSidebarOpen,
+            disabled: isPublishControlDisabled,
+            menuDisabled: isPublishMenuDisabled,
+            onOpenChange: (nextOpen) => {
+              setAgentVersionSelectorMenuOpen(false);
+              setAgentVersionsHeaderMenuOpen(false);
+              setAgentPublishMenuOpen(nextOpen);
             },
-            children: React.createElement(React.Fragment, null,
-              versionPopupActions.map((action) => React.createElement("button", {
-                  key: action.label,
-                  type: "button",
-                  className: "tb-popup-row",
-                  role: "menuitem",
-                  disabled: isPublishMenuDisabled || action.disabled,
-                  onClick: () => {
-                    setAgentPublishMenuOpen(false);
-                    void action.onClick();
-                  },
-                },
-                React.createElement(getPlaygroundSafeIconComponent(action.Icon, Circle), { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
-                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                  React.createElement("span", null, action.label)
-                ),
-                action.shortcut
-                  ? React.createElement("span", {
-                      className: "playground-agents-detail-publish-menu-shortcut",
-                      "aria-hidden": "true",
-                    }, action.shortcut)
-                  : null
-              ))
-            )
+            onPublish: saveAndPublishCurrentAgentVersion,
           });
         }
 
@@ -98169,7 +95185,7 @@ ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.modal}            )
               React.createElement("span", { className: "playground-version-changes-select-arrow", "aria-hidden": "true" }, "→"),
               renderCompareSelect(displayRightSource.id, orderedCompareSources.rightStateSide)
             ),
-            actions: renderAgentVersionChangesPublishAction(),
+            actions: renderAgentPublishAction(),
             files: diffFiles,
             backIcon: ArrowLeft,
             backText: "Back",
@@ -104878,7 +101894,10 @@ ${GUARDRAILS_DOMAIN_FRAGMENTS.runtime}      function createPlaygroundPlatformNav
           }
         }, []);
 ${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.layoutState}
-        const [activePage, setActivePage] = useState("thread");
+        const [activePage, setActivePageState] = useState("thread");
+        const activePageRef = useRef(activePage);
+        activePageRef.current = activePage;
+${PLATFORM_NAVIGATION_GUARD_APP_SCRIPT_FRAGMENTS.state}${PLATFORM_NAVIGATION_GUARD_APP_SCRIPT_FRAGMENTS.refs}
 ${METRONOME_APP_SCRIPT_FRAGMENTS.state}
         const [environmentsOpenToken, setEnvironmentsOpenToken] = useState(0);
         const [environmentsNavigationTargetId, setEnvironmentsNavigationTargetId] = useState("");
@@ -105001,6 +102020,7 @@ ${METRONOME_APP_SCRIPT_FRAGMENTS.menuState}
         });
         const [agentPageSelectionRequest, setAgentPageSelectionRequest] = useState(null);
         const [agentCreationPageRequestToken, setAgentCreationPageRequestToken] = useState(0);
+        const [agentCreationPageModelId, setAgentCreationPageModelId] = useState("");
         const [threadAgentSelectionOverride, setThreadAgentSelectionOverride] = useState(null);
         const [currentThreadId, setCurrentThreadId] = useState(() => (isDemoMode ? DEFAULT_DEMO_THREAD_ID : readInitialThreadDeepLinkId()));
         const [initialThreadPrivateMode, setInitialThreadPrivateMode] = useState(false);
@@ -105215,7 +102235,9 @@ ${INFERENCE_APP_SCRIPT_FRAGMENTS.state}        const [connectionsOverviewChartTi
         const tagInstructionsTextareaRef = useRef(null);
         const tagDetailAutosaveTimersRef = useRef({});
         const [toolsSkillsOpenRequest, setToolsSkillsOpenRequest] = useState(null);
-        const [resourcesView, setResourcesView] = useState("agents");
+        const [resourcesView, setResourcesViewState] = useState("agents");
+        const resourcesViewRef = useRef(resourcesView);
+        resourcesViewRef.current = resourcesView;
         const [resourcesServerKind, setResourcesServerKind] = useState("");
 ${MODELS_APP_SCRIPT_FRAGMENTS.state}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.state}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.state}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.state}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.state}        const [projectOverviewResourceFilter, setProjectOverviewResourceFilter] = useState("all");
         const [projectOverviewResourceSearchQuery, setProjectOverviewResourceSearchQuery] = useState("");
@@ -106071,7 +103093,16 @@ ${CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationLoadLifecycle}
 
 ${APP_HEADER_APP_SCRIPT_FRAGMENTS.navigation}
 
+${PLATFORM_NAVIGATION_GUARD_APP_SCRIPT_FRAGMENTS.navigation}
+        const setActivePage = useCallback((nextValue) => (
+          requestPlatformStateChange(activePageRef, setActivePageState, nextValue)
+        ), [requestPlatformStateChange]);
+        const setResourcesView = useCallback((nextValue) => (
+          requestPlatformStateChange(resourcesViewRef, setResourcesViewState, nextValue)
+        ), [requestPlatformStateChange]);
+
 ${APP_HEADER_APP_SCRIPT_FRAGMENTS.lifecycle}
+${PLATFORM_NAVIGATION_GUARD_APP_SCRIPT_FRAGMENTS.lifecycle}
 
         useEffect(() => {
           if (isDemoMode || sessionState.status !== "unauthenticated") {
@@ -113933,6 +110964,9 @@ ${METRONOME_APP_SCRIPT_FRAGMENTS.runActions}
             setSidebarWorkspaceMode(getSidebarModeForResourcesView(normalizedView));
           }
           setActivePage("resources");
+          if (options.forceOverview) {
+            setResourcesBackRequestToken((current) => current + 1);
+          }
           if (normalizedView === "computers") {
             setEnvironmentsNavigationTargetId("");
             setEnvironmentsOpenToken((current) => current + 1);
@@ -113955,6 +110989,13 @@ ${METRONOME_APP_SCRIPT_FRAGMENTS.runActions}
               skillId: String(options.skillId || "").trim(),
               token: Date.now().toString(36) + Math.random().toString(36).slice(2),
             });
+          }
+          if (options.forceOverview) {
+            if (normalizedView === "plugins" || normalizedView === "tags") {
+              setSelectedPluginId("");
+            } else if (normalizedView === "skills") {
+              setToolsSkillsBackRequestToken((current) => current + 1);
+            }
           }
           if (!options.preserveSidebarMode) {
             setSidebarWorkspaceMode(getSidebarModeForToolsView(normalizedView));
@@ -113985,6 +111026,7 @@ ${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.navigation}
               || (activePage === "tools" && (toolsView === "plugins" || toolsView === "tags" || toolsView === "skills"));
           }
           return activePage === "develop"
+            || activePage === "develop-webhooks"
             || activePage === "develop-api-keys"
             || (isResourcesPage && activeResourcesView === "servers")
             || (activePage === "tools" && toolsView === "actions");
@@ -113992,15 +111034,15 @@ ${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.navigation}
 
 ${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.modeNavigation}
         function handleOpenPluginsShortcut() {
-          openToolsView("plugins");
+          openToolsView("plugins", { forceOverview: true });
         }
 
         function handleOpenTagsShortcut() {
-          openToolsView("tags");
+          openToolsView("tags", { forceOverview: true });
         }
 
         function handleOpenSkillsShortcut() {
-          openToolsView("skills");
+          openToolsView("skills", { forceOverview: true });
         }
 
         function handleOpenActionsShortcut() {
@@ -114008,25 +111050,33 @@ ${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.modeNavigation}
         }
 
         function handleOpenTasksShortcut() {
+          setTasksProjectBackRequestToken((current) => current + 1);
           setSidebarWorkspaceMode("work");
           setActivePage("tasks");
         }
 
         function handleOpenFilesShortcut() {
+          setFilesPageNavigationRequest({
+            token: createPlaygroundPlatformNavigationToken(),
+            environmentId: "",
+            path: "",
+            isFolder: true,
+            contentMode: "files",
+          });
           setSidebarWorkspaceMode("work");
           setActivePage("files");
         }
 
         function handleOpenResourcesShortcut() {
-          openResourcesView("agents");
+          openResourcesView("agents", { forceOverview: true });
         }
 
         function handleOpenEnvironmentsShortcut() {
-          openResourcesView("computers");
+          openResourcesView("computers", { forceOverview: true });
         }
 
         function handleOpenAgentsShortcut() {
-          openResourcesView("agents");
+          openResourcesView("agents", { forceOverview: true });
         }
 
         function renderAccountAvatar(className, imageClassName, fallbackLabel, photoUrl) {
@@ -117035,7 +114085,10 @@ ${API_KEYS_PAGE_SCRIPT_FRAGMENTS.legacyCard}        function renderSettingsChip(
                     className: "playground-agents-detail-permission-ring",
                     title: ring.label + ": " + getPlaygroundPermissionAccessLabel(ringAccess),
                   },
-                  renderPlaygroundPermissionMiniRingIcon(ring.id, ringAccess)
+                  React.createElement(PlatformPermissionMiniRingIcon, {
+                    ringId: ring.id,
+                    access: ringAccess,
+                  })
                 );
               })
             );
@@ -117317,7 +114370,8 @@ ${API_KEYS_PAGE_SCRIPT_FRAGMENTS.legacyCard}        function renderSettingsChip(
               key: "permissions",
               "data-section-id": "permissions",
             },
-            renderPlaygroundPermissionPanel(normalizedPermissionSet, {
+            React.createElement(PlatformPermissionsPage, {
+              permissionSet: normalizedPermissionSet,
               subjectType: "agent",
               onRingAccessChange: (ringId, access) => updateTagPermissionRingAccess(tagId, ringId, access),
               onActionRingChange: (actionId, ringId) => updateTagPermissionActionRing(tagId, actionId, ringId),
@@ -118212,6 +115266,10 @@ ${API_KEYS_PAGE_SCRIPT_FRAGMENTS.legacyCard}        function renderSettingsChip(
                 )
               )
             : null;
+
+          if (options.composerOnly) {
+            return settingsTriggerComposerDialog;
+          }
 
           const content = React.createElement(React.Fragment, null,
             renderSettingsBanner("error", settingsTriggersError),
@@ -120039,7 +117097,6 @@ ${INFERENCE_APP_SCRIPT_FRAGMENTS.historyCapture}
           activeResourcesView,
           contentMode,
           currentThreadId,
-          developHomeSection,
           environmentId,
           evaluationsPageMode,
           fineTuningPageMode,
@@ -120070,6 +117127,7 @@ ${INFERENCE_APP_SCRIPT_FRAGMENTS.historyCapture}
           selectedEvaluationRunId,
           selectedEvaluationSetId,
           selectedFineTuningJobId,
+          settingsSelectedTriggerId,
           settingsSection,
           tasksHeaderState.detailMode,
           tasksHeaderState.mode,
@@ -120179,6 +117237,7 @@ ${INFERENCE_APP_SCRIPT_FRAGMENTS.historyCapture}
             }
             if (resourceView === "agents") {
               if (entry.resourceId === PLAYGROUND_AGENT_DRAFT_ID) {
+                setAgentCreationPageModelId("");
                 setAgentCreationPageRequestToken((current) => current + 1);
               } else if (entry.resourceId) {
                 setAgentPageSelectionRequest({
@@ -120318,12 +117377,27 @@ ${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.historyRestore}
             if (!entry) {
               return;
             }
-            applyPlatformNavigationEntry(entry);
+            requestPlatformNavigation(
+              () => applyPlatformNavigationEntry(entry),
+              {
+                onCancel: () => {
+                  const currentEntry = normalizePlaygroundPlatformNavigationEntry(currentPlatformNavigationEntry);
+                  const currentState = buildPlaygroundPlatformNavigationState(currentEntry);
+                  if (!currentState) {
+                    return;
+                  }
+                  window.history.pushState({
+                    ...(window.history.state && typeof window.history.state === "object" ? window.history.state : {}),
+                    ...currentState,
+                  }, "");
+                },
+              }
+            );
           }
 
           window.addEventListener("popstate", handlePlatformNavigationPopState);
           return () => window.removeEventListener("popstate", handlePlatformNavigationPopState);
-        }, [applyPlatformNavigationEntry]);
+        }, [applyPlatformNavigationEntry, currentPlatformNavigationEntry, requestPlatformNavigation]);
 
         useEffect(() => {
           if (activePage !== "resources" || activeResourcesView !== "servers" || !hasSessionAuth) {
@@ -120365,7 +117439,7 @@ ${MARKETPLACE_APP_SCRIPT_FRAGMENTS.selectedTitle}${ORGANIZATIONS_APP_SCRIPT_FRAG
             return "New Thread";
           }
           return selectedKnownThread?.title || "Current thread";
-        }, [activePage, currentThreadId, hasDemoAccess, hasRealAccess, isResourcesPage, metronomeRunTraceSelection, selectedKnownThread]);
+        }, [activePage, currentThreadId, hasDemoAccess, hasRealAccess, isResourcesPage, metronomeRunTraceSelection, selectedKnownThread, settingsSelectedTrigger, settingsSelectedTriggerId]);
         const selectedThreadNavRecord = useMemo(() => {
           if (selectedKnownThread?.id) {
             return selectedKnownThread;
@@ -120619,12 +117693,15 @@ ${MARKETPLACE_APP_SCRIPT_FRAGMENTS.selectedTitle}${ORGANIZATIONS_APP_SCRIPT_FRAG
           });
           setActivePage("resources");
         }, [refreshAgents]);
-        const openAgentCreationInResources = useCallback(() => {
+        const openAgentCreationInResources = useCallback((options = {}) => {
+          const requestedModelId = String(options?.modelId || "").trim();
+          const requestedSidebarMode = options?.sidebarMode === "configure" ? "configure" : "work";
           void refreshAgents();
           setSelectedWelcomeComposerTaskId("");
           setThreadAgentSelectionOverride(null);
           setAgentPageSelectionRequest(null);
-          setSidebarWorkspaceMode("work");
+          setAgentCreationPageModelId(requestedModelId);
+          setSidebarWorkspaceMode(requestedSidebarMode);
           setResourcesView("agents");
           setResourcesHeaderState({
             mode: "overview",
@@ -122680,6 +119757,11 @@ ${API_KEYS_APP_SCRIPT_FRAGMENTS.topNavigation}
               ? "Computers"
               : "Agents";
           const isConfigureResourcesPage = !activeDevelopServerPageItem;
+          const returnToResourcesOverview = () => openResourcesView(activeResourcesView, {
+            forceOverview: true,
+            preserveSidebarMode: true,
+            serverKind: activeResourcesServerKind,
+          });
           const resourcesPathItems = activeDevelopServerPageItem
             ? (
                 isResourcesDetailView
@@ -122687,7 +119769,7 @@ ${API_KEYS_APP_SCRIPT_FRAGMENTS.topNavigation}
                       { label: "Develop" },
                       {
                         label: resourcesOverviewTitle,
-                        onClick: () => setResourcesBackRequestToken((current) => current + 1),
+                        onClick: returnToResourcesOverview,
                       },
                       { label: resourcesHeaderState.title || "Resource" },
                     ]
@@ -122699,7 +119781,7 @@ ${API_KEYS_APP_SCRIPT_FRAGMENTS.topNavigation}
                       ...(isConfigureResourcesPage ? [{ label: "Configure" }] : []),
                       {
                         label: resourcesOverviewTitle,
-                        onClick: () => setResourcesBackRequestToken((current) => current + 1),
+                        onClick: returnToResourcesOverview,
                       },
                       { label: resourcesHeaderState.title || "Resource" },
                     ]
@@ -123740,6 +120822,7 @@ ${API_KEYS_APP_SCRIPT_FRAGMENTS.topNavigation}
             leftExtra: filesPageTopNav?.left || null,
             center: filesPageTopNav?.center || null,
             extraActions: filesPageTopNav?.extraActions || null,
+            includeSearchDivider: true,
           });
         }
 
@@ -123828,6 +120911,7 @@ ${CALENDAR_SHELL_SCRIPT_FRAGMENTS.topNavigation}
                   focusedAgentId: agentPageSelectionRequest?.agentId || "",
                   focusedAgentSelectionToken: agentPageSelectionRequest?.token || "",
                   createAgentRequestToken: agentCreationPageRequestToken,
+                  createAgentModelId: agentCreationPageModelId,
                   subscriptionTierId: accountTierId || "",
                   onUpgradeToIndividual: () => handleSettingsSubscribe("builder"),
                   onPreferredAgentChange: (nextAgentId) => {
@@ -123853,19 +120937,21 @@ ${CALENDAR_SHELL_SCRIPT_FRAGMENTS.topNavigation}
 	                    if (!normalizedThreadId) {
 	                      return;
 	                    }
-                    if (options?.threadRecord?.id) {
-                      upsertRealThreadRecord(options.threadRecord);
-                    }
-                    const requestedContentMode = options?.contentMode === "changes" ? "changes" : "chat";
-                    setThreadAgentSelectionOverride(null);
-                    setPendingThreadRunRequest(null);
-                    setActivePage("thread");
-                    setCurrentThreadId(normalizedThreadId);
-                    setContentMode(requestedContentMode);
-                    setThreadListMode("threads");
-                    setChangesNavigationTarget(null);
-	                    setRunnerRenderKey((current) => current + 1);
-	                    void refreshThreads(undefined, normalizedThreadId);
+                    requestPlatformNavigation(() => {
+                      if (options?.threadRecord?.id) {
+                        upsertRealThreadRecord(options.threadRecord);
+                      }
+                      const requestedContentMode = options?.contentMode === "changes" ? "changes" : "chat";
+                      setThreadAgentSelectionOverride(null);
+                      setPendingThreadRunRequest(null);
+                      setActivePage("thread");
+                      setCurrentThreadId(normalizedThreadId);
+                      setContentMode(requestedContentMode);
+                      setThreadListMode("threads");
+                      setChangesNavigationTarget(null);
+	                      setRunnerRenderKey((current) => current + 1);
+	                      void refreshThreads(undefined, normalizedThreadId);
+                    });
 	                  },
 	                  onThreadActionMenuOpen: openThreadActionMenu,
                   threadMutationSignal,
@@ -123874,46 +120960,50 @@ ${CALENDAR_SHELL_SCRIPT_FRAGMENTS.topNavigation}
 	                    if (!normalizedThreadId) {
 	                      return;
                     }
-                    setThreadAgentSelectionOverride(null);
-                    if (options?.taskPreview?.taskId) {
-                      upsertThreadTaskPreview(normalizedThreadId, {
-                        ...options.taskPreview,
-                        threadId: normalizedThreadId,
-                      });
-                    }
-                    if (options?.taskRunRequest?.prompt) {
-                      setPendingThreadRunRequest({
-                        token: options.taskRunRequest.token || (Date.now().toString(36) + Math.random().toString(36).slice(2)),
-                        threadId: normalizedThreadId,
-                        prompt: options.taskRunRequest.prompt,
-                        displayPrompt: options.taskRunRequest.displayPrompt || null,
-                        agentId: options.taskRunRequest.agentId || null,
-                        attachments: Array.isArray(options.taskRunRequest.attachments) ? options.taskRunRequest.attachments : [],
-                        githubRepo: options.taskRunRequest.githubRepo || null,
-                        enabledSkills: options.taskRunRequest.enabledSkills || null,
-                        environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
-                        quotedSelection: options.taskRunRequest.quotedSelection || null,
-                      });
-                    } else {
-                      setPendingThreadRunRequest(null);
-                    }
-                    setActivePage("thread");
-                    setCurrentThreadId(normalizedThreadId);
-                    setContentMode("chat");
-                    setThreadListMode("threads");
-                    setChangesNavigationTarget(null);
-                    setRunnerRenderKey((current) => current + 1);
-                    void refreshThreads();
+                    requestPlatformNavigation(() => {
+                      setThreadAgentSelectionOverride(null);
+                      if (options?.taskPreview?.taskId) {
+                        upsertThreadTaskPreview(normalizedThreadId, {
+                          ...options.taskPreview,
+                          threadId: normalizedThreadId,
+                        });
+                      }
+                      if (options?.taskRunRequest?.prompt) {
+                        setPendingThreadRunRequest({
+                          token: options.taskRunRequest.token || (Date.now().toString(36) + Math.random().toString(36).slice(2)),
+                          threadId: normalizedThreadId,
+                          prompt: options.taskRunRequest.prompt,
+                          displayPrompt: options.taskRunRequest.displayPrompt || null,
+                          agentId: options.taskRunRequest.agentId || null,
+                          attachments: Array.isArray(options.taskRunRequest.attachments) ? options.taskRunRequest.attachments : [],
+                          githubRepo: options.taskRunRequest.githubRepo || null,
+                          enabledSkills: options.taskRunRequest.enabledSkills || null,
+                          environmentId: typeof options.taskRunRequest.environmentId === "string" ? options.taskRunRequest.environmentId : "",
+                          quotedSelection: options.taskRunRequest.quotedSelection || null,
+                        });
+                      } else {
+                        setPendingThreadRunRequest(null);
+                      }
+                      setActivePage("thread");
+                      setCurrentThreadId(normalizedThreadId);
+                      setContentMode("chat");
+                      setThreadListMode("threads");
+                      setChangesNavigationTarget(null);
+                      setRunnerRenderKey((current) => current + 1);
+                      void refreshThreads();
+                    });
                   },
                   onAgentMutated: async () => {
                     await refreshAgents();
                   },
                   onStartThreadWithAgent: (agentId) => {
-                    const normalizedAgentId = String(agentId || "").trim();
-                    if (normalizedAgentId) {
-                      setPreferredAgentId(normalizedAgentId);
-                    }
-                    handleNewThread();
+                    requestPlatformNavigation(() => {
+                      const normalizedAgentId = String(agentId || "").trim();
+                      if (normalizedAgentId) {
+                        setPreferredAgentId(normalizedAgentId);
+                      }
+                      handleNewThread();
+                    });
                   },
 ${MODELS_AGENT_SCRIPT_FRAGMENTS.hostProps}                  embeddedInResources: true,
                   topNavActionsPortalId: "playground-resources-nav-actions",
@@ -123921,6 +121011,8 @@ ${MODELS_AGENT_SCRIPT_FRAGMENTS.hostProps}                  embeddedInResources:
                   onResourcesHeaderChange: setResourcesHeaderState,
                   onVersionsSidebarOpenChange: setIsAgentVersionsDetailOpen,
                   onOpenSettingsUsage: () => openSettingsModal("costs-overview"),
+                  onNavigationGuardChange: registerPlatformNavigationGuard,
+                  onNavigationRequest: requestPlatformNavigation,
                   backRequestToken: resourcesBackRequestToken,
                 })
               : hasDemoAccess
@@ -124085,6 +121177,7 @@ ${APP_HEADER_APP_SCRIPT_FRAGMENTS.appHeader}
 ${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.modeSelector}
 ${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.navigationItems}
 ${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.sidebar}
+${PLATFORM_NAVIGATION_GUARD_APP_SCRIPT_FRAGMENTS.modal}
         const renderedPlaygroundOnboarding = showPlaygroundOnboarding
           ? React.createElement(PlaygroundOnboardingModal, {
               open: showPlaygroundOnboarding,
@@ -124148,6 +121241,7 @@ ${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.sidebar}
 
 	        return (
           React.createElement(React.Fragment, null,
+            renderPlatformNavigationGuardModal(),
             renderedPlaygroundOnboarding,
             renderedSubscriptionSuccessModal,
             renderedComposerAgentUpgradeModal,
@@ -124285,6 +121379,8 @@ ${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.sidebar}
 	                      ? renderInferencePageNav()
 	                    : activePage === "develop"
 	                      ? renderDevelopHomeNav()
+	                    : activePage === "develop-webhooks"
+	                      ? renderDevelopWebhooksNav()
 	                    : activePage === "develop-api-keys"
 	                      ? renderDevelopApiKeysNav()
 	                    : isResourcesPage
@@ -124644,6 +121740,12 @@ ${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.sidebar}
 	                      : activePage === "develop"
 	                        ? hasRealAccess
 	                          ? renderDevelopHomePage()
+	                          : hasDemoAccess
+	                            ? renderDemoFeaturePage("resources")
+	                            : renderAuthGate()
+	                      : activePage === "develop-webhooks"
+	                        ? hasRealAccess
+	                          ? renderDevelopWebhooksPage()
 	                          : hasDemoAccess
 	                            ? renderDemoFeaturePage("resources")
 	                            : renderAuthGate()
@@ -132965,6 +130067,7 @@ const configureHomeService = createConfigureHomeService({
 
 const apiKeysService = createApiKeysService({
   proxyAiosJsonRequest,
+  proxyUpstreamGet,
 });
 
 const projectsService = createProjectsService({

@@ -68,8 +68,8 @@ function renderPrimaryAction(action: PlatformDataTablePrimaryAction | undefined)
 }
 
 export function ResourceOverviewPage<TData>({
-  period,
-  onPeriodChange,
+  period = "day",
+  onPeriodChange = () => undefined,
   analytics,
   heroContent,
   showPeriodSelector = true,
@@ -111,7 +111,7 @@ export function ResourceOverviewPage<TData>({
       {overviewControls}
       <div className={`resource-overview-page${className ? ` ${className}` : ""}`}>
         {heroContent === undefined
-          ? <PlatformAnalyticsSection analytics={analytics} chartType="line" />
+          ? <PlatformAnalyticsSection analytics={analytics!} chartType="line" />
           : heroContent}
 
         <section className="resource-overview-page__table-section">
@@ -119,6 +119,7 @@ export function ResourceOverviewPage<TData>({
             {...resolvedTable}
             surface={resolvedTable.surface || "plain"}
             layout={resolvedTable.layout || "fill"}
+            variant={resolvedTable.variant || "minimalistic-ui"}
             pagination={resolvedTable.pagination === undefined ? {} : resolvedTable.pagination}
           />
         </section>

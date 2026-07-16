@@ -1,6 +1,7 @@
 import { createElement, isValidElement, useId, useRef, type ElementType, type KeyboardEvent, type ReactNode } from "react";
 
 export type PlatformDetailTabIcon = ElementType | ReactNode;
+export type PlatformDetailTabBarVariant = "default" | "minimal";
 
 export interface PlatformDetailTab<TValue extends string = string> {
   id: TValue;
@@ -14,8 +15,11 @@ export interface PlatformDetailTabBarProps<TValue extends string = string> {
   tabs: readonly PlatformDetailTab<TValue>[];
   value: TValue;
   onValueChange: (value: TValue) => void;
+  endActions?: ReactNode;
   ariaLabel?: string;
   panelId?: string;
+  showDivider?: boolean;
+  variant?: PlatformDetailTabBarVariant;
   className?: string;
 }
 
@@ -36,8 +40,11 @@ export function PlatformDetailTabBar<TValue extends string = string>({
   tabs,
   value,
   onValueChange,
+  endActions,
   ariaLabel = "Details",
   panelId,
+  showDivider = false,
+  variant = "default",
   className = "",
 }: PlatformDetailTabBarProps<TValue>) {
   const generatedId = useId().replace(/:/g, "");
@@ -76,9 +83,10 @@ export function PlatformDetailTabBar<TValue extends string = string>({
 
   return (
     <nav
-      className={`platform-detail-tab-bar${className ? ` ${className}` : ""}`}
+      className={`platform-detail-tab-bar${showDivider && variant === "default" ? " has-divider" : ""}${variant === "minimal" ? " is-minimal" : ""}${className ? ` ${className}` : ""}`}
       aria-label={ariaLabel}
       data-platform-detail-tab-bar="true"
+      data-platform-detail-tab-bar-variant={variant}
     >
       <div className="platform-detail-tab-bar__list" role="tablist" aria-orientation="horizontal">
         {tabs.map((tab) => {
@@ -109,6 +117,11 @@ export function PlatformDetailTabBar<TValue extends string = string>({
           );
         })}
       </div>
+      {endActions ? (
+        <div className="platform-detail-tab-bar__end-actions">
+          {endActions}
+        </div>
+      ) : null}
     </nav>
   );
 }

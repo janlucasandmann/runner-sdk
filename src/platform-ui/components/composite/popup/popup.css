@@ -52,6 +52,45 @@
   font-size: var(--platform-popup-font-size) !important;
 }
 
+.platform-popup-surface .tb-popup-row {
+  position: relative;
+  z-index: 6;
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 160ms ease, color 160ms ease, opacity 160ms ease;
+}
+
+.platform-popup-surface .tb-popup-row:hover:not(:disabled),
+.platform-popup-surface .tb-popup-row:focus-visible,
+.platform-popup-surface .tb-popup-row.selected,
+.platform-popup-surface .tb-popup-row.is-selected {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.platform-popup-surface .tb-popup-row:focus-visible {
+  outline: none;
+}
+
+.platform-popup-surface .tb-popup-row:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.platform-popup-surface .tb-popup-row:disabled:hover:not(.is-selected) {
+  background: transparent;
+}
+
 .platform-popup-surface :where(button, a, [role="button"], [role="menuitem"]) svg,
 .platform-popup-surface :where(.tb-popup-icon, .tb-popup-chevron, .tb-popup-check) {
   width: var(--platform-popup-icon-size);
@@ -62,8 +101,25 @@
   position: fixed;
 }
 
+.platform-popup-surface.is-portaled {
+  z-index: var(--platform-popup-portal-z-index, 12060);
+}
+
 .platform-popup-surface.is-inline {
   position: relative;
+}
+
+.platform-popup-surface.is-minimal {
+  border: 1px solid rgba(255, 255, 255, 0.075) !important;
+  border-radius: 10px !important;
+  background: #1a1a1a !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.platform-popup-surface.is-minimal::before {
+  content: none;
+  display: none;
 }
 
 .platform-popup-surface::before {

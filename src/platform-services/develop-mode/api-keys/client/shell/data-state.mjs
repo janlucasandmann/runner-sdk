@@ -10,4 +10,12 @@ export const API_KEYS_DATA_STATE_SCRIPT = `        const [settingsApiKeys, setSe
         const [settingsCreateKeyLoading, setSettingsCreateKeyLoading] = useState(false);
         const [settingsNewlyCreatedKey, setSettingsNewlyCreatedKey] = useState("");
         const [settingsRevokingKeyId, setSettingsRevokingKeyId] = useState("");
+        const [developApiKeysAnalyticsPeriod, setDevelopApiKeysAnalyticsPeriod] = useState("month");
+        const [developApiKeysAnalyticsRefreshToken, setDevelopApiKeysAnalyticsRefreshToken] = useState(0);
+        const [developApiKeysAnalyticsState, setDevelopApiKeysAnalyticsState] = useState(() => ({
+          scopeKey: "",
+          dataByPeriod: {},
+          loadingPeriod: "",
+          errorsByPeriod: {},
+        }));
 `;

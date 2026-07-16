@@ -4,9 +4,12 @@ import { fileURLToPath } from "node:url";
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const componentRoot = path.join(packageRoot, "src", "platform-ui", "components");
-const primitiveComponents = ["button", "label", "search", "switch"];
-const compositeComponents = ["analytics", "data-table", "detail-sidebar", "detail-tab-bar", "instructions-editor", "modal", "popup", "widgets"];
+const primitiveComponents = ["button", "label", "search", "selector", "switch"];
+const compositeComponents = ["analytics", "code-preview-box", "data-table", "detail-sidebar", "detail-tab-bar", "empty-state", "instructions-editor", "modal", "popup", "widgets"];
 const retiredRootComponents = [...primitiveComponents, ...compositeComponents];
+const allowedUiCompositeDependencies = new Map([
+  ["selector", new Set(["popup"])],
+]);
 
 async function pathExists(targetPath) {
   try {
@@ -52,7 +55,13 @@ for (const componentName of retiredRootComponents) {
 const uiFiles = await collectFiles(path.join(componentRoot, "ui"));
 for (const filePath of uiFiles) {
   const source = await fs.readFile(filePath, "utf8");
-  if (source.includes("/composite/") || source.includes("../composite")) {
+  const relativeUiPath = path.relative(path.join(componentRoot, "ui"), filePath);
+  const componentName = relativeUiPath.split(path.sep)[0];
+  const allowedDependencies = allowedUiCompositeDependencies.get(componentName) || new Set();
+  const compositeImports = Array.from(source.matchAll(/(?:\/|\.\.\/)composite\/([^/"']+)/g))
+    .map((match) => match[1]);
+  const forbiddenDependencies = compositeImports.filter((dependency) => !allowedDependencies.has(dependency));
+  if (forbiddenDependencies.length > 0) {
     failures.push(`${path.relative(packageRoot, filePath)} makes a primitive depend on a composite`);
   }
 }
@@ -61,7 +70,7 @@ const runtimeFiles = [
   ...await collectFiles(path.join(packageRoot, "src")),
   ...await collectFiles(path.join(packageRoot, "examples")),
 ];
-const retiredImportPattern = /platform-ui\/components\/(?:analytics|button|label|search|switch|data-table|modal|popup|widgets)(?:\/|["'])|(?:^|\.)\.\/[^"']*components\/(?:analytics|button|label|search|switch|data-table|modal|popup|widgets)(?:\/|["'])/m;
+const retiredImportPattern = /platform-ui\/components\/(?:analytics|button|label|search|selector|switch|data-table|modal|popup|widgets)(?:\/|["'])|(?:^|\.)\.\/[^"']*components\/(?:analytics|button|label|search|selector|switch|data-table|modal|popup|widgets)(?:\/|["'])/m;
 for (const filePath of runtimeFiles) {
   if (filePath.endsWith(path.join("src", "react", "runner-chat-css.ts"))) continue;
   const source = await fs.readFile(filePath, "utf8");
@@ -75,11 +84,14 @@ const canonicalExports = new Map([
   ["./platform-ui/components/ui/button", "./dist/platform-ui/components/ui/button/index.js"],
   ["./platform-ui/components/ui/label", "./dist/platform-ui/components/ui/label/index.js"],
   ["./platform-ui/components/ui/search", "./dist/platform-ui/components/ui/search/index.js"],
+  ["./platform-ui/components/ui/selector", "./dist/platform-ui/components/ui/selector/index.js"],
   ["./platform-ui/components/ui/switch", "./dist/platform-ui/components/ui/switch/index.js"],
   ["./platform-ui/components/composite/analytics", "./dist/platform-ui/components/composite/analytics/index.js"],
+  ["./platform-ui/components/composite/code-preview-box", "./dist/platform-ui/components/composite/code-preview-box/index.js"],
   ["./platform-ui/components/composite/data-table", "./dist/platform-ui/components/composite/data-table/index.js"],
   ["./platform-ui/components/composite/detail-sidebar", "./dist/platform-ui/components/composite/detail-sidebar/index.js"],
   ["./platform-ui/components/composite/detail-tab-bar", "./dist/platform-ui/components/composite/detail-tab-bar/index.js"],
+  ["./platform-ui/components/composite/empty-state", "./dist/platform-ui/components/composite/empty-state/index.js"],
   ["./platform-ui/components/composite/instructions-editor", "./dist/platform-ui/components/composite/instructions-editor/index.js"],
   ["./platform-ui/components/composite/modal", "./dist/platform-ui/components/composite/modal/index.js"],
   ["./platform-ui/components/composite/popup", "./dist/platform-ui/components/composite/popup/index.js"],
@@ -95,6 +107,7 @@ const compatibilityExports = new Map([
   ["./platform-ui/components/button", canonicalExports.get("./platform-ui/components/ui/button")],
   ["./platform-ui/components/label", canonicalExports.get("./platform-ui/components/ui/label")],
   ["./platform-ui/components/search", canonicalExports.get("./platform-ui/components/ui/search")],
+  ["./platform-ui/components/selector", canonicalExports.get("./platform-ui/components/ui/selector")],
   ["./platform-ui/components/switch", canonicalExports.get("./platform-ui/components/ui/switch")],
   ["./platform-ui/components/data-table", canonicalExports.get("./platform-ui/components/composite/data-table")],
   ["./platform-ui/components/modal", canonicalExports.get("./platform-ui/components/composite/modal")],

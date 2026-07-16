@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 export type PlatformAnalyticsChartType = "bar" | "line";
 export type PlatformAnalyticsValueKind = "count" | "currency" | "duration" | "percent" | "tokens";
 export type PlatformAnalyticsAxis = "primary" | "secondary";
+export type PlatformAnalyticsSectionVariant = "default" | "framed";
 
 export interface PlatformAnalyticsMetric {
   id: string;
@@ -41,4 +42,8 @@ export interface PlatformAnalyticsChartProps {
 
 export interface PlatformAnalyticsSectionProps extends PlatformAnalyticsChartProps {
   className?: string;
+  variant?: PlatformAnalyticsSectionVariant;
+  title?: ReactNode;
+  headerActions?: ReactNode;
+  chartContent?: ReactNode;
 }

@@ -38,6 +38,12 @@ export const API_KEYS_CREATE_SCRIPT = `        async function handleSettingsCrea
             setSettingsNewKeyDescription("");
             setSettingsNewKeyScopePreset("full");
             setSettingsApiKeyDialogOpen(false);
+            invalidateApiKeysOverviewAnalytics({
+              backendUrl: proxyBackendBase,
+              headers: authRequestHeaders,
+              identity: String(sessionState.userId || sessionState.email || accountEmail || "session"),
+            });
+            setDevelopApiKeysAnalyticsRefreshToken((current) => current + 1);
             await loadSettingsApiKeys({ force: true });
           } catch (error) {
             setSettingsApiKeysError(error instanceof Error ? error.message : "Failed to create API key.");

@@ -13,7 +13,7 @@ import {
 
 assert.equal(Object.keys(TEAMS_STYLE_FRAGMENTS).length, 3);
 assert.match(TEAMS_STYLE_FRAGMENTS.foundation, /\.playground-team-page/);
-assert.match(TEAMS_STYLE_FRAGMENTS.rolesAndDialogs, /\.playground-team-role-pages/);
+assert.match(createTeamsPageScriptFragments().rolesAndView, /PlatformRolePermissionsPage/);
 assert.match(TEAMS_STYLE_FRAGMENTS.rolesAndDialogs, /\.playground-team-modal-backdrop/);
 assert.match(TEAMS_STYLE_FRAGMENTS.responsive, /@media \(max-width: 900px\)/);
 assert.equal(Object.values(TEAMS_STYLE_FRAGMENTS).join(""), TEAMS_PAGE_CSS);
@@ -108,7 +108,7 @@ assert.match(demoServerSource, /\$\{TEAMS_STYLE_FRAGMENTS\.foundation\}/);
 assert.match(demoServerSource, /\$\{TEAMS_DOMAIN_SCRIPT_FRAGMENTS\.memberIdentity\}/);
 assert.match(demoServerSource, /\$\{TEAMS_RUNTIME_SCRIPT_FRAGMENTS\.loading\}/);
 assert.match(demoServerSource, /\$\{TEAMS_PAGE_SCRIPT_FRAGMENTS\.setup\}/);
-assert.match(demoServerSource, /\$\{TEAMS_APP_SCRIPT_FRAGMENTS\.sidebarEntry\}/);
+assert.match(demoServerSource, /configurePrimaryEntries:[^\n]*TEAMS_APP_SCRIPT_FRAGMENTS\.sidebarEntry/);
 assert.doesNotMatch(demoServerSource, /^\s*\.playground-team-page \{/m);
 assert.doesNotMatch(demoServerSource, /function getTeamPageApiErrorMessage\(/);
 assert.doesNotMatch(demoServerSource, /async function loadTeamPageData\(/);

@@ -1,7 +1,7 @@
 import { Bot, Copy, Layers, Plus, SquarePen, Trash2, UsersRound } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { PlatformDataTableAction, PlatformDataTableColumn } from "../../../platform-ui/components/composite/data-table/index.js";
-import { PlatformSwitch } from "../../../platform-ui/components/ui/switch/index.js";
+import { PlatformDetailTabBar } from "../../../platform-ui/components/composite/detail-tab-bar/index.js";
 import {
   ResourceOverviewIdentityCell,
   ResourceOverviewPage,
@@ -174,17 +174,17 @@ export function AgentsOverviewPage({
     ];
   };
 
-  const modeSwitch = (
-    <PlatformSwitch
-      ariaLabel="Agent type"
+  const modeTabs = (
+    <PlatformDetailTabBar<"agents" | "squads">
+      ariaLabel="Agent categories"
       value={mode}
-      options={[
-        { value: "agents", label: "Agents" },
-        { value: "squads", label: "Squads" },
+      tabs={[
+        { id: "agents", label: "Agents" },
+        { id: "squads", label: "Squads" },
       ]}
-      onValueChange={(value) => {
-        if (value === "agents" || value === "squads") onModeChange(value);
-      }}
+      onValueChange={onModeChange}
+      variant="minimal"
+      className="agents-overview-tab-bar"
     />
   );
 
@@ -206,7 +206,7 @@ export function AgentsOverviewPage({
         sorting: { defaultValue: { id: "usage", direction: "desc" } },
         selection: { enabled: true, ariaLabel: (row) => `Select ${row.name}` },
         toolbar: {
-          title: `All ${entity}`,
+          leading: modeTabs,
           search: { placeholder: mode === "squads" ? "Search squads" : "Search agents", getSearchText: (row) => row.searchText || `${row.name} ${row.modelLabel} ${row.creatorName}` },
           filters: [{
             id: "type",
@@ -219,7 +219,6 @@ export function AgentsOverviewPage({
               { id: "custom", label: `Custom ${entity}` },
             ],
           }],
-          trailing: modeSwitch,
           primaryAction: { label: mode === "squads" ? "Squad" : "Agent", icon: Plus, onClick: mode === "squads" ? onCreateSquad : onCreateAgent },
         },
         getRowActions,

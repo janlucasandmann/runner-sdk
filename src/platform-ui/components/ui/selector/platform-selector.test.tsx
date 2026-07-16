@@ -1,0 +1,127 @@
+// @vitest-environment jsdom
+
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { userEvent } from "@testing-library/user-event";
+import { PlatformSelector } from "./platform-selector.js";
+
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
+
+describe("PlatformSelector", () => {
+  it("renders the selected label with ChevronsUpDown and selects from PlatformPopup", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const { container } = render(
+      <PlatformSelector
+        value="full_access"
+        options={[
+          { value: "full_access", label: "Full access" },
+          { value: "read_only", label: "Read only" },
+        ]}
+        ariaLabel="Default permissions"
+        onValueChange={onValueChange}
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Default permissions" });
+    expect(trigger.textContent).toContain("Full access");
+    expect(trigger.querySelector(".lucide-chevrons-up-down")).not.toBeNull();
+
+    await user.click(trigger);
+
+    const popup = document.body.querySelector(
+      ".platform-popup-surface.platform-selector__popup.is-minimal.is-portaled",
+    );
+    expect(popup).not.toBeNull();
+    expect(popup?.parentElement).toBe(document.body);
+    expect(container.querySelector(".platform-popup-surface")).toBeNull();
+    expect(screen.getByRole("listbox", { name: "Default permissions options" })).not.toBeNull();
+    await user.click(screen.getByRole("option", { name: "Read only" }));
+
+    expect(onValueChange).toHaveBeenCalledWith(
+      "read_only",
+      expect.objectContaining({ value: "read_only", label: "Read only" }),
+    );
+    expect(screen.queryByRole("listbox", { name: "Default permissions options" })).toBeNull();
+  });
+
+  it("dismisses on outside interaction and Escape", async () => {
+    const user = userEvent.setup();
+    render(
+      <div>
+        <PlatformSelector
+          value="one"
+          options={[
+            { value: "one", label: "One" },
+            { value: "two", label: "Two" },
+          ]}
+          ariaLabel="Number"
+        />
+        <button type="button">Outside</button>
+      </div>,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Number" });
+    await user.click(trigger);
+    expect(screen.getByRole("listbox", { name: "Number options" })).not.toBeNull();
+
+    fireEvent.mouseDown(screen.getByRole("button", { name: "Outside" }));
+    expect(screen.queryByRole("listbox", { name: "Number options" })).toBeNull();
+
+    await user.click(trigger);
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(screen.queryByRole("listbox", { name: "Number options" })).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it("supports custom trigger and option content", async () => {
+    const user = userEvent.setup();
+    render(
+      <PlatformSelector
+        value="andrea"
+        options={[
+          {
+            value: "andrea",
+            label: "Andrea",
+            description: "andrea@example.com",
+            leading: <span data-testid="avatar">A</span>,
+          },
+        ]}
+        label={<span data-testid="owner-label">Andrea</span>}
+        ariaLabel="Choose owner"
+        fullWidth
+      />,
+    );
+
+    expect(screen.getByTestId("owner-label")).not.toBeNull();
+    await user.click(screen.getByRole("button", { name: "Choose owner" }));
+    expect(screen.getByTestId("avatar")).not.toBeNull();
+    expect(screen.getByText("andrea@example.com")).not.toBeNull();
+  });
+
+  it("supports right-edge popup alignment independently from trigger alignment", async () => {
+    const user = userEvent.setup();
+    render(
+      <PlatformSelector
+        value="full_access"
+        options={[
+          { value: "full_access", label: "Full access" },
+          { value: "read_only", label: "Read only" },
+        ]}
+        ariaLabel="Right aligned permissions"
+        alignment="start"
+        popupAlignment="right"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Right aligned permissions" }));
+
+    expect(
+      screen.getByRole("listbox", { name: "Right aligned permissions options" })
+        .getAttribute("data-platform-popup-placement"),
+    ).toBe("bottom-end");
+  });
+});

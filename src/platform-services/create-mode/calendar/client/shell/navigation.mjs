@@ -5,4 +5,16 @@ export const CALENDAR_NAVIGATION_SCRIPT = `
           setActivePage("calendar");
         }
 
+        function openCalendarOverviewPage() {
+          setTasksPageNavigationRequest({
+            token: createPlaygroundPlatformNavigationToken(),
+            projectId: "",
+            view: "calendar",
+            taskId: "",
+            missionControlAction: "",
+            projectComposerAction: "",
+          });
+          openCalendarPage();
+        }
+
 `;

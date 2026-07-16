@@ -42,7 +42,11 @@ export const MODELS_PAGE_VIEW_SCRIPT = String.raw`      function renderPlaygroun
             ].join(" ").toLowerCase();
             return haystack.includes(normalizedSearchQuery);
           });
-        const visibleRows = sortPlaygroundManagedModels(activeTab, filteredRows, props.sort, normalizedSortDirection);
+        const visibleRows = sortPlaygroundManagedModels(activeTab, filteredRows, props.sort, normalizedSortDirection)
+          .map((model) => ({
+            ...model,
+            details: getPlaygroundManagedModelDetails(activeTab, model),
+          }));
         const isAgentTab = activeTab === "agent";
         const isVideoTab = activeTab === "video";
         const capabilityLabel = isVideoTab ? "Max Duration" : isAgentTab ? "Intelligence" : "Mode";
@@ -126,7 +130,7 @@ export const MODELS_PAGE_VIEW_SCRIPT = String.raw`      function renderPlaygroun
           .filter((entry) => entry.model);
 
         const renderFeaturedModelsSection = () => {
-          if (!isAgentTab || featuredModels.length === 0) return null;
+          if (featuredModels.length === 0) return null;
           return React.createElement("section", {
               className: "playground-models-featured-section",
               "aria-label": "Featured Models",
@@ -274,58 +278,6 @@ export const MODELS_PAGE_VIEW_SCRIPT = String.raw`      function renderPlaygroun
 	                },
 	              ]),
 	        ];
-	        const categorySwitch = React.createElement("div", {
-	            className: "content-mode-switch playground-agents-list-switch playground-models-overview-category-switch",
-	            role: "tablist",
-	            "aria-label": "Model categories",
-	          },
-	          getPlaygroundManagedModelsTabs().map((tab) => React.createElement("button", {
-	            key: tab.id,
-	            type: "button",
-	            role: "tab",
-	            className: "content-mode-button" + (activeTab === tab.id ? " is-active" : ""),
-	            "aria-selected": activeTab === tab.id ? "true" : "false",
-	            onClick: () => {
-	              props.setActiveTab(tab.id);
-	              props.setProviderFilter("all");
-	              setModelSort("provider", "asc");
-	            },
-	          }, tab.label))
-	        );
-	        const modelsDataTable = React.createElement(PlatformDataTable, {
-	          rows: visibleRows,
-	          columns: modelColumns,
-	          getRowId: (model) => activeTab + ":" + String(model.id || ""),
-	          ariaLabel: "Models",
-	          className: "playground-models-platform-data-table",
-	          surface: "plain",
-	          sorting: {
-	            value: { id: props.sort, direction: normalizedSortDirection },
-	            manual: true,
-	            onChange: (nextSorting) => {
-	              if (nextSorting) setModelSort(nextSorting.id, nextSorting.direction);
-	            },
-	          },
-	          toolbar: {
-	            search: {
-	              value: props.searchQuery,
-	              onChange: props.setSearchQuery,
-	              placeholder: "Search models",
-	              manual: true,
-	            },
-	            filters: [{
-	              id: "provider",
-	              label: "Provider",
-	              value: providerFilter,
-	              options: providerFilterOptions,
-	              onChange: props.setProviderFilter,
-	            }],
-	            trailing: categorySwitch,
-	          },
-	          getRowClassName: (model) => model.isPricingSubrow ? "is-pricing-subrow" : "",
-	          emptyState: normalizedSearchQuery || providerFilter !== "all" ? "No matching models found." : "No models available.",
-	        });
-
         const skillSettingsSection = skillSettingsMeta
           ? React.createElement("section", { className: "playground-models-skill-settings-section" },
               React.createElement("div", { className: "playground-models-skill-settings-copy" },
@@ -346,53 +298,69 @@ export const MODELS_PAGE_VIEW_SCRIPT = String.raw`      function renderPlaygroun
               )
             )
           : null;
-        return React.createElement("div", { className: "playground-files-shell playground-models-shell" },
-          React.createElement("section", { className: "playground-files-browser playground-models-browser" },
-	            React.createElement("div", { className: "playground-files-browser-header playground-models-browser-header" },
-              React.createElement("div", { className: "playground-files-library-header playground-models-library-header" },
-                React.createElement("div", { className: "playground-files-library-title-row" },
-                  React.createElement("h1", { className: "playground-files-library-title" }, "Models")
-                )
-              )
-            ),
-            React.createElement("div", { className: "playground-files-browser-body playground-models-browser-body" },
-              renderFeaturedModelsSection(),
-              React.createElement("section", {
-                  className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-team-overview-table-section playground-team-grid-table-section playground-models-overview-table-section",
-                },
-	                modelsDataTable
-	              ),
-	              skillSettingsSection
-            )
-          )
-        );
+        return React.createElement(ModelsOverviewPage, {
+          rows: visibleRows,
+          columns: modelColumns,
+          featuredContent: renderFeaturedModelsSection(),
+          skillSettingsContent: skillSettingsSection,
+          tabs: getPlaygroundManagedModelsTabs(),
+          activeTab,
+          onTabChange: (tabId) => {
+            props.setActiveTab(tabId);
+            props.setProviderFilter("all");
+            setModelSort("provider", "asc");
+          },
+          onCreateAgent: (model) => {
+            const modelId = String(model?.details?.agentModelId || model?.id || "").trim();
+            if (modelId && typeof props.onCreateAgent === "function") {
+              props.onCreateAgent(modelId);
+            }
+          },
+          searchValue: props.searchQuery,
+          onSearchChange: props.setSearchQuery,
+          providerFilter,
+          providerFilterOptions,
+          onProviderFilterChange: props.setProviderFilter,
+          sorting: {
+            id: props.sort,
+            direction: normalizedSortDirection,
+          },
+          onSortingChange: (nextSorting) => {
+            if (nextSorting) {
+              setModelSort(nextSorting.id, nextSorting.direction);
+            }
+          },
+          getRowId: (model) => activeTab + ":" + String(model.id || ""),
+          getRowClassName: (model) => model.isPricingSubrow ? "is-pricing-subrow" : "",
+          emptyState: "No models available.",
+          noResultsState: "No matching models found.",
+        });
 	      }
 
       function renderPlaygroundModelsPage(props) {
         const activeTab = normalizePlaygroundManagedModelsTab(props.activeTab);
-        return React.createElement("div", { className: "playground-files-page playground-models-page playground-agents-overview-page is-develop-configure-page" },
-          renderPlaygroundManagedModelsTable({
-            activeTab,
-            setActiveTab: props.setActiveTab,
-            agentModelOptions: props.agentModelOptions,
-            searchQuery: props.searchQuery,
-            setSearchQuery: props.setSearchQuery,
-            providerFilter: props.providerFilter,
-            setProviderFilter: props.setProviderFilter,
-            sort: props.sort,
-            setSort: props.setSort,
-            sortDirection: props.sortDirection,
-            setSortDirection: props.setSortDirection,
-            toolbarPopover: props.toolbarPopover,
-            setToolbarPopover: props.setToolbarPopover,
-            toolbarPopoverClosing: props.toolbarPopoverClosing,
-            setToolbarPopoverClosing: props.setToolbarPopoverClosing,
-            toolbarRef: props.toolbarRef,
-            viewMode: props.viewMode,
-            setViewMode: props.setViewMode,
-            pricingUrl: props.pricingUrl,
-            onOpenSkillSettings: props.onOpenSkillSettings,
-          })
-        );
+        return renderPlaygroundManagedModelsTable({
+          activeTab,
+          setActiveTab: props.setActiveTab,
+          agentModelOptions: props.agentModelOptions,
+          searchQuery: props.searchQuery,
+          setSearchQuery: props.setSearchQuery,
+          providerFilter: props.providerFilter,
+          setProviderFilter: props.setProviderFilter,
+          sort: props.sort,
+          setSort: props.setSort,
+          sortDirection: props.sortDirection,
+          setSortDirection: props.setSortDirection,
+          toolbarPopover: props.toolbarPopover,
+          setToolbarPopover: props.setToolbarPopover,
+          toolbarPopoverClosing: props.toolbarPopoverClosing,
+          setToolbarPopoverClosing: props.setToolbarPopoverClosing,
+          toolbarRef: props.toolbarRef,
+          viewMode: props.viewMode,
+          setViewMode: props.setViewMode,
+          pricingUrl: props.pricingUrl,
+          onOpenSkillSettings: props.onOpenSkillSettings,
+          onCreateAgent: props.onCreateAgent,
+        });
       }
 `;

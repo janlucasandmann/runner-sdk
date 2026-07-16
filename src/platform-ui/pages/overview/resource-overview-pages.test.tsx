@@ -146,7 +146,6 @@ describe("resource overview pages", () => {
     const { container } = renderWithOverviewControls(createPage());
     const isTagsOverview = kind === "tags";
     const toolbarTitles: Record<string, string> = {
-      agents: "All Agents",
       computers: "All Computers",
       skills: "All Skills",
       tags: "All Tags",
@@ -166,9 +165,15 @@ describe("resource overview pages", () => {
       expect(screen.getByRole("radiogroup", { name: "Analytics time frame" }).getAttribute("data-platform-switch")).toBe("true");
       expect(screen.getByText("No activity yet.")).not.toBeNull();
     }
-    expect(container.querySelector(".platform-data-table.is-fill-layout")).not.toBeNull();
+    expect(container.querySelector(".platform-data-table.is-fill-layout.is-minimalistic-ui")).not.toBeNull();
     expect(screen.getByRole("navigation", { name: /pagination/ })).not.toBeNull();
-    expect(screen.getByRole("heading", { name: toolbarTitles[kind], level: 2 })).not.toBeNull();
+    if (kind === "agents") {
+      const tabBar = screen.getByRole("navigation", { name: "Agent categories" });
+      expect(tabBar.getAttribute("data-platform-detail-tab-bar-variant")).toBe("minimal");
+      expect(screen.queryByRole("heading", { name: "All Agents", level: 2 })).toBeNull();
+    } else {
+      expect(screen.getByRole("heading", { name: toolbarTitles[kind], level: 2 })).not.toBeNull();
+    }
     expect(screen.getByText("1-1 of 1")).not.toBeNull();
     expect(screen.getByRole("button", { name: /Sort Name/ })).not.toBeNull();
   });
@@ -275,7 +280,7 @@ describe("resource overview pages", () => {
     expect(createButton.closest(".platform-data-table__toolbar")).toBeNull();
   });
 
-  it("uses the shared switch for agent and squad modes", async () => {
+  it("uses the shared minimal tab bar for agent and squad modes", async () => {
     const user = userEvent.setup();
     const onModeChange = vi.fn();
     render(
@@ -297,8 +302,11 @@ describe("resource overview pages", () => {
       />,
     );
 
-    expect(screen.getByRole("radiogroup", { name: "Agent type" }).getAttribute("data-platform-switch")).toBe("true");
-    await user.click(screen.getByRole("radio", { name: "Squads" }));
+    const tabBar = screen.getByRole("navigation", { name: "Agent categories" });
+    expect(tabBar.getAttribute("data-platform-detail-tab-bar-variant")).toBe("minimal");
+    expect(tabBar.classList.contains("has-divider")).toBe(false);
+    expect(within(tabBar).getByRole("tab", { name: "Agents" }).getAttribute("aria-selected")).toBe("true");
+    await user.click(within(tabBar).getByRole("tab", { name: "Squads" }));
     expect(onModeChange).toHaveBeenCalledWith("squads");
   });
 

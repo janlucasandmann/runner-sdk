@@ -2,6 +2,50 @@ export const DEVELOP_HOME_CONTENT_CSS = `      .playground-develop-webhooks-page
         width: 100%;
       }
 
+      .develop-home-overview__header-menu-surface {
+        top: calc(100% + 8px);
+        right: 0;
+        left: auto;
+        width: 200px;
+        min-width: 200px;
+      }
+
+      .develop-webhooks-overview__status {
+        color: rgba(126, 255, 194, 0.88);
+        font-size: 12px;
+        font-weight: 400;
+      }
+
+      .resource-overview-page.is-develop-home {
+        padding-bottom: 56px;
+        overflow-x: hidden;
+        overflow-y: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+
+      .resource-overview-page.is-develop-home::-webkit-scrollbar {
+        display: none;
+        width: 0;
+        height: 0;
+      }
+
+      .resource-overview-page.is-develop-home .resource-overview-page__table-section {
+        flex: 0 0 auto;
+        overflow: visible;
+      }
+
+      .develop-home-overview__content,
+      .develop-home-overview__supplementary {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .develop-home-overview__supplementary {
+        padding-top: 24px;
+      }
+
       .playground-develop-header {
         display: flex;
         align-items: center;

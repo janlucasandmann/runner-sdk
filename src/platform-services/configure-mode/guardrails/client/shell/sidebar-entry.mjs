@@ -3,6 +3,6 @@ export const GUARDRAILS_APP_SIDEBAR_ENTRY_SCRIPT = `              {
                 label: "Guardrails",
                 Icon: Shield,
                 active: activePage === "guardrails",
-                onClick: () => openGuardrailsPage(),
+                onClick: () => openGuardrailsOverviewPage(),
               },
 `;

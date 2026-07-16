@@ -517,6 +517,13 @@ export function createAppSidebarFoundationStyles(options = {}) {
         gap: 4px;
       }
 
+      .sidebar-rail-section-spacer {
+        width: 100%;
+        height: 8px;
+        flex: 0 0 8px;
+        pointer-events: none;
+      }
+
       .sidebar-rail-footer {
         margin-top: auto;
         padding-bottom: 10px;
@@ -528,7 +535,7 @@ export function createAppSidebarFoundationStyles(options = {}) {
 
       .sidebar-rail-button.is-active {
         background: rgba(255, 255, 255, 0.08);
-        border-radius: 10px;
+        border-radius: 8px;
         color: var(--sidebar-link-active-color);
       }
 
@@ -1689,39 +1696,6 @@ ${metronomeSidebarCss}
       .sidebar-organization-menu-icon {
         width: 16px;
         height: 16px;
-      }
-
-      .sidebar-rail-plan {
-        position: relative;
-        z-index: 0;
-        overflow: hidden;
-      }
-
-      .sidebar-rail-plan::before {
-        content: "";
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        padding: 1px;
-        background: linear-gradient(
-          -10deg,
-          rgba(200, 200, 200, 0.25),
-          rgba(255, 255, 255, 0.1),
-          rgba(255, 255, 255, 0.15),
-          rgba(255, 255, 255, 0.375)
-        );
-        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-        mask-clip: content-box, border-box;
-        mask-composite: exclude;
-        mask-origin: content-box, border-box;
-        mask-repeat: repeat, repeat;
-        mask-size: auto, auto;
-      }
-
-      .sidebar-rail-plan > * {
-        position: relative;
-        z-index: 1;
       }
 
 `;

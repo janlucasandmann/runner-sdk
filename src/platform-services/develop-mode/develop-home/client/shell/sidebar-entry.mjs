@@ -5,4 +5,11 @@ export const DEVELOP_HOME_SIDEBAR_ENTRY_SCRIPT = `              {
                 active: activePage === "develop",
                 onClick: () => openDevelopHome(),
               },
+              {
+                id: "develop-webhooks",
+                label: "Webhooks",
+                Icon: Webhook,
+                active: activePage === "develop-webhooks",
+                onClick: () => openDevelopWebhooksPage(),
+              },
 `;

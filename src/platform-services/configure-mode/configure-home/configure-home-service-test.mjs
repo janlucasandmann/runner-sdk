@@ -15,12 +15,10 @@ assert.deepEqual(Object.keys(CONFIGURE_HOME_STYLE_FRAGMENTS), [
   "foundation",
   "overviewCards",
   "notificationPage",
-  "notificationsTable",
 ]);
-assert.match(CONFIGURE_HOME_STYLE_FRAGMENTS.foundation, /\.playground-configure-home/);
-assert.match(CONFIGURE_HOME_STYLE_FRAGMENTS.overviewCards, /\.playground-configure-overview-card/);
-assert.match(CONFIGURE_HOME_STYLE_FRAGMENTS.notificationPage, /\.playground-configure-notifications-section/);
-assert.match(CONFIGURE_HOME_STYLE_FRAGMENTS.notificationsTable, /\.playground-configure-notifications-table-section/);
+assert.match(CONFIGURE_HOME_STYLE_FRAGMENTS.foundation, /\.playground-configure-overview-controls-slot/);
+assert.match(CONFIGURE_HOME_STYLE_FRAGMENTS.overviewCards, /\.configure-home-overview__teaser/);
+assert.match(CONFIGURE_HOME_STYLE_FRAGMENTS.notificationPage, /\.configure-home-notification__identity/);
 assert.equal(Object.values(CONFIGURE_HOME_STYLE_FRAGMENTS).join(""), CONFIGURE_HOME_PAGE_CSS);
 
 assert.match(CONFIGURE_HOME_DOMAIN_SCRIPT_FRAGMENTS.constants, /PLAYGROUND_NOTIFICATION_READ_STORAGE_PREFIX/);
@@ -82,8 +80,10 @@ assert.deepEqual(Object.keys(pageFragments), [
   "notificationsSection",
   "home",
 ]);
-assert.match(pageFragments.notificationsSection, /function renderConfigureNotificationsSection/);
+assert.match(pageFragments.notificationsSection, /function getConfigureHomeNotificationActions/);
 assert.match(pageFragments.home, /function renderConfigureHomePage/);
+assert.match(pageFragments.home, /ConfigureHomeOverviewPage/);
+assert.doesNotMatch(pageFragments.home, /PlatformDataTable/);
 assert.match(pageFragments.home, new RegExp(JSON.stringify(pricingUrl).replace(/[.*+?^\${}()|[\]\\]/g, "\\$&")));
 assert.doesNotThrow(() => new Function(Object.values(pageFragments).join("")));
 
@@ -94,13 +94,14 @@ const demoServerSource = await fs.readFile(
 assert.match(demoServerSource, /from "\.\.\/src\/platform-services\/configure-mode\/configure-home\/index\.mjs"/);
 assert.match(demoServerSource, /const CONFIGURE_HOME_PAGE_SCRIPT_FRAGMENTS = createConfigureHomePageScriptFragments\(/);
 assert.match(demoServerSource, /const configureHomeService = createConfigureHomeService\(/);
+assert.match(demoServerSource, /import \{ ConfigureHomeOverviewPage \} from "\/dist\/platform-services\/configure-mode\/configure-home\/client\/page\/configure-home-overview-page\.js"/);
 assert.match(demoServerSource, /configureHomeService\.handleRequest\(req, res, url\)/);
 assert.match(demoServerSource, /\$\{CONFIGURE_HOME_STYLE_FRAGMENTS\.foundation\}/);
 assert.match(demoServerSource, /\$\{CONFIGURE_HOME_DOMAIN_SCRIPT_FRAGMENTS\.storage\}/);
 assert.match(demoServerSource, /\$\{CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS\.notificationProjection\}/);
 assert.match(demoServerSource, /\$\{CONFIGURE_HOME_PAGE_SCRIPT_FRAGMENTS\.home\}/);
-assert.match(demoServerSource, /\$\{CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS\.sidebarEntry\}/);
-assert.doesNotMatch(demoServerSource, /^\s*\.playground-configure-home \{/m);
+assert.match(demoServerSource, /configurePrimaryEntries: CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS\.sidebarEntry/);
+assert.doesNotMatch(demoServerSource, /^\s*\.configure-home-overview__teaser \{/m);
 assert.doesNotMatch(demoServerSource, /function readStoredNotificationIds\(/);
 assert.doesNotMatch(demoServerSource, /const notificationItems = useMemo\(/);
 assert.doesNotMatch(demoServerSource, /function handleMarkAllNotificationsRead\(/);

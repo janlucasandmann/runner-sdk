@@ -10,7 +10,8 @@ export function ResourceDetailPage<TTab extends string = string>({
   tabs,
   activeTab,
   onTabChange,
-  actions,
+  tabBarActions,
+  sidebarToggle,
   children,
   sidebar,
   sidebarCollapsed = false,
@@ -20,7 +21,7 @@ export function ResourceDetailPage<TTab extends string = string>({
   className = "",
   headerClassName = "",
   tabBarClassName = "",
-  actionBarClassName = "",
+  tabBarActionsClassName = "",
   contentClassName = "",
   sidebarClassName = "",
 }: ResourceDetailPageProps<TTab>) {
@@ -30,6 +31,16 @@ export function ResourceDetailPage<TTab extends string = string>({
   const panelLabel = activeTabDefinition?.ariaLabel
     || (typeof activeTabDefinition?.label === "string" ? activeTabDefinition.label : `${ariaLabel} content`);
   const hasSidebar = sidebar !== undefined && sidebar !== null;
+  const tabBarEndActions = tabBarActions || sidebarToggle ? (
+    <div className={`resource-detail-page__tab-bar-actions${tabBarActionsClassName ? ` ${tabBarActionsClassName}` : ""}`}>
+      {tabBarActions}
+      {sidebarToggle ? (
+        <div className="resource-detail-page__sidebar-toggle">
+          {sidebarToggle}
+        </div>
+      ) : null}
+    </div>
+  ) : null;
 
   return (
     <section
@@ -48,16 +59,11 @@ export function ResourceDetailPage<TTab extends string = string>({
         tabs={tabs}
         value={activeTab}
         onValueChange={onTabChange}
+        endActions={tabBarEndActions}
         ariaLabel={tabAriaLabel}
         panelId={panelId}
         className={tabBarClassName}
       />
-
-      {actions ? (
-        <div className={`resource-detail-page__actions${actionBarClassName ? ` ${actionBarClassName}` : ""}`}>
-          {actions}
-        </div>
-      ) : null}
 
       <section
         id={panelId}

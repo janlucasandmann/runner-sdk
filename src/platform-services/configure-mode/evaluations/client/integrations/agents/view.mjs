@@ -66,17 +66,21 @@ export const EVALUATIONS_AGENT_VIEW_SCRIPT = `          const agentEvaluationEnv
               };
             })
             .filter((row) => row.runs.length > 0);
+          const getAgentEvaluationSearchText = (row) => [
+            row.set?.name,
+            row.set?.id,
+            row.latestRun?.label,
+            getAgentEvaluationVersionLabel(row.latestRun),
+            getAgentEvaluationEnvironmentLabel(row.latestRun),
+          ].join(" ");
+          const agentEvaluationStatusFilteredRows = agentEvaluationRows.filter((row) => (
+            agentDetailEvaluationFilterMode === "all"
+            || getAgentEvaluationRunStatus(row.latestRun) === agentDetailEvaluationFilterMode
+          ));
           const normalizedAgentEvaluationSearch = String(agentDetailEvaluationSearchQuery || "").trim().toLowerCase();
-          const filteredAgentEvaluationRows = agentEvaluationRows.filter((row) => {
+          const filteredAgentEvaluationRows = agentEvaluationStatusFilteredRows.filter((row) => {
             if (!normalizedAgentEvaluationSearch) return true;
-            const haystack = [
-              row.set?.name,
-              row.set?.id,
-              row.latestRun?.label,
-              getAgentEvaluationVersionLabel(row.latestRun),
-              getAgentEvaluationEnvironmentLabel(row.latestRun),
-            ].join(" ").toLowerCase();
-            return haystack.includes(normalizedAgentEvaluationSearch);
+            return getAgentEvaluationSearchText(row).toLowerCase().includes(normalizedAgentEvaluationSearch);
           });
           const selectedAgentEvaluationRow = agentEvaluationRows.find((row) => row.set.id === agentDetailEvaluationSelectedSetId)
             || (agentDetailEvaluationSelectedSetId
@@ -600,48 +604,58 @@ export const EVALUATIONS_AGENT_VIEW_SCRIPT = `          const agentEvaluationEnv
                 key: "evaluation",
                 "data-section-id": "evaluation",
               },
-              React.createElement("div", { className: "playground-plugins-section-header" },
-                React.createElement("div", { className: "playground-plugins-section-copy" },
-                  React.createElement("h3", { className: "playground-plugins-section-title" }, "Evaluation")
-                )
-              ),
-              React.createElement("div", { className: "playground-plugins-search-row" },
-                React.createElement("div", { className: "playground-plugins-search-shell" },
-                  React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("input", {
-                    type: "search",
-                    value: agentDetailEvaluationSearchQuery,
-                    onChange: (event) => setAgentDetailEvaluationSearchQuery(event.target.value),
-                    className: "playground-plugins-search",
-                    placeholder: "Search evaluations",
-                    "aria-label": "Search agent evaluations",
-                  })
-                ),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-files-control-button playground-project-overview-toolbar-action",
-                  onClick: () => openAgentEvaluationRunModal(filteredAgentEvaluationRows[0]?.set?.id || agentEvaluationSets[0]?.id || ""),
-                  disabled: !agentEvaluationSets.length || typeof setEvaluationSets !== "function",
-                },
-                  React.createElement(Play, { width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("span", null, "Run Evaluation")
-                )
-              ),
               React.createElement(PlatformDataTable, {
-                rows: filteredAgentEvaluationRows,
+                rows: agentEvaluationStatusFilteredRows,
                 getRowId: (row) => row.set.id,
                 ariaLabel: "Agent evaluations",
                 className: "playground-agent-evaluations-platform-table",
                 surface: "plain",
+                variant: "minimalistic-ui",
                 sticky: false,
-                emptyState: normalizedAgentEvaluationSearch
-                  ? "No matching evaluations for this agent."
-                  : "No evaluations have been run for this agent yet.",
+                sorting: {
+                  defaultValue: { id: "updated", direction: "desc" },
+                },
+                toolbar: {
+                  title: "Evaluation",
+                  search: {
+                    value: agentDetailEvaluationSearchQuery,
+                    onChange: setAgentDetailEvaluationSearchQuery,
+                    placeholder: "Search evaluations",
+                    ariaLabel: "Search agent evaluations",
+                    getSearchText: getAgentEvaluationSearchText,
+                  },
+                  filters: [
+                    {
+                      id: "status",
+                      label: "Status",
+                      value: agentDetailEvaluationFilterMode,
+                      options: [
+                        { id: "all", label: "All Evaluations", description: "Show every evaluation run for this agent" },
+                        { id: "passed", label: "Passed", description: "Latest run met its pass threshold" },
+                        { id: "running", label: "Running", description: "Latest run is still in progress" },
+                        { id: "completed", label: "Completed", description: "Latest run finished below its pass threshold" },
+                        { id: "failed", label: "Failed", description: "Latest run ended with an error" },
+                      ],
+                      onChange: setAgentDetailEvaluationFilterMode,
+                    },
+                  ],
+                  primaryAction: {
+                    label: "Run Evaluation",
+                    icon: Play,
+                    onClick: () => openAgentEvaluationRunModal(filteredAgentEvaluationRows[0]?.set?.id || agentEvaluationSets[0]?.id || ""),
+                    disabled: !agentEvaluationSets.length || typeof setEvaluationSets !== "function",
+                  },
+                },
+                emptyState: agentDetailEvaluationFilterMode === "all"
+                  ? "No evaluations have been run for this agent yet."
+                  : "No evaluations match this status filter.",
+                noResultsState: "No matching evaluations for this agent.",
                 columns: [
                   {
                     id: "evaluation",
                     header: "Evaluation",
                     accessor: (row) => row.set.name || "Untitled Evaluation",
+                    sortable: true,
                     width: "minmax(180px, 1.5fr)",
                     cell: ({ row }) => React.createElement("div", { className: "playground-plugin-row-title" }, row.set.name || "Untitled Evaluation"),
                   },
@@ -649,6 +663,8 @@ export const EVALUATIONS_AGENT_VIEW_SCRIPT = `          const agentEvaluationEnv
                     id: "score",
                     header: "Score",
                     accessor: (row) => Number(row.latestRun?.averageScore || 0),
+                    sortable: true,
+                    sortDescFirst: true,
                     width: "minmax(80px, 0.65fr)",
                     cell: ({ row }) => React.createElement("span", { className: "playground-agents-detail-evaluation-score" }, row.latestRun ? formatAgentEvaluationPercent(row.latestRun.averageScore) : "-"),
                   },
@@ -656,14 +672,17 @@ export const EVALUATIONS_AGENT_VIEW_SCRIPT = `          const agentEvaluationEnv
                     id: "version",
                     header: "Version",
                     accessor: (row) => getAgentEvaluationVersionLabel(row.latestRun),
+                    sortable: true,
                     width: "minmax(100px, 0.8fr)",
                     cell: ({ row }) => React.createElement("span", { className: "playground-agents-detail-evaluation-version" }, getAgentEvaluationVersionLabel(row.latestRun)),
                   },
-                  { id: "runs", header: "Runs", accessor: (row) => row.runs.length, width: "minmax(70px, 0.55fr)", hideBelow: 700 },
+                  { id: "runs", header: "Runs", accessor: (row) => row.runs.length, sortable: true, sortDescFirst: true, width: "minmax(70px, 0.55fr)", hideBelow: 700 },
                   {
                     id: "updated",
                     header: "Updated",
                     accessor: (row) => row.latestRun?.completedAt || row.latestRun?.createdAt || row.set.updatedAt || "",
+                    sortable: true,
+                    sortDescFirst: true,
                     width: "minmax(110px, 0.9fr)",
                     align: "end",
                     cell: ({ row }) => formatAgentEvaluationDate(row.latestRun?.completedAt || row.latestRun?.createdAt || row.set.updatedAt),
@@ -693,6 +712,10 @@ export const EVALUATIONS_AGENT_VIEW_SCRIPT = `          const agentEvaluationEnv
               if (rightNumber !== leftNumber) return rightNumber - leftNumber;
               return getAgentEvaluationRunTimestampMs(right) - getAgentEvaluationRunTimestampMs(left);
             });
+            const visibleLatestRunsByVersion = latestRunsByVersion.filter((run) => (
+              agentDetailEvaluationRunFilterMode === "all"
+              || getAgentEvaluationRunStatus(run) === agentDetailEvaluationRunFilterMode
+            ));
             const latestRun = runs[0] || null;
             const bestRun = runs.reduce((best, run) => Number(run?.averageScore || 0) > Number(best?.averageScore || 0) ? run : best, latestRun || null);
             const passedRuns = runs.filter((run) => !isAgentEvaluationRunActive(run) && Number(run?.averageScore || 0) >= Number(run?.passThreshold || selectedRow.set.passThreshold || 0.8)).length;
@@ -756,24 +779,56 @@ export const EVALUATIONS_AGENT_VIEW_SCRIPT = `          const agentEvaluationEnv
               React.createElement("section", {
                   className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-agents-detail-evaluation-version-section",
                 },
-                React.createElement("div", { className: "playground-plugins-section-header" },
-                  React.createElement("div", { className: "playground-plugins-section-copy" },
-                    React.createElement("h3", { className: "playground-plugins-section-title" }, "Runs by Version")
-                  )
-                ),
                 React.createElement(PlatformDataTable, {
-                  rows: latestRunsByVersion,
+                  rows: visibleLatestRunsByVersion,
                   getRowId: (run) => run.id,
                   ariaLabel: "Evaluation runs by agent version",
                   className: "playground-agent-evaluation-runs-platform-table",
                   surface: "plain",
+                  variant: "minimalistic-ui",
                   sticky: false,
-                  emptyState: "No runs for this evaluation yet.",
+                  sorting: {
+                    defaultValue: { id: "updated", direction: "desc" },
+                  },
+                  toolbar: {
+                    title: "Runs by Version",
+                    search: {
+                      placeholder: "Search runs",
+                      ariaLabel: "Search evaluation runs by agent version",
+                      getSearchText: (run) => [
+                        getAgentEvaluationVersionLabel(run),
+                        formatAgentEvaluationPercent(run.averageScore),
+                        getAgentEvaluationRunStatus(run),
+                        getAgentEvaluationEnvironmentLabel(run),
+                        formatAgentEvaluationDate(run.completedAt || run.createdAt),
+                      ].join(" "),
+                    },
+                    filters: [
+                      {
+                        id: "status",
+                        label: "Status",
+                        value: agentDetailEvaluationRunFilterMode,
+                        options: [
+                          { id: "all", label: "All Runs", description: "Show the latest run for every agent version" },
+                          { id: "passed", label: "Passed", description: "Only show runs that met the pass threshold" },
+                          { id: "running", label: "Running", description: "Only show runs still in progress" },
+                          { id: "completed", label: "Completed", description: "Only show completed runs below the pass threshold" },
+                          { id: "failed", label: "Failed", description: "Only show runs that ended with an error" },
+                        ],
+                        onChange: setAgentDetailEvaluationRunFilterMode,
+                      },
+                    ],
+                  },
+                  emptyState: agentDetailEvaluationRunFilterMode === "all"
+                    ? "No runs for this evaluation yet."
+                    : "No runs match this status filter.",
+                  noResultsState: "No matching evaluation runs.",
                   columns: [
                     {
                       id: "version",
                       header: "Version",
                       accessor: getAgentEvaluationVersionLabel,
+                      sortable: true,
                       width: "minmax(120px, 1fr)",
                       cell: ({ row: run }) => React.createElement("span", { className: "playground-agents-detail-evaluation-version" }, getAgentEvaluationVersionLabel(run)),
                     },
@@ -781,15 +836,19 @@ export const EVALUATIONS_AGENT_VIEW_SCRIPT = `          const agentEvaluationEnv
                       id: "score",
                       header: "Score",
                       accessor: (run) => Number(run.averageScore || 0),
+                      sortable: true,
+                      sortDescFirst: true,
                       width: "minmax(80px, 0.65fr)",
                       cell: ({ row: run }) => React.createElement("span", { className: "playground-agents-detail-evaluation-score" }, formatAgentEvaluationPercent(run.averageScore)),
                     },
-                    { id: "status", header: "Status", accessor: (run) => run.status || "", width: "minmax(100px, 0.8fr)", cell: ({ row: run }) => renderAgentEvaluationStatusBadge(run) },
-                    { id: "environment", header: "Environment", accessor: getAgentEvaluationEnvironmentLabel, width: "minmax(130px, 1.1fr)", hideBelow: 760, cell: ({ row: run }) => renderAgentEvaluationEnvironment(run) },
+                    { id: "status", header: "Status", accessor: (run) => run.status || "", sortable: true, width: "minmax(100px, 0.8fr)", cell: ({ row: run }) => renderAgentEvaluationStatusBadge(run) },
+                    { id: "environment", header: "Environment", accessor: getAgentEvaluationEnvironmentLabel, sortable: true, width: "minmax(130px, 1.1fr)", hideBelow: 760, cell: ({ row: run }) => renderAgentEvaluationEnvironment(run) },
                     {
                       id: "updated",
                       header: "Updated",
                       accessor: (run) => run.completedAt || run.createdAt || "",
+                      sortable: true,
+                      sortDescFirst: true,
                       width: "minmax(110px, 0.9fr)",
                       align: "end",
                       cell: ({ row: run }) => formatAgentEvaluationDate(run.completedAt || run.createdAt),

@@ -49,45 +49,32 @@ export const TEAMS_PAGE_ROLES_AND_VIEW_SCRIPT = `          const renderRolesTab 
               );
             };
             return React.createElement("div", { className: "playground-team-detail-panel playground-team-roles-panel" },
-              React.createElement("div", { className: "playground-team-role-pages" },
-                React.createElement("div", { className: "playground-team-role-list", role: "tablist", "aria-label": "Team roles" },
-                  visibleRoleDefinitions.map((role) =>
-                    React.createElement("button", {
-                      key: role.id,
-                      type: "button",
-                      role: "tab",
-                      className: "playground-team-role-card" + (selectedRoleDefinition.id === role.id ? " is-active" : ""),
-                      "aria-selected": selectedRoleDefinition.id === role.id ? "true" : "false",
-                      onClick: () => {
-                        setTeamPageSelectedRoleId(role.id);
-                        setTeamPageRoleMembersPopover("");
-                      },
-                    },
-                      React.createElement("span", { className: "playground-team-role-card-title" }, role.label),
-                      React.createElement("span", { className: "playground-team-role-card-description" }, role.description),
-                      React.createElement("span", { className: "playground-team-role-card-meta" }, getRoleRowCount(role.id) + " assigned")
-                    )
-                  )
-                ),
-                React.createElement("div", { className: "playground-team-role-permission-page" + (!canManageTeam || isSelectedOwnerRole ? " is-read-only" : "") },
-                  React.createElement("div", { className: "playground-team-role-permission-header" },
-                    React.createElement("div", null,
-                      React.createElement("div", { className: "playground-team-role-permission-kicker" }, "Role"),
-                      React.createElement("h2", { className: "playground-team-role-permission-title" }, selectedRoleDefinition.label),
-                      React.createElement("p", { className: "playground-team-role-permission-copy" }, selectedRoleDefinition.description)
-                    ),
-                    renderAssignedUsersButton(selectedRoleDefinition)
-                  ),
-                  renderPlaygroundPermissionPanel(selectedRolePermissionSet, {
-                    subjectType: "team_role",
-                    animationKey: teamPermissionChartAnimationKey,
-                    disabled: isSelectedOwnerRole || !canManageTeam || teamPageActionId === selectedRoleActionId,
-                    onRingAccessChange: (ringId, access) => updateTeamRolePermissionRingAccess(selectedRoleDefinition.id, ringId, access),
-                    onActionRingChange: (actionId, ringId) => updateTeamRolePermissionActionRing(selectedRoleDefinition.id, actionId, ringId),
-                    onActionAccessChange: (actionId, access) => updateTeamRolePermissionActionAccess(selectedRoleDefinition.id, actionId, access),
-                  })
-                )
-              )
+              React.createElement(PlatformRolePermissionsPage, {
+                roles: visibleRoleDefinitions.map((role) => ({
+                  id: role.id,
+                  label: role.label,
+                  description: role.description,
+                  meta: getRoleRowCount(role.id) + " assigned",
+                })),
+                value: selectedRoleDefinition.id,
+                onValueChange: (roleId) => {
+                  setTeamPageSelectedRoleId(roleId);
+                  setTeamPageRoleMembersPopover("");
+                },
+                roleAriaLabel: "Team roles",
+                roleHeaderAction: renderAssignedUsersButton(selectedRoleDefinition),
+                readOnly: isSelectedOwnerRole || !canManageTeam,
+                permissionSet: selectedRolePermissionSet,
+                accessOptions: PLAYGROUND_PERMISSION_ACCESS_OPTIONS,
+                ringDefinitions: PLAYGROUND_PERMISSION_RING_DEFINITIONS,
+                actionDefinitions: PLAYGROUND_PERMISSION_ACTION_DEFINITIONS,
+                subjectType: "team_role",
+                animationKey: teamPermissionChartAnimationKey,
+                disabled: teamPageActionId === selectedRoleActionId,
+                onRingAccessChange: (ringId, access) => updateTeamRolePermissionRingAccess(selectedRoleDefinition.id, ringId, access),
+                onActionRingChange: (actionId, ringId) => updateTeamRolePermissionActionRing(selectedRoleDefinition.id, actionId, ringId),
+                onActionAccessChange: (actionId, access) => updateTeamRolePermissionActionAccess(selectedRoleDefinition.id, actionId, access),
+              })
             );
           };
 
@@ -155,4 +142,3 @@ export const TEAMS_PAGE_ROLES_AND_VIEW_SCRIPT = `          const renderRolesTab 
           );
         }
 `;
-

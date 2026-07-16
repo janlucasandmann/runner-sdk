@@ -11,7 +11,10 @@ import {
 
 assert.deepEqual(Object.keys(DEVELOP_HOME_STYLE_FRAGMENTS), ["foundation", "content"]);
 assert.match(DEVELOP_HOME_STYLE_FRAGMENTS.foundation, /^\s*\.playground-develop-home \{/);
+assert.match(DEVELOP_HOME_STYLE_FRAGMENTS.foundation, /\.playground-develop-webhooks-overview-controls-slot/);
+assert.match(DEVELOP_HOME_STYLE_FRAGMENTS.content, /\.playground-develop-docs-quickstart-card/);
 assert.match(DEVELOP_HOME_STYLE_FRAGMENTS.content, /\.playground-develop-docs-concepts-grid/);
+assert.match(DEVELOP_HOME_STYLE_FRAGMENTS.content, /\.develop-home-overview__header-menu-surface/);
 assert.equal(Object.values(DEVELOP_HOME_STYLE_FRAGMENTS).join(""), DEVELOP_HOME_PAGE_CSS);
 
 assert.deepEqual(Object.keys(DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS), [
@@ -21,7 +24,15 @@ assert.deepEqual(Object.keys(DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS), [
 ]);
 assert.match(DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.operationalMetrics, /loadDevelopServerOperationalMetrics/);
 assert.match(DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.operationalMetrics, /publishOperationalMetricsSnapshot/);
-assert.match(DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.homeMetricsLifecycle, /developHomeSection !== "overview"/);
+assert.match(DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.operationalMetrics, /voiceCalls: buildSeries\("voiceCalls"\)/);
+assert.match(DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.operationalMetrics, /payload\?\.data\?\.analytics\?\.resources/);
+assert.match(DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.operationalMetrics, /readResourceChartBuckets\(resource, "traffic", "traffic24h"\)/);
+assert.match(DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.operationalMetrics, /readResourceChartBuckets\(resource, "operations", "operations24h"\)/);
+assert.match(DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.operationalMetrics, /entry\?\.bucket_start/);
+assert.match(DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.homeMetricsLifecycle, /activePage !== "develop"/);
+assert.match(DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.homeMetricsLifecycle, /period: developHomeChartTimescale/);
+assert.match(DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.homeMetricsLifecycle, /loadSettingsUsageData/);
+assert.doesNotMatch(DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.homeMetricsLifecycle, /developHomeSection/);
 assert.match(DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.resourceMetricsLifecycle, /requestedMetricsKey/);
 assert.doesNotThrow(() => new Function(`
   function developHomeRuntimeHost() {
@@ -39,12 +50,25 @@ assert.deepEqual(Object.keys(DEVELOP_HOME_APP_SCRIPT_FRAGMENTS), [
   "topNavigation",
   "sidebarEntry",
 ]);
-assert.match(DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.state, /developHomeSection/);
+assert.match(DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.state, /developServerMetricsChartTab/);
+assert.match(DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.state, /developAnalyticsMenuOpen/);
+assert.match(DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.state, /developHomeChartTimescale/);
+assert.match(DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.state, /developHomeChartTimescale, setDevelopHomeChartTimescale\] = useState\("month"\)/);
+assert.match(DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.state, /developQuickstartLanguage/);
+assert.doesNotMatch(DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.state, /developHomeSection/);
 assert.match(DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.metricsState, /developServerOperationalMetrics/);
 assert.match(DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.navigation, /function openDevelopHome/);
-assert.match(DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.historyCapture, /developSection: developHomeSection/);
+assert.match(DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.navigation, /function openDevelopWebhooksPage/);
+assert.match(DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.historyCapture, /page: "develop-webhooks"/);
+assert.match(DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.historyCapture, /resourceId: settingsSelectedTriggerId/);
 assert.match(DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.historyRestore, /entry\.page === "develop"/);
+assert.match(DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.historyRestore, /entry\.page === "develop-webhooks"/);
+assert.match(DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.selectedTitle, /return "Home"/);
+assert.match(DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, /pathItems: \[\{ label: "Develop" \}, \{ label: "Home" \}\]/);
+assert.match(DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, /includeSearchDivider: true/);
 assert.match(DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.sidebarEntry, /id: "develop-home"/);
+assert.match(DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.sidebarEntry, /id: "develop-webhooks"/);
+assert.match(DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.sidebarEntry, /Icon: Webhook/);
 assert.doesNotThrow(() => new Function(`
   function developHomeShellHost() {
     ${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.state}
@@ -60,12 +84,26 @@ assert.doesNotThrow(() => new Function(`
 `));
 
 const aiosOrigin = "https://platform.example.test";
-const inferenceEntry = "            { label: \"Inference\", Icon: Cpu, onClick: openInferencePage },\n";
-const pageScript = createDevelopHomePageScript({ aiosOrigin, inferenceEntry });
+const pageScript = createDevelopHomePageScript({
+  aiosOrigin,
+  inferenceEntry: "            { id: \"inference\", label: \"Configure Inference\", Icon: Cpu, onClick: openInferencePage },\n",
+});
 assert.match(pageScript, /function renderDevelopHomePage/);
-assert.match(pageScript, /renderDevelopOperationalMetricsChart/);
-assert.match(pageScript, /Inference/);
-assert.match(pageScript, new RegExp(JSON.stringify(aiosOrigin + "/developers").replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+assert.match(pageScript, /React\.createElement\(DevelopHomeOverviewPage/);
+assert.match(pageScript, /supplementaryContent/);
+assert.match(pageScript, /quickstartLanguages/);
+assert.match(pageScript, /coreConcepts/);
+assert.match(pageScript, /quickLinks/);
+assert.match(pageScript, /Configure Inference/);
+assert.match(pageScript, /function renderDevelopWebhooksPage/);
+assert.match(pageScript, /React\.createElement\(DevelopWebhooksOverviewPage/);
+assert.match(pageScript, /renderWebhookActionsPanel\(\{ composerOnly: true \}\)/);
+assert.match(pageScript, new RegExp(JSON.stringify(aiosOrigin + "/pricing").replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+assert.match(pageScript, new RegExp(JSON.stringify(aiosOrigin + "/developers/quickstart").replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+assert.match(pageScript, new RegExp(JSON.stringify(aiosOrigin + "/developers/core-concepts").replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+assert.doesNotMatch(pageScript, /PlatformCodePreviewBox/);
+assert.doesNotMatch(pageScript, /playground-develop-tab/);
+assert.doesNotMatch(pageScript, /developHomeSection/);
 assert.doesNotMatch(pageScript, /__DEVELOP_HOME_/);
 assert.doesNotThrow(() => new Function(pageScript));
 
@@ -74,7 +112,10 @@ const demoServerSource = await fs.readFile(
   "utf8",
 );
 assert.match(demoServerSource, /develop-mode\/develop-home\/index\.mjs/);
+assert.match(demoServerSource, /DevelopHomeOverviewPage, DevelopResourceOverviewRoute/);
+assert.match(demoServerSource, /DevelopWebhooksOverviewPage/);
 assert.match(demoServerSource, /const DEVELOP_HOME_PAGE_SCRIPT = createDevelopHomePageScript/);
+assert.match(demoServerSource, /inferenceEntry: INFERENCE_APP_SCRIPT_FRAGMENTS\.configureHomeEntry/);
 assert.match(demoServerSource, /\$\{DEVELOP_HOME_STYLE_FRAGMENTS\.content\}/);
 assert.match(demoServerSource, /\$\{DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS\.operationalMetrics\}/);
 assert.match(demoServerSource, /\$\{DEVELOP_HOME_APP_SCRIPT_FRAGMENTS\.navigation\}/);
@@ -83,5 +124,15 @@ assert.doesNotMatch(demoServerSource, /^\s*\.playground-develop-home \{/m);
 assert.doesNotMatch(demoServerSource, /const loadDevelopServerOperationalMetrics = useCallback/);
 assert.doesNotMatch(demoServerSource, /function openDevelopHome\(/);
 assert.doesNotMatch(demoServerSource, /function renderDevelopHomePage\(/);
+assert.doesNotMatch(demoServerSource, /import \{ DevelopHomeOverviewPage \} from "\/dist\/platform-services\/develop-mode\/develop-home/);
 
-console.log("Develop Home ownership, browser syntax, navigation, metrics, and renderer contracts passed.");
+const developHomeOverviewSource = await fs.readFile(
+  new URL("./client/page/develop-home-overview-page.tsx", import.meta.url),
+  "utf8",
+);
+assert.match(developHomeOverviewSource, /Developer quickstart/);
+assert.match(developHomeOverviewSource, /Core concepts/);
+assert.match(developHomeOverviewSource, /Quick Links/);
+assert.match(developHomeOverviewSource, /DevelopHomeSupplementarySections/);
+
+console.log("Develop Home and Webhooks overview ownership, browser syntax, navigation, metrics, and renderer contracts passed.");

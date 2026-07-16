@@ -3,11 +3,13 @@ import {
   useCallback,
   useLayoutEffect,
   useRef,
+  useState,
   type CSSProperties,
   type HTMLAttributes,
   type ReactNode,
   type Ref,
 } from "react";
+import { createPortal } from "react-dom";
 
 export type PlatformPopupAnimation =
   | "up-in"
@@ -18,12 +20,19 @@ export type PlatformPopupAnimation =
   | "left-out";
 
 export type PlatformPopupMode = "anchored" | "fixed" | "inline";
+export type PlatformPopupVariant = "default" | "minimal";
+export type PlatformPopupPlacement =
+  | "bottom-start"
+  | "bottom-end"
+  | "top-start"
+  | "top-end";
 
 export interface PlatformPopupSurfaceProps extends HTMLAttributes<HTMLDivElement> {
   animation?: PlatformPopupAnimation | false;
   animateHeight?: boolean;
   heightAnimationDurationMs?: number;
   mode?: PlatformPopupMode;
+  variant?: PlatformPopupVariant;
   width?: CSSProperties["width"];
   maxWidth?: CSSProperties["maxWidth"];
   maxHeight?: CSSProperties["maxHeight"];
@@ -34,11 +43,19 @@ export interface PlatformPopupProps {
   trigger?: ReactNode | ((state: { open: boolean }) => ReactNode);
   children?: ReactNode;
   rootRef?: Ref<HTMLDivElement>;
+  rootProps?: Omit<HTMLAttributes<HTMLDivElement>, "children" | "className">;
   surfaceRef?: Ref<HTMLDivElement>;
   rootClassName?: string;
   surfaceClassName?: string;
-  surfaceProps?: Omit<PlatformPopupSurfaceProps, "animation" | "children" | "className">;
+  surfaceProps?: Omit<PlatformPopupSurfaceProps, "animation" | "children" | "className" | "variant">;
   animation?: PlatformPopupAnimation | false;
+  variant?: PlatformPopupVariant;
+  portal?: boolean;
+  portalTarget?: Element | DocumentFragment | null;
+  placement?: PlatformPopupPlacement;
+  portalOffset?: number;
+  portalCollisionPadding?: number;
+  portalMatchAnchorWidth?: boolean;
 }
 
 export type PlatformPopupDismissLayerProps = HTMLAttributes<HTMLDivElement>;
@@ -58,6 +75,85 @@ function assignPlatformPopupRef<T>(ref: Ref<T> | undefined, value: T | null) {
   }
 }
 
+interface PlatformPopupPortalPosition {
+  left: number;
+  top: number;
+  width: number | null;
+  placement: PlatformPopupPlacement;
+  ready: boolean;
+}
+
+const INITIAL_PLATFORM_POPUP_PORTAL_POSITION: PlatformPopupPortalPosition = {
+  left: 0,
+  top: 0,
+  width: null,
+  placement: "bottom-start",
+  ready: false,
+};
+
+function clampPlatformPopupCoordinate(value: number, minimum: number, maximum: number) {
+  return Math.min(Math.max(value, minimum), Math.max(minimum, maximum));
+}
+
+function getPlatformPopupPortalPosition({
+  anchorRect,
+  surfaceRect,
+  placement,
+  offset,
+  collisionPadding,
+  matchAnchorWidth,
+}: {
+  anchorRect: DOMRect;
+  surfaceRect: DOMRect;
+  placement: PlatformPopupPlacement;
+  offset: number;
+  collisionPadding: number;
+  matchAnchorWidth: boolean;
+}): PlatformPopupPortalPosition {
+  const viewportWidth = Math.max(
+    0,
+    typeof window === "undefined" ? 0 : window.innerWidth,
+    typeof document === "undefined" ? 0 : document.documentElement.clientWidth,
+  );
+  const viewportHeight = Math.max(
+    0,
+    typeof window === "undefined" ? 0 : window.innerHeight,
+    typeof document === "undefined" ? 0 : document.documentElement.clientHeight,
+  );
+  const surfaceWidth = Math.max(surfaceRect.width, matchAnchorWidth ? anchorRect.width : 0);
+  const surfaceHeight = surfaceRect.height;
+  const requestedSide = placement.startsWith("top") ? "top" : "bottom";
+  const alignment = placement.endsWith("end") ? "end" : "start";
+  const roomAbove = anchorRect.top - collisionPadding - offset;
+  const roomBelow = viewportHeight - collisionPadding - anchorRect.bottom - offset;
+  const resolvedSide = requestedSide === "bottom"
+    ? (surfaceHeight > roomBelow && roomAbove > roomBelow ? "top" : "bottom")
+    : (surfaceHeight > roomAbove && roomBelow > roomAbove ? "bottom" : "top");
+  const resolvedPlacement = `${resolvedSide}-${alignment}` as PlatformPopupPlacement;
+  const preferredLeft = alignment === "end"
+    ? anchorRect.right - surfaceWidth
+    : anchorRect.left;
+  const preferredTop = resolvedSide === "top"
+    ? anchorRect.top - offset - surfaceHeight
+    : anchorRect.bottom + offset;
+
+  return {
+    left: clampPlatformPopupCoordinate(
+      preferredLeft,
+      collisionPadding,
+      viewportWidth - collisionPadding - surfaceWidth,
+    ),
+    top: clampPlatformPopupCoordinate(
+      preferredTop,
+      collisionPadding,
+      viewportHeight - collisionPadding - surfaceHeight,
+    ),
+    width: matchAnchorWidth ? surfaceWidth : null,
+    placement: resolvedPlacement,
+    ready: true,
+  };
+}
+
 export function inferPlatformPopupAnimation(className: string): PlatformPopupAnimation | false {
   const tokens = className.split(/\s+/).filter(Boolean);
   if (tokens.some((token) => /(?:^|-)animate-up-out$/.test(token))) return "up-out";
@@ -74,6 +170,7 @@ export const PlatformPopupSurface = forwardRef<HTMLDivElement, PlatformPopupSurf
     animateHeight = false,
     heightAnimationDurationMs = 180,
     mode = "anchored",
+    variant = "default",
     width,
     maxWidth,
     maxHeight,
@@ -151,11 +248,13 @@ export const PlatformPopupSurface = forwardRef<HTMLDivElement, PlatformPopupSurf
           "platform-popup-surface",
           "tb-popup-menu",
           mode !== "anchored" && `is-${mode}`,
+          variant !== "default" && `is-${variant}`,
           className
         )}
         data-platform-popup-animation={resolvedAnimation || undefined}
         data-platform-popup-height-animation={animateHeight ? "enabled" : undefined}
         data-platform-popup-mode={mode}
+        data-platform-popup-variant={variant}
         style={{
           ...style,
           width: width ?? style?.width,
@@ -187,17 +286,141 @@ export function PlatformPopup({
   trigger,
   children,
   rootRef,
+  rootProps = {},
   surfaceRef,
   rootClassName = "",
   surfaceClassName = "",
   surfaceProps = {},
   animation,
+  variant = "default",
+  portal = false,
+  portalTarget,
+  placement = "bottom-start",
+  portalOffset = 8,
+  portalCollisionPadding = 8,
+  portalMatchAnchorWidth = false,
 }: PlatformPopupProps) {
+  const localRootRef = useRef<HTMLDivElement | null>(null);
+  const localSurfaceRef = useRef<HTMLDivElement | null>(null);
+  const [portalPosition, setPortalPosition] = useState<PlatformPopupPortalPosition>(
+    INITIAL_PLATFORM_POPUP_PORTAL_POSITION,
+  );
+  const setRootRef = useCallback((element: HTMLDivElement | null) => {
+    localRootRef.current = element;
+    assignPlatformPopupRef(rootRef, element);
+  }, [rootRef]);
+  const setSurfaceRef = useCallback((element: HTMLDivElement | null) => {
+    localSurfaceRef.current = element;
+    assignPlatformPopupRef(surfaceRef, element);
+  }, [surfaceRef]);
+  const updatePortalPosition = useCallback(() => {
+    const anchor = localRootRef.current;
+    const surface = localSurfaceRef.current;
+    if (!portal || !open || !anchor || !surface) return;
+    const nextPosition = getPlatformPopupPortalPosition({
+      anchorRect: anchor.getBoundingClientRect(),
+      surfaceRect: surface.getBoundingClientRect(),
+      placement,
+      offset: Math.max(0, portalOffset),
+      collisionPadding: Math.max(0, portalCollisionPadding),
+      matchAnchorWidth: portalMatchAnchorWidth,
+    });
+    setPortalPosition((current) => (
+      current.left === nextPosition.left
+      && current.top === nextPosition.top
+      && current.width === nextPosition.width
+      && current.placement === nextPosition.placement
+      && current.ready === nextPosition.ready
+        ? current
+        : nextPosition
+    ));
+  }, [
+    open,
+    placement,
+    portal,
+    portalCollisionPadding,
+    portalMatchAnchorWidth,
+    portalOffset,
+  ]);
+
+  useLayoutEffect(() => {
+    if (!portal || !open) return;
+    updatePortalPosition();
+  }, [children, open, portal, updatePortalPosition]);
+
+  useLayoutEffect(() => {
+    if (!portal || !open || typeof window === "undefined") return undefined;
+    let animationFrame = 0;
+    const schedulePositionUpdate = () => {
+      if (animationFrame) window.cancelAnimationFrame(animationFrame);
+      animationFrame = window.requestAnimationFrame(() => {
+        animationFrame = 0;
+        updatePortalPosition();
+      });
+    };
+    const resizeObserver = typeof ResizeObserver === "undefined"
+      ? null
+      : new ResizeObserver(schedulePositionUpdate);
+    if (localRootRef.current) resizeObserver?.observe(localRootRef.current);
+    if (localSurfaceRef.current) resizeObserver?.observe(localSurfaceRef.current);
+    window.addEventListener("resize", schedulePositionUpdate);
+    window.addEventListener("scroll", schedulePositionUpdate, true);
+    return () => {
+      if (animationFrame) window.cancelAnimationFrame(animationFrame);
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", schedulePositionUpdate);
+      window.removeEventListener("scroll", schedulePositionUpdate, true);
+    };
+  }, [open, portal, updatePortalPosition]);
+
   const resolvedTrigger = typeof trigger === "function" ? trigger({ open }) : trigger;
+  const {
+    style: surfaceStyle,
+    ...restSurfaceProps
+  } = surfaceProps;
+  const resolvedPortalTarget = portalTarget
+    ?? (typeof document !== "undefined" ? document.body : null);
+  const popupSurface = open ? (
+    <PlatformPopupSurface
+      {...restSurfaceProps}
+      ref={setSurfaceRef}
+      className={joinPlatformPopupClassNames(
+        surfaceClassName,
+        portal && "is-portaled",
+      )}
+      animation={animation}
+      variant={variant}
+      mode={portal ? "fixed" : restSurfaceProps.mode}
+      data-platform-popup-portaled={portal ? "true" : undefined}
+      data-platform-popup-placement={portal ? portalPosition.placement : undefined}
+      style={{
+        ...surfaceStyle,
+        ...(portal
+          ? {
+              left: portalPosition.left,
+              top: portalPosition.top,
+              width: restSurfaceProps.width
+                ?? surfaceStyle?.width
+                ?? portalPosition.width
+                ?? undefined,
+              visibility: portalPosition.ready
+                ? surfaceStyle?.visibility
+                : "hidden",
+            }
+          : null),
+      }}
+    >
+      {children}
+    </PlatformPopupSurface>
+  ) : null;
+  const renderedSurface = portal && resolvedPortalTarget && popupSurface
+    ? createPortal(popupSurface, resolvedPortalTarget)
+    : popupSurface;
 
   return (
     <div
-      ref={rootRef}
+      {...rootProps}
+      ref={setRootRef}
       className={joinPlatformPopupClassNames(
         "platform-popup-anchor",
         rootClassName,
@@ -205,16 +428,7 @@ export function PlatformPopup({
       )}
     >
       {resolvedTrigger}
-      {open ? (
-        <PlatformPopupSurface
-          {...surfaceProps}
-          ref={surfaceRef}
-          className={surfaceClassName}
-          animation={animation}
-        >
-          {children}
-        </PlatformPopupSurface>
-      ) : null}
+      {renderedSurface}
     </div>
   );
 }

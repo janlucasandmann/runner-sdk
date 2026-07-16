@@ -5,24 +5,18 @@ export const APP_SIDEBAR_MENU_LIFECYCLE_SCRIPT = `        useEffect(() => {
           }
 
           if (sidebarWorkspaceMenuOpen) {
-            setRenderedSidebarWorkspaceMenu(true);
-            setSidebarWorkspaceMenuPhase("enter");
-            sidebarWorkspaceMenuAnimationTimerRef.current = window.setTimeout(() => {
-              setSidebarWorkspaceMenuPhase("idle");
-              sidebarWorkspaceMenuAnimationTimerRef.current = null;
-            }, 180);
+            if (!renderedSidebarWorkspaceMenu) {
+              setRenderedSidebarWorkspaceMenu(true);
+            }
             return;
           }
 
           if (!renderedSidebarWorkspaceMenu) {
-            setSidebarWorkspaceMenuPhase("idle");
             return;
           }
 
-          setSidebarWorkspaceMenuPhase("exit");
           sidebarWorkspaceMenuAnimationTimerRef.current = window.setTimeout(() => {
             setRenderedSidebarWorkspaceMenu(false);
-            setSidebarWorkspaceMenuPhase("idle");
             sidebarWorkspaceMenuAnimationTimerRef.current = null;
           }, 180);
         }, [renderedSidebarWorkspaceMenu, sidebarWorkspaceMenuOpen]);

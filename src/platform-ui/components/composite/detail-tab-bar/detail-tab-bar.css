@@ -2,10 +2,18 @@
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   overflow: hidden;
 }
 
+.platform-detail-tab-bar.has-divider {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 .platform-detail-tab-bar__list {
+  flex: 1 1 auto;
   min-width: 0;
   display: flex;
   align-items: center;
@@ -29,7 +37,7 @@
   color: rgba(255, 255, 255, 0.5);
   background: transparent;
   font: inherit;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1;
   font-weight: 400;
   white-space: nowrap;
@@ -39,10 +47,24 @@
 
 .platform-detail-tab-bar__tab:hover:not(:disabled) { color: rgba(255, 255, 255, 0.82); }
 .platform-detail-tab-bar__tab.is-active { color: rgba(255, 255, 255, 0.96); border-bottom-color: rgba(255, 255, 255, 0.5); }
+.platform-detail-tab-bar.is-minimal { border-bottom: 0; }
+.platform-detail-tab-bar.is-minimal .platform-detail-tab-bar__tab {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.platform-detail-tab-bar.is-minimal .platform-detail-tab-bar__tab.is-active { color: #fff; }
 .platform-detail-tab-bar__tab:disabled { opacity: 0.36; cursor: default; }
 .platform-detail-tab-bar__tab:focus-visible { outline: 1px solid rgba(77, 163, 255, 0.78); outline-offset: 3px; border-radius: 2px; }
 .platform-detail-tab-bar__icon { width: 13px; height: 13px; flex: 0 0 auto; }
 .platform-detail-tab-bar__label { min-width: 0; }
+.platform-detail-tab-bar__end-actions {
+  min-width: 0;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
 
 @media (max-width: 760px) {
   .platform-detail-tab-bar__list { gap: 18px; }

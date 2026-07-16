@@ -18,18 +18,28 @@ export const APP_HEADER_COMPONENT_SCRIPT = `        function toggleAccountMenuFr
 
         function renderAppHeaderGhostButton(options = {}) {
           const isPrivateChatVariant = options.variant === "private-chat";
+          if (isPrivateChatVariant) {
+            return React.createElement(PlatformSecondaryButton, {
+              className: "playground-top-nav-private-chat-control",
+              active: runnerComposerPrivateMode,
+              "aria-label": "Private Chat",
+              title: runnerComposerPrivateMode ? "Private mode active" : "Private mode",
+              onClick: handleGhostModeToggle,
+            },
+              React.createElement(Ghost, { strokeWidth: 1.8 }),
+              React.createElement("span", null, "Private Chat")
+            );
+          }
+
           return React.createElement("button", {
             type: "button",
-            className: isPrivateChatVariant
-              ? "playground-top-nav-private-chat-button" + (runnerComposerPrivateMode ? " is-active" : "")
-              : "playground-content-menu-button" + (runnerComposerPrivateMode ? " is-private-active" : ""),
-            "aria-label": isPrivateChatVariant ? "Private Chat" : "Ghost mode",
+            className: "playground-content-menu-button" + (runnerComposerPrivateMode ? " is-private-active" : ""),
+            "aria-label": "Ghost mode",
             "aria-pressed": runnerComposerPrivateMode ? "true" : "false",
             title: runnerComposerPrivateMode ? "Private mode active" : "Private mode",
             onClick: handleGhostModeToggle,
           },
-            React.createElement(Ghost, { className: isPrivateChatVariant ? "" : "playground-content-menu-icon", strokeWidth: 1.8 }),
-            isPrivateChatVariant ? React.createElement("span", null, "Private Chat") : null
+            React.createElement(Ghost, { className: "playground-content-menu-icon", strokeWidth: 1.8 })
           );
         }
 

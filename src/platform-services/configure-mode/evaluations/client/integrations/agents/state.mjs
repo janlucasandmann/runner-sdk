@@ -1,4 +1,6 @@
 export const EVALUATIONS_AGENT_STATE_SCRIPT = `        const [agentDetailEvaluationSearchQuery, setAgentDetailEvaluationSearchQuery] = useState("");
+        const [agentDetailEvaluationFilterMode, setAgentDetailEvaluationFilterMode] = useState("all");
+        const [agentDetailEvaluationRunFilterMode, setAgentDetailEvaluationRunFilterMode] = useState("all");
         const [agentDetailEvaluationSelectedSetId, setAgentDetailEvaluationSelectedSetId] = useState("");
         const [agentDetailEvaluationRunModalOpen, setAgentDetailEvaluationRunModalOpen] = useState(false);
         const [agentDetailEvaluationRunForm, setAgentDetailEvaluationRunForm] = useState({

@@ -26,6 +26,41 @@ export const MODELS_PAGE_QUERY_SCRIPT = String.raw`      function getPlaygroundM
         return String(model?.provider || "Managed").trim() || "Managed";
       }
 
+      function getPlaygroundManagedModelProviderIconMeta(tabId, model) {
+        const normalizedTabId = normalizePlaygroundManagedModelsTab(tabId);
+        if (normalizedTabId === "agent") {
+          return getPlaygroundAgentModelProviderIcon(model);
+        }
+        if (normalizedTabId === "deep_research") {
+          return { src: "/img/05-model-provider-icons/gemini.png", alt: "Google", className: "" };
+        }
+
+        const normalizedProvider = String(model?.provider || "").trim().toLowerCase();
+        if (normalizedTabId === "image") {
+          if (normalizedProvider.includes("google")) {
+            return { src: "/img/05-model-provider-icons/gemini.png", alt: "Google", className: "" };
+          }
+          if (normalizedProvider.includes("openai")) {
+            return { src: "/img/05-model-provider-icons/openai.svg", alt: "OpenAI", className: "is-openai" };
+          }
+        }
+        if (normalizedTabId === "video") {
+          if (normalizedProvider.includes("bytedance")) {
+            return { src: "/img/05-model-provider-icons/bytedance.svg", alt: "ByteDance", className: "" };
+          }
+          if (normalizedProvider.includes("xai") || normalizedProvider.includes("x.ai")) {
+            return { src: "/img/05-model-provider-icons/xai.svg", alt: "xAI", className: "is-openai" };
+          }
+        }
+
+        return getPlaygroundAgentModelProviderIcon({
+          id: model?.baseModelId || model?.id,
+          providerType: model?.provider || "",
+          source: "managed",
+          contextWindow: normalizedTabId === "image" ? "Images" : normalizedTabId === "video" ? "Video" : "Research",
+        });
+      }
+
       function getPlaygroundManagedModelProviderFilterKey(tabId, model) {
         if (normalizePlaygroundManagedModelsTab(tabId) === "agent") {
           return getPlaygroundAgentModelProviderFilterKey(model);
@@ -175,6 +210,189 @@ export const MODELS_PAGE_QUERY_SCRIPT = String.raw`      function getPlaygroundM
           input: formatPlaygroundManagedAgentUsdPerMTok(pricing?.input),
           output: formatPlaygroundManagedAgentUsdPerMTok(pricing?.output),
           cached: formatPlaygroundManagedAgentUsdPerMTok(pricing?.cached),
+        };
+      }
+
+      function getPlaygroundManagedModelCategoryLabel(tabId) {
+        const normalizedTabId = normalizePlaygroundManagedModelsTab(tabId);
+        if (normalizedTabId === "image") return "Image model";
+        if (normalizedTabId === "video") return "Video model";
+        if (normalizedTabId === "deep_research") return "Research model";
+        return "Agent model";
+      }
+
+      function getPlaygroundManagedModelIntegrationLabel(tabId) {
+        const normalizedTabId = normalizePlaygroundManagedModelsTab(tabId);
+        if (normalizedTabId === "image") return "Image Generation skill";
+        if (normalizedTabId === "video") return "Video Generation skill";
+        if (normalizedTabId === "deep_research") return "Deep Research skill";
+        return "Primary agent model";
+      }
+
+      function readPlaygroundManagedModelAvailability(model) {
+        const modelId = String(model?.baseModelId || model?.id || "").trim();
+        const catalogAvailability = PLAYGROUND_MANAGED_MODEL_AVAILABILITY_BY_ID[modelId] || {};
+        const suppliedAvailability = model?.availability
+          && typeof model.availability === "object"
+          && !Array.isArray(model.availability)
+          ? model.availability
+          : {};
+        return {
+          ...catalogAvailability,
+          ...suppliedAvailability,
+        };
+      }
+
+      function createPlaygroundManagedModelDetailFact(label, value, description = "") {
+        const normalizedValue = String(value == null ? "" : value).trim();
+        if (!normalizedValue) return null;
+        const normalizedDescription = String(description || "").trim();
+        return {
+          label,
+          value: normalizedValue,
+          ...(normalizedDescription ? { description: normalizedDescription } : {}),
+        };
+      }
+
+      function compactPlaygroundManagedModelDetailFacts(facts) {
+        return facts.filter(Boolean);
+      }
+
+      function getPlaygroundManagedModelDetails(tabId, model) {
+        const normalizedTabId = normalizePlaygroundManagedModelsTab(tabId);
+        const modelId = String(model?.baseModelId || model?.id || "").trim();
+        const availability = readPlaygroundManagedModelAvailability(model);
+        const modelProvider = String(
+          availability.modelProvider
+          || model?.provider
+          || getPlaygroundManagedModelProviderLabel(normalizedTabId, model)
+          || "Managed"
+        ).trim() || "Managed";
+        const deliveryProvider = String(
+          availability.deliveryProvider
+          || (String(model?.source || "").trim().toLowerCase() === "external"
+            ? "Workspace external model"
+            : normalizedTabId === "agent" && String(model?.description || "").toLowerCase().includes("clawcode")
+              ? "Clawcode model gateway"
+              : "Platform managed model gateway")
+        ).trim();
+        const location = String(
+          availability.location
+          || model?.location
+          || "Not exposed by platform"
+        ).trim();
+        const locationDescription = /not exposed|provider-managed/i.test(location)
+          ? "The current model catalog does not expose a fixed inference region."
+          : "";
+        const runtimeModelId = String(
+          availability.runtimeModelId
+          || model?.runtimeModelId
+          || modelId
+        ).trim();
+        const dataHandling = String(
+          availability.dataHandling
+          || model?.dataHandling
+          || "Not exposed by platform"
+        ).trim();
+        const dataHandlingDescription = /not exposed/i.test(dataHandling)
+          ? "Retention and residency depend on the configured provider route."
+          : "";
+        const catalogSource = String(model?.source || "managed").trim().toLowerCase() === "external"
+          ? "Workspace external catalog"
+          : "Managed model catalog";
+        const statusLabel = model?.locked ? "Plan required" : "Available";
+        const pricingLabel = getPlaygroundManagedModelPricingLabel(normalizedTabId, model);
+        const description = String(model?.description || "").trim()
+          || "No model description is available.";
+        let overviewFacts = [];
+        let fallbackCapabilities = [];
+
+        if (normalizedTabId === "agent") {
+          const pricing = getPlaygroundManagedAgentPricingCells(model);
+          overviewFacts = compactPlaygroundManagedModelDetailFacts([
+            createPlaygroundManagedModelDetailFact("Model ID", modelId),
+            createPlaygroundManagedModelDetailFact("Intelligence", model?.intelligence || model?.intelligenceLabel || "Custom"),
+            createPlaygroundManagedModelDetailFact("Context window", model?.contextWindow || "Custom"),
+            createPlaygroundManagedModelDetailFact(
+              "Speed",
+              hasPlaygroundManagedAgentModelTps(model)
+                ? formatPlaygroundManagedAgentModelTps(model)
+                : model?.speed || "Custom"
+            ),
+            createPlaygroundManagedModelDetailFact("Input", pricing.input + " / mTok"),
+            createPlaygroundManagedModelDetailFact("Cached input", pricing.cached + " / mTok"),
+            createPlaygroundManagedModelDetailFact("Output", pricing.output + " / mTok"),
+          ]);
+          fallbackCapabilities = ["Agent execution"];
+        } else if (normalizedTabId === "image") {
+          overviewFacts = compactPlaygroundManagedModelDetailFacts([
+            createPlaygroundManagedModelDetailFact("Model ID", modelId),
+            createPlaygroundManagedModelDetailFact("Mode", model?.mode || "Image generation"),
+            createPlaygroundManagedModelDetailFact("Quality", model?.contextWindow || "Auto"),
+            createPlaygroundManagedModelDetailFact("Speed", model?.speed || "Custom"),
+            createPlaygroundManagedModelDetailFact("Pricing", pricingLabel || "Pricing tiers"),
+          ]);
+          fallbackCapabilities = ["Image generation"];
+          if (/edit/i.test(String(model?.mode || ""))) fallbackCapabilities.push("Image editing");
+          if (/inpaint/i.test(String(model?.mode || ""))) fallbackCapabilities.push("Inpainting");
+        } else if (normalizedTabId === "video") {
+          overviewFacts = compactPlaygroundManagedModelDetailFacts([
+            createPlaygroundManagedModelDetailFact("Model ID", modelId),
+            createPlaygroundManagedModelDetailFact("Maximum duration", model?.maxDuration || "Custom"),
+            createPlaygroundManagedModelDetailFact("Resolutions", model?.resolutions || "Custom"),
+            createPlaygroundManagedModelDetailFact("Input modalities", model?.inputModalities || "Custom"),
+            createPlaygroundManagedModelDetailFact("Pricing", pricingLabel || "Pricing tiers"),
+          ]);
+          fallbackCapabilities = ["Video generation"].concat(
+            String(model?.inputModalities || "")
+              .split(",")
+              .map((value) => value.trim())
+              .filter(Boolean)
+              .map((value) => value + " input")
+          );
+        } else {
+          overviewFacts = compactPlaygroundManagedModelDetailFacts([
+            createPlaygroundManagedModelDetailFact("Model ID", modelId),
+            createPlaygroundManagedModelDetailFact("Mode", model?.mode || "Deep research"),
+            createPlaygroundManagedModelDetailFact("Research scope", model?.contextWindow || "Web, files, sources"),
+            createPlaygroundManagedModelDetailFact("Speed", model?.speed || "Custom"),
+            createPlaygroundManagedModelDetailFact("Pricing", pricingLabel || "Usage-based pricing"),
+          ]);
+          fallbackCapabilities = ["Deep research", "Source-grounded synthesis"];
+        }
+
+        const suppliedCapabilities = Array.isArray(availability.capabilities)
+          ? availability.capabilities
+          : Array.isArray(model?.capabilities)
+            ? model.capabilities
+            : fallbackCapabilities;
+        const capabilities = Array.from(new Set(
+          suppliedCapabilities
+            .map((value) => String(value || "").trim())
+            .filter(Boolean)
+        ));
+        const availabilityFacts = compactPlaygroundManagedModelDetailFacts([
+          createPlaygroundManagedModelDetailFact("Model provider", modelProvider),
+          createPlaygroundManagedModelDetailFact("Delivery provider", deliveryProvider),
+          createPlaygroundManagedModelDetailFact("Hosting", availability.hosting || model?.hosting || "Provider-managed"),
+          createPlaygroundManagedModelDetailFact("Location", location, locationDescription),
+          createPlaygroundManagedModelDetailFact("Runtime model ID", runtimeModelId),
+          createPlaygroundManagedModelDetailFact("Data handling", dataHandling, dataHandlingDescription),
+          createPlaygroundManagedModelDetailFact("Platform integration", availability.integration || getPlaygroundManagedModelIntegrationLabel(normalizedTabId)),
+          createPlaygroundManagedModelDetailFact("Catalog source", catalogSource),
+          createPlaygroundManagedModelDetailFact("Access", statusLabel),
+        ]);
+
+        return {
+          categoryLabel: getPlaygroundManagedModelCategoryLabel(normalizedTabId),
+          description,
+          providerIcon: getPlaygroundManagedModelProviderIconMeta(normalizedTabId, model) || undefined,
+          overviewFacts,
+          availabilityFacts,
+          capabilities,
+          documentationUrl: String(availability.documentationUrl || model?.documentationUrl || "").trim(),
+          canCreateAgent: normalizedTabId === "agent" && !model?.locked,
+          agentModelId: normalizedTabId === "agent" ? String(model?.id || modelId).trim() : "",
         };
       }
 

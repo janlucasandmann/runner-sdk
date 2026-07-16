@@ -1,4 +1,30 @@
-export const MODELS_STYLE_OVERVIEW = String.raw`      .playground-models-skill-settings-section {
+export const MODELS_STYLE_OVERVIEW = String.raw`      .resource-overview-page.is-models-overview {
+        overflow: hidden;
+      }
+
+      .resource-overview-page.is-models-overview .resource-overview-page__table-section {
+        min-height: 240px;
+      }
+
+      .resource-overview-table.is-models-overview .platform-data-table__toolbar-leading {
+        overflow: hidden;
+      }
+
+      .resource-overview-table.is-models-overview .models-overview-tab-bar {
+        width: auto;
+        max-width: 100%;
+      }
+
+      .resource-overview-table.is-models-overview .platform-data-table__footer {
+        padding: 16px 0 0;
+        border-top: 0;
+      }
+
+      .resource-overview-table.is-models-overview .platform-data-table__footer .playground-models-skill-settings-section {
+        margin-top: 0;
+      }
+
+      .playground-models-skill-settings-section {
         margin-top: 16px;
         padding: 16px;
         border: 1px solid rgba(255, 255, 255, 0.1);
@@ -103,30 +129,6 @@ export const MODELS_STYLE_OVERVIEW = String.raw`      .playground-models-skill-s
       .playground-models-overview-controls {
         flex: 0 0 auto;
         flex-wrap: nowrap !important;
-      }
-
-      .playground-models-overview-category-row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        min-width: 0;
-        margin-left: auto;
-      }
-
-      .playground-models-overview-category-switch {
-        min-width: 0;
-        overflow-x: auto;
-        scrollbar-width: none;
-      }
-
-      .playground-models-overview-category-switch::-webkit-scrollbar {
-        display: none;
-      }
-
-      .playground-models-overview-category-switch .content-mode-button {
-        min-width: max-content;
-        padding-left: 14px;
-        padding-right: 14px;
       }
 
       .playground-models-overview-table-section .playground-models-overview-table,

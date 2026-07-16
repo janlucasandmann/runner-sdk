@@ -1,13 +1,3 @@
-export const API_KEYS_UI_STATE_SCRIPT = `        const [developApiKeysMenuOpen, setDevelopApiKeysMenuOpen] = useState(false);
-        const [developApiKeysSearchQuery, setDevelopApiKeysSearchQuery] = useState("");
-        const [developApiKeysSort, setDevelopApiKeysSort] = useState("name");
-        const [developApiKeysSortDirection, setDevelopApiKeysSortDirection] = useState("asc");
-        const [developApiKeysFilter, setDevelopApiKeysFilter] = useState("all");
-        const [developApiKeysToolbarPopover, setDevelopApiKeysToolbarPopover] = useState("");
-        const [developApiKeysSelectedIds, setDevelopApiKeysSelectedIds] = useState(() => new Set());
-        const [developApiKeyActionMenu, setDevelopApiKeyActionMenu] = useState(null);
-        const [developApiKeyActionMenuClosing, setDevelopApiKeyActionMenuClosing] = useState(false);
-        const developApiKeyActionMenuCloseTimerRef = useRef(null);
-        const [developApiKeyRevealModal, setDevelopApiKeyRevealModal] = useState(null);
+export const API_KEYS_UI_STATE_SCRIPT = `        const [developApiKeyRevealModal, setDevelopApiKeyRevealModal] = useState(null);
         const [settingsRevealableApiKeys, setSettingsRevealableApiKeys] = useState({});
 `;

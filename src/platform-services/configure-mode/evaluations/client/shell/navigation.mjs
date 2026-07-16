@@ -38,4 +38,12 @@ export const EVALUATIONS_APP_NAVIGATION_SCRIPT = `        function openEvaluatio
           setActivePage("evaluations");
         }
 
+        function openEvaluationsOverviewPage() {
+          setSelectedEvaluationSetId("");
+          setSelectedEvaluationRunId("");
+          setSelectedEvaluationCaseId("");
+          setEvaluationRunReturnTarget(null);
+          openEvaluationsPage({ mode: "overview" });
+        }
+
 `;

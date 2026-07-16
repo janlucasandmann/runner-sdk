@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 const modeRoot = path.dirname(fileURLToPath(import.meta.url));
 const packageRoot = path.resolve(modeRoot, "../../..");
 const serviceNames = [
+  "api-keys",
   "web-apps",
   "apis",
   "functions",
@@ -38,6 +39,7 @@ await assert.rejects(
 const demoServerSource = await fs.readFile(path.join(packageRoot, "examples/demo-server.mjs"), "utf8");
 assert.match(demoServerSource, /DevelopResourceOverviewRoute/);
 assert.match(demoServerSource, /DevelopVoiceAgentsOverviewPage/);
+assert.match(demoServerSource, /DevelopApiKeysOverviewPage/);
 assert.doesNotMatch(demoServerSource, /DevelopResourceOverviewPage/);
 
 console.log(`Develop mode service boundaries passed (${serviceNames.length} services checked).`);

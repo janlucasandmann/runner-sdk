@@ -48,6 +48,13 @@
     "./platform-ui/components/ui/search/styles.css": {
       "default": "./dist/platform-ui/components/ui/search/search.css"
     },
+    "./platform-ui/components/ui/selector": {
+      "types": "./dist/platform-ui/components/ui/selector/index.d.ts",
+      "default": "./dist/platform-ui/components/ui/selector/index.js"
+    },
+    "./platform-ui/components/ui/selector/styles.css": {
+      "default": "./dist/platform-ui/components/ui/selector/selector.css"
+    },
     "./platform-ui/components/ui/switch": {
       "types": "./dist/platform-ui/components/ui/switch/index.d.ts",
       "default": "./dist/platform-ui/components/ui/switch/index.js"
@@ -65,6 +72,13 @@
     },
     "./platform-ui/components/composite/analytics/styles.css": {
       "default": "./dist/platform-ui/components/composite/analytics/analytics.css"
+    },
+    "./platform-ui/components/composite/code-preview-box": {
+      "types": "./dist/platform-ui/components/composite/code-preview-box/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/code-preview-box/index.js"
+    },
+    "./platform-ui/components/composite/code-preview-box/styles.css": {
+      "default": "./dist/platform-ui/components/composite/code-preview-box/code-preview-box.css"
     },
     "./platform-ui/components/composite/data-table": {
       "types": "./dist/platform-ui/components/composite/data-table/index.d.ts",
@@ -86,6 +100,13 @@
     },
     "./platform-ui/components/composite/detail-tab-bar/styles.css": {
       "default": "./dist/platform-ui/components/composite/detail-tab-bar/detail-tab-bar.css"
+    },
+    "./platform-ui/components/composite/empty-state": {
+      "types": "./dist/platform-ui/components/composite/empty-state/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/empty-state/index.js"
+    },
+    "./platform-ui/components/composite/empty-state/styles.css": {
+      "default": "./dist/platform-ui/components/composite/empty-state/empty-state.css"
     },
     "./platform-ui/components/composite/instructions-editor": {
       "types": "./dist/platform-ui/components/composite/instructions-editor/index.d.ts",
@@ -140,6 +161,13 @@
     "./platform-ui/components/search/styles.css": {
       "default": "./dist/platform-ui/components/ui/search/search.css"
     },
+    "./platform-ui/components/selector": {
+      "types": "./dist/platform-ui/components/ui/selector/index.d.ts",
+      "default": "./dist/platform-ui/components/ui/selector/index.js"
+    },
+    "./platform-ui/components/selector/styles.css": {
+      "default": "./dist/platform-ui/components/ui/selector/selector.css"
+    },
     "./platform-ui/components/data-table": {
       "types": "./dist/platform-ui/components/composite/data-table/index.d.ts",
       "default": "./dist/platform-ui/components/composite/data-table/index.js"
@@ -190,6 +218,13 @@
     "./platform-ui/pages/details/styles.css": {
       "default": "./dist/platform-ui/pages/details/resource-detail.css"
     },
+    "./platform-ui/pages/permissions": {
+      "types": "./dist/platform-ui/pages/permissions/index.d.ts",
+      "default": "./dist/platform-ui/pages/permissions/index.js"
+    },
+    "./platform-ui/pages/permissions/styles.css": {
+      "default": "./dist/platform-ui/pages/permissions/permission-page.css"
+    },
     "./platform-ui/pages/styles.css": {
       "default": "./dist/platform-ui/pages/styles.css"
     },
@@ -222,8 +257,8 @@
     "clean": "rm -rf dist",
     "history-smoke": "npm run build && node ./examples/history-api-test.mjs",
     "calendar-service-test": "node ./src/platform-services/create-mode/calendar/calendar-service-test.mjs",
-    "configure-home-service-test": "node ./src/platform-services/configure-mode/configure-home/configure-home-service-test.mjs",
-    "develop-home-service-test": "node ./src/platform-services/develop-mode/develop-home/develop-home-service-test.mjs",
+    "configure-home-service-test": "node ./src/platform-services/configure-mode/configure-home/configure-home-service-test.mjs && vitest run src/platform-services/configure-mode/configure-home/client/page/configure-home-overview-page.test.tsx",
+    "develop-home-service-test": "node ./src/platform-services/develop-mode/develop-home/develop-home-service-test.mjs && vitest run src/platform-services/develop-mode/develop-home/client/page",
     "api-keys-service-test": "node ./src/platform-services/develop-mode/api-keys/api-keys-service-test.mjs",
     "evaluations-service-test": "node ./src/platform-services/configure-mode/evaluations/evaluations-service-test.mjs",
     "files-service-test": "node ./src/platform-services/create-mode/files/files-service-test.mjs",
@@ -239,6 +274,7 @@
     "settings-modal-service-test": "node ./src/platform-shell/settings-modal/settings-modal-service-test.mjs",
     "app-header-service-test": "node ./src/platform-shell/app-header/app-header-service-test.mjs",
     "app-sidebar-service-test": "node ./src/platform-shell/app-sidebar/app-sidebar-service-test.mjs",
+    "navigation-guard-service-test": "node ./src/platform-shell/navigation-guard/navigation-guard-service-test.mjs && vitest run src/platform-ui/components/composite/modal/platform-unsaved-changes-modal.test.tsx",
     "projects-service-test": "node ./src/platform-services/create-mode/projects/projects-service-test.mjs",
     "teams-service-test": "node ./src/platform-services/configure-mode/teams/teams-service-test.mjs",
     "thread-domain-test": "npm run build && node ./examples/thread-domain-test.mjs",
@@ -251,6 +287,7 @@
     "platform-table-test": "npm run platform-table-invariants && vitest run src/platform-ui/components/composite/data-table",
     "platform-button-test": "vitest run src/platform-ui/components/ui/button",
     "platform-search-test": "vitest run src/platform-ui/components/ui/search",
+    "platform-selector-test": "vitest run src/platform-ui/components/ui/selector",
     "platform-button-invariants": "node ./scripts/platform-button-invariants.mjs",
     "platform-overlay-invariants": "node ./scripts/platform-overlay-invariants.mjs",
     "platform-resource-invariants": "node ./scripts/platform-resource-invariants.mjs",
@@ -261,7 +298,7 @@
     "platform-widget-test": "npm run platform-widget-invariants && vitest run src/platform-ui/components/composite/widgets",
     "develop-mode-service-test": "node ./src/platform-services/develop-mode/develop-mode-service-test.mjs",
     "platform-resource-overview-test": "npm run platform-resource-invariants && npm run develop-mode-service-test && vitest run src/platform-ui/pages/overview src/platform-services/develop-mode",
-    "platform-resource-detail-test": "npm run platform-component-invariants && npm run platform-resource-invariants && vitest run src/platform-ui/pages/details src/platform-ui/components/composite/detail-tab-bar src/platform-ui/components/composite/detail-sidebar src/platform-ui/components/composite/instructions-editor src/platform-resources/agents/detail",
+    "platform-resource-detail-test": "npm run platform-component-invariants && npm run platform-resource-invariants && vitest run src/platform-ui/pages/details src/platform-ui/pages/permissions src/platform-ui/components/composite/detail-tab-bar src/platform-ui/components/composite/detail-sidebar src/platform-ui/components/composite/instructions-editor src/platform-resources/agents/detail",
     "smoke": "npm run build && node ./examples/smoke-test.mjs",
     "demo": "npm run build && node ./examples/demo-server.mjs"
   },

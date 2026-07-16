@@ -26,9 +26,14 @@ export const SETTINGS_MODAL_NAVIGATION_SCRIPT = String.raw`        function clos
             openOrganizationBillingPage("billing", normalizedSectionId);
             return;
           }
-          if (normalizedSectionId === "integrations" || normalizedSectionId === "webhooks") {
+          if (normalizedSectionId === "integrations") {
             setSettingsModalOpen(false);
-            openToolsView(normalizedSectionId === "webhooks" ? "actions" : "tags");
+            openToolsView("tags");
+            return;
+          }
+          if (normalizedSectionId === "webhooks") {
+            setSettingsModalOpen(false);
+            openDevelopWebhooksPage();
             return;
           }
 
@@ -36,4 +41,3 @@ export const SETTINGS_MODAL_NAVIGATION_SCRIPT = String.raw`        function clos
           setSettingsModalOpen(true);
         }
 `;
-

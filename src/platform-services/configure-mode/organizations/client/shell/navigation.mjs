@@ -6,6 +6,17 @@ export const ORGANIZATIONS_NAVIGATION_SCRIPT = `        function openOrganizatio
           setActivePage("organization");
         }
 
+        function openOrganizationOverviewPage() {
+          setOrganizationPageSelectedOrganizationId("");
+          setOrganizationPageActiveTab("members");
+          setOrganizationPageSelectedRoleId("member");
+          setOrganizationPagePendingDestination(null);
+          setOrganizationPageMembers([]);
+          setOrganizationPageInvitations([]);
+          setOrganizationPageResources([]);
+          openOrganizationPage();
+        }
+
         function openOrganizationBillingPage(tab = "billing", billingSection = "costs-plans", options = {}) {
           const normalizedTab = tab === "usage" ? "usage" : "billing";
           const normalizedBillingSection = ["costs-plans", "costs-plan-options", "costs-records"].includes(billingSection)

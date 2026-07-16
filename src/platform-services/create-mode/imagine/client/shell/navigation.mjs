@@ -5,4 +5,10 @@ export const IMAGINE_APP_NAVIGATION_SCRIPT = String.raw`
           setActivePage("imagine");
         }
 
+        function openImagineOverviewPage() {
+          setImagineActiveView("explore");
+          setImagineTemplateSelectionRequest(null);
+          openImaginePage();
+        }
+
 `;

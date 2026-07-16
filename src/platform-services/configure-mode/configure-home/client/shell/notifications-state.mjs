@@ -15,5 +15,4 @@ export const CONFIGURE_HOME_NOTIFICATIONS_STATE_SCRIPT = `        const [product
         const [notificationsPageSearchQuery, setNotificationsPageSearchQuery] = useState("");
         const [notificationsPageFilter, setNotificationsPageFilter] = useState("all");
         const [notificationsPageSort, setNotificationsPageSort] = useState("newest");
-        const [notificationsPageToolbarPopover, setNotificationsPageToolbarPopover] = useState("");
 `;

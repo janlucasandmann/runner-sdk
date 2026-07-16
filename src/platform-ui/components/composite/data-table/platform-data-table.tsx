@@ -204,6 +204,7 @@ export function PlatformDataTable<TData>({
   className = "",
   surface = "default",
   layout = "content",
+  variant = "default",
   sticky = true,
   stickyTop = 0,
   rowMinHeight = 58,
@@ -394,6 +395,7 @@ export function PlatformDataTable<TData>({
   }, [data, getRowId, selection, selectionControlled]);
 
   const renderedRows = table.getRowModel().rows;
+  const showEmptyStateRow = !loading && !error && (!data.length || !renderedRows.length);
   const totalRowCount = paginationConfig?.manual
     ? Math.max(0, Math.floor(Number(paginationConfig.totalCount ?? data.length) || 0))
     : table.getFilteredRowModel().rows.length;
@@ -580,6 +582,9 @@ export function PlatformDataTable<TData>({
       toolbar.title
         ? createElement("h2", { className: "platform-data-table__toolbar-title" }, toolbar.title)
         : null,
+      toolbar.leading
+        ? createElement("div", { className: "platform-data-table__toolbar-leading" }, toolbar.leading)
+        : null,
       filters.length
         ? createElement("button", {
             type: "button",
@@ -590,9 +595,6 @@ export function PlatformDataTable<TData>({
             "aria-haspopup": "menu",
             "aria-expanded": toolbarMenu ? "true" : "false",
           }, createElement(ListFilter, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": true }))
-        : null,
-      toolbar.leading
-        ? createElement("div", { className: "platform-data-table__toolbar-leading" }, toolbar.leading)
         : null,
       createElement("div", { className: "platform-data-table__toolbar-spacer" }),
       createElement("div", { className: "platform-data-table__toolbar-controls" },
@@ -789,8 +791,23 @@ export function PlatformDataTable<TData>({
       createElement("span", null, "Loading"),
     );
     else if (error) stateContent = createElement("div", { className: "platform-data-table__state is-error", role: "alert" }, error);
-    else if (!data.length) stateContent = createElement("div", { className: "platform-data-table__state is-empty" }, emptyState);
-    else if (!renderedRows.length) stateContent = createElement("div", { className: "platform-data-table__state is-empty" }, noResultsState);
+
+    if (showEmptyStateRow) {
+      const columnCount = visibleColumns.length + (hasSelection ? 1 : 0) + (hasActions ? 1 : 0);
+      return createElement("div", { className: "platform-data-table__body has-state", role: "rowgroup" },
+        createElement("div", {
+          className: "platform-data-table__state-row",
+          role: "row",
+          "aria-rowindex": 2,
+        },
+          createElement("div", {
+            className: "platform-data-table__state is-empty",
+            role: "cell",
+            "aria-colspan": columnCount,
+          }, !data.length ? emptyState : noResultsState),
+        ),
+      );
+    }
 
     if (stateContent) {
       return createElement("div", { className: "platform-data-table__body has-state", role: "rowgroup" }, stateContent);
@@ -1032,6 +1049,7 @@ export function PlatformDataTable<TData>({
         "platform-data-table",
         `is-${surface}`,
         `is-${layout}-layout`,
+        variant === "minimalistic-ui" && "is-minimalistic-ui",
         paginationEnabled && "has-pagination",
         sticky && "has-sticky-header",
         className,
@@ -1047,7 +1065,10 @@ export function PlatformDataTable<TData>({
           className: "platform-data-table__table",
           role: "table",
           "aria-label": ariaLabel,
-          "aria-rowcount": (paginationEnabled ? totalRowCount : renderedRows.length) + 1,
+          "aria-rowcount": Math.max(
+            paginationEnabled ? totalRowCount : renderedRows.length,
+            showEmptyStateRow ? 1 : 0,
+          ) + 1,
           "aria-colcount": visibleColumns.length + (hasSelection ? 1 : 0) + (hasActions ? 1 : 0),
         },
         createElement("div", { className: "platform-data-table__sticky" },

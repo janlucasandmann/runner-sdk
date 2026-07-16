@@ -8423,7 +8423,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
                           }, reducedTeamName)
                         : React.createElement("span", { className: "playground-project-settings-source-button" }, reducedTeamName)
                     ),
-                    renderPlaygroundPermissionPanel(selectedRolePermissionSet, {
+                    renderPlaygroundPermissionsPage(selectedRolePermissionSet, {
                       subjectType: "project_team_role",
                       animationKey: projectPermissionChartAnimationKey,
                       disabled: true,
@@ -8609,47 +8609,40 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	                  )
 	                : null;
 	              const renderProjectTeamRolePages = () =>
-	                React.createElement("div", { className: "playground-team-role-pages playground-project-team-role-pages" },
-	                  React.createElement("div", { className: "playground-team-role-list playground-project-team-role-list", role: "tablist", "aria-label": "Project team roles" },
-	                    PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) =>
-	                      React.createElement("button", {
-	                        key: role.id,
-	                        type: "button",
-	                        role: "tab",
-	                        className: "playground-team-role-card" + (selectedRoleDefinition.id === role.id ? " is-active" : ""),
-	                        "aria-selected": selectedRoleDefinition.id === role.id ? "true" : "false",
-	                        onClick: () => {
-	                          if (typeof setProjectOverviewPermissionRoleId === "function") {
-	                            setProjectOverviewPermissionRoleId(role.id);
-	                          }
-	                        },
-	                      },
-	                        React.createElement("span", { className: "playground-team-role-card-title" }, role.label),
-	                        React.createElement("span", { className: "playground-team-role-card-description" }, role.description),
-	                        React.createElement("span", { className: "playground-team-role-card-meta" }, "Project access")
-	                      )
-	                    )
-	                  ),
-	                  React.createElement("div", { className: "playground-team-role-permission-page playground-project-team-role-permission-page" + (isSelectedOwnerRole ? " is-read-only" : "") },
-	                    React.createElement("div", { className: "playground-team-role-permission-header playground-project-team-role-permission-header" },
-	                      React.createElement("div", null,
-	                        React.createElement("div", { className: "playground-team-role-permission-kicker" }, "Project role"),
-	                        React.createElement("h2", { className: "playground-team-role-permission-title" }, selectedRoleDefinition.label),
-	                        React.createElement("p", { className: "playground-team-role-permission-copy" },
-	                          "Project-scoped permissions for " + selectedRoleDefinition.label.toLowerCase() + "s in " + (selectedPermissionTeam.name || "this team") + "."
-	                        )
-	                      )
-	                    ),
-	                    renderPlaygroundPermissionPanel(selectedRolePermissionSet, {
-	                      subjectType: "project_team_role",
-	                      animationKey: projectPermissionChartAnimationKey,
-	                      disabled: isSelectedOwnerRole || !hasRealAccess,
-	                      onRingAccessChange: (ringId, nextAccess) => updateProjectTeamRolePermissionRingAccess?.(selectedPermissionTeam.id, selectedRoleDefinition.id, ringId, nextAccess),
-	                      onActionRingChange: (actionId, nextRingId) => updateProjectTeamRolePermissionActionRing?.(selectedPermissionTeam.id, selectedRoleDefinition.id, actionId, nextRingId),
-	                      onActionAccessChange: (actionId, nextAccess) => updateProjectTeamRolePermissionActionAccess?.(selectedPermissionTeam.id, selectedRoleDefinition.id, actionId, nextAccess),
-	                    })
-	                  )
-	                );
+	                React.createElement(PlatformRolePermissionsPage, {
+	                  roles: PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => ({
+	                    id: role.id,
+	                    label: role.label,
+	                    description: role.description,
+	                    meta: "Project access",
+	                  })),
+	                  value: selectedRoleDefinition.id,
+	                  onValueChange: (roleId) => {
+	                    if (typeof setProjectOverviewPermissionRoleId === "function") {
+	                      setProjectOverviewPermissionRoleId(roleId);
+	                    }
+	                  },
+	                  roleAriaLabel: "Project team roles",
+	                  roleKicker: "Project role",
+	                  roleDescription: "Project-scoped permissions for "
+	                    + selectedRoleDefinition.label.toLowerCase() + "s in "
+	                    + (selectedPermissionTeam.name || "this team") + ".",
+	                  readOnly: isSelectedOwnerRole,
+	                  className: "playground-project-team-role-pages",
+	                  roleListClassName: "playground-project-team-role-list",
+	                  permissionPageClassName: "playground-project-team-role-permission-page",
+	                  permissionHeaderClassName: "playground-project-team-role-permission-header",
+	                  permissionSet: selectedRolePermissionSet,
+	                  accessOptions: PLAYGROUND_PERMISSION_ACCESS_OPTIONS,
+	                  ringDefinitions: PLAYGROUND_PERMISSION_RING_DEFINITIONS,
+	                  actionDefinitions: PLAYGROUND_PERMISSION_ACTION_DEFINITIONS,
+	                  subjectType: "project_team_role",
+	                  animationKey: projectPermissionChartAnimationKey,
+	                  disabled: !hasRealAccess,
+	                  onRingAccessChange: (ringId, nextAccess) => updateProjectTeamRolePermissionRingAccess?.(selectedPermissionTeam.id, selectedRoleDefinition.id, ringId, nextAccess),
+	                  onActionRingChange: (actionId, nextRingId) => updateProjectTeamRolePermissionActionRing?.(selectedPermissionTeam.id, selectedRoleDefinition.id, actionId, nextRingId),
+	                  onActionAccessChange: (actionId, nextAccess) => updateProjectTeamRolePermissionActionAccess?.(selectedPermissionTeam.id, selectedRoleDefinition.id, actionId, nextAccess),
+	                });
 	              return React.createElement("section", {
 	                  className: "playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-permissions-section playground-project-teams-section",
 	                },
@@ -8669,7 +8662,7 @@ export const PROJECT_OVERVIEW_SCRIPT = String.raw`
 	                  )
 	                ),
 	                isAllAgentsTeam
-	                  ? renderPlaygroundPermissionPanel(projectPermissionSet, {
+	                  ? renderPlaygroundPermissionsPage(projectPermissionSet, {
 	                      subjectType: "project",
 	                      animationKey: projectPermissionChartAnimationKey,
 	                      onRingAccessChange: updateProjectPermissionRingAccess,

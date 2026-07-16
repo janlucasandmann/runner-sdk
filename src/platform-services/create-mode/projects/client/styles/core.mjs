@@ -650,9 +650,9 @@ export const PROJECTS_CORE_CSS = `
       .playground-content-body.is-calendar-page .playground-tasks-main-scroll.is-projects-home > .playground-tasks-empty,
       .playground-content-body.is-tasks-page .playground-tasks-main-scroll.is-projects-home > .playground-environments-error,
       .playground-content-body.is-calendar-page .playground-tasks-main-scroll.is-projects-home > .playground-environments-error {
-        margin-bottom: 5px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 15px;
+        margin: 0;
+        border: 0;
+        border-radius: 0;
         background: #000;
         background-clip: padding-box;
         box-sizing: border-box;
@@ -2253,24 +2253,6 @@ export const PROJECTS_CORE_CSS = `
 
 	      .playground-database-api-quickstart-card {
 	        margin-top: 24px;
-	      }
-
-	      .playground-database-api-quickstart-editor-shell {
-	        width: 100%;
-	        height: 220px;
-	        min-height: 220px;
-	        overflow: hidden;
-	        border-radius: 8px;
-	      }
-
-	      .playground-database-api-quickstart-editor-loading {
-	        width: 100%;
-	        height: 220px;
-	        display: flex;
-	        align-items: center;
-	        justify-content: center;
-	        color: rgba(255, 255, 255, 0.52);
-	        font-size: 12px;
 	      }
 
 	      .playground-database-detail-usage-header-actions {

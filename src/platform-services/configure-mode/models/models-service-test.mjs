@@ -14,12 +14,25 @@ import {
 assert.match(MODELS_PAGE_CSS, /\.playground-models-page/);
 assert.match(MODELS_PAGE_CSS, /\.playground-models-overview-table-section/);
 assert.match(MODELS_PAGE_CSS, /\.playground-models-featured-card/);
+assert.match(MODELS_PAGE_CSS, /\.resource-overview-page\.is-models-overview/);
+assert.match(MODELS_PAGE_CSS, /\.models-overview-details-modal__facts/);
+assert.match(MODELS_PAGE_CSS, /\.models-overview-details-modal__documentation/);
 assert.equal(Object.values(MODELS_STYLE_FRAGMENTS).join(""), MODELS_PAGE_CSS);
 
 assert.match(MODELS_PAGE_SCRIPT, /function normalizePlaygroundManagedModelsTab/);
 assert.match(MODELS_PAGE_SCRIPT, /function loadPlaygroundManagedAgentModelCatalog/);
+assert.match(MODELS_PAGE_SCRIPT, /function getPlaygroundManagedModelDetails/);
+assert.match(MODELS_PAGE_SCRIPT, /PLAYGROUND_MANAGED_MODEL_AVAILABILITY_BY_ID/);
+assert.match(MODELS_PAGE_SCRIPT, /@cf\/moonshotai\/kimi-k2\.7-code/);
+assert.match(MODELS_PAGE_SCRIPT, /alibaba\/qwen3\.5-397b-a17b/);
 assert.match(MODELS_PAGE_SCRIPT, /function renderPlaygroundManagedModelsTable/);
 assert.match(MODELS_PAGE_SCRIPT, /function renderPlaygroundModelsPage/);
+assert.match(MODELS_PAGE_SCRIPT, /React\.createElement\(ModelsOverviewPage/);
+assert.doesNotMatch(MODELS_PAGE_SCRIPT_FRAGMENTS.view, /React\.createElement\(PlatformDataTable/);
+assert.doesNotMatch(MODELS_PAGE_SCRIPT_FRAGMENTS.view, /playground-files-browser-header playground-models-browser-header/);
+assert.doesNotMatch(MODELS_PAGE_SCRIPT_FRAGMENTS.view, /playground-models-overview-category-switch/);
+assert.doesNotMatch(MODELS_PAGE_SCRIPT_FRAGMENTS.view, /if \(!isAgentTab \|\| featuredModels\.length === 0\)/);
+assert.match(MODELS_PAGE_SCRIPT_FRAGMENTS.view, /if \(featuredModels\.length === 0\) return null/);
 assert.doesNotThrow(() => new Function(MODELS_PAGE_SCRIPT));
 assert.equal(Object.values(MODELS_PAGE_SCRIPT_FRAGMENTS).join(""), MODELS_PAGE_SCRIPT);
 assert.match(MODELS_PAGE_SCRIPT_FRAGMENTS.catalog, /getPlaygroundManagedVideoModelOptions/);
@@ -41,6 +54,8 @@ assert.match(appFragments.topNavigation, new RegExp(JSON.stringify(pricingUrl).r
 assert.match(appFragments.topNavigation, new RegExp(JSON.stringify(developersUrl).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
 assert.match(appFragments.pageView, /function renderModelsPage/);
 assert.match(appFragments.pageView, new RegExp(JSON.stringify(pricingUrl).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+assert.match(appFragments.pageView, /onCreateAgent: \(modelId\) => openAgentCreationInResources/);
+assert.match(appFragments.pageView, /sidebarMode: "configure"/);
 assert.match(appFragments.sidebarEntry, /id: "models"/);
 assert.doesNotThrow(() => new Function(`
   function modelsHostIntegration() {
@@ -78,17 +93,42 @@ const demoServerSource = await fs.readFile(
 assert.match(demoServerSource, /from "\.\.\/src\/platform-services\/configure-mode\/models\/index\.mjs"/);
 assert.match(demoServerSource, /const MODELS_APP_SCRIPT_FRAGMENTS = createModelsAppScriptFragments\(/);
 assert.match(demoServerSource, /const modelsService = createModelsService\(/);
+assert.match(demoServerSource, /import \{ ModelsOverviewPage \} from "\/dist\/platform-services\/configure-mode\/models\/client\/page\/models-overview-page\.js"/);
 assert.match(demoServerSource, /modelsService\.handleRequest\(req, res, url\)/);
 assert.match(demoServerSource, /\$\{MODELS_PAGE_CSS\}/);
 assert.match(demoServerSource, /\$\{MODELS_PAGE_SCRIPT\}/);
 assert.match(demoServerSource, /\$\{MODELS_APP_SCRIPT_FRAGMENTS\.pageView\}/);
-assert.match(demoServerSource, /\$\{MODELS_AGENT_SCRIPT_FRAGMENTS\.overviewAction\}/);
-assert.match(demoServerSource, /\$\{MODELS_AGENT_SCRIPT_FRAGMENTS\.catalogLoader\}/);
+assert.match(demoServerSource, /const \[agentCreationPageModelId, setAgentCreationPageModelId\] = useState\(""\)/);
+assert.match(demoServerSource, /createAgentModelId: agentCreationPageModelId/);
+assert.match(demoServerSource, /draft: \{ model: normalizedModelId \}/);
 assert.doesNotMatch(demoServerSource, /demo-models-page\.mjs/);
 assert.doesNotMatch(demoServerSource, /function openModelsPage\(/);
 assert.doesNotMatch(demoServerSource, /function renderModelsPage\(/);
 assert.doesNotMatch(demoServerSource, /function renderModelsPageNav\(/);
 assert.doesNotMatch(demoServerSource, /url\.pathname === "\/api\/real\/agents\/models"/);
+
+const modelsOverviewPageSource = await fs.readFile(
+  new URL("./client/page/models-overview-page.tsx", import.meta.url),
+  "utf8",
+);
+assert.match(modelsOverviewPageSource, /ResourceOverviewPage<ModelsOverviewRow>/);
+assert.match(modelsOverviewPageSource, /<PlatformDetailTabBar/);
+assert.match(modelsOverviewPageSource, /variant="minimal"/);
+assert.match(modelsOverviewPageSource, /heroContent=\{featuredContent\}/);
+assert.match(modelsOverviewPageSource, /leading: tabBar/);
+assert.match(modelsOverviewPageSource, /pagination: false/);
+assert.match(modelsOverviewPageSource, /getRowActions/);
+assert.match(modelsOverviewPageSource, /label: "Create Agent"/);
+assert.match(modelsOverviewPageSource, /label: "View Details"/);
+assert.match(modelsOverviewPageSource, /<ModelDetailsModal/);
+
+const modelDetailsModalSource = await fs.readFile(
+  new URL("./client/page/model-details-modal.tsx", import.meta.url),
+  "utf8",
+);
+assert.match(modelDetailsModalSource, /<PlatformModal/);
+assert.match(modelDetailsModalSource, /Availability/);
+assert.match(modelDetailsModalSource, /Provider documentation/);
 
 const proxyCalls = [];
 const modelsService = createModelsService({

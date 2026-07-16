@@ -1,6 +1,6 @@
 export const MODELS_STYLE_FEATURED = String.raw`      .playground-models-featured-section {
         width: 100%;
-        margin: 0 0 24px;
+        margin: 0;
       }
 
       .playground-models-featured-grid {
@@ -198,15 +198,6 @@ export const MODELS_STYLE_FEATURED = String.raw`      .playground-models-feature
           max-width: none !important;
         }
 
-        .playground-models-overview-category-row {
-          width: 100%;
-          margin-left: 0;
-        }
-
-        .playground-models-overview-category-switch {
-          flex: 1 1 auto;
-        }
-
         .playground-models-overview-table-section .playground-models-overview-column-header {
           display: none;
         }
@@ -242,12 +233,22 @@ export const MODELS_STYLE_FEATURED = String.raw`      .playground-models-feature
       }
 
       @media (max-width: 720px) {
-        .playground-models-page {
-          padding: 0 18px 42px;
+        .playground-models-featured-grid {
+          grid-template-columns: none;
+          grid-auto-flow: column;
+          grid-auto-columns: minmax(280px, 86vw);
+          overflow-x: auto;
+          overscroll-behavior-x: contain;
+          scrollbar-width: none;
+          scroll-snap-type: x proximity;
         }
 
-        .playground-models-featured-grid {
-          grid-template-columns: minmax(0, 1fr);
+        .playground-models-featured-grid::-webkit-scrollbar {
+          display: none;
+        }
+
+        .playground-models-featured-card {
+          scroll-snap-align: start;
         }
       }
 `;

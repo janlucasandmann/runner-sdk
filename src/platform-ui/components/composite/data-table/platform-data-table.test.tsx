@@ -175,6 +175,28 @@ describe("PlatformDataTable", () => {
     expect(onChange).toHaveBeenCalledWith("published");
   });
 
+  it("keeps leading navigation at the left edge before toolbar filters", () => {
+    const { container } = renderTable({
+      toolbar: {
+        leading: <nav aria-label="Resource types">Types</nav>,
+        filters: [{
+          id: "status",
+          label: "Status",
+          value: "all",
+          onChange: () => undefined,
+          options: [{ id: "all", label: "All" }],
+        }],
+      },
+    });
+
+    const toolbar = container.querySelector(".platform-data-table__toolbar");
+    const leading = container.querySelector(".platform-data-table__toolbar-leading");
+    const filterButton = screen.getByRole("button", { name: "Filter" });
+
+    expect(toolbar?.firstElementChild).toBe(leading);
+    expect(leading?.nextElementSibling).toBe(filterButton);
+  });
+
   it("keeps the fill-layout header outside the row scroll viewport", () => {
     const { container } = renderTable({ layout: "fill" });
     const root = container.querySelector(".platform-data-table");
@@ -189,6 +211,37 @@ describe("PlatformDataTable", () => {
     expect(table.contains(scrollViewport)).toBe(true);
     expect(scrollViewport?.contains(body)).toBe(true);
     expect(scrollViewport?.contains(header)).toBe(false);
+  });
+
+  it("exposes the minimalistic UI variant without changing the default table", () => {
+    const { container, rerender } = renderTable({ variant: "minimalistic-ui" });
+    expect(container.querySelector(".platform-data-table.is-minimalistic-ui")).not.toBeNull();
+    expect(container.querySelector(".platform-data-table.is-minimalistic-ui .platform-data-table__surface")).not.toBeNull();
+
+    rerender(
+      <PlatformDataTable<TestRow>
+        rows={rows}
+        columns={columns}
+        getRowId={(row) => row.id}
+        ariaLabel="Test resources"
+      />,
+    );
+    expect(container.querySelector(".platform-data-table.is-minimalistic-ui")).toBeNull();
+  });
+
+  it("supports embedded minimal tables without toolbar, footer, or pagination chrome", () => {
+    const { container } = renderTable({
+      variant: "minimalistic-ui",
+      surface: "plain",
+      sticky: false,
+      pagination: false,
+    });
+
+    expect(container.querySelector(".platform-data-table__toolbar")).toBeNull();
+    expect(container.querySelector(".platform-data-table__footer")).toBeNull();
+    expect(container.querySelector(".platform-data-table__pagination")).toBeNull();
+    expect(screen.getByRole("columnheader", { name: /Name/ })).not.toBeNull();
+    expect(screen.getByRole("table", { name: "Test resources" })).not.toBeNull();
   });
 
   it("paginates rows and keeps navigation outside the scroll viewport", async () => {
@@ -318,7 +371,25 @@ describe("PlatformDataTable", () => {
         emptyState="No resources yet"
       />,
     );
-    expect(screen.getByText("No resources yet")).not.toBeNull();
+    const emptyMessage = screen.getByText("No resources yet");
+    const emptyRow = emptyMessage.closest('[role="row"]');
+    expect(emptyRow?.classList.contains("platform-data-table__state-row")).toBe(true);
+    expect(within(emptyRow as HTMLElement).getByRole("cell").getAttribute("aria-colspan")).toBe("2");
+  });
+
+  it("renders filtered no-results content in the canonical empty table row", () => {
+    renderTable({
+      toolbar: {
+        search: {
+          value: "missing",
+          onChange: vi.fn(),
+        },
+      },
+      noResultsState: "No matching resources",
+    });
+
+    const noResultsMessage = screen.getByText("No matching resources");
+    expect(noResultsMessage.closest('[role="row"]')?.classList.contains("platform-data-table__state-row")).toBe(true);
   });
 
   it("animates the shared nine-dot loading sequence", () => {

@@ -7,6 +7,7 @@ export type {
   PlatformAnalyticsMetric,
   PlatformAnalyticsModel,
   PlatformAnalyticsSectionProps,
+  PlatformAnalyticsSectionVariant,
   PlatformAnalyticsSeries,
   PlatformAnalyticsValueKind,
 } from "./platform-analytics-types.js";

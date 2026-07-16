@@ -7,11 +7,7 @@ export const GUARDRAILS_AGENT_PAGE_MODEL_SCRIPT = `          const availableAgen
             .map((setId) => availableAgentGuardrailSets.find((set) => set.id === setId) || null)
             .filter(Boolean);
           const importableAgentGuardrailSets = availableAgentGuardrailSets.filter((set) => !agentGuardrailSetIdLookup.has(set.id));
-          const normalizedAgentGuardrailSearch = String(agentGuardrailSearchQuery || "").trim().toLowerCase();
-          const visibleAgentGuardrailSets = importedAgentGuardrailSets.filter((set) => {
-            if (!normalizedAgentGuardrailSearch) {
-              return true;
-            }
+          function getAgentGuardrailSearchText(set) {
             const promptText = (Array.isArray(set.prompts) ? set.prompts : [])
               .map((prompt) => [prompt?.title, prompt?.prompt].filter(Boolean).join(" "))
               .join(" ");
@@ -19,7 +15,17 @@ export const GUARDRAILS_AGENT_PAGE_MODEL_SCRIPT = `          const availableAgen
               set.name,
               set.description,
               promptText,
-            ].filter(Boolean).join(" ").toLowerCase().includes(normalizedAgentGuardrailSearch);
+            ].filter(Boolean).join(" ");
+          }
+          const filteredAgentGuardrailSets = importedAgentGuardrailSets.filter((set) => {
+            const promptCount = Array.isArray(set.prompts) ? set.prompts.length : 0;
+            if (agentGuardrailFilterMode === "with-prompts") {
+              return promptCount > 0;
+            }
+            if (agentGuardrailFilterMode === "without-prompts") {
+              return promptCount === 0;
+            }
+            return true;
           });
           function formatAgentGuardrailDate(value) {
             const date = new Date(value || "");

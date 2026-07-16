@@ -10,6 +10,8 @@ export type {
   PlatformPopupAnimation,
   PlatformPopupDismissLayerProps,
   PlatformPopupMode,
+  PlatformPopupPlacement,
   PlatformPopupProps,
   PlatformPopupSurfaceProps,
+  PlatformPopupVariant,
 } from "./platform-popup.js";

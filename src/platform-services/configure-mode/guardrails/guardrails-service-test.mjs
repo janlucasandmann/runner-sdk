@@ -39,6 +39,8 @@ assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.historyCapture, /guardrailId: selec
 assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.sidebarEntry, /label: "Guardrails"/);
 assert.match(GUARDRAILS_AGENT_DOMAIN_SCRIPT, /function buildPlaygroundAgentGuardrailBundle/);
 assert.match(GUARDRAILS_AGENT_PAGE_SCRIPT, /const agentGuardrailsSection/);
+assert.match(GUARDRAILS_AGENT_PAGE_SCRIPT, /variant: "minimalistic-ui"/);
+assert.doesNotMatch(GUARDRAILS_AGENT_PAGE_SCRIPT, /pagination\s*:/);
 assert.match(GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.versionDiffPayload, /invisiblePromptAdaptations/);
 assert.match(GUARDRAILS_STYLE_FRAGMENTS.page, /\.playground-guardrails-page/);
 assert.match(GUARDRAILS_STYLE_FRAGMENTS.versionChanges, /\.playground-guardrails-version-changes-page/);

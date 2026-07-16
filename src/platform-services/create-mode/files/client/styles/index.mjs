@@ -4,6 +4,7 @@ import { FILES_CONTEXT_MENU_CSS } from "./context-menu.mjs";
 import { FILES_EDITOR_CSS } from "./editor.mjs";
 import { FILES_FOUNDATION_CSS } from "./foundation.mjs";
 import { FILES_PREVIEW_CSS } from "./preview.mjs";
+import { FILES_RESPONSIVE_CSS } from "./responsive.mjs";
 import { FILES_TOOLBAR_CSS } from "./toolbar.mjs";
 
 export const FILES_STYLE_FRAGMENTS = Object.freeze({
@@ -14,7 +15,7 @@ export const FILES_STYLE_FRAGMENTS = Object.freeze({
   chat: FILES_CHAT_CSS,
   editor: FILES_EDITOR_CSS,
   contextMenu: FILES_CONTEXT_MENU_CSS,
+  responsive: FILES_RESPONSIVE_CSS,
 });
 
 export const FILES_PAGE_CSS = Object.values(FILES_STYLE_FRAGMENTS).join("\n");
-

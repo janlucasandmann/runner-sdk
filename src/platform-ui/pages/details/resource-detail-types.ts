@@ -8,7 +8,8 @@ export interface ResourceDetailPageProps<TTab extends string = string> {
   tabs: readonly PlatformDetailTab<TTab>[];
   activeTab: TTab;
   onTabChange: (tab: TTab) => void;
-  actions?: ReactNode;
+  tabBarActions?: ReactNode;
+  sidebarToggle?: ReactNode;
   children: ReactNode;
   sidebar?: ReactNode;
   sidebarCollapsed?: boolean;
@@ -18,7 +19,7 @@ export interface ResourceDetailPageProps<TTab extends string = string> {
   className?: string;
   headerClassName?: string;
   tabBarClassName?: string;
-  actionBarClassName?: string;
+  tabBarActionsClassName?: string;
   contentClassName?: string;
   sidebarClassName?: string;
 }

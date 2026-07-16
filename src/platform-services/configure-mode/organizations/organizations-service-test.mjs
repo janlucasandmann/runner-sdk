@@ -114,7 +114,7 @@ assert.match(demoServerSource, /\$\{ORGANIZATIONS_STYLE_FRAGMENTS\.billing\}/);
 assert.match(demoServerSource, /\$\{ORGANIZATIONS_DOMAIN_SCRIPT_FRAGMENTS\.organizationIdentity\}/);
 assert.match(demoServerSource, /\$\{ORGANIZATIONS_RUNTIME_SCRIPT_FRAGMENTS\.loading\}/);
 assert.match(demoServerSource, /\$\{ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS\.setup\}/);
-assert.match(demoServerSource, /\$\{ORGANIZATIONS_APP_SCRIPT_FRAGMENTS\.sidebarEntry\}/);
+assert.match(demoServerSource, /configurePrimaryEntries:[^\n]*ORGANIZATIONS_APP_SCRIPT_FRAGMENTS\.sidebarEntry/);
 assert.doesNotMatch(demoServerSource, /^\s*\.playground-organization-billing-panel \{/m);
 assert.doesNotMatch(demoServerSource, /function normalizeOrganizationPageRecord\(/);
 assert.doesNotMatch(demoServerSource, /async function loadOrganizationPageData\(/);

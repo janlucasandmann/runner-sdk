@@ -21,11 +21,7 @@ export type ResourceOverviewMetric = PlatformAnalyticsMetric;
 export type ResourceOverviewSeries = PlatformAnalyticsSeries;
 export type ResourceOverviewAnalyticsModel = PlatformAnalyticsModel;
 
-export interface ResourceOverviewPageProps<TData> {
-  period: ResourceOverviewPeriod;
-  onPeriodChange: (period: ResourceOverviewPeriod) => void;
-  analytics: ResourceOverviewAnalyticsModel;
-  heroContent?: ReactNode;
+interface ResourceOverviewPageBaseProps<TData> {
   showPeriodSelector?: boolean;
   controlsPortalId?: string;
   table: PlatformDataTableProps<TData>;
@@ -33,3 +29,22 @@ export interface ResourceOverviewPageProps<TData> {
   headerActions?: ReactNode;
   className?: string;
 }
+
+interface ResourceOverviewAnalyticsPageProps {
+  heroContent?: undefined;
+  period: ResourceOverviewPeriod;
+  onPeriodChange: (period: ResourceOverviewPeriod) => void;
+  analytics: ResourceOverviewAnalyticsModel;
+}
+
+interface ResourceOverviewCustomHeroPageProps {
+  heroContent: ReactNode;
+  period?: ResourceOverviewPeriod;
+  onPeriodChange?: (period: ResourceOverviewPeriod) => void;
+  analytics?: ResourceOverviewAnalyticsModel;
+}
+
+export type ResourceOverviewPageProps<TData> = ResourceOverviewPageBaseProps<TData> & (
+  | ResourceOverviewAnalyticsPageProps
+  | ResourceOverviewCustomHeroPageProps
+);
