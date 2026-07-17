@@ -51,6 +51,7 @@ export interface ComputersOverviewPageProps {
   analytics: ResourceOverviewAnalyticsModel;
   controlsPortalId?: string;
   loading?: boolean;
+  error?: React.ReactNode;
   mutating?: boolean;
   headerActions?: React.ReactNode;
   onOpen: (row: ComputerOverviewRow) => void;
@@ -68,6 +69,7 @@ export function ComputersOverviewPage({
   analytics,
   controlsPortalId,
   loading = false,
+  error,
   mutating = false,
   headerActions,
   onOpen,
@@ -197,6 +199,7 @@ export function ComputersOverviewPage({
         onRowActivate: onOpen,
         getRowAriaLabel: (row) => row.name,
         loading,
+        error,
         emptyState: "No computers available.",
       }}
     />

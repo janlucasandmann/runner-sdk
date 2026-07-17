@@ -35,7 +35,7 @@ Import resource pages and contracts through:
 import {
   AgentsOverviewPage,
   ComputersOverviewPage,
-} from "@computer-agents/runner-web-sdk/platform-resources";
+} from "@computer-agents/platform/platform-resources";
 ```
 
 The former `platform-ui/resources` package path remains a compatibility alias, but new code must use `platform-resources`.
@@ -43,7 +43,7 @@ The former `platform-ui/resources` package path remains a compatibility alias, b
 Overview-page styling is available through:
 
 ```ts
-import "@computer-agents/runner-web-sdk/platform-resources/styles.css";
+import "@computer-agents/platform/platform-resources/styles.css";
 ```
 
 ## Adding a resource

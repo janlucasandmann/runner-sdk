@@ -6,6 +6,7 @@ import {
   SETTINGS_MODAL_CSS,
   createSettingsModalPageScript,
 } from "./index.mjs";
+import { readPlatformCompositionSource } from "../../../apps/platform/testing/platform-composition-source.mjs";
 
 assert.deepEqual(Object.keys(SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS), ["state", "navigation"]);
 assert.match(SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS.state, /settingsModalOpen/);
@@ -34,20 +35,17 @@ assert.doesNotThrow(() => new Function(`
   }
 `));
 
-const demoServerSource = await fs.readFile(
-  new URL("../../../examples/demo-server.mjs", import.meta.url),
-  "utf8",
-);
-assert.match(demoServerSource, /from "\.\.\/src\/platform-shell\/index\.mjs"/);
-assert.match(demoServerSource, /const SETTINGS_MODAL_PAGE_SCRIPT = createSettingsModalPageScript\(/);
-assert.match(demoServerSource, /\$\{SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS\.state\}/);
-assert.match(demoServerSource, /\$\{SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS\.navigation\}/);
-assert.match(demoServerSource, /\$\{SETTINGS_MODAL_PAGE_SCRIPT\}/);
-assert.match(demoServerSource, /\$\{APP_HEADER_APP_SCRIPT_FRAGMENTS\.accountMenu\}/);
-assert.match(demoServerSource, /renderSettingsModal\(\)/);
-assert.doesNotMatch(demoServerSource, /function renderSettingsPage\(/);
-assert.doesNotMatch(demoServerSource, /activePage === "settings"/);
-assert.doesNotMatch(demoServerSource, /id: "settings",\s+label: "Settings",\s+Icon: Settings2/);
+const platformEntrySource = await readPlatformCompositionSource();
+assert.match(platformEntrySource, /from "[^"]*\/src\/platform-shell\/index\.mjs"/);
+assert.match(platformEntrySource, /const SETTINGS_MODAL_PAGE_SCRIPT = createSettingsModalPageScript\(/);
+assert.match(platformEntrySource, /\$\{SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS\.state\}/);
+assert.match(platformEntrySource, /\$\{SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS\.navigation\}/);
+assert.match(platformEntrySource, /\$\{SETTINGS_MODAL_PAGE_SCRIPT\}/);
+assert.match(platformEntrySource, /\$\{APP_HEADER_APP_SCRIPT_FRAGMENTS\.accountMenu\}/);
+assert.match(platformEntrySource, /renderSettingsModal\(\)/);
+assert.doesNotMatch(platformEntrySource, /function renderSettingsPage\(/);
+assert.doesNotMatch(platformEntrySource, /activePage === "settings"/);
+assert.doesNotMatch(platformEntrySource, /id: "settings",\s+label: "Settings",\s+Icon: Settings2/);
 
 const accountMenuSource = await fs.readFile(
   new URL("../app-header/client/components/account-menu.mjs", import.meta.url),

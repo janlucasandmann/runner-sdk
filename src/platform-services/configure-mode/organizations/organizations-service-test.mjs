@@ -10,6 +10,7 @@ import {
   createOrganizationsPageScriptFragments,
   createOrganizationsService,
 } from "./index.mjs";
+import { readPlatformCompositionSource } from "../../../../apps/platform/testing/platform-composition-source.mjs";
 
 assert.deepEqual(Object.keys(ORGANIZATIONS_STYLE_FRAGMENTS), ["billing", "overview"]);
 assert.match(ORGANIZATIONS_STYLE_FRAGMENTS.billing, /\.playground-organization-billing-panel/);
@@ -102,26 +103,23 @@ assert.match(pageFragments.resources, /const renderOrganizationResources/);
 assert.match(pageFragments.rolesAndView, /const renderOrganizationRoles/);
 assert.doesNotThrow(() => new Function(Object.values(pageFragments).join("")));
 
-const demoServerSource = await fs.readFile(
-  new URL("../../../../examples/demo-server.mjs", import.meta.url),
-  "utf8",
-);
-assert.match(demoServerSource, /from "\.\.\/src\/platform-services\/configure-mode\/organizations\/index\.mjs"/);
-assert.match(demoServerSource, /const ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS = createOrganizationsPageScriptFragments\(/);
-assert.match(demoServerSource, /const organizationsService = createOrganizationsService\(/);
-assert.match(demoServerSource, /organizationsService\.handleRequest\(req, res, url\)/);
-assert.match(demoServerSource, /\$\{ORGANIZATIONS_STYLE_FRAGMENTS\.billing\}/);
-assert.match(demoServerSource, /\$\{ORGANIZATIONS_DOMAIN_SCRIPT_FRAGMENTS\.organizationIdentity\}/);
-assert.match(demoServerSource, /\$\{ORGANIZATIONS_RUNTIME_SCRIPT_FRAGMENTS\.loading\}/);
-assert.match(demoServerSource, /\$\{ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS\.setup\}/);
-assert.match(demoServerSource, /configurePrimaryEntries:[^\n]*ORGANIZATIONS_APP_SCRIPT_FRAGMENTS\.sidebarEntry/);
-assert.doesNotMatch(demoServerSource, /^\s*\.playground-organization-billing-panel \{/m);
-assert.doesNotMatch(demoServerSource, /function normalizeOrganizationPageRecord\(/);
-assert.doesNotMatch(demoServerSource, /async function loadOrganizationPageData\(/);
-assert.doesNotMatch(demoServerSource, /function openOrganizationPage\(/);
-assert.doesNotMatch(demoServerSource, /function renderOrganizationPage\(/);
-assert.doesNotMatch(demoServerSource, /function renderOrganizationPageNav\(/);
-assert.doesNotMatch(demoServerSource, /const organizationsProxyMatch =/);
+const platformEntrySource = await readPlatformCompositionSource();
+assert.match(platformEntrySource, /from "\.\.\/\.\.\/\.\.\/src\/platform-services\/configure-mode\/organizations\/index\.mjs"/);
+assert.match(platformEntrySource, /const ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS = createOrganizationsPageScriptFragments\(/);
+assert.match(platformEntrySource, /organizationsService:\s*createOrganizationsService\(/);
+assert.match(platformEntrySource, /organizationsService\.handleRequest\(req, res, url\)/);
+assert.match(platformEntrySource, /\$\{ORGANIZATIONS_STYLE_FRAGMENTS\.billing\}/);
+assert.match(platformEntrySource, /\$\{ORGANIZATIONS_DOMAIN_SCRIPT_FRAGMENTS\.organizationIdentity\}/);
+assert.match(platformEntrySource, /\$\{ORGANIZATIONS_RUNTIME_SCRIPT_FRAGMENTS\.loading\}/);
+assert.match(platformEntrySource, /\$\{ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS\.setup\}/);
+assert.match(platformEntrySource, /configurePrimaryEntries:[^\n]*ORGANIZATIONS_APP_SCRIPT_FRAGMENTS\.sidebarEntry/);
+assert.doesNotMatch(platformEntrySource, /^\s*\.playground-organization-billing-panel \{/m);
+assert.doesNotMatch(platformEntrySource, /function normalizeOrganizationPageRecord\(/);
+assert.doesNotMatch(platformEntrySource, /async function loadOrganizationPageData\(/);
+assert.doesNotMatch(platformEntrySource, /function openOrganizationPage\(/);
+assert.doesNotMatch(platformEntrySource, /function renderOrganizationPage\(/);
+assert.doesNotMatch(platformEntrySource, /function renderOrganizationPageNav\(/);
+assert.doesNotMatch(platformEntrySource, /const organizationsProxyMatch =/);
 
 const proxyCalls = [];
 const organizationsService = createOrganizationsService({

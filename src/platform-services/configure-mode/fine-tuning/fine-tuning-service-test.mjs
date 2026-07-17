@@ -12,6 +12,7 @@ import {
   compactFineTuningJobRecord,
   normalizeEvaluationSet,
 } from "./server/domain/index.mjs";
+import { readPlatformCompositionSource } from "../../../../apps/platform/testing/platform-composition-source.mjs";
 
 assert.match(PLAYGROUND_FINE_TUNING_CSS, /\.playground-fine-tuning-page/);
 assert.match(PLAYGROUND_FINE_TUNING_SCRIPT, /function normalizePlaygroundFineTuningJob/);
@@ -51,23 +52,20 @@ assert.doesNotThrow(() => new Function(String.raw`
   }
 `));
 
-const demoServerSource = await fs.readFile(
-  new URL("../../../../examples/demo-server.mjs", import.meta.url),
-  "utf8",
-);
+const platformEntrySource = await readPlatformCompositionSource();
 
-assert.match(demoServerSource, /from "\.\.\/src\/platform-services\/configure-mode\/fine-tuning\/index\.mjs"/);
-assert.match(demoServerSource, /const fineTuningService = createFineTuningService\(/);
-assert.match(demoServerSource, /fineTuningService\.handleRequest\(req, res, url\)/);
-assert.match(demoServerSource, /\$\{PLAYGROUND_FINE_TUNING_CSS\}/);
-assert.match(demoServerSource, /\$\{PLAYGROUND_FINE_TUNING_SCRIPT\}/);
-assert.match(demoServerSource, /\$\{FINE_TUNING_APP_SCRIPT_FRAGMENTS\.pageView\}/);
-assert.doesNotMatch(demoServerSource, /playground-fine-tuning-page\.mjs/);
-assert.doesNotMatch(demoServerSource, /playground-fine-tuning-runtime\.mjs/);
-assert.doesNotMatch(demoServerSource, /function openFineTuningPage\(/);
-assert.doesNotMatch(demoServerSource, /function renderFineTuningPage\(/);
-assert.doesNotMatch(demoServerSource, /function renderFineTuningPageNav\(/);
-assert.doesNotMatch(demoServerSource, /const playgroundFineTuningRuntime/);
+assert.match(platformEntrySource, /from "\.\.\/\.\.\/\.\.\/src\/platform-services\/configure-mode\/fine-tuning\/index\.mjs"/);
+assert.match(platformEntrySource, /const fineTuningService = createFineTuningService\(/);
+assert.match(platformEntrySource, /fineTuningService\.handleRequest\(req, res, url\)/);
+assert.match(platformEntrySource, /\$\{PLAYGROUND_FINE_TUNING_CSS\}/);
+assert.match(platformEntrySource, /\$\{PLAYGROUND_FINE_TUNING_SCRIPT\}/);
+assert.match(platformEntrySource, /\$\{FINE_TUNING_APP_SCRIPT_FRAGMENTS\.pageView\}/);
+assert.doesNotMatch(platformEntrySource, /playground-fine-tuning-page\.mjs/);
+assert.doesNotMatch(platformEntrySource, /playground-fine-tuning-runtime\.mjs/);
+assert.doesNotMatch(platformEntrySource, /function openFineTuningPage\(/);
+assert.doesNotMatch(platformEntrySource, /function renderFineTuningPage\(/);
+assert.doesNotMatch(platformEntrySource, /function renderFineTuningPageNav\(/);
+assert.doesNotMatch(platformEntrySource, /const playgroundFineTuningRuntime/);
 
 const compactJob = compactFineTuningJobRecord({
   id: "job_1",

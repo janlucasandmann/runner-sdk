@@ -1,0 +1,598 @@
+<!doctype html>
+  <html lang="en">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Product Usage Summary</title>
+      <style>
+        * { box-sizing: border-box; }
+        :root {
+          --bg: #000;
+          --panel: rgba(255,255,255,.045);
+          --panel-strong: rgba(255,255,255,.075);
+          --border: rgba(255,255,255,.1);
+          --text: rgba(255,255,255,.94);
+          --muted: rgba(255,255,255,.52);
+          --blue: #66a6ff;
+          --green: #45d483;
+          --yellow: #ffe717;
+          --pink: #ff6fb7;
+        }
+        body {
+          margin: 0;
+          min-height: 100vh;
+          background: radial-gradient(circle at 24% 0%, rgba(102,166,255,.14), transparent 28%), #000;
+          color: var(--text);
+          font-family: Inter, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+        }
+        main {
+          width: min(1240px, calc(100vw - 40px));
+          margin: 0 auto;
+          padding: 34px 0 64px;
+        }
+        header {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 18px;
+          margin-bottom: 22px;
+        }
+        h1 {
+          margin: 0;
+          font-size: 30px;
+          line-height: 1.04;
+          font-weight: 500;
+          letter-spacing: 0;
+        }
+        .subhead {
+          margin-top: 10px;
+          max-width: 680px;
+          color: var(--muted);
+          font-size: 13px;
+          line-height: 1.45;
+        }
+        .toolbar {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+          justify-content: flex-end;
+        }
+        button {
+          height: 34px;
+          border: 1px solid rgba(255,255,255,.1);
+          border-radius: 999px;
+          background: rgba(255,255,255,.045);
+          color: var(--text);
+          padding: 0 14px;
+          font: inherit;
+          font-size: 12px;
+          cursor: pointer;
+        }
+        button.active {
+          background: white;
+          color: black;
+          border-color: white;
+        }
+        button:disabled { opacity: .55; cursor: default; }
+        .status {
+          min-height: 18px;
+          margin: 0 0 18px;
+          color: var(--muted);
+          font-size: 12px;
+        }
+        .error { color: #ffb4b4; }
+        .grid {
+          display: grid;
+          gap: 12px;
+        }
+        .kpis {
+          grid-template-columns: repeat(5, minmax(0, 1fr));
+          margin-bottom: 12px;
+        }
+        .card, section {
+          position: relative;
+          border-radius: 15px;
+          background: var(--panel);
+          overflow: hidden;
+        }
+        .card::before, section::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          padding: 1px;
+          border-radius: inherit;
+          background: linear-gradient(135deg, rgba(255,255,255,.24), rgba(255,255,255,.05) 40%, rgba(255,255,255,.11));
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          pointer-events: none;
+        }
+        .card {
+          min-height: 116px;
+          padding: 16px;
+        }
+        .label {
+          color: var(--muted);
+          font-size: 12px;
+          line-height: 1.25;
+        }
+        .value {
+          margin-top: 12px;
+          font-size: 34px;
+          line-height: 1;
+          font-weight: 500;
+        }
+        .hint {
+          margin-top: 10px;
+          color: rgba(255,255,255,.45);
+          font-size: 11px;
+        }
+        .two-col {
+          grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+          margin-bottom: 12px;
+        }
+        section {
+          min-height: 320px;
+        }
+        .section-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 16px 18px 0;
+        }
+        .section-title {
+          font-size: 14px;
+          font-weight: 500;
+        }
+        .section-note {
+          color: var(--muted);
+          font-size: 11px;
+        }
+        .chart {
+          height: 260px;
+          padding: 6px 14px 12px;
+        }
+        .chart svg {
+          width: 100%;
+          height: 100%;
+          overflow: visible;
+        }
+        .axis, .gridline {
+          stroke: rgba(255,255,255,.09);
+          stroke-width: 1;
+        }
+        .axis-label {
+          fill: rgba(255,255,255,.4);
+          font-size: 10px;
+        }
+        .legend {
+          display: flex;
+          gap: 12px;
+          flex-wrap: wrap;
+          padding: 0 18px 16px;
+        }
+        .legend-item {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          color: rgba(255,255,255,.6);
+          font-size: 11px;
+        }
+        .dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 999px;
+          background: var(--blue);
+        }
+        .bars {
+          padding: 10px 18px 18px;
+        }
+        .feature-row {
+          display: grid;
+          grid-template-columns: 1fr auto;
+          gap: 12px;
+          align-items: center;
+          padding: 10px 0;
+          border-bottom: 1px dotted rgba(255,255,255,.12);
+        }
+        .feature-row:last-child { border-bottom: 0; }
+        .feature-label {
+          min-width: 0;
+        }
+        .feature-title {
+          font-size: 13px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .feature-cat {
+          margin-top: 3px;
+          color: var(--muted);
+          font-size: 11px;
+        }
+        .bar-track {
+          margin-top: 8px;
+          height: 4px;
+          border-radius: 999px;
+          background: rgba(255,255,255,.08);
+          overflow: hidden;
+        }
+        .bar-fill {
+          height: 100%;
+          border-radius: inherit;
+          background: linear-gradient(90deg, var(--blue), rgba(102,166,255,.3));
+        }
+        .feature-count {
+          color: rgba(255,255,255,.82);
+          font-size: 13px;
+        }
+        .table-section {
+          min-height: 0;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 12px;
+        }
+        th, td {
+          padding: 12px 14px;
+          border-bottom: 1px solid rgba(255,255,255,.07);
+          text-align: left;
+          white-space: nowrap;
+        }
+        th {
+          color: var(--muted);
+          font-weight: 400;
+          font-size: 11px;
+        }
+        td {
+          color: rgba(255,255,255,.84);
+        }
+        td:first-child {
+          max-width: 260px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        tr:last-child td { border-bottom: 0; }
+        .pill {
+          display: inline-flex;
+          align-items: center;
+          height: 22px;
+          padding: 0 8px;
+          border-radius: 999px;
+          background: rgba(255,255,255,.08);
+          color: rgba(255,255,255,.72);
+          font-size: 11px;
+          text-transform: capitalize;
+        }
+        .risk-grid {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          margin-bottom: 12px;
+        }
+        @media (max-width: 980px) {
+          header { flex-direction: column; }
+          .toolbar { justify-content: flex-start; }
+          .kpis, .risk-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+          .two-col { grid-template-columns: 1fr; }
+          table { min-width: 860px; }
+          .table-wrap { overflow-x: auto; }
+        }
+        @media (max-width: 620px) {
+          main { width: min(100vw - 24px, 1240px); padding-top: 24px; }
+          .kpis, .risk-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <main>
+        <header>
+          <div>
+            <h1>Product Usage</h1>
+            <div class="subhead">Internal onboarding and retention dashboard built from production product data. Use Cloud Logging for incident-level traces; use this dashboard to see which users and features are actually moving.</div>
+          </div>
+          <div class="toolbar" aria-label="Period">
+            <button type="button" data-days="3">3d</button>
+            <button type="button" data-days="7" class="active">7d</button>
+            <button type="button" data-days="14">14d</button>
+            <button type="button" data-days="30">30d</button>
+            <button id="refresh" type="button">Refresh</button>
+          </div>
+        </header>
+        <div id="status" class="status">Checking session...</div>
+        <div class="grid kpis" id="kpis"></div>
+        <div class="grid risk-grid" id="health"></div>
+        <div class="grid two-col">
+          <section>
+            <div class="section-head">
+              <div class="section-title">Activity and Retention</div>
+              <div class="section-note">Daily users, returners, and threads</div>
+            </div>
+            <div id="activity-chart" class="chart"></div>
+            <div id="activity-legend" class="legend"></div>
+          </section>
+          <section>
+            <div class="section-head">
+              <div class="section-title">Feature Usage</div>
+              <div class="section-note">Most used surfaces in period</div>
+            </div>
+            <div id="features" class="bars"></div>
+          </section>
+        </div>
+        <div class="grid two-col">
+          <section>
+            <div class="section-head">
+              <div class="section-title">Resource Creation</div>
+              <div class="section-note">Agents, computers, projects, servers, files</div>
+            </div>
+            <div id="resource-chart" class="chart"></div>
+            <div id="resource-legend" class="legend"></div>
+          </section>
+          <section>
+            <div class="section-head">
+              <div class="section-title">Server Types</div>
+              <div class="section-note">Created deployable resources</div>
+            </div>
+            <div id="server-kinds" class="bars"></div>
+          </section>
+        </div>
+        <section class="table-section">
+          <div class="section-head">
+            <div class="section-title">Most Active Users</div>
+            <div class="section-note">Sorted by product activity events</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Plan</th>
+                  <th>Active days</th>
+                  <th>Sessions</th>
+                  <th>Active time</th>
+                  <th>Threads</th>
+                  <th>Messages</th>
+                  <th>Agents</th>
+                  <th>Computers</th>
+                  <th>Files</th>
+                  <th>Projects</th>
+                  <th>Servers</th>
+                  <th>Last active</th>
+                </tr>
+              </thead>
+              <tbody id="top-users"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+      <script>
+        const AIOS_ORIGIN = __PLATFORM_AIOS_ORIGIN_JSON__;
+        let currentDays = 7;
+        const statusEl = document.getElementById("status");
+        const refreshButton = document.getElementById("refresh");
+  
+        function buildLoginUrl() {
+          const loginUrl = new URL("/login", AIOS_ORIGIN);
+          loginUrl.searchParams.set("redirect", window.location.href);
+          return loginUrl.toString();
+        }
+  
+        function formatNumber(value, digits) {
+          const number = Number(value || 0);
+          return new Intl.NumberFormat(undefined, { maximumFractionDigits: digits == null ? 0 : digits }).format(number);
+        }
+  
+        function formatPercent(value) {
+          return Math.round(Number(value || 0) * 100) + "%";
+        }
+  
+        function formatMinutes(value) {
+          const minutes = Number(value || 0);
+          if (minutes < 60) return formatNumber(minutes, 1) + " min";
+          return formatNumber(minutes / 60, 1) + " h";
+        }
+  
+        function formatDate(value) {
+          if (!value) return "Never";
+          try {
+            return new Intl.DateTimeFormat(undefined, { dateStyle: "short", timeStyle: "short" }).format(new Date(value));
+          } catch {
+            return value;
+          }
+        }
+  
+        function setStatus(text, isError) {
+          statusEl.textContent = text;
+          statusEl.className = isError ? "status error" : "status";
+        }
+  
+        function renderKpis(summary) {
+          const entries = [
+            ["New users", formatNumber(summary.newUsers), "Accounts created in period"],
+            ["Active users", formatNumber(summary.activeUsers), "Users with product activity"],
+            ["Returning users", formatNumber(summary.returningUsers), formatPercent(summary.returnRate) + " of active users"],
+            ["Threads started", formatNumber(summary.threadsStarted), formatNumber(summary.threadsPerActiveUser, 1) + " per active user"],
+            ["Avg active time", formatMinutes(summary.avgActiveMinutes), "30-minute session windows"],
+            ["Agents created", formatNumber(summary.agentsCreated), "Custom non-system agents"],
+            ["Computers created", formatNumber(summary.computersCreated), "Custom non-system computers"],
+            ["Files uploaded", formatNumber(summary.filesUploaded), "Distinct attachment IDs"],
+            ["Projects created", formatNumber(summary.projectsCreated), formatNumber(summary.tasksCreated) + " tasks"],
+            ["Servers created", formatNumber(summary.serversCreated), formatNumber(summary.databasesCreated) + " databases"],
+          ];
+          document.getElementById("kpis").innerHTML = entries.map(function(entry) {
+            return '<div class="card"><div class="label">' + entry[0] + '</div><div class="value">' + entry[1] + '</div><div class="hint">' + entry[2] + '</div></div>';
+          }).join("");
+        }
+  
+        function renderHealth(health) {
+          const entries = [
+            ["Failed threads", formatNumber(health.failedThreads), formatPercent(health.failureRate) + " failure rate"],
+            ["Waiting permissions", formatNumber(health.permissionWaitingThreads), "Threads paused for approval"],
+            ["No first thread", formatNumber(health.newUsersWithoutThreads), "New users without any thread"],
+            ["First answer", formatNumber(health.avgFirstAssistantSeconds, 1) + "s", "Avg user message to assistant"],
+          ];
+          document.getElementById("health").innerHTML = entries.map(function(entry) {
+            return '<div class="card"><div class="label">' + entry[0] + '</div><div class="value">' + entry[1] + '</div><div class="hint">' + entry[2] + '</div></div>';
+          }).join("");
+        }
+  
+        function createPath(points) {
+          return points.map(function(point, index) {
+            return (index === 0 ? "M" : "L") + point[0] + " " + point[1];
+          }).join(" ");
+        }
+  
+        function renderLineChart(containerId, legendId, rows, series) {
+          const container = document.getElementById(containerId);
+          const legend = document.getElementById(legendId);
+          if (!rows.length) {
+            container.innerHTML = '<div class="status">No chart data.</div>';
+            legend.innerHTML = "";
+            return;
+          }
+          const width = 760;
+          const height = 230;
+          const padding = { top: 18, right: 18, bottom: 34, left: 38 };
+          const values = [];
+          rows.forEach(function(row) {
+            series.forEach(function(item) {
+              values.push(Number(row[item.key] || 0));
+            });
+          });
+          const maxValue = Math.max(1, Math.max.apply(null, values));
+          const xSpan = Math.max(1, rows.length - 1);
+          const chartWidth = width - padding.left - padding.right;
+          const chartHeight = height - padding.top - padding.bottom;
+          const grid = [0, .5, 1].map(function(step) {
+            const y = padding.top + chartHeight - chartHeight * step;
+            return '<line class="gridline" x1="' + padding.left + '" y1="' + y + '" x2="' + (width - padding.right) + '" y2="' + y + '"></line>';
+          }).join("");
+          const paths = series.map(function(item) {
+            const points = rows.map(function(row, index) {
+              const x = padding.left + (chartWidth * index / xSpan);
+              const y = padding.top + chartHeight - (Number(row[item.key] || 0) / maxValue) * chartHeight;
+              return [x, y];
+            });
+            return '<path d="' + createPath(points) + '" fill="none" stroke="' + item.color + '" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>';
+          }).join("");
+          const firstLabel = rows[0] ? rows[0].date.slice(5) : "";
+          const lastLabel = rows[rows.length - 1] ? rows[rows.length - 1].date.slice(5) : "";
+          container.innerHTML =
+            '<svg viewBox="0 0 ' + width + ' ' + height + '" role="img">' +
+            grid +
+            '<text class="axis-label" x="' + padding.left + '" y="' + (height - 10) + '">' + firstLabel + '</text>' +
+            '<text class="axis-label" text-anchor="end" x="' + (width - padding.right) + '" y="' + (height - 10) + '">' + lastLabel + '</text>' +
+            '<text class="axis-label" x="8" y="' + (padding.top + 4) + '">' + formatNumber(maxValue) + '</text>' +
+            '<text class="axis-label" x="8" y="' + (padding.top + chartHeight + 4) + '">0</text>' +
+            paths +
+            '</svg>';
+          legend.innerHTML = series.map(function(item) {
+            return '<span class="legend-item"><span class="dot" style="background:' + item.color + '"></span>' + item.label + '</span>';
+          }).join("");
+        }
+  
+        function renderBars(containerId, rows, options) {
+          const container = document.getElementById(containerId);
+          const list = rows || [];
+          if (!list.length) {
+            container.innerHTML = '<div class="status">No entries yet.</div>';
+            return;
+          }
+          const max = Math.max.apply(null, list.map(function(row) { return Number(row.count || 0); })) || 1;
+          container.innerHTML = list.slice(0, options && options.limit ? options.limit : 12).map(function(row) {
+            const label = row.label || row.kind || row.status || "Unknown";
+            const category = row.category || (row.users ? String(row.users) + " users" : "");
+            const width = Math.max(3, Math.round(Number(row.count || 0) / max * 100));
+            return '<div class="feature-row">' +
+              '<div class="feature-label">' +
+                '<div class="feature-title">' + label + '</div>' +
+                '<div class="feature-cat">' + category + '</div>' +
+                '<div class="bar-track"><div class="bar-fill" style="width:' + width + '%"></div></div>' +
+              '</div>' +
+              '<div class="feature-count">' + formatNumber(row.count) + '</div>' +
+            '</div>';
+          }).join("");
+        }
+  
+        function renderTopUsers(users) {
+          const tbody = document.getElementById("top-users");
+          if (!users || !users.length) {
+            tbody.innerHTML = '<tr><td colspan="13" class="status">No active users in this period.</td></tr>';
+            return;
+          }
+          tbody.innerHTML = users.map(function(user) {
+            const displayName = user.email || user.name || user.userId;
+            return '<tr>' +
+              '<td title="' + (user.userId || "") + '">' + displayName + '</td>' +
+              '<td><span class="pill">' + (user.tier || "sandbox") + '</span></td>' +
+              '<td>' + formatNumber(user.activeDays) + '</td>' +
+              '<td>' + formatNumber(user.sessions) + '</td>' +
+              '<td>' + formatMinutes(user.activeMinutes) + '</td>' +
+              '<td>' + formatNumber(user.threadsStarted) + ' / ' + formatNumber(user.threadsTotal) + '</td>' +
+              '<td>' + formatNumber(user.userMessages) + '</td>' +
+              '<td>' + formatNumber(user.agentsCreated) + '</td>' +
+              '<td>' + formatNumber(user.computersCreated) + '</td>' +
+              '<td>' + formatNumber(user.filesUploaded) + '</td>' +
+              '<td>' + formatNumber(user.projectsCreated) + '</td>' +
+              '<td>' + formatNumber(user.serversCreated) + '</td>' +
+              '<td>' + formatDate(user.lastActivityAt) + '</td>' +
+            '</tr>';
+          }).join("");
+        }
+  
+        async function loadUsage() {
+          refreshButton.disabled = true;
+          setStatus("Loading product usage...", false);
+          try {
+            const response = await fetch("/api/real/admin/product-usage-summary?days=" + encodeURIComponent(currentDays), {
+              cache: "no-store",
+              credentials: "include",
+            });
+            const payload = await response.json().catch(function() { return {}; });
+            if (response.status === 401 || response.status === 403) {
+              window.location.replace(payload.loginUrl || buildLoginUrl());
+              return;
+            }
+            if (!response.ok) {
+              throw new Error(payload.message || payload.error || "Failed to load product usage summary.");
+            }
+            renderKpis(payload.summary || {});
+            renderHealth(payload.health || {});
+            renderLineChart("activity-chart", "activity-legend", payload.timeSeries || [], [
+              { key: "activeUsers", label: "Active users", color: "#66a6ff" },
+              { key: "returningUsers", label: "Returning users", color: "#45d483" },
+              { key: "threadsStarted", label: "Threads", color: "#ffe717" },
+            ]);
+            renderLineChart("resource-chart", "resource-legend", payload.timeSeries || [], [
+              { key: "agentsCreated", label: "Agents", color: "#66a6ff" },
+              { key: "computersCreated", label: "Computers", color: "#45d483" },
+              { key: "projectsCreated", label: "Projects", color: "#ffe717" },
+              { key: "serversCreated", label: "Servers", color: "#ff6fb7" },
+              { key: "filesUploaded", label: "Files", color: "#a78bfa" },
+            ]);
+            renderBars("features", payload.featureUsage || [], { limit: 14 });
+            renderBars("server-kinds", (payload.serverKinds || []).map(function(row) {
+              return { label: String(row.kind || "unknown").replace(/_/g, " "), category: String(row.users || 0) + " users", count: row.count };
+            }), { limit: 10 });
+            renderTopUsers(payload.topUsers || []);
+            setStatus("Loaded " + currentDays + " days for " + (payload.viewer && payload.viewer.email ? payload.viewer.email : "admin") + (payload.generatedAt ? " at " + formatDate(payload.generatedAt) : "."), false);
+          } catch (error) {
+            setStatus(error instanceof Error ? error.message : String(error), true);
+          } finally {
+            refreshButton.disabled = false;
+          }
+        }
+  
+        document.querySelectorAll("[data-days]").forEach(function(button) {
+          button.addEventListener("click", function() {
+            currentDays = Number(button.getAttribute("data-days")) || 7;
+            document.querySelectorAll("[data-days]").forEach(function(item) { item.classList.toggle("active", item === button); });
+            void loadUsage();
+          });
+        });
+        refreshButton.addEventListener("click", function() { void loadUsage(); });
+        void loadUsage();
+      </script>
+    </body>
+  </html>

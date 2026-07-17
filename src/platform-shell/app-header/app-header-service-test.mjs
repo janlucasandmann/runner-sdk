@@ -6,6 +6,7 @@ import {
   APP_HEADER_STYLES,
   createAppHeaderScriptFragments,
 } from "./index.mjs";
+import { readPlatformCompositionSource } from "../../../apps/platform/testing/platform-composition-source.mjs";
 
 const fragments = createAppHeaderScriptFragments();
 
@@ -69,24 +70,21 @@ assert.match(APP_HEADER_STYLE_FRAGMENTS.notificationsPopup, /\.notification-menu
 assert.match(APP_HEADER_STYLE_FRAGMENTS.searchModal, /\.thread-search-modal/);
 assert.equal(Object.values(APP_HEADER_STYLE_FRAGMENTS).join(""), APP_HEADER_STYLES);
 
-const demoServerSource = await fs.readFile(
-  new URL("../../../examples/demo-server.mjs", import.meta.url),
-  "utf8",
-);
-assert.match(demoServerSource, /createAppHeaderScriptFragments/);
-assert.match(demoServerSource, /\$\{APP_HEADER_APP_SCRIPT_FRAGMENTS\.appHeader\}/);
-assert.match(demoServerSource, /\$\{APP_HEADER_APP_SCRIPT_FRAGMENTS\.breadcrumbBar\}/);
-assert.match(demoServerSource, /\$\{APP_HEADER_APP_SCRIPT_FRAGMENTS\.accountMenu\}/);
-assert.match(demoServerSource, /\$\{APP_HEADER_APP_SCRIPT_FRAGMENTS\.notificationsPopup\}/);
-assert.match(demoServerSource, /\$\{APP_HEADER_APP_SCRIPT_FRAGMENTS\.searchModal\}/);
-assert.match(demoServerSource, /renderAppHeader\(\{\s*className: "playground-thread-navbar"/);
-assert.match(demoServerSource, /pathItems: \[\{ label: "Create" \}, \{ label: "New Thread" \}\]/);
-assert.doesNotMatch(demoServerSource, /React\.createElement\("div", \{ className: "playground-content-nav" \}/);
-assert.match(demoServerSource, /const \[showPlaygroundOnboarding, setShowPlaygroundOnboarding\]/);
-assert.match(demoServerSource, /const \[showSubscriptionSuccessModal, setShowSubscriptionSuccessModal\]/);
-assert.doesNotMatch(demoServerSource, /function renderUnifiedTopNav\(/);
-assert.doesNotMatch(demoServerSource, /function renderThreadSearchPalette\(/);
-assert.doesNotMatch(demoServerSource, /function renderNotificationMenu\(/);
-assert.doesNotMatch(demoServerSource, /renderAppHeaderSidebarToggle\(\)/);
+const platformEntrySource = await readPlatformCompositionSource();
+assert.match(platformEntrySource, /createAppHeaderScriptFragments/);
+assert.match(platformEntrySource, /\$\{APP_HEADER_APP_SCRIPT_FRAGMENTS\.appHeader\}/);
+assert.match(platformEntrySource, /\$\{APP_HEADER_APP_SCRIPT_FRAGMENTS\.breadcrumbBar\}/);
+assert.match(platformEntrySource, /\$\{APP_HEADER_APP_SCRIPT_FRAGMENTS\.accountMenu\}/);
+assert.match(platformEntrySource, /\$\{APP_HEADER_APP_SCRIPT_FRAGMENTS\.notificationsPopup\}/);
+assert.match(platformEntrySource, /\$\{APP_HEADER_APP_SCRIPT_FRAGMENTS\.searchModal\}/);
+assert.match(platformEntrySource, /renderAppHeader\(\{\s*className: "playground-thread-navbar"/);
+assert.match(platformEntrySource, /pathItems: \[\{ label: "Create" \}, \{ label: "New Thread" \}\]/);
+assert.doesNotMatch(platformEntrySource, /React\.createElement\("div", \{ className: "playground-content-nav" \}/);
+assert.match(platformEntrySource, /const \[showPlaygroundOnboarding, setShowPlaygroundOnboarding\]/);
+assert.match(platformEntrySource, /const \[showSubscriptionSuccessModal, setShowSubscriptionSuccessModal\]/);
+assert.doesNotMatch(platformEntrySource, /function renderUnifiedTopNav\(/);
+assert.doesNotMatch(platformEntrySource, /function renderThreadSearchPalette\(/);
+assert.doesNotMatch(platformEntrySource, /function renderNotificationMenu\(/);
+assert.doesNotMatch(platformEntrySource, /renderAppHeaderSidebarToggle\(\)/);
 
 console.log("App Header component ownership, styles, icon contract, and browser syntax passed.");

@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { readPlatformCompositionSource } from "../apps/platform/testing/platform-composition-source.mjs";
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const resourceRoot = path.join(packageRoot, "src", "platform-resources");
@@ -125,7 +126,7 @@ if (await pathExists(path.join(developModeRoot, "resources"))) {
 
 const sourceFiles = [
   ...await collectFiles(path.join(packageRoot, "src")),
-  path.join(packageRoot, "examples", "demo-server.mjs"),
+  path.join(packageRoot, "apps", "platform", "server", "index.mjs"),
 ];
 for (const filePath of sourceFiles) {
   if (!await pathExists(filePath)) continue;
@@ -135,8 +136,7 @@ for (const filePath of sourceFiles) {
   }
 }
 
-const demoServerPath = path.join(packageRoot, "examples", "demo-server.mjs");
-const demoServerSource = await fs.readFile(demoServerPath, "utf8");
+const platformEntrySource = await readPlatformCompositionSource();
 for (const retiredIdentifier of [
   "setAgentInstructionsHistory",
   "setIsAgentInstructionsEditing",
@@ -149,41 +149,72 @@ for (const retiredIdentifier of [
   "PLAYGROUND_FORGE_AGENT_BACKGROUND_URL",
   "PLAYGROUND_FOUNDRY_AGENT_BACKGROUND_URL",
 ]) {
-  if (demoServerSource.includes(retiredIdentifier)) {
-    failures.push(`examples/demo-server.mjs still owns retired agent-detail behavior: ${retiredIdentifier}`);
+  if (platformEntrySource.includes(retiredIdentifier)) {
+    failures.push(`apps/platform/server/index.mjs still owns retired agent-detail behavior: ${retiredIdentifier}`);
   }
 }
 if (await pathExists(path.join(packageRoot, "img", "agent-backgrounds"))) {
   failures.push("img/agent-backgrounds must not exist; agent detail pages no longer render wallpapers");
 }
-if (!demoServerSource.includes("React.createElement(AgentPublishControl")) {
-  failures.push("examples/demo-server.mjs must consume the modular AgentPublishControl");
+if (!platformEntrySource.includes("React.createElement(AgentPublishControl")) {
+  failures.push("the platform application must consume the modular AgentPublishControl");
 }
-if (demoServerSource.includes("renderAgentPublishControlTrigger")) {
-  failures.push("examples/demo-server.mjs must not own the AgentPublishControl trigger");
+if (platformEntrySource.includes("renderAgentPublishControlTrigger")) {
+  failures.push("the platform application must not own the AgentPublishControl trigger");
 }
-if (!demoServerSource.includes("React.createElement(PlatformPermissionsPage")) {
-  failures.push("examples/demo-server.mjs must consume the modular PlatformPermissionsPage");
+if (!platformEntrySource.includes("React.createElement(PlatformPermissionsPage")) {
+  failures.push("the platform application must consume the modular PlatformPermissionsPage");
 }
-if (!demoServerSource.includes("React.createElement(PlatformRolePermissionsPage")) {
-  failures.push("examples/demo-server.mjs must consume the modular PlatformRolePermissionsPage");
+const rolePermissionsConsumers = [
+  "src/platform-services/configure-mode/organizations/client/page/roles-and-view.mjs",
+  "src/platform-services/configure-mode/teams/client/page/roles-and-view.mjs",
+  "src/platform-services/create-mode/projects/client/overview/runtime/sidebar-and-composition.mjs",
+  "apps/platform/client/legacy/domains/compute-resources/controller/database-detail-view.js",
+  "apps/platform/client/legacy/domains/compute-resources/controller/server-detail-view.js",
+];
+for (const consumerPath of rolePermissionsConsumers) {
+  const absoluteConsumerPath = path.join(packageRoot, consumerPath);
+  if (!await pathExists(absoluteConsumerPath)) {
+    failures.push(`${consumerPath} is missing`);
+    continue;
+  }
+  const consumerSource = await fs.readFile(absoluteConsumerPath, "utf8");
+  if (!consumerSource.includes("React.createElement(PlatformRolePermissionsPage")) {
+    failures.push(`${consumerPath} must consume the modular PlatformRolePermissionsPage`);
+  }
 }
-if (!demoServerSource.includes("permissions: {")) {
-  failures.push("examples/demo-server.mjs must bind agent permissions through AgentDetailPage");
+if (!platformEntrySource.includes("permissions: {")) {
+  failures.push("the platform application must bind agent permissions through AgentDetailPage");
 }
-if (!/key: "agent-insights-threads-" \+ selectedAgentThreadId,[\s\S]{0,240}?variant: "minimalistic-ui"/.test(demoServerSource)) {
+if (!/key: "agent-insights-threads-" \+ selectedAgentThreadId,[\s\S]{0,240}?variant: "minimalistic-ui"/.test(platformEntrySource)) {
   failures.push("agent detail Insights must use the minimalistic PlatformDataTable variant");
 }
-const agentInsightsTableStart = demoServerSource.indexOf('key: "agent-insights-threads-" + selectedAgentThreadId');
+const agentInsightsTableStart = platformEntrySource.indexOf('key: "agent-insights-threads-" + selectedAgentThreadId');
 const agentInsightsTableToolbar = agentInsightsTableStart >= 0
-  ? demoServerSource.indexOf("toolbar:", agentInsightsTableStart)
+  ? platformEntrySource.indexOf("toolbar:", agentInsightsTableStart)
   : -1;
 if (
   agentInsightsTableStart < 0
   || agentInsightsTableToolbar < 0
-  || demoServerSource.slice(agentInsightsTableStart, agentInsightsTableToolbar).includes("pagination:")
+  || platformEntrySource.slice(agentInsightsTableStart, agentInsightsTableToolbar).includes("pagination:")
 ) {
   failures.push("agent detail Insights must not render a table pagination footer");
+}
+const agentAnalyticsStart = platformEntrySource.indexOf("const agentUsageChartSection = React.createElement(PlatformAnalyticsSection");
+const agentAnalyticsEnd = agentAnalyticsStart >= 0
+  ? platformEntrySource.indexOf("const renderAgentAboutRow", agentAnalyticsStart)
+  : -1;
+const agentAnalyticsSource = agentAnalyticsStart >= 0 && agentAnalyticsEnd > agentAnalyticsStart
+  ? platformEntrySource.slice(agentAnalyticsStart, agentAnalyticsEnd)
+  : "";
+if (!agentAnalyticsSource.includes("timeframe: {")) {
+  failures.push("agent detail Insights analytics must delegate its timeframe selector to PlatformAnalyticsSection");
+}
+if (agentAnalyticsSource.includes('className: "playground-project-overview-progress-combo-ranges"')) {
+  failures.push("agent detail Insights must not render a local analytics timeframe control");
+}
+if (!/const agentInsightsSection = React\.createElement\(React\.Fragment, null,\s*agentUsageChartSection,\s*agentThreadsSection/.test(platformEntrySource)) {
+  failures.push("agent detail Insights must render the centralized analytics section above the threads table");
 }
 for (const retiredPermissionRenderer of [
   "const PLAYGROUND_PERMISSION_ACCESS_OPTIONS =",
@@ -208,8 +239,8 @@ for (const retiredPermissionRenderer of [
   "function renderAgentPermissionsList",
   ".playground-permission-rings-overview {",
 ]) {
-  if (demoServerSource.includes(retiredPermissionRenderer)) {
-    failures.push(`examples/demo-server.mjs still owns retired permission-page UI: ${retiredPermissionRenderer}`);
+  if (platformEntrySource.includes(retiredPermissionRenderer)) {
+    failures.push(`apps/platform/server/index.mjs still owns retired permission-page UI: ${retiredPermissionRenderer}`);
   }
 }
 

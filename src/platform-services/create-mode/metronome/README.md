@@ -1,7 +1,7 @@
 # Metronome service
 
 `src/platform-services/create-mode/metronome` is the ownership boundary for the platform
-Metronome experience. `demo-server.mjs` composes the service, but no longer owns
+Metronome experience. `apps/platform/server/index.mjs` composes the service, but no longer owns
 its page implementation, workflow domain, run supervision UI, or HTTP routing.
 
 ## Structure
@@ -23,7 +23,7 @@ its page implementation, workflow domain, run supervision UI, or HTTP routing.
 
 ## Host boundary
 
-`demo-server.mjs` is now a composition root. It may mount the Metronome page,
+`apps/platform/server/index.mjs` is now a composition root. It may mount the Metronome page,
 provide authentication/transport adapters, and connect Metronome to shared
 surfaces such as Threads, Teams, Calendar, Projects, and Resource Templates.
 Metronome workflow behavior, run supervision, page rendering, and HTTP route

@@ -10,6 +10,7 @@ import {
   INFERENCE_STYLE_FRAGMENTS,
   createInferenceService,
 } from "./index.mjs";
+import { readPlatformCompositionSource } from "../../../../apps/platform/testing/platform-composition-source.mjs";
 
 assert.match(INFERENCE_PAGE_CSS, /\.playground-settings-inference-endpoint-card/);
 assert.match(INFERENCE_PAGE_CSS, /\.playground-settings-runtime-grid/);
@@ -111,30 +112,27 @@ assert.doesNotThrow(() => new Function(`
   }
 `));
 
-const demoServerSource = await fs.readFile(
-  new URL("../../../../examples/demo-server.mjs", import.meta.url),
-  "utf8",
-);
+const platformEntrySource = await readPlatformCompositionSource();
 const billingCatalogSource = await fs.readFile(
-  new URL("../../../../examples/billing/playground-billing-catalog.mjs", import.meta.url),
+  new URL("../../../../apps/platform/shared/billing/playground-billing-catalog.mjs", import.meta.url),
   "utf8",
 );
 
-assert.match(demoServerSource, /from "\.\.\/src\/platform-services\/configure-mode\/inference\/index\.mjs"/);
-assert.match(demoServerSource, /const inferenceService = createInferenceService\(/);
-assert.match(demoServerSource, /inferenceService\.handleRequest\(req, res, url\)/);
-assert.match(demoServerSource, /\$\{INFERENCE_PAGE_CSS\}/);
-assert.match(demoServerSource, /\$\{INFERENCE_DOMAIN_SCRIPT_FRAGMENTS\.settings\}/);
-assert.match(demoServerSource, /\$\{INFERENCE_APP_SCRIPT_FRAGMENTS\.runtimeLifecycle\}/);
-assert.match(demoServerSource, /\$\{INFERENCE_APP_SCRIPT_FRAGMENTS\.handlers\}/);
-assert.match(demoServerSource, /inferencePageCaseScript: INFERENCE_PAGE_CASE_SCRIPT/);
-assert.match(demoServerSource, /configureInfrastructureEntries:[^\n]*INFERENCE_APP_SCRIPT_FRAGMENTS\.sidebarEntry/);
-assert.doesNotMatch(demoServerSource, /function normalizeDemoSettingsInferenceSettings\(/);
-assert.doesNotMatch(demoServerSource, /function normalizeSettingsLocalRunnerListPayload\(/);
-assert.doesNotMatch(demoServerSource, /function openInferencePage\(/);
-assert.doesNotMatch(demoServerSource, /function renderInferencePageNav\(/);
-assert.doesNotMatch(demoServerSource, /const handleSettingsInferenceConnectionTest =/);
-assert.doesNotMatch(demoServerSource, /case "inference":/);
+assert.match(platformEntrySource, /from "\.\.\/\.\.\/\.\.\/src\/platform-services\/configure-mode\/inference\/index\.mjs"/);
+assert.match(platformEntrySource, /inferenceService:\s*createInferenceService\(/);
+assert.match(platformEntrySource, /inferenceService\.handleRequest\(req, res, url\)/);
+assert.match(platformEntrySource, /\$\{INFERENCE_PAGE_CSS\}/);
+assert.match(platformEntrySource, /\$\{INFERENCE_DOMAIN_SCRIPT_FRAGMENTS\.settings\}/);
+assert.match(platformEntrySource, /\$\{INFERENCE_APP_SCRIPT_FRAGMENTS\.runtimeLifecycle\}/);
+assert.match(platformEntrySource, /\$\{INFERENCE_APP_SCRIPT_FRAGMENTS\.handlers\}/);
+assert.match(platformEntrySource, /inferencePageCaseScript: INFERENCE_PAGE_CASE_SCRIPT/);
+assert.match(platformEntrySource, /configureInfrastructureEntries:[^\n]*INFERENCE_APP_SCRIPT_FRAGMENTS\.sidebarEntry/);
+assert.doesNotMatch(platformEntrySource, /function normalizeDemoSettingsInferenceSettings\(/);
+assert.doesNotMatch(platformEntrySource, /function normalizeSettingsLocalRunnerListPayload\(/);
+assert.doesNotMatch(platformEntrySource, /function openInferencePage\(/);
+assert.doesNotMatch(platformEntrySource, /function renderInferencePageNav\(/);
+assert.doesNotMatch(platformEntrySource, /const handleSettingsInferenceConnectionTest =/);
+assert.doesNotMatch(platformEntrySource, /case "inference":/);
 assert.doesNotMatch(billingCatalogSource, /POST \/api\/real\/billing\/inference\/test/);
 
 const proxyCalls = [];

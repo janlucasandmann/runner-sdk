@@ -20,6 +20,7 @@ import {
   PROJECTS_DOMAIN_RUNTIME_SCRIPT,
   PROJECTS_PAGE_RUNTIME_SCRIPT,
 } from "../projects/index.mjs";
+import { readPlatformCompositionSource } from "../../../../apps/platform/testing/platform-composition-source.mjs";
 
 assert.match(CALENDAR_SCHEDULE_MODEL_FOUNDATION_SCRIPT, /function buildPlaygroundDefaultScheduleDraft/);
 assert.match(CALENDAR_SCHEDULE_MODEL_RUNTIME_SCRIPT, /function normalizePlaygroundScheduleRecord/);
@@ -53,17 +54,17 @@ assert.match(PROJECTS_DOMAIN_RUNTIME_SCRIPT, /function buildPlaygroundCalendarVi
 assert.match(PROJECTS_PAGE_RUNTIME_SCRIPT, /function renderCalendarView/);
 assert.match(PROJECTS_PAGE_RUNTIME_SCRIPT, /function renderStandaloneCalendarWorkspace/);
 
-const demoServerSource = await fs.readFile(new URL("../../../../examples/demo-server.mjs", import.meta.url), "utf8");
+const platformEntrySource = await readPlatformCompositionSource();
 const projectsDomainSource = await fs.readFile(new URL("../projects/client/domain-runtime.mjs", import.meta.url), "utf8");
 const projectsDataSource = await fs.readFile(new URL("../projects/client/page/data.mjs", import.meta.url), "utf8");
 const projectsViewsSource = await fs.readFile(new URL("../projects/client/page/views.mjs", import.meta.url), "utf8");
 const projectsRoutesSource = await fs.readFile(new URL("../projects/server/routes.mjs", import.meta.url), "utf8");
 
-assert.match(demoServerSource, /from "\.\.\/src\/platform-services\/create-mode\/calendar\/index\.mjs"/);
-assert.match(demoServerSource, /calendarService\.handleRequest\(req, res, url\)/);
-assert.doesNotMatch(demoServerSource, /function openCalendarPage/);
-assert.doesNotMatch(demoServerSource, /^\s*\.playground-tasks-scheduler\s*\{/m);
-assert.doesNotMatch(demoServerSource, /^\s*\.playground-thread-widget-calendar\s*\{/m);
+assert.match(platformEntrySource, /from "\.\.\/\.\.\/\.\.\/src\/platform-services\/create-mode\/calendar\/index\.mjs"/);
+assert.match(platformEntrySource, /calendarService\.handleRequest\(req, res, url\)/);
+assert.doesNotMatch(platformEntrySource, /function openCalendarPage/);
+assert.doesNotMatch(platformEntrySource, /^\s*\.playground-tasks-scheduler\s*\{/m);
+assert.doesNotMatch(platformEntrySource, /^\s*\.playground-thread-widget-calendar\s*\{/m);
 assert.doesNotMatch(projectsDomainSource, /function buildPlaygroundCalendarVisibleRange/);
 assert.doesNotMatch(projectsDomainSource, /function normalizePlaygroundScheduleRecord/);
 assert.doesNotMatch(projectsDataSource, /async function loadProjectSchedules/);

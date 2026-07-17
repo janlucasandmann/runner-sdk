@@ -1,0 +1,2104 @@
+<!doctype html>
+  <html lang="en">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Usage Summary</title>
+      <style>
+        * { box-sizing: border-box; }
+        :root {
+          --usage-bg: #000;
+          --usage-panel: rgba(255,255,255,0.05);
+          --usage-panel-strong: rgba(255,255,255,0.08);
+          --usage-border: rgba(255,255,255,0.1);
+          --usage-border-soft: rgba(255,255,255,0.06);
+          --usage-text: rgba(255,255,255,0.94);
+          --usage-muted: rgba(255,255,255,0.52);
+          --usage-faint: rgba(255,255,255,0.34);
+          --usage-blue: #66a6ff;
+          --usage-green: #45d483;
+          --usage-yellow: #ffe717;
+          --usage-purple: #8f7cff;
+          --usage-pink: #ff6fb7;
+        }
+        html,
+        body {
+          height: 100%;
+          min-height: 100%;
+        }
+        body {
+          margin: 0;
+          min-height: 100vh;
+          background:
+            radial-gradient(circle at 28% 0%, rgba(102,166,255,0.08), transparent 30%),
+            radial-gradient(circle at 94% 10%, rgba(143,124,255,0.06), transparent 24%),
+            #000;
+          color: var(--usage-text);
+          font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          overflow: hidden;
+        }
+        button,
+        input {
+          font: inherit;
+        }
+        button {
+          color: inherit;
+        }
+        .usage-app-shell {
+          display: grid;
+          grid-template-columns: 244px minmax(0, 1fr);
+          height: 100vh;
+          min-height: 100vh;
+          min-width: 0;
+          width: 100vw;
+          overflow: hidden;
+        }
+        .usage-sidebar {
+          display: flex;
+          flex-direction: column;
+          min-width: 0;
+          border-right: 1px solid var(--usage-border);
+          background: rgba(13,13,13,0.86);
+          backdrop-filter: blur(20px);
+        }
+        .usage-sidebar-header {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          min-height: 78px;
+          padding: 0 18px;
+          border-bottom: 1px solid var(--usage-border);
+        }
+        .usage-sidebar-logo {
+          display: grid;
+          place-items: center;
+          width: 30px;
+          height: 30px;
+          border-radius: 9px;
+          background: rgba(255,255,255,0.08);
+          color: white;
+          font-size: 14px;
+          font-weight: 600;
+        }
+        .usage-sidebar-title {
+          min-width: 0;
+        }
+        .usage-sidebar-title strong {
+          display: block;
+          font-size: 13px;
+          line-height: 1.2;
+          font-weight: 500;
+        }
+        .usage-sidebar-title span {
+          display: block;
+          margin-top: 2px;
+          color: var(--usage-muted);
+          font-size: 11px;
+          line-height: 1.2;
+        }
+        .usage-sidebar-nav {
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+          padding: 14px 10px;
+          overflow-y: auto;
+        }
+        .usage-sidebar-link {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          width: 100%;
+          min-height: 34px;
+          border: 0;
+          border-radius: 8px;
+          background: transparent;
+          color: rgba(255,255,255,0.62);
+          padding: 0 10px;
+          text-align: left;
+          cursor: pointer;
+        }
+        .usage-sidebar-link:hover {
+          background: rgba(255,255,255,0.07);
+          color: rgba(255,255,255,0.9);
+        }
+        .usage-sidebar-link.is-active {
+          background: rgba(255,255,255,0.1);
+          color: white;
+        }
+        .usage-sidebar-icon {
+          display: grid;
+          place-items: center;
+          width: 17px;
+          height: 17px;
+          color: currentColor;
+          opacity: 0.86;
+        }
+        .usage-sidebar-link span:last-child {
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          font-size: 12px;
+          font-weight: 400;
+        }
+        .usage-app-main {
+          display: grid;
+          grid-template-rows: 78px minmax(0, 1fr);
+          min-width: 0;
+          min-height: 0;
+          height: 100vh;
+          min-height: 100vh;
+          overflow: hidden;
+        }
+        .usage-top-nav {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          align-items: center;
+          gap: 18px;
+          min-width: 0;
+          border-bottom: 1px solid var(--usage-border);
+          background: rgba(0,0,0,0.72);
+          backdrop-filter: blur(18px);
+          padding: 0 42px;
+        }
+        .usage-top-left {
+          display: flex;
+          align-items: center;
+          min-width: 0;
+          gap: 10px;
+        }
+        .usage-sidebar-toggle {
+          display: grid;
+          place-items: center;
+          width: 32px;
+          height: 32px;
+          border: 0;
+          border-radius: 999px;
+          background: transparent;
+          color: rgba(255,255,255,0.65);
+          padding: 0;
+        }
+        .usage-breadcrumb {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          min-width: 0;
+          font-size: 12px;
+          color: rgba(255,255,255,0.46);
+        }
+        .usage-breadcrumb strong {
+          color: white;
+          font-weight: 500;
+        }
+        .usage-top-actions {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .usage-timeframe-switch {
+          display: inline-flex;
+          align-items: center;
+          gap: 2px;
+          height: 34px;
+          padding: 2px;
+          border: 1px solid var(--usage-border);
+          border-radius: 999px;
+          background: rgba(255,255,255,0.04);
+        }
+        .usage-timeframe-button {
+          height: 28px;
+          min-width: 42px;
+          border: 0;
+          border-radius: 999px;
+          background: transparent;
+          color: rgba(255,255,255,0.62);
+          padding: 0 11px;
+          font-size: 12px;
+          line-height: 1;
+          cursor: pointer;
+        }
+        .usage-timeframe-button:hover {
+          color: rgba(255,255,255,0.9);
+        }
+        .usage-timeframe-button.is-active {
+          background: rgba(255,255,255,0.2);
+          color: white;
+        }
+        .usage-refresh-button {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 7px;
+          height: 34px;
+          border: 1px solid var(--usage-border);
+          border-radius: 999px;
+          background: rgba(255,255,255,0.04);
+          color: rgba(255,255,255,0.82);
+          padding: 0 13px;
+          font-size: 12px;
+          cursor: pointer;
+        }
+        .usage-refresh-button:hover {
+          background: rgba(255,255,255,0.09);
+        }
+        .usage-refresh-button:disabled {
+          opacity: 0.56;
+          cursor: default;
+        }
+        .usage-content-scroll {
+          min-width: 0;
+          min-height: 0;
+          overflow: auto;
+          -webkit-overflow-scrolling: touch;
+          padding: 24px 42px 52px;
+        }
+        .usage-content {
+          display: flex;
+          flex-direction: column;
+          gap: 18px;
+          max-width: 1500px;
+          min-height: 100%;
+          margin: 0 auto;
+        }
+        .usage-page-header {
+          display: flex;
+          align-items: flex-end;
+          justify-content: space-between;
+          gap: 16px;
+          min-width: 0;
+        }
+        .usage-page-title {
+          margin: 0;
+          font-size: 22px;
+          line-height: 1.08;
+          font-weight: 500;
+          letter-spacing: 0;
+        }
+        .usage-page-copy {
+          margin: 7px 0 0;
+          color: var(--usage-muted);
+          font-size: 12px;
+          line-height: 1.45;
+        }
+        .usage-status {
+          min-height: 17px;
+          color: var(--usage-muted);
+          font-size: 12px;
+          text-align: right;
+        }
+        .usage-status.is-error {
+          color: #ffb4b4;
+        }
+        .usage-kpi-grid {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 10px;
+        }
+        .usage-kpi-card,
+        .usage-chart-card,
+        .usage-table-card {
+          position: relative;
+          background: rgba(255,255,255,0.05);
+          border-radius: 13px;
+          overflow: hidden;
+        }
+        .usage-kpi-card::before,
+        .usage-chart-card::before,
+        .usage-table-card::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          padding: 1px;
+          background: linear-gradient(135deg, rgba(255,255,255,0.26), rgba(255,255,255,0.04) 46%, rgba(255,255,255,0.1));
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          pointer-events: none;
+        }
+        .usage-kpi-card {
+          min-height: 102px;
+          padding: 14px;
+        }
+        .usage-kpi-label {
+          color: var(--usage-muted);
+          font-size: 11px;
+          line-height: 1.2;
+        }
+        .usage-kpi-value {
+          margin-top: 11px;
+          font-size: 26px;
+          line-height: 1;
+          font-weight: 500;
+        }
+        .usage-kpi-hint {
+          margin-top: 8px;
+          color: var(--usage-faint);
+          font-size: 11px;
+          line-height: 1.28;
+        }
+        .usage-chart-grid {
+          display: grid;
+          grid-template-columns: minmax(0, 1.35fr) minmax(340px, 0.65fr);
+          gap: 12px;
+        }
+        .usage-chart-card {
+          min-height: 354px;
+        }
+        .usage-chart-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 16px 18px 0;
+        }
+        .usage-chart-title {
+          font-size: 14px;
+          font-weight: 500;
+        }
+        .usage-chart-note {
+          color: var(--usage-muted);
+          font-size: 11px;
+          text-align: right;
+        }
+        .usage-chart-frame {
+          height: 274px;
+          padding: 16px 16px 14px;
+        }
+        .usage-breakdown-list {
+          display: flex;
+          flex-direction: column;
+          gap: 0;
+          padding: 10px 18px 18px;
+        }
+        .usage-breakdown-row {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 14px;
+          align-items: center;
+          padding: 10px 0;
+          border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+        .usage-breakdown-row:last-child {
+          border-bottom: 0;
+        }
+        .usage-breakdown-title {
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          color: rgba(255,255,255,0.84);
+          font-size: 12px;
+        }
+        .usage-breakdown-meta {
+          margin-top: 4px;
+          color: var(--usage-muted);
+          font-size: 11px;
+        }
+        .usage-breakdown-track {
+          height: 4px;
+          margin-top: 8px;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.08);
+          overflow: hidden;
+        }
+        .usage-breakdown-fill {
+          height: 100%;
+          min-width: 3px;
+          border-radius: inherit;
+          background: linear-gradient(90deg, var(--usage-blue), rgba(102,166,255,0.28));
+        }
+        .usage-breakdown-value {
+          color: rgba(255,255,255,0.82);
+          font-size: 12px;
+        }
+        .usage-table-card {
+          min-height: 0;
+        }
+        .usage-table-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          min-height: 54px;
+          padding: 0 18px;
+          border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .usage-table-title {
+          font-size: 14px;
+          font-weight: 500;
+        }
+        .usage-table-wrap {
+          overflow-x: auto;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 12px;
+        }
+        th,
+        td {
+          padding: 12px 14px;
+          border-bottom: 1px solid rgba(255,255,255,0.07);
+          text-align: left;
+          white-space: nowrap;
+        }
+        th {
+          color: var(--usage-muted);
+          font-size: 11px;
+          font-weight: 400;
+        }
+        td {
+          color: rgba(255,255,255,0.84);
+        }
+        tr:last-child td {
+          border-bottom: 0;
+        }
+        .usage-muted-cell {
+          color: var(--usage-muted);
+        }
+        .usage-wide-cell {
+          min-width: 260px;
+          max-width: 520px;
+          white-space: normal;
+          line-height: 1.4;
+        }
+        .usage-pill {
+          display: inline-flex;
+          align-items: center;
+          height: 22px;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.08);
+          color: rgba(255,255,255,0.72);
+          padding: 0 8px;
+          font-size: 11px;
+          text-transform: capitalize;
+        }
+        .usage-empty {
+          display: grid;
+          place-items: center;
+          min-height: 184px;
+          color: var(--usage-muted);
+          font-size: 12px;
+          text-align: center;
+        }
+        .usage-loading {
+          display: grid;
+          place-items: center;
+          min-height: 274px;
+        }
+        .usage-dot-loader {
+          display: grid;
+          grid-template-columns: repeat(3, 4px);
+          gap: 3px;
+        }
+        .usage-dot-loader span {
+          width: 4px;
+          height: 4px;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.68);
+          animation: usage-dot-pulse 0.9s ease-in-out infinite;
+        }
+        .usage-dot-loader span:nth-child(2) { animation-delay: 0.12s; }
+        .usage-dot-loader span:nth-child(3) { animation-delay: 0.24s; }
+        @keyframes usage-dot-pulse {
+          0%, 80%, 100% { transform: translateY(0); opacity: 0.42; }
+          40% { transform: translateY(-4px); opacity: 1; }
+        }
+        @media (max-width: 1120px) {
+          .usage-app-shell {
+            grid-template-columns: 76px minmax(0, 1fr);
+          }
+          .usage-sidebar-title,
+          .usage-sidebar-link span:last-child {
+            display: none;
+          }
+          .usage-sidebar-header {
+            justify-content: center;
+            padding: 0;
+          }
+          .usage-sidebar-nav {
+            align-items: center;
+          }
+          .usage-sidebar-link {
+            justify-content: center;
+            width: 44px;
+            padding: 0;
+          }
+        }
+        @media (max-width: 960px) {
+          .usage-top-nav,
+          .usage-content-scroll {
+            padding-left: 20px;
+            padding-right: 20px;
+          }
+          .usage-kpi-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+          .usage-chart-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+        @media (max-width: 680px) {
+          body {
+            overflow: auto;
+          }
+          .usage-app-shell {
+            grid-template-columns: 1fr;
+          }
+          .usage-sidebar {
+            display: none;
+          }
+          .usage-app-main {
+            min-height: 100vh;
+          }
+          .usage-top-nav {
+            grid-template-columns: 1fr;
+            min-height: auto;
+            padding-top: 14px;
+            padding-bottom: 14px;
+          }
+          .usage-top-actions {
+            justify-content: space-between;
+          }
+          .usage-kpi-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="usage-app-shell">
+        <aside class="usage-sidebar" aria-label="Usage summary navigation">
+          <div class="usage-sidebar-header">
+            <div class="usage-sidebar-logo">CA</div>
+            <div class="usage-sidebar-title">
+              <strong>Computer Agents</strong>
+              <span>Usage Summary</span>
+            </div>
+          </div>
+          <nav class="usage-sidebar-nav" id="usage-sidebar-nav"></nav>
+        </aside>
+        <div class="usage-app-main">
+          <header class="usage-top-nav">
+            <div class="usage-top-left">
+              <button type="button" class="usage-sidebar-toggle" aria-label="Sidebar">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M9 4v16" stroke="currentColor" stroke-width="1.7"/></svg>
+              </button>
+              <div class="usage-breadcrumb">
+                <span>Admin</span>
+                <span>›</span>
+                <strong id="usage-breadcrumb-current">Overview</strong>
+              </div>
+            </div>
+            <div class="usage-top-actions">
+              <div class="usage-timeframe-switch" role="tablist" aria-label="Time frame">
+                <button type="button" class="usage-timeframe-button" data-days="3">3d</button>
+                <button type="button" class="usage-timeframe-button is-active" data-days="7">7d</button>
+                <button type="button" class="usage-timeframe-button" data-days="14">14d</button>
+                <button type="button" class="usage-timeframe-button" data-days="30">30d</button>
+              </div>
+              <button type="button" class="usage-refresh-button" id="usage-refresh">Refresh</button>
+            </div>
+          </header>
+          <main class="usage-content-scroll">
+            <div class="usage-content">
+              <div class="usage-page-header">
+                <div>
+                  <h1 class="usage-page-title" id="usage-page-title">Overview</h1>
+                  <p class="usage-page-copy" id="usage-page-copy">Product activity, retention, and resource creation across the platform.</p>
+                </div>
+                <div id="usage-status" class="usage-status">Checking session...</div>
+              </div>
+              <div class="usage-kpi-grid" id="usage-kpis"></div>
+              <div class="usage-chart-grid">
+                <section class="usage-chart-card">
+                  <div class="usage-chart-header">
+                    <div class="usage-chart-title" id="usage-primary-title">Usage trend</div>
+                    <div class="usage-chart-note" id="usage-primary-note">Daily activity</div>
+                  </div>
+                  <div class="usage-chart-frame" id="usage-primary-chart-frame">
+                    <canvas id="usage-primary-chart" aria-label="Usage trend chart"></canvas>
+                  </div>
+                </section>
+                <section class="usage-chart-card">
+                  <div class="usage-chart-header">
+                    <div class="usage-chart-title" id="usage-breakdown-title">Breakdown</div>
+                    <div class="usage-chart-note" id="usage-breakdown-note">Top signals</div>
+                  </div>
+                  <div class="usage-breakdown-list" id="usage-breakdown-list"></div>
+                </section>
+              </div>
+              <section class="usage-table-card">
+                <div class="usage-table-header">
+                  <div class="usage-table-title" id="usage-table-title">Most Active Users</div>
+                  <div class="usage-chart-note" id="usage-table-note">Sorted by product activity</div>
+                </div>
+                <div class="usage-table-wrap" id="usage-table-wrap"></div>
+              </section>
+            </div>
+          </main>
+        </div>
+      </div>
+      <script type="module">
+        const AIOS_ORIGIN = __PLATFORM_AIOS_ORIGIN_JSON__;
+        let ChartConstructor = null;
+        let chartConstructorPromise = null;
+        let chartRenderSequence = 0;
+  
+        function loadChartConstructor() {
+          if (ChartConstructor) return Promise.resolve(ChartConstructor);
+          if (!chartConstructorPromise) {
+            chartConstructorPromise = import("https://esm.sh/chart.js@4.5.1/auto?bundle")
+              .then(function(module) {
+                ChartConstructor = module.default || module.Chart;
+                return ChartConstructor;
+              });
+          }
+          return chartConstructorPromise;
+        }
+  
+        const navItems = [
+          { id: "overview", label: "Overview", icon: "dashboard" },
+          { id: "users", label: "Users", icon: "users" },
+          { id: "threads", label: "Threads", icon: "thread" },
+          { id: "agents", label: "Agents", icon: "bot" },
+          { id: "computers", label: "Computers", icon: "computer" },
+          { id: "projects", label: "Projects", icon: "project" },
+          { id: "metronome", label: "Metronome", icon: "metronome" },
+          { id: "resources", label: "Resources", icon: "resources" },
+          { id: "calendar", label: "Calendar", icon: "calendar" },
+          { id: "teams", label: "Teams", icon: "teams" },
+          { id: "models", label: "Models", icon: "models" },
+          { id: "sales", label: "Sales", icon: "sales" },
+          { id: "feedback", label: "Feedback", icon: "feedback" },
+        ];
+        const sectionConfig = {
+          overview: {
+            title: "Overview",
+            copy: "Product activity, retention, and resource creation across the platform.",
+            primaryTitle: "Platform Activity",
+            primaryNote: "Users, returners, and threads",
+            breakdownTitle: "Feature Usage",
+            breakdownNote: "Most used surfaces",
+            chartSeries: [
+              { key: "activeUsers", label: "Active users", color: "#66a6ff", type: "line" },
+              { key: "returningUsers", label: "Returning users", color: "#45d483", type: "line" },
+              { key: "threadsStarted", label: "Threads", color: "#ffe717", type: "bar" },
+            ],
+            kpis: [
+              ["New users", "summary.newUsers", "Accounts created"],
+              ["Active users", "summary.activeUsers", "Users with activity"],
+              ["Returning users", "summary.returningUsers", "Return rate", "summary.returnRate", "percent"],
+              ["Threads", "summary.threadsStarted", "Started in period"],
+            ],
+            breakdown: "features",
+            table: "users",
+          },
+          users: {
+            title: "Users",
+            copy: "Account creation, active users, retention, and user-level engagement.",
+            primaryTitle: "User Trend",
+            primaryNote: "Daily user activity",
+            breakdownTitle: "Top Users",
+            breakdownNote: "Sessions and active time",
+            chartSeries: [
+              { key: "newUsers", label: "New users", color: "#8f7cff", type: "bar" },
+              { key: "activeUsers", label: "Active users", color: "#66a6ff", type: "line" },
+              { key: "returningUsers", label: "Returning users", color: "#45d483", type: "line" },
+            ],
+            kpis: [
+              ["New users", "summary.newUsers", "Created in period"],
+              ["Active users", "summary.activeUsers", "Product activity"],
+              ["Return rate", "summary.returnRate", "Returning / active", null, "percentMain"],
+              ["Avg active time", "summary.avgActiveMinutes", "Per active user", null, "minutes"],
+            ],
+            breakdown: "users",
+            table: "users",
+          },
+          threads: {
+            title: "Threads",
+            copy: "Thread creation, messages, failures, and permission waits.",
+            primaryTitle: "Thread Activity",
+            primaryNote: "Started threads and user messages",
+            breakdownTitle: "Thread Health",
+            breakdownNote: "Failures and permission waits",
+            chartSeries: [
+              { key: "threadsStarted", label: "Threads", color: "#66a6ff", type: "bar" },
+              { key: "userMessages", label: "Messages", color: "#45d483", type: "line" },
+              { key: "failedThreads", label: "Failures", color: "#ff6fb7", type: "line" },
+            ],
+            kpis: [
+              ["Threads started", "summary.threadsStarted", "New threads"],
+              ["Messages", "summary.userMessages", "User messages"],
+              ["Failed threads", "health.failedThreads", "Failure rate", "health.failureRate", "percent"],
+              ["Waiting permissions", "health.permissionWaitingThreads", "Approval required"],
+            ],
+            breakdown: "threadHealth",
+            table: "users",
+          },
+          agents: {
+            title: "Agents",
+            copy: "Agent creation and agent-related product activity.",
+            primaryTitle: "Agent Activity",
+            primaryNote: "Agents created and threads started",
+            breakdownTitle: "Agent Signals",
+            breakdownNote: "Creation and usage",
+            chartSeries: [
+              { key: "agentsCreated", label: "Agents", color: "#66a6ff", type: "bar" },
+              { key: "threadsStarted", label: "Threads", color: "#8f7cff", type: "line" },
+            ],
+            kpis: [
+              ["Agents created", "summary.agentsCreated", "Custom agents"],
+              ["Threads / user", "summary.threadsPerActiveUser", "Per active user", null, "decimal"],
+              ["Active users", "summary.activeUsers", "Potential agent users"],
+              ["Messages", "summary.userMessages", "Agent prompts"],
+            ],
+            breakdown: "agents",
+            table: "users",
+          },
+          computers: {
+            title: "Computers",
+            copy: "Computer creation, files, and environment activity.",
+            primaryTitle: "Computer Activity",
+            primaryNote: "Computers and files",
+            breakdownTitle: "Computer Signals",
+            breakdownNote: "Created resources",
+            chartSeries: [
+              { key: "computersCreated", label: "Computers", color: "#45d483", type: "bar" },
+              { key: "filesUploaded", label: "Files", color: "#66a6ff", type: "line" },
+            ],
+            kpis: [
+              ["Computers created", "summary.computersCreated", "Custom computers"],
+              ["Files uploaded", "summary.filesUploaded", "Distinct attachments"],
+              ["Active users", "summary.activeUsers", "Users with activity"],
+              ["Avg active time", "summary.avgActiveMinutes", "Session windows", null, "minutes"],
+            ],
+            breakdown: "computers",
+            table: "users",
+          },
+          projects: {
+            title: "Projects",
+            copy: "Project creation, task activity, and project-scoped resource signals.",
+            primaryTitle: "Project Activity",
+            primaryNote: "Projects and tasks",
+            breakdownTitle: "Project Signals",
+            breakdownNote: "Tasks and users",
+            chartSeries: [
+              { key: "projectsCreated", label: "Projects", color: "#ffe717", type: "bar" },
+              { key: "tasksCreated", label: "Tasks", color: "#66a6ff", type: "line" },
+            ],
+            kpis: [
+              ["Projects created", "summary.projectsCreated", "New projects"],
+              ["Tasks created", "summary.tasksCreated", "Project tasks"],
+              ["Active users", "summary.activeUsers", "Contributors"],
+              ["Threads", "summary.threadsStarted", "Project execution"],
+            ],
+            breakdown: "projects",
+            table: "users",
+          },
+          metronome: {
+            title: "Metronome",
+            copy: "Workflow-related usage, automation triggers, and run-adjacent activity.",
+            primaryTitle: "Workflow Activity",
+            primaryNote: "Workflow usage signals",
+            breakdownTitle: "Metronome Signals",
+            breakdownNote: "Detected features",
+            chartSeries: [
+              { key: "metronomesCreated", label: "Metronomes", color: "#ff8a3d", type: "bar" },
+              { key: "threadsStarted", label: "Threads", color: "#66a6ff", type: "line" },
+            ],
+            kpis: [
+              ["Metronomes", "summary.metronomesCreated", "Created workflows"],
+              ["Threads", "summary.threadsStarted", "Runs and support threads"],
+              ["Failed threads", "health.failedThreads", "Possible run failures"],
+              ["Active users", "summary.activeUsers", "Automation users"],
+            ],
+            breakdown: "metronome",
+            table: "features",
+          },
+          resources: {
+            title: "Resources",
+            copy: "Files, servers, databases, deployable resources, and related creation events.",
+            primaryTitle: "Resource Creation",
+            primaryNote: "Files, servers, databases",
+            breakdownTitle: "Server Types",
+            breakdownNote: "Created deployable resources",
+            chartSeries: [
+              { key: "filesUploaded", label: "Files", color: "#66a6ff", type: "bar" },
+              { key: "serversCreated", label: "Servers", color: "#ff6fb7", type: "line" },
+              { key: "databasesCreated", label: "Databases", color: "#45d483", type: "line" },
+            ],
+            kpis: [
+              ["Files uploaded", "summary.filesUploaded", "Attachment IDs"],
+              ["Servers created", "summary.serversCreated", "Deployable resources"],
+              ["Databases", "summary.databasesCreated", "Data resources"],
+              ["Projects", "summary.projectsCreated", "Resource scopes"],
+            ],
+            breakdown: "serverKinds",
+            table: "features",
+          },
+          calendar: {
+            title: "Calendar",
+            copy: "Calendar usage, scheduling-related actions, and active workflow demand.",
+            primaryTitle: "Calendar Activity",
+            primaryNote: "Calendar and scheduling signals",
+            chartSeries: [
+              { key: "calendarEventsCreated", label: "Events", color: "#66a6ff", type: "bar" },
+              { key: "threadsStarted", label: "Threads", color: "#8f7cff", type: "line" },
+            ],
+            kpis: [
+              ["Events", "summary.calendarEventsCreated", "Calendar records"],
+              ["Active users", "summary.activeUsers", "Potential calendar users"],
+              ["Threads", "summary.threadsStarted", "Scheduling work"],
+              ["Avg active time", "summary.avgActiveMinutes", "Per active user", null, "minutes"],
+            ],
+            breakdown: "calendar",
+            table: "features",
+          },
+          teams: {
+            title: "Teams",
+            copy: "Team-level usage, shared access, and collaboration signals.",
+            primaryTitle: "Team Activity",
+            primaryNote: "Teams and shared work",
+            chartSeries: [
+              { key: "teamsCreated", label: "Teams", color: "#45d483", type: "bar" },
+              { key: "activeUsers", label: "Active users", color: "#66a6ff", type: "line" },
+            ],
+            kpis: [
+              ["Teams", "summary.teamsCreated", "Created teams"],
+              ["Active users", "summary.activeUsers", "Collaborators"],
+              ["Projects", "summary.projectsCreated", "Shared scopes"],
+              ["Threads", "summary.threadsStarted", "Team execution"],
+            ],
+            breakdown: "teams",
+            table: "users",
+          },
+          models: {
+            title: "Models",
+            copy: "LLMs used by users, including request volume, active users, token totals, and USD-credit cost totals.",
+            primaryTitle: "LLM Usage",
+            primaryNote: "Model usage by day",
+            chartSeries: [
+              { key: "modelRequests", label: "Model calls", color: "#66a6ff", type: "bar" },
+              { key: "modelTokens", label: "LLM tokens", color: "#45d483", type: "line" },
+              { key: "modelTotalCT", label: "Usage cost", color: "#8f7cff", type: "line" },
+            ],
+            kpis: [
+              ["Models used", "modelSummary.modelCount", "Distinct LLMs"],
+              ["Model calls", "modelSummary.requests", "LLM requests"],
+              ["LLM tokens", "modelSummary.tokens", "Actual model tokens"],
+              ["Usage cost", "modelSummary.totalCT", "Model cost", null, "usdCredits"],
+            ],
+            breakdown: "models",
+            table: "models",
+          },
+          sales: {
+            title: "Sales",
+            copy: "Enterprise contact requests submitted from the contact sales page.",
+            primaryTitle: "Enterprise Inquiries",
+            primaryNote: "Requests by day",
+            breakdownTitle: "Inquiry Status",
+            breakdownNote: "Latest contact-sales statuses",
+            chartSeries: [
+              { key: "count", label: "Inquiries", color: "#66a6ff", type: "bar" },
+            ],
+            kpis: [
+              ["Inquiries", "salesSummary.total", "Latest requests"],
+              ["New", "salesSummary.newCount", "Needs follow-up"],
+              ["Contacted", "salesSummary.contactedCount", "Marked contacted"],
+              ["Unique emails", "salesSummary.uniqueEmails", "Distinct contacts"],
+            ],
+            breakdown: "sales",
+            table: "sales",
+          },
+          feedback: {
+            title: "Feedback",
+            copy: "Thread ratings and issue reports submitted by users.",
+            primaryTitle: "Feedback Mix",
+            primaryNote: "Ratings and reports",
+            breakdownTitle: "Report Types",
+            breakdownNote: "Submitted issue reports",
+            chartSeries: [
+              { key: "count", label: "Feedback", color: "#66a6ff", type: "bar" },
+            ],
+            kpis: [
+              ["Ratings", "feedbackSummary.ratingsTotal", "Total thread ratings"],
+              ["Positive", "feedbackSummary.upCount", "Thumbs up"],
+              ["Negative", "feedbackSummary.downCount", "Thumbs down"],
+              ["Reports", "feedbackSummary.reportsTotal", "Issue reports"],
+            ],
+            breakdown: "feedback",
+            table: "feedback",
+          },
+        };
+        let currentDays = 7;
+        let activeSection = window.location.hash ? window.location.hash.slice(1) : "overview";
+        const sectionPayloadCache = new Map();
+        const sectionLoadingKeys = new Set();
+        const sectionErrorCache = new Map();
+        let primaryChart = null;
+  
+        const navEl = document.getElementById("usage-sidebar-nav");
+        const statusEl = document.getElementById("usage-status");
+        const refreshButton = document.getElementById("usage-refresh");
+        const titleEl = document.getElementById("usage-page-title");
+        const copyEl = document.getElementById("usage-page-copy");
+        const breadcrumbEl = document.getElementById("usage-breadcrumb-current");
+        const kpisEl = document.getElementById("usage-kpis");
+        const primaryTitleEl = document.getElementById("usage-primary-title");
+        const primaryNoteEl = document.getElementById("usage-primary-note");
+        const breakdownTitleEl = document.getElementById("usage-breakdown-title");
+        const breakdownNoteEl = document.getElementById("usage-breakdown-note");
+        const breakdownEl = document.getElementById("usage-breakdown-list");
+        const tableTitleEl = document.getElementById("usage-table-title");
+        const tableNoteEl = document.getElementById("usage-table-note");
+        const tableWrapEl = document.getElementById("usage-table-wrap");
+        const primaryChartFrameEl = document.getElementById("usage-primary-chart-frame");
+  
+        function buildLoginUrl() {
+          const loginUrl = new URL("/login", AIOS_ORIGIN);
+          loginUrl.searchParams.set("redirect", window.location.href);
+          return loginUrl.toString();
+        }
+  
+        function getIconMarkup(id) {
+          const paths = {
+            dashboard: '<path d="M4 13h7V4H4v9Zm9 7h7V4h-7v16ZM4 20h7v-5H4v5Z" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linejoin="round"/>',
+            users: '<path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM21 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round"/>',
+            thread: '<path d="M5 6h14M5 12h10M5 18h7" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round"/>',
+            bot: '<rect x="5" y="7" width="14" height="12" rx="3" stroke="currentColor" stroke-width="1.7" fill="none"/><path d="M12 7V4M9 12h.01M15 12h.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>',
+            computer: '<rect x="3" y="4" width="18" height="12" rx="2" stroke="currentColor" stroke-width="1.7" fill="none"/><path d="M8 20h8M12 16v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>',
+            project: '<path d="M4 6h7l2 3h7v9a2 2 0 0 1-2 2H4V6Z" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linejoin="round"/>',
+            metronome: '<path d="M8 21h8M10 3h4l5 18H5L10 3Z" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linejoin="round"/><path d="m12 6 3 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>',
+            resources: '<path d="M12 3 4 7l8 4 8-4-8-4ZM4 12l8 4 8-4M4 17l8 4 8-4" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linejoin="round"/>',
+            calendar: '<rect x="4" y="5" width="16" height="15" rx="2" stroke="currentColor" stroke-width="1.7" fill="none"/><path d="M8 3v4M16 3v4M4 10h16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>',
+            teams: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round"/>',
+            models: '<path d="M12 3a4 4 0 0 0-4 4v1H7a4 4 0 0 0 0 8h1v1a4 4 0 0 0 8 0v-1h1a4 4 0 0 0 0-8h-1V7a4 4 0 0 0-4-4Z" stroke="currentColor" stroke-width="1.7" fill="none"/><path d="M8 8h8M8 16h8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>',
+            sales: '<path d="M4 7h16v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7Z" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linejoin="round"/><path d="M4 7l8 6 8-6M8 4h8" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+            feedback: '<path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 4 11.5a8.5 8.5 0 1 1 17 0Z" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linejoin="round"/><path d="M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
+          };
+          return '<svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true">' + (paths[id] || paths.dashboard) + '</svg>';
+        }
+  
+        function escapeHtml(value) {
+          return String(value == null ? "" : value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+        }
+  
+        function readPath(source, path) {
+          if (!source || !path) return undefined;
+          return String(path).split(".").reduce(function(current, key) {
+            return current && Object.prototype.hasOwnProperty.call(current, key) ? current[key] : undefined;
+          }, source);
+        }
+  
+        function numberValue(value) {
+          const number = Number(value || 0);
+          return Number.isFinite(number) ? number : 0;
+        }
+  
+        function formatNumber(value, digits) {
+          return new Intl.NumberFormat(undefined, { maximumFractionDigits: digits == null ? 0 : digits }).format(numberValue(value));
+        }
+  
+        function formatUsdCredits(value) {
+          return new Intl.NumberFormat(undefined, {
+            style: "currency",
+            currency: "USD",
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }).format(numberValue(value) / 100);
+        }
+  
+        function formatPercent(value) {
+          return Math.round(numberValue(value) * 100) + "%";
+        }
+  
+        function formatMinutes(value) {
+          const minutes = numberValue(value);
+          if (minutes < 60) return formatNumber(minutes, 1) + " min";
+          return formatNumber(minutes / 60, 1) + " h";
+        }
+  
+        function formatSeconds(value) {
+          return formatNumber(value, 1) + "s";
+        }
+  
+        function formatDate(value) {
+          if (!value) return "Never";
+          try {
+            return new Intl.DateTimeFormat(undefined, { dateStyle: "short", timeStyle: "short" }).format(new Date(value));
+          } catch {
+            return String(value);
+          }
+        }
+  
+        function formatKpiValue(value, mode) {
+          if (mode === "percentMain") return formatPercent(value);
+          if (mode === "minutes") return formatMinutes(value);
+          if (mode === "seconds") return formatSeconds(value);
+          if (mode === "decimal") return formatNumber(value, 1);
+          if (mode === "usdCredits") return formatUsdCredits(value);
+          return formatNumber(value);
+        }
+  
+        function setStatus(text, isError) {
+          statusEl.textContent = text || "";
+          statusEl.classList.toggle("is-error", Boolean(isError));
+        }
+  
+        function isProductUsageSection(section) {
+          return section !== "feedback" && section !== "sales";
+        }
+  
+        function getSectionCacheKey(section) {
+          return isProductUsageSection(section) ? "product:" + currentDays + ":" + (section || "overview") : section;
+        }
+  
+        function getActiveSectionCacheKey() {
+          return getSectionCacheKey(activeSection);
+        }
+  
+        function getActiveSectionPayload() {
+          return sectionPayloadCache.get(getActiveSectionCacheKey()) || null;
+        }
+  
+        function isActiveSectionLoading() {
+          return sectionLoadingKeys.has(getActiveSectionCacheKey());
+        }
+  
+        function getActiveSectionError() {
+          return sectionErrorCache.get(getActiveSectionCacheKey()) || "";
+        }
+  
+        function updateRefreshState() {
+          refreshButton.disabled = isActiveSectionLoading();
+        }
+  
+        function getSectionFetchUrl(section) {
+          if (section === "feedback") return "/api/real/admin/feedback-summary?limit=100";
+          if (section === "sales") return "/api/real/admin/contact-sales?limit=100";
+          return "/api/real/admin/product-usage-summary?days=" + encodeURIComponent(currentDays) + "&section=" + encodeURIComponent(section || "overview");
+        }
+  
+        function getSectionLoadingText(section) {
+          const config = sectionConfig[section] || sectionConfig.overview;
+          return "Loading " + String(config.title || "usage").toLowerCase() + "...";
+        }
+  
+        function getSectionLoadedText(section, payload) {
+          const config = sectionConfig[section] || sectionConfig.overview;
+          if (section === "feedback") {
+            return "Loaded feedback" + (payload?.generatedAt ? " at " + formatDate(payload.generatedAt) : ".");
+          }
+          if (section === "sales") {
+            return "Loaded sales inquiries" + (payload?.generatedAt ? " at " + formatDate(payload.generatedAt) : ".");
+          }
+          return "Loaded " + currentDays + " days" + (payload?.viewer && payload.viewer.email ? " for " + payload.viewer.email : "") + (payload?.generatedAt ? " at " + formatDate(payload.generatedAt) : ".");
+        }
+  
+        function renderNav() {
+          navEl.innerHTML = navItems.map(function(item) {
+            return '<button type="button" class="usage-sidebar-link' + (item.id === activeSection ? " is-active" : "") + '" data-section="' + item.id + '">' +
+              '<span class="usage-sidebar-icon">' + getIconMarkup(item.icon) + '</span>' +
+              '<span>' + escapeHtml(item.label) + '</span>' +
+            '</button>';
+          }).join("");
+          navEl.querySelectorAll("[data-section]").forEach(function(button) {
+            button.addEventListener("click", function() {
+              activeSection = button.getAttribute("data-section") || "overview";
+              window.location.hash = activeSection;
+              renderPage();
+              void loadActiveSection();
+            });
+          });
+        }
+  
+        function readSeriesValue(row, key) {
+          const value = row && Object.prototype.hasOwnProperty.call(row, key) ? row[key] : 0;
+          return numberValue(value);
+        }
+  
+        function normalizeUsageArray(value) {
+          if (Array.isArray(value)) return value.filter(Boolean);
+          if (!value || typeof value !== "object") return [];
+          return Object.entries(value).map(function(entry) {
+            const key = entry[0];
+            const raw = entry[1];
+            if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+              return Object.assign({ modelId: key, label: key }, raw);
+            }
+            return { modelId: key, label: key, count: raw };
+          });
+        }
+  
+        function readFirstArray(source, keys) {
+          for (const key of keys) {
+            const value = readPath(source, key);
+            const array = normalizeUsageArray(value);
+            if (array.length) return array;
+          }
+          return [];
+        }
+  
+        function readModelRowId(row) {
+          return String(
+            row?.modelId
+            || row?.model_id
+            || row?.model
+            || row?.id
+            || row?.name
+            || row?.label
+            || ""
+          ).trim();
+        }
+  
+        function readModelRowLabel(row) {
+          return String(
+            row?.label
+            || row?.displayName
+            || row?.display_name
+            || row?.modelName
+            || row?.model_name
+            || readModelRowId(row)
+            || "Unknown model"
+          ).trim();
+        }
+  
+        function readModelRowProvider(row) {
+          return String(
+            row?.provider
+            || row?.providerType
+            || row?.provider_type
+            || row?.vendor
+            || ""
+          ).trim();
+        }
+  
+        function readModelRowRequests(row) {
+          return numberValue(
+            row?.requests
+            || row?.requestCount
+            || row?.request_count
+            || row?.calls
+            || row?.callCount
+            || row?.runs
+            || row?.runCount
+            || row?.threads
+            || row?.threadCount
+            || row?.messages
+            || row?.messageCount
+            || row?.count
+          );
+        }
+  
+        function readModelRowUsers(row) {
+          return numberValue(
+            row?.users
+            || row?.activeUsers
+            || row?.active_users
+            || row?.userCount
+            || row?.user_count
+          );
+        }
+  
+        function readModelRowCT(row) {
+          return numberValue(
+            row?.totalCT
+            || row?.totalCt
+            || row?.computeTokens
+            || row?.compute_tokens
+            || row?.ct
+            || row?.costCT
+            || row?.cost_ct
+            || row?.usage?.totalCT
+            || row?.usage?.computeTokens
+            || row?.usage?.compute_tokens
+          );
+        }
+  
+        function readModelRowInputTokens(row) {
+          return numberValue(
+            row?.inputTokens
+            || row?.input_tokens
+            || row?.promptTokens
+            || row?.prompt_tokens
+            || row?.usage?.inputTokens
+            || row?.usage?.input_tokens
+            || row?.usage?.promptTokens
+            || row?.usage?.prompt_tokens
+          );
+        }
+  
+        function readModelRowOutputTokens(row) {
+          return numberValue(
+            row?.outputTokens
+            || row?.output_tokens
+            || row?.completionTokens
+            || row?.completion_tokens
+            || row?.usage?.outputTokens
+            || row?.usage?.output_tokens
+            || row?.usage?.completionTokens
+            || row?.usage?.completion_tokens
+          );
+        }
+  
+        function readModelRowCacheTokens(row) {
+          return numberValue(
+            row?.cacheTokens
+            || row?.cache_tokens
+            || row?.cachedTokens
+            || row?.cached_tokens
+            || row?.usage?.cacheTokens
+            || row?.usage?.cache_tokens
+            || row?.usage?.cachedTokens
+            || row?.usage?.cached_tokens
+          );
+        }
+  
+        function readModelRowTokens(row) {
+          const explicitTotal = numberValue(
+            row?.totalTokens
+            || row?.total_tokens
+            || row?.tokens
+            || row?.usage?.totalTokens
+            || row?.usage?.total_tokens
+            || row?.usage?.tokens
+          );
+          if (explicitTotal > 0) return explicitTotal;
+          return readModelRowInputTokens(row) + readModelRowOutputTokens(row) + readModelRowCacheTokens(row);
+        }
+  
+        function collectModelUsageRows(payload) {
+          const explicitRows = readFirstArray(payload || {}, [
+            "modelUsage",
+            "modelsUsage",
+            "llmUsage",
+            "llmModelUsage",
+            "modelBreakdown",
+            "modelUsageSummary",
+            "usageByModel",
+            "model_usage",
+            "models",
+          ]);
+          const featureRows = explicitRows.length
+            ? []
+            : (Array.isArray(payload?.featureUsage) ? payload.featureUsage : []).filter(function(row) {
+                const text = [
+                  row?.label,
+                  row?.kind,
+                  row?.category,
+                  row?.model,
+                  row?.modelId,
+                  row?.model_id,
+                ].filter(Boolean).join(" ").toLowerCase();
+                return text.includes("model") || text.includes("llm") || Boolean(readModelRowId(row));
+              });
+          const rows = (explicitRows.length ? explicitRows : featureRows).map(function(row) {
+            const id = readModelRowId(row) || readModelRowLabel(row);
+            const provider = readModelRowProvider(row);
+            const requests = readModelRowRequests(row);
+            const users = readModelRowUsers(row);
+            const totalCT = readModelRowCT(row);
+            const inputTokens = readModelRowInputTokens(row);
+            const outputTokens = readModelRowOutputTokens(row);
+            const cacheTokens = readModelRowCacheTokens(row);
+            const tokens = readModelRowTokens(row);
+            return {
+              id,
+              label: readModelRowLabel(row),
+              provider,
+              requests,
+              users,
+              totalCT,
+              inputTokens,
+              outputTokens,
+              cacheTokens,
+              tokens,
+              raw: row,
+            };
+          }).filter(function(row) {
+            return row.label && (row.requests > 0 || row.users > 0 || row.totalCT > 0 || row.tokens > 0);
+          });
+          const merged = new Map();
+          rows.forEach(function(row) {
+            const key = String(row.id || row.label).toLowerCase();
+            const existing = merged.get(key);
+            if (!existing) {
+              merged.set(key, Object.assign({}, row));
+              return;
+            }
+            existing.requests += row.requests;
+            existing.users = Math.max(existing.users, row.users);
+            existing.totalCT += row.totalCT;
+            existing.inputTokens += row.inputTokens;
+            existing.outputTokens += row.outputTokens;
+            existing.cacheTokens += row.cacheTokens;
+            existing.tokens += row.tokens;
+            if (!existing.provider && row.provider) existing.provider = row.provider;
+          });
+          return Array.from(merged.values()).sort(function(a, b) {
+            return (b.requests || b.totalCT || b.tokens || b.users) - (a.requests || a.totalCT || a.tokens || a.users);
+          });
+        }
+  
+        function buildModelSummary(payload) {
+          const rows = collectModelUsageRows(payload || {});
+          return {
+            modelCount: rows.length,
+            requests: rows.reduce(function(sum, row) { return sum + numberValue(row.requests); }, 0),
+            users: rows.reduce(function(max, row) { return Math.max(max, numberValue(row.users)); }, 0),
+            totalCT: rows.reduce(function(sum, row) { return sum + numberValue(row.totalCT); }, 0),
+            inputTokens: rows.reduce(function(sum, row) { return sum + numberValue(row.inputTokens); }, 0),
+            outputTokens: rows.reduce(function(sum, row) { return sum + numberValue(row.outputTokens); }, 0),
+            cacheTokens: rows.reduce(function(sum, row) { return sum + numberValue(row.cacheTokens); }, 0),
+            tokens: rows.reduce(function(sum, row) { return sum + numberValue(row.tokens); }, 0),
+          };
+        }
+  
+        function getModelDayRows(payload) {
+          const candidates = [
+            payload?.modelTimeSeries,
+            payload?.modelUsageByDay,
+            payload?.modelsByDay,
+            payload?.llmUsageByDay,
+            payload?.llmTimeSeries,
+            payload?.timeSeries,
+          ];
+          for (const candidate of candidates) {
+            if (Array.isArray(candidate) && candidate.length) return candidate;
+          }
+          return [];
+        }
+  
+        function getModelRowsForDay(row) {
+          const candidates = [
+            row?.modelUsage,
+            row?.models,
+            row?.llmUsage,
+            row?.usageByModel,
+            row?.model_usage,
+          ];
+          for (const candidate of candidates) {
+            const normalized = normalizeUsageArray(candidate);
+            if (normalized.length) return normalized;
+          }
+          return [];
+        }
+  
+        function buildModelTrendRows(payload) {
+          const dayRows = getModelDayRows(payload || {});
+          return dayRows.map(function(row) {
+            const modelRows = getModelRowsForDay(row);
+            const aggregate = modelRows.reduce(function(next, modelRow) {
+              next.modelRequests += readModelRowRequests(modelRow);
+              next.modelActiveUsers = Math.max(next.modelActiveUsers, readModelRowUsers(modelRow));
+              next.modelTotalCT += readModelRowCT(modelRow);
+              next.modelTokens += readModelRowTokens(modelRow);
+              return next;
+            }, {
+              date: row?.date || row?.day || row?.bucket || "",
+              modelRequests: numberValue(row?.modelRequests || row?.model_requests || row?.llmRequests || row?.llm_requests),
+              modelActiveUsers: numberValue(row?.modelActiveUsers || row?.model_active_users || row?.llmUsers || row?.llm_users),
+              modelTotalCT: numberValue(row?.modelTotalCT || row?.model_total_ct || row?.llmCT || row?.llm_ct),
+              modelTokens: numberValue(row?.modelTokens || row?.model_tokens || row?.llmTokens || row?.llm_tokens),
+            });
+            return aggregate;
+          });
+        }
+  
+        function buildFeedbackSummary(payload) {
+          const summary = payload && payload.summary && typeof payload.summary === "object" ? payload.summary : {};
+          const reportsByType = summary.reportsByType && typeof summary.reportsByType === "object" ? summary.reportsByType : {};
+          const reportsTotal = numberValue(summary.reportsTotal)
+            || Object.values(reportsByType).reduce(function(total, value) { return total + numberValue(value); }, 0);
+          return {
+            ratingsTotal: numberValue(summary.ratingsTotal),
+            upCount: numberValue(summary.upCount),
+            downCount: numberValue(summary.downCount),
+            reportsTotal,
+            reportsByType,
+          };
+        }
+  
+        function buildFeedbackTrendRows(payload) {
+          const summary = buildFeedbackSummary(payload || {});
+          return [
+            { date: "Positive", count: summary.upCount },
+            { date: "Negative", count: summary.downCount },
+            { date: "Reports", count: summary.reportsTotal },
+          ];
+        }
+  
+        function normalizeSalesSubmissions(payload) {
+          const rows = readFirstArray(payload || {}, [
+            "submissions",
+            "inquiries",
+            "requests",
+            "sales",
+            "contactSales",
+            "contact_sales",
+          ]);
+          return rows.map(function(row) {
+            return {
+              id: String(row?.id || row?.submissionId || row?.submission_id || "").trim(),
+              name: String(row?.name || row?.fullName || row?.full_name || "").trim(),
+              email: String(row?.email || row?.businessEmail || row?.business_email || "").trim(),
+              goal: String(row?.goal || row?.message || row?.notes || "").trim(),
+              source: String(row?.source || row?.origin || "").trim(),
+              status: String(row?.status || "new").trim().toLowerCase(),
+              createdAt: row?.createdAt || row?.created_at || row?.createdAtIso || row?.created_at_iso || null,
+            };
+          }).filter(function(row) {
+            return row.email || row.name || row.goal || row.id;
+          }).sort(function(left, right) {
+            return new Date(right.createdAt || 0).getTime() - new Date(left.createdAt || 0).getTime();
+          });
+        }
+  
+        function buildSalesSummary(payload) {
+          const rows = normalizeSalesSubmissions(payload || {});
+          const uniqueEmails = new Set(rows.map(function(row) {
+            return String(row.email || "").trim().toLowerCase();
+          }).filter(Boolean));
+          return {
+            total: rows.length,
+            newCount: rows.filter(function(row) { return row.status === "new" || row.status === "open"; }).length,
+            contactedCount: rows.filter(function(row) { return row.status === "contacted" || row.status === "replied"; }).length,
+            uniqueEmails: uniqueEmails.size,
+          };
+        }
+  
+        function buildSalesTrendRows(payload) {
+          const rows = normalizeSalesSubmissions(payload || {});
+          const buckets = new Map();
+          const today = new Date();
+          for (let index = currentDays - 1; index >= 0; index -= 1) {
+            const date = new Date(today.getTime() - index * 24 * 60 * 60 * 1000);
+            const key = date.toISOString().slice(0, 10);
+            buckets.set(key, { date: key, count: 0 });
+          }
+          rows.forEach(function(row) {
+            if (!row.createdAt) return;
+            const date = new Date(row.createdAt);
+            if (!Number.isFinite(date.getTime())) return;
+            const key = date.toISOString().slice(0, 10);
+            if (buckets.has(key)) {
+              buckets.get(key).count += 1;
+            }
+          });
+          return Array.from(buckets.values());
+        }
+  
+        function buildSalesBreakdownRows(payload) {
+          const rows = normalizeSalesSubmissions(payload || {});
+          const counts = rows.reduce(function(next, row) {
+            const key = row.status || "new";
+            next[key] = (next[key] || 0) + 1;
+            return next;
+          }, {});
+          return Object.keys(counts).sort(function(left, right) {
+            return counts[right] - counts[left];
+          }).map(function(key) {
+            return {
+              label: key.replace(/_/g, " "),
+              meta: "Contact sales status",
+              value: counts[key],
+            };
+          });
+        }
+  
+        function buildFeedbackBreakdownRows(payload) {
+          const summary = buildFeedbackSummary(payload || {});
+          const reportsByType = summary.reportsByType || {};
+          const reportRows = Object.keys(reportsByType).map(function(key) {
+            return {
+              label: key.replace(/_/g, " "),
+              meta: "Issue report type",
+              value: numberValue(reportsByType[key]),
+            };
+          }).filter(function(row) { return row.value > 0; });
+          if (reportRows.length) return reportRows;
+          return [
+            { label: "Positive ratings", meta: "Thread feedback", value: summary.upCount },
+            { label: "Negative ratings", meta: "Thread feedback", value: summary.downCount },
+            { label: "Issue reports", meta: "User reports", value: summary.reportsTotal },
+          ];
+        }
+  
+        function hasChartData(rows, series) {
+          return Array.isArray(rows) && rows.length > 0 && Array.isArray(series) && series.some(function(entry) {
+            return rows.some(function(row) { return readSeriesValue(row, entry.key) > 0; });
+          });
+        }
+  
+        function buildBreakdownRows(payload, type) {
+          const summary = payload && payload.summary ? payload.summary : {};
+          const health = payload && payload.health ? payload.health : {};
+          const featureUsage = Array.isArray(payload && payload.featureUsage) ? payload.featureUsage : [];
+          const serverKinds = Array.isArray(payload && payload.serverKinds) ? payload.serverKinds : [];
+          const topUsers = Array.isArray(payload && payload.topUsers) ? payload.topUsers : [];
+          if (type === "serverKinds") {
+            return serverKinds.map(function(row) {
+              return {
+                label: String(row.kind || "unknown").replace(/_/g, " "),
+                meta: String(numberValue(row.users)) + " users",
+                value: numberValue(row.count),
+              };
+            });
+          }
+          if (type === "users") {
+            return topUsers.slice(0, 8).map(function(user) {
+              return {
+                label: user.email || user.name || user.userId || "Unknown user",
+                meta: formatMinutes(user.activeMinutes) + " active",
+                value: numberValue(user.sessions || user.threadsStarted || user.userMessages),
+              };
+            });
+          }
+          if (type === "threadHealth") {
+            return [
+              { label: "Started", meta: "Threads in period", value: summary.threadsStarted },
+              { label: "Failed", meta: "Runs with errors", value: health.failedThreads },
+              { label: "Waiting permissions", meta: "Blocked on approval", value: health.permissionWaitingThreads },
+              { label: "User messages", meta: "Prompt volume", value: summary.userMessages },
+            ];
+          }
+          if (type === "agents") {
+            return [
+              { label: "Agents created", meta: "Custom non-system agents", value: summary.agentsCreated },
+              { label: "Threads started", meta: "Agent work sessions", value: summary.threadsStarted },
+              { label: "User messages", meta: "Prompts sent", value: summary.userMessages },
+            ];
+          }
+          if (type === "computers") {
+            return [
+              { label: "Computers created", meta: "Custom computers", value: summary.computersCreated },
+              { label: "Files uploaded", meta: "Computer file activity", value: summary.filesUploaded },
+              { label: "Active users", meta: "Users with activity", value: summary.activeUsers },
+            ];
+          }
+          if (type === "projects") {
+            return [
+              { label: "Projects created", meta: "New project workspaces", value: summary.projectsCreated },
+              { label: "Tasks created", meta: "Project task volume", value: summary.tasksCreated },
+              { label: "Threads", meta: "Execution volume", value: summary.threadsStarted },
+            ];
+          }
+          if (type === "metronome") {
+            const matches = featureUsage.filter(function(row) {
+              return String(row.label || row.kind || "").toLowerCase().includes("metronome")
+                || String(row.category || "").toLowerCase().includes("metronome");
+            });
+            return matches.length ? matches.map(function(row) {
+              return { label: row.label || row.kind || "Metronome", meta: row.category || "Feature usage", value: row.count };
+            }) : [
+              { label: "Metronomes created", meta: "Workflow creation", value: summary.metronomesCreated },
+              { label: "Threads", meta: "Workflow-adjacent runs", value: summary.threadsStarted },
+            ];
+          }
+          if (type === "models") {
+            const modelRows = collectModelUsageRows(payload || {});
+            if (modelRows.length) {
+              return modelRows.map(function(row) {
+                const meta = [
+                  row.provider || "",
+                  row.tokens ? formatNumber(row.tokens) + " tokens" : "",
+                  row.users ? formatNumber(row.users) + " users" : "",
+                  row.totalCT ? formatUsdCredits(row.totalCT) : "",
+                ].filter(Boolean).join(" · ");
+                return {
+                  label: row.label,
+                  meta: meta || row.id || "LLM usage",
+                  value: row.requests || row.totalCT || row.tokens || row.users,
+                };
+              });
+            }
+          }
+          if (type === "feedback") {
+            return buildFeedbackBreakdownRows(payload || {});
+          }
+          if (type === "sales") {
+            return buildSalesBreakdownRows(payload || {});
+          }
+          if (type === "calendar" || type === "teams" || type === "models") {
+            const query = type === "models" ? "model" : type;
+            const matches = featureUsage.filter(function(row) {
+              return String(row.label || row.kind || "").toLowerCase().includes(query)
+                || String(row.category || "").toLowerCase().includes(query);
+            });
+            return matches.length ? matches.map(function(row) {
+              return { label: row.label || row.kind || query, meta: row.category || "Feature usage", value: row.count };
+            }) : [
+              { label: type === "models" ? "Messages" : type === "teams" ? "Teams" : "Calendar events", meta: "Inferred usage signal", value: type === "models" ? summary.userMessages : summary[type === "teams" ? "teamsCreated" : "calendarEventsCreated"] },
+              { label: "Threads", meta: "Related work", value: summary.threadsStarted },
+              { label: "Active users", meta: "Users with activity", value: summary.activeUsers },
+            ];
+          }
+          return featureUsage.map(function(row) {
+            return {
+              label: row.label || row.kind || row.status || "Unknown",
+              meta: row.category || (row.users ? String(row.users) + " users" : "Feature usage"),
+              value: row.count,
+            };
+          });
+        }
+  
+        function renderBreakdown(payload, config) {
+          const rows = buildBreakdownRows(payload || {}, config.breakdown).filter(function(row) {
+            return row && (row.label || numberValue(row.value) > 0);
+          });
+          if (!rows.length) {
+            breakdownEl.innerHTML = '<div class="usage-empty">No breakdown data for this period.</div>';
+            return;
+          }
+          const maxValue = Math.max(1, rows.reduce(function(max, row) { return Math.max(max, numberValue(row.value)); }, 0));
+          breakdownEl.innerHTML = rows.slice(0, 12).map(function(row) {
+            const width = Math.max(3, Math.round(numberValue(row.value) / maxValue * 100));
+            return '<div class="usage-breakdown-row">' +
+              '<div>' +
+                '<div class="usage-breakdown-title">' + escapeHtml(row.label) + '</div>' +
+                '<div class="usage-breakdown-meta">' + escapeHtml(row.meta || "") + '</div>' +
+                '<div class="usage-breakdown-track"><div class="usage-breakdown-fill" style="width:' + width + '%"></div></div>' +
+              '</div>' +
+              '<div class="usage-breakdown-value">' + formatNumber(row.value) + '</div>' +
+            '</div>';
+          }).join("");
+        }
+  
+        function renderKpis(payload, config) {
+          const source = payload || {};
+          kpisEl.innerHTML = (config.kpis || []).map(function(item) {
+            const value = readPath(source, item[1]);
+            const detailValue = item[3] ? readPath(source, item[3]) : null;
+            const hasDetailValue = Boolean(item[3]);
+            const mode = hasDetailValue ? item[5] : item[4];
+            const hint = item[3]
+              ? formatKpiValue(detailValue, item[4]) + " " + String(item[2] || "").toLowerCase()
+              : item[2];
+            return '<div class="usage-kpi-card">' +
+              '<div class="usage-kpi-label">' + escapeHtml(item[0]) + '</div>' +
+              '<div class="usage-kpi-value">' + escapeHtml(formatKpiValue(value, mode)) + '</div>' +
+              '<div class="usage-kpi-hint">' + escapeHtml(hint || "") + '</div>' +
+            '</div>';
+          }).join("");
+        }
+  
+        function destroyPrimaryChart() {
+          if (primaryChart) {
+            primaryChart.destroy();
+            primaryChart = null;
+          }
+        }
+  
+        function renderLoadingChart() {
+          chartRenderSequence += 1;
+          destroyPrimaryChart();
+          primaryChartFrameEl.innerHTML = '<div class="usage-loading"><div class="usage-dot-loader" aria-label="Loading"><span></span><span></span><span></span></div></div>';
+        }
+  
+        async function renderPrimaryChart(payload, config) {
+          const renderSequence = ++chartRenderSequence;
+          const isModelSection = activeSection === "models";
+          const isFeedbackSection = activeSection === "feedback";
+          const isSalesSection = activeSection === "sales";
+          const rows = isFeedbackSection
+            ? buildFeedbackTrendRows(payload || {})
+            : isSalesSection
+              ? buildSalesTrendRows(payload || {})
+              : isModelSection
+                ? buildModelTrendRows(payload || {})
+                : (Array.isArray(payload && payload.timeSeries) ? payload.timeSeries : []);
+          const series = Array.isArray(config.chartSeries) ? config.chartSeries : [];
+          destroyPrimaryChart();
+          primaryChartFrameEl.innerHTML = '<canvas id="usage-primary-chart" aria-label="Usage trend chart"></canvas>';
+          const canvas = document.getElementById("usage-primary-chart");
+          if (!canvas || !hasChartData(rows, series)) {
+            primaryChartFrameEl.innerHTML = '<div class="usage-empty">No chart data for this period.</div>';
+            return;
+          }
+          let Chart;
+          try {
+            Chart = await loadChartConstructor();
+          } catch {
+            if (renderSequence === chartRenderSequence) {
+              primaryChartFrameEl.innerHTML = '<div class="usage-empty">Chart library failed to load.</div>';
+            }
+            return;
+          }
+          if (renderSequence !== chartRenderSequence || !document.body.contains(canvas)) return;
+          const labels = rows.map(function(row) {
+            const raw = String(row.date || row.day || "");
+            return raw.length >= 10 ? raw.slice(5) : raw;
+          });
+          const datasets = series.map(function(entry) {
+            const base = {
+              label: entry.label,
+              data: rows.map(function(row) { return readSeriesValue(row, entry.key); }),
+              borderColor: entry.color,
+              backgroundColor: entry.type === "bar" ? entry.color : entry.color + "22",
+              pointRadius: entry.type === "bar" ? 0 : 2.5,
+              pointHoverRadius: 4,
+              borderWidth: entry.type === "bar" ? 0 : 2,
+            };
+            if (entry.type === "bar") {
+              base.type = "bar";
+              base.borderRadius = 4;
+              base.borderSkipped = false;
+              base.maxBarThickness = 26;
+            } else {
+              base.type = "line";
+              base.tension = 0.38;
+              base.fill = true;
+            }
+            return base;
+          });
+          primaryChart = new Chart(canvas, {
+            type: "bar",
+            data: { labels: labels, datasets: datasets },
+            options: {
+              animation: false,
+              responsive: true,
+              maintainAspectRatio: false,
+              interaction: { mode: "index", intersect: false },
+              layout: { padding: { top: 10, right: 8, bottom: 0, left: 0 } },
+              plugins: {
+                legend: {
+                  display: true,
+                  position: "top",
+                  align: "start",
+                  labels: {
+                    usePointStyle: true,
+                    boxWidth: 7,
+                    boxHeight: 7,
+                    color: "rgba(255,255,255,0.68)",
+                    padding: 14,
+                    font: { size: 11, weight: "400", family: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif" },
+                  },
+                },
+                tooltip: {
+                  enabled: true,
+                  backgroundColor: "rgba(8,8,8,0.96)",
+                  borderColor: "rgba(255,255,255,0.14)",
+                  borderWidth: 1,
+                  cornerRadius: 8,
+                  titleColor: "rgba(255,255,255,0.94)",
+                  bodyColor: "rgba(255,255,255,0.78)",
+                  padding: 10,
+                  callbacks: {
+                    label: function(context) {
+                      return String(context.dataset.label || "Value") + ": " + formatNumber(context.parsed.y);
+                    },
+                  },
+                },
+              },
+              scales: {
+                x: {
+                  grid: { display: false, drawBorder: false },
+                  border: { display: false },
+                  ticks: {
+                    color: "rgba(255,255,255,0.42)",
+                    maxRotation: 0,
+                    minRotation: 0,
+                    padding: 10,
+                    font: { size: 10, weight: "400", family: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif" },
+                  },
+                },
+                y: {
+                  beginAtZero: true,
+                  grid: { color: "rgba(255,255,255,0.09)", drawTicks: false },
+                  border: { display: false },
+                  ticks: {
+                    color: "rgba(255,255,255,0.42)",
+                    padding: 8,
+                    maxTicksLimit: 5,
+                    font: { size: 10, weight: "400", family: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif" },
+                    callback: function(value) { return formatNumber(value); },
+                  },
+                },
+              },
+            },
+          });
+        }
+  
+        function renderUsersTable(users) {
+          if (!users || !users.length) {
+            return '<div class="usage-empty">No active users in this period.</div>';
+          }
+          return '<table><thead><tr>' +
+            '<th>User</th><th>Plan</th><th>Active days</th><th>Sessions</th><th>Active time</th><th>Threads</th><th>Messages</th><th>Agents</th><th>Computers</th><th>Files</th><th>Projects</th><th>Servers</th><th>Last active</th>' +
+            '</tr></thead><tbody>' +
+            users.map(function(user) {
+              return '<tr>' +
+                '<td title="' + escapeHtml(user.userId || "") + '">' + escapeHtml(user.email || user.name || user.userId || "Unknown user") + '</td>' +
+                '<td><span class="usage-pill">' + escapeHtml(user.tier || "sandbox") + '</span></td>' +
+                '<td>' + formatNumber(user.activeDays) + '</td>' +
+                '<td>' + formatNumber(user.sessions) + '</td>' +
+                '<td>' + formatMinutes(user.activeMinutes) + '</td>' +
+                '<td>' + formatNumber(user.threadsStarted) + ' / ' + formatNumber(user.threadsTotal) + '</td>' +
+                '<td>' + formatNumber(user.userMessages) + '</td>' +
+                '<td>' + formatNumber(user.agentsCreated) + '</td>' +
+                '<td>' + formatNumber(user.computersCreated) + '</td>' +
+                '<td>' + formatNumber(user.filesUploaded) + '</td>' +
+                '<td>' + formatNumber(user.projectsCreated) + '</td>' +
+                '<td>' + formatNumber(user.serversCreated) + '</td>' +
+                '<td>' + formatDate(user.lastActivityAt) + '</td>' +
+              '</tr>';
+            }).join("") +
+            '</tbody></table>';
+        }
+  
+        function renderFeatureTable(rows) {
+          if (!rows || !rows.length) {
+            return '<div class="usage-empty">No feature rows in this period.</div>';
+          }
+          return '<table><thead><tr><th>Signal</th><th>Category</th><th>Count</th><th>Users</th></tr></thead><tbody>' +
+            rows.map(function(row) {
+              return '<tr>' +
+                '<td>' + escapeHtml(row.label || row.kind || row.status || "Unknown") + '</td>' +
+                '<td class="usage-muted-cell">' + escapeHtml(row.category || "") + '</td>' +
+                '<td>' + formatNumber(row.count) + '</td>' +
+                '<td>' + formatNumber(row.users) + '</td>' +
+              '</tr>';
+            }).join("") +
+            '</tbody></table>';
+        }
+  
+        function renderModelTable(rows) {
+          if (!rows || !rows.length) {
+            return '<div class="usage-empty">No model usage data in this period.</div>';
+          }
+          return '<table><thead><tr><th>Model</th><th>Provider</th><th>Runs</th><th>Users</th><th>Input tokens</th><th>Output tokens</th><th>Cache tokens</th><th>Total tokens</th><th>Usage cost</th></tr></thead><tbody>' +
+            rows.map(function(row) {
+              return '<tr>' +
+                '<td title="' + escapeHtml(row.id || row.label) + '">' + escapeHtml(row.label || row.id || "Unknown model") + '</td>' +
+                '<td class="usage-muted-cell">' + escapeHtml(row.provider || "Unknown") + '</td>' +
+                '<td>' + formatNumber(row.requests) + '</td>' +
+                '<td>' + formatNumber(row.users) + '</td>' +
+                '<td>' + formatNumber(row.inputTokens) + '</td>' +
+                '<td>' + formatNumber(row.outputTokens) + '</td>' +
+                '<td>' + formatNumber(row.cacheTokens) + '</td>' +
+                '<td>' + formatNumber(row.tokens) + '</td>' +
+                '<td>' + formatUsdCredits(row.totalCT) + '</td>' +
+              '</tr>';
+            }).join("") +
+            '</tbody></table>';
+        }
+  
+        function renderFeedbackTable(payload) {
+          const ratings = Array.isArray(payload?.ratings) ? payload.ratings : [];
+          const reports = Array.isArray(payload?.reports) ? payload.reports : [];
+          const rows = ratings.map(function(rating) {
+            return {
+              type: rating.rating === "down" ? "Negative rating" : "Positive rating",
+              signal: rating.rating === "down" ? "Thumbs down" : "Thumbs up",
+              thread: rating.threadTitle || rating.threadId || "Thread",
+              user: rating.userId || "",
+              message: "",
+              updatedAt: rating.updatedAt || rating.createdAt,
+            };
+          }).concat(reports.map(function(report) {
+            return {
+              type: "Issue report",
+              signal: String(report.reportType || "general").replace(/_/g, " "),
+              thread: report.threadTitle || report.threadId || "Thread",
+              user: report.userId || "",
+              message: report.message || "",
+              updatedAt: report.createdAt,
+            };
+          })).sort(function(left, right) {
+            return new Date(right.updatedAt || 0).getTime() - new Date(left.updatedAt || 0).getTime();
+          });
+          if (!rows.length) {
+            return '<div class="usage-empty">No feedback submitted yet.</div>';
+          }
+          return '<table><thead><tr><th>Type</th><th>Signal</th><th>Thread</th><th>User</th><th>Message</th><th>Updated</th></tr></thead><tbody>' +
+            rows.slice(0, 100).map(function(row) {
+              return '<tr>' +
+                '<td><span class="usage-pill">' + escapeHtml(row.type) + '</span></td>' +
+                '<td>' + escapeHtml(row.signal) + '</td>' +
+                '<td title="' + escapeHtml(row.thread) + '">' + escapeHtml(row.thread) + '</td>' +
+                '<td class="usage-muted-cell">' + escapeHtml(row.user) + '</td>' +
+                '<td class="usage-wide-cell">' + escapeHtml(row.message || "—") + '</td>' +
+                '<td>' + formatDate(row.updatedAt) + '</td>' +
+              '</tr>';
+            }).join("") +
+            '</tbody></table>';
+        }
+  
+        function renderSalesTable(payload) {
+          const rows = normalizeSalesSubmissions(payload || {});
+          if (!rows.length) {
+            return '<div class="usage-empty">No contact sales inquiries yet.</div>';
+          }
+          return '<table><thead><tr><th>Status</th><th>Name</th><th>Email</th><th>Goal</th><th>Source</th><th>Created</th></tr></thead><tbody>' +
+            rows.slice(0, 100).map(function(row) {
+              return '<tr>' +
+                '<td><span class="usage-pill">' + escapeHtml(row.status || "new") + '</span></td>' +
+                '<td>' + escapeHtml(row.name || "—") + '</td>' +
+                '<td>' + escapeHtml(row.email || "—") + '</td>' +
+                '<td class="usage-wide-cell">' + escapeHtml(row.goal || "—") + '</td>' +
+                '<td class="usage-muted-cell">' + escapeHtml(row.source || "—") + '</td>' +
+                '<td>' + formatDate(row.createdAt) + '</td>' +
+              '</tr>';
+            }).join("") +
+            '</tbody></table>';
+        }
+  
+        function renderTable(payload, config) {
+          if (config.table === "sales") {
+            tableTitleEl.textContent = "Contact Sales Inquiries";
+            tableNoteEl.textContent = "Latest enterprise requests";
+            tableWrapEl.innerHTML = renderSalesTable(payload || {});
+            return;
+          }
+          if (config.table === "feedback") {
+            tableTitleEl.textContent = "Recent Feedback";
+            tableNoteEl.textContent = "Latest ratings and issue reports";
+            tableWrapEl.innerHTML = renderFeedbackTable(payload || {});
+            return;
+          }
+          if (config.table === "models") {
+            tableTitleEl.textContent = "LLMs Used";
+            tableNoteEl.textContent = "Actual model usage from user activity";
+            tableWrapEl.innerHTML = renderModelTable(collectModelUsageRows(payload || {}));
+            return;
+          }
+          if (config.table === "features") {
+            tableTitleEl.textContent = "Feature Signals";
+            tableNoteEl.textContent = "Aggregated product surfaces";
+            const rows = config.breakdown === "serverKinds"
+              ? (payload.serverKinds || []).map(function(row) {
+                  return { label: String(row.kind || "unknown").replace(/_/g, " "), category: "Server type", count: row.count, users: row.users };
+                })
+              : (payload.featureUsage || []);
+            tableWrapEl.innerHTML = renderFeatureTable(rows);
+            return;
+          }
+          tableTitleEl.textContent = config.title === "Users" ? "Most Active Users" : "User Activity";
+          tableNoteEl.textContent = "Sorted by product activity";
+          tableWrapEl.innerHTML = renderUsersTable(payload.topUsers || []);
+        }
+  
+        function renderPage() {
+          if (!sectionConfig[activeSection]) activeSection = "overview";
+          const config = sectionConfig[activeSection];
+          const pagePayload = getActiveSectionPayload();
+          const isLoading = isActiveSectionLoading();
+          const loadError = getActiveSectionError();
+          renderNav();
+          updateRefreshState();
+          titleEl.textContent = config.title;
+          copyEl.textContent = config.copy;
+          breadcrumbEl.textContent = config.title;
+          primaryTitleEl.textContent = config.primaryTitle || "Usage Trend";
+          primaryNoteEl.textContent = config.primaryNote || "Daily activity";
+          breakdownTitleEl.textContent = config.breakdownTitle || "Breakdown";
+          breakdownNoteEl.textContent = config.breakdownNote || "Top signals";
+          if (isLoading || !pagePayload) {
+            kpisEl.innerHTML = "";
+            const message = isLoading ? "Loading usage data..." : (loadError || "No usage data loaded yet.");
+            breakdownEl.innerHTML = '<div class="usage-empty">' + escapeHtml(message) + '</div>';
+            tableTitleEl.textContent = "Details";
+            tableNoteEl.textContent = "";
+            tableWrapEl.innerHTML = '<div class="usage-empty">' + escapeHtml(message) + '</div>';
+            if (isLoading) {
+              renderLoadingChart();
+            } else {
+              destroyPrimaryChart();
+              primaryChartFrameEl.innerHTML = '<div class="usage-empty">' + escapeHtml(message) + '</div>';
+            }
+            return;
+          }
+          const renderPayload = activeSection === "models"
+            ? Object.assign({}, pagePayload, { modelSummary: buildModelSummary(pagePayload || {}) })
+            : activeSection === "feedback"
+              ? Object.assign({}, pagePayload, { feedbackSummary: buildFeedbackSummary(pagePayload || {}) })
+              : activeSection === "sales"
+                ? Object.assign({}, pagePayload, { salesSummary: buildSalesSummary(pagePayload || {}) })
+                : pagePayload;
+          renderKpis(renderPayload, config);
+          void renderPrimaryChart(pagePayload, config);
+          renderBreakdown(pagePayload, config);
+          renderTable(pagePayload, config);
+        }
+  
+        async function loadActiveSection(options) {
+          if (!sectionConfig[activeSection]) activeSection = "overview";
+          const section = activeSection;
+          const key = getSectionCacheKey(section);
+          const force = Boolean(options && options.force);
+          if (!force && sectionPayloadCache.has(key)) {
+            sectionErrorCache.delete(key);
+            setStatus(getSectionLoadedText(section, sectionPayloadCache.get(key) || {}), false);
+            renderPage();
+            return;
+          }
+          if (!force && sectionLoadingKeys.has(key)) {
+            renderPage();
+            return;
+          }
+          sectionLoadingKeys.add(key);
+          sectionErrorCache.delete(key);
+          updateRefreshState();
+          setStatus(getSectionLoadingText(section), false);
+          renderPage();
+          try {
+            const response = await fetch(getSectionFetchUrl(section), {
+              cache: "no-store",
+              credentials: "include",
+            });
+            const payload = await response.json().catch(function() { return {}; });
+            if (response.status === 401 || response.status === 403) {
+              window.location.replace(payload.loginUrl || buildLoginUrl());
+              return;
+            }
+            if (!response.ok) {
+              throw new Error(payload.message || payload.error || "Failed to load " + (sectionConfig[section]?.title || "usage") + ".");
+            }
+            sectionPayloadCache.set(key, payload || {});
+            if (getActiveSectionCacheKey() === key) {
+              setStatus(getSectionLoadedText(section, payload || {}), false);
+            }
+          } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            sectionPayloadCache.delete(key);
+            sectionErrorCache.set(key, message);
+            if (getActiveSectionCacheKey() === key) {
+              setStatus(message, true);
+            }
+          } finally {
+            sectionLoadingKeys.delete(key);
+            updateRefreshState();
+            if (getActiveSectionCacheKey() === key) {
+              renderPage();
+            }
+          }
+        }
+  
+        document.querySelectorAll("[data-days]").forEach(function(button) {
+          button.addEventListener("click", function() {
+            currentDays = numberValue(button.getAttribute("data-days")) || 7;
+            document.querySelectorAll("[data-days]").forEach(function(item) {
+              item.classList.toggle("is-active", item === button);
+            });
+            void loadActiveSection({ force: isProductUsageSection(activeSection) });
+          });
+        });
+        window.addEventListener("hashchange", function() {
+          activeSection = window.location.hash ? window.location.hash.slice(1) : "overview";
+          renderPage();
+          void loadActiveSection();
+        });
+        refreshButton.addEventListener("click", function() {
+          void loadActiveSection({ force: true });
+        });
+        renderNav();
+        void loadActiveSection();
+      </script>
+    </body>
+  </html>

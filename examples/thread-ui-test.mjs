@@ -23,6 +23,7 @@ import {
   calculateRunnerThreadTimelineProgress,
   formatRunnerThreadTimelineClock,
 } from "../dist/react/thread/run-activity-card.js";
+import { RunnerPageQueueReceipt } from "../dist/react/runner-chat/execution/page-queue-receipt.js";
 import { isRunnerThreadProjectionRequestCurrent } from "../dist/react/thread/use-runner-thread-projection.js";
 import {
   adaptRunnerThreadActionToRunnerLog,
@@ -56,10 +57,19 @@ assert.equal(formatRunnerThreadTimelineClock(94_000), "01:34");
 assert.equal(formatRunnerThreadTimelineClock(3_723_000), "01:02:03");
 
 const runnerChatSource = await readFile(new URL("../src/react/runner-chat.tsx", import.meta.url), "utf8");
+const canonicalThreadSurfaceSource = await readFile(
+  new URL("../src/react/runner-chat/canonical-thread-surface.tsx", import.meta.url),
+  "utf8",
+);
 assert.equal(
   (runnerChatSource.match(/renderAction=\{renderCanonicalThreadAction\}/g) || []).length,
+  2,
+  "RunnerChat must bind the original typed log renderer to both canonical and legacy surfaces",
+);
+assert.equal(
+  (canonicalThreadSurfaceSource.match(/renderAction=\{renderAction\}/g) || []).length,
   4,
-  "every canonical, compatibility, and legacy run-card path must use the original typed log renderer",
+  "the canonical surface must carry its typed renderer through main and compatibility timelines",
 );
 
 assert.equal(describeRunnerThreadAction({
@@ -118,6 +128,50 @@ assert.match(restoredFileLogMarkup, /tb-log-compact-action/);
 assert.match(restoredFileLogMarkup, /Created file/);
 assert.match(restoredFileLogMarkup, /\/workspace\/jojojo.txt/);
 assert.doesNotMatch(restoredFileLogMarkup, />Details</);
+
+const webSearchLogMarkup = renderToStaticMarkup(React.createElement(RunnerWorkLogEntry, {
+  log: {
+    time: "00:00:01",
+    message: "Web search completed",
+    type: "success",
+    eventType: "command_execution",
+    metadata: {
+      command: 'python /workspace/.claude/skills/web-search/search.py "thread architecture"',
+      output: JSON.stringify({
+        query: "thread architecture",
+        results: [{ title: "Thread architecture", url: "https://example.com/thread" }],
+      }),
+      exitCode: 0,
+    },
+  },
+}));
+assert.match(webSearchLogMarkup, /tb-log-web-search-compact/);
+assert.match(webSearchLogMarkup, /thread architecture/);
+
+const browserLogMarkup = renderToStaticMarkup(React.createElement(RunnerWorkLogEntry, {
+  backendUrl: "https://runner.test",
+  environmentId: "environment-1",
+  log: {
+    time: "00:00:02",
+    message: "Captured the browser",
+    type: "success",
+    eventType: "command_execution",
+    metadata: {
+      command: "node /workspace/.claude/skills/browser/browser.mjs screenshot",
+      output: JSON.stringify({
+        ok: true,
+        action: "screenshot",
+        url: "https://example.com",
+        title: "Example",
+        screenshotPaths: ["/workspace/tmp/browser.png"],
+      }),
+      exitCode: 0,
+    },
+  },
+}));
+assert.match(browserLogMarkup, /tb-log-card-browser/);
+assert.match(browserLogMarkup, /Capture screen/);
+assert.match(browserLogMarkup, /example\.com/);
 
 assert.equal(isRunnerThreadProjectionRequestCurrent("thread-a", 4, "thread-a", 4), true);
 assert.equal(isRunnerThreadProjectionRequestCurrent("thread-a", 4, "thread-b", 4), false, "old-thread responses are stale");
@@ -251,8 +305,13 @@ assert.match(collapsedMarkup, /Permission required/);
 assert.match(collapsedMarkup, /Ring 3/);
 assert.equal((collapsedMarkup.match(/Permission required/g) || []).length, 1, "a promoted permission must not duplicate inside its run card");
 assert.ok(
-  collapsedMarkup.indexOf("Permission required") > collapsedMarkup.indexOf("Validate backward compatibility"),
-  "a pending permission must render at its live event position, not only at the old run anchor",
+  collapsedMarkup.indexOf("Permission required") < collapsedMarkup.indexOf("Fix authentication without changing the public API"),
+  "a pending permission must be promoted into the live supervision dock",
+);
+assert.match(collapsedMarkup, /Permission requested · Deploy the validated build/);
+assert.ok(
+  collapsedMarkup.indexOf("Permission requested · Deploy the validated build") > collapsedMarkup.lastIndexOf("tb-thread-run-card"),
+  "the historical marker must preserve the request's causal trace position without duplicating its controls",
 );
 assert.doesNotMatch(collapsedMarkup, /24 tests passed/, "raw action output must not mount while the run is collapsed");
 
@@ -280,8 +339,35 @@ const noisyCollapsedMarkup = renderToStaticMarkup(React.createElement(RunnerThre
   maxMountedTimelineItems: 20,
 }));
 assert.match(noisyCollapsedMarkup, /Validate backward compatibility/, "hidden run events must not evict the run card");
+assert.equal((noisyCollapsedMarkup.match(/Permission required/g) || []).length, 1);
 assert.doesNotMatch(noisyCollapsedMarkup, /Running integration tests against the existing API/);
 assert.doesNotMatch(noisyCollapsedMarkup, /Noisy action 250/, "run-scoped events stay inside the collapsed run projection");
+
+const permissionOutsideWindowProjection = reduceRunnerThreadEvents(
+  projection,
+  Array.from({ length: 250 }, (_, index) => ({
+    kind: "message",
+    id: `post-permission-message-${index + 1}`,
+    threadId,
+    sequence: 100 + index,
+    authorParticipantId: "human",
+    content: `Post-permission message ${index + 1}`,
+    modality: "text",
+    status: "delivered",
+    createdAt: new Date(Date.parse(createdAt) + 10_000 + index).toISOString(),
+  })),
+);
+const permissionOutsideWindowMarkup = renderToStaticMarkup(React.createElement(RunnerThread, {
+  projection: permissionOutsideWindowProjection,
+  maxMountedTimelineItems: 20,
+}));
+assert.match(permissionOutsideWindowMarkup, /Post-permission message 250/);
+assert.doesNotMatch(permissionOutsideWindowMarkup, /Permission requested · Deploy the validated build/);
+assert.equal(
+  (permissionOutsideWindowMarkup.match(/Permission required/g) || []).length,
+  1,
+  "an unresolved permission remains mounted even when its historical anchor is outside the virtualized window",
+);
 
 const expandedMarkup = renderToStaticMarkup(React.createElement(RunnerThreadRunActivityCard, {
   run: projection.runsById["run-1"],
@@ -450,9 +536,12 @@ const localQueueMarkup = renderToStaticMarkup(React.createElement(RunnerThreadRu
   },
   projection,
 }));
-assert.match(localQueueMarkup, /tb-thread-run-headline[^>]*>Working\.\.\.<\/span>/);
+assert.match(localQueueMarkup, /tb-thread-run-headline-copy">Queued in this page<\/span>/);
+assert.doesNotMatch(localQueueMarkup, /tb-thread-run-dot-loader/);
 assert.doesNotMatch(localQueueMarkup, /Executing npm test/, "worker progress must not become the working label");
-assert.doesNotMatch(localQueueMarkup, /Queued in this page/);
+const localQueueReceiptMarkup = renderToStaticMarkup(React.createElement(RunnerPageQueueReceipt));
+assert.match(localQueueReceiptMarkup, /Queued in this page/);
+assert.match(localQueueReceiptMarkup, /Not persisted/);
 
 const explicitObserverProjection = {
   ...projection,

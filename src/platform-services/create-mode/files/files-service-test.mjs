@@ -9,6 +9,7 @@ import {
   createFilesService,
 } from "./index.mjs";
 import { createEnvironmentHtmlPreviewProxy } from "./server/html-preview.mjs";
+import { readPlatformCompositionSource } from "../../../../apps/platform/testing/platform-composition-source.mjs";
 
 assert.match(FILES_DOMAIN_FRAGMENTS.preview, /function getPlaygroundFileKind/);
 assert.match(FILES_DOMAIN_FRAGMENTS.inventory, /function buildPlaygroundEnvironmentTree/);
@@ -28,21 +29,18 @@ assert.match(FILES_STYLE_FRAGMENTS.preview, /\.playground-files-image-mask-overl
 assert.match(FILES_STYLE_FRAGMENTS.editor, /\.playground-code-preview-editor-shell/);
 assert.match(FILES_STYLE_FRAGMENTS.responsive, /@media \(max-width: 980px\)[\s\S]*\.playground-files-shell/);
 
-const demoServerSource = await fs.readFile(
-  new URL("../../../../examples/demo-server.mjs", import.meta.url),
-  "utf8",
-);
-assert.match(demoServerSource, /from "\.\.\/src\/platform-services\/create-mode\/files\/index\.mjs"/);
-assert.match(demoServerSource, /filesService\.handleRequest\(req, res, url\)/);
-assert.match(demoServerSource, /\$\{FILES_PAGE_RUNTIME_SCRIPT\}/);
-assert.match(demoServerSource, /import \{ PlatformSearch \} from "\/dist\/platform-ui\/components\/ui\/search\/index\.js"/);
-assert.doesNotMatch(demoServerSource, /^\s*function PlaygroundFilesPage/m);
-assert.doesNotMatch(demoServerSource, /^\s*function PlaygroundFileIcon/m);
-assert.doesNotMatch(demoServerSource, /^\s*\.playground-files-page\s*\{/m);
-assert.doesNotMatch(demoServerSource, /^\s*\.playground-files-shell\s*\{/m);
-assert.doesNotMatch(demoServerSource, /const environmentFilesUploadMatch/);
-assert.doesNotMatch(demoServerSource, /const serverFilesMatch/);
-assert.doesNotMatch(demoServerSource, /async function proxyEnvironmentHtmlPreview/);
+const platformEntrySource = await readPlatformCompositionSource();
+assert.match(platformEntrySource, /from "\.\.\/\.\.\/\.\.\/src\/platform-services\/create-mode\/files\/index\.mjs"/);
+assert.match(platformEntrySource, /filesService\.handleRequest\(req, res, url\)/);
+assert.match(platformEntrySource, /\$\{FILES_PAGE_RUNTIME_SCRIPT\}/);
+assert.match(platformEntrySource, /import \{ PlatformSearch \} from "\/dist\/platform-ui\/components\/ui\/search\/index\.js"/);
+assert.doesNotMatch(platformEntrySource, /^\s*function PlaygroundFilesPage/m);
+assert.doesNotMatch(platformEntrySource, /^\s*function PlaygroundFileIcon/m);
+assert.doesNotMatch(platformEntrySource, /^\s*\.playground-files-page\s*\{/m);
+assert.doesNotMatch(platformEntrySource, /^\s*\.playground-files-shell\s*\{/m);
+assert.doesNotMatch(platformEntrySource, /const environmentFilesUploadMatch/);
+assert.doesNotMatch(platformEntrySource, /const serverFilesMatch/);
+assert.doesNotMatch(platformEntrySource, /async function proxyEnvironmentHtmlPreview/);
 
 const calls = [];
 const baseAdapters = {

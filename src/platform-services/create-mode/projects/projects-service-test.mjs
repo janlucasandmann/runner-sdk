@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import fs from "node:fs/promises";
 
 import {
   PROJECTS_DOMAIN_FOUNDATION_SCRIPT,
@@ -11,6 +10,127 @@ import {
   createProjectsService,
 } from "./index.mjs";
 import { createProjectResourceIndexHandler } from "./server/resource-index.mjs";
+import {
+  PROJECTS_DOMAIN_RUNTIME_FRAGMENT_PATHS,
+} from "./client/domain-runtime.mjs";
+import {
+  PROJECT_OVERVIEW_SCRIPT,
+  PROJECT_OVERVIEW_SCRIPT_FRAGMENT_PATHS,
+} from "./client/overview/runtime.mjs";
+import {
+  PROJECT_OVERVIEW_CSS,
+  PROJECT_OVERVIEW_CSS_FRAGMENT_PATHS,
+} from "./client/overview/styles.mjs";
+import {
+  PROJECTS_PAGE_ACTIONS_FRAGMENT_PATHS,
+  PROJECTS_PAGE_ACTIONS_SCRIPT,
+} from "./client/page/actions.mjs";
+import {
+  PROJECTS_PAGE_DATA_FRAGMENT_PATHS,
+  PROJECTS_PAGE_DATA_SCRIPT,
+} from "./client/page/data.mjs";
+import {
+  PROJECTS_PAGE_SHELL_FRAGMENT_PATHS,
+  PROJECTS_PAGE_SHELL_SCRIPT,
+} from "./client/page/shell.mjs";
+import {
+  PROJECTS_PAGE_VIEWS_FRAGMENT_PATHS,
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+} from "./client/page/views.mjs";
+import {
+  PROJECTS_CORE_CSS,
+  PROJECTS_CORE_CSS_FRAGMENT_PATHS,
+} from "./client/styles/core.mjs";
+import { assertLegacyBrowserSourceContract } from "../../../../apps/platform/testing/legacy-browser-source-contract.mjs";
+import { readPlatformCompositionSource } from "../../../../apps/platform/testing/platform-composition-source.mjs";
+
+const projectsClientUrl = new URL("./client/", import.meta.url);
+const projectsOverviewUrl = new URL("./client/overview/", import.meta.url);
+const projectsPageUrl = new URL("./client/page/", import.meta.url);
+const projectsStylesUrl = new URL("./client/styles/", import.meta.url);
+
+await Promise.all([
+  assertLegacyBrowserSourceContract({
+    label: "Projects domain runtime",
+    source: PROJECTS_DOMAIN_RUNTIME_SCRIPT,
+    expectedSha256: "cc142c2d47678c8fc5ea665f80cb69fc2ecafceb4d899c6370c074cb045ad423",
+    fragmentGroups: [{
+      baseUrl: projectsClientUrl,
+      paths: PROJECTS_DOMAIN_RUNTIME_FRAGMENT_PATHS,
+    }],
+    maxFragmentLines: 2_500,
+  }),
+  assertLegacyBrowserSourceContract({
+    label: "Projects overview runtime",
+    source: PROJECT_OVERVIEW_SCRIPT,
+    expectedSha256: "07e6050edf4c0385d4f1c8ca80a574724aff2b51ee72427c69f2c8c2cc6dba5a",
+    fragmentGroups: [{
+      baseUrl: projectsOverviewUrl,
+      paths: PROJECT_OVERVIEW_SCRIPT_FRAGMENT_PATHS,
+    }],
+    maxFragmentLines: 2_500,
+  }),
+  assertLegacyBrowserSourceContract({
+    label: "Projects overview styles",
+    source: PROJECT_OVERVIEW_CSS,
+    expectedSha256: "f12e1c3e420cc14e5c8bac29f978d7c9eb67aa806df2cf5a84f8ea31380bd480",
+    fragmentGroups: [{
+      baseUrl: projectsOverviewUrl,
+      paths: PROJECT_OVERVIEW_CSS_FRAGMENT_PATHS,
+    }],
+    maxFragmentLines: 2_500,
+  }),
+  assertLegacyBrowserSourceContract({
+    label: "Projects actions runtime",
+    source: PROJECTS_PAGE_ACTIONS_SCRIPT,
+    expectedSha256: "27ebb7a9fb83ecb8a84c7e24dcdb75f7a2c5e3a8a616d50c797d619eb0ed9527",
+    fragmentGroups: [{
+      baseUrl: projectsPageUrl,
+      paths: PROJECTS_PAGE_ACTIONS_FRAGMENT_PATHS,
+    }],
+    maxFragmentLines: 2_500,
+  }),
+  assertLegacyBrowserSourceContract({
+    label: "Projects data runtime",
+    source: PROJECTS_PAGE_DATA_SCRIPT,
+    expectedSha256: "b0195f31038cb744a40d79e1dd14b60db7159ac17580cb107c89fe028c386321",
+    fragmentGroups: [{
+      baseUrl: projectsPageUrl,
+      paths: PROJECTS_PAGE_DATA_FRAGMENT_PATHS,
+    }],
+    maxFragmentLines: 2_500,
+  }),
+  assertLegacyBrowserSourceContract({
+    label: "Projects shell runtime",
+    source: PROJECTS_PAGE_SHELL_SCRIPT,
+    expectedSha256: "39f04c7f3df004a810ed1770400f03c3db860d9ab3b356c61cceb8db4481e917",
+    fragmentGroups: [{
+      baseUrl: projectsPageUrl,
+      paths: PROJECTS_PAGE_SHELL_FRAGMENT_PATHS,
+    }],
+    maxFragmentLines: 2_500,
+  }),
+  assertLegacyBrowserSourceContract({
+    label: "Projects views runtime",
+    source: PROJECTS_PAGE_VIEWS_SCRIPT,
+    expectedSha256: "0d730264ce1d6581b0ca0565100163ab561847041c9dbebf1fdf0af626b74c9f",
+    fragmentGroups: [{
+      baseUrl: projectsPageUrl,
+      paths: PROJECTS_PAGE_VIEWS_FRAGMENT_PATHS,
+    }],
+    maxFragmentLines: 2_500,
+  }),
+  assertLegacyBrowserSourceContract({
+    label: "Projects core styles",
+    source: PROJECTS_CORE_CSS,
+    expectedSha256: "cee8e9ea367ebbd84a1368fd132929a0ed026740e1faf9302ba8c5a6283c5ccd",
+    fragmentGroups: [{
+      baseUrl: projectsStylesUrl,
+      paths: PROJECTS_CORE_CSS_FRAGMENT_PATHS,
+    }],
+    maxFragmentLines: 2_500,
+  }),
+]);
 
 assert.match(PROJECTS_DOMAIN_FOUNDATION_SCRIPT, /PLAYGROUND_TASK_BOARD_UNSCHEDULED_ID/);
 assert.match(PROJECTS_DOMAIN_RUNTIME_SCRIPT, /normalizePlaygroundProjectRecord/);
@@ -22,19 +142,19 @@ assert.match(PROJECTS_STYLES, /playground-project-overview/);
 assert.match(PROJECTS_STYLE_FRAGMENTS.core, /playground-tasks-page/);
 assert.match(PROJECTS_STYLE_FRAGMENTS.connectorBrowser, /playground-tasks-connector-browser-portal/);
 
-const demoServerSource = await fs.readFile(new URL("../../../../examples/demo-server.mjs", import.meta.url), "utf8");
-assert.match(demoServerSource, /from "\.\.\/src\/platform-services\/create-mode\/projects\/index\.mjs"/);
-assert.doesNotMatch(demoServerSource, /function PlaygroundTasksPage/);
-assert.doesNotMatch(demoServerSource, /async function proxyProjectResourceIndexGet/);
-assert.doesNotMatch(demoServerSource, /async function proxyTaskStartThread/);
-assert.doesNotMatch(demoServerSource, /async function fetchAiosTaskApi/);
-assert.doesNotMatch(demoServerSource, /async function proxyUpstreamTaskJsonRequest/);
-assert.doesNotMatch(demoServerSource, /PLAYGROUND_TASK_BACKLOG_THREAD_PREFIX/);
-assert.doesNotMatch(demoServerSource, /function normalizePlaygroundProjectRecord/);
-assert.doesNotMatch(demoServerSource, /function buildPlaygroundProjectLinkedFilePathIndex/);
-assert.doesNotMatch(demoServerSource, /function createPlaygroundProjectTeamRolePermissionSet/);
-assert.doesNotMatch(demoServerSource, /^\s*\.playground-tasks-page \{/m);
-assert.doesNotMatch(demoServerSource, /^\s*\.playground-tasks-connector-browser-portal\.tb-runner-chat \{/m);
+const platformEntrySource = await readPlatformCompositionSource();
+assert.match(platformEntrySource, /from "\.\.\/\.\.\/\.\.\/src\/platform-services\/create-mode\/projects\/index\.mjs"/);
+assert.doesNotMatch(platformEntrySource, /function PlaygroundTasksPage/);
+assert.doesNotMatch(platformEntrySource, /async function proxyProjectResourceIndexGet/);
+assert.doesNotMatch(platformEntrySource, /async function proxyTaskStartThread/);
+assert.doesNotMatch(platformEntrySource, /async function fetchAiosTaskApi/);
+assert.doesNotMatch(platformEntrySource, /async function proxyUpstreamTaskJsonRequest/);
+assert.doesNotMatch(platformEntrySource, /PLAYGROUND_TASK_BACKLOG_THREAD_PREFIX/);
+assert.doesNotMatch(platformEntrySource, /function normalizePlaygroundProjectRecord/);
+assert.doesNotMatch(platformEntrySource, /function buildPlaygroundProjectLinkedFilePathIndex/);
+assert.doesNotMatch(platformEntrySource, /function createPlaygroundProjectTeamRolePermissionSet/);
+assert.doesNotMatch(platformEntrySource, /^\s*\.playground-tasks-page \{/m);
+assert.doesNotMatch(platformEntrySource, /^\s*\.playground-tasks-connector-browser-portal\.tb-runner-chat \{/m);
 
 const calls = [];
 const record = (adapter) => (...args) => {

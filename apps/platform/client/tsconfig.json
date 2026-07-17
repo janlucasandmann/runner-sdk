@@ -1,0 +1,13 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "outDir": "../../../dist/platform-client-types",
+    "rootDir": "../../..",
+    "types": ["vite/client"]
+  },
+  "include": [
+    "src/**/*",
+    "../../../src/**/*"
+  ]
+}

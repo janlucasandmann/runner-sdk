@@ -16,12 +16,18 @@ export function createApiKeysService(adapters = {}) {
         return true;
       }
 
-      if (url.pathname === "/api/aios/user/api-keys" && (req.method === "GET" || req.method === "POST")) {
+      if (
+        (url.pathname === "/api/aios/user/api-keys"
+          || url.pathname === "/api/real/api-keys")
+        && (req.method === "GET" || req.method === "POST")
+      ) {
         void adapters.proxyAiosJsonRequest(req, res, "/api/user/api-keys", req.method);
         return true;
       }
 
-      const mutationMatch = url.pathname.match(/^\/api\/aios\/user\/api-keys\/([^/]+)\/(revoke|reveal)$/);
+      const mutationMatch = url.pathname.match(
+        /^\/api\/(?:aios\/user\/|real\/)api-keys\/([^/]+)\/(revoke|reveal)$/,
+      );
       if (!mutationMatch) {
         return false;
       }

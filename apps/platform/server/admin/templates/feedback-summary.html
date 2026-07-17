@@ -1,0 +1,245 @@
+<!doctype html>
+  <html lang="en">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Feedback Summary</title>
+      <style>
+        * { box-sizing: border-box; }
+        body {
+          margin: 0;
+          min-height: 100vh;
+          background: #050505;
+          color: rgba(255,255,255,.92);
+          font-family: Inter, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+        }
+        main {
+          width: min(960px, calc(100vw - 32px));
+          margin: 0 auto;
+          padding: 32px 0 56px;
+        }
+        h1 {
+          margin: 0 0 18px;
+          font-size: 24px;
+          line-height: 1.15;
+          font-weight: 600;
+        }
+        .toolbar {
+          display: flex;
+          gap: 10px;
+          margin-bottom: 18px;
+        }
+        button {
+          height: 38px;
+          border-radius: 999px;
+          font: inherit;
+          font-size: 13px;
+        }
+        button {
+          border: 0;
+          background: white;
+          color: black;
+          padding: 0 16px;
+          cursor: pointer;
+        }
+        button.secondary {
+          border: 1px solid rgba(255,255,255,.12);
+          background: rgba(255,255,255,.06);
+          color: white;
+        }
+        button[hidden] { display: none; }
+        button:disabled { opacity: .55; cursor: default; }
+        .cards {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 10px;
+          margin-bottom: 18px;
+        }
+        .card, section {
+          border: 1px solid rgba(255,255,255,.1);
+          border-radius: 14px;
+          background: rgba(255,255,255,.045);
+        }
+        .card {
+          padding: 14px;
+        }
+        .label {
+          color: rgba(255,255,255,.52);
+          font-size: 12px;
+        }
+        .value {
+          margin-top: 8px;
+          font-size: 28px;
+          font-weight: 600;
+        }
+        section {
+          overflow: hidden;
+          margin-top: 12px;
+        }
+        .section-title {
+          padding: 14px 16px;
+          border-bottom: 1px solid rgba(255,255,255,.08);
+          font-size: 14px;
+          font-weight: 600;
+        }
+        .row {
+          display: grid;
+          grid-template-columns: 120px 1fr 150px;
+          gap: 12px;
+          padding: 12px 16px;
+          border-bottom: 1px solid rgba(255,255,255,.06);
+          font-size: 13px;
+          line-height: 1.35;
+        }
+        .row:last-child { border-bottom: 0; }
+        .muted { color: rgba(255,255,255,.5); }
+        .pill {
+          width: max-content;
+          color: rgba(255,255,255,.88);
+          text-transform: capitalize;
+        }
+        .message {
+          min-width: 0;
+          white-space: pre-wrap;
+          word-break: break-word;
+        }
+        .status {
+          margin: 8px 0 16px;
+          color: rgba(255,255,255,.6);
+          font-size: 13px;
+        }
+        .error { color: #ffb4b4; }
+        @media (max-width: 720px) {
+          .toolbar { flex-direction: column; }
+          .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+          .row { grid-template-columns: 1fr; }
+        }
+      </style>
+    </head>
+    <body>
+      <main>
+        <h1>Feedback Summary</h1>
+        <div class="toolbar">
+          <button id="refresh" type="button">Refresh</button>
+          <button id="login" class="secondary" type="button" hidden>Open login</button>
+        </div>
+        <div id="status" class="status">Checking session...</div>
+        <div class="cards">
+          <div class="card"><div class="label">Ratings</div><div id="ratings-total" class="value">0</div></div>
+          <div class="card"><div class="label">Thumbs up</div><div id="up-count" class="value">0</div></div>
+          <div class="card"><div class="label">Thumbs down</div><div id="down-count" class="value">0</div></div>
+          <div class="card"><div class="label">Reports</div><div id="reports-total" class="value">0</div></div>
+        </div>
+        <section>
+          <div class="section-title">Latest reports</div>
+          <div id="reports"></div>
+        </section>
+        <section>
+          <div class="section-title">Latest ratings</div>
+          <div id="ratings"></div>
+        </section>
+      </main>
+      <script>
+        const refreshButton = document.getElementById("refresh");
+        const loginButton = document.getElementById("login");
+        const statusEl = document.getElementById("status");
+        const AIOS_ORIGIN = __PLATFORM_AIOS_ORIGIN_JSON__;
+        const ALLOWED_EMAIL = __PLATFORM_ALLOWED_EMAIL_JSON__;
+  
+        function buildLoginUrl() {
+          const loginUrl = new URL("/login", AIOS_ORIGIN);
+          loginUrl.searchParams.set("redirect", window.location.href);
+          return loginUrl.toString();
+        }
+  
+        function openLogin() {
+          window.location.assign(buildLoginUrl());
+        }
+  
+        function setText(id, value) {
+          document.getElementById(id).textContent = String(value ?? 0);
+        }
+  
+        function formatDate(value) {
+          if (!value) return "";
+          try {
+            return new Intl.DateTimeFormat(undefined, { dateStyle: "short", timeStyle: "short" }).format(new Date(value));
+          } catch {
+            return value;
+          }
+        }
+  
+        function renderRows(container, rows, render) {
+          container.innerHTML = "";
+          if (!rows.length) {
+            const empty = document.createElement("div");
+            empty.className = "row muted";
+            empty.textContent = "No entries yet.";
+            container.appendChild(empty);
+            return;
+          }
+          for (const row of rows) {
+            container.appendChild(render(row));
+          }
+        }
+  
+        function row(cells) {
+          const el = document.createElement("div");
+          el.className = "row";
+          for (const cell of cells) {
+            const child = document.createElement("div");
+            child.className = cell.className || "";
+            child.textContent = cell.text || "";
+            el.appendChild(child);
+          }
+          return el;
+        }
+  
+        async function loadFeedback() {
+          refreshButton.disabled = true;
+          loginButton.hidden = true;
+          statusEl.textContent = "Loading feedback...";
+          statusEl.className = "status";
+          try {
+            const response = await fetch("/api/real/admin/feedback-summary?limit=100", {
+              cache: "no-store",
+              credentials: "include",
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (response.status === 401 || response.status === 403) {
+              window.location.replace(payload.loginUrl || buildLoginUrl());
+              return;
+            }
+            if (!response.ok) {
+              throw new Error(payload.message || payload.error || "Failed to load feedback.");
+            }
+            const summary = payload.summary || {};
+            setText("ratings-total", summary.ratingsTotal || 0);
+            setText("up-count", summary.upCount || 0);
+            setText("down-count", summary.downCount || 0);
+            setText("reports-total", summary.reportsTotal || 0);
+            renderRows(document.getElementById("reports"), payload.reports || [], (report) => row([
+              { text: String(report.reportType || "").replace("_", " "), className: "pill" },
+              { text: report.message || "", className: "message" },
+              { text: [report.threadId, formatDate(report.createdAt)].filter(Boolean).join("\\n"), className: "muted" },
+            ]));
+            renderRows(document.getElementById("ratings"), payload.ratings || [], (rating) => row([
+              { text: rating.rating || "", className: "pill" },
+              { text: rating.threadTitle || rating.threadId || "", className: "message" },
+              { text: [rating.threadId, formatDate(rating.updatedAt)].filter(Boolean).join("\\n"), className: "muted" },
+            ]));
+            statusEl.textContent = "Loaded for " + (payload.viewer?.email || ALLOWED_EMAIL) + (payload.generatedAt ? " at " + formatDate(payload.generatedAt) : ".");
+          } catch (error) {
+            statusEl.textContent = error instanceof Error ? error.message : String(error);
+            statusEl.className = "status error";
+          } finally {
+            refreshButton.disabled = false;
+          }
+        }
+  
+        refreshButton.addEventListener("click", loadFeedback);
+        loginButton.addEventListener("click", openLogin);
+        void loadFeedback();
+      </script>
+    </body>
+  </html>

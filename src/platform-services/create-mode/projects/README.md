@@ -2,7 +2,7 @@
 
 `src/platform-services/create-mode/projects` is the ownership boundary for the platform
 Projects experience.
-`demo-server.mjs` composes the service, but does not own its domain behavior.
+`apps/platform/server/index.mjs` composes the service, but does not own its domain behavior.
 
 ## Structure
 
@@ -30,7 +30,7 @@ Projects experience.
 
 ## Host boundary
 
-`demo-server.mjs` is now a composition root. It may mount the Projects page,
+`apps/platform/server/index.mjs` is now a composition root. It may mount the Projects page,
 pass callbacks to it, and provide generic authentication, transport, binary
 file, and JSON response adapters. Project domain behavior, project HTTP route
 matching, task execution semantics, and project-owned UI implementations belong

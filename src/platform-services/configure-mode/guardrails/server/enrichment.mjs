@@ -245,7 +245,7 @@ export function createGuardrailsThreadEnricher(adapters) {
         },
       };
     } catch (error) {
-      warn("[demo-server] Failed to enrich thread payload with agent guardrails", error);
+      warn("[platform-gateway] Failed to enrich thread payload with agent guardrails", error);
       return payload;
     }
   };

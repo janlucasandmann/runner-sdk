@@ -1,7 +1,8 @@
 import fs from "node:fs/promises";
+import { readPlatformCompositionSource } from "../apps/platform/testing/platform-composition-source.mjs";
 
 const packageJson = JSON.parse(await fs.readFile(new URL("../package.json", import.meta.url), "utf8"));
-const demoServerSource = await fs.readFile(new URL("../examples/demo-server.mjs", import.meta.url), "utf8");
+const demoServerSource = await readPlatformCompositionSource();
 const calendarRuntimeSource = await fs.readFile(
   new URL("../src/platform-services/create-mode/calendar/client/domain/runtime.mjs", import.meta.url),
   "utf8"

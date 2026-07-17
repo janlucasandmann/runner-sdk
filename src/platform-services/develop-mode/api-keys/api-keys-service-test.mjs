@@ -10,12 +10,21 @@ import {
   API_KEYS_STYLE_FRAGMENTS,
   createApiKeysService,
 } from "./index.mjs";
+import { readPlatformCompositionSource } from "../../../../apps/platform/testing/platform-composition-source.mjs";
 
 assert.deepEqual(Object.keys(API_KEYS_STYLE_FRAGMENTS), ["table", "sharedComponents", "page"]);
 assert.match(API_KEYS_STYLE_FRAGMENTS.table, /\.playground-settings-api-keys-table/);
 assert.match(API_KEYS_STYLE_FRAGMENTS.sharedComponents, /\.playground-settings-api-key-modal/);
 assert.match(API_KEYS_STYLE_FRAGMENTS.page, /\.resource-overview-page\.is-develop-api-keys/);
 assert.equal(Object.values(API_KEYS_STYLE_FRAGMENTS).join(""), API_KEYS_PAGE_CSS);
+assert.equal(
+  await fs.readFile(
+    new URL("./client/styles/api-keys.css", import.meta.url),
+    "utf8",
+  ),
+  API_KEYS_PAGE_CSS,
+  "The typed API Keys stylesheet must remain byte-identical to the compatibility style export.",
+);
 
 assert.deepEqual(Object.keys(API_KEYS_DOMAIN_SCRIPT_FRAGMENTS), ["scopePresets", "helpers"]);
 assert.match(API_KEYS_DOMAIN_SCRIPT_FRAGMENTS.scopePresets, /SETTINGS_API_KEY_SCOPE_PRESETS/);
@@ -100,22 +109,19 @@ assert.doesNotThrow(() => new Function(`
   }
 `));
 
-const demoServerSource = await fs.readFile(
-  new URL("../../../../examples/demo-server.mjs", import.meta.url),
-  "utf8",
-);
-assert.match(demoServerSource, /develop-mode\/api-keys\/index\.mjs/);
-assert.match(demoServerSource, /const apiKeysService = createApiKeysService/);
-assert.match(demoServerSource, /apiKeysService\.handleRequest\(req, res, url\)/);
-assert.match(demoServerSource, /\$\{API_KEYS_DOMAIN_SCRIPT_FRAGMENTS\.scopePresets\}/);
-assert.match(demoServerSource, /\$\{API_KEYS_RUNTIME_SCRIPT_FRAGMENTS\.loading\}/);
-assert.match(demoServerSource, /\$\{API_KEYS_PAGE_SCRIPT_FRAGMENTS\.management\}/);
-assert.match(demoServerSource, /DevelopApiKeysOverviewPage/);
-assert.doesNotMatch(demoServerSource, /const SETTINGS_API_KEY_SCOPE_PRESETS =/);
-assert.doesNotMatch(demoServerSource, /const loadSettingsApiKeys = useCallback/);
-assert.doesNotMatch(demoServerSource, /function openDevelopApiKeysPage\(/);
-assert.doesNotMatch(demoServerSource, /function renderApiKeysManagementPanel\(/);
-assert.doesNotMatch(demoServerSource, /url\.pathname === "\/api\/aios\/user\/api-keys"/);
+const platformEntrySource = await readPlatformCompositionSource();
+assert.match(platformEntrySource, /develop-mode\/api-keys\/index\.mjs/);
+assert.match(platformEntrySource, /apiKeysService:\s*createApiKeysService\(/);
+assert.match(platformEntrySource, /apiKeysService\.handleRequest\(req, res, url\)/);
+assert.match(platformEntrySource, /\$\{API_KEYS_DOMAIN_SCRIPT_FRAGMENTS\.scopePresets\}/);
+assert.match(platformEntrySource, /\$\{API_KEYS_RUNTIME_SCRIPT_FRAGMENTS\.loading\}/);
+assert.match(platformEntrySource, /\$\{API_KEYS_PAGE_SCRIPT_FRAGMENTS\.management\}/);
+assert.match(platformEntrySource, /DevelopApiKeysOverviewPage/);
+assert.doesNotMatch(platformEntrySource, /const SETTINGS_API_KEY_SCOPE_PRESETS =/);
+assert.doesNotMatch(platformEntrySource, /const loadSettingsApiKeys = useCallback/);
+assert.doesNotMatch(platformEntrySource, /function openDevelopApiKeysPage\(/);
+assert.doesNotMatch(platformEntrySource, /function renderApiKeysManagementPanel\(/);
+assert.doesNotMatch(platformEntrySource, /url\.pathname === "\/api\/aios\/user\/api-keys"/);
 
 const proxyCalls = [];
 const service = createApiKeysService({
@@ -127,6 +133,10 @@ const cases = [
   ["POST", "/api/aios/user/api-keys", "/api/user/api-keys", "POST"],
   ["POST", "/api/aios/user/api-keys/key_123/revoke", "/api/user/api-keys/key_123/revoke", "POST"],
   ["GET", "/api/aios/user/api-keys/key_123/reveal", "/api/user/api-keys/key_123/reveal", "GET"],
+  ["GET", "/api/real/api-keys", "/api/user/api-keys", "GET"],
+  ["POST", "/api/real/api-keys", "/api/user/api-keys", "POST"],
+  ["POST", "/api/real/api-keys/key_123/revoke", "/api/user/api-keys/key_123/revoke", "POST"],
+  ["GET", "/api/real/api-keys/key_123/reveal", "/api/user/api-keys/key_123/reveal", "GET"],
 ];
 for (const [method, path, upstreamPath, upstreamMethod] of cases) {
   const handled = service.handleRequest({ method }, {}, new URL("http://localhost" + path));

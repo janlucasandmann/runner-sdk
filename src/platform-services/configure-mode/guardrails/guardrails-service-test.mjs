@@ -21,6 +21,7 @@ import {
   extractProxyAgentGuardrailPayload,
   normalizeProxyGuardrailSetIds,
 } from "./server/enrichment.mjs";
+import { readPlatformCompositionSource } from "../../../../apps/platform/testing/platform-composition-source.mjs";
 
 assert.match(GUARDRAILS_CATALOG_SCRIPT, /PLAYGROUND_DEFAULT_GUARDRAIL_SETS/);
 assert.match(GUARDRAILS_DOMAIN_RUNTIME_SCRIPT, /function normalizePlaygroundGuardrailSet/);
@@ -59,23 +60,20 @@ assert.equal(GUARDRAILS_PAGE_CSS, GUARDRAILS_STYLE_FRAGMENTS.page);
   GUARDRAILS_PAGE_RUNTIME_SCRIPT,
 ].forEach((script) => assert.doesNotThrow(() => new Function(script)));
 
-const demoServerSource = await fs.readFile(
-  new URL("../../../../examples/demo-server.mjs", import.meta.url),
-  "utf8",
-);
-assert.match(demoServerSource, /from "\.\.\/src\/platform-services\/configure-mode\/guardrails\/index\.mjs"/);
-assert.match(demoServerSource, /guardrailsService\.handleRequest\(req, res, url\)/);
-assert.match(demoServerSource, /guardrailsService\.enrichThreadPayload/);
-assert.match(demoServerSource, /\$\{GUARDRAILS_PAGE_RUNTIME_SCRIPT\}/);
-assert.match(demoServerSource, /\$\{GUARDRAILS_DOMAIN_FRAGMENTS\.runtime\}/);
-assert.match(demoServerSource, /\$\{GUARDRAILS_AGENT_SCRIPT_FRAGMENTS\.page\}/);
-assert.doesNotMatch(demoServerSource, /function renderGuardrailsPage\(/);
-assert.doesNotMatch(demoServerSource, /function openGuardrailsPage\(/);
-assert.doesNotMatch(demoServerSource, /function normalizePlaygroundGuardrailSet\(/);
-assert.doesNotMatch(demoServerSource, /function normalizeProxyGuardrailSetIds\(/);
-assert.doesNotMatch(demoServerSource, /const guardrailsProxyMatch/);
-assert.doesNotMatch(demoServerSource, /const agentGuardrailsMatch/);
-assert.doesNotMatch(demoServerSource, /^\s*\.playground-guardrails-page\s*\{/m);
+const platformEntrySource = await readPlatformCompositionSource();
+assert.match(platformEntrySource, /from "\.\.\/\.\.\/\.\.\/src\/platform-services\/configure-mode\/guardrails\/index\.mjs"/);
+assert.match(platformEntrySource, /guardrailsService\.handleRequest\(req, res, url\)/);
+assert.match(platformEntrySource, /guardrailsService\.enrichThreadPayload/);
+assert.match(platformEntrySource, /\$\{GUARDRAILS_PAGE_RUNTIME_SCRIPT\}/);
+assert.match(platformEntrySource, /\$\{GUARDRAILS_DOMAIN_FRAGMENTS\.runtime\}/);
+assert.match(platformEntrySource, /\$\{GUARDRAILS_AGENT_SCRIPT_FRAGMENTS\.page\}/);
+assert.doesNotMatch(platformEntrySource, /function renderGuardrailsPage\(/);
+assert.doesNotMatch(platformEntrySource, /function openGuardrailsPage\(/);
+assert.doesNotMatch(platformEntrySource, /function normalizePlaygroundGuardrailSet\(/);
+assert.doesNotMatch(platformEntrySource, /function normalizeProxyGuardrailSetIds\(/);
+assert.doesNotMatch(platformEntrySource, /const guardrailsProxyMatch/);
+assert.doesNotMatch(platformEntrySource, /const agentGuardrailsMatch/);
+assert.doesNotMatch(platformEntrySource, /^\s*\.playground-guardrails-page\s*\{/m);
 
 const calls = [];
 const agentRecord = {

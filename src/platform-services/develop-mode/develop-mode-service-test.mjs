@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { readPlatformCompositionSource } from "../../../apps/platform/testing/platform-composition-source.mjs";
 
 const modeRoot = path.dirname(fileURLToPath(import.meta.url));
 const packageRoot = path.resolve(modeRoot, "../../..");
@@ -36,10 +37,10 @@ await assert.rejects(
   "The legacy generic resources ownership bucket must stay removed.",
 );
 
-const demoServerSource = await fs.readFile(path.join(packageRoot, "examples/demo-server.mjs"), "utf8");
-assert.match(demoServerSource, /DevelopResourceOverviewRoute/);
-assert.match(demoServerSource, /DevelopVoiceAgentsOverviewPage/);
-assert.match(demoServerSource, /DevelopApiKeysOverviewPage/);
-assert.doesNotMatch(demoServerSource, /DevelopResourceOverviewPage/);
+const platformEntrySource = await readPlatformCompositionSource();
+assert.match(platformEntrySource, /DevelopResourceOverviewRoute/);
+assert.match(platformEntrySource, /DevelopVoiceAgentsOverviewPage/);
+assert.match(platformEntrySource, /DevelopApiKeysOverviewPage/);
+assert.doesNotMatch(platformEntrySource, /DevelopResourceOverviewPage/);
 
 console.log(`Develop mode service boundaries passed (${serviceNames.length} services checked).`);

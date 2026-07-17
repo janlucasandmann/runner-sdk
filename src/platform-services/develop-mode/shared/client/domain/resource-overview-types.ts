@@ -108,6 +108,7 @@ export interface DevelopResourceOverviewServicePageProps {
   analyticsError?: string;
   controlsPortalId?: string;
   loading?: boolean;
+  error?: ReactNode;
   mutating?: boolean;
   headerActions?: ReactNode;
   onOpen: (row: DevelopResourceOverviewRow) => void;

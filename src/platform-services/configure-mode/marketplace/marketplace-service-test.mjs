@@ -12,6 +12,7 @@ import {
   createMarketplaceDomainScriptFragments,
   createMarketplaceService,
 } from "./index.mjs";
+import { readPlatformCompositionSource } from "../../../../apps/platform/testing/platform-composition-source.mjs";
 
 assert.equal(MARKETPLACE_TEMPLATE_CATALOG.length, 12);
 assert.equal(MARKETPLACE_TEMPLATE_TYPES.length, 7);
@@ -82,25 +83,22 @@ assert.doesNotThrow(() => new Function(`
   }
 `));
 
-const demoServerSource = await fs.readFile(
-  new URL("../../../../examples/demo-server.mjs", import.meta.url),
-  "utf8",
-);
+const platformEntrySource = await readPlatformCompositionSource();
 
-assert.match(demoServerSource, /from "\.\.\/src\/platform-services\/configure-mode\/marketplace\/index\.mjs"/);
-assert.match(demoServerSource, /const MARKETPLACE_DOMAIN_SCRIPT_FRAGMENTS = createMarketplaceDomainScriptFragments\(/);
-assert.match(demoServerSource, /const marketplaceService = createMarketplaceService\(/);
-assert.match(demoServerSource, /marketplaceService\.handleRequest\(req, res, url\)/);
-assert.match(demoServerSource, /\$\{MARKETPLACE_PAGE_CSS\}/);
-assert.match(demoServerSource, /\$\{MARKETPLACE_PAGE_SCRIPT\}/);
-assert.match(demoServerSource, /\$\{MARKETPLACE_DOMAIN_SCRIPT_FRAGMENTS\.catalog\}/);
-assert.match(demoServerSource, /\$\{MARKETPLACE_APP_SCRIPT_FRAGMENTS\.pageView\}/);
-assert.match(demoServerSource, /configureInfrastructureEntries:[^\n]*MARKETPLACE_APP_SCRIPT_FRAGMENTS\.sidebarEntry/);
-assert.doesNotMatch(demoServerSource, /demo-resource-templates(?:-page)?\.mjs/);
-assert.doesNotMatch(demoServerSource, /function openResourceTemplatesPage\(/);
-assert.doesNotMatch(demoServerSource, /function renderResourceTemplatesPage\(/);
-assert.doesNotMatch(demoServerSource, /function renderResourceTemplatesPageNav\(/);
-assert.doesNotMatch(demoServerSource, /const PLAYGROUND_RESOURCE_TEMPLATE_DATA = \[/);
+assert.match(platformEntrySource, /from "\.\.\/\.\.\/\.\.\/src\/platform-services\/configure-mode\/marketplace\/index\.mjs"/);
+assert.match(platformEntrySource, /const MARKETPLACE_DOMAIN_SCRIPT_FRAGMENTS = createMarketplaceDomainScriptFragments\(/);
+assert.match(platformEntrySource, /marketplaceService:\s*createMarketplaceService\(/);
+assert.match(platformEntrySource, /marketplaceService\.handleRequest\(req, res, url\)/);
+assert.match(platformEntrySource, /\$\{MARKETPLACE_PAGE_CSS\}/);
+assert.match(platformEntrySource, /\$\{MARKETPLACE_PAGE_SCRIPT\}/);
+assert.match(platformEntrySource, /\$\{MARKETPLACE_DOMAIN_SCRIPT_FRAGMENTS\.catalog\}/);
+assert.match(platformEntrySource, /\$\{MARKETPLACE_APP_SCRIPT_FRAGMENTS\.pageView\}/);
+assert.match(platformEntrySource, /configureInfrastructureEntries:[^\n]*MARKETPLACE_APP_SCRIPT_FRAGMENTS\.sidebarEntry/);
+assert.doesNotMatch(platformEntrySource, /demo-resource-templates(?:-page)?\.mjs/);
+assert.doesNotMatch(platformEntrySource, /function openResourceTemplatesPage\(/);
+assert.doesNotMatch(platformEntrySource, /function renderResourceTemplatesPage\(/);
+assert.doesNotMatch(platformEntrySource, /function renderResourceTemplatesPageNav\(/);
+assert.doesNotMatch(platformEntrySource, /const PLAYGROUND_RESOURCE_TEMPLATE_DATA = \[/);
 
 const sentResponses = [];
 const marketplaceService = createMarketplaceService({

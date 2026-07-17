@@ -6,4 +6,4 @@ Use `PlatformPrimaryButton` and `PlatformSecondaryButton` when the action hierar
 
 Available sizes are `compact`, `small` (default), `medium`, and `large`. Native button props, refs, custom width/min-width, full-width layout, disabled state, and active state are supported.
 
-Import `@computer-agents/runner-web-sdk/platform-ui/components/ui/button/styles.css` once in applications that consume the button package directly. RunnerChat and the platform demo bundle the stylesheet automatically.
+Import `@computer-agents/platform/platform-ui/components/ui/button/styles.css` once in applications that consume the button package directly. RunnerChat and the platform application bundle the stylesheet automatically.

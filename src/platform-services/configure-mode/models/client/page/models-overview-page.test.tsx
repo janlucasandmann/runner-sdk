@@ -4,7 +4,12 @@ import { cleanup, render, screen, waitFor, within } from "@testing-library/react
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { PlatformDataTableColumn } from "../../../../../platform-ui/components/composite/data-table/index.js";
-import { ModelsOverviewPage, type ModelsOverviewRow } from "./models-overview-page.js";
+import {
+  getModelContextLabelVariant,
+  getModelSpeedLabelVariant,
+  ModelsOverviewPage,
+  type ModelsOverviewRow,
+} from "./models-overview-page.js";
 
 afterEach(cleanup);
 
@@ -13,6 +18,8 @@ const rows: ModelsOverviewRow[] = [
     id: "model-1",
     label: "Model One",
     provider: "Provider One",
+    contextWindow: "262k",
+    speed: "97.7 t/s",
     details: {
       categoryLabel: "Agent model",
       description: "A model for agent execution.",
@@ -40,9 +47,42 @@ const columns: PlatformDataTableColumn<ModelsOverviewRow>[] = [
     accessor: (row) => row.provider,
     sortable: true,
   },
+  {
+    id: "context",
+    header: "Context",
+    accessor: (row) => row.contextWindow,
+    sortable: true,
+  },
+  {
+    id: "speed",
+    header: "Speed in TPS",
+    accessor: (row) => row.speed,
+    sortable: true,
+  },
 ];
 
 describe("ModelsOverviewPage", () => {
+  it("maps context capacities to the shared label variants", () => {
+    expect(getModelContextLabelVariant(undefined)).toBe("gray");
+    expect(getModelContextLabelVariant("Custom")).toBe("gray");
+    expect(getModelContextLabelVariant("299k")).toBe("yellow");
+    expect(getModelContextLabelVariant("300k")).toBe("blue");
+    expect(getModelContextLabelVariant("999,999")).toBe("blue");
+    expect(getModelContextLabelVariant("1M")).toBe("green");
+  });
+
+  it("maps model speeds to the shared label variants", () => {
+    expect(getModelSpeedLabelVariant(undefined)).toBe("gray");
+    expect(getModelSpeedLabelVariant("—")).toBe("gray");
+    expect(getModelSpeedLabelVariant("59.9 t/s")).toBe("yellow");
+    expect(getModelSpeedLabelVariant("60 t/s")).toBe("blue");
+    expect(getModelSpeedLabelVariant("119.9 TPS")).toBe("blue");
+    expect(getModelSpeedLabelVariant("120 TPS")).toBe("green");
+    expect(getModelSpeedLabelVariant("Slow")).toBe("yellow");
+    expect(getModelSpeedLabelVariant("Fast")).toBe("blue");
+    expect(getModelSpeedLabelVariant("Very Fast")).toBe("green");
+  });
+
   it("uses the canonical overview shell with featured cards instead of analytics", async () => {
     const user = userEvent.setup();
     const onSearchChange = vi.fn();
@@ -86,6 +126,8 @@ describe("ModelsOverviewPage", () => {
     expect(screen.getByText("Model skill settings")).not.toBeNull();
     expect(screen.getByRole("table", { name: "Models" })).not.toBeNull();
     expect(screen.queryByRole("heading", { name: "All Models" })).toBeNull();
+    expect(screen.getByText("262k").getAttribute("data-platform-label-variant")).toBe("yellow");
+    expect(screen.getByText("97.7 t/s").getAttribute("data-platform-label-variant")).toBe("blue");
 
     const selectAll = screen.getByRole("checkbox", { name: "Select all visible rows" });
     const selectModel = screen.getByRole("checkbox", { name: "Select Model One" });

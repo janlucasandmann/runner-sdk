@@ -57,17 +57,10 @@
 }
 
 .platform-button.is-secondary {
-  padding-right: calc(var(--platform-button-padding-inline) - 1px) !important;
-  padding-left: calc(var(--platform-button-padding-inline) - 1px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
   background: transparent !important;
   color: rgba(255, 255, 255, 0.9) !important;
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
-}
-
-.platform-button.is-secondary:has(svg) {
-  padding-left: 9px !important;
 }
 
 .platform-button.is-secondary:hover:not(:disabled),

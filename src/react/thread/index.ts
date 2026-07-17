@@ -6,7 +6,13 @@ export { RunnerThreadRunActivityCard, isRunnerThreadRunActive } from "./run-acti
 export { RunnerThreadActivityGroupTree } from "./activity-group-tree.js";
 export { RunnerThreadActivityActionList } from "./activity-action-list.js";
 export { RunnerThreadPermissionRequestCard } from "./permission-request-card.js";
+export {
+  getRunnerThreadPromotedPermissionId,
+  RunnerThreadPendingPermissionsDock,
+  RunnerThreadPermissionHistoryMarker,
+} from "./pending-permissions-dock.js";
 export { RunnerThreadActiveRunsDock } from "./active-runs-dock.js";
+export { RunnerThreadLiveSupervisionDock } from "./live-supervision-dock.js";
 export { RunnerThreadParticipantAvatar } from "./participant-avatar.js";
 export { useRunnerThreadProjection } from "./use-runner-thread-projection.js";
 
@@ -18,7 +24,12 @@ export type { RunnerThreadRunActivityCardProps } from "./run-activity-card.js";
 export type { RunnerThreadActivityGroupTreeProps, RunnerThreadActivityFilter } from "./activity-group-tree.js";
 export type { RunnerThreadActivityActionListProps, RunnerThreadActionRenderer } from "./activity-action-list.js";
 export type { RunnerThreadPermissionRequestCardProps } from "./permission-request-card.js";
+export type {
+  RunnerThreadPendingPermissionsDockProps,
+  RunnerThreadPermissionHistoryMarkerProps,
+} from "./pending-permissions-dock.js";
 export type { RunnerThreadActiveRunsDockProps } from "./active-runs-dock.js";
+export type { RunnerThreadLiveSupervisionDockProps } from "./live-supervision-dock.js";
 export type { RunnerThreadParticipantAvatarProps } from "./participant-avatar.js";
 export type { UseRunnerThreadProjectionOptions, UseRunnerThreadProjectionResult } from "./use-runner-thread-projection.js";
 export type { RunnerThreadDetailLoadState, RunnerThreadDetailLoadStatus } from "./run-detail-hydration.js";

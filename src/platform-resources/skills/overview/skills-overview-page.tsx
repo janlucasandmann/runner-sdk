@@ -1,4 +1,4 @@
-import { ChevronRight, Plus, SquarePen, Trash2 } from "lucide-react";
+import { ChevronRight, Plus, Sparkles, SquarePen, Trash2 } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import type { PlatformDataTableAction, PlatformDataTableColumn } from "../../../platform-ui/components/composite/data-table/index.js";
 import {
@@ -92,7 +92,9 @@ export function SkillsOverviewPage({
       width: "minmax(220px, 1.35fr)",
       cell: ({ row }) => (
         <div className="resource-overview-identity">
-          <span className="resource-overview-identity__visual is-skill" aria-hidden="true">{row.icon}</span>
+          <span className="resource-overview-identity__visual is-skill" aria-hidden="true">
+            {row.icon || <Sparkles width={16} height={16} strokeWidth={1.8} />}
+          </span>
           <span className="resource-overview-identity__title">{row.name}</span>
         </div>
       ),

@@ -1,0 +1,11 @@
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - "build"
+      - "-t"
+      - "${_IMAGE_URI}"
+      - "-f"
+      - "repos/runner-web-sdk/deployment/platform/Dockerfile"
+      - "."
+images:
+  - "${_IMAGE_URI}"

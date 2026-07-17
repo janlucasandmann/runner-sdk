@@ -10,6 +10,7 @@ import {
   createModelsAppScriptFragments,
   createModelsService,
 } from "./index.mjs";
+import { readPlatformCompositionSource } from "../../../../apps/platform/testing/platform-composition-source.mjs";
 
 assert.match(MODELS_PAGE_CSS, /\.playground-models-page/);
 assert.match(MODELS_PAGE_CSS, /\.playground-models-overview-table-section/);
@@ -18,6 +19,14 @@ assert.match(MODELS_PAGE_CSS, /\.resource-overview-page\.is-models-overview/);
 assert.match(MODELS_PAGE_CSS, /\.models-overview-details-modal__facts/);
 assert.match(MODELS_PAGE_CSS, /\.models-overview-details-modal__documentation/);
 assert.equal(Object.values(MODELS_STYLE_FRAGMENTS).join(""), MODELS_PAGE_CSS);
+assert.equal(
+  await fs.readFile(
+    new URL("./client/styles/models.css", import.meta.url),
+    "utf8",
+  ),
+  MODELS_PAGE_CSS,
+  "The typed Models stylesheet must remain byte-identical to the compatibility style export.",
+);
 
 assert.match(MODELS_PAGE_SCRIPT, /function normalizePlaygroundManagedModelsTab/);
 assert.match(MODELS_PAGE_SCRIPT, /function loadPlaygroundManagedAgentModelCatalog/);
@@ -85,33 +94,33 @@ assert.match(MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLifecycle, /loadAgentModelCata
 assert.match(MODELS_AGENT_SCRIPT_FRAGMENTS.overviewAction, /onOpenModelsPage\(\)/);
 assert.match(MODELS_AGENT_SCRIPT_FRAGMENTS.hostProps, /onOpenModelsPage: \(\) => openModelsPage\(\)/);
 
-const demoServerSource = await fs.readFile(
-  new URL("../../../../examples/demo-server.mjs", import.meta.url),
-  "utf8",
-);
+const platformEntrySource = await readPlatformCompositionSource();
 
-assert.match(demoServerSource, /from "\.\.\/src\/platform-services\/configure-mode\/models\/index\.mjs"/);
-assert.match(demoServerSource, /const MODELS_APP_SCRIPT_FRAGMENTS = createModelsAppScriptFragments\(/);
-assert.match(demoServerSource, /const modelsService = createModelsService\(/);
-assert.match(demoServerSource, /import \{ ModelsOverviewPage \} from "\/dist\/platform-services\/configure-mode\/models\/client\/page\/models-overview-page\.js"/);
-assert.match(demoServerSource, /modelsService\.handleRequest\(req, res, url\)/);
-assert.match(demoServerSource, /\$\{MODELS_PAGE_CSS\}/);
-assert.match(demoServerSource, /\$\{MODELS_PAGE_SCRIPT\}/);
-assert.match(demoServerSource, /\$\{MODELS_APP_SCRIPT_FRAGMENTS\.pageView\}/);
-assert.match(demoServerSource, /const \[agentCreationPageModelId, setAgentCreationPageModelId\] = useState\(""\)/);
-assert.match(demoServerSource, /createAgentModelId: agentCreationPageModelId/);
-assert.match(demoServerSource, /draft: \{ model: normalizedModelId \}/);
-assert.doesNotMatch(demoServerSource, /demo-models-page\.mjs/);
-assert.doesNotMatch(demoServerSource, /function openModelsPage\(/);
-assert.doesNotMatch(demoServerSource, /function renderModelsPage\(/);
-assert.doesNotMatch(demoServerSource, /function renderModelsPageNav\(/);
-assert.doesNotMatch(demoServerSource, /url\.pathname === "\/api\/real\/agents\/models"/);
+assert.match(platformEntrySource, /from "\.\.\/\.\.\/\.\.\/src\/platform-services\/configure-mode\/models\/index\.mjs"/);
+assert.match(platformEntrySource, /const MODELS_APP_SCRIPT_FRAGMENTS = createModelsAppScriptFragments\(/);
+assert.match(platformEntrySource, /modelsService:\s*createModelsService\(/);
+assert.match(
+  platformEntrySource,
+  /import \{[^}]*ModelsOverviewPage[^}]*\} from "\/dist\/platform-app\/routing\/platform-lazy-pages\.js"/,
+);
+assert.match(platformEntrySource, /modelsService\.handleRequest\(req, res, url\)/);
+assert.match(platformEntrySource, /\$\{MODELS_PAGE_CSS\}/);
+assert.match(platformEntrySource, /\$\{MODELS_PAGE_SCRIPT\}/);
+assert.match(platformEntrySource, /\$\{MODELS_APP_SCRIPT_FRAGMENTS\.pageView\}/);
+assert.match(platformEntrySource, /const \[agentCreationPageModelId, setAgentCreationPageModelId\] = useState\(""\)/);
+assert.match(platformEntrySource, /createAgentModelId: agentCreationPageModelId/);
+assert.match(platformEntrySource, /draft: \{ model: normalizedModelId \}/);
+assert.doesNotMatch(platformEntrySource, /demo-models-page\.mjs/);
+assert.doesNotMatch(platformEntrySource, /function openModelsPage\(/);
+assert.doesNotMatch(platformEntrySource, /function renderModelsPage\(/);
+assert.doesNotMatch(platformEntrySource, /function renderModelsPageNav\(/);
+assert.doesNotMatch(platformEntrySource, /url\.pathname === "\/api\/real\/agents\/models"/);
 
 const modelsOverviewPageSource = await fs.readFile(
   new URL("./client/page/models-overview-page.tsx", import.meta.url),
   "utf8",
 );
-assert.match(modelsOverviewPageSource, /ResourceOverviewPage<ModelsOverviewRow>/);
+assert.match(modelsOverviewPageSource, /ResourceOverviewPage<TRow>/);
 assert.match(modelsOverviewPageSource, /<PlatformDetailTabBar/);
 assert.match(modelsOverviewPageSource, /variant="minimal"/);
 assert.match(modelsOverviewPageSource, /heroContent=\{featuredContent\}/);

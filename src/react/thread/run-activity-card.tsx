@@ -164,6 +164,9 @@ export function RunnerThreadRunActivityCard({
     return Number.isFinite(stableTimestamp) ? stableTimestamp : 0;
   });
   const active = isRunnerThreadRunActive(run);
+  const pageResidentQueue = run.status === "queued"
+    && run.metadata?.pageResidentQueue === true
+    && run.metadata?.coordinatorDurable !== true;
 
   useEffect(() => {
     if (!expanded || !onLoadDetails || detailLoadState?.status !== "idle") return;
@@ -248,7 +251,9 @@ export function RunnerThreadRunActivityCard({
     [projection, run.id],
   );
   const headerLine = active
-    ? formatRunnerThreadActiveWorkingLabel(observerWorkingLabel)
+    ? pageResidentQueue
+      ? "Queued in this page"
+      : formatRunnerThreadActiveWorkingLabel(observerWorkingLabel)
     : `Worked for ${duration}`;
 
   useEffect(() => {
@@ -309,7 +314,7 @@ export function RunnerThreadRunActivityCard({
         aria-expanded={expanded}
       >
         <span className="tb-thread-run-headline" aria-live={active ? "polite" : "off"}>
-          {active ? (
+          {active && !pageResidentQueue ? (
             <DotLoader
               dotCount={9}
               dotSize={2}

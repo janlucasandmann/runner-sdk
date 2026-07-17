@@ -11,6 +11,6 @@ This directory is the Configure-mode ownership boundary for Guardrails.
 - `client/styles/` owns the Guardrails page, version comparison, and Agents-integration styles.
 - `server/` owns Guardrail Set and Agent Guardrail proxy routes plus enforcement-time thread-payload enrichment.
 
-`examples/demo-server.mjs` remains the composition root. It supplies transport, auth, organization, Runner Chat, Agents, and shared versioning adapters through the public `index.mjs`; Guardrails owns the behavior mounted through those adapters.
+`apps/platform/server/index.mjs` remains the composition root. It supplies transport, auth, organization, Runner Chat, Agents, and shared versioning adapters through the public `index.mjs`; Guardrails owns the behavior mounted through those adapters.
 
 The client fragment exports preserve the legacy browser evaluation order while keeping individual modules focused and reviewable.

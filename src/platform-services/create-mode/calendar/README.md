@@ -1,7 +1,7 @@
 # Calendar service
 
 `src/platform-services/create-mode/calendar` is the ownership boundary for the platform
-Calendar experience. `demo-server.mjs` composes the service, and the Projects
+Calendar experience. `apps/platform/server/index.mjs` composes the service, and the Projects
 surface embeds its compiled UI fragments, but neither owns Calendar domain
 behavior or schedule HTTP routing.
 
@@ -25,7 +25,7 @@ behavior or schedule HTTP routing.
 
 ## Host boundary
 
-The demo server may provide authentication and upstream transport adapters,
+The platform server may provide authentication and upstream transport adapters,
 mount Calendar in shared navigation, and pass Projects/tasks/Metronome data to
 Calendar projections. Projects may expose the host React component while the
 current UI is shared, but Calendar state, schedule editing, event projection,

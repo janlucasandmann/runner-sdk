@@ -5,6 +5,7 @@ import {
   createAppSidebarScriptFragments,
   createAppSidebarStyleFragments,
 } from "./index.mjs";
+import { readPlatformCompositionSource } from "../../../apps/platform/testing/platform-composition-source.mjs";
 
 const fragments = createAppSidebarScriptFragments({
   metronomeSidebarEntryScript: "        function renderSidebarMetronomeRunEntry() {}\n",
@@ -96,14 +97,11 @@ assert.doesNotMatch(styles.foundation, /\.sidebar-rail-plan/);
 assert.doesNotMatch(styles.foundation, /\.sidebar-workspace-trigger/);
 assert.match(styles.foundation, /\.metronome-test/);
 
-const demoServerSource = await fs.readFile(
-  new URL("../../../examples/demo-server.mjs", import.meta.url),
-  "utf8",
-);
-assert.ok(demoServerSource.includes("createAppSidebarScriptFragments"));
-assert.ok(demoServerSource.includes("${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.sidebar}"));
-assert.ok(demoServerSource.includes("renderAppSidebar()"));
-assert.ok(!demoServerSource.includes("function renderExpandedSidebarContent()"));
-assert.doesNotMatch(demoServerSource, /className: "sidebar-workspace-row"/);
+const platformEntrySource = await readPlatformCompositionSource();
+assert.ok(platformEntrySource.includes("createAppSidebarScriptFragments"));
+assert.ok(platformEntrySource.includes("${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.sidebar}"));
+assert.ok(platformEntrySource.includes("renderAppSidebar()"));
+assert.ok(!platformEntrySource.includes("function renderExpandedSidebarContent()"));
+assert.doesNotMatch(platformEntrySource, /className: "sidebar-workspace-row"/);
 
 console.log("App Sidebar ownership, mode selector, styles, and browser syntax passed.");

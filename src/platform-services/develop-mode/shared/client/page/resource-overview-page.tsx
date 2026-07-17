@@ -27,6 +27,7 @@ export function DevelopResourceOverviewSurface({
   analyticsError = "",
   controlsPortalId,
   loading = false,
+  error,
   mutating = false,
   headerActions,
   onOpen,
@@ -170,6 +171,7 @@ export function DevelopResourceOverviewSurface({
         onRowFocus: onPrefetch,
         getRowAriaLabel: (row) => row.name,
         loading,
+        error,
         emptyState: `No ${definition.plural.toLowerCase()} available.`,
         noResultsState: `No matching ${definition.plural.toLowerCase()} found.`,
       }}

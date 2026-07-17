@@ -10,6 +10,7 @@ import {
   createTeamsPageScriptFragments,
   createTeamsService,
 } from "./index.mjs";
+import { readPlatformCompositionSource } from "../../../../apps/platform/testing/platform-composition-source.mjs";
 
 assert.equal(Object.keys(TEAMS_STYLE_FRAGMENTS).length, 3);
 assert.match(TEAMS_STYLE_FRAGMENTS.foundation, /\.playground-team-page/);
@@ -96,27 +97,24 @@ assert.match(pageFragments.resourcesView, /const renderResourcesTab/);
 assert.match(pageFragments.rolesAndView, /const renderRolesTab/);
 assert.doesNotThrow(() => new Function(Object.values(pageFragments).join("")));
 
-const demoServerSource = await fs.readFile(
-  new URL("../../../../examples/demo-server.mjs", import.meta.url),
-  "utf8",
-);
-assert.match(demoServerSource, /from "\.\.\/src\/platform-services\/configure-mode\/teams\/index\.mjs"/);
-assert.match(demoServerSource, /const TEAMS_PAGE_SCRIPT_FRAGMENTS = createTeamsPageScriptFragments\(/);
-assert.match(demoServerSource, /const teamsService = createTeamsService\(/);
-assert.match(demoServerSource, /teamsService\.handleRequest\(req, res, url\)/);
-assert.match(demoServerSource, /\$\{TEAMS_STYLE_FRAGMENTS\.foundation\}/);
-assert.match(demoServerSource, /\$\{TEAMS_DOMAIN_SCRIPT_FRAGMENTS\.memberIdentity\}/);
-assert.match(demoServerSource, /\$\{TEAMS_RUNTIME_SCRIPT_FRAGMENTS\.loading\}/);
-assert.match(demoServerSource, /\$\{TEAMS_PAGE_SCRIPT_FRAGMENTS\.setup\}/);
-assert.match(demoServerSource, /configurePrimaryEntries:[^\n]*TEAMS_APP_SCRIPT_FRAGMENTS\.sidebarEntry/);
-assert.doesNotMatch(demoServerSource, /^\s*\.playground-team-page \{/m);
-assert.doesNotMatch(demoServerSource, /function getTeamPageApiErrorMessage\(/);
-assert.doesNotMatch(demoServerSource, /async function loadTeamPageData\(/);
-assert.doesNotMatch(demoServerSource, /function openTeamPage\(/);
-assert.doesNotMatch(demoServerSource, /function renderTeamPage\(/);
-assert.doesNotMatch(demoServerSource, /function renderTeamPageNav\(/);
-assert.doesNotMatch(demoServerSource, /function normalizeTeamMemberProfileLookupString\(/);
-assert.doesNotMatch(demoServerSource, /const teamsProxyMatch =/);
+const platformEntrySource = await readPlatformCompositionSource();
+assert.match(platformEntrySource, /from "\.\.\/\.\.\/\.\.\/src\/platform-services\/configure-mode\/teams\/index\.mjs"/);
+assert.match(platformEntrySource, /const TEAMS_PAGE_SCRIPT_FRAGMENTS = createTeamsPageScriptFragments\(/);
+assert.match(platformEntrySource, /teamsService:\s*createTeamsService\(/);
+assert.match(platformEntrySource, /teamsService\.handleRequest\(req, res, url\)/);
+assert.match(platformEntrySource, /\$\{TEAMS_STYLE_FRAGMENTS\.foundation\}/);
+assert.match(platformEntrySource, /\$\{TEAMS_DOMAIN_SCRIPT_FRAGMENTS\.memberIdentity\}/);
+assert.match(platformEntrySource, /\$\{TEAMS_RUNTIME_SCRIPT_FRAGMENTS\.loading\}/);
+assert.match(platformEntrySource, /\$\{TEAMS_PAGE_SCRIPT_FRAGMENTS\.setup\}/);
+assert.match(platformEntrySource, /configurePrimaryEntries:[^\n]*TEAMS_APP_SCRIPT_FRAGMENTS\.sidebarEntry/);
+assert.doesNotMatch(platformEntrySource, /^\s*\.playground-team-page \{/m);
+assert.doesNotMatch(platformEntrySource, /function getTeamPageApiErrorMessage\(/);
+assert.doesNotMatch(platformEntrySource, /async function loadTeamPageData\(/);
+assert.doesNotMatch(platformEntrySource, /function openTeamPage\(/);
+assert.doesNotMatch(platformEntrySource, /function renderTeamPage\(/);
+assert.doesNotMatch(platformEntrySource, /function renderTeamPageNav\(/);
+assert.doesNotMatch(platformEntrySource, /function normalizeTeamMemberProfileLookupString\(/);
+assert.doesNotMatch(platformEntrySource, /const teamsProxyMatch =/);
 
 function createService(overrides = {}) {
   return createTeamsService({

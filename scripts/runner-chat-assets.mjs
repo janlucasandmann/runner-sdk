@@ -1,12 +1,11 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadRunnerChatCssBundle } from "./runner-chat-style-sources.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const packageRoot = path.resolve(__dirname, "..");
-const cssPath = path.join(packageRoot, "src", "react", "runner-chat.css");
-const threadCssPath = path.join(packageRoot, "src", "react", "thread", "runner-thread.css");
 const generatedTsPath = path.join(packageRoot, "src", "react", "runner-chat-css.ts");
 const distCssPath = path.join(packageRoot, "dist", "react", "runner-chat.css");
 const platformDataTableCssPath = path.join(packageRoot, "src", "platform-ui", "components", "composite", "data-table", "data-table.css");
@@ -47,7 +46,6 @@ const agentDetailCssPath = path.join(packageRoot, "src", "platform-resources", "
 const distPlatformPagesCssPath = path.join(packageRoot, "dist", "platform-ui", "pages", "styles.css");
 const assetsSourceDir = path.join(packageRoot, "src", "react", "assets");
 const distAssetsDir = path.join(packageRoot, "dist", "react", "assets");
-const bundledDiffCssPath = path.join(packageRoot, "node_modules", "@git-diff-view", "react", "styles", "diff-view-pure.css");
 
 function serializeCssAsTs(cssText) {
   const escaped = cssText.replace(/`/g, "\\`").replace(/\$\{/g, "\\${");
@@ -55,19 +53,7 @@ function serializeCssAsTs(cssText) {
 }
 
 async function loadBundledCss() {
-  const [baseCssText, threadCssText, diffCssText, buttonCssText, labelCssText, searchCssText, selectorCssText, popupCssText, switchCssText, modalCssText] = await Promise.all([
-    fs.readFile(cssPath, "utf8"),
-    fs.readFile(threadCssPath, "utf8"),
-    fs.readFile(bundledDiffCssPath, "utf8"),
-    fs.readFile(platformButtonCssPath, "utf8"),
-    fs.readFile(platformLabelCssPath, "utf8"),
-    fs.readFile(platformSearchCssPath, "utf8"),
-    fs.readFile(platformSelectorCssPath, "utf8"),
-    fs.readFile(platformPopupCssPath, "utf8"),
-    fs.readFile(platformSwitchCssPath, "utf8"),
-    fs.readFile(platformModalCssPath, "utf8"),
-  ]);
-  return `${diffCssText}\n\n${popupCssText}\n\n${selectorCssText}\n\n${searchCssText}\n\n${switchCssText}\n\n${modalCssText}\n\n${baseCssText}\n\n${threadCssText}\n\n${buttonCssText}\n\n${labelCssText}`;
+  return loadRunnerChatCssBundle(packageRoot);
 }
 
 async function prepare() {

@@ -8,6 +8,7 @@ import {
   DEVELOP_HOME_STYLE_FRAGMENTS,
   createDevelopHomePageScript,
 } from "./index.mjs";
+import { readPlatformCompositionSource } from "../../../../apps/platform/testing/platform-composition-source.mjs";
 
 assert.deepEqual(Object.keys(DEVELOP_HOME_STYLE_FRAGMENTS), ["foundation", "content"]);
 assert.match(DEVELOP_HOME_STYLE_FRAGMENTS.foundation, /^\s*\.playground-develop-home \{/);
@@ -16,6 +17,14 @@ assert.match(DEVELOP_HOME_STYLE_FRAGMENTS.content, /\.playground-develop-docs-qu
 assert.match(DEVELOP_HOME_STYLE_FRAGMENTS.content, /\.playground-develop-docs-concepts-grid/);
 assert.match(DEVELOP_HOME_STYLE_FRAGMENTS.content, /\.develop-home-overview__header-menu-surface/);
 assert.equal(Object.values(DEVELOP_HOME_STYLE_FRAGMENTS).join(""), DEVELOP_HOME_PAGE_CSS);
+assert.equal(
+  await fs.readFile(
+    new URL("./client/styles/develop-home.css", import.meta.url),
+    "utf8",
+  ),
+  DEVELOP_HOME_PAGE_CSS,
+  "The typed Develop Home stylesheet must remain byte-identical to the compatibility style export.",
+);
 
 assert.deepEqual(Object.keys(DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS), [
   "operationalMetrics",
@@ -107,24 +116,21 @@ assert.doesNotMatch(pageScript, /developHomeSection/);
 assert.doesNotMatch(pageScript, /__DEVELOP_HOME_/);
 assert.doesNotThrow(() => new Function(pageScript));
 
-const demoServerSource = await fs.readFile(
-  new URL("../../../../examples/demo-server.mjs", import.meta.url),
-  "utf8",
-);
-assert.match(demoServerSource, /develop-mode\/develop-home\/index\.mjs/);
-assert.match(demoServerSource, /DevelopHomeOverviewPage, DevelopResourceOverviewRoute/);
-assert.match(demoServerSource, /DevelopWebhooksOverviewPage/);
-assert.match(demoServerSource, /const DEVELOP_HOME_PAGE_SCRIPT = createDevelopHomePageScript/);
-assert.match(demoServerSource, /inferenceEntry: INFERENCE_APP_SCRIPT_FRAGMENTS\.configureHomeEntry/);
-assert.match(demoServerSource, /\$\{DEVELOP_HOME_STYLE_FRAGMENTS\.content\}/);
-assert.match(demoServerSource, /\$\{DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS\.operationalMetrics\}/);
-assert.match(demoServerSource, /\$\{DEVELOP_HOME_APP_SCRIPT_FRAGMENTS\.navigation\}/);
-assert.match(demoServerSource, /\$\{DEVELOP_HOME_PAGE_SCRIPT\}/);
-assert.doesNotMatch(demoServerSource, /^\s*\.playground-develop-home \{/m);
-assert.doesNotMatch(demoServerSource, /const loadDevelopServerOperationalMetrics = useCallback/);
-assert.doesNotMatch(demoServerSource, /function openDevelopHome\(/);
-assert.doesNotMatch(demoServerSource, /function renderDevelopHomePage\(/);
-assert.doesNotMatch(demoServerSource, /import \{ DevelopHomeOverviewPage \} from "\/dist\/platform-services\/develop-mode\/develop-home/);
+const platformEntrySource = await readPlatformCompositionSource();
+assert.match(platformEntrySource, /develop-mode\/develop-home\/index\.mjs/);
+assert.match(platformEntrySource, /DevelopHomeOverviewPage, DevelopResourceOverviewRoute/);
+assert.match(platformEntrySource, /DevelopWebhooksOverviewPage/);
+assert.match(platformEntrySource, /const DEVELOP_HOME_PAGE_SCRIPT = createDevelopHomePageScript/);
+assert.match(platformEntrySource, /inferenceEntry: INFERENCE_APP_SCRIPT_FRAGMENTS\.configureHomeEntry/);
+assert.match(platformEntrySource, /\$\{DEVELOP_HOME_STYLE_FRAGMENTS\.content\}/);
+assert.match(platformEntrySource, /\$\{DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS\.operationalMetrics\}/);
+assert.match(platformEntrySource, /\$\{DEVELOP_HOME_APP_SCRIPT_FRAGMENTS\.navigation\}/);
+assert.match(platformEntrySource, /\$\{DEVELOP_HOME_PAGE_SCRIPT\}/);
+assert.doesNotMatch(platformEntrySource, /^\s*\.playground-develop-home \{/m);
+assert.doesNotMatch(platformEntrySource, /const loadDevelopServerOperationalMetrics = useCallback/);
+assert.doesNotMatch(platformEntrySource, /function openDevelopHome\(/);
+assert.doesNotMatch(platformEntrySource, /function renderDevelopHomePage\(/);
+assert.doesNotMatch(platformEntrySource, /import \{ DevelopHomeOverviewPage \} from "\/dist\/platform-services\/develop-mode\/develop-home/);
 
 const developHomeOverviewSource = await fs.readFile(
   new URL("./client/page/develop-home-overview-page.tsx", import.meta.url),

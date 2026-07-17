@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { PlatformSwitchOption } from "../../ui/switch/index.js";
 
 export type PlatformAnalyticsChartType = "bar" | "line";
 export type PlatformAnalyticsValueKind = "count" | "currency" | "duration" | "percent" | "tokens";
@@ -40,10 +41,20 @@ export interface PlatformAnalyticsChartProps {
   chartType?: PlatformAnalyticsChartType;
 }
 
+export interface PlatformAnalyticsTimeframeControl {
+  value: string;
+  options: readonly PlatformSwitchOption[];
+  onValueChange: (value: string) => void;
+  ariaLabel?: string;
+  className?: string;
+  disabled?: boolean;
+}
+
 export interface PlatformAnalyticsSectionProps extends PlatformAnalyticsChartProps {
   className?: string;
   variant?: PlatformAnalyticsSectionVariant;
   title?: ReactNode;
+  timeframe?: PlatformAnalyticsTimeframeControl;
   headerActions?: ReactNode;
   chartContent?: ReactNode;
 }

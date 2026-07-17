@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import type {
   RunnerThreadControlAction,
@@ -11,7 +11,6 @@ import type {
 } from "../../thread/types.js";
 import { mountRunnerChatStyles } from "../runner-chat-styles.js";
 import type { RunnerThreadActionRenderer } from "./activity-action-list.js";
-import { RunnerThreadActiveRunsDock } from "./active-runs-dock.js";
 import { RunnerThreadTimeline } from "./thread-timeline.js";
 import type { RunnerThreadDetailLoadState } from "./run-detail-hydration.js";
 
@@ -58,19 +57,13 @@ export function RunnerThread({
   onCorrectRoute,
   onOpenChanges,
 }: RunnerThreadProps) {
-  const runElements = useRef(new Map<string, HTMLElement>());
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     mountRunnerChatStyles();
   }, []);
 
-  const runs = useMemo(() => Object.values(projection.runsById), [projection.runsById]);
   const isEmpty = projection.timeline.length === 0;
-
-  const selectRun = (run: RunnerThreadRun) => {
-    runElements.current.get(run.id)?.scrollIntoView({ behavior: "smooth", block: "center" });
-  };
 
   const loadEarlierWithoutJump = async () => {
     if (!onLoadEarlier) return false;
@@ -87,13 +80,6 @@ export function RunnerThread({
 
   return (
     <section className={`tb-runner-chat tb-runner-thread ${className || ""}`.trim()} aria-label="Thread">
-      <RunnerThreadActiveRunsDock
-        runs={runs}
-        projection={projection}
-        onSelectRun={selectRun}
-        onCancelRun={onControlRun ? (run) => onControlRun(run, "cancel") : undefined}
-      />
-
       <div ref={scrollContainerRef} className="tb-runner-thread-scroll">
         <div className="tb-runner-thread-content">
           {loading && isEmpty ? <div className="tb-runner-thread-state">Loading thread…</div> : null}
@@ -115,10 +101,6 @@ export function RunnerThread({
               onPermissionDecision={onPermissionDecision}
               onCorrectRoute={onCorrectRoute}
               onOpenChanges={onOpenChanges}
-              onRunElement={(runId, element) => {
-                if (element) runElements.current.set(runId, element);
-                else runElements.current.delete(runId);
-              }}
             />
           ) : null}
         </div>

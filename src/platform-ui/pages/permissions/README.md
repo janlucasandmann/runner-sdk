@@ -31,7 +31,7 @@ Every ring and access control uses the shared `PlatformSelector`, so labels, Luc
 import {
   PlatformPermissionsPage,
   type PlatformPermissionSet,
-} from "@computer-agents/runner-web-sdk/platform-ui/pages/permissions";
+} from "@computer-agents/platform/platform-ui/pages/permissions";
 
 <PlatformPermissionsPage
   permissionSet={permissionSet}
@@ -48,7 +48,7 @@ import {
 Load either the dedicated stylesheet or the combined page stylesheet:
 
 ```ts
-import "@computer-agents/runner-web-sdk/platform-ui/pages/permissions/styles.css";
+import "@computer-agents/platform/platform-ui/pages/permissions/styles.css";
 // or
-import "@computer-agents/runner-web-sdk/platform-ui/pages/styles.css";
+import "@computer-agents/platform/platform-ui/pages/styles.css";
 ```

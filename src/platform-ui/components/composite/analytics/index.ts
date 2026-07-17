@@ -9,5 +9,6 @@ export type {
   PlatformAnalyticsSectionProps,
   PlatformAnalyticsSectionVariant,
   PlatformAnalyticsSeries,
+  PlatformAnalyticsTimeframeControl,
   PlatformAnalyticsValueKind,
 } from "./platform-analytics-types.js";

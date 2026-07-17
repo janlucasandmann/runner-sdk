@@ -1,7 +1,7 @@
 # Files service
 
 `src/platform-services/create-mode/files` is the ownership boundary for the
-platform Files experience. `demo-server.mjs` composes the service, but no
+platform Files experience. `apps/platform/server/index.mjs` composes the service, but no
 longer owns its browser, preview/editor behavior, file-domain model, styles, or
 HTTP routing.
 
@@ -25,7 +25,7 @@ HTTP routing.
 
 ## Host boundary
 
-`demo-server.mjs` remains the composition root. It provides authentication and
+`apps/platform/server/index.mjs` remains the composition root. It provides authentication and
 upstream transport adapters, mounts Files in shared navigation, supplies
 environment and agent collections, and connects explicit integrations such as
 Projects, Teams, Threads, and the document preview host. File browsing,

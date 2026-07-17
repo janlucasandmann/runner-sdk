@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import fs from "node:fs/promises";
 
 import {
   METRONOME_APP_SCRIPT_FRAGMENTS,
@@ -12,6 +11,99 @@ import {
   METRONOME_STYLE_FRAGMENTS,
   createMetronomeService,
 } from "./index.mjs";
+import {
+  METRONOME_PAGE_CONTROLLER_FRAGMENT_PATHS,
+  METRONOME_PAGE_CONTROLLER_SCRIPT,
+} from "./client/page/controller.mjs";
+import {
+  METRONOME_PAGE_INSPECTOR_FRAGMENT_PATHS,
+  METRONOME_PAGE_INSPECTOR_SCRIPT,
+} from "./client/page/inspector.mjs";
+import {
+  METRONOME_TEMPLATES_FRAGMENT_PATHS,
+  METRONOME_TEMPLATES_RUNTIME_SCRIPT,
+} from "./client/runtime/templates-and-graph.mjs";
+import {
+  METRONOME_TRIGGERS_FRAGMENT_PATHS,
+  METRONOME_TRIGGERS_RUNTIME_SCRIPT,
+} from "./client/runtime/triggers-and-contracts.mjs";
+import {
+  METRONOME_WORKFLOW_DOMAIN_FRAGMENT_PATHS,
+  METRONOME_WORKFLOW_DOMAIN_RUNTIME_SCRIPT,
+} from "./client/runtime/workflow-domain.mjs";
+import {
+  METRONOME_INSPECTOR_CSS,
+  METRONOME_INSPECTOR_CSS_FRAGMENT_PATHS,
+} from "./client/styles/inspector.mjs";
+import { assertLegacyBrowserSourceContract } from "../../../../apps/platform/testing/legacy-browser-source-contract.mjs";
+import { readPlatformCompositionSource } from "../../../../apps/platform/testing/platform-composition-source.mjs";
+
+const metronomePageUrl = new URL("./client/page/", import.meta.url);
+const metronomeRuntimeUrl = new URL("./client/runtime/", import.meta.url);
+const metronomeStylesUrl = new URL("./client/styles/", import.meta.url);
+
+await Promise.all([
+  assertLegacyBrowserSourceContract({
+    label: "Metronome controller runtime",
+    source: METRONOME_PAGE_CONTROLLER_SCRIPT,
+    expectedSha256: "b020dd4a6af404ac67b9a2f9eddc997474e2493a60c95739f6e64af068ccb195",
+    fragmentGroups: [{
+      baseUrl: metronomePageUrl,
+      paths: METRONOME_PAGE_CONTROLLER_FRAGMENT_PATHS,
+    }],
+    maxFragmentLines: 1_600,
+  }),
+  assertLegacyBrowserSourceContract({
+    label: "Metronome inspector runtime",
+    source: METRONOME_PAGE_INSPECTOR_SCRIPT,
+    expectedSha256: "be96b4eee6f520515937c1b5d838165fdd8253a8beb6dd465352a3622ad8bb6e",
+    fragmentGroups: [{
+      baseUrl: metronomePageUrl,
+      paths: METRONOME_PAGE_INSPECTOR_FRAGMENT_PATHS,
+    }],
+    maxFragmentLines: 1_600,
+  }),
+  assertLegacyBrowserSourceContract({
+    label: "Metronome templates runtime",
+    source: METRONOME_TEMPLATES_RUNTIME_SCRIPT,
+    expectedSha256: "08a1199d5503a96db346e91e0701b0f1b9e38a38729d3de04432592c0c87d844",
+    fragmentGroups: [{
+      baseUrl: metronomeRuntimeUrl,
+      paths: METRONOME_TEMPLATES_FRAGMENT_PATHS,
+    }],
+    maxFragmentLines: 1_600,
+  }),
+  assertLegacyBrowserSourceContract({
+    label: "Metronome triggers runtime",
+    source: METRONOME_TRIGGERS_RUNTIME_SCRIPT,
+    expectedSha256: "464398ea2b588f20de89812e18405d9650b1f53bb312ea1b00d0bffe389b254e",
+    fragmentGroups: [{
+      baseUrl: metronomeRuntimeUrl,
+      paths: METRONOME_TRIGGERS_FRAGMENT_PATHS,
+    }],
+    maxFragmentLines: 1_600,
+  }),
+  assertLegacyBrowserSourceContract({
+    label: "Metronome workflow runtime",
+    source: METRONOME_WORKFLOW_DOMAIN_RUNTIME_SCRIPT,
+    expectedSha256: "ad45b1c090ac5313cd9da7beb4a0952720e22ea482f1a255a06d11e3917c7eb1",
+    fragmentGroups: [{
+      baseUrl: metronomeRuntimeUrl,
+      paths: METRONOME_WORKFLOW_DOMAIN_FRAGMENT_PATHS,
+    }],
+    maxFragmentLines: 1_600,
+  }),
+  assertLegacyBrowserSourceContract({
+    label: "Metronome inspector styles",
+    source: METRONOME_INSPECTOR_CSS,
+    expectedSha256: "ac161495bf4c7f566117d60b9478e55259a9389b8958f370e45e01173b7fa73f",
+    fragmentGroups: [{
+      baseUrl: metronomeStylesUrl,
+      paths: METRONOME_INSPECTOR_CSS_FRAGMENT_PATHS,
+    }],
+    maxFragmentLines: 1_600,
+  }),
+]);
 
 assert.match(METRONOME_DOMAIN_RUNTIME_SCRIPT, /function getMetronomeNodeIOContract/);
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /function PlaygroundMetronomePage/);
@@ -28,16 +120,16 @@ assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.sidebarEntry, /function renderSideba
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.teamSharing, /function buildTeamPageMetronomeWorkflowShareMetadata/);
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.topNavActions, /function renderMetronomeTopNavActions/);
 
-const demoServerSource = await fs.readFile(new URL("../../../../examples/demo-server.mjs", import.meta.url), "utf8");
-assert.match(demoServerSource, /from "\.\.\/src\/platform-services\/create-mode\/metronome\/index\.mjs"/);
-assert.match(demoServerSource, /metronomeService\.handleRequest\(req, res, url\)/);
-assert.doesNotMatch(demoServerSource, /function PlaygroundMetronomePage/);
-assert.doesNotMatch(demoServerSource, /function getThreadMetronomeMetadata/);
-assert.doesNotMatch(demoServerSource, /function openMetronomePage/);
-assert.doesNotMatch(demoServerSource, /function renderMetronomeRunTraceThreadSurface/);
-assert.doesNotMatch(demoServerSource, /function renderSidebarMetronomeRunEntry/);
-assert.doesNotMatch(demoServerSource, /^\s*\.sidebar-metronome-run-group\s*\{/m);
-assert.doesNotMatch(demoServerSource, /pathname\.match\(\/\^\\\/api\\\/real\\\/metronomes/);
+const platformEntrySource = await readPlatformCompositionSource();
+assert.match(platformEntrySource, /from "\.\.\/\.\.\/\.\.\/src\/platform-services\/create-mode\/metronome\/index\.mjs"/);
+assert.match(platformEntrySource, /metronomeService\.handleRequest\(req, res, url\)/);
+assert.doesNotMatch(platformEntrySource, /function PlaygroundMetronomePage/);
+assert.doesNotMatch(platformEntrySource, /function getThreadMetronomeMetadata/);
+assert.doesNotMatch(platformEntrySource, /function openMetronomePage/);
+assert.doesNotMatch(platformEntrySource, /function renderMetronomeRunTraceThreadSurface/);
+assert.doesNotMatch(platformEntrySource, /function renderSidebarMetronomeRunEntry/);
+assert.doesNotMatch(platformEntrySource, /^\s*\.sidebar-metronome-run-group\s*\{/m);
+assert.doesNotMatch(platformEntrySource, /pathname\.match\(\/\^\\\/api\\\/real\\\/metronomes/);
 
 const calls = [];
 const metronomeService = createMetronomeService({

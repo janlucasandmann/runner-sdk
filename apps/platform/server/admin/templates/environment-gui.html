@@ -1,0 +1,153 @@
+<!doctype html>
+  <html lang="en">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Environment Desktop</title>
+      <style>
+        * { box-sizing: border-box; }
+        html, body {
+          margin: 0;
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+          background: #050607;
+          color: rgba(255, 255, 255, 0.92);
+          font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+        }
+        body {
+          position: relative;
+        }
+        #tb-environment-gui-root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: #000;
+        }
+        #tb-environment-gui-status {
+          display: none;
+        }
+        canvas {
+          display: block;
+        }
+      </style>
+    </head>
+    <body>
+      <div id="tb-environment-gui-root"></div>
+      <div id="tb-environment-gui-status" data-tone="idle">Connecting…</div>
+      <script type="module">
+        import RFB from "/vendor/novnc-next/lib/index.esm.js";
+  
+        const params = new URLSearchParams(window.location.search);
+        const websocketUrl = params.get("wsUrl") || "";
+        const title = params.get("title") || "Desktop";
+        const desktopRoot = document.getElementById("tb-environment-gui-root");
+        const statusLabel = document.getElementById("tb-environment-gui-status");
+  
+        document.title = title;
+  
+        let rfb = null;
+        let reconnectTimer = 0;
+        let manualDisconnect = false;
+  
+        function setStatus(message, tone = "idle") {
+          if (!statusLabel) return;
+          statusLabel.textContent = message;
+          statusLabel.dataset.tone = tone;
+        }
+  
+        function clearReconnectTimer() {
+          if (reconnectTimer) {
+            window.clearTimeout(reconnectTimer);
+            reconnectTimer = 0;
+          }
+        }
+  
+        function teardownCurrentConnection() {
+          if (!rfb) return;
+          const current = rfb;
+          rfb = null;
+          try {
+            if (current && current._rfbConnectionState && current._rfbConnectionState !== "disconnected") {
+              current.disconnect();
+            }
+          } catch {}
+        }
+  
+        function scheduleReconnect() {
+          clearReconnectTimer();
+          reconnectTimer = window.setTimeout(() => {
+            reconnectTimer = 0;
+            connect();
+          }, 1200);
+        }
+  
+        function connect() {
+          if (!desktopRoot) return;
+          if (!websocketUrl) {
+            setStatus("Desktop connection is missing.", "error");
+            return;
+          }
+  
+          teardownCurrentConnection();
+          clearReconnectTimer();
+          setStatus("Connecting…", "connecting");
+          document.body.classList.remove("is-connected");
+  
+          const nextRfb = new RFB(desktopRoot, websocketUrl, { shared: true });
+          nextRfb.background = "transparent";
+          nextRfb.clipViewport = true;
+          nextRfb.scaleViewport = true;
+          nextRfb.qualityLevel = 6;
+          nextRfb.compressionLevel = 2;
+          nextRfb.focusOnClick = true;
+          nextRfb.showDotCursor = true;
+  
+          nextRfb.addEventListener("connect", () => {
+            document.body.classList.add("is-connected");
+            setStatus("Live desktop", "connected");
+            nextRfb.focus();
+          });
+  
+          nextRfb.addEventListener("disconnect", (event) => {
+            document.body.classList.remove("is-connected");
+            const clean = Boolean(event?.detail?.clean);
+            if (manualDisconnect) {
+              setStatus("Desktop closed.", "idle");
+              return;
+            }
+            if (clean) {
+              setStatus("Desktop session ended.", "idle");
+              return;
+            }
+            setStatus("Connection lost. Reconnecting…", "error");
+            scheduleReconnect();
+          });
+  
+          nextRfb.addEventListener("credentialsrequired", () => {
+            setStatus("Desktop authentication is required.", "error");
+          });
+  
+          nextRfb.addEventListener("securityfailure", () => {
+            setStatus("Desktop connection was rejected.", "error");
+          });
+  
+          rfb = nextRfb;
+        }
+  
+        desktopRoot?.addEventListener("pointerdown", () => {
+          if (rfb) {
+            rfb.focus();
+          }
+        });
+  
+        window.addEventListener("beforeunload", () => {
+          manualDisconnect = true;
+          clearReconnectTimer();
+          teardownCurrentConnection();
+        });
+  
+        connect();
+      </script>
+    </body>
+  </html>

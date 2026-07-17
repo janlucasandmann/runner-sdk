@@ -16,3 +16,4 @@ export type {
 } from "./agents-overview-analytics-client.js";
 export { AgentsOverviewPage } from "./agents-overview-page.js";
 export type { AgentOverviewRow, AgentsOverviewPageProps } from "./agents-overview-page.js";
+export { normalizeAgentOverviewRows } from "./agents-overview-model.js";

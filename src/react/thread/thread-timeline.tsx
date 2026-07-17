@@ -1,5 +1,5 @@
 import { Activity, ChevronDown, ChevronUp } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import type {
   RunnerThreadControlAction,
@@ -16,6 +16,11 @@ import type {
 import type { RunnerThreadActionRenderer } from "./activity-action-list.js";
 import { RunnerThreadMessageView } from "./thread-message.js";
 import { RunnerThreadPermissionRequestCard } from "./permission-request-card.js";
+import {
+  getRunnerThreadPromotedPermissionId,
+  RunnerThreadPermissionHistoryMarker,
+} from "./pending-permissions-dock.js";
+import { RunnerThreadLiveSupervisionDock } from "./live-supervision-dock.js";
 import { RunnerThreadRunActivityCard } from "./run-activity-card.js";
 import type { RunnerThreadDetailLoadState } from "./run-detail-hydration.js";
 
@@ -85,8 +90,6 @@ export function RunnerThreadTimeline({
     setWindowEndKey(null);
     setPendingEarlierAnchorKey(null);
   }, [projection.threadId]);
-  const renderedPermissionIds = useRef(new Set<string>());
-  renderedPermissionIds.current.clear();
   const activityByRunId = useMemo(() => {
     const result: Record<string, {
       groups: RunnerThreadActivityGroup[];
@@ -157,8 +160,31 @@ export function RunnerThreadTimeline({
     }
   };
 
+  const openPromotedPermission = (request: RunnerThreadPermissionRequest) => {
+    if (typeof document === "undefined") return;
+    const target = document.getElementById(getRunnerThreadPromotedPermissionId(request.id));
+    target?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    const focusTarget = target?.querySelector<HTMLElement>("button:not(:disabled)");
+    focusTarget?.focus({ preventScroll: true });
+  };
+
+  const selectLiveRun = (run: RunnerThreadRun) => {
+    if (typeof document === "undefined") return;
+    document.getElementById(`tb-thread-run-${run.id}`)
+      ?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+
   return (
     <div className="tb-thread-timeline">
+      <RunnerThreadLiveSupervisionDock
+        projection={projection}
+        onSelectRun={selectLiveRun}
+        onCancelRun={onControlRun
+          ? (run) => onControlRun(run, "cancel")
+          : undefined}
+        onPermissionDecision={onPermissionDecision}
+      />
+
       {(hiddenBefore > 0 || canLoadFromServer) ? (
         <button type="button" className="tb-thread-load-earlier" onClick={() => void showEarlier()} disabled={loadingEarlier}>
           <ChevronUp strokeWidth={1.7} /> {loadingEarlier ? "Loading earlier activity…" : "Load earlier activity"}
@@ -209,8 +235,15 @@ export function RunnerThreadTimeline({
         }
 
         if (item.kind === "permission") {
-          if (renderedPermissionIds.current.has(item.id)) return null;
-          renderedPermissionIds.current.add(item.id);
+          if (item.status === "pending") {
+            return (
+              <RunnerThreadPermissionHistoryMarker
+                key={`permission-history:${item.id}`}
+                request={item}
+                onOpen={openPromotedPermission}
+              />
+            );
+          }
           if (item.status !== "pending" && item.runId && projection.runsById[item.runId]) return null;
           return (
             <RunnerThreadPermissionRequestCard

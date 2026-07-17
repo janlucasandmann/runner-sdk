@@ -38,6 +38,6 @@ The component owns controlled or uncontrolled popup state, outside-click and Esc
 Import the component and its styles through:
 
 ```ts
-import { PlatformSelector } from "@computer-agents/runner-web-sdk/platform-ui/components/ui/selector";
-import "@computer-agents/runner-web-sdk/platform-ui/components/ui/selector/styles.css";
+import { PlatformSelector } from "@computer-agents/platform/platform-ui/components/ui/selector";
+import "@computer-agents/platform/platform-ui/components/ui/selector/styles.css";
 ```

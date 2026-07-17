@@ -10,6 +10,7 @@ import {
   createConfigureHomePageScriptFragments,
   createConfigureHomeService,
 } from "./index.mjs";
+import { readPlatformCompositionSource } from "../../../../apps/platform/testing/platform-composition-source.mjs";
 
 assert.deepEqual(Object.keys(CONFIGURE_HOME_STYLE_FRAGMENTS), [
   "foundation",
@@ -20,6 +21,14 @@ assert.match(CONFIGURE_HOME_STYLE_FRAGMENTS.foundation, /\.playground-configure-
 assert.match(CONFIGURE_HOME_STYLE_FRAGMENTS.overviewCards, /\.configure-home-overview__teaser/);
 assert.match(CONFIGURE_HOME_STYLE_FRAGMENTS.notificationPage, /\.configure-home-notification__identity/);
 assert.equal(Object.values(CONFIGURE_HOME_STYLE_FRAGMENTS).join(""), CONFIGURE_HOME_PAGE_CSS);
+assert.equal(
+  await fs.readFile(
+    new URL("./client/styles/configure-home.css", import.meta.url),
+    "utf8",
+  ),
+  CONFIGURE_HOME_PAGE_CSS,
+  "The typed Configure Home stylesheet must remain byte-identical to the compatibility style export.",
+);
 
 assert.match(CONFIGURE_HOME_DOMAIN_SCRIPT_FRAGMENTS.constants, /PLAYGROUND_NOTIFICATION_READ_STORAGE_PREFIX/);
 assert.match(CONFIGURE_HOME_DOMAIN_SCRIPT_FRAGMENTS.storage, /function readStoredNotificationIds/);
@@ -87,28 +96,28 @@ assert.doesNotMatch(pageFragments.home, /PlatformDataTable/);
 assert.match(pageFragments.home, new RegExp(JSON.stringify(pricingUrl).replace(/[.*+?^\${}()|[\]\\]/g, "\\$&")));
 assert.doesNotThrow(() => new Function(Object.values(pageFragments).join("")));
 
-const demoServerSource = await fs.readFile(
-  new URL("../../../../examples/demo-server.mjs", import.meta.url),
-  "utf8",
+const platformEntrySource = await readPlatformCompositionSource();
+assert.match(platformEntrySource, /from "\.\.\/\.\.\/\.\.\/src\/platform-services\/configure-mode\/configure-home\/index\.mjs"/);
+assert.match(platformEntrySource, /const CONFIGURE_HOME_PAGE_SCRIPT_FRAGMENTS = createConfigureHomePageScriptFragments\(/);
+assert.match(platformEntrySource, /configureHomeService:\s*createConfigureHomeService\(/);
+assert.match(
+  platformEntrySource,
+  /import \{[^}]*ConfigureHomeOverviewPage[^}]*\} from "\/dist\/platform-app\/routing\/platform-lazy-pages\.js"/,
 );
-assert.match(demoServerSource, /from "\.\.\/src\/platform-services\/configure-mode\/configure-home\/index\.mjs"/);
-assert.match(demoServerSource, /const CONFIGURE_HOME_PAGE_SCRIPT_FRAGMENTS = createConfigureHomePageScriptFragments\(/);
-assert.match(demoServerSource, /const configureHomeService = createConfigureHomeService\(/);
-assert.match(demoServerSource, /import \{ ConfigureHomeOverviewPage \} from "\/dist\/platform-services\/configure-mode\/configure-home\/client\/page\/configure-home-overview-page\.js"/);
-assert.match(demoServerSource, /configureHomeService\.handleRequest\(req, res, url\)/);
-assert.match(demoServerSource, /\$\{CONFIGURE_HOME_STYLE_FRAGMENTS\.foundation\}/);
-assert.match(demoServerSource, /\$\{CONFIGURE_HOME_DOMAIN_SCRIPT_FRAGMENTS\.storage\}/);
-assert.match(demoServerSource, /\$\{CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS\.notificationProjection\}/);
-assert.match(demoServerSource, /\$\{CONFIGURE_HOME_PAGE_SCRIPT_FRAGMENTS\.home\}/);
-assert.match(demoServerSource, /configurePrimaryEntries: CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS\.sidebarEntry/);
-assert.doesNotMatch(demoServerSource, /^\s*\.configure-home-overview__teaser \{/m);
-assert.doesNotMatch(demoServerSource, /function readStoredNotificationIds\(/);
-assert.doesNotMatch(demoServerSource, /const notificationItems = useMemo\(/);
-assert.doesNotMatch(demoServerSource, /function handleMarkAllNotificationsRead\(/);
-assert.doesNotMatch(demoServerSource, /function renderNotificationMenu\(/);
-assert.doesNotMatch(demoServerSource, /function renderConfigureHomePage\(/);
-assert.doesNotMatch(demoServerSource, /function renderConfigureHomeNav\(/);
-assert.doesNotMatch(demoServerSource, /url\.pathname === "\/api\/real\/notifications\/in-app"/);
+assert.match(platformEntrySource, /configureHomeService\.handleRequest\(req, res, url\)/);
+assert.match(platformEntrySource, /\$\{CONFIGURE_HOME_STYLE_FRAGMENTS\.foundation\}/);
+assert.match(platformEntrySource, /\$\{CONFIGURE_HOME_DOMAIN_SCRIPT_FRAGMENTS\.storage\}/);
+assert.match(platformEntrySource, /\$\{CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS\.notificationProjection\}/);
+assert.match(platformEntrySource, /\$\{CONFIGURE_HOME_PAGE_SCRIPT_FRAGMENTS\.home\}/);
+assert.match(platformEntrySource, /configurePrimaryEntries: CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS\.sidebarEntry/);
+assert.doesNotMatch(platformEntrySource, /^\s*\.configure-home-overview__teaser \{/m);
+assert.doesNotMatch(platformEntrySource, /function readStoredNotificationIds\(/);
+assert.doesNotMatch(platformEntrySource, /const notificationItems = useMemo\(/);
+assert.doesNotMatch(platformEntrySource, /function handleMarkAllNotificationsRead\(/);
+assert.doesNotMatch(platformEntrySource, /function renderNotificationMenu\(/);
+assert.doesNotMatch(platformEntrySource, /function renderConfigureHomePage\(/);
+assert.doesNotMatch(platformEntrySource, /function renderConfigureHomeNav\(/);
+assert.doesNotMatch(platformEntrySource, /url\.pathname === "\/api\/real\/notifications\/in-app"/);
 
 const proxyCalls = [];
 const configureHomeService = createConfigureHomeService({

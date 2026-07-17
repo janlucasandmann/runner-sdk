@@ -6,50 +6,20 @@
 }
 
 .platform-analytics.is-framed {
-  --platform-analytics-frame-border: linear-gradient(
-    -10deg,
-    rgba(200, 200, 200, 0.25),
-    rgba(255, 255, 255, 0.1),
-    rgba(255, 255, 255, 0.15),
-    rgba(255, 255, 255, 0.375)
-  );
   box-sizing: border-box;
   position: relative;
-  isolation: isolate;
   width: 100%;
   min-height: 438px;
   padding: 18px 18px 14px;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  border: 0;
+  border: 1px solid rgba(255, 255, 255, 0.075);
   border-radius: 15px;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.075);
   -webkit-backdrop-filter: blur(50px);
   backdrop-filter: blur(50px);
   color: rgba(255, 255, 255, 0.96);
-}
-
-.platform-analytics.is-framed::before {
-  content: "";
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  border-radius: inherit;
-  padding: 1px;
-  background: var(--platform-analytics-frame-border);
-  mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-  mask-clip: content-box, border-box;
-  mask-composite: exclude;
-  mask-origin: content-box, border-box;
-  mask-repeat: repeat, repeat;
-  mask-size: auto, auto;
-}
-
-.platform-analytics.is-framed > * {
-  position: relative;
-  z-index: 1;
 }
 
 .platform-analytics__header {

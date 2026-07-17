@@ -3,57 +3,40 @@ import { createPortal } from "react-dom";
 import {
   ArrowUp as LucideArrowUp,
   AudioLines as LucideAudioLines,
-  Bookmark as LucideBookmark,
   Bot as LucideBot,
   Brain as LucideBrain,
-  Braces as LucideBraces,
   Building2 as LucideBuilding2,
   Calendar as LucideCalendar,
   Check as LucideCheck,
   ChevronDown as LucideChevronDown,
-  ChevronLeft as LucideChevronLeft,
   CornerDownRight as LucideCornerDownRight,
-  Route as LucideRoute,
   Rocket as LucideRocket,
   Cloud as LucideCloud,
   Code as LucideCode,
   Copy as LucideCopy,
   Cpu as LucideCpu,
-  Database as LucideDatabase,
-  ChevronsUp as LucideChevronsUp,
   ChevronRight as LucideChevronRight,
   ChevronUp as LucideChevronUp,
-  Clock3 as LucideClock3,
   Ellipsis as LucideEllipsis,
-  Calculator as LucideCalculator,
-  Equal as LucideEqual,
   FileText as LucideFileText,
   GitBranch as LucideGitBranch,
   Globe as LucideGlobe,
   Images as LucideImages,
-  ImageIcon as LucideImageIcon,
   Layers as LucideLayers,
   ListTodo as LucideListTodo,
   Mail as LucideMail,
   MessageCircle as LucideMessageCircle,
-  MessageSquare as LucideMessageSquare,
   Maximize2 as LucideMaximize2,
   Minimize2 as LucideMinimize2,
   Monitor as LucideMonitor,
   LoaderCircle as LucideLoaderCircle,
-  Package as LucidePackage,
   Palette as LucidePalette,
   Pencil as LucidePencil,
-  PenTool as LucidePenTool,
   Presentation as LucidePresentation,
-  Minus as LucideMinus,
   Plus as LucidePlus,
   RefreshCw as LucideRefreshCw,
   Eraser as LucideEraser,
-  Server as LucideServer,
-  Shield as LucideShield,
   Split as LucideSplit,
-  Sparkles as LucideSparkles,
   Star as LucideStar,
   Telescope as LucideTelescope,
   Terminal as LucideTerminal,
@@ -67,8 +50,7 @@ import {
   X as LucideX,
   Zap as LucideZap,
 } from "lucide-react";
-import { RunnerDeepResearchSession, RunnerExecuteResult, RunnerLog, RunnerThreadStep, RunnerThreadStepDiffResult } from "../types.js";
-import { iterateSseData } from "../sse.js";
+import { RunnerDeepResearchSession, RunnerExecuteResult, RunnerLog } from "../types.js";
 import {
   PlatformPopupSurface,
   type PlatformPopupAnimation,
@@ -77,31 +59,24 @@ import {
   PlatformPrimaryButton,
   PlatformSecondaryButton,
 } from "../platform-ui/components/ui/button/index.js";
-import { PlatformModal } from "../platform-ui/components/composite/modal/index.js";
 import { PlatformSwitch } from "../platform-ui/components/ui/switch/index.js";
 import { adaptLegacyThreadToProjection } from "../thread/legacy-adapter.js";
-import type { RunnerThreadAction, RunnerThreadMessage, RunnerThreadPermissionRequest, RunnerThreadProjection, RunnerThreadRoutedMessageResult, RunnerThreadRunStatus } from "../thread/types.js";
+import type { RunnerThreadAction, RunnerThreadMessage, RunnerThreadProjection, RunnerThreadRoutedMessageResult, RunnerThreadRunStatus } from "../thread/types.js";
 import { useRunnerExecution } from "./use-runner-execution.js";
 import { RUNNER_CHAT_ENTER_ANIMATION_DURATION_MS, getRunnerChatEnterAnimationStyle } from "./runner-chat-animations.js";
 import { mountRunnerChatStyles } from "./runner-chat-styles.js";
 import { RunnerThreadRunActivityCard } from "./thread/run-activity-card.js";
 import { adaptRunnerThreadActionToRunnerLog } from "./thread/activity-action-list.js";
 import { RunnerThreadUserMessageTime } from "./thread/thread-message.js";
-import { RunnerThreadTimeline } from "./thread/thread-timeline.js";
 import { useRunnerThreadProjection } from "./thread/use-runner-thread-projection.js";
 import { RunnerDocumentPreviewDrawer } from "./runner-document-preview-drawer.js";
 import {
-  buildRunnerPreviewHeaders,
   buildRunnerPreviewAttachmentFromPath,
   buildRunnerPreviewDownloadUrl,
   buildRunnerPreviewHtmlPreviewUrlFromDownloadUrl,
   buildRunnerPreviewHtmlPreviewUrl,
-  getRunnerPreviewFilename,
   inferRunnerPreviewMimeType,
-  getRunnerPreviewHeaderValue,
   isRunnerPreviewHtmlFile,
-  isRunnerDocumentPreviewable,
-  normalizeRunnerPreviewPath,
   normalizeRunnerPreviewWorkspacePath,
   resolveRunnerPreviewAssetUrl,
   type RunnerImageUnderstandingPreviewData,
@@ -114,10 +89,485 @@ import {
 } from "./runner-document-preview.js";
 import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
 import { LazyMediaPreviewMount, RunnerLazyMediaPreviewLoader } from "./runner-lazy-media-preview.js";
-import type { RunnerImageMaskStroke, RunnerImageNaturalSize } from "./runner-image-edit-overlays.js";
-import { BrowserSkillLogBox, ComputerUseDetailDrawer, DeepResearchDetailDrawer, DeepResearchLogBox, InlineStatusLogBox, RunnerCodeViewer, RunnerWorkLogEntry, SubagentDetailDrawer, SubagentLogBox, collectComputerAgentsCreatedResources, collectRunnerLogFileChangePreviews, isComputerAgentsMutationLog, type RunnerCreatedResourcePreview, hasActiveDeepResearchLogGroup, isBrowserSkillCommand, isBrowserSkillLaunchCommand, isComputerUseMcpLog, isDeepResearchCommand, shouldRenderRunnerReasoningLog } from "./runner-log-boxes.js";
+import { BrowserSkillLogBox, ComputerUseDetailDrawer, DeepResearchDetailDrawer, DeepResearchLogBox, InlineStatusLogBox, RunnerCodeViewer, RunnerWorkLogEntry, SubagentDetailDrawer, SubagentLogBox, type RunnerCreatedResourcePreview, hasActiveDeepResearchLogGroup, isBrowserSkillCommand, isBrowserSkillLaunchCommand, isComputerUseMcpLog, isDeepResearchCommand } from "./runner-log-boxes.js";
 import { RunnerMarkdown, stripRunnerSystemTags as stripSystemTags } from "./runner-markdown.js";
 import { DotLoader } from "./dot-loader.js";
+import {
+  getRunnerEmailDeliveryDisplay,
+  getRunnerEmailAttachmentFilename,
+  getRunnerEmailPromptDisplay,
+  isRunnerEmailMetadata,
+  normalizeRunnerTurnMessageMetadata,
+  type RunnerEmailDeliveryAttachmentFile,
+  type RunnerEmailDeliveryDisplay,
+} from "./runner-chat/email-presentation.js";
+import {
+  getRecordNumber,
+  getRecordObject,
+  getRecordString,
+  normalizeRecordObject,
+} from "./runner-chat/record-utils.js";
+import {
+  CollapsibleRunnerUserPrompt,
+  RunnerRunSummaryJsonDocument,
+  splitRunnerRunSummaryContent,
+  type RunnerChatRunSummaryJsonRenderContext,
+  type RunnerChatUserPromptRenderContext,
+} from "./runner-chat/run-summary-content.js";
+export type {
+  RunnerChatRunSummaryJsonRenderContext,
+  RunnerChatUserPromptRenderContext,
+} from "./runner-chat/run-summary-content.js";
+import {
+  getRunnerComputerDisplayLabel,
+  renderRunnerSummaryResourceChip,
+  renderTurnAgentAvatar,
+} from "./runner-chat/run-summary-presentation.js";
+import {
+  IconCheck,
+  IconChevronDown,
+  IconChevronLeft,
+  IconChevronRight,
+  IconChevronUp,
+  IconClock,
+  IconCloud,
+  IconFile,
+  IconFileText,
+  IconFolderOpen,
+  IconFolderPlus,
+  IconGithub,
+  IconGoogleDrive,
+  IconImages,
+  IconLayers,
+  IconLoader2,
+  IconLogout,
+  IconMic,
+  IconMusic,
+  IconNotion,
+  IconOneDrive,
+  IconPaperclip,
+  IconPlus,
+  IconSearch,
+  IconStop,
+  IconUser,
+  IconVideo,
+  IconX,
+} from "./runner-chat/icons.js";
+import {
+  isRunnerChatWebVoiceMode,
+  normalizeRunnerChatVoiceMode,
+  type RunnerAgentSelectorMode,
+  type RunnerReasoningEffortId,
+  type RunnerWorkspaceSelectorMode,
+} from "./runner-chat/voice-audio.js";
+import { buildRunnerVoiceHeaders } from "./runner-chat/voice-realtime-protocol.js";
+import { useRunnerSpeechToText } from "./runner-chat/use-speech-to-text.js";
+import { useRunnerVoiceModeSession } from "./runner-chat/use-voice-mode-session.js";
+import {
+  RUNNER_AD_ASPECT_RATIO_OPTIONS,
+  RUNNER_AD_CREATION_DEFAULT_SETTINGS,
+  RUNNER_AD_QUALITY_OPTIONS,
+  RUNNER_AD_STYLE_OPTIONS,
+  RUNNER_AD_VARIANT_OPTIONS,
+  buildRunnerAdCreationLabel,
+  buildRunnerAgentCreationLabel,
+  buildRunnerBacklogSubtaskLabel,
+  buildRunnerMissionControlLabel,
+  buildRunnerParseCreationLabel,
+  buildRunnerResearchCreationLabel,
+  buildRunnerResourceCreationLabel,
+  buildRunnerScrapeCreationLabel,
+  buildRunnerSkillCreationLabel,
+  buildRunnerSlideCreationLabel,
+  buildStagedRunnerAdCreationCommand,
+  formatRunnerAdCreationComputeTokens,
+  getRunnerAdCreationQualityComputeTokensPerImage,
+  normalizeRunnerAdCreationSettings,
+  normalizeRunnerBacklogTicketNumber,
+  parseAutoStageAdCreationCommand,
+  parseAutoStageAgentCreationCommand,
+  parseAutoStageBacklogMissionControlCommand,
+  parseAutoStageBacklogSubtaskCommand,
+  parseAutoStageParseCreationCommand,
+  parseAutoStageResearchCreationCommand,
+  parseAutoStageResourceCreationCommand,
+  parseAutoStageScrapeCreationCommand,
+  parseAutoStageSkillCreationCommand,
+  parseAutoStageSlideCreationCommand,
+  resolveRunnerSlashCommandInputState,
+  type RunnerAdCreationAspectRatioId,
+  type RunnerAdCreationQualityId,
+  type RunnerAdCreationSettings,
+  type RunnerAdCreationStyleId,
+  type RunnerAdCreationVariantCount,
+  type RunnerAgentCreationCommandType,
+  type RunnerResourceCreationCommandType,
+  type RunnerSkillCreationCommandType,
+  type StagedAdCreationCommand,
+  type StagedAgentCreationCommand,
+  type StagedBacklogCommand,
+  type StagedBacklogMissionControlCommand,
+  type StagedBacklogSubtaskCommand,
+  type StagedParseCreationCommand,
+  type StagedResearchCreationCommand,
+  type StagedResourceCreationCommand,
+  type StagedScrapeCreationCommand,
+  type StagedSkillCreationCommand,
+  type StagedSlideCreationCommand,
+} from "./runner-chat/composer-commands.js";
+import {
+  RUNNER_REASONING_EFFORT_OPTIONS,
+  buildRunnerAgentGuardrailsHiddenPrompt,
+  buildRunnerExecutionPromptWithHiddenContext,
+  getRunnerAgentOptionPhotoUrl,
+  getRunnerAgentOptionProviderType,
+  getRunnerAgentProviderIcon,
+  getRunnerAgentSelectorMode,
+  getRunnerPreferredDefaultAgentOption,
+  getRunnerProjectEnvironmentId,
+  getRunnerReasoningEffortOption,
+  isRunnerHumanAgentOption,
+  isRunnerTeamAgentOption,
+  mergeRunnerChatOptions,
+  normalizeRunnerReasoningEffort,
+  orderOptionsWithPinnedTop,
+  type RunnerChatOption,
+  type RunnerChatProjectOption,
+} from "./runner-chat/agent-options.js";
+export type {
+  RunnerChatOption,
+  RunnerChatProjectOption,
+} from "./runner-chat/agent-options.js";
+import type {
+  LocalAttachment,
+  RunnerAttachment,
+  RunnerChatImplicitAttachment,
+  RunnerTurnAttachment,
+} from "./runner-chat/attachment-types.js";
+export type {
+  RunnerAttachment,
+  RunnerChatImplicitAttachment,
+} from "./runner-chat/attachment-types.js";
+import {
+  attachmentTypeForFile,
+  buildSelectedGithubRepoReference,
+  createGithubBrowserNodeId,
+  createGithubBrowserRepoFolderId,
+  getAttachmentDisplayName,
+  getAttachmentPreviewUrl,
+  getBrowserFileType,
+  getGithubAttachmentRef,
+  getGithubRepoName,
+  isAttachmentDocumentPreviewable,
+  isGithubAttachmentSelection,
+  isLocalAttachmentRecord,
+  parseGithubBrowserFolderId,
+} from "./runner-chat/attachment-utils.js";
+import {
+  RUNNER_THREAD_HISTORY_ACTIVE_LINE_WIDTH,
+  buildRunnerThreadHistoryItemId,
+  buildRunnerThreadHistoryPreviewText,
+  getRunnerThreadHistoryLineWidth,
+  type RunnerThreadHistoryItem,
+} from "./runner-chat/thread-history.js";
+import {
+  fetchAllThreadMessages,
+  getRunnerLogAbsoluteTimestampMs,
+  isComputeTokenBudgetErrorLog,
+  isComputeTokenBudgetErrorMessage,
+  isRunnerModelProviderUnavailableMessage,
+  sanitizeRunnerBudgetMessage,
+  sanitizeRunnerMessage,
+  type RunnerConversationMessage,
+} from "./runner-chat/conversation-messages.js";
+import {
+  formatElapsedDurationLabel,
+  parseSecondsFromClock,
+  parseIsoTimestampMs,
+} from "./runner-chat/time-utils.js";
+import {
+  buildRunnerHeaders,
+  sanitizeBackendUrl,
+} from "./runner-chat/api-utils.js";
+import {
+  cancelThreadExecution,
+  createThread,
+  DEFAULT_NEW_THREAD_TITLE,
+  forkThreadRequest,
+  type RunnerForkExistingEnvironmentFileCopyMode,
+  type RunnerForkFileCopyMode,
+  type RunnerForkTarget,
+} from "./runner-chat/thread-api.js";
+import {
+  prepareGithubRepositorySelection,
+  reportRunnerLifecycleCallbackError,
+  startEnvironment,
+} from "./runner-chat/environment-api.js";
+import {
+  blobToBase64,
+  buildFileFromFetchedContent,
+  decodeBase64TextContent,
+  normalizeBase64Content,
+  uploadAttachment,
+  uploadAttachmentContent,
+  type RunnerChatFetchedFileContent,
+} from "./runner-chat/attachment-api.js";
+export type {
+  RunnerChatFetchedFileContent,
+} from "./runner-chat/attachment-api.js";
+import {
+  fetchThreadFeedback,
+  reportThreadFeedbackIssue,
+  setThreadFeedback,
+  type RunnerThreadFeedbackRating,
+  type RunnerThreadFeedbackReportType,
+  type RunnerThreadFeedbackState,
+} from "./runner-chat/thread-feedback.js";
+import {
+  buildRunnerAttachmentFromPreviewAttachment,
+  buildTurnAttachmentsFromLocalAttachments,
+  buildTurnAttachmentsFromRunnerAttachments,
+  isRunnerEmailContextAttachment,
+  isRunnerImagePreviewAttachment,
+  isRunnerTurnDisplayHiddenAttachment,
+  mergeRunnerTurnAttachments,
+  normalizeTurnAttachment,
+  normalizeTurnAttachments,
+  pickTurnAttachments,
+} from "./runner-chat/turn-attachments.js";
+import type {
+  RunnerQuotedSelection,
+  RunnerQuotedSelectionSource,
+  RunnerTurn,
+  RunnerTurnStatus,
+} from "./runner-chat/turn-types.js";
+import type {
+  RunnerThreadHydrationPayload,
+} from "./runner-chat/hydration/types.js";
+import {
+  dedupeAdjacentRunnerLogs,
+  isDuplicateAssistantSummaryTimelineLog,
+  normalizeHydratedLog,
+  runnerLogSignature,
+  shouldDisplayTimelineLog,
+} from "./runner-chat/hydration/log-normalization.js";
+import {
+  buildSubagentTimelineGroups,
+  buildTimelineItems,
+  getTurnMetronomeWorkflowPromptLog,
+  isBrowserTimelineLog,
+  isComputerUseTimelineLog,
+  isDeepResearchTimelineCommand,
+  logBelongsToSubagentInvocation,
+  type RunnerTimelineItem,
+  type RunnerTurnTimelineState,
+} from "./runner-chat/legacy-timeline.js";
+import {
+  buildBrowserGroupPresentation,
+  buildComputerUseGroupPresentation,
+  buildSubagentGroupPresentation,
+  getBrowserTimelineGroupId,
+  timelineItemKey,
+  type RunnerComputerUsePresentation,
+  type RunnerSubagentPresentation,
+} from "./runner-chat/legacy-timeline-presentation.js";
+import {
+  isRunningThreadLifecycleStatus,
+} from "./runner-chat/hydration/lifecycle-status.js";
+import {
+  fetchThreadHydrationPayload,
+  fetchThreadResearchSessions,
+} from "./runner-chat/hydration/api.js";
+import {
+  applyHydratedRunningThreadState,
+  getTurnAssistantMessageText,
+  getTurnLatestProgressTimestampMs,
+  isActiveTurnStatus,
+  isRunningTurnStatus,
+  isTurnResponseLog,
+  turnPresentation,
+} from "./runner-chat/hydration/turn-state.js";
+import {
+  buildHydratedTurnsFromMessages,
+} from "./runner-chat/hydration/message-turns.js";
+import {
+  mergeHydratedTurns,
+} from "./runner-chat/hydration/turn-merge.js";
+import {
+  buildHydratedTurnsFromLogs,
+  buildHydratedTurnsFromPayload,
+} from "./runner-chat/hydration/turn-builders.js";
+import { useRunnerRunningThreadReattachment } from "./runner-chat/hydration/use-running-thread-reattachment.js";
+import { useRunnerThreadHistoryHydration } from "./runner-chat/hydration/use-thread-history-hydration.js";
+import {
+  normalizeQuotedSelection,
+  previewQuotedSelectionText,
+  sanitizeQuotedSelectionText,
+} from "./runner-chat/quoted-selection.js";
+import {
+  findQuotedSelectionContainer,
+  getQuotedSelectionSourceType,
+} from "./runner-chat/quoted-selection-dom.js";
+import { generateRunnerClientId as generateId } from "./runner-chat/id-utils.js";
+import {
+  DEFAULT_THREAD_CONTEXT_ACTIONS,
+  EMPTY_THREAD_CONTEXT_CATEGORIES,
+  buildContextIndicatorTitle,
+  deriveThreadContextDisplayMetrics,
+  formatCompactTokenCount,
+  formatThreadContextCommandText,
+  getContextCategoryDisplayTokens,
+  isThreadContextCommandPrompt,
+  parseAutoStageThreadContextCommand,
+  parseThreadContextCommand,
+  stagedThreadContextCommandOffset,
+  stagedThreadContextCommandTone,
+  threadContextActionAllowsPrompt,
+  threadContextCategoryColor,
+  type ParsedThreadContextCommand,
+  type RunnerChatThreadContext,
+  type RunnerChatThreadContextAction,
+  type RunnerChatThreadContextAvailableActions,
+  type RunnerChatThreadContextCategory,
+  type RunnerChatThreadContextCategoryKey,
+  type RunnerChatThreadContextDetails,
+} from "./runner-chat/thread-context-utils.js";
+import {
+  fetchRunnerThreadContext,
+  fetchRunnerThreadContextDetails,
+  requestRunnerThreadContextAction,
+  streamRunnerThreadBtw,
+} from "./runner-chat/thread-context-api.js";
+import {
+  getRunnerMissionControlAgentName,
+  getRunnerMissionControlAgentPhotoUrl,
+  renderRunnerMissionControlPreviewCard,
+  renderRunnerTaskPreviewCard,
+  type RunnerMissionControlPreview,
+  type RunnerTaskPreview,
+} from "./runner-chat/task-preview.js";
+import {
+  buildEnvironmentFileDownloadUrl,
+  buildEnvironmentFileListUrl,
+  buildWorkspaceSelectionStorageKey,
+  childFolderPath,
+  fileItemsForParent,
+  formatBrowserFileDate,
+  formatBrowserFileSize,
+  isBrowserFilePreviewable,
+  loadPersistedWorkspaceSelection,
+  mergeDriveFolderItems,
+  notionDatabasesToFileItems,
+  normalizeEnvironmentWorkspaceItems,
+  normalizeRunnerWorkspaceFolderPath,
+  normalizeWorkspaceSelectorMode,
+  persistWorkspaceSelection,
+  type RunnerChatFileNode,
+  type RunnerChatNotionDatabase,
+} from "./runner-chat/workspace-files.js";
+import {
+  collectTurnChangedFiles,
+} from "./runner-chat/turn-file-changes.js";
+import {
+  mapExpandedTurns,
+} from "./runner-chat/turn-expansion.js";
+import {
+  type RunnerChatMetronomeWorkflowRunPayload,
+} from "./runner-chat/metronome-workflow.js";
+import { useRunnerExternalRunRequest } from "./runner-chat/execution/external-run-request.js";
+import {
+  useRunnerQueuedExecution,
+  type RunnerPendingMessage,
+} from "./runner-chat/execution/queued-execution.js";
+import {
+  getRunnerActiveRunInstructionNotice,
+  persistRunnerActiveRunInstruction,
+} from "./runner-chat/execution/active-run-instruction.js";
+import { RunnerPageQueueReceipt } from "./runner-chat/execution/page-queue-receipt.js";
+import { createRunnerThreadRunExecutor } from "./runner-chat/execution/thread-run-executor.js";
+import { RunnerCanonicalThreadSurface } from "./runner-chat/canonical-thread-surface.js";
+import { adaptRunnerThreadPermissionRequestToRunnerLog } from "./runner-chat/permission-log-adapter.js";
+import { RunnerFileBrowserDialog } from "./runner-chat/file-browser-dialog.js";
+import {
+  RunnerEditConfirmationDialog,
+  RunnerForkThreadDialog,
+  RunnerReportIssueDialog,
+} from "./runner-chat/workflow-dialogs.js";
+import {
+  getRunnerComposerPlanDisplay,
+} from "./runner-chat/composer-plan.js";
+import {
+  POPUP_ANIMATION_DURATION_MS,
+  RUNNER_COMPOSER_POPUP_OPEN_EVENT,
+  emitRunnerComposerPopupOpen,
+  getMainPopupRenderId,
+  getRunnerComposerPopupEventSource,
+  getSidePopupRenderId,
+  isPlusPopupId,
+  renderComposerPopupPortal,
+  useComposerAnchoredPopupStyle,
+  type InputPopupId,
+  type MainPopupRenderId,
+  type PopupAnimationPhase,
+  type SidePopupExitDirection,
+  type SidePopupRenderId,
+} from "./runner-chat/composer-popup.js";
+import {
+  extractDeepResearchSessionIdFromLogs,
+  extractDeepResearchTopicFromGroup,
+  isDeepResearchSessionActive,
+  resolveDeepResearchSessionForGroup,
+} from "./runner-chat/deep-research-session.js";
+import {
+  buildRunnerImageSelectionInpaintPrompt,
+  createRunnerImageSelectionMaskFile,
+  requiresAuthenticatedAttachmentPreview,
+  type RunnerImagePreviewSelectionState,
+} from "./runner-chat/image-selection.js";
+import {
+  getRunnerLogRangeDurationLabel,
+  getRunnerLogTimestampMs,
+  isBtwTurnPrompt,
+  runnerExecutionStatusTone as statusTone,
+  toRunnerLogDurationLabel as toDurationLabel,
+} from "./runner-chat/log-presentation.js";
+import {
+  areStringArraysEqual,
+  buildEnabledSkillsPayload,
+  buildEnabledSkillsStorageKey,
+  customSkillIconComponent,
+  defaultEnabledSkillIds,
+  loadPersistedEnabledSkillIds,
+  normalizeComputerAgentSkills,
+  normalizeEnabledSkillIdList,
+  normalizeRunnerSkillId,
+  persistEnabledSkillIds,
+  type RunnerChatSkill,
+  type RunnerChatSkillDefaults,
+} from "./runner-chat/skill-configuration.js";
+export type {
+  RunnerChatThreadContext,
+  RunnerChatThreadContextAction,
+  RunnerChatThreadContextAvailableActions,
+  RunnerChatThreadContextCategory,
+  RunnerChatThreadContextCategoryKey,
+  RunnerChatThreadContextDetails,
+} from "./runner-chat/thread-context-utils.js";
+export type {
+  RunnerMissionControlPreview,
+  RunnerTaskPreview,
+} from "./runner-chat/task-preview.js";
+export type {
+  RunnerChatFileNode,
+  RunnerChatNotionDatabase,
+} from "./runner-chat/workspace-files.js";
+export type {
+  RunnerChatSkill,
+  RunnerChatSkillDefaults,
+} from "./runner-chat/skill-configuration.js";
+export type {
+  RunnerChatMetronomeWorkflowRunPayload,
+} from "./runner-chat/metronome-workflow.js";
 
 const RUNNER_FOLDER_ICON_URL = new URL("./assets/folder.png", import.meta.url).toString();
 const RUNNER_TEXT_FILE_ICON_URL = new URL("./assets/txtfile.png", import.meta.url).toString();
@@ -126,799 +576,12 @@ const RUNNER_EMAIL_ATTACHMENT_FILE_ICON_URL = new URL("./assets/email-attachment
 const RUNNER_TRANSPARENT_LOGO_URL = "https://computer-agents.com/img/logos/runnertransparent.png";
 const RUNNER_THINKING_STATUS_FADE_DURATION_MS = 120;
 const RUNNER_THINKING_STATUS_REAPPEAR_DELAY_MS = 500;
-const RUNNER_THREAD_HISTORY_PREVIEW_LENGTH = 50;
-const RUNNER_THREAD_HISTORY_ACTIVE_LINE_WIDTH = 15;
-const RUNNER_THREAD_HISTORY_MEDIUM_LINE_WIDTH = 10;
-const RUNNER_THREAD_HISTORY_SMALL_LINE_WIDTH = 5;
 const RUNNER_WORK_LOG_PAGE_SIZE = 10;
 // Live runs stay intentionally quiet at the conversation altitude. The header
 // carries the current semantic summary; concrete actions are mounted only when
 // the user expands the run.
 const RUNNER_LIVE_WORK_LOG_PREVIEW_COUNT = 0;
-const RUNNER_COMPOSER_POPUP_OPEN_EVENT = "tb-runner-composer-popup-open";
-
-function emitRunnerComposerPopupOpen(sourceId: string) {
-  if (typeof window === "undefined") return;
-  window.dispatchEvent(new CustomEvent(RUNNER_COMPOSER_POPUP_OPEN_EVENT, {
-    detail: { sourceId },
-  }));
-}
-
-function getRunnerComposerPopupEventSource(event: Event): string {
-  if (!(event instanceof CustomEvent)) return "";
-  return typeof event.detail?.sourceId === "string" ? event.detail.sourceId : "";
-}
-
-export interface RunnerAttachment {
-  id: string;
-  filename: string;
-  mimeType: string;
-  size: number;
-  type: "image" | "document";
-  uploadedAt: string;
-  url?: string;
-  workspacePath?: string;
-  gcsPath?: string;
-  integrationSource?: "google-drive" | "one-drive" | "github";
-  githubRepoFullName?: string;
-  githubRef?: string | null;
-  githubItemPath?: string;
-  githubSelectionType?: "repo" | "file";
-  [key: string]: unknown;
-}
-
-export interface RunnerChatImplicitAttachment {
-  url: string;
-  filename: string;
-  mimeType?: string;
-  type?: RunnerAttachment["type"];
-  hiddenFromTurnDisplay?: boolean;
-  runnerAttachmentRole?: string;
-}
-
-type RunnerTurnAttachment = RunnerPreviewAttachment;
-
-interface LocalAttachment {
-  id: string;
-  file: File;
-  type: RunnerAttachment["type"];
-  previewUrl?: string;
-  source: "local" | "workspace" | "integration";
-  hiddenFromTurnDisplay?: boolean;
-  runnerAttachmentRole?: string;
-  sourceEnvironmentId?: string | null;
-  integrationSource?: "google-drive" | "one-drive" | "github";
-  githubRepoFullName?: string;
-  githubRef?: string | null;
-  githubItemPath?: string;
-  githubSelectionType?: "repo" | "file";
-  resolvedAttachment?: RunnerAttachment;
-  uploadStatus?: "idle" | "uploading" | "uploaded" | "failed";
-  uploadError?: string | null;
-}
-
-interface RunnerEmailPromptDisplay {
-  content: string;
-  emailFrom: string;
-  isEmailPrompt: boolean;
-}
-
-interface RunnerEmailDeliveryAttachmentFile {
-  filename: string;
-  workspacePath?: string;
-  mimeType?: string;
-  sizeBytes?: number;
-  url?: string;
-  reason?: string;
-  kind?: "attachment" | "download_link";
-}
-
-interface RunnerEmailDeliveryDisplay {
-  label: string;
-  detail: string;
-  className: string;
-  attachmentCount: number;
-  downloadLinkCount: number;
-  attachmentFiles: RunnerEmailDeliveryAttachmentFile[];
-}
-
-function cleanRunnerEmailPromptContent(value: string): string {
-  return value
-    .replace(/\n*\[Email task from:\s*[^\]\r\n]+\]\s*$/i, "")
-    .replace(/\n*\[Email task from:\s*[^\]\r\n]+\]\s*/gi, "\n")
-    .replace(/\n{1,3}Attached files:\s*(?:\r?\n\s*(?:-\s*)?.+)+\s*$/i, "")
-    .trim();
-}
-
-function getRunnerEmailMetadataDisplay(metadata?: Record<string, unknown> | null): {
-  emailFrom: string;
-  isEmailPrompt: boolean;
-} {
-  if (!metadata) {
-    return { emailFrom: "", isEmailPrompt: false };
-  }
-
-  const emailRecord = getRecordObject(metadata, ["email", "emailMetadata", "email_metadata"]);
-  const emailFrom =
-    getRecordString(emailRecord, ["from", "fromEmail", "from_email", "sender", "senderEmail", "sender_email", "replyTo", "reply_to"]) ||
-    getRecordString(metadata, ["emailFrom", "email_from", "fromEmail", "from_email", "replyToEmail", "reply_to_email", "senderEmail", "sender_email"]);
-  const source = getRecordString(metadata, ["source", "channel", "appId", "app_id"]).trim().toLowerCase();
-  const isEmailPrompt =
-    Boolean(emailRecord) ||
-    Boolean(emailFrom) ||
-    source === "email" ||
-    source === "mail" ||
-    source === "incoming_email";
-
-  return {
-    emailFrom: emailFrom || (isEmailPrompt ? "email" : ""),
-    isEmailPrompt,
-  };
-}
-
-function isRunnerEmailMetadata(metadata?: Record<string, unknown> | null): boolean {
-  return getRunnerEmailMetadataDisplay(metadata).isEmailPrompt;
-}
-
-function normalizeRunnerTurnMessageMetadata(
-  messageMetadata?: Record<string, unknown> | null,
-  threadMetadata?: Record<string, unknown> | null,
-): Record<string, unknown> | null {
-  if (isRunnerEmailMetadata(messageMetadata)) {
-    if (isRunnerEmailMetadata(threadMetadata)) {
-      const threadEmail = getRecordObject(threadMetadata, ["email", "emailMetadata", "email_metadata"]);
-      const messageEmail = getRecordObject(messageMetadata, ["email", "emailMetadata", "email_metadata"]);
-      return {
-        ...(threadMetadata || {}),
-        ...(messageMetadata || {}),
-        email: {
-          ...(threadEmail || {}),
-          ...(messageEmail || {}),
-        },
-      };
-    }
-    return messageMetadata || null;
-  }
-  if (isRunnerEmailMetadata(threadMetadata)) {
-    return {
-      ...(threadMetadata || {}),
-      ...(messageMetadata || {}),
-    };
-  }
-  return messageMetadata || null;
-}
-
-function getRunnerEmailAttachmentFilename(value: string): string {
-  const normalized = String(value || "").trim().replace(/[?#].*$/, "");
-  const segments = normalized.split(/[\\/]/).filter(Boolean);
-  return segments[segments.length - 1] || normalized || "Attachment";
-}
-
-function normalizeRunnerEmailAttachmentIdentityPart(value: string): string {
-  return String(value || "")
-    .trim()
-    .replace(/[?#].*$/, "")
-    .replace(/\\/g, "/")
-    .replace(/\/+/g, "/")
-    .toLowerCase();
-}
-
-function getRunnerEmailDeliveryAttachmentIdentityKeys(
-  file: RunnerEmailDeliveryAttachmentFile
-): string[] {
-  const keys = new Set<string>();
-  const workspacePath = normalizeRunnerEmailAttachmentIdentityPart(file.workspacePath || "");
-  const url = normalizeRunnerEmailAttachmentIdentityPart(file.url || "");
-  const filename = normalizeRunnerEmailAttachmentIdentityPart(file.filename || "");
-  if (workspacePath) {
-    keys.add(`path:${workspacePath}`);
-  }
-  if (url) {
-    keys.add(`url:${url}`);
-  }
-  if (filename) {
-    keys.add(`filename:${filename}`);
-  }
-  return Array.from(keys);
-}
-
-function mergeRunnerEmailDeliveryAttachmentFile(
-  existing: RunnerEmailDeliveryAttachmentFile,
-  incoming: RunnerEmailDeliveryAttachmentFile
-): RunnerEmailDeliveryAttachmentFile {
-  const kind = existing.kind === "attachment" || incoming.kind === "attachment"
-    ? "attachment"
-    : existing.kind || incoming.kind;
-  return {
-    filename: existing.filename || incoming.filename,
-    ...(existing.workspacePath || incoming.workspacePath ? { workspacePath: existing.workspacePath || incoming.workspacePath } : {}),
-    ...(existing.mimeType || incoming.mimeType ? { mimeType: existing.mimeType || incoming.mimeType } : {}),
-    ...(typeof existing.sizeBytes === "number" || typeof incoming.sizeBytes === "number"
-      ? { sizeBytes: typeof existing.sizeBytes === "number" ? existing.sizeBytes : incoming.sizeBytes }
-      : {}),
-    ...(existing.url || incoming.url ? { url: existing.url || incoming.url } : {}),
-    ...(existing.reason || incoming.reason ? { reason: existing.reason || incoming.reason } : {}),
-    ...(kind ? { kind } : {}),
-  };
-}
-
-function normalizeRunnerEmailDeliveryAttachmentFile(
-  value: unknown,
-  kind: RunnerEmailDeliveryAttachmentFile["kind"] = "attachment"
-): RunnerEmailDeliveryAttachmentFile | null {
-  if (typeof value === "string" && value.trim()) {
-    const workspacePath = value.trim();
-    return {
-      filename: getRunnerEmailAttachmentFilename(workspacePath),
-      workspacePath,
-      kind,
-    };
-  }
-  const record = normalizeRecordObject(value);
-  if (!record) {
-    return null;
-  }
-  const workspacePath = getRecordString(record, ["workspacePath", "workspace_path", "path", "filePath", "file_path"]);
-  const filename =
-    getRecordString(record, ["filename", "fileName", "file_name", "name"]) ||
-    getRunnerEmailAttachmentFilename(workspacePath || getRecordString(record, ["url", "href"]));
-  if (!filename) {
-    return null;
-  }
-  const sizeBytes = getRecordNumber(record, ["sizeBytes", "size_bytes", "bytes", "size"]);
-  const mimeType = getRecordString(record, ["mimeType", "mime_type", "contentType", "content_type"]);
-  const url = getRecordString(record, ["url", "href"]);
-  const reason = getRecordString(record, ["reason"]);
-  return {
-    filename,
-    ...(workspacePath ? { workspacePath } : {}),
-    ...(mimeType ? { mimeType } : {}),
-    ...(typeof sizeBytes === "number" ? { sizeBytes } : {}),
-    ...(url ? { url } : {}),
-    ...(reason ? { reason } : {}),
-    kind,
-  };
-}
-
-function getRecordArray(record: Record<string, unknown> | null | undefined, keys: string[]): unknown[] {
-  if (!record) {
-    return [];
-  }
-  for (const key of keys) {
-    const value = record[key];
-    if (Array.isArray(value)) {
-      return value;
-    }
-    if (typeof value === "string" && value.trim()) {
-      try {
-        const parsed = JSON.parse(value);
-        if (Array.isArray(parsed)) {
-          return parsed;
-        }
-      } catch {
-        // Ignore malformed metadata arrays.
-      }
-    }
-  }
-  return [];
-}
-
-function extractRunnerEmailAttachmentFilesFromSummary(summaryText?: string | null): RunnerEmailDeliveryAttachmentFile[] {
-  const content = String(summaryText || "");
-  if (!content.includes("email-attachments")) {
-    return [];
-  }
-  const files: RunnerEmailDeliveryAttachmentFile[] = [];
-  const pattern = /<!--\s*email-attachments\s*:\s*([\s\S]*?)\s*-->/gi;
-  let match: RegExpExecArray | null = null;
-  while ((match = pattern.exec(content)) !== null) {
-    const rawManifest = String(match[1] || "").trim();
-    if (!rawManifest) {
-      continue;
-    }
-    try {
-      const parsed = JSON.parse(rawManifest);
-      const entries = Array.isArray(parsed) ? parsed : [parsed];
-      for (const entry of entries) {
-        const file = normalizeRunnerEmailDeliveryAttachmentFile(entry, "attachment");
-        if (file) {
-          files.push(file);
-        }
-      }
-    } catch {
-      for (const path of rawManifest.match(/\/workspace\/[^"',\]\s]+/g) || []) {
-        const file = normalizeRunnerEmailDeliveryAttachmentFile(path, "attachment");
-        if (file) {
-          files.push(file);
-        }
-      }
-    }
-  }
-  return dedupeRunnerEmailDeliveryAttachmentFiles(files);
-}
-
-function dedupeRunnerEmailDeliveryAttachmentFiles(
-  files: RunnerEmailDeliveryAttachmentFile[]
-): RunnerEmailDeliveryAttachmentFile[] {
-  const keyToIndex = new Map<string, number>();
-  const deduped: RunnerEmailDeliveryAttachmentFile[] = [];
-  for (const file of files) {
-    const keys = getRunnerEmailDeliveryAttachmentIdentityKeys(file);
-    let existingIndex: number | undefined;
-    for (const key of keys) {
-      const index = keyToIndex.get(key);
-      if (typeof index === "number") {
-        existingIndex = index;
-        break;
-      }
-    }
-    if (typeof existingIndex === "number") {
-      deduped[existingIndex] = mergeRunnerEmailDeliveryAttachmentFile(deduped[existingIndex], file);
-      for (const key of getRunnerEmailDeliveryAttachmentIdentityKeys(deduped[existingIndex])) {
-        keyToIndex.set(key, existingIndex);
-      }
-      continue;
-    }
-    const nextIndex = deduped.length;
-    deduped.push(file);
-    for (const key of keys) {
-      keyToIndex.set(key, nextIndex);
-    }
-  }
-  return deduped;
-}
-
-function getRunnerEmailDeliveryDisplay(
-  metadata?: Record<string, unknown> | null,
-  summaryText?: string | null
-): RunnerEmailDeliveryDisplay | null {
-  if (!metadata) {
-    return null;
-  }
-
-  const emailRecord = getRecordObject(metadata, ["email", "emailMetadata", "email_metadata"]);
-  const deliveryRecord =
-    getRecordObject(metadata, ["emailDelivery", "email_delivery"]) ||
-    getRecordObject(emailRecord, ["delivery", "emailDelivery", "email_delivery"]);
-  if (!deliveryRecord) {
-    return null;
-  }
-
-  const status = getRecordString(deliveryRecord, ["status", "deliveryStatus", "delivery_status"]).trim().toLowerCase();
-  if (!status) {
-    return null;
-  }
-
-  const attachmentCount = getRecordNumber(deliveryRecord, ["attachmentCount", "attachment_count"]);
-  const downloadLinkCount = getRecordNumber(deliveryRecord, ["downloadLinkCount", "download_link_count"]);
-  const issue = getRecordString(deliveryRecord, ["issue", "deliveryIssue", "delivery_issue", "error"]);
-  const metadataAttachmentFiles = getRecordArray(deliveryRecord, ["attachmentFiles", "attachment_files", "attachments"])
-    .map((entry) => normalizeRunnerEmailDeliveryAttachmentFile(entry, "attachment"))
-    .filter((file): file is RunnerEmailDeliveryAttachmentFile => Boolean(file));
-  const metadataDownloadLinks = getRecordArray(deliveryRecord, ["downloadLinks", "download_links"])
-    .map((entry) => normalizeRunnerEmailDeliveryAttachmentFile(entry, "download_link"))
-    .filter((file): file is RunnerEmailDeliveryAttachmentFile => Boolean(file));
-  const manifestAttachmentFiles = extractRunnerEmailAttachmentFilesFromSummary(summaryText);
-  const attachmentFiles = dedupeRunnerEmailDeliveryAttachmentFiles([
-    ...metadataAttachmentFiles,
-    ...metadataDownloadLinks,
-    ...manifestAttachmentFiles,
-  ]);
-  const dedupedAttachmentCount = attachmentFiles.filter((file) => (file.kind || "attachment") === "attachment").length;
-  const dedupedDownloadLinkCount = attachmentFiles.filter((file) => file.kind === "download_link").length;
-  const effectiveAttachmentCount = Math.max(
-    0,
-    Math.round(dedupedAttachmentCount || attachmentCount || metadataAttachmentFiles.length || manifestAttachmentFiles.length || 0)
-  );
-  const effectiveDownloadLinkCount = Math.max(0, Math.round(dedupedDownloadLinkCount || downloadLinkCount || metadataDownloadLinks.length || 0));
-  const detailParts: string[] = [];
-  if (issue && ["deferred", "failed", "bounced", "dropped", "spam_report"].includes(status)) {
-    detailParts.push(issue);
-  }
-  if (effectiveDownloadLinkCount > 0) {
-    detailParts.push(`${effectiveDownloadLinkCount} download link${effectiveDownloadLinkCount === 1 ? "" : "s"}`);
-  }
-
-  switch (status) {
-    case "delivered":
-    case "opened":
-    case "clicked":
-      return {
-        label: status === "delivered" ? "Email delivered" : "Email reply delivered",
-        detail: detailParts.join(" | "),
-        className: "is-delivered",
-        attachmentCount: effectiveAttachmentCount,
-        downloadLinkCount: effectiveDownloadLinkCount,
-        attachmentFiles,
-      };
-    case "sending":
-    case "accepted":
-    case "processed":
-      return {
-        label: "Email reply sent",
-        detail: detailParts.join(" | "),
-        className: "is-pending",
-        attachmentCount: effectiveAttachmentCount,
-        downloadLinkCount: effectiveDownloadLinkCount,
-        attachmentFiles,
-      };
-    case "deferred":
-      return {
-        label: "Email delivery delayed",
-        detail: detailParts.join(" | "),
-        className: "is-issue",
-        attachmentCount: effectiveAttachmentCount,
-        downloadLinkCount: effectiveDownloadLinkCount,
-        attachmentFiles,
-      };
-    case "failed":
-      return {
-        label: "Email send failed",
-        detail: detailParts.join(" | "),
-        className: "is-issue",
-        attachmentCount: effectiveAttachmentCount,
-        downloadLinkCount: effectiveDownloadLinkCount,
-        attachmentFiles,
-      };
-    case "bounced":
-      return {
-        label: "Email bounced",
-        detail: detailParts.join(" | "),
-        className: "is-issue",
-        attachmentCount: effectiveAttachmentCount,
-        downloadLinkCount: effectiveDownloadLinkCount,
-        attachmentFiles,
-      };
-    case "dropped":
-      return {
-        label: "Email dropped",
-        detail: detailParts.join(" | "),
-        className: "is-issue",
-        attachmentCount: effectiveAttachmentCount,
-        downloadLinkCount: effectiveDownloadLinkCount,
-        attachmentFiles,
-      };
-    case "spam_report":
-      return {
-        label: "Spam report received",
-        detail: detailParts.join(" | "),
-        className: "is-issue",
-        attachmentCount: effectiveAttachmentCount,
-        downloadLinkCount: effectiveDownloadLinkCount,
-        attachmentFiles,
-      };
-    default:
-      return null;
-  }
-}
-
-function getRunnerEmailPromptDisplay(prompt: string, metadata?: Record<string, unknown> | null): RunnerEmailPromptDisplay {
-  const strippedPrompt = stripSystemTags(String(prompt || ""));
-  const emailMatch = strippedPrompt.match(/\[Email task from:\s*([^\]\r\n]+)\]\s*$/i);
-  const metadataDisplay = getRunnerEmailMetadataDisplay(metadata);
-  const emailFrom = emailMatch ? emailMatch[1].trim() : metadataDisplay.emailFrom;
-  if (!emailFrom) {
-    return {
-      content: strippedPrompt,
-      emailFrom: "",
-      isEmailPrompt: false,
-    };
-  }
-
-  return {
-    content: cleanRunnerEmailPromptContent(strippedPrompt),
-    emailFrom,
-    isEmailPrompt: true,
-  };
-}
-
-type RunnerSummaryJsonValue = Record<string, unknown> | unknown[];
-
-function isRunnerSummaryPlainObject(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
-function isRunnerSummaryJsonValue(value: unknown): value is RunnerSummaryJsonValue {
-  return Array.isArray(value) || isRunnerSummaryPlainObject(value);
-}
-
-function stripRunnerSummaryJsonFence(value: string): string {
-  const trimmed = value.trim();
-  const match = trimmed.match(/^```(?:json|jsonc)?\s*\n([\s\S]*?)\n```$/i);
-  return match?.[1]?.trim() || trimmed;
-}
-
-function parseRunnerSummaryJsonValue(value: string): RunnerSummaryJsonValue | null {
-  const candidate = stripRunnerSummaryJsonFence(value);
-  if (!candidate.startsWith("{") && !candidate.startsWith("[")) return null;
-  try {
-    const parsed = JSON.parse(candidate);
-    return isRunnerSummaryJsonValue(parsed) ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
-function formatRunnerSummaryJsonRaw(value: RunnerSummaryJsonValue): string {
-  try {
-    return JSON.stringify(value, null, 2);
-  } catch {
-    return "{}";
-  }
-}
-
-function getRunnerSummaryJsonType(value: unknown): "array" | "object" | "null" | "boolean" | "number" | "string" {
-  if (Array.isArray(value)) return "array";
-  if (isRunnerSummaryPlainObject(value)) return "object";
-  if (value === null) return "null";
-  if (typeof value === "boolean") return "boolean";
-  if (typeof value === "number") return "number";
-  return "string";
-}
-
-function formatRunnerSummaryJsonPreview(value: unknown): string {
-  const type = getRunnerSummaryJsonType(value);
-  if (type === "object") {
-    const count = Object.keys(value as Record<string, unknown>).length;
-    return `${count} ${count === 1 ? "field" : "fields"}`;
-  }
-  if (type === "array") {
-    const count = Array.isArray(value) ? value.length : 0;
-    return `${count} ${count === 1 ? "item" : "items"}`;
-  }
-  if (type === "null") return "null";
-  if (type === "boolean" || type === "number") return String(value);
-  return JSON.stringify(String(value || ""));
-}
-
-type RunnerRunSummarySegment =
-  | { kind: "markdown"; content: string; id: string }
-  | { kind: "json"; value: RunnerSummaryJsonValue; id: string; title: string };
-
-export interface RunnerChatUserPromptRenderContext {
-  turnId: string;
-  turnIndex: number;
-  isLatestTurn: boolean;
-  prompt: string;
-  displayContent: string;
-  isEmailPrompt: boolean;
-  emailFrom: string;
-}
-
-export interface RunnerChatRunSummaryJsonRenderContext {
-  turnId: string;
-  segmentId: string;
-  title: string;
-  value: RunnerSummaryJsonValue;
-  summaryContent: string;
-  agentMessage: RunnerLog;
-}
-
-function splitRunnerRunSummaryContent(content: string): RunnerRunSummarySegment[] {
-  const normalizedContent = stripSystemTags(content || "").trim();
-  if (!normalizedContent) return [];
-
-  const pureJson = parseRunnerSummaryJsonValue(normalizedContent);
-  if (pureJson) {
-    return [{ kind: "json", value: pureJson, id: "json-0", title: "JSON" }];
-  }
-
-  const segments: RunnerRunSummarySegment[] = [];
-  const fenceRegex = /```([^\n`]*)\n([\s\S]*?)```/g;
-  let cursor = 0;
-  let jsonIndex = 0;
-  let match: RegExpExecArray | null;
-
-  while ((match = fenceRegex.exec(normalizedContent))) {
-    const fullMatch = match[0] || "";
-    const language = String(match[1] || "").trim().toLowerCase();
-    const body = String(match[2] || "").trim();
-    const startsAt = match.index;
-    const jsonValue = (!language || language === "json" || language === "jsonc") ? parseRunnerSummaryJsonValue(body) : null;
-
-    if (!jsonValue) {
-      continue;
-    }
-
-    const before = normalizedContent.slice(cursor, startsAt).trim();
-    if (before) {
-      segments.push({ kind: "markdown", content: before, id: `markdown-${segments.length}` });
-    }
-    segments.push({ kind: "json", value: jsonValue, id: `json-${jsonIndex}`, title: "JSON" });
-    jsonIndex += 1;
-    cursor = startsAt + fullMatch.length;
-  }
-
-  if (!segments.length) {
-    return [{ kind: "markdown", content: normalizedContent, id: "markdown-0" }];
-  }
-
-  const after = normalizedContent.slice(cursor).trim();
-  if (after) {
-    segments.push({ kind: "markdown", content: after, id: `markdown-${segments.length}` });
-  }
-
-  return segments;
-}
-
-function RunnerRunSummaryJsonRows({ value, depth = 0 }: { value: RunnerSummaryJsonValue | unknown; depth?: number }) {
-  const entries = Array.isArray(value)
-    ? value.map((item, index) => [String(index), item] as const)
-    : Object.entries(isRunnerSummaryPlainObject(value) ? value : {});
-
-  if (!entries.length) {
-    return (
-      <div className="tb-run-summary-json-empty" style={depth > 0 ? { marginLeft: depth * 18 } : undefined}>
-        No fields.
-      </div>
-    );
-  }
-
-  return (
-    <div className="tb-run-summary-json-field-tree">
-      {entries.map(([fieldKey, fieldValue]) => {
-        const fieldType = getRunnerSummaryJsonType(fieldValue);
-        const expandable = fieldType === "object" || fieldType === "array";
-        return (
-          <div key={`${depth}:${fieldKey}`} className="tb-run-summary-json-field-node">
-            <div className="tb-run-summary-json-field-row" style={{ paddingLeft: depth * 18 }}>
-              <div className="tb-run-summary-json-field-main">
-                <span className="tb-run-summary-json-field-toggle-placeholder" />
-                <span className="tb-run-summary-json-field-key">{fieldKey}</span>
-                <span className="tb-run-summary-json-field-separator">:</span>
-                {expandable ? (
-                  <span className="tb-run-summary-json-field-group">
-                    <span className="tb-run-summary-json-field-type-pill">{fieldType === "object" ? "Object" : "Array"}</span>
-                    <span className="tb-run-summary-json-field-preview">{formatRunnerSummaryJsonPreview(fieldValue)}</span>
-                  </span>
-                ) : (
-                  <span className="tb-run-summary-json-field-value">{formatRunnerSummaryJsonPreview(fieldValue)}</span>
-                )}
-              </div>
-            </div>
-            {expandable ? (
-              <div className="tb-run-summary-json-field-children">
-                <RunnerRunSummaryJsonRows value={fieldValue} depth={depth + 1} />
-              </div>
-            ) : null}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function RunnerRunSummaryJsonDocument({ value, title = "JSON", documentId }: { value: RunnerSummaryJsonValue; title?: string; documentId: string }) {
-  const [viewMode, setViewMode] = useState<"preview" | "json">("preview");
-  const rawJson = useMemo(() => formatRunnerSummaryJsonRaw(value), [value]);
-
-  return (
-    <div className="tb-run-summary-json-document">
-      <div className="tb-run-summary-json-header">
-        <div className="tb-run-summary-json-title">
-          <LucideBraces className="tb-run-summary-json-title-icon" strokeWidth={1.9} />
-          <span>{title}</span>
-        </div>
-        <div className="tb-run-summary-json-mode-switch" role="tablist" aria-label="JSON display mode">
-          <button
-            type="button"
-            className={`tb-run-summary-json-mode-button ${viewMode === "preview" ? "is-active" : ""}`.trim()}
-            onClick={() => setViewMode("preview")}
-          >
-            Preview
-          </button>
-          <button
-            type="button"
-            className={`tb-run-summary-json-mode-button ${viewMode === "json" ? "is-active" : ""}`.trim()}
-            onClick={() => setViewMode("json")}
-          >
-            JSON
-          </button>
-        </div>
-      </div>
-      <div className="tb-run-summary-json-body">
-        {viewMode === "json" ? (
-          <div className="tb-run-summary-json-editor-shell">
-            <RunnerCodeViewer
-              content={rawJson}
-              filePath={`run-summary-${documentId}.json`}
-              language="json"
-              showLineNumbers
-              fillHeight
-              className="tb-run-summary-json-editor"
-            />
-          </div>
-        ) : (
-          <RunnerRunSummaryJsonRows value={value} />
-        )}
-      </div>
-    </div>
-  );
-}
-
-function CollapsibleRunnerUserPrompt({
-  content,
-  className,
-  maxLines = 10,
-}: {
-  content: string;
-  className?: string;
-  maxLines?: number;
-}) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [isOverflowing, setIsOverflowing] = useState(false);
-
-  useEffect(() => {
-    setIsExpanded(false);
-  }, [content]);
-
-  useLayoutEffect(() => {
-    const node = containerRef.current;
-    if (!node) {
-      return;
-    }
-
-    const measure = () => {
-      const computedStyle = window.getComputedStyle(node);
-      const lineHeight = Number.parseFloat(computedStyle.lineHeight);
-      const collapsedHeight = Number.isFinite(lineHeight) ? lineHeight * maxLines : 0;
-      if (collapsedHeight > 0) {
-        setIsOverflowing(node.scrollHeight > collapsedHeight + 1);
-        return;
-      }
-      setIsOverflowing(node.scrollHeight > node.clientHeight + 1);
-    };
-
-    measure();
-
-    if (typeof ResizeObserver === "function") {
-      const observer = new ResizeObserver(() => {
-        measure();
-      });
-      observer.observe(node);
-      return () => observer.disconnect();
-    }
-
-    window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
-  }, [content, maxLines]);
-
-  return (
-    <>
-      <div
-        ref={containerRef}
-        className={`tb-user-turn-collapsible-copy ${isExpanded ? "is-expanded" : ""}`.trim()}
-        style={!isExpanded ? { ["--tb-user-turn-collapsed-lines" as string]: String(maxLines) } : undefined}
-      >
-        <RunnerMarkdown
-          content={content}
-          className={className}
-          softBreaks
-          disallowHeadings
-        />
-      </div>
-      {isOverflowing ? (
-        <button
-          type="button"
-          className="tb-user-turn-show-more"
-          onClick={() => setIsExpanded((current) => !current)}
-        >
-          <span>{isExpanded ? "Show less" : "Show more"}</span>
-          {isExpanded ? (
-            <LucideChevronUp className="tb-user-turn-show-more-icon" strokeWidth={1.8} />
-          ) : (
-            <LucideChevronDown className="tb-user-turn-show-more-icon" strokeWidth={1.8} />
-          )}
-        </button>
-      ) : null}
-    </>
-  );
-}
-
-type RunnerTurnStatus = "queued" | "running" | "permission_asked" | "completed" | "failed" | "cancelled";
 export type RunnerFileBrowserSource = "workspace" | "google-drive" | "one-drive" | "github" | "notion";
-type RunnerQuotedSelectionSource = "working_log" | "run_summary" | "deep_research_report";
 type RunnerThinkingStatusPhase = "visible" | "fading" | "hidden";
 
 function normalizeRunnerFileBrowserSource(source: unknown): RunnerFileBrowserSource {
@@ -938,39 +601,10 @@ function normalizeRunnerFileBrowserSource(source: unknown): RunnerFileBrowserSou
   return "workspace";
 }
 
-interface RunnerQuotedSelection {
-  text: string;
-  sourceType: RunnerQuotedSelectionSource;
-}
-
 interface RunnerQuotedSelectionPopupState {
   selection: RunnerQuotedSelection;
   x: number;
   y: number;
-}
-
-interface RunnerTurn {
-  id: string;
-  sourceMessageId?: string | null;
-  prompt: string;
-  messageMetadata?: Record<string, unknown> | null;
-  logs: RunnerLog[];
-  startedAtMs: number;
-  completedAtMs?: number;
-  durationSeconds?: number | null;
-  status: RunnerTurnStatus;
-  animateOnRender?: boolean;
-  isInitialTurn?: boolean;
-  agentName?: string | null;
-  environmentName?: string | null;
-  presentation?: "default" | "context-action-notice" | "btw";
-  quotedSelection?: RunnerQuotedSelection | null;
-  attachments?: RunnerTurnAttachment[] | null;
-  slideCreationCommand?: StagedSlideCreationCommand | null;
-  researchCreationCommand?: StagedResearchCreationCommand | null;
-  scrapeCreationCommand?: StagedScrapeCreationCommand | null;
-  parseCreationCommand?: StagedParseCreationCommand | null;
-  adCreationCommand?: StagedAdCreationCommand | null;
 }
 
 export interface RunnerChatAgentTurnClickPayload {
@@ -988,171 +622,6 @@ export interface RunnerChatSummaryWorkspacePathClickPayload {
   sourceType: "run_summary" | "working_log" | "deep_research_report";
 }
 
-type RunnerThreadHistoryRole = "user" | "assistant";
-
-interface RunnerThreadHistoryItem {
-  id: string;
-  turnId: string;
-  role: RunnerThreadHistoryRole;
-  label: string;
-  preview: string;
-}
-
-interface PendingRunnerMessage {
-  id: string;
-  turnId: string;
-  prompt: string;
-  displayPrompt?: string | null;
-  reasoningEffort?: string | null;
-  attachments: LocalAttachment[];
-  extraResolvedAttachments?: RunnerAttachment[] | null;
-  quotedSelection?: RunnerQuotedSelection | null;
-  backlogCommand?: StagedBacklogCommand | null;
-  resourceCreationCommand?: StagedResourceCreationCommand | null;
-  agentCreationCommand?: StagedAgentCreationCommand | null;
-  skillCreationCommand?: StagedSkillCreationCommand | null;
-  slideCreationCommand?: StagedSlideCreationCommand | null;
-  researchCreationCommand?: StagedResearchCreationCommand | null;
-  scrapeCreationCommand?: StagedScrapeCreationCommand | null;
-  parseCreationCommand?: StagedParseCreationCommand | null;
-  adCreationCommand?: StagedAdCreationCommand | null;
-}
-
-interface RunnerImagePreviewSelectionState {
-  attachmentId: string;
-  naturalSize: RunnerImageNaturalSize;
-  strokes: RunnerImageMaskStroke[];
-}
-
-interface BaseStagedBacklogCommand {
-  label: string;
-}
-
-interface StagedBacklogSubtaskCommand extends BaseStagedBacklogCommand {
-  action: "subtask";
-  ticketNumber: string;
-}
-
-interface StagedBacklogMissionControlCommand extends BaseStagedBacklogCommand {
-  action: "mission_control";
-}
-
-type StagedBacklogCommand = StagedBacklogSubtaskCommand | StagedBacklogMissionControlCommand;
-type RunnerResourceCreationCommandType = "computer" | "app" | "function";
-type RunnerAgentCreationCommandType = "agent" | "team";
-type RunnerSkillCreationCommandType = "skill";
-type RunnerAdCreationStyleId = "clean" | "bold" | "premium" | "social";
-type RunnerAdCreationQualityId = "low" | "medium" | "high";
-type RunnerAdCreationAspectRatioId = "1:1" | "4:5" | "9:16" | "16:9";
-type RunnerAdCreationVariantCount = 1 | 2 | 4;
-
-interface RunnerAdCreationSettings {
-  style: RunnerAdCreationStyleId;
-  quality: RunnerAdCreationQualityId;
-  aspectRatio: RunnerAdCreationAspectRatioId;
-  variants: RunnerAdCreationVariantCount;
-}
-
-const RUNNER_AD_CT_PER_DOLLAR = 100;
-const RUNNER_AD_GPT_IMAGE_2_OUTPUT_USD_PER_MILLION = 30;
-const RUNNER_AD_CREATION_DEFAULT_SETTINGS: RunnerAdCreationSettings = {
-  style: "premium",
-  quality: "medium",
-  aspectRatio: "1:1",
-  variants: 1,
-};
-const RUNNER_AD_STYLE_OPTIONS: Array<{ id: RunnerAdCreationStyleId; label: string; description: string }> = [
-  { id: "premium", label: "Premium", description: "Polished brand ad" },
-  { id: "bold", label: "Bold", description: "High contrast campaign" },
-  { id: "clean", label: "Clean", description: "Minimal product focus" },
-  { id: "social", label: "Social", description: "Native feed creative" },
-];
-const RUNNER_AD_QUALITY_OPTIONS: Array<{ id: RunnerAdCreationQualityId; label: string; description: string; outputTokens: number }> = [
-  { id: "low", label: "Low", description: "Fast draft", outputTokens: 272 },
-  { id: "medium", label: "Medium", description: "Balanced detail", outputTokens: 1056 },
-  { id: "high", label: "High", description: "Highest detail", outputTokens: 4160 },
-];
-const RUNNER_AD_ASPECT_RATIO_OPTIONS: Array<{ id: RunnerAdCreationAspectRatioId; label: string; description: string }> = [
-  { id: "1:1", label: "1:1", description: "Square" },
-  { id: "4:5", label: "4:5", description: "Social feed" },
-  { id: "9:16", label: "9:16", description: "Story" },
-  { id: "16:9", label: "16:9", description: "Wide" },
-];
-const RUNNER_AD_VARIANT_OPTIONS: Array<{ id: RunnerAdCreationVariantCount; label: string; description: string }> = [
-  { id: 1, label: "1", description: "Single concept" },
-  { id: 2, label: "2", description: "Two variants" },
-  { id: 4, label: "4", description: "Small set" },
-];
-
-interface StagedResourceCreationCommand extends BaseStagedBacklogCommand {
-  action: RunnerResourceCreationCommandType;
-}
-
-interface StagedAgentCreationCommand extends BaseStagedBacklogCommand {
-  action: RunnerAgentCreationCommandType;
-}
-
-interface StagedSkillCreationCommand extends BaseStagedBacklogCommand {
-  action: RunnerSkillCreationCommandType;
-}
-
-interface StagedSlideCreationCommand extends BaseStagedBacklogCommand {
-  action: "slides";
-}
-
-interface StagedResearchCreationCommand extends BaseStagedBacklogCommand {
-  action: "research";
-}
-
-interface StagedScrapeCreationCommand extends BaseStagedBacklogCommand {
-  action: "scrape";
-}
-
-interface StagedParseCreationCommand extends BaseStagedBacklogCommand {
-  action: "parse";
-}
-
-interface StagedAdCreationCommand extends BaseStagedBacklogCommand {
-  action: "ad";
-  style?: RunnerAdCreationStyleId;
-  quality?: RunnerAdCreationQualityId;
-  aspectRatio?: RunnerAdCreationAspectRatioId;
-  variants?: RunnerAdCreationVariantCount;
-  computeTokensPerImage?: number;
-}
-
-interface RunnerSlashCommandInputState {
-  query: string;
-  prompt: string;
-}
-
-interface RunnerTaskPreview {
-  taskId: string;
-  projectId: string;
-  projectName?: string;
-  threadId?: string;
-  ticketNumber: string;
-  title: string;
-  description?: string;
-  taskColor?: string;
-  status?: string;
-  priority?: string;
-  taskType?: string;
-  assigneeAgentId?: string;
-  assigneeName?: string;
-  assigneePhotoUrl?: string;
-  environmentId?: string;
-  environmentName?: string;
-  runKind?: string;
-  reviewRequired?: boolean;
-  reviewerAgentId?: string;
-  sourceThreadId?: string;
-  reviewRequest?: boolean;
-  showPromptPreview?: boolean;
-  reviewCommentId?: string;
-  isDeleted?: boolean;
-}
-
 export interface RunnerChatFollowUpAction {
   id: string;
   label: string;
@@ -1161,26 +630,6 @@ export interface RunnerChatFollowUpAction {
   focusComposer?: boolean;
   onClick?: () => Promise<void> | void;
 }
-
-interface RunnerMissionControlPreview {
-  prompt?: string;
-  projectName?: string;
-  projectIcon?: ReactNode;
-  agentName?: string;
-  agentPhotoUrl?: string;
-}
-
-type RunnerTurnSummaryPreviewItem =
-  | {
-      id: string;
-      kind: "attachment";
-      attachment: RunnerTurnAttachment;
-    }
-  | {
-      id: string;
-      kind: "resource";
-      resource: RunnerCreatedResourcePreview;
-    };
 
 interface PendingEditConfirmation {
   turnId: string;
@@ -1219,10 +668,6 @@ interface RunnerSelectedDeepResearchDetailPresentation {
   fallbackTopic?: string | null;
 }
 
-type RunnerForkFileCopyMode = "all" | "thread_only" | "none";
-type RunnerForkTarget = "existing_environment" | "new_forked_environment";
-type RunnerForkExistingEnvironmentFileCopyMode = "thread_only" | "none";
-
 interface PendingForkConfiguration {
   source: "message" | "thread";
   sourceThreadId: string;
@@ -1233,1716 +678,14 @@ interface PendingForkConfiguration {
   restoreSelectedEnvironmentId?: string | null;
 }
 
-function extractDeepResearchSessionIdFromLogs(logs: RunnerLog[], runningCommandLog?: RunnerLog): string | null {
-  const sessionIdFromLogs = logs.find(
-    (log) => typeof log.metadata?.deepResearch?.sessionId === "string" && log.metadata.deepResearch.sessionId.trim()
-  )?.metadata?.deepResearch?.sessionId;
-  if (typeof sessionIdFromLogs === "string" && sessionIdFromLogs.trim()) {
-    return sessionIdFromLogs.trim();
-  }
-  const commandSessionId = runningCommandLog?.metadata?.deepResearch?.sessionId;
-  return typeof commandSessionId === "string" && commandSessionId.trim() ? commandSessionId.trim() : null;
-}
-
-function extractDeepResearchTopicFromGroup(logs: RunnerLog[], runningCommandLog?: RunnerLog): string {
-  const topicFromLogs = logs.find(
-    (log) => typeof log.metadata?.deepResearch?.topic === "string" && log.metadata.deepResearch.topic.trim()
-  )?.metadata?.deepResearch?.topic;
-  if (typeof topicFromLogs === "string" && topicFromLogs.trim()) {
-    return topicFromLogs.trim();
-  }
-  const command = typeof runningCommandLog?.metadata?.command === "string" ? runningCommandLog.metadata.command : "";
-  const match = command.match(/deep-research\.py\s+["']([^"']+)["']/i);
-  return match?.[1]?.trim() || "";
-}
-
-function resolveDeepResearchSessionForGroup(params: {
-  logs: RunnerLog[];
-  runningCommandLog?: RunnerLog;
-  turn: RunnerTurn;
-  sessions: RunnerDeepResearchSession[];
-}): RunnerDeepResearchSession | null {
-  const sessionId = extractDeepResearchSessionIdFromLogs(params.logs, params.runningCommandLog);
-  if (sessionId) {
-    return params.sessions.find((session) => session.id === sessionId) || null;
-  }
-
-  const topic = extractDeepResearchTopicFromGroup(params.logs, params.runningCommandLog).toLowerCase();
-  const turnStartedAt = params.turn.startedAtMs;
-  const candidateSessions = params.sessions.filter((session) => {
-    if (topic && session.topic.trim().toLowerCase() === topic) {
-      return true;
-    }
-    const createdAtMs = parseIsoTimestampMs(session.startedAt) ?? parseIsoTimestampMs(session.createdAt);
-    return createdAtMs !== null && Math.abs(createdAtMs - turnStartedAt) <= 15 * 60 * 1000;
-  });
-
-  if (candidateSessions.length <= 1) {
-    return candidateSessions[0] || null;
-  }
-
-  return candidateSessions
-    .slice()
-    .sort((left, right) => {
-      const leftMs = parseIsoTimestampMs(left.startedAt) ?? parseIsoTimestampMs(left.createdAt) ?? 0;
-      const rightMs = parseIsoTimestampMs(right.startedAt) ?? parseIsoTimestampMs(right.createdAt) ?? 0;
-      return Math.abs(leftMs - turnStartedAt) - Math.abs(rightMs - turnStartedAt);
-    })[0] || null;
-}
-
-function isDeepResearchSessionActive(session: RunnerDeepResearchSession | null | undefined): boolean {
-  if (!session) {
-    return false;
-  }
-  const normalizedStatus = typeof session.status === "string" ? session.status.trim().toLowerCase() : "";
-  return Boolean(normalizedStatus) &&
-    normalizedStatus !== "completed" &&
-    normalizedStatus !== "failed" &&
-    normalizedStatus !== "timeout" &&
-    normalizedStatus !== "cancelled";
-}
-
-interface RunnerConversationMessage {
-  id?: string;
-  role: string;
-  content: string;
-  createdAt?: string;
-  inputTokens?: number | null;
-  outputTokens?: number | null;
-  durationMs?: number | null;
-  actionsCount?: number | null;
-  logMetadata?: Record<string, unknown> | null;
-}
-
-type RunnerThreadFeedbackRating = "up" | "down";
-type RunnerThreadFeedbackReportType = "general" | "bug" | "child_safety" | "response";
-
-interface RunnerThreadFeedbackState {
-  userRating: RunnerThreadFeedbackRating | null;
-  upCount: number;
-  downCount: number;
-  reportCount: number;
-  isSubmitting: boolean;
-}
-
-const RUNNER_THREAD_FEEDBACK_REPORT_OPTIONS: Array<{ value: RunnerThreadFeedbackReportType; label: string }> = [
-  { value: "general", label: "General feedback" },
-  { value: "bug", label: "Report issue / bug" },
-  { value: "child_safety", label: "Child safety concern" },
-  { value: "response", label: "Response feedback" },
-];
-
-function getRecordString(record: Record<string, unknown> | null | undefined, keys: string[]): string {
-  if (!record) {
-    return "";
-  }
-  for (const key of keys) {
-    const value = record[key];
-    if (typeof value === "string" && value.trim().length > 0) {
-      return value;
-    }
-    if (typeof value === "number" && Number.isFinite(value)) {
-      return String(value);
-    }
-  }
-  return "";
-}
-
-function getRecordNumber(record: Record<string, unknown> | null | undefined, keys: string[]): number | null {
-  if (!record) {
-    return null;
-  }
-  for (const key of keys) {
-    const value = record[key];
-    if (typeof value === "number" && Number.isFinite(value)) {
-      return value;
-    }
-    if (typeof value === "string" && value.trim()) {
-      const parsed = Number(value);
-      if (Number.isFinite(parsed)) {
-        return parsed;
-      }
-    }
-  }
-  return null;
-}
-
-function normalizeRecordObject(value: unknown): Record<string, unknown> | null {
-  if (value && typeof value === "object" && !Array.isArray(value)) {
-    return value as Record<string, unknown>;
-  }
-  if (typeof value === "string" && value.trim()) {
-    try {
-      const parsed = JSON.parse(value);
-      return parsed && typeof parsed === "object" && !Array.isArray(parsed)
-        ? (parsed as Record<string, unknown>)
-        : null;
-    } catch {
-      return null;
-    }
-  }
-  return null;
-}
-
-function getRecordObject(record: Record<string, unknown> | null | undefined, keys: string[]): Record<string, unknown> | null {
-  if (!record) {
-    return null;
-  }
-  for (const key of keys) {
-    const value = normalizeRecordObject(record[key]);
-    if (value) {
-      return value;
-    }
-  }
-  return null;
-}
-
-function addRunnerGuardrailText(texts: string[], seen: Set<string>, value: unknown): void {
-  const text = typeof value === "string" ? value.trim() : "";
-  if (!text || seen.has(text)) {
-    return;
-  }
-  seen.add(text);
-  texts.push(text);
-}
-
-function collectRunnerPromptAdaptationTexts(texts: string[], seen: Set<string>, value: unknown): void {
-  if (!Array.isArray(value)) {
-    return;
-  }
-  value.forEach((item) => {
-    if (typeof item === "string") {
-      addRunnerGuardrailText(texts, seen, item);
-      return;
-    }
-    const record = normalizeRecordObject(item);
-    if (!record) {
-      return;
-    }
-    addRunnerGuardrailText(texts, seen, getRecordString(record, ["content", "prompt", "text", "instruction", "instructions"]));
-  });
-}
-
-function collectRunnerGuardrailSetTexts(texts: string[], seen: Set<string>, value: unknown): void {
-  if (!Array.isArray(value)) {
-    return;
-  }
-  value.forEach((item) => {
-    const record = normalizeRecordObject(item);
-    if (!record) {
-      return;
-    }
-    addRunnerGuardrailText(texts, seen, getRecordString(record, ["prompt", "content", "text", "instruction", "instructions"]));
-    getRecordArray(record, ["prompts", "promptAdaptations", "prompt_adaptations", "invisiblePromptAdaptations", "invisible_prompt_adaptations"])
-      .forEach((prompt) => {
-        if (typeof prompt === "string") {
-          addRunnerGuardrailText(texts, seen, prompt);
-          return;
-        }
-        const promptRecord = normalizeRecordObject(prompt);
-        if (!promptRecord) {
-          return;
-        }
-        addRunnerGuardrailText(texts, seen, getRecordString(promptRecord, ["prompt", "content", "text", "instruction", "instructions"]));
-      });
-  });
-}
-
-function getRunnerAgentGuardrailTexts(option: RunnerChatOption | null | undefined): string[] {
-  if (!option) {
-    return [];
-  }
-
-  const candidate = option as RunnerAgentOptionRecord;
-  const metadata = normalizeRecordObject(candidate.metadata);
-  const runnerGuardrails = getRecordObject(metadata, ["runnerGuardrails", "runner_guardrails"]);
-  const texts: string[] = [];
-  const seen = new Set<string>();
-  const adaptationKeys = [
-    "promptAdaptations",
-    "prompt_adaptations",
-    "promptAdaptions",
-    "prompt_adaptions",
-    "invisiblePromptAdaptations",
-    "invisible_prompt_adaptations",
-    "invisiblePromptAdaptions",
-    "invisible_prompt_adaptions",
-  ];
-
-  [
-    candidate.promptAdaptations,
-    candidate.prompt_adaptations,
-    candidate.promptAdaptions,
-    candidate.prompt_adaptions,
-    candidate.invisiblePromptAdaptations,
-    candidate.invisible_prompt_adaptations,
-    candidate.invisiblePromptAdaptions,
-    candidate.invisible_prompt_adaptions,
-    ...adaptationKeys.map((key) => metadata?.[key]),
-    ...adaptationKeys.map((key) => runnerGuardrails?.[key]),
-  ].forEach((value) => collectRunnerPromptAdaptationTexts(texts, seen, value));
-
-  [
-    candidate.guardrails,
-    metadata?.guardrails,
-    runnerGuardrails?.guardrails,
-  ].forEach((value) => collectRunnerGuardrailSetTexts(texts, seen, value));
-
-  return texts;
-}
-
-const RUNNER_AGENT_GUARDRAILS_HIDDEN_PROMPT_MARKER = "Invisible guardrails for the selected agent:";
-const RUNNER_VISIBLE_USER_MESSAGE_MARKER = "Visible user message:";
-
-function isRunnerInternalHiddenExecutionPromptContent(value: unknown): boolean {
-  const normalizedValue = stripSystemTags(String(value || "")).trim();
-  if (!normalizedValue) {
-    return false;
-  }
-  return normalizedValue.startsWith(RUNNER_AGENT_GUARDRAILS_HIDDEN_PROMPT_MARKER);
-}
-
-function extractRunnerVisibleContentFromHiddenExecutionPrompt(value: unknown): string {
-  const normalizedValue = stripSystemTags(String(value || "")).trim();
-  if (!isRunnerInternalHiddenExecutionPromptContent(normalizedValue)) {
-    return normalizedValue;
-  }
-
-  const explicitVisibleIndex = normalizedValue.lastIndexOf(RUNNER_VISIBLE_USER_MESSAGE_MARKER);
-  if (explicitVisibleIndex >= 0) {
-    return normalizedValue.slice(explicitVisibleIndex + RUNNER_VISIBLE_USER_MESSAGE_MARKER.length).trim();
-  }
-
-  const blocks = normalizedValue
-    .split(/\n{2,}/)
-    .map((block) => block.trim())
-    .filter(Boolean);
-  const lastBlock = blocks[blocks.length - 1] || "";
-  if (
-    !lastBlock ||
-    lastBlock === RUNNER_AGENT_GUARDRAILS_HIDDEN_PROMPT_MARKER ||
-    lastBlock.startsWith("Follow these guardrails") ||
-    /^Guardrail\s+\d+:/i.test(lastBlock)
-  ) {
-    return "";
-  }
-  return lastBlock;
-}
-
-function buildRunnerExecutionPromptWithHiddenContext(hiddenParts: string[], visiblePrompt: string): string {
-  const normalizedHiddenParts = hiddenParts
-    .filter((part) => typeof part === "string" && part.trim().length > 0)
-    .map((part) => part.trim());
-  const normalizedVisiblePrompt = String(visiblePrompt || "").trim();
-  if (normalizedHiddenParts.length === 0) {
-    return normalizedVisiblePrompt;
-  }
-  return [
-    ...normalizedHiddenParts,
-    `${RUNNER_VISIBLE_USER_MESSAGE_MARKER}\n${normalizedVisiblePrompt}`,
-  ].join("\n\n");
-}
-
-function buildRunnerAgentGuardrailsHiddenPrompt(option: RunnerChatOption | null | undefined): string {
-  const guardrailTexts = getRunnerAgentGuardrailTexts(option);
-  if (guardrailTexts.length === 0) {
-    return "";
-  }
-  return [
-    RUNNER_AGENT_GUARDRAILS_HIDDEN_PROMPT_MARKER,
-    "Follow these guardrails for every response in this thread unless a higher-priority system or safety instruction conflicts with them.",
-    guardrailTexts.map((text, index) => `Guardrail ${index + 1}:\n${text}`).join("\n\n"),
-  ].join("\n\n");
-}
-
-function normalizeRunnerAdCreationSettings(value?: Partial<RunnerAdCreationSettings> | null): RunnerAdCreationSettings {
-  const style = RUNNER_AD_STYLE_OPTIONS.some((option) => option.id === value?.style)
-    ? value?.style
-    : RUNNER_AD_CREATION_DEFAULT_SETTINGS.style;
-  const quality = RUNNER_AD_QUALITY_OPTIONS.some((option) => option.id === value?.quality)
-    ? value?.quality
-    : RUNNER_AD_CREATION_DEFAULT_SETTINGS.quality;
-  const aspectRatio = RUNNER_AD_ASPECT_RATIO_OPTIONS.some((option) => option.id === value?.aspectRatio)
-    ? value?.aspectRatio
-    : RUNNER_AD_CREATION_DEFAULT_SETTINGS.aspectRatio;
-  const variants = RUNNER_AD_VARIANT_OPTIONS.some((option) => option.id === value?.variants)
-    ? value?.variants
-    : RUNNER_AD_CREATION_DEFAULT_SETTINGS.variants;
-  return {
-    style: style || RUNNER_AD_CREATION_DEFAULT_SETTINGS.style,
-    quality: quality || RUNNER_AD_CREATION_DEFAULT_SETTINGS.quality,
-    aspectRatio: aspectRatio || RUNNER_AD_CREATION_DEFAULT_SETTINGS.aspectRatio,
-    variants: variants || RUNNER_AD_CREATION_DEFAULT_SETTINGS.variants,
-  };
-}
-
-function getRunnerAdCreationQualityComputeTokensPerImage(quality: RunnerAdCreationQualityId): number {
-  const option = RUNNER_AD_QUALITY_OPTIONS.find((entry) => entry.id === quality) || RUNNER_AD_QUALITY_OPTIONS[1];
-  const dollars = ((option?.outputTokens || 0) / 1_000_000) * RUNNER_AD_GPT_IMAGE_2_OUTPUT_USD_PER_MILLION;
-  return Math.max(1, Math.round(dollars * RUNNER_AD_CT_PER_DOLLAR));
-}
-
-function formatRunnerAdCreationComputeTokens(value: number): string {
-  const normalized = Number(value);
-  if (!Number.isFinite(normalized) || normalized <= 0) {
-    return "$0.00";
-  }
-  const dollars = normalized / RUNNER_AD_CT_PER_DOLLAR;
-  const smallValue = dollars > 0 && dollars < 0.01;
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: smallValue ? 4 : 2,
-    maximumFractionDigits: smallValue ? 4 : 2,
-  }).format(dollars);
-}
-
-function buildStagedRunnerAdCreationCommand(settings?: Partial<RunnerAdCreationSettings> | null): StagedAdCreationCommand {
-  const normalizedSettings = normalizeRunnerAdCreationSettings(settings);
-  return {
-    action: "ad",
-    label: buildRunnerAdCreationLabel(),
-    ...normalizedSettings,
-    computeTokensPerImage: getRunnerAdCreationQualityComputeTokensPerImage(normalizedSettings.quality),
-  };
-}
-
-function buildRunnerAdEnabledSkillsPayload(
-  adCreationCommand: StagedAdCreationCommand | null | undefined,
-  enabledSkills: Record<string, unknown> | null
-): Record<string, unknown> | null {
-  if (!adCreationCommand) {
-    return enabledSkills;
-  }
-  const settings = normalizeRunnerAdCreationSettings(adCreationCommand);
-  const computeTokensPerImage = getRunnerAdCreationQualityComputeTokensPerImage(settings.quality);
-  return {
-    ...(enabledSkills || {}),
-    imageGeneration: true,
-    imageGenerationModel: "gpt-image-2",
-    imageGenerationQuality: settings.quality,
-    imageGenerationComputeTokensPerImage: computeTokensPerImage,
-    imageGenerationConfig: {
-      ...(
-        enabledSkills && typeof enabledSkills.imageGenerationConfig === "object" && enabledSkills.imageGenerationConfig && !Array.isArray(enabledSkills.imageGenerationConfig)
-          ? (enabledSkills.imageGenerationConfig as Record<string, unknown>)
-          : {}
-      ),
-      model: "gpt-image-2",
-      quality: settings.quality,
-      computeTokensPerImage,
-    },
-  };
-}
-
-function buildRunnerScrapeEnabledSkillsPayload(
-  scrapeCreationCommand: StagedScrapeCreationCommand | null | undefined,
-  enabledSkills: Record<string, unknown> | null
-): Record<string, unknown> | null {
-  if (!scrapeCreationCommand) {
-    return enabledSkills;
-  }
-  return {
-    ...(enabledSkills || {}),
-    webSearch: true,
-  };
-}
-
-function buildRunnerParseEnabledSkillsPayload(
-  parseCreationCommand: StagedParseCreationCommand | null | undefined,
-  enabledSkills: Record<string, unknown> | null
-): Record<string, unknown> | null {
-  if (!parseCreationCommand) {
-    return enabledSkills;
-  }
-  return {
-    ...(enabledSkills || {}),
-    pdf: true,
-    documentParsing: true,
-  };
-}
-
-function buildAssistantMessageRunMetadata(message: RunnerConversationMessage): RunnerLog["metadata"] | undefined {
-  const baseMetadata =
-    message.logMetadata && typeof message.logMetadata === "object" && !Array.isArray(message.logMetadata)
-      ? message.logMetadata
-      : {};
-  const metadata: Record<string, unknown> = { ...baseMetadata };
-  if (typeof message.durationMs === "number" && Number.isFinite(message.durationMs)) {
-    metadata.durationMs = message.durationMs;
-  }
-  if (typeof message.inputTokens === "number" && Number.isFinite(message.inputTokens)) {
-    metadata.inputTokens = message.inputTokens;
-  }
-  if (typeof message.outputTokens === "number" && Number.isFinite(message.outputTokens)) {
-    metadata.outputTokens = message.outputTokens;
-  }
-  if (typeof message.actionsCount === "number" && Number.isFinite(message.actionsCount)) {
-    metadata.actionsCount = message.actionsCount;
-  }
-  return Object.keys(metadata).length > 0 ? (metadata as RunnerLog["metadata"]) : undefined;
-}
-
-function normalizeSlideCreationCommandFromMetadata(logMetadata: unknown): StagedSlideCreationCommand | null {
-  const metadata = normalizeRecordObject(logMetadata);
-  if (!metadata) {
-    return null;
-  }
-
-  const commandRecord = normalizeRecordObject(metadata.slideCreationCommand);
-  if (commandRecord) {
-    const action = getRecordString(commandRecord, ["action", "type"]).trim().toLowerCase();
-    const label = getRecordString(commandRecord, ["label", "command"]).trim().toLowerCase();
-    if (action === "slides" || label === "/slides") {
-      return {
-        action: "slides",
-        label: buildRunnerSlideCreationLabel(),
-      };
-    }
-  }
-
-  const mode = getRecordString(metadata, ["composerMode", "mode", "slashCommand", "command"]).trim().toLowerCase();
-  if (mode === "slides" || mode === "/slides") {
-    return {
-      action: "slides",
-      label: buildRunnerSlideCreationLabel(),
-    };
-  }
-
-  return null;
-}
-
-function normalizeResearchCreationCommandFromMetadata(logMetadata: unknown): StagedResearchCreationCommand | null {
-  const metadata = normalizeRecordObject(logMetadata);
-  if (!metadata) {
-    return null;
-  }
-
-  const commandRecord = normalizeRecordObject(metadata.researchCreationCommand);
-  if (commandRecord) {
-    const action = getRecordString(commandRecord, ["action", "type"]).trim().toLowerCase();
-    const label = getRecordString(commandRecord, ["label", "command"]).trim().toLowerCase();
-    if (action === "research" || label === "/research") {
-      return {
-        action: "research",
-        label: buildRunnerResearchCreationLabel(),
-      };
-    }
-  }
-
-  const mode = getRecordString(metadata, ["composerMode", "mode", "slashCommand", "command"]).trim().toLowerCase();
-  if (mode === "research" || mode === "/research") {
-    return {
-      action: "research",
-      label: buildRunnerResearchCreationLabel(),
-    };
-  }
-
-  return null;
-}
-
-function normalizeScrapeCreationCommandFromMetadata(logMetadata: unknown): StagedScrapeCreationCommand | null {
-  const metadata = normalizeRecordObject(logMetadata);
-  if (!metadata) {
-    return null;
-  }
-
-  const commandRecord = normalizeRecordObject(metadata.scrapeCreationCommand);
-  if (commandRecord) {
-    const action = getRecordString(commandRecord, ["action", "type"]).trim().toLowerCase();
-    const label = getRecordString(commandRecord, ["label", "command"]).trim().toLowerCase();
-    if (action === "scrape" || label === "/scrape") {
-      return {
-        action: "scrape",
-        label: buildRunnerScrapeCreationLabel(),
-      };
-    }
-  }
-
-  const mode = getRecordString(metadata, ["composerMode", "mode", "slashCommand", "command"]).trim().toLowerCase();
-  if (mode === "scrape" || mode === "/scrape") {
-    return {
-      action: "scrape",
-      label: buildRunnerScrapeCreationLabel(),
-    };
-  }
-
-  return null;
-}
-
-function normalizeParseCreationCommandFromMetadata(logMetadata: unknown): StagedParseCreationCommand | null {
-  const metadata = normalizeRecordObject(logMetadata);
-  if (!metadata) {
-    return null;
-  }
-
-  const commandRecord = normalizeRecordObject(metadata.parseCreationCommand);
-  if (commandRecord) {
-    const action = getRecordString(commandRecord, ["action", "type"]).trim().toLowerCase();
-    const label = getRecordString(commandRecord, ["label", "command"]).trim().toLowerCase();
-    if (action === "parse" || label === "/parse") {
-      return {
-        action: "parse",
-        label: buildRunnerParseCreationLabel(),
-      };
-    }
-  }
-
-  const mode = getRecordString(metadata, ["composerMode", "mode", "slashCommand", "command"]).trim().toLowerCase();
-  if (mode === "parse" || mode === "/parse") {
-    return {
-      action: "parse",
-      label: buildRunnerParseCreationLabel(),
-    };
-  }
-
-  return null;
-}
-
-function normalizeAdCreationCommandFromMetadata(logMetadata: unknown): StagedAdCreationCommand | null {
-  const metadata = normalizeRecordObject(logMetadata);
-  if (!metadata) {
-    return null;
-  }
-
-  const commandRecord = normalizeRecordObject(metadata.adCreationCommand);
-  if (commandRecord) {
-    const action = getRecordString(commandRecord, ["action", "type"]).trim().toLowerCase();
-    const label = getRecordString(commandRecord, ["label", "command"]).trim().toLowerCase();
-    if (action === "ad" || label === "/ad") {
-      const variants = getRecordNumber(commandRecord, ["variants", "variantCount", "variant_count"]);
-      return buildStagedRunnerAdCreationCommand({
-        style: getRecordString(commandRecord, ["style"]) as RunnerAdCreationStyleId,
-        quality: getRecordString(commandRecord, ["quality"]) as RunnerAdCreationQualityId,
-        aspectRatio: getRecordString(commandRecord, ["aspectRatio", "aspect_ratio"]) as RunnerAdCreationAspectRatioId,
-        variants: (variants as RunnerAdCreationVariantCount | null) || undefined,
-      });
-    }
-  }
-
-  const mode = getRecordString(metadata, ["composerMode", "mode", "slashCommand", "command"]).trim().toLowerCase();
-  if (mode === "ad" || mode === "/ad") {
-    return buildStagedRunnerAdCreationCommand();
-  }
-
-  return null;
-}
-
-function sanitizeRunnerBudgetMessage(value: string): string {
-  return String(value || "")
-    .replace(
-      /Insufficient budget:\s*Insufficient balance:\s*\$-?\d+(?:\.\d+)?\.?\s*Please add funds\.?/gi,
-      "Insufficient budget: Insufficient balance. Please add credits or upgrade your plan to continue."
-    )
-    .replace(
-      /Insufficient balance:\s*\$-?\d+(?:\.\d+)?\.?\s*Please add funds\.?/gi,
-      "Insufficient balance. Please add credits or upgrade your plan to continue."
-    )
-    .replace(/\bcompute tokens\b/gi, "credits");
-}
-
-const AGENT_RUNTIME_INTERRUPTED_MESSAGE =
-  "The agent stopped unexpectedly before it could finish. Please retry this turn. If the issue continues, contact support.";
-const LLM_PROVIDER_UNAVAILABLE_MESSAGE =
-  "The selected model provider is temporarily unavailable. Please retry this turn in a moment.";
-
-function isInternalAgentRuntimeFailureMessage(value: string): boolean {
-  const normalized = value.replace(/\s+/g, " ").trim();
-  if (!normalized) return false;
-  return (
-    /\bclaw\s+worker\b/i.test(normalized) ||
-    /\bclaude\s+worker\b/i.test(normalized) ||
-    /\bworker\s+(?:exited|closed|is not available|produced no output|request failed|ready timeout)\b/i.test(normalized) ||
-    /\b(?:docker\s+exec|container execution)\s+failed\b/i.test(normalized) ||
-    /\bcontainer no longer exists\b/i.test(normalized) ||
-    /\bexited with code\s+137\b/i.test(normalized)
-  );
-}
-
-function isLlmProviderUnavailableMessage(value: string): boolean {
-  const normalized = value.replace(/\s+/g, " ").trim();
-  if (!normalized) return false;
-  const hasUnavailableStatus =
-    /\bapi returned\s+503\b/i.test(normalized) ||
-    /\b503\s+service unavailable\b/i.test(normalized) ||
-    /\bservice unavailable\b/i.test(normalized) ||
-    /\btemporarily unavailable\b/i.test(normalized);
-  const hasProviderMarker =
-    /"code"\s*:\s*3045\b/i.test(normalized) ||
-    /\bAiError:\s*AiError:\s*Unknown internal error\b/i.test(normalized) ||
-    /\b(?:cloudflare|workers ai|moonshot|model provider|llm provider)\b/i.test(normalized);
-  const hasRetryWrapper = /\bapi failed after\s+\d+\s+attempts\b/i.test(normalized);
-
-  return (
-    (hasProviderMarker && hasUnavailableStatus) ||
-    (hasRetryWrapper && hasUnavailableStatus)
-  );
-}
-
-function getRunnerFailureReplacement(value: string): string | null {
-  if (isInternalAgentRuntimeFailureMessage(value)) {
-    return AGENT_RUNTIME_INTERRUPTED_MESSAGE;
-  }
-  if (isLlmProviderUnavailableMessage(value)) {
-    return LLM_PROVIDER_UNAVAILABLE_MESSAGE;
-  }
-  return null;
-}
-
-function sanitizeRunnerMessage(value: string): string {
-  const normalized = sanitizeRunnerBudgetMessage(value);
-  const replacementMessage = getRunnerFailureReplacement(normalized);
-  if (!replacementMessage) {
-    return normalized;
-  }
-  const replacement = `Execution failed: ${replacementMessage}`;
-  if (/\[Execution failed\]/i.test(normalized)) {
-    return normalized.replace(/\[Execution failed\][\s\S]*$/i, `[Execution failed]\n${replacement}`);
-  }
-  if (/^execution failed\b/i.test(normalized.trim())) {
-    return replacement;
-  }
-  return replacementMessage;
-}
-
-function isRunnerModelProviderUnavailableMessage(value: unknown): boolean {
-  if (typeof value !== "string") {
-    return false;
-  }
-  const normalized = sanitizeRunnerBudgetMessage(value);
-  return isLlmProviderUnavailableMessage(normalized) || sanitizeRunnerMessage(normalized).includes(LLM_PROVIDER_UNAVAILABLE_MESSAGE);
-}
-
-function isComputeTokenBudgetErrorMessage(value: unknown): boolean {
-  if (typeof value !== "string") {
-    return false;
-  }
-  const normalized = sanitizeRunnerBudgetMessage(value).replace(/\s+/g, " ").trim().toLowerCase();
-  if (!normalized) {
-    return false;
-  }
-  return (
-    normalized.includes("compute tokens") && (
-      normalized.includes("insufficient") ||
-      normalized.includes("balance") ||
-      normalized.includes("upgrade") ||
-      normalized.includes("quota")
-    )
-  ) || (
-    normalized.includes("insufficient") && (
-      normalized.includes("budget") ||
-      normalized.includes("balance")
-    )
-  );
-}
-
-function isComputeTokenBudgetErrorLog(log: RunnerLog | null | undefined): boolean {
-  if (!log) {
-    return false;
-  }
-  const errorRecord = normalizeRecordObject(log.metadata?.error);
-  const errorCode = typeof errorRecord?.code === "string" ? errorRecord.code.trim().toLowerCase() : "";
-  if (errorCode === "compute_tokens_exhausted" || errorCode === "insufficient_compute_tokens") {
-    return true;
-  }
-  const metadataRecord = normalizeRecordObject(log.metadata);
-  const candidates = [
-    log.message,
-    typeof errorRecord?.message === "string" ? errorRecord.message : "",
-    typeof metadataRecord?.message === "string" ? metadataRecord.message : "",
-  ];
-  return candidates.some((candidate) => isComputeTokenBudgetErrorMessage(candidate));
-}
-
-function normalizeRunnerConversationMessageContent(value: unknown): string {
-  if (typeof value === "string") {
-    return sanitizeRunnerMessage(value);
-  }
-  if (!Array.isArray(value)) {
-    return "";
-  }
-  const normalized = value
-    .map((entry) => {
-      if (typeof entry === "string") {
-        return entry;
-      }
-      if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
-        return "";
-      }
-      const record = entry as Record<string, unknown>;
-      return getRecordString(record, ["text", "content", "message"]);
-    })
-    .filter(Boolean)
-    .join("\n")
-    .trim();
-  return sanitizeRunnerMessage(normalized);
-}
-
-function normalizeRunnerConversationMessage(value: unknown): RunnerConversationMessage | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return null;
-  }
-
-  const record = value as Record<string, unknown>;
-  const role = getRecordString(record, ["role", "authorRole", "author_role"]).trim().toLowerCase();
-  if (!role) {
-    return null;
-  }
-
-  const rawContent = normalizeRunnerConversationMessageContent(record.content ?? record.message ?? record.text);
-  const content = role === "user"
-    ? extractRunnerVisibleContentFromHiddenExecutionPrompt(rawContent)
-    : rawContent;
-  if (role === "user" && isRunnerInternalHiddenExecutionPromptContent(rawContent) && !content) {
-    return null;
-  }
-  const logMetadataCandidate =
-    getRecordObject(record, ["logMetadata", "log_metadata", "metadata"]);
-  const usageRecord = getRecordObject(record, ["usage", "tokenUsage", "token_usage"]);
-  const directAttachments = Array.isArray(record.attachments) ? record.attachments : null;
-  const directModel = getRecordString(record, ["model", "modelName", "model_name", "modelId", "model_id", "runModel"]);
-  const directProvider = getRecordString(record, ["provider", "providerName", "provider_name", "modelProvider", "model_provider"]);
-  const directCostUsd =
-    getRecordNumber(record, ["costUsd", "costUSD", "cost_usd", "totalCostUsd", "total_cost_usd", "usdCost", "usd_cost"]) ??
-    getRecordNumber(usageRecord, ["costUsd", "costUSD", "cost_usd", "totalCostUsd", "total_cost_usd", "usdCost", "usd_cost"]);
-  const explicitComputeTokens =
-    getRecordNumber(record, ["computeTokens", "compute_tokens", "costCT", "costCt", "cost_ct", "ct", "totalComputeTokens", "total_compute_tokens"]) ??
-    getRecordNumber(usageRecord, ["computeTokens", "compute_tokens", "costCT", "costCt", "cost_ct", "ct", "totalComputeTokens", "total_compute_tokens"]);
-  const directComputeTokens =
-    explicitComputeTokens ??
-    (directCostUsd !== null ? Math.round(directCostUsd * RUNNER_AD_CT_PER_DOLLAR) : null);
-  const inputTokens =
-    getRecordNumber(record, ["inputTokens", "input_tokens"]) ??
-    getRecordNumber(usageRecord, ["inputTokens", "input_tokens"]);
-  const outputTokens =
-    getRecordNumber(record, ["outputTokens", "output_tokens"]) ??
-    getRecordNumber(usageRecord, ["outputTokens", "output_tokens"]);
-  const durationMs = getRecordNumber(record, ["durationMs", "duration_ms"]);
-  const actionsCount = getRecordNumber(record, ["actionsCount", "actions_count"]);
-  const directRunMetadata: Record<string, unknown> = {};
-  if (directModel) {
-    directRunMetadata.model = directModel;
-  }
-  if (directProvider) {
-    directRunMetadata.provider = directProvider;
-  }
-  if (directCostUsd !== null) {
-    directRunMetadata.costUsd = directCostUsd;
-    directRunMetadata.costUSD = directCostUsd;
-    directRunMetadata.cost_usd = directCostUsd;
-  }
-  if (directComputeTokens !== null) {
-    directRunMetadata.computeTokens = directComputeTokens;
-    directRunMetadata.costCT = directComputeTokens;
-    directRunMetadata.costCt = directComputeTokens;
-  }
-  const logMetadata =
-    logMetadataCandidate || directAttachments || Object.keys(directRunMetadata).length > 0
-      ? {
-          ...((logMetadataCandidate as Record<string, unknown> | null) || {}),
-          ...directRunMetadata,
-          ...(directAttachments ? { attachments: directAttachments } : {}),
-        }
-      : null;
-
-  return {
-    id: getRecordString(record, ["id", "messageId", "message_id"]) || undefined,
-    role,
-    content,
-    createdAt: getRecordString(record, ["createdAt", "created_at", "created", "timestamp"]) || undefined,
-    inputTokens,
-    outputTokens,
-    durationMs,
-    actionsCount,
-    logMetadata,
-  };
-}
-
-function sortRunnerConversationMessagesChronologically(messages: RunnerConversationMessage[]): RunnerConversationMessage[] {
-  if (messages.length < 2) {
-    return messages;
-  }
-
-  const entries = messages.map((message, index) => ({
-    message,
-    index,
-    timestampMs: parseIsoTimestampMs(message.createdAt),
-  }));
-
-  const canonicalEntries = entries.filter((entry) => entry.message.role === "user" || entry.message.role === "assistant");
-  const canSort =
-    entries.every((entry) => entry.timestampMs !== null) ||
-    (canonicalEntries.length > 0 && canonicalEntries.every((entry) => entry.timestampMs !== null));
-  if (!canSort) {
-    return messages;
-  }
-
-  return [...entries]
-    .sort((left, right) => {
-      if (left.timestampMs === null || right.timestampMs === null) {
-        if (left.timestampMs === null && right.timestampMs === null) {
-          return left.index - right.index;
-        }
-        return left.timestampMs === null ? 1 : -1;
-      }
-      if (left.timestampMs !== right.timestampMs) {
-        return left.timestampMs - right.timestampMs;
-      }
-      return left.index - right.index;
-    })
-    .map((entry) => entry.message);
-}
-
-function getRunnerLogAbsoluteTimestampMs(log: RunnerLog): number | null {
-  const createdAtMs = parseIsoTimestampMs(log.createdAt);
-  if (createdAtMs !== null) {
-    return createdAtMs;
-  }
-  return parseIsoTimestampMs(log.time);
-}
-
-function sortRunnerLogsChronologically(logs: RunnerLog[]): RunnerLog[] {
-  if (logs.length < 2) {
-    return logs;
-  }
-
-  const entries = logs.map((log, index) => ({
-    log,
-    index,
-    timestampMs: getRunnerLogAbsoluteTimestampMs(log),
-  }));
-
-  if (!entries.every((entry) => entry.timestampMs !== null)) {
-    return logs;
-  }
-
-  return [...entries]
-    .sort((left, right) => {
-      if (left.timestampMs !== right.timestampMs) {
-        return (left.timestampMs ?? 0) - (right.timestampMs ?? 0);
-      }
-      return left.index - right.index;
-    })
-    .map((entry) => entry.log);
-}
-
-function getRunnerLogMetadataRecord(log: RunnerLog | null | undefined): Record<string, unknown> | null {
-  const metadata = log?.metadata;
-  return metadata && typeof metadata === "object" && !Array.isArray(metadata)
-    ? (metadata as Record<string, unknown>)
-    : null;
-}
-
-function getRunnerLogNumber(log: RunnerLog | null | undefined, keys: string[]): number | null {
-  return getRecordNumber(getRunnerLogMetadataRecord(log), keys) ?? getRecordNumber(log as Record<string, unknown> | null | undefined, keys);
-}
-
-function mergeConversationMessageRunMetadataFromLogs(
-  messages: RunnerConversationMessage[],
-  logs: RunnerLog[]
-): RunnerConversationMessage[] {
-  if (messages.length === 0 || logs.length === 0) {
-    return messages;
-  }
-
-  const assistantResponseLogs = logs.filter((log) => log.eventType === "agent_message" || log.eventType === "llm_response");
-  const completionLogs = logs.filter((log) => log.eventType === "turn_completed");
-  if (assistantResponseLogs.length === 0 && completionLogs.length === 0) {
-    return messages;
-  }
-
-  let changed = false;
-  let assistantLogIndex = 0;
-  let completionLogIndex = 0;
-
-  const nextMessages = messages.map((message) => {
-    if (message.role !== "assistant") {
-      return message;
-    }
-
-    const responseLog = assistantResponseLogs[assistantLogIndex++] || null;
-    const completionLog = completionLogs[completionLogIndex++] || null;
-    const responseMetadata = getRunnerLogMetadataRecord(responseLog);
-    const completionMetadata = getRunnerLogMetadataRecord(completionLog);
-    const messageMetadata =
-      message.logMetadata && typeof message.logMetadata === "object" && !Array.isArray(message.logMetadata)
-        ? message.logMetadata
-        : null;
-    const mergedMetadata = {
-      ...(responseMetadata || {}),
-      ...(completionMetadata || {}),
-      ...(messageMetadata || {}),
-    };
-    const hasMergedMetadata = Object.keys(mergedMetadata).length > 0;
-    const inputTokens = message.inputTokens ?? getRunnerLogNumber(responseLog, ["inputTokens", "input_tokens"]) ?? getRunnerLogNumber(completionLog, ["inputTokens", "input_tokens"]);
-    const outputTokens = message.outputTokens ?? getRunnerLogNumber(responseLog, ["outputTokens", "output_tokens"]) ?? getRunnerLogNumber(completionLog, ["outputTokens", "output_tokens"]);
-    const durationMs = message.durationMs ?? getRunnerLogNumber(responseLog, ["durationMs", "duration_ms"]) ?? getRunnerLogNumber(completionLog, ["durationMs", "duration_ms"]);
-    const actionsCount = message.actionsCount ?? getRunnerLogNumber(responseLog, ["actionsCount", "actions_count"]) ?? getRunnerLogNumber(completionLog, ["actionsCount", "actions_count"]);
-
-    if (
-      !hasMergedMetadata &&
-      inputTokens === message.inputTokens &&
-      outputTokens === message.outputTokens &&
-      durationMs === message.durationMs &&
-      actionsCount === message.actionsCount
-    ) {
-      return message;
-    }
-
-    changed = true;
-    return {
-      ...message,
-      inputTokens,
-      outputTokens,
-      durationMs,
-      actionsCount,
-      logMetadata: hasMergedMetadata ? mergedMetadata : message.logMetadata,
-    };
-  });
-
-  return changed ? nextMessages : messages;
-}
-
-function isLocalAttachmentRecord(attachment: LocalAttachment | RunnerTurnAttachment): attachment is LocalAttachment {
-  return "file" in attachment;
-}
-
-function getGithubAttachmentRepoFullName(attachment: LocalAttachment | RunnerTurnAttachment): string {
-  if (isLocalAttachmentRecord(attachment)) {
-    return String(attachment.githubRepoFullName || "").trim();
-  }
-  return String(attachment.githubRepoFullName || "").trim();
-}
-
-function getGithubAttachmentPath(attachment: LocalAttachment | RunnerTurnAttachment): string {
-  if (isLocalAttachmentRecord(attachment)) {
-    return String(attachment.githubItemPath || "").trim();
-  }
-  return String(attachment.githubItemPath || "").trim();
-}
-
-function getGithubAttachmentRef(attachment: LocalAttachment | RunnerTurnAttachment): string {
-  if (isLocalAttachmentRecord(attachment)) {
-    return String(attachment.githubRef || "").trim();
-  }
-  return String(attachment.githubRef || "").trim();
-}
-
-function isGithubAttachmentSelection(attachment: LocalAttachment | RunnerTurnAttachment): boolean {
-  const integrationSource = isLocalAttachmentRecord(attachment)
-    ? attachment.integrationSource
-    : attachment.integrationSource;
-  if (integrationSource !== "github" || !getGithubAttachmentRepoFullName(attachment)) {
-    return false;
-  }
-  const selectionType = isLocalAttachmentRecord(attachment)
-    ? attachment.githubSelectionType
-    : attachment.githubSelectionType;
-  const workspacePath = isLocalAttachmentRecord(attachment)
-    ? attachment.resolvedAttachment?.workspacePath || ""
-    : attachment.workspacePath || "";
-  return selectionType === "repo" || selectionType === "file" || String(workspacePath || "").startsWith("/workspace/GitHub/");
-}
-
-function getGithubRepoName(repoFullName: string): string {
-  const normalized = String(repoFullName || "").trim();
-  if (!normalized) {
-    return "repository";
-  }
-  return normalized.split("/").pop() || normalized;
-}
-
-function getGithubAttachmentDisplayName(attachment: LocalAttachment | RunnerTurnAttachment): string {
-  const repoFullName = getGithubAttachmentRepoFullName(attachment);
-  const repoName = getGithubRepoName(repoFullName);
-  const selectionPath = getGithubAttachmentPath(attachment);
-  if (!selectionPath) {
-    return repoName;
-  }
-  const selectionName = selectionPath.split("/").filter(Boolean).pop() || selectionPath;
-  return `${repoName}/${selectionName}`;
-}
-
-function getAttachmentDisplayName(attachment: LocalAttachment | RunnerTurnAttachment): string {
-  if (isGithubAttachmentSelection(attachment)) {
-    return getGithubAttachmentDisplayName(attachment);
-  }
-  return isLocalAttachmentRecord(attachment) ? attachment.file.name : attachment.filename;
-}
-
-function getAttachmentPreviewUrl(attachment: LocalAttachment | RunnerTurnAttachment): string | undefined {
-  return isLocalAttachmentRecord(attachment) ? attachment.previewUrl : attachment.previewUrl || attachment.url;
-}
-
-function buildRunnerThreadHistoryItemId(turnId: string, role: RunnerThreadHistoryRole): string {
-  return `${turnId}:${role}`;
-}
-
-function buildRunnerThreadHistoryPreviewText(content: string): string {
-  const normalized = stripSystemTags(String(content || "")).replace(/\s+/g, " ").trim();
-  if (!normalized) {
-    return "";
-  }
-  if (normalized.length <= RUNNER_THREAD_HISTORY_PREVIEW_LENGTH) {
-    return normalized;
-  }
-  return `${normalized.slice(0, RUNNER_THREAD_HISTORY_PREVIEW_LENGTH).trimEnd()}…`;
-}
-
-function getRunnerThreadHistoryLineWidth(index: number, activeIndex: number): number {
-  if (index === activeIndex) {
-    return RUNNER_THREAD_HISTORY_ACTIVE_LINE_WIDTH;
-  }
-  if (index === 0) {
-    return RUNNER_THREAD_HISTORY_ACTIVE_LINE_WIDTH;
-  }
-  return index % 2 === 1
-    ? RUNNER_THREAD_HISTORY_MEDIUM_LINE_WIDTH
-    : RUNNER_THREAD_HISTORY_SMALL_LINE_WIDTH;
-}
-
-function encodeGithubBrowserSegment(value: string | null | undefined): string {
-  return encodeURIComponent(String(value || "").trim());
-}
-
-function decodeGithubBrowserSegment(value: string | null | undefined): string {
-  try {
-    return decodeURIComponent(String(value || ""));
-  } catch {
-    return String(value || "");
-  }
-}
-
-function createGithubBrowserRepoFolderId(repoFullName: string, ref?: string | null): string {
-  return `github-repo:${encodeGithubBrowserSegment(repoFullName)}:${encodeGithubBrowserSegment(ref || "")}`;
-}
-
-function createGithubBrowserNodeId(repoFullName: string, path: string, ref?: string | null): string {
-  return `github-node:${encodeGithubBrowserSegment(repoFullName)}:${encodeGithubBrowserSegment(ref || "")}:${encodeGithubBrowserSegment(path || "")}`;
-}
-
-function parseGithubBrowserFolderId(folderId: string | null | undefined): {
-  repoFullName: string;
-  path: string;
-  ref: string;
-  isRoot: boolean;
-} {
-  if (!folderId || folderId === "root") {
-    return { repoFullName: "", path: "", ref: "", isRoot: true };
-  }
-
-  if (folderId.startsWith("github-repo:")) {
-    const value = folderId.slice("github-repo:".length);
-    const separatorIndex = value.indexOf(":");
-    if (separatorIndex === -1) {
-      return {
-        repoFullName: value,
-        path: "",
-        ref: "",
-        isRoot: false,
-      };
-    }
-    return {
-      repoFullName: decodeGithubBrowserSegment(value.slice(0, separatorIndex)),
-      path: "",
-      ref: decodeGithubBrowserSegment(value.slice(separatorIndex + 1)),
-      isRoot: false,
-    };
-  }
-
-  if (folderId.startsWith("github-node:")) {
-    const value = folderId.slice("github-node:".length);
-    const firstSeparatorIndex = value.indexOf(":");
-    if (firstSeparatorIndex === -1) {
-      return { repoFullName: value, path: "", ref: "", isRoot: false };
-    }
-    const secondSeparatorIndex = value.indexOf(":", firstSeparatorIndex + 1);
-    if (secondSeparatorIndex === -1) {
-      return {
-        repoFullName: value.slice(0, firstSeparatorIndex),
-        path: value.slice(firstSeparatorIndex + 1),
-        ref: "",
-        isRoot: false,
-      };
-    }
-    return {
-      repoFullName: decodeGithubBrowserSegment(value.slice(0, firstSeparatorIndex)),
-      ref: decodeGithubBrowserSegment(value.slice(firstSeparatorIndex + 1, secondSeparatorIndex)),
-      path: decodeGithubBrowserSegment(value.slice(secondSeparatorIndex + 1)),
-      isRoot: false,
-    };
-  }
-
-  return { repoFullName: "", path: "", ref: "", isRoot: true };
-}
-
-function isAttachmentDocumentPreviewable(attachment: RunnerTurnAttachment): boolean {
-  if (isGithubAttachmentSelection(attachment)) {
-    return false;
-  }
-  if (attachment.previewKindOverride === "image-understanding" && attachment.imageUnderstandingPreview) {
-    return true;
-  }
-  if (attachment.previewKindOverride === "web-search" && attachment.webSearchPreview) {
-    return true;
-  }
-  if (attachment.previewKindOverride === "image-generation-prompt" && attachment.imageGenerationPromptPreview) {
-    return true;
-  }
-  if (attachment.previewKindOverride === "video-generation-prompt" && attachment.videoGenerationPromptPreview) {
-    return true;
-  }
-  if (attachment.type === "image" || String(attachment.mimeType || "").toLowerCase().startsWith("image/")) {
-    return true;
-  }
-  return isRunnerDocumentPreviewable(attachment);
-}
-
-const MAX_QUOTED_SELECTION_LENGTH = 4000;
-const QUOTED_SELECTION_PREVIEW_LENGTH = 140;
 const COMPOSER_QUOTED_SELECTION_ANIMATION_MS = 220;
 
-interface RunnerThreadHydrationPayload {
-  threadId: string;
-  threadStatus?: string | null;
-  threadUpdatedAt?: string | null;
-  threadEnvironmentId?: string | null;
-  threadEnvironmentName?: string | null;
-  threadMetadata?: Record<string, unknown> | null;
-  initialPrompt: string;
-  logs: RunnerLog[];
-  messages: RunnerConversationMessage[];
-  durationSeconds?: number | null;
-  startedAtMs?: number | null;
-  completedAtMs?: number | null;
-  agentName?: string | null;
-  environmentName?: string | null;
-}
-
-interface RunnerThreadDiffEntry {
-  path?: string;
-  additions?: number;
-  deletions?: number;
-  changes?: string;
-  diff?: string;
-  createdAt?: string;
-}
-
-interface RunnerParsedThreadStep {
-  id: string;
-  sequence: number;
-  stepKind: string;
-  eventType: string | null;
-  title: string;
-  createdAt: string;
-  metadata: Record<string, unknown> | null;
-}
-
-interface RunnerTurnFilePreview {
-  path: string;
-  kind: "created" | "modified" | "deleted";
-  content?: string;
-  diff?: string;
-  additions?: number;
-  deletions?: number;
-}
-
 export type RunnerChatInputMode = "minimal" | "computer-agents";
-
-export interface RunnerChatOption {
-  id: string;
-  name: string;
-  description?: string;
-  isDefault?: boolean;
-  voiceMode?: RunnerChatVoiceMode | string | null;
-  voiceProvider?: string | null;
-  voiceModel?: string | null;
-  voiceId?: string | null;
-  voiceInstructions?: string | null;
-  voiceLanguageHint?: string | null;
-}
-
-type RunnerChatVoiceMode = "off" | "web" | "phone" | "web_and_phone";
-type RunnerAgentSelectorMode = "agents" | "teams" | "humans";
-type RunnerWorkspaceSelectorMode = "computers" | "projects";
-type RunnerReasoningEffortId = "minimal" | "low" | "medium" | "high";
-
-function normalizeRunnerChatVoiceMode(value: unknown): RunnerChatVoiceMode {
-  const normalized = String(value || "off").trim().toLowerCase().replace(/[\s-]+/g, "_");
-  if (normalized === "web_phone") return "web_and_phone";
-  if (normalized === "web" || normalized === "phone" || normalized === "web_and_phone") {
-    return normalized;
-  }
-  return "off";
-}
-
-function isRunnerChatWebVoiceMode(mode: unknown): boolean {
-  const normalizedMode = normalizeRunnerChatVoiceMode(mode);
-  return normalizedMode === "web" || normalizedMode === "web_and_phone";
-}
-
-const RUNNER_CHAT_VOICE_SAMPLE_RATE = 24000;
-
-function bytesToBase64(bytes: Uint8Array): string {
-  let binary = "";
-  const chunkSize = 0x8000;
-  for (let index = 0; index < bytes.length; index += chunkSize) {
-    const chunk = bytes.subarray(index, index + chunkSize);
-    binary += String.fromCharCode(...chunk);
-  }
-  return btoa(binary);
-}
-
-function base64ToBytes(value: string): Uint8Array {
-  const binary = atob(value);
-  const bytes = new Uint8Array(binary.length);
-  for (let index = 0; index < binary.length; index += 1) {
-    bytes[index] = binary.charCodeAt(index);
-  }
-  return bytes;
-}
-
-function float32ToBase64Pcm16(samples: Float32Array): string {
-  const pcm16 = new Int16Array(samples.length);
-  for (let index = 0; index < samples.length; index += 1) {
-    const sample = Math.max(-1, Math.min(1, samples[index] || 0));
-    pcm16[index] = sample < 0 ? sample * 0x8000 : sample * 0x7fff;
-  }
-  return bytesToBase64(new Uint8Array(pcm16.buffer));
-}
-
-function resampleFloat32ToSampleRate(samples: Float32Array, sourceSampleRate: number, targetSampleRate: number): Float32Array {
-  if (!samples.length || sourceSampleRate === targetSampleRate) {
-    return samples;
-  }
-  const ratio = sourceSampleRate / targetSampleRate;
-  const targetLength = Math.max(1, Math.round(samples.length / ratio));
-  const resampled = new Float32Array(targetLength);
-  for (let index = 0; index < targetLength; index += 1) {
-    const sourceIndex = index * ratio;
-    const leftIndex = Math.floor(sourceIndex);
-    const rightIndex = Math.min(samples.length - 1, leftIndex + 1);
-    const fraction = sourceIndex - leftIndex;
-    const left = samples[leftIndex] || 0;
-    const right = samples[rightIndex] || left;
-    resampled[index] = left + (right - left) * fraction;
-  }
-  return resampled;
-}
-
-function base64Pcm16ToFloat32(value: string): Float32Array {
-  const bytes = base64ToBytes(value);
-  const pcm16 = new Int16Array(bytes.buffer, bytes.byteOffset, Math.floor(bytes.byteLength / 2));
-  const samples = new Float32Array(pcm16.length);
-  for (let index = 0; index < pcm16.length; index += 1) {
-    samples[index] = pcm16[index] / 32768;
-  }
-  return samples;
-}
-
-const RUNNER_REASONING_EFFORT_OPTIONS: Array<{
-  id: RunnerReasoningEffortId;
-  label: string;
-  description: string;
-}> = [
-  { id: "minimal", label: "Low", description: "Fast responses for simple tasks." },
-  { id: "low", label: "Medium", description: "Balanced default reasoning." },
-  { id: "medium", label: "High", description: "More deliberate planning and tool use." },
-  { id: "high", label: "Max", description: "Maximum reasoning for complex work." },
-];
-
-function normalizeRunnerReasoningEffort(value: unknown): RunnerReasoningEffortId {
-  const normalized = typeof value === "string" ? value.trim().toLowerCase().replace(/[_\s]+/g, "-") : "";
-  if (normalized === "minimal" || normalized === "low" || normalized === "medium" || normalized === "high") {
-    return normalized;
-  }
-  if (normalized === "extra-high" || normalized === "extra") {
-    return "high";
-  }
-  return "low";
-}
-
-function getRunnerReasoningEffortOption(value: unknown) {
-  return RUNNER_REASONING_EFFORT_OPTIONS.find((option) => option.id === normalizeRunnerReasoningEffort(value)) || RUNNER_REASONING_EFFORT_OPTIONS[1];
-}
-
-export interface RunnerChatProjectOption extends RunnerChatOption {
-  defaultEnvironmentId?: string | null;
-  environmentId?: string | null;
-  color?: string | null;
-  metadata?: Record<string, unknown> | null;
-}
 
 export interface RunnerChatProjectsConfig {
   items?: RunnerChatProjectOption[];
   selectedProjectId?: string | null;
   onProjectChange?: (projectId: string) => void;
-}
-
-type RunnerAgentOptionRecord = RunnerChatOption & {
-  agentType?: string | null;
-  model?: string | null;
-  modelId?: string | null;
-  modelProvider?: string | null;
-  modelProviderType?: string | null;
-  provider?: string | null;
-  providerType?: string | null;
-  source?: string | null;
-  photoUrl?: string | null;
-  photoURL?: string | null;
-  avatarUrl?: string | null;
-  avatarURL?: string | null;
-  guardrails?: unknown;
-  guardrailSetIds?: unknown;
-  guardrail_set_ids?: unknown;
-  promptAdaptations?: unknown;
-  prompt_adaptations?: unknown;
-  promptAdaptions?: unknown;
-  prompt_adaptions?: unknown;
-  invisiblePromptAdaptations?: unknown;
-  invisible_prompt_adaptations?: unknown;
-  invisiblePromptAdaptions?: unknown;
-  invisible_prompt_adaptions?: unknown;
-  profile?: unknown;
-  metadata?: unknown;
-};
-
-function orderOptionsWithPinnedTop<T extends RunnerChatOption>(options: T[], pinnedId: string | null): T[] {
-  if (!pinnedId) {
-    return options;
-  }
-  const pinnedIndex = options.findIndex((option) => option.id === pinnedId);
-  if (pinnedIndex <= 0) {
-    return options;
-  }
-  return [options[pinnedIndex], ...options.slice(0, pinnedIndex), ...options.slice(pinnedIndex + 1)];
-}
-
-function mergeRunnerChatOptions(primary: RunnerChatOption[], additions: Array<RunnerChatOption | null | undefined>): RunnerChatOption[] {
-  const merged = new Map<string, RunnerChatOption>();
-  for (const option of primary) {
-    if (option.id.trim()) {
-      merged.set(option.id, option);
-    }
-  }
-  for (const option of additions) {
-    if (!option || !option.id.trim()) continue;
-    const existing = merged.get(option.id);
-    merged.set(option.id, existing ? { ...option, ...existing, name: existing.name || option.name } : option);
-  }
-  return Array.from(merged.values());
-}
-
-function getRunnerProjectEnvironmentId(project: RunnerChatProjectOption | null | undefined): string {
-  if (!project) {
-    return "";
-  }
-  const directDefaultEnvironmentId = typeof project.defaultEnvironmentId === "string" ? project.defaultEnvironmentId.trim() : "";
-  if (directDefaultEnvironmentId) {
-    return directDefaultEnvironmentId;
-  }
-  const directEnvironmentId = typeof project.environmentId === "string" ? project.environmentId.trim() : "";
-  if (directEnvironmentId) {
-    return directEnvironmentId;
-  }
-  const metadata = project.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
-    ? project.metadata
-    : null;
-  const metadataDefaultEnvironmentId =
-    metadata && typeof metadata.defaultEnvironmentId === "string" ? metadata.defaultEnvironmentId.trim() : "";
-  if (metadataDefaultEnvironmentId) {
-    return metadataDefaultEnvironmentId;
-  }
-  return metadata && typeof metadata.environmentId === "string" ? metadata.environmentId.trim() : "";
-}
-
-function isRunnerTeamAgentOption(option: RunnerChatOption | null | undefined): boolean {
-  if (!option) {
-    return false;
-  }
-
-  const candidate = option as RunnerAgentOptionRecord;
-  if (typeof candidate.agentType === "string" && candidate.agentType.trim() === "team") {
-    return true;
-  }
-
-  const metadata = candidate.metadata;
-  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
-    return false;
-  }
-
-  const kind = "kind" in metadata && typeof metadata.kind === "string" ? metadata.kind.trim() : "";
-  const team = "team" in metadata && metadata.team && typeof metadata.team === "object" && !Array.isArray(metadata.team)
-    ? metadata.team
-    : null;
-
-  return kind === "team" && Boolean(team);
-}
-
-function isRunnerHumanAgentOption(option: RunnerChatOption | null | undefined): boolean {
-  if (!option) {
-    return false;
-  }
-
-  const candidate = option as RunnerAgentOptionRecord;
-  if (typeof candidate.agentType === "string" && candidate.agentType.trim() === "human") {
-    return true;
-  }
-
-  const metadata = candidate.metadata;
-  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
-    return false;
-  }
-
-  const kind = "kind" in metadata && typeof metadata.kind === "string" ? metadata.kind.trim() : "";
-  return kind === "human";
-}
-
-function isRunnerAssistantAgentOption(option: RunnerChatOption | null | undefined): boolean {
-  const normalizedName = String(option?.name || "").trim().toLowerCase();
-  const normalizedId = String(option?.id || "").trim().toLowerCase();
-  return normalizedName === "assistant"
-    || normalizedName === "default"
-    || normalizedName === "default agent"
-    || normalizedId === "agent_assistant"
-    || normalizedId === "agent-assistant"
-    || normalizedId.startsWith("agent-assistant-");
-}
-
-function isRunnerDeveloperAgentOption(option: RunnerChatOption | null | undefined): boolean {
-  const normalizedName = String(option?.name || "").trim().toLowerCase();
-  const normalizedId = String(option?.id || "").trim().toLowerCase();
-  return normalizedName === "developer"
-    || normalizedId === "agent_default"
-    || normalizedId === "agent-default"
-    || normalizedId.startsWith("agent-default-");
-}
-
-function getRunnerPreferredDefaultAgentOption(agents: RunnerChatOption[]): RunnerChatOption | null {
-  const normalizedAgents = Array.isArray(agents) ? agents.filter(Boolean) : [];
-  const singleAgents = normalizedAgents.filter((agent) => !isRunnerTeamAgentOption(agent) && !isRunnerHumanAgentOption(agent));
-  const candidateAgents = singleAgents.length > 0 ? singleAgents : normalizedAgents;
-
-  return candidateAgents.find(isRunnerAssistantAgentOption)
-    || candidateAgents.find((agent) => agent?.isDefault)
-    || candidateAgents.find(isRunnerDeveloperAgentOption)
-    || candidateAgents[0]
-    || null;
-}
-
-function getRunnerAgentOptionPhotoUrl(option: RunnerChatOption | null | undefined): string {
-  if (!option) {
-    return "";
-  }
-
-  const candidate = option as RunnerAgentOptionRecord;
-  const directPhotoUrl =
-    typeof candidate.photoUrl === "string" && candidate.photoUrl.trim()
-      ? candidate.photoUrl.trim()
-      : typeof candidate.photoURL === "string" && candidate.photoURL.trim()
-        ? candidate.photoURL.trim()
-        : typeof candidate.avatarUrl === "string" && candidate.avatarUrl.trim()
-          ? candidate.avatarUrl.trim()
-          : typeof candidate.avatarURL === "string" && candidate.avatarURL.trim()
-            ? candidate.avatarURL.trim()
-            : "";
-  if (directPhotoUrl) {
-    return directPhotoUrl;
-  }
-
-  const profile = candidate.profile;
-  if (profile && typeof profile === "object" && !Array.isArray(profile)) {
-    const profilePhotoUrl =
-      "photoUrl" in profile && typeof profile.photoUrl === "string" && profile.photoUrl.trim()
-        ? profile.photoUrl.trim()
-        : "photoURL" in profile && typeof profile.photoURL === "string" && profile.photoURL.trim()
-          ? profile.photoURL.trim()
-          : "avatarUrl" in profile && typeof profile.avatarUrl === "string" && profile.avatarUrl.trim()
-            ? profile.avatarUrl.trim()
-            : "";
-    if (profilePhotoUrl) {
-      return profilePhotoUrl;
-    }
-  }
-
-  const metadata = candidate.metadata;
-  if (metadata && typeof metadata === "object" && !Array.isArray(metadata)) {
-    const metadataPhotoUrl =
-      "photoUrl" in metadata && typeof metadata.photoUrl === "string" && metadata.photoUrl.trim()
-        ? metadata.photoUrl.trim()
-        : "photoURL" in metadata && typeof metadata.photoURL === "string" && metadata.photoURL.trim()
-          ? metadata.photoURL.trim()
-          : "avatarUrl" in metadata && typeof metadata.avatarUrl === "string" && metadata.avatarUrl.trim()
-            ? metadata.avatarUrl.trim()
-            : "";
-    if (metadataPhotoUrl) {
-      return metadataPhotoUrl;
-    }
-    const metadataProfile =
-      "profile" in metadata && metadata.profile && typeof metadata.profile === "object" && !Array.isArray(metadata.profile)
-        ? metadata.profile
-        : null;
-    if (metadataProfile) {
-      const metadataProfilePhotoUrl =
-        "photoUrl" in metadataProfile && typeof metadataProfile.photoUrl === "string" && metadataProfile.photoUrl.trim()
-          ? metadataProfile.photoUrl.trim()
-          : "photoURL" in metadataProfile && typeof metadataProfile.photoURL === "string" && metadataProfile.photoURL.trim()
-            ? metadataProfile.photoURL.trim()
-            : "avatarUrl" in metadataProfile && typeof metadataProfile.avatarUrl === "string" && metadataProfile.avatarUrl.trim()
-              ? metadataProfile.avatarUrl.trim()
-              : "";
-      if (metadataProfilePhotoUrl) {
-        return metadataProfilePhotoUrl;
-      }
-    }
-  }
-
-  return "";
-}
-
-function getRunnerAgentOptionModelId(option: RunnerChatOption | null | undefined): string {
-  if (!option) {
-    return "";
-  }
-
-  const candidate = option as RunnerAgentOptionRecord;
-  const directModel = getRecordString(candidate as unknown as Record<string, unknown>, [
-    "model",
-    "modelId",
-    "model_id",
-    "lastUsedModel",
-    "last_used_model",
-    "defaultModel",
-    "default_model",
-  ]).trim();
-  if (directModel) {
-    return directModel;
-  }
-
-  const metadata = normalizeRecordObject(candidate.metadata);
-  const metadataModel = getRecordString(metadata || {}, [
-    "model",
-    "modelId",
-    "model_id",
-    "lastUsedModel",
-    "last_used_model",
-    "defaultModel",
-    "default_model",
-  ]).trim();
-  if (metadataModel) {
-    return metadataModel;
-  }
-
-  const nestedModel = getRecordObject(metadata, ["model", "modelMeta", "model_meta", "llm", "llmModel", "llm_model"]);
-  return getRecordString(nestedModel || {}, ["id", "model", "modelId", "model_id", "name"]).trim();
-}
-
-function getRunnerAgentOptionExplicitProvider(option: RunnerChatOption | null | undefined): string {
-  if (!option) {
-    return "";
-  }
-
-  const candidate = option as RunnerAgentOptionRecord;
-  const directProvider = getRecordString(candidate as unknown as Record<string, unknown>, [
-    "modelProvider",
-    "model_provider",
-    "modelProviderType",
-    "model_provider_type",
-    "provider",
-    "providerType",
-    "provider_type",
-    "source",
-  ]).trim();
-  if (directProvider) {
-    return directProvider;
-  }
-
-  const metadata = normalizeRecordObject(candidate.metadata);
-  const metadataProvider = getRecordString(metadata || {}, [
-    "modelProvider",
-    "model_provider",
-    "modelProviderType",
-    "model_provider_type",
-    "provider",
-    "providerType",
-    "provider_type",
-    "source",
-  ]).trim();
-  if (metadataProvider) {
-    return metadataProvider;
-  }
-
-  const nestedModel = getRecordObject(metadata, ["model", "modelMeta", "model_meta", "llm", "llmModel", "llm_model"]);
-  return getRecordString(nestedModel || {}, [
-    "modelProvider",
-    "model_provider",
-    "modelProviderType",
-    "model_provider_type",
-    "provider",
-    "providerType",
-    "provider_type",
-    "source",
-  ]).trim();
-}
-
-function inferRunnerAgentProviderTypeFromModelId(modelId: string): string {
-  const normalized = modelId.trim().toLowerCase();
-  if (!normalized) {
-    return "";
-  }
-  if (normalized.startsWith("external:")) {
-    const [, providerType] = normalized.split(":");
-    return providerType || "";
-  }
-  if (normalized.startsWith("minimax-") || normalized === "minimax/m3" || normalized.includes("minimax")) return "minimax";
-  if (normalized.startsWith("claude-") || normalized.includes("anthropic")) return "anthropic";
-  if (normalized.startsWith("gemini-") || normalized.includes("google")) return "google";
-  if (normalized.startsWith("gpt-") || normalized.startsWith("o1") || normalized.startsWith("o3") || normalized.startsWith("o4") || normalized.includes("openai")) return "openai";
-  if (normalized.startsWith("deepseek-") || normalized.includes("deepseek")) return "deepseek";
-  if (normalized.startsWith("kimi-") || normalized.includes("moonshot") || normalized.includes("kimi")) return "kimi";
-  if (normalized.startsWith("glm-") || normalized.includes("zai") || normalized.includes("zhipu")) return "zai";
-  if (normalized.startsWith("qwen") || normalized.includes("alibaba/qwen")) return "qwen";
-  if (normalized.startsWith("grok-") || normalized.includes("xai")) return "xai";
-  return "";
-}
-
-function getRunnerAgentOptionProviderType(option: RunnerChatOption | null | undefined): string {
-  const modelProvider = inferRunnerAgentProviderTypeFromModelId(getRunnerAgentOptionModelId(option));
-  if (modelProvider === "minimax") {
-    return modelProvider;
-  }
-
-  const explicitProvider = getRunnerAgentOptionExplicitProvider(option).trim().toLowerCase();
-  if (!explicitProvider) {
-    return modelProvider;
-  }
-  if (explicitProvider.includes("minimax")) return "minimax";
-  if (explicitProvider.includes("anthropic") || explicitProvider.includes("claude")) return "anthropic";
-  if (explicitProvider.includes("google") || explicitProvider.includes("gemini")) return "google";
-  if (explicitProvider.includes("openai") || explicitProvider === "open-ai") return "openai";
-  if (explicitProvider.includes("deepseek")) return "deepseek";
-  if (explicitProvider.includes("moonshot") || explicitProvider.includes("kimi")) return "kimi";
-  if (explicitProvider.includes("zai") || explicitProvider.includes("zhipu")) return "zai";
-  if (explicitProvider.includes("qwen") || explicitProvider.includes("alibaba")) return "qwen";
-  if (explicitProvider.includes("xai") || explicitProvider.includes("grok")) return "xai";
-  if (explicitProvider.includes("cloudflare")) {
-    return modelProvider || "kimi";
-  }
-  return modelProvider || explicitProvider;
-}
-
-function getRunnerAgentProviderIcon(providerType: string): { src: string; alt: string; className?: string } | null {
-  const normalized = providerType.trim().toLowerCase();
-  if (normalized === "anthropic") return { src: "/img/05-model-provider-icons/claude.png", alt: "Anthropic" };
-  if (normalized === "google" || normalized === "gemini") return { src: "/img/05-model-provider-icons/gemini.png", alt: "Google" };
-  if (normalized === "openai") return { src: "/img/05-model-provider-icons/openai.svg", alt: "OpenAI", className: "is-openai" };
-  if (normalized === "deepseek") return { src: "/img/05-model-provider-icons/deepseek.png", alt: "DeepSeek" };
-  if (normalized === "minimax") return { src: "/img/05-model-provider-icons/minimax.svg", alt: "MiniMax" };
-  if (normalized === "kimi" || normalized === "moonshot" || normalized === "cloudflare") return { src: "/img/05-model-provider-icons/kimi.png", alt: "Moonshot" };
-  if (normalized === "zai" || normalized === "z-ai" || normalized === "zhipu") return { src: "/img/05-model-provider-icons/zai.webp", alt: "ZAI" };
-  if (normalized === "qwen" || normalized === "alibaba") return { src: "/img/05-model-provider-icons/qwen.svg", alt: "Qwen", className: "is-openai" };
-  if (normalized === "xai" || normalized === "grok") return { src: "/img/05-model-provider-icons/xai.svg", alt: "xAI" };
-  return null;
 }
 
 function renderRunnerAgentOptionIcon(agent: RunnerChatOption): ReactNode {
@@ -2963,22 +706,6 @@ function renderRunnerAgentOptionIcon(agent: RunnerChatOption): ReactNode {
       draggable={false}
     />
   );
-}
-
-function getRunnerAgentSelectorMode(option: RunnerChatOption | null | undefined): RunnerAgentSelectorMode {
-  if (isRunnerHumanAgentOption(option)) {
-    return "humans";
-  }
-  return isRunnerTeamAgentOption(option) ? "teams" : "agents";
-}
-
-export interface RunnerChatSkill {
-  id: string;
-  name: string;
-  description?: string;
-  enabled?: boolean;
-  icon?: string | null;
-  isCustom?: boolean;
 }
 
 export interface RunnerChatExternalRunRequest {
@@ -3029,39 +756,10 @@ export interface RunnerChatProjectTaskSubmitPayload {
   quotedSelection?: RunnerQuotedSelection | null;
 }
 
-export interface RunnerChatFileNode {
-  id: string;
-  name: string;
-  parentId?: string | null;
-  isFolder?: boolean;
-  hasChildren?: boolean;
-  mimeType?: string;
-  size?: number;
-  modifiedTime?: string;
-  createdTime?: string;
-  previewUrl?: string;
-  path?: string;
-  repoFullName?: string;
-  ref?: string;
-}
-
-export interface RunnerChatNotionDatabase {
-  id: string;
-  name: string;
-  icon?: string | null;
-}
-
 export interface RunnerChatSchedulePreset {
   id: string;
   label: string;
   cron?: string;
-}
-
-export interface RunnerChatFetchedFileContent {
-  content: string;
-  mimeType?: string;
-  encoding?: "base64" | "text";
-  name?: string;
 }
 
 export interface RunnerChatGithubConfig {
@@ -3128,41 +826,6 @@ export interface RunnerChatComputerAgentsConfig {
   workspace?: RunnerChatWorkspaceConfig;
   schedule?: RunnerChatScheduleConfig;
   projects?: RunnerChatProjectsConfig;
-}
-
-export interface RunnerChatSkillDefaults {
-  deepResearch?: {
-    model?: string;
-  };
-  imageGeneration?: {
-    model?: string;
-    quality?: string;
-    computeTokensPerImage?: number;
-  };
-  videoGeneration?: {
-    model?: string;
-  };
-}
-
-export interface RunnerChatMetronomeWorkflowRunPayload {
-  threadId: string;
-  workflowId: string;
-  runId: string;
-  workflowName: string;
-  status: string;
-  triggerCommand?: string;
-  triggerEventId?: string;
-  originThreadId?: string;
-  sourceThreadId?: string;
-  triggerThreadId?: string;
-  nodeId?: string;
-  isOriginThread?: boolean;
-  userMessage?: string;
-  activeNodeId?: string;
-  activeEdgeId?: string;
-  workflowMap?: unknown;
-  attachments?: RunnerAttachment[];
-  log: RunnerLog;
 }
 
 export interface RunnerChatProps {
@@ -3328,2008 +991,14 @@ export interface RunnerChatActionSummaryClickPayload {
   revertedFileName?: string | null;
 }
 
-interface RunnerChatThreadContext {
-  threadId: string;
-  sessionId: string | null;
-  model: string;
-  maxTokens: number;
-  usedTokens: number;
-  remainingTokens: number;
-  remainingRatio: number;
-  source: string;
-  exact: boolean;
-}
-
-type RunnerChatThreadContextCategoryKey =
-  | "system_prompt"
-  | "skills"
-  | "messages"
-  | "free_space"
-  | "autocompact_buffer"
-  | "other";
-
-interface RunnerChatThreadContextCategory {
-  key: RunnerChatThreadContextCategoryKey;
-  label: string;
-  tokens: number;
-  ratio: number;
-  kind: "used" | "free" | "buffer" | "other";
-}
-
-interface RunnerChatThreadContextDetails extends RunnerChatThreadContext {
-  categories: RunnerChatThreadContextCategory[];
-  rawText?: string;
-  estimate?: RunnerChatThreadContext;
-}
-
-type RunnerChatThreadContextAction = "compact" | "clear" | "fork" | "btw" | "revert" | "reapply";
-type StagedThreadContextCommandTone = "compact" | "btw" | "fork" | "neutral";
-
-interface RunnerChatThreadContextAvailableActions {
-  compact: boolean;
-  clear: boolean;
-  btw: boolean;
-  fork: boolean;
-}
-
-interface ParsedThreadContextCommand {
-  action: "context" | RunnerChatThreadContextAction;
-  prompt?: string;
-}
-
-const DEFAULT_COMPUTER_AGENT_SKILLS: RunnerChatSkill[] = [
-  { id: "image_generation", name: "Image Generation", enabled: true },
-  { id: "video_generation", name: "Video Generation", enabled: true },
-  { id: "web_search", name: "Web Search", enabled: true },
-  { id: "deep_research", name: "Deep Research", enabled: true },
-  { id: "browser", name: "Browser", enabled: true },
-  { id: "pdf", name: "Document Parsing", enabled: true },
-  { id: "frontend_design", name: "Frontend Design", enabled: true },
-  { id: "pptx", name: "PowerPoint/PPTX", enabled: true },
-  { id: "memory", name: "Memory", enabled: true },
-  { id: "task_management", name: "Task Management", enabled: true },
-  { id: "computer_agents", name: "Computer Agents", enabled: true },
-  { id: "email", name: "Email", enabled: true },
-];
-const DEFAULT_ENABLED_SKILL_IDS = ["image_generation", "video_generation", "web_search", "deep_research", "browser", "memory", "task_management", "computer_agents", "email"] as const;
-const RUNNER_CHAT_SKILL_ID_ALIASES: Record<string, string> = {
-  videoGeneration: "video_generation",
-  video_generation: "video_generation",
-  "video-generation": "video_generation",
-  deepResearch: "deep_research",
-  deep_research: "deep_research",
-  "deep-research": "deep_research",
-  research: "deep_research",
-  documentParsing: "pdf",
-  document_parsing: "pdf",
-  "document-parsing": "pdf",
-  parse: "pdf",
-  gmail: "email",
-  mail: "email",
-};
-const RUNNER_CHAT_ENABLED_SKILLS_STORAGE_KEY_PREFIX = "tb_runner_chat_enabled_skills_v3";
-const RUNNER_CHAT_WORKSPACE_SELECTION_STORAGE_KEY_PREFIX = "tb_runner_chat_workspace_selection_v1";
-
 const DEFAULT_SCHEDULE_PRESETS: RunnerChatSchedulePreset[] = [
   { id: "daily", label: "Every day", cron: "0 9 * * *" },
   { id: "weekdays", label: "Every weekday", cron: "0 9 * * 1-5" },
   { id: "weekly", label: "Every week", cron: "0 9 * * 1" },
 ];
 
-const SPEECH_SAMPLE_RATE = 16000;
-const SPEECH_WORKLET_BUFFER_SIZE = 2048;
-const SPEECH_WORKLET_PROCESSOR_NAME = "tb-runner-speech-capture";
-const SPEECH_QUEUE_LIMIT = 128;
-const SPEECH_ACTIVITY_RMS_THRESHOLD = 0.009;
-const SPEECH_ACTIVITY_HANGOVER_MS = 450;
 const ATTACH_FILES_SHORTCUT_KEY = "u";
 const SCHEDULE_SHORTCUT_KEY = "s";
-const POPUP_ANIMATION_DURATION_MS = 180;
-const DEFAULT_THREAD_CONTEXT_ACTIONS: RunnerChatThreadContextAvailableActions = {
-  compact: false,
-  clear: false,
-  btw: true,
-  fork: false,
-};
-
-const EMPTY_THREAD_CONTEXT_CATEGORIES: RunnerChatThreadContextCategory[] = [
-  { key: "system_prompt", label: "System prompt", tokens: 0, ratio: 0, kind: "used" },
-  { key: "skills", label: "Skills", tokens: 0, ratio: 0, kind: "used" },
-  { key: "messages", label: "Thread context", tokens: 0, ratio: 0, kind: "used" },
-  { key: "autocompact_buffer", label: "Autocompact buffer", tokens: 0, ratio: 0, kind: "buffer" },
-  { key: "free_space", label: "Free space", tokens: 0, ratio: 0, kind: "free" },
-];
-
-type InputPopupId =
-  | "main"
-  | "context"
-  | "skills"
-  | "agent"
-  | "agent-reasoning"
-  | "environment"
-  | "organization"
-  | "github"
-  | "notion"
-  | "google-drive"
-  | "one-drive"
-  | "schedule"
-  | "attach-files";
-
-type SpeechClientMessage = { type: "audio"; data: string } | { type: "activity-start" | "activity-end" };
-
-type MainPopupRenderId = "main" | "context" | "agent" | "environment" | "organization";
-type SidePopupRenderId = Exclude<InputPopupId, MainPopupRenderId>;
-type PopupAnimationPhase = "idle" | "enter" | "exit";
-type SidePopupExitDirection = "left" | "down";
-type ComposerPopupPlacement = "above-start" | "above-end" | "side-end";
-type ComposerPopupAnchorRef<T extends HTMLElement = HTMLElement> = { current: T | null };
-
-type ComposerAnchoredPopupOptions = {
-  open: boolean;
-  anchorRef: ComposerPopupAnchorRef;
-  verticalAnchorRef?: ComposerPopupAnchorRef;
-  popupRef: ComposerPopupAnchorRef;
-  placement?: ComposerPopupPlacement;
-  gap?: number;
-  viewportPadding?: number;
-  offsetX?: number;
-  offsetY?: number;
-};
-
-function useComposerAnchoredPopupStyle({
-  open,
-  anchorRef,
-  verticalAnchorRef,
-  popupRef,
-  placement = "above-start",
-  gap = 8,
-  viewportPadding = 8,
-  offsetX = 0,
-  offsetY = 0,
-}: ComposerAnchoredPopupOptions): CSSProperties | null {
-  const [style, setStyle] = useState<CSSProperties | null>(null);
-
-  useLayoutEffect(() => {
-    if (!open) {
-      setStyle(null);
-      return;
-    }
-
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    let frameId = 0;
-    let settleFrameIds: number[] = [];
-    const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => scheduleUpdate()) : null;
-    let observedElements = new Set<HTMLElement>();
-
-    const observeCurrentElements = (...elements: Array<HTMLElement | null>) => {
-      if (!resizeObserver) {
-        return;
-      }
-
-      const nextElements = new Set(elements.filter((element): element is HTMLElement => Boolean(element)));
-
-      observedElements.forEach((element) => {
-        if (!nextElements.has(element)) {
-          resizeObserver.unobserve(element);
-        }
-      });
-
-      nextElements.forEach((element) => {
-        if (!observedElements.has(element)) {
-          resizeObserver.observe(element);
-        }
-      });
-
-      observedElements = nextElements;
-    };
-
-    const update = () => {
-      const anchor = anchorRef.current;
-      if (!anchor) {
-        setStyle(null);
-        return;
-      }
-
-      const popup = popupRef.current;
-      const verticalAnchor = verticalAnchorRef?.current || anchor;
-      const anchorRect = anchor.getBoundingClientRect();
-      const verticalAnchorRect = verticalAnchor.getBoundingClientRect();
-      const popupWidth = popup?.offsetWidth || 240;
-      const popupHeight = popup?.offsetHeight || 0;
-      const visualViewport = window.visualViewport;
-      const viewportWidth = visualViewport?.width || window.innerWidth;
-      const viewportHeight = visualViewport?.height || window.innerHeight;
-      const viewportLeft = visualViewport?.offsetLeft || 0;
-      const viewportTop = visualViewport?.offsetTop || 0;
-      const maxLeft = viewportLeft + viewportWidth - popupWidth - viewportPadding;
-      const layoutViewportHeight = window.innerHeight;
-      const viewportBottom = viewportTop + viewportHeight;
-      const maxBottom = Math.max(viewportPadding, layoutViewportHeight - viewportBottom + viewportPadding);
-
-      let left = anchorRect.left;
-      let bottomEdge = verticalAnchorRect.top - gap;
-
-      if (placement === "above-end") {
-        left = anchorRect.right - popupWidth;
-      } else if (placement === "side-end") {
-        left = anchorRect.right + gap;
-        bottomEdge = verticalAnchorRect.bottom;
-        if (left + popupWidth > viewportLeft + viewportWidth - viewportPadding) {
-          left = anchorRect.left - popupWidth - gap;
-        }
-      }
-
-      left += offsetX;
-      bottomEdge += offsetY;
-
-      let bottom = layoutViewportHeight - bottomEdge;
-      const unclampedTop = bottomEdge - popupHeight;
-      if (unclampedTop < viewportTop + viewportPadding) {
-        bottom = Math.min(bottom, layoutViewportHeight - (viewportTop + viewportPadding + popupHeight));
-      }
-
-      const clampedLeft = Math.min(Math.max(left, viewportLeft + viewportPadding), Math.max(viewportLeft + viewportPadding, maxLeft));
-      const clampedBottom = Math.max(maxBottom, Math.round(bottom));
-
-      observeCurrentElements(anchor, verticalAnchor, popup || null);
-
-      setStyle({
-        left: `${Math.round(clampedLeft)}px`,
-        top: "auto",
-        bottom: `${clampedBottom}px`,
-        visibility: "visible",
-      });
-    };
-
-    const scheduleUpdate = () => {
-      window.cancelAnimationFrame(frameId);
-      frameId = window.requestAnimationFrame(update);
-    };
-
-    update();
-    // Portal popups mount outside the composer so their ref and intrinsic height
-    // can settle one or two frames after the button click. Measure for a short
-    // window so scroll-boundary states do not leave the popup hidden/offscreen.
-    const scheduleSettledUpdate = (remainingFrames: number) => {
-      const settledFrameId = window.requestAnimationFrame(() => {
-        scheduleUpdate();
-        if (remainingFrames > 1) {
-          scheduleSettledUpdate(remainingFrames - 1);
-        }
-      });
-      settleFrameIds.push(settledFrameId);
-    };
-    scheduleSettledUpdate(4);
-
-    window.addEventListener("resize", scheduleUpdate);
-    window.addEventListener("scroll", scheduleUpdate, true);
-    window.visualViewport?.addEventListener("resize", scheduleUpdate);
-    window.visualViewport?.addEventListener("scroll", scheduleUpdate);
-    observeCurrentElements(anchorRef.current, verticalAnchorRef?.current || null, popupRef.current);
-
-    return () => {
-      window.cancelAnimationFrame(frameId);
-      settleFrameIds.forEach((id) => window.cancelAnimationFrame(id));
-      window.removeEventListener("resize", scheduleUpdate);
-      window.removeEventListener("scroll", scheduleUpdate, true);
-      window.visualViewport?.removeEventListener("resize", scheduleUpdate);
-      window.visualViewport?.removeEventListener("scroll", scheduleUpdate);
-      resizeObserver?.disconnect();
-    };
-  }, [anchorRef, gap, offsetX, offsetY, open, placement, popupRef, verticalAnchorRef, viewportPadding]);
-
-  return style;
-}
-
-function renderComposerPopupPortal(content: ReactNode, style: CSSProperties | null): ReactNode {
-  if (!content || typeof document === "undefined") {
-    return null;
-  }
-
-  const resolvedStyle: CSSProperties = style || {
-    left: "-9999px",
-    top: "0px",
-    bottom: "auto",
-    visibility: "hidden",
-  };
-
-  return createPortal(
-    <div className="tb-composer-popup-portal-root" style={resolvedStyle}>
-      <div className="tb-runner-chat tb-composer-popup-portal-scope">{content}</div>
-    </div>,
-    document.body
-  );
-}
-
-function isPlusPopupId(popup: InputPopupId | null): popup is Exclude<InputPopupId, "context" | "agent" | "agent-reasoning" | "environment" | "organization"> {
-  return popup === "main" || popup === "skills" || popup === "github" || popup === "notion" || popup === "google-drive" || popup === "one-drive" || popup === "schedule" || popup === "attach-files";
-}
-
-function getMainPopupRenderId(popup: InputPopupId | null): MainPopupRenderId | null {
-  if (popup === "agent-reasoning") return "agent";
-  if (popup === "context" || popup === "agent" || popup === "environment" || popup === "organization") return popup;
-  return isPlusPopupId(popup) ? "main" : null;
-}
-
-function getSidePopupRenderId(popup: InputPopupId | null): SidePopupRenderId | null {
-  if (!popup || popup === "main" || popup === "context" || popup === "agent" || popup === "environment" || popup === "organization") {
-    return null;
-  }
-  return popup;
-}
-
-function generateId(prefix: string): string {
-  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-}
-
-function sanitizeBackendUrl(url: string): string {
-  return url.trim().replace(/\/+$/, "");
-}
-
-function getHeaderValue(headers: HeadersInit | undefined, name: string): string {
-  return getRunnerPreviewHeaderValue(headers, name);
-}
-
-function buildRunnerHeaders(requestHeaders: HeadersInit | undefined, apiKey: string): Headers {
-  return buildRunnerPreviewHeaders(requestHeaders, apiKey);
-}
-
-function formatCompactTokenCount(value: number): string {
-  if (value >= 1_000_000) {
-    return `${(value / 1_000_000).toFixed(value >= 10_000_000 ? 0 : 1).replace(/\.0$/, "")}M`;
-  }
-  if (value >= 1_000) {
-    return `${(value / 1_000).toFixed(value >= 10_000 ? 0 : 1).replace(/\.0$/, "")}k`;
-  }
-  return String(value);
-}
-
-function deriveThreadContextDisplayMetrics(
-  context: RunnerChatThreadContext | RunnerChatThreadContextDetails | null | undefined
-): { usedTokens: number; remainingTokens: number; remainingRatio: number; usedRatio: number } {
-  if (!context) {
-    return {
-      usedTokens: 0,
-      remainingTokens: 0,
-      remainingRatio: 0,
-      usedRatio: 0,
-    };
-  }
-
-  let usedTokens = Math.max(0, context.usedTokens);
-  let remainingTokens = Math.max(0, context.remainingTokens);
-
-  if ("categories" in context) {
-    const explicitFreeCategory = context.categories.find((category) => category.key === "free_space");
-    const nonFreeTokens = context.categories
-      .filter((category) => category.key !== "free_space")
-      .reduce((sum, category) => sum + Math.max(0, category.tokens), 0);
-
-    if (explicitFreeCategory) {
-      remainingTokens = Math.max(0, Math.min(context.maxTokens, explicitFreeCategory.tokens));
-      usedTokens = Math.max(0, context.maxTokens - remainingTokens);
-    } else {
-      usedTokens = Math.max(0, Math.min(context.maxTokens, nonFreeTokens));
-      remainingTokens = Math.max(0, context.maxTokens - usedTokens);
-    }
-  }
-
-  const remainingRatio = context.maxTokens > 0 ? remainingTokens / context.maxTokens : 0;
-
-  return {
-    usedTokens,
-    remainingTokens,
-    remainingRatio,
-    usedRatio: context.maxTokens > 0 ? usedTokens / context.maxTokens : 0,
-  };
-}
-
-function buildContextIndicatorTitle(
-  context: RunnerChatThreadContext | RunnerChatThreadContextDetails | null,
-  hasThread: boolean,
-  isLoading: boolean
-): string {
-  if (!hasThread) {
-    return "Conversation context remaining";
-  }
-  if (!context) {
-    return isLoading ? "Loading conversation context…" : "Conversation context remaining";
-  }
-
-  const displayMetrics = deriveThreadContextDisplayMetrics(context);
-  const remainingPercent = Math.round(displayMetrics.remainingRatio * 100);
-  const qualifier = context.exact ? "" : " (estimate)";
-  return `Conversation context remaining: ${remainingPercent}%${qualifier} • ${formatCompactTokenCount(displayMetrics.remainingTokens)} / ${formatCompactTokenCount(context.maxTokens)} tokens`;
-}
-
-function getContextCategoryDisplayTokens(
-  category: RunnerChatThreadContextCategory,
-  metrics: ReturnType<typeof deriveThreadContextDisplayMetrics>
-): number {
-  if (category.key === "free_space") {
-    return metrics.remainingTokens;
-  }
-  return Math.max(0, category.tokens);
-}
-
-function parseThreadContextCommand(input: string): ParsedThreadContextCommand | null {
-  const trimmed = input.trim();
-  if (!trimmed.startsWith("/")) {
-    return null;
-  }
-
-  if (/^\/context\s*$/i.test(trimmed)) {
-    return { action: "context" };
-  }
-  const compactMatch = trimmed.match(/^\/compact(?:\s+([\s\S]+))?$/i);
-  if (compactMatch) {
-    return {
-      action: "compact",
-      prompt: compactMatch[1]?.trim() || "",
-    };
-  }
-  if (/^\/clear\s*$/i.test(trimmed)) {
-    return { action: "clear" };
-  }
-  const forkMatch = trimmed.match(/^\/fork(?:\s+([\s\S]+))?$/i);
-  if (forkMatch) {
-    return {
-      action: "fork",
-      prompt: forkMatch[1]?.trim() || "",
-    };
-  }
-
-  const btwMatch = trimmed.match(/^\/btw(?:\s+([\s\S]+))?$/i);
-  if (btwMatch) {
-    return {
-      action: "btw",
-      prompt: btwMatch[1]?.trim() || "",
-    };
-  }
-
-  return null;
-}
-
-function threadContextCategoryColor(category: RunnerChatThreadContextCategory): string {
-  if (category.key === "system_prompt") return "#67e8f9";
-  if (category.key === "skills") return "#60a5fa";
-  if (category.key === "messages") return "#f8fafc";
-  if (category.key === "autocompact_buffer") return "#fbbf24";
-  if (category.key === "free_space") return "rgba(255, 255, 255, 0.18)";
-  return "rgba(255, 255, 255, 0.4)";
-}
-
-function stagedThreadContextCommandTone(action: RunnerChatThreadContextAction | null): StagedThreadContextCommandTone | null {
-  if (action === "compact") return "compact";
-  if (action === "btw") return "btw";
-  if (action === "fork") return "fork";
-  if (action === "clear") return "neutral";
-  return null;
-}
-
-function stagedThreadContextCommandOffset(action: RunnerChatThreadContextAction | null): string {
-  if (action === "compact") return "82px";
-  if (action === "clear") return "58px";
-  if (action === "fork") return "52px";
-  if (action === "btw") return "52px";
-  return "16px";
-}
-
-function threadContextActionAllowsPrompt(action: RunnerChatThreadContextAction | null): boolean {
-  return action === "compact" || action === "btw" || action === "fork";
-}
-
-function parseAutoStageThreadContextCommand(input: string): { action: RunnerChatThreadContextAction; prompt: string } | null {
-  const compactMatch = input.match(/^\/compact(?:\s+([\s\S]*))?$/i);
-  if (compactMatch) {
-    return {
-      action: "compact",
-      prompt: compactMatch[1] || "",
-    };
-  }
-
-  const btwMatch = input.match(/^\/btw(?:\s+([\s\S]*))?$/i);
-  if (btwMatch) {
-    return {
-      action: "btw",
-      prompt: btwMatch[1] || "",
-    };
-  }
-
-  const forkMatch = input.match(/^\/fork(?:\s+([\s\S]*))?$/i);
-  if (forkMatch) {
-    return {
-      action: "fork",
-      prompt: forkMatch[1] || "",
-    };
-  }
-
-  return null;
-}
-
-function normalizeRunnerBacklogTicketNumber(value: string): string {
-  const digits = String(value || "").replace(/\D+/g, "");
-  if (!digits) {
-    return "";
-  }
-  return digits.slice(-3).padStart(3, "0");
-}
-
-function buildRunnerBacklogSubtaskLabel(ticketNumber: string): string {
-  const normalizedTicketNumber = normalizeRunnerBacklogTicketNumber(ticketNumber);
-  return normalizedTicketNumber ? `Subtask to ${normalizedTicketNumber}` : "Subtask";
-}
-
-function buildRunnerMissionControlLabel(): string {
-  return "Mission Control";
-}
-
-function buildRunnerResourceCreationLabel(commandType: RunnerResourceCreationCommandType): string {
-  return `/${commandType}`;
-}
-
-function buildRunnerAgentCreationLabel(commandType: RunnerAgentCreationCommandType): string {
-  return `/${commandType}`;
-}
-
-function buildRunnerSkillCreationLabel(commandType: RunnerSkillCreationCommandType): string {
-  return `/${commandType}`;
-}
-
-function buildRunnerSlideCreationLabel(): string {
-  return "/slides";
-}
-
-function buildRunnerSlideCreationHiddenPrompt(): string {
-  return [
-    "The user selected /slides. Treat the visible user request as a request to create PowerPoint-ready slide output.",
-    "Use the image generation skill whenever a visual slide, slide background, diagram, illustration, or polished slide image would improve the result.",
-    "Produce very high quality 16:9 slide assets suitable for use in PowerPoint: clear information hierarchy, crisp readable typography, strong spacing, consistent styling, and presentation-ready composition.",
-    "If the user asks for multiple slides, create a coherent slide set with consistent visual language and clear filenames. Save generated slide assets in the workspace when possible, and summarize what was created.",
-  ].join("\n");
-}
-
-function buildRunnerResearchCreationLabel(): string {
-  return "/research";
-}
-
-function buildRunnerResearchCreationHiddenPrompt(): string {
-  return [
-    "The user selected /research. Treat the visible user request as a request for rigorous research.",
-    "Use the research or deep research skill whenever it is available and appropriate. Prefer primary sources, collect concrete facts, and keep a clear source trail.",
-    "Create a well-structured research summary file in the workspace with concise findings, methodology, sources, and next-step recommendations.",
-    "Include supporting images in the report by default. If research produces images, charts, diagrams, screenshots, or generated visual summaries, embed them directly in the markdown report instead of only listing them separately.",
-    "Use the image generation skill when useful to create supporting images, charts, diagrams, or visual summaries for the research file. Save generated assets with clear filenames and reference them from the summary.",
-    "When embedding local workspace images in markdown, use either a path relative to the report file or a workspace-absolute path such as /workspace/research/image.png so the report preview can resolve the image.",
-  ].join("\n");
-}
-
-function buildRunnerScrapeCreationLabel(): string {
-  return "/scrape";
-}
-
-function buildRunnerScrapeCreationHiddenPrompt(): string {
-  return [
-    "The user selected /scrape. Treat the visible user request as a request to use Firecrawl-backed web search and scraping.",
-    "Use the web-search skill's Firecrawl functionality. Start with the native WebSearch tool when you need to discover URLs; it is backed by Firecrawl and returns cited web or news sources plus images when available.",
-    "For the most relevant result pages, follow up with Firecrawl scrape via `python3 /workspace/.claude/skills/web-search/scripts/web-search.py --scrape-url \"https://example.com/page\"` to read clean markdown.",
-    "If the user asks for structured fields, tables, products, pricing, contact details, or extracted data, use JSON extraction mode with `--json-prompt` and a concise schema when useful.",
-    "Use location, category, include domains, and exclude domains naturally when the user request benefits from those filters. Cite source URLs and summarize which pages were scraped.",
-    "Do not write ad hoc scraping code unless Firecrawl is unavailable.",
-  ].join("\n");
-}
-
-function buildRunnerParseCreationLabel(): string {
-  return "/parse";
-}
-
-function buildRunnerParseCreationHiddenPrompt(): string {
-  return [
-    "The user selected /parse. Treat the visible user request as a request to parse documents with the Document Parsing skill.",
-    "Use the Firecrawl Parse utility for local or non-public documents: `python3 /workspace/.scripts/document-parse.py \"/path/to/document.pdf\"`.",
-    "Use it for PDFs, DOCX, XLSX, HTML, DOC, ODT, RTF, scanned PDFs, forms, reports, invoices, contracts, and other document files.",
-    "Return Markdown by default. If the user asks for fields, tables, invoices, contacts, entities, or other structured data, use `--json-prompt` or `--json-schema`.",
-    "Use `--pdf-mode ocr` for scanned or image-only PDFs and `--max-pages` to bound very large documents.",
-    "Do not write ad hoc document parsing, PDF extraction, OCR, or spreadsheet parsing code unless Firecrawl Parse is unavailable.",
-  ].join("\n");
-}
-
-function buildRunnerAdCreationLabel(): string {
-  return "/ad";
-}
-
-function buildRunnerAdCreationHiddenPrompt(command?: StagedAdCreationCommand | null): string {
-  const settings = normalizeRunnerAdCreationSettings(command || null);
-  const styleLabel = RUNNER_AD_STYLE_OPTIONS.find((option) => option.id === settings.style)?.label || settings.style;
-  const aspectRatioLabel = RUNNER_AD_ASPECT_RATIO_OPTIONS.find((option) => option.id === settings.aspectRatio)?.label || settings.aspectRatio;
-  const qualityLabel = RUNNER_AD_QUALITY_OPTIONS.find((option) => option.id === settings.quality)?.label || settings.quality;
-  const computeTokensPerImage = getRunnerAdCreationQualityComputeTokensPerImage(settings.quality);
-  return [
-    "The user selected /ad. Treat the visible user request as a request to create a high quality advertisement.",
-    `Ad generation settings: style ${styleLabel}, GPT Image 2 quality ${qualityLabel} (${formatRunnerAdCreationComputeTokens(computeTokensPerImage)} / image), aspect ratio ${aspectRatioLabel}, ${settings.variants} image variant${settings.variants === 1 ? "" : "s"}.`,
-    "Use the image generation skill to produce a polished ad creative whenever possible. Prioritize strong visual hierarchy, clear product or offer focus, professional composition, readable typography, and production-ready brand feel.",
-    "Respect the selected style, image quality, aspect ratio, and variant count unless the user's visible request explicitly overrides them.",
-    "Create ad assets suitable for real campaign use. If the user does not specify a format, choose a practical primary format and mention any assumptions.",
-    "Save generated ad images in the workspace with clear filenames, and summarize the creative direction, intended audience, format, and files created.",
-  ].join("\n");
-}
-
-function parseAutoStageBacklogSubtaskCommand(input: string): { ticketNumber: string; prompt: string } | null {
-  const match = input.match(/^\/subtask\s+(\d{3})(?:\s+([\s\S]*))$/i);
-  if (!match) {
-    return null;
-  }
-  const ticketNumber = normalizeRunnerBacklogTicketNumber(match[1] || "");
-  if (!ticketNumber) {
-    return null;
-  }
-  return {
-    ticketNumber,
-    prompt: match[2] || "",
-  };
-}
-
-function parseAutoStageBacklogMissionControlCommand(input: string): { prompt: string } | null {
-  const match = input.match(/^\/mission-control(?:\s+([\s\S]*))?$/i);
-  if (!match) {
-    return null;
-  }
-
-  return {
-    prompt: match[1] || "",
-  };
-}
-
-function parseAutoStageResourceCreationCommand(input: string): { action: RunnerResourceCreationCommandType; prompt: string } | null {
-  const match = input.match(/^\/(computer|app|function)(?:\s+([\s\S]*))?$/i);
-  if (!match) {
-    return null;
-  }
-
-  const action = String(match[1] || "").trim().toLowerCase() as RunnerResourceCreationCommandType;
-  if (action !== "computer" && action !== "app" && action !== "function") {
-    return null;
-  }
-
-  return {
-    action,
-    prompt: match[2] || "",
-  };
-}
-
-function parseAutoStageAgentCreationCommand(input: string): { action: RunnerAgentCreationCommandType; prompt: string } | null {
-  const match = input.match(/^\/(agent|team)(?:\s+([\s\S]*))?$/i);
-  if (!match) {
-    return null;
-  }
-
-  const action = String(match[1] || "").trim().toLowerCase() as RunnerAgentCreationCommandType;
-  if (action !== "agent" && action !== "team") {
-    return null;
-  }
-
-  return {
-    action,
-    prompt: match[2] || "",
-  };
-}
-
-function parseAutoStageSkillCreationCommand(input: string): { action: RunnerSkillCreationCommandType; prompt: string } | null {
-  const match = input.match(/^\/(skill)(?:\s+([\s\S]*))?$/i);
-  if (!match) {
-    return null;
-  }
-
-  return {
-    action: "skill",
-    prompt: match[2] || "",
-  };
-}
-
-function parseAutoStageSlideCreationCommand(input: string): { prompt: string } | null {
-  const match = input.match(/^\/slides(?:\s+([\s\S]*))?$/i);
-  if (!match) {
-    return null;
-  }
-
-  return {
-    prompt: match[1] || "",
-  };
-}
-
-function parseAutoStageResearchCreationCommand(input: string): { prompt: string } | null {
-  const match = input.match(/^\/research(?:\s+([\s\S]*))?$/i);
-  if (!match) {
-    return null;
-  }
-
-  return {
-    prompt: match[1] || "",
-  };
-}
-
-function parseAutoStageScrapeCreationCommand(input: string): { prompt: string } | null {
-  const match = input.match(/^\/scrape(?:\s+([\s\S]*))?$/i);
-  if (!match) {
-    return null;
-  }
-
-  return {
-    prompt: match[1] || "",
-  };
-}
-
-function parseAutoStageParseCreationCommand(input: string): { prompt: string } | null {
-  const match = input.match(/^\/parse(?:\s+([\s\S]*))?$/i);
-  if (!match) {
-    return null;
-  }
-
-  return {
-    prompt: match[1] || "",
-  };
-}
-
-function parseAutoStageAdCreationCommand(input: string): { prompt: string } | null {
-  const match = input.match(/^\/ad(?:\s+([\s\S]*))?$/i);
-  if (!match) {
-    return null;
-  }
-
-  return {
-    prompt: match[1] || "",
-  };
-}
-
-function resolveRunnerSlashCommandInputState(input: string, cursorIndex: number): RunnerSlashCommandInputState | null {
-  const value = String(input || "");
-  if (!value) {
-    return null;
-  }
-
-  const cursor = Math.min(Math.max(0, Number.isFinite(cursorIndex) ? Math.round(cursorIndex) : value.length), value.length);
-  const slashIndex = value.slice(0, cursor).lastIndexOf("/");
-  if (slashIndex < 0) {
-    return null;
-  }
-
-  const tokenRemainder = value.slice(slashIndex + 1);
-  const tokenSeparatorMatch = tokenRemainder.match(/\s/);
-  const tokenEndIndex = tokenSeparatorMatch
-    ? slashIndex + 1 + (tokenSeparatorMatch.index ?? 0)
-    : value.length;
-  if (cursor > tokenEndIndex) {
-    return null;
-  }
-
-  const query = value.slice(slashIndex + 1, tokenEndIndex).trim().toLowerCase();
-  const promptParts = [
-    value.slice(0, slashIndex).trim(),
-    value.slice(tokenEndIndex).trim(),
-  ].filter(Boolean);
-
-  return {
-    query,
-    prompt: promptParts.join(" "),
-  };
-}
-
-function normalizeRunnerTaskPreviewPriority(value: string | null | undefined): "low" | "medium" | "high" | "critical" {
-  const normalized = String(value || "").trim().toLowerCase();
-  if (normalized === "low" || normalized === "medium" || normalized === "high" || normalized === "critical") {
-    return normalized;
-  }
-  return "medium";
-}
-
-function normalizeRunnerTaskPreviewType(value: string | null | undefined): "task" | "subtask" {
-  return String(value || "").trim().toLowerCase() === "subtask" ? "subtask" : "task";
-}
-
-function normalizeRunnerTaskPreviewColor(value: string | null | undefined): "gray" | "blue" | "green" | "amber" | "rose" {
-  const normalized = String(value || "").trim().toLowerCase();
-  if (normalized === "gray" || normalized === "green" || normalized === "amber" || normalized === "rose") {
-    return normalized;
-  }
-  return normalized === "blue" ? "blue" : "gray";
-}
-
-function getRunnerTaskPreviewColorStyle(value: string | null | undefined): CSSProperties {
-  const normalized = normalizeRunnerTaskPreviewColor(value);
-  const presentation = normalized === "gray"
-    ? {
-        accent: "rgba(255, 255, 255, 0.92)",
-        surface: "rgba(255, 255, 255, 0.05)",
-        surfaceHover: "rgba(255, 255, 255, 0.07)",
-        border: "rgba(255, 255, 255, 0.08)",
-      }
-    : normalized === "green"
-    ? {
-        accent: "#2ca36b",
-        surface: "rgba(44, 163, 107, 0.12)",
-        surfaceHover: "rgba(44, 163, 107, 0.16)",
-        border: "rgba(44, 163, 107, 0.2)",
-      }
-    : normalized === "amber"
-      ? {
-          accent: "#c98a1f",
-          surface: "rgba(201, 138, 31, 0.12)",
-          surfaceHover: "rgba(201, 138, 31, 0.16)",
-          border: "rgba(201, 138, 31, 0.2)",
-        }
-      : normalized === "rose"
-        ? {
-            accent: "#c45b87",
-            surface: "rgba(196, 91, 135, 0.12)",
-            surfaceHover: "rgba(196, 91, 135, 0.16)",
-            border: "rgba(196, 91, 135, 0.2)",
-          }
-        : {
-            accent: "#016bcb",
-            surface: "rgba(1, 107, 203, 0.12)",
-            surfaceHover: "rgba(1, 107, 203, 0.16)",
-            border: "rgba(1, 107, 203, 0.2)",
-          };
-  return {
-    "--tb-task-preview-accent": presentation.accent,
-    "--tb-task-preview-surface": presentation.surface,
-    "--tb-task-preview-surface-hover": presentation.surfaceHover,
-    "--tb-task-preview-border": presentation.border,
-  } as CSSProperties;
-}
-
-function isRunnerTaskReviewPreview(taskPreview: RunnerTaskPreview): boolean {
-  return String(taskPreview?.runKind || "").trim().toLowerCase() === "review";
-}
-
-function renderRunnerTaskPreviewPriorityIcon(priority: string | null | undefined, className: string) {
-  const normalized = normalizeRunnerTaskPreviewPriority(priority);
-  if (normalized === "low") {
-    return <LucideChevronDown className={`${className} is-low`} strokeWidth={2} />;
-  }
-  if (normalized === "high") {
-    return <LucideChevronUp className={`${className} is-high`} strokeWidth={2} />;
-  }
-  if (normalized === "critical") {
-    return <LucideChevronsUp className={`${className} is-critical`} strokeWidth={2} />;
-  }
-  return <LucideEqual className={`${className} is-medium`} strokeWidth={2} />;
-}
-
-function renderRunnerTaskPreviewAssigneeAvatar(taskPreview: RunnerTaskPreview) {
-  const assigneeName = String(taskPreview?.assigneeName || "").trim();
-  if (!assigneeName) {
-    return null;
-  }
-  const assigneePhotoUrl = String(taskPreview?.assigneePhotoUrl || "").trim();
-
-  return (
-    <span className="tb-task-preview-assignee-avatar" aria-hidden="true" title={assigneeName}>
-      {assigneePhotoUrl
-        ? <img
-            className="tb-task-preview-assignee-avatar-image"
-            src={assigneePhotoUrl}
-            alt={assigneeName.charAt(0).toUpperCase()}
-          />
-        : <span className="tb-task-preview-assignee-avatar-fallback">
-            {assigneeName.charAt(0).toUpperCase()}
-          </span>}
-    </span>
-  );
-}
-
-function renderTurnAgentAvatar(name: string, photoUrl?: string | null) {
-  const normalizedName = String(name || "").trim();
-  if (!normalizedName) {
-    return null;
-  }
-  const normalizedPhotoUrl = String(photoUrl || "").trim();
-  return (
-    <span className="tb-turn-agent-avatar" aria-hidden="true" title={normalizedName}>
-      {normalizedPhotoUrl
-        ? <img
-            className="tb-turn-agent-avatar-image"
-            src={normalizedPhotoUrl}
-            alt={normalizedName.charAt(0).toUpperCase()}
-          />
-        : <span className="tb-turn-agent-avatar-fallback">
-            {normalizedName.charAt(0).toUpperCase()}
-          </span>}
-    </span>
-  );
-}
-
-function getRunnerComputerDisplayLabel(environmentName: string | null | undefined) {
-  const normalizedName = String(environmentName || "").trim() || "Default";
-  return /\bcomputer\b/i.test(normalizedName) ? normalizedName : `${normalizedName} Computer`;
-}
-
-function renderRunnerTaskPreviewCard(
-  taskPreview: RunnerTaskPreview,
-  options: {
-    onClick?: ((preview: RunnerTaskPreview) => void) | undefined;
-  } = {}
-) {
-  const isTaskPreviewDeleted = Boolean(taskPreview?.isDeleted);
-  const isReviewPreview = isRunnerTaskReviewPreview(taskPreview);
-
-  return (
-    <button
-      type="button"
-      className={`tb-task-preview-card${isReviewPreview ? " is-review" : ""}`.trim()}
-      style={getRunnerTaskPreviewColorStyle(taskPreview.taskColor)}
-      disabled={isTaskPreviewDeleted}
-      onClick={() => {
-        if (!isTaskPreviewDeleted && typeof options.onClick === "function") {
-          options.onClick(taskPreview);
-        }
-      }}
-    >
-      {isReviewPreview ? <div className="tb-task-preview-review-label">Review</div> : null}
-      <div className="tb-task-preview-card-header">
-        <div className="tb-task-preview-title">{taskPreview.title || "Untitled Task"}</div>
-        {renderRunnerTaskPreviewAssigneeAvatar(taskPreview)}
-      </div>
-      <RunnerMarkdown
-        content={String(taskPreview.description || "").trim() || "No description"}
-        className="tb-task-preview-card-description tb-message-markdown"
-        softBreaks
-        disallowHeadings
-      />
-      <div className="tb-task-preview-card-bottom">
-        <div className="tb-task-preview-card-meta-left">
-          <div className={`tb-task-preview-type-badge ${normalizeRunnerTaskPreviewType(taskPreview.taskType) === "subtask" ? "is-subtask" : "is-task"}`.trim()}>
-            {normalizeRunnerTaskPreviewType(taskPreview.taskType) === "subtask"
-              ? <LucideCheck className="tb-task-preview-type-icon" strokeWidth={2} />
-              : <LucideBookmark className="tb-task-preview-type-icon" strokeWidth={2} />}
-          </div>
-          {renderRunnerTaskPreviewPriorityIcon(taskPreview.priority, "tb-task-preview-priority-icon")}
-        </div>
-        <span className="tb-task-preview-ticket">{taskPreview.ticketNumber}</span>
-      </div>
-    </button>
-  );
-}
-
-function renderRunnerMissionControlPreviewCard(preview: RunnerMissionControlPreview | null | undefined) {
-  const prompt = String(preview?.prompt || "").trim() || "Run mission control.";
-  const projectName = String(preview?.projectName || "").trim() || "Project";
-
-  return (
-    <div className="tb-task-preview-card tb-mission-control-preview-card" role="presentation">
-      <div className="tb-mission-control-preview-header">
-        <span className="tb-mission-control-preview-title">
-          <span>Mission Control</span>
-        </span>
-      </div>
-      <RunnerMarkdown
-        content={prompt}
-        className="tb-mission-control-preview-copy tb-message-markdown"
-        softBreaks
-        disallowHeadings
-      />
-      <div className="tb-mission-control-preview-footer">
-        <span className="tb-mission-control-preview-project">
-          <span className="tb-mission-control-preview-project-icon" aria-hidden="true">
-            {preview?.projectIcon || <LucideRocket strokeWidth={1.8} />}
-          </span>
-          <span className="tb-mission-control-preview-project-name">{projectName}</span>
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function getRunnerMissionControlAgentName(preview: RunnerMissionControlPreview | null | undefined) {
-  return String(preview?.agentName || "").trim() || "Mission Control";
-}
-
-function getRunnerMissionControlAgentPhotoUrl(preview: RunnerMissionControlPreview | null | undefined) {
-  return String(preview?.agentPhotoUrl || "").trim();
-}
-
-function getRunnerSummaryResourceSubtitle(resource: RunnerCreatedResourcePreview): string {
-  if (resource.resourceType === "agent") {
-    return [resource.model, resource.isDefault ? "Default" : ""].filter(Boolean).join(" · ");
-  }
-  if (resource.resourceType === "skill") {
-    return [resource.category, resource.isDefault ? "Default" : ""].filter(Boolean).join(" · ");
-  }
-  if (resource.resourceType === "environment") {
-    return [resource.projectName, resource.isDefault ? "Default" : ""].filter(Boolean).join(" · ");
-  }
-  if (resource.resourceType === "project") {
-    return [resource.status, resource.projectName].filter(Boolean).join(" · ");
-  }
-  return [resource.status, resource.projectName].filter(Boolean).join(" · ");
-}
-
-function renderRunnerSummaryResourceIcon(resource: RunnerCreatedResourcePreview) {
-  if (resource.resourceType === "agent") {
-    return <LucideBot className="runner-summary-resource-icon" strokeWidth={1.8} />;
-  }
-  if (resource.resourceType === "skill") {
-    return <LucideCpu className="runner-summary-resource-icon" strokeWidth={1.8} />;
-  }
-  if (resource.resourceType === "environment") {
-    return <LucideCloud className="runner-summary-resource-icon" strokeWidth={1.8} />;
-  }
-  if (resource.resourceType === "project") {
-    return <LucideRocket className="runner-summary-resource-icon" strokeWidth={1.8} />;
-  }
-  return <LucideCalendar className="runner-summary-resource-icon" strokeWidth={1.8} />;
-}
-
-function getRunnerSummaryResourceChipVerb(resource: RunnerCreatedResourcePreview): string {
-  return resource.mutationVerb === "updated" ? "Updated" : "Created";
-}
-
-function renderRunnerSummaryResourceChip(
-  resource: RunnerCreatedResourcePreview,
-  options: { onClick?: (resource: RunnerCreatedResourcePreview) => void } = {},
-) {
-  const typeLabel =
-    resource.resourceType === "agent"
-      ? "Agent"
-      : resource.resourceType === "skill"
-        ? "Skill"
-        : resource.resourceType === "environment"
-          ? "Environment"
-          : resource.resourceType === "project"
-            ? "Project"
-          : "Milestone";
-  const subtitle = getRunnerSummaryResourceSubtitle(resource);
-  const isAgent = resource.resourceType === "agent";
-  const className = `runner-summary-resource-chip is-${resource.resourceType} ${options.onClick ? "is-clickable" : ""}`.trim();
-  const title = isAgent
-    ? `${getRunnerSummaryResourceChipVerb(resource)} ${resource.name}`.trim()
-    : [typeLabel, resource.name, subtitle].filter(Boolean).join(" · ");
-  const content = isAgent ? (
-    <>
-      <span className={`runner-summary-resource-icon-slot is-${resource.resourceType}`.trim()} aria-hidden="true">
-        {renderRunnerSummaryResourceIcon(resource)}
-      </span>
-      <span className="runner-summary-resource-inline-text">
-        {getRunnerSummaryResourceChipVerb(resource)} {resource.name}
-      </span>
-    </>
-  ) : (
-    <>
-      <span className={`runner-summary-resource-icon-slot is-${resource.resourceType}`.trim()} aria-hidden="true">
-        {renderRunnerSummaryResourceIcon(resource)}
-      </span>
-      <span className="runner-summary-resource-copy">
-        <span className="runner-summary-resource-label">{typeLabel}</span>
-        <span className="runner-summary-resource-name">{resource.name}</span>
-        {subtitle ? <span className="runner-summary-resource-meta">{subtitle}</span> : null}
-      </span>
-    </>
-  );
-
-  if (options.onClick) {
-    return (
-      <button
-        type="button"
-        className={className}
-        title={title}
-        onClick={() => options.onClick?.(resource)}
-      >
-        {content}
-      </button>
-    );
-  }
-
-  return (
-    <div className={className} title={title}>
-      {content}
-    </div>
-  );
-}
-
-function formatThreadContextCommandText(action: RunnerChatThreadContextAction, prompt?: string): string {
-  const trimmedPrompt = prompt?.trim();
-  if (trimmedPrompt && threadContextActionAllowsPrompt(action)) {
-    return `/${action} ${trimmedPrompt}`;
-  }
-  return `/${action}`;
-}
-
-function isThreadContextCommandPrompt(prompt: string, action?: string | null): boolean {
-  const trimmed = prompt.trim();
-  if (!trimmed.startsWith("/")) {
-    return false;
-  }
-  if (!action) {
-    return /^\/(compact|clear|fork|btw)\b/i.test(trimmed);
-  }
-  return new RegExp(`^/${action}\\b`, "i").test(trimmed);
-}
-
-function normalizeEnvironmentWorkspaceItems(input: unknown): RunnerChatFileNode[] {
-  const rawItems = Array.isArray(input)
-    ? input
-    : input && typeof input === "object" && Array.isArray((input as { data?: unknown[] }).data)
-      ? (input as { data: unknown[] }).data
-      : input && typeof input === "object" && Array.isArray((input as { files?: unknown[] }).files)
-        ? (input as { files: unknown[] }).files
-      : [];
-
-  const normalized = rawItems
-    .map((entry): RunnerChatFileNode | null => {
-      if (!entry || typeof entry !== "object") return null;
-      const file = entry as Record<string, unknown>;
-      const modifiedTime =
-        typeof file.modifiedAt === "string"
-          ? file.modifiedAt
-          : typeof file.lastModified === "string"
-            ? file.lastModified
-            : typeof file.modifiedTime === "string"
-              ? file.modifiedTime
-              : typeof file.updatedAt === "string"
-                ? file.updatedAt
-                : undefined;
-      const createdTime =
-        typeof file.createdAt === "string"
-          ? file.createdAt
-          : typeof file.createdTime === "string"
-            ? file.createdTime
-            : undefined;
-      const rawPath = typeof file.path === "string" ? file.path : "";
-      const normalizedPath = rawPath.replace(/^\/+/, "").replace(/\/+$/, "");
-      const explicitName = typeof file.name === "string" ? file.name : "";
-      const name = explicitName || normalizedPath.split("/").filter(Boolean).pop() || "";
-      if (!name) return null;
-
-      const parentSegments = normalizedPath.split("/").filter(Boolean);
-      parentSegments.pop();
-      const parentId = parentSegments.length ? parentSegments.join("/") : null;
-      const type = typeof file.type === "string" ? file.type : "";
-      const isFolder = type === "directory" || type === "folder";
-      const hasChildren =
-        typeof file.hasChildren === "boolean"
-          ? file.hasChildren
-          : typeof file.childCount === "number"
-            ? file.childCount > 0
-            : undefined;
-
-      return {
-        id: normalizedPath || name,
-        name,
-        path: `/${normalizedPath}`,
-        parentId,
-        isFolder,
-        hasChildren,
-        mimeType: typeof file.mimeType === "string" ? file.mimeType : undefined,
-        size: typeof file.size === "number" ? file.size : undefined,
-        modifiedTime,
-        createdTime,
-      };
-    })
-    .filter((item): item is RunnerChatFileNode => item !== null);
-
-  return normalized;
-}
-
-function getBrowserFileType(mimeType?: string, name?: string): "image" | "video" | "audio" | "pdf" | "code" | "spreadsheet" | "document" | "file" {
-  if (!mimeType && !name) return "file";
-
-  const ext = name?.split(".").pop()?.toLowerCase() || "";
-
-  if (mimeType?.startsWith("image/") || ["png", "jpg", "jpeg", "gif", "svg", "webp", "bmp"].includes(ext)) {
-    return "image";
-  }
-  if (mimeType?.startsWith("video/") || ["mp4", "mov", "avi", "webm"].includes(ext)) {
-    return "video";
-  }
-  if (mimeType?.startsWith("audio/") || ["mp3", "wav", "ogg", "m4a"].includes(ext)) {
-    return "audio";
-  }
-  if (["pdf"].includes(ext)) {
-    return "pdf";
-  }
-  if (["ts", "tsx", "js", "jsx", "json", "css", "html", "py", "go", "rs", "java", "cpp", "c", "h"].includes(ext)) {
-    return "code";
-  }
-  if (["xlsx", "xls", "csv"].includes(ext)) {
-    return "spreadsheet";
-  }
-  if (["doc", "docx", "txt", "md"].includes(ext)) {
-    return "document";
-  }
-  return "file";
-}
-
-function attachmentTypeForFile(mimeType?: string, name?: string): RunnerAttachment["type"] {
-  return getBrowserFileType(mimeType, name) === "image" ? "image" : "document";
-}
-
-function isBrowserFilePreviewable(file: RunnerChatFileNode): boolean {
-  const fileType = getBrowserFileType(file.mimeType, file.name);
-  return fileType === "image" || fileType === "video" || fileType === "code" || fileType === "document" || file.name.endsWith(".txt") || file.name.endsWith(".md") || file.name.endsWith(".json");
-}
-
-function buildEnvironmentFileDownloadUrl(backendUrl: string, environmentId: string, filePath?: string): string | null {
-  return buildRunnerPreviewDownloadUrl(backendUrl, environmentId, filePath);
-}
-
-function normalizeRunnerWorkspaceFolderPath(folderPath?: string | null): string {
-  return String(folderPath || "").trim().replace(/^\/+/, "").replace(/\/+$/, "");
-}
-
-function buildEnvironmentFileListUrl(backendUrl: string, environmentId: string, folderPath = "", depth = 1): string | null {
-  const normalizedBackendUrl = sanitizeBackendUrl(backendUrl);
-  const normalizedEnvironmentId = String(environmentId || "").trim();
-  if (!normalizedBackendUrl || !normalizedEnvironmentId) {
-    return null;
-  }
-  const normalizedFolderPath = normalizeRunnerWorkspaceFolderPath(folderPath);
-  const params = new URLSearchParams();
-  params.set("depth", String(depth));
-  if (normalizedFolderPath) {
-    params.set("path", normalizedFolderPath);
-  }
-  return `${normalizedBackendUrl}/environments/${encodeURIComponent(normalizedEnvironmentId)}/files?${params.toString()}`;
-}
-
-function isInternalTurnPreviewPath(filePath: string): boolean {
-  const normalized = filePath.replace(/^\/workspace\/?/, "");
-  return (
-    normalized === ".claude.json" ||
-    normalized.startsWith(".claude/") ||
-    normalized.startsWith(".cache/") ||
-    normalized.startsWith(".npm/") ||
-    normalized.startsWith(".local/") ||
-    normalized.startsWith("browser-skill/") ||
-    normalized.startsWith("tmp/")
-  );
-}
-
-function isInternalFileChangeLog(log: RunnerLog): boolean {
-  if (log.eventType !== "file_change") return false;
-  const filePaths = Array.isArray(log.metadata?.filePaths)
-    ? log.metadata.filePaths.filter((value): value is string =>
-      typeof value === "string" && value.trim().length > 0 && !isRunnerHydratedNullDevicePath(value)
-    )
-    : [];
-  return filePaths.length > 0 && filePaths.every((filePath) => {
-    const normalizedPath = normalizeRunnerPreviewPath(filePath);
-    return normalizedPath ? isInternalTurnPreviewPath(normalizedPath) : false;
-  });
-}
-
-function resolveTurnPreviewMapValue<T>(source: Record<string, T> | undefined, filePath: string): T | undefined {
-  if (!source) return undefined;
-  return (
-    source[filePath] ||
-    source[filePath.replace(/^\/workspace\//, "")] ||
-    source[filePath.replace(/^\/+/, "")] ||
-    source[`/workspace/${filePath.replace(/^\/workspace\//, "").replace(/^\/+/, "")}`]
-  );
-}
-
-function buildDeletedThreadPreviewDiff(filePath: string, content: string): string {
-  const normalizedContent = content.replace(/\r\n/g, "\n");
-  const lines = normalizedContent.split("\n");
-  const body = lines.map((line) => `-${line}`).join("\n");
-  return `--- a/${filePath}\n+++ /dev/null\n@@ -1,${lines.length} +0,0 @@\n${body}`;
-}
-
-function collectTurnFilePreviews(logs: RunnerLog[]): RunnerTurnFilePreview[] {
-  const previewEntries = new Map<string, RunnerTurnFilePreview & { order: number }>();
-  let order = 0;
-
-  for (const log of logs) {
-    const previews = collectRunnerLogFileChangePreviews(log);
-    if (previews.length === 0) continue;
-
-    for (const preview of previews) {
-      const normalizedPath = normalizeRunnerPreviewPath(preview.path);
-      if (!normalizedPath || isInternalTurnPreviewPath(normalizedPath)) continue;
-      const changeKind = preview.kind;
-
-      if (changeKind === "deleted") {
-        const existing = previewEntries.get(normalizedPath);
-        const deletedContent = typeof existing?.content === "string" ? existing.content : undefined;
-        const deletedDiff =
-          typeof preview.diff === "string" && preview.diff.trim().length > 0
-            ? preview.diff
-            : deletedContent
-              ? buildDeletedThreadPreviewDiff(normalizedPath, deletedContent)
-              : undefined;
-        previewEntries.set(normalizedPath, {
-          ...(existing || {}),
-          path: normalizedPath,
-          kind: "deleted",
-          content: deletedContent,
-          diff: deletedDiff,
-          additions: typeof preview.additions === "number" ? preview.additions : 0,
-          deletions:
-            typeof preview.deletions === "number"
-              ? preview.deletions
-              : deletedContent
-                ? deletedContent.replace(/\r\n/g, "\n").split("\n").length
-                : undefined,
-          order,
-        });
-        order += 1;
-        continue;
-      }
-      const nextPreview: RunnerTurnFilePreview & { order: number } = {
-        path: normalizedPath,
-        kind: changeKind,
-        content: preview.content,
-        diff: preview.diff,
-        additions: typeof preview.additions === "number" ? preview.additions : undefined,
-        deletions: typeof preview.deletions === "number" ? preview.deletions : undefined,
-        order,
-      };
-
-      const existing = previewEntries.get(normalizedPath);
-      previewEntries.set(normalizedPath, {
-        ...(existing || {}),
-        ...nextPreview,
-      });
-      order += 1;
-    }
-  }
-
-  return Array.from(previewEntries.values())
-    .sort((left, right) => left.order - right.order)
-    .map(({ order: _order, ...preview }) => preview)
-    .filter((preview) => {
-      const fileType = getBrowserFileType(undefined, getRunnerPreviewFilename(preview.path));
-      return fileType !== "file" || Boolean(preview.content || preview.diff);
-    });
-}
-
-function buildTurnSummaryPreviewAttachment(
-  file: RunnerTurnFilePreview,
-  options: { backendUrl?: string; environmentId?: string | null }
-): RunnerTurnAttachment {
-  return {
-    ...buildRunnerPreviewAttachmentFromPath(file.path, {
-      backendUrl: options.backendUrl,
-      environmentId: options.environmentId,
-      idPrefix: "summary-preview",
-    }),
-    workspacePath: file.path,
-    changeKind: file.kind,
-    ...(typeof file.diff === "string" && file.diff.trim() ? { diffContent: file.diff } : {}),
-    ...(typeof file.content === "string" ? { fileContent: file.content } : {}),
-    ...(typeof file.additions === "number" ? { diffAdditions: file.additions } : {}),
-    ...(typeof file.deletions === "number" ? { diffDeletions: file.deletions } : {}),
-  };
-}
-
-function collectTurnSummaryPreviewAttachments(
-  logs: RunnerLog[],
-  options: { backendUrl?: string; environmentId?: string | null }
-): RunnerTurnAttachment[] {
-  return collectTurnFilePreviews(logs).map((file) => buildTurnSummaryPreviewAttachment(file, options));
-}
-
-function collectTurnSummaryPreviewResources(logs: RunnerLog[]): RunnerCreatedResourcePreview[] {
-  const resources = logs.flatMap((log) => {
-    const nextResources: RunnerCreatedResourcePreview[] = [];
-    if (isComputerAgentsMutationLog(log)) {
-      nextResources.push(
-        ...collectComputerAgentsCreatedResources(log).filter((resource) => resource.resourceType === "agent")
-      );
-    }
-    return nextResources;
-  });
-  const nextByKey = new Map<string, RunnerCreatedResourcePreview>();
-  for (const resource of resources) {
-    const key = `${resource.resourceType}:${String(resource.id || resource.name || "").trim().toLowerCase()}`;
-    if (!key || key.endsWith(":")) continue;
-    const existing = nextByKey.get(key);
-    nextByKey.set(key, existing ? { ...existing, ...resource } : resource);
-  }
-  return Array.from(nextByKey.values());
-}
-
-function collectTurnSummaryPreviewItems(
-  logs: RunnerLog[],
-  options: { backendUrl?: string; environmentId?: string | null }
-): RunnerTurnSummaryPreviewItem[] {
-  const resources = collectTurnSummaryPreviewResources(logs).map((resource) => ({
-    id: `resource:${resource.resourceType}:${resource.id}`,
-    kind: "resource" as const,
-    resource,
-  }));
-  const attachments = collectTurnSummaryPreviewAttachments(logs, options).map((attachment) => ({
-    id: `attachment:${attachment.id}`,
-    kind: "attachment" as const,
-    attachment,
-  }));
-  return [...resources, ...attachments];
-}
-
-function collectThreadRetainedSummaryPreviewPaths(turns: RunnerTurn[]): Set<string> {
-  const retainedPaths = new Set<string>();
-
-  for (const turn of turns) {
-    for (const log of turn.logs) {
-      const previews = collectRunnerLogFileChangePreviews(log);
-      if (previews.length === 0) continue;
-
-      for (const preview of previews) {
-        const normalizedPath = normalizeRunnerPreviewPath(preview.path);
-        if (!normalizedPath || isInternalTurnPreviewPath(normalizedPath)) continue;
-        const changeKind = preview.kind;
-
-        if (changeKind === "deleted") {
-          retainedPaths.delete(normalizedPath);
-          continue;
-        }
-
-        retainedPaths.add(normalizedPath);
-      }
-    }
-  }
-
-  return retainedPaths;
-}
-
-function collectTurnChangedFiles(logs: RunnerLog[]): Array<{
-  path: string;
-  kind: "created" | "modified" | "deleted";
-  additions?: number;
-  deletions?: number;
-}> {
-  const changedFiles = new Map<string, {
-    path: string;
-    kind: "created" | "modified" | "deleted";
-    additions?: number;
-    deletions?: number;
-    order: number;
-  }>();
-  let order = 0;
-
-  for (const log of logs) {
-    const previews = collectRunnerLogFileChangePreviews(log);
-    if (previews.length === 0) continue;
-
-    for (const preview of previews) {
-      const normalizedPath = normalizeRunnerPreviewPath(preview.path);
-      if (!normalizedPath || isInternalTurnPreviewPath(normalizedPath)) continue;
-      const changeKind = preview.kind;
-      changedFiles.set(normalizedPath, {
-        path: normalizedPath,
-        kind: changeKind,
-        additions: typeof preview.additions === "number" ? preview.additions : undefined,
-        deletions: typeof preview.deletions === "number" ? preview.deletions : undefined,
-        order,
-      });
-      order += 1;
-    }
-  }
-
-  return Array.from(changedFiles.values())
-    .sort((left, right) => left.order - right.order)
-    .map(({ order: _order, ...changedFile }) => changedFile);
-}
-
-function mergeDriveFolderItems(current: RunnerChatFileNode[], folderId: string, nextItems: RunnerChatFileNode[]): RunnerChatFileNode[] {
-  const normalizedParentId = folderId === "root" ? null : folderId;
-  const remaining = current.filter((item) => (item.parentId ?? null) !== normalizedParentId);
-  const normalizedNext = nextItems.map((item) => ({
-    ...item,
-    parentId: item.parentId ?? normalizedParentId,
-  }));
-
-  return [...remaining, ...normalizedNext];
-}
-
-function resolveSpeechToTextUrl(overrideUrl: string | undefined, backendUrl: string, requestHeaders?: HeadersInit): string | null {
-  const upstreamUrl = getHeaderValue(requestHeaders, "X-Runner-Upstream-Url");
-  const candidate = overrideUrl?.trim() || upstreamUrl || `${sanitizeBackendUrl(backendUrl)}/ws/speech-to-text`;
-  if (!candidate) return null;
-
-  try {
-    const base = typeof window === "undefined" ? "http://localhost" : window.location.href;
-    const url = new URL(candidate, base);
-    if (url.protocol === "http:") {
-      url.protocol = "ws:";
-    } else if (url.protocol === "https:") {
-      url.protocol = "wss:";
-    }
-    if (url.protocol !== "ws:" && url.protocol !== "wss:") {
-      return null;
-    }
-    return url.toString();
-  } catch {
-    return null;
-  }
-}
-
-function combineInputWithTranscript(baseInput: string, transcript: string): string {
-  const trimmedTranscript = transcript.trim();
-  if (!trimmedTranscript) {
-    return baseInput;
-  }
-  if (!baseInput.trim()) {
-    return trimmedTranscript;
-  }
-  return /\s$/.test(baseInput) ? `${baseInput}${trimmedTranscript}` : `${baseInput} ${trimmedTranscript}`;
-}
-
-function float32ToInt16Pcm(input: Float32Array): Int16Array {
-  const pcm = new Int16Array(input.length);
-  for (let index = 0; index < input.length; index += 1) {
-    const sample = Math.max(-1, Math.min(1, input[index] || 0));
-    pcm[index] = sample < 0 ? Math.round(sample * 0x8000) : Math.round(sample * 0x7fff);
-  }
-  return pcm;
-}
-
-function downsampleTo16kHz(input: Float32Array, sourceSampleRate: number): Int16Array {
-  if (!input.length) {
-    return new Int16Array(0);
-  }
-
-  if (sourceSampleRate === SPEECH_SAMPLE_RATE) {
-    return float32ToInt16Pcm(input);
-  }
-
-  const ratio = sourceSampleRate / SPEECH_SAMPLE_RATE;
-  const outputLength = Math.max(1, Math.round(input.length / ratio));
-  const pcm = new Int16Array(outputLength);
-  let outputIndex = 0;
-  let inputIndex = 0;
-
-  while (outputIndex < outputLength) {
-    const nextInputIndex = Math.min(input.length, Math.round((outputIndex + 1) * ratio));
-    let sum = 0;
-    let count = 0;
-
-    while (inputIndex < nextInputIndex) {
-      sum += input[inputIndex] || 0;
-      count += 1;
-      inputIndex += 1;
-    }
-
-    const average = count > 0 ? sum / count : input[Math.min(inputIndex, input.length - 1)] || 0;
-    const sample = Math.max(-1, Math.min(1, average));
-    pcm[outputIndex] = sample < 0 ? Math.round(sample * 0x8000) : Math.round(sample * 0x7fff);
-    outputIndex += 1;
-  }
-
-  return pcm;
-}
-
-function encodePcmChunkBase64(chunk: Int16Array): string {
-  const bytes = new Uint8Array(chunk.buffer, chunk.byteOffset, chunk.byteLength);
-  let binary = "";
-
-  for (let index = 0; index < bytes.length; index += 0x8000) {
-    binary += String.fromCharCode(...bytes.subarray(index, index + 0x8000));
-  }
-
-  return btoa(binary);
-}
-
-function calculateRms(input: Float32Array): number {
-  if (input.length === 0) return 0;
-
-  let sum = 0;
-  for (let index = 0; index < input.length; index += 1) {
-    const value = input[index] || 0;
-    sum += value * value;
-  }
-
-  return Math.sqrt(sum / input.length);
-}
-
-function createSpeechCaptureWorkletUrl(): string {
-  const source = `
-class TestbaseSpeechCaptureProcessor extends AudioWorkletProcessor {
-  constructor(options) {
-    super();
-    this.bufferSize = options.processorOptions?.bufferSize || ${SPEECH_WORKLET_BUFFER_SIZE};
-    this.pending = [];
-  }
-
-  process(inputs) {
-    const input = inputs[0];
-    const channel = input && input[0];
-    if (!channel || channel.length === 0) {
-      return true;
-    }
-
-    for (let index = 0; index < channel.length; index += 1) {
-      this.pending.push(channel[index]);
-    }
-
-    while (this.pending.length >= this.bufferSize) {
-      const chunk = new Float32Array(this.pending.slice(0, this.bufferSize));
-      this.pending = this.pending.slice(this.bufferSize);
-      this.port.postMessage(chunk);
-    }
-
-    return true;
-  }
-}
-
-registerProcessor(${JSON.stringify(SPEECH_WORKLET_PROCESSOR_NAME)}, TestbaseSpeechCaptureProcessor);
-`;
-
-  return URL.createObjectURL(new Blob([source], { type: "text/javascript" }));
-}
-
-function runStatusLabel(status: "idle" | "running" | "success" | "failed" | "cancelled") {
-  if (status === "running") return "Running";
-  if (status === "success") return "Completed";
-  if (status === "failed") return "Failed";
-  if (status === "cancelled") return "Cancelled";
-  return "Idle";
-}
-
-function statusTone(status: "idle" | "running" | "success" | "failed" | "cancelled"): "neutral" | "success" | "error" {
-  if (status === "success") return "success";
-  if (status === "failed") return "error";
-  return "neutral";
-}
-
-function eventGlyph(eventType?: string): string {
-  if (eventType === "reasoning" || eventType === "planning") return "↺";
-  if (eventType === "command_execution") return ">_";
-  if (eventType === "agent_message" || eventType === "llm_response") return "AI";
-  if (eventType === "turn_completed") return "$";
-  if (eventType === "setup" || eventType === "startup") return "⚙";
-  if (eventType === "file_change") return "FI";
-  return "•";
-}
-
-function IconLightbulb({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="M9 18h6M10 21h4M12 3a7 7 0 0 0-4 12l1.2 1.6A2 2 0 0 1 9.6 18h4.8a2 2 0 0 1 .4-1.4L16 15a7 7 0 0 0-4-12z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconReadFile({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M14 3v6h6M8 13h8M8 17h6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconWriteFile({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M14 3v6h6M12 12v6M9 15h6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconFolder({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconFolderPlus({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="M12 10v6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M9 13h6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconVideo({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="M14 2v4a2 2 0 0 0 2 2h4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M15.033 13.44a.647.647 0 0 1 0 1.12l-4.065 2.352a.645.645 0 0 1-.968-.56v-4.704a.645.645 0 0 1 .967-.56z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconMusic({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="M9 18V5l12-2v13" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="6" cy="18" r="3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="18" cy="16" r="3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconTerminal({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="m4 17 6-5-6-5M12 19h8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconCloud({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
-    </svg>
-  );
-}
-
-function IconImages({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <rect x="3" y="5" width="14" height="14" rx="2" strokeWidth="1.5" />
-      <path d="m3 15 4-4 3 3 3-3 4 4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="10" cy="10" r="1.25" fill="currentColor" stroke="none" />
-      <path d="M17 8h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconGlobe({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <circle cx="12" cy="12" r="9" strokeWidth="1.5" />
-      <path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconTelescope({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="m6 21 3.5-7M14.5 6.5 18 14M9.5 14 16 11l-3-7-6.5 3 3 7Z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M12 12 7 9.5M15 10.5 20 8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconFileText({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M14 2v6h6M8 13h8M8 17h8M8 9h2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconPalette({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="M12 3a9 9 0 0 0 0 18h1.2a2.8 2.8 0 0 0 0-5.6H12a1.8 1.8 0 0 1 0-3.6h4.5A4.5 4.5 0 0 0 21 7.3 9 9 0 0 0 12 3Z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="7.5" cy="10.5" r="1" fill="currentColor" stroke="none" />
-      <circle cx="12" cy="8" r="1" fill="currentColor" stroke="none" />
-      <circle cx="16.5" cy="10.5" r="1" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
-function IconBrain({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="M9.5 4a3 3 0 0 0-3 3v.3A3.7 3.7 0 0 0 4 10.8 3.7 3.7 0 0 0 6.5 14v.5a3.5 3.5 0 0 0 6 2.4 3.5 3.5 0 0 0 6-2.4V14a3.7 3.7 0 0 0 2.5-3.2 3.7 3.7 0 0 0-2.5-3.5V7a3 3 0 0 0-5.2-2.1A3.5 3.5 0 0 0 9.5 4Z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M9 10h1M14 8.5h1M8.5 13.5H10M14 13.5h1.5M12 6v12" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconSearch({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="11" cy="11" r="8" />
-      <path d="m21 21-4.3-4.3" />
-    </svg>
-  );
-}
-
-function IconX({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="M6 6l12 12M18 6 6 18" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconChevronLeft({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="m15 6-6 6 6 6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconChevronDown({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="m6 9 6 6 6-6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconChevronUp({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="m6 15 6-6 6 6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconChevronRight({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="m9 6 6 6-6 6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconPlus({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="M12 5v14M5 12h14" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconPaperclip({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="m21.44 11.05-8.49 8.49a5.5 5.5 0 0 1-7.78-7.78l8.49-8.48a3.5 3.5 0 1 1 4.95 4.95l-8.49 8.49a1.5 1.5 0 0 1-2.12-2.12l7.78-7.78" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconLayers({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="m12 3 9 4.5-9 4.5-9-4.5 9-4.5ZM3 12l9 4.5 9-4.5M3 16.5 12 21l9-4.5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconUser({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="M18 20a6 6 0 0 0-12 0M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconGithub({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-    </svg>
-  );
-}
-
-function IconGoogleDrive({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 87.3 78" aria-hidden="true">
-      <path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da" />
-      <path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z" fill="#00ac47" />
-      <path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z" fill="#ea4335" />
-      <path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d" />
-      <path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc" />
-      <path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 28h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00" />
-    </svg>
-  );
-}
-
-function IconOneDrive({ className }: { className?: string }) {
-  return (
-    <img
-      className={className}
-      src="https://upload.wikimedia.org/wikipedia/commons/5/59/Microsoft_Office_OneDrive_%282019%E2%80%932025%29.svg"
-      alt=""
-      aria-hidden="true"
-      draggable={false}
-    />
-  );
-}
-
-function IconNotion({ className }: { className?: string }) {
-  return (
-    <img
-      className={className}
-      src="https://upload.wikimedia.org/wikipedia/commons/e/e9/Notion-logo.svg"
-      alt=""
-      aria-hidden="true"
-      draggable={false}
-    />
-  );
-}
-
-function IconClock({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <circle cx="12" cy="12" r="8" strokeWidth="1.5" />
-      <path d="M12 8v5l3 2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconPlay({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="m8 5 11 7-11 7V5Z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconRepeat({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="M17 2v4h-4M7 22v-4h4M20 11a7 7 0 0 0-12-4L7 8M4 13a7 7 0 0 0 12 4l1-1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconFolderOpen({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="M3 8.5A2.5 2.5 0 0 1 5.5 6H9l2 2h7.5A2.5 2.5 0 0 1 21 10.5v6A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5v-8Z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconFile({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M14 2v4a2 2 0 0 0 2 2h4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconLoader2({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="M21 12a9 9 0 1 1-6.219-8.56" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconLogout({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="M15 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconMic({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="M12 3a3 3 0 0 1 3 3v6a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3Z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M19 11a7 7 0 0 1-14 0M12 18v3M8 21h8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconStop({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <rect x="7.5" y="7.5" width="9" height="9" rx="1.75" />
-    </svg>
-  );
-}
-
-function IconCheck({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="m5 12 5 5L20 7" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
 
 function renderBrowserFileIcon(file: RunnerChatFileNode, className: string) {
   if (file.isFolder) {
@@ -5353,292 +1022,6 @@ function renderBrowserFileIcon(file: RunnerChatFileNode, className: string) {
   return <img src={RUNNER_TEXT_FILE_ICON_URL} alt="" aria-hidden="true" draggable={false} className={`${className} tb-file-browser-icon-asset`} />;
 }
 
-function notionDatabasesToFileItems(databases: RunnerChatNotionDatabase[]): RunnerChatFileNode[] {
-  const workspaceItem: RunnerChatFileNode = {
-    id: "__entire_workspace__",
-    name: "Entire workspace",
-    mimeType: "application/x-notion-workspace",
-    isFolder: false,
-  };
-
-  const databaseItems = databases.map((database) => ({
-    id: database.id,
-    name: database.name,
-    mimeType: "application/x-notion-database",
-    isFolder: false,
-  }));
-
-  return [workspaceItem, ...databaseItems];
-}
-
-function normalizeComputerAgentSkills(skills: RunnerChatSkill[]): RunnerChatSkill[] {
-  const input = skills.length > 0 ? skills : DEFAULT_COMPUTER_AGENT_SKILLS;
-  const normalizedInput = input
-    .filter((skill): skill is RunnerChatSkill => Boolean(skill?.id))
-    .map((skill) => ({
-      ...skill,
-      id: RUNNER_CHAT_SKILL_ID_ALIASES[String(skill.id || "").trim()] || String(skill.id || "").trim(),
-    }))
-    .filter((skill) => skill.id);
-  const byId = new Map(normalizedInput.map((skill) => [skill.id, skill] as const));
-  const core = DEFAULT_COMPUTER_AGENT_SKILLS.map((skill) => ({ ...skill, ...byId.get(skill.id) }));
-  const custom = normalizedInput.filter((skill) => !DEFAULT_COMPUTER_AGENT_SKILLS.some((entry) => entry.id === skill.id));
-  return [...core, ...custom];
-}
-
-function buildEnabledSkillsStorageKey(appId: string): string {
-  return `${RUNNER_CHAT_ENABLED_SKILLS_STORAGE_KEY_PREFIX}:${appId || "runner-web-sdk"}`;
-}
-
-function buildWorkspaceSelectionStorageKey(appId: string, backendUrl: string): string {
-  return `${RUNNER_CHAT_WORKSPACE_SELECTION_STORAGE_KEY_PREFIX}:${appId || "runner-web-sdk"}:${sanitizeBackendUrl(backendUrl) || "default"}`;
-}
-
-function normalizeWorkspaceSelectorMode(value: unknown): RunnerWorkspaceSelectorMode {
-  return value === "projects" ? "projects" : "computers";
-}
-
-function loadPersistedWorkspaceSelection(storageKey: string): {
-  mode: RunnerWorkspaceSelectorMode;
-  environmentId: string;
-  projectId: string;
-} | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-  try {
-    const raw = window.localStorage.getItem(storageKey);
-    if (!raw) {
-      return null;
-    }
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-      return null;
-    }
-    const record = parsed as Record<string, unknown>;
-    return {
-      mode: normalizeWorkspaceSelectorMode(record.mode),
-      environmentId: typeof record.environmentId === "string" ? record.environmentId.trim() : "",
-      projectId: typeof record.projectId === "string" ? record.projectId.trim() : "",
-    };
-  } catch {
-    return null;
-  }
-}
-
-function persistWorkspaceSelection(
-  storageKey: string,
-  selection: {
-    mode: RunnerWorkspaceSelectorMode;
-    environmentId?: string | null;
-    projectId?: string | null;
-  }
-) {
-  if (typeof window === "undefined") {
-    return;
-  }
-  try {
-    window.localStorage.setItem(
-      storageKey,
-      JSON.stringify({
-        mode: selection.mode,
-        environmentId: String(selection.environmentId || "").trim(),
-        projectId: String(selection.projectId || "").trim(),
-      })
-    );
-  } catch {
-    // Ignore storage failures; the UI still works without persistence.
-  }
-}
-
-function loadPersistedEnabledSkillIds(storageKey: string): string[] | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-  try {
-    const raw = window.localStorage.getItem(storageKey);
-    if (!raw) {
-      return null;
-    }
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) {
-      return null;
-    }
-    const normalized = parsed
-      .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
-      .map((value) => RUNNER_CHAT_SKILL_ID_ALIASES[value.trim()] || value.trim());
-    return normalized.length > 0 ? [...new Set(normalized)] : [];
-  } catch {
-    return null;
-  }
-}
-
-function normalizeEnabledSkillIdList(skillIds?: string[] | null): string[] | null {
-  if (!Array.isArray(skillIds)) {
-    return null;
-  }
-  const normalized: string[] = [];
-  const seen = new Set<string>();
-  for (const skillId of skillIds) {
-    const rawSkillId = String(skillId || "").trim();
-    if (!rawSkillId) {
-      continue;
-    }
-    const normalizedSkillId = RUNNER_CHAT_SKILL_ID_ALIASES[rawSkillId] || rawSkillId;
-    if (!normalizedSkillId || seen.has(normalizedSkillId)) {
-      continue;
-    }
-    seen.add(normalizedSkillId);
-    normalized.push(normalizedSkillId);
-  }
-  return normalized;
-}
-
-function persistEnabledSkillIds(storageKey: string, skillIds: string[]) {
-  if (typeof window === "undefined") {
-    return;
-  }
-  try {
-    window.localStorage.setItem(storageKey, JSON.stringify([...new Set(skillIds)]));
-  } catch {
-    // Ignore storage failures; the UI still works without persistence.
-  }
-}
-
-function areStringArraysEqual(left: string[], right: string[]): boolean {
-  if (left.length !== right.length) {
-    return false;
-  }
-  for (let index = 0; index < left.length; index += 1) {
-    if (left[index] !== right[index]) {
-      return false;
-    }
-  }
-  return true;
-}
-
-function defaultEnabledSkillIds(skills: RunnerChatSkill[]): string[] {
-  const defaultIds = new Set<string>(DEFAULT_ENABLED_SKILL_IDS);
-  return skills.filter((skill) => !skill.isCustom && defaultIds.has(skill.id)).map((skill) => skill.id);
-}
-
-function customSkillIconComponent(icon?: string | null) {
-  const iconKey = (icon || "default").toLowerCase();
-  const iconMap = {
-    default: LucideWand2,
-    sparkles: LucideSparkles,
-    brain: LucideBrain,
-    zap: LucideZap,
-    telescope: LucideTelescope,
-    search: LucideGlobe,
-    image: LucideImageIcon,
-    code: LucideCode,
-    terminal: LucideTerminal,
-    "file-text": LucideFileText,
-    database: LucideDatabase,
-    "pen-tool": LucidePenTool,
-    palette: LucidePalette,
-    message: LucideMessageSquare,
-    mail: LucideMail,
-    calendar: LucideCalendar,
-    calculator: LucideCalculator,
-    shield: LucideShield,
-    lock: LucideShield,
-    cloud: LucideCloud,
-    server: LucideServer,
-    cpu: LucideCpu,
-    monitor: LucideMonitor,
-    git: LucideGitBranch,
-    package: LucidePackage,
-    list: LucideListTodo,
-  } as const;
-  return iconMap[iconKey as keyof typeof iconMap] || LucideWand2;
-}
-
-function buildEnabledSkillsPayload(
-  enabledSkillIds: string[],
-  displayedSkills: RunnerChatSkill[],
-  skillDefaults?: RunnerChatSkillDefaults
-) {
-  const enabled = new Set(enabledSkillIds);
-  const defaultSkillMap: Record<string, string> = {
-    image_generation: "imageGeneration",
-    video_generation: "videoGeneration",
-    web_search: "webSearch",
-    deep_research: "deepResearch",
-    browser: "browser",
-    pdf: "pdf",
-    frontend_design: "frontendDesign",
-    pptx: "pptx",
-    memory: "memory",
-    task_management: "taskManagement",
-    email: "email",
-  };
-
-  const payload: Record<string, unknown> = {};
-  for (const [id, key] of Object.entries(defaultSkillMap)) {
-    payload[key] = enabled.has(id);
-  }
-  payload.documentParsing = enabled.has("pdf");
-
-  if (enabled.has("image_generation") && skillDefaults?.imageGeneration) {
-    const imageGeneration = skillDefaults.imageGeneration;
-    const normalizedModel = typeof imageGeneration.model === "string" ? imageGeneration.model.trim() : "";
-    const normalizedQuality = typeof imageGeneration.quality === "string" ? imageGeneration.quality.trim() : "";
-    const normalizedComputeTokens = Number(imageGeneration.computeTokensPerImage);
-    const imageGenerationConfig: Record<string, unknown> = {};
-    if (normalizedModel) {
-      imageGenerationConfig.model = normalizedModel;
-      payload.imageGenerationModel = normalizedModel;
-    }
-    if (normalizedQuality) {
-      imageGenerationConfig.quality = normalizedQuality;
-      payload.imageGenerationQuality = normalizedQuality;
-    }
-    if (Number.isFinite(normalizedComputeTokens) && normalizedComputeTokens > 0) {
-      const computeTokensPerImage = Math.max(0, Math.round(normalizedComputeTokens));
-      imageGenerationConfig.computeTokensPerImage = computeTokensPerImage;
-      payload.imageGenerationComputeTokensPerImage = computeTokensPerImage;
-    }
-    if (Object.keys(imageGenerationConfig).length > 0) {
-      payload.imageGenerationConfig = imageGenerationConfig;
-    }
-  }
-
-  if (enabled.has("video_generation") && skillDefaults?.videoGeneration) {
-    const videoGeneration = skillDefaults.videoGeneration;
-    const normalizedModel = typeof videoGeneration.model === "string" ? videoGeneration.model.trim() : "";
-    if (normalizedModel) {
-      payload.videoGenerationModel = normalizedModel;
-      payload.videoGenerationConfig = { model: normalizedModel };
-    }
-  }
-
-  if (enabled.has("deep_research") && skillDefaults?.deepResearch) {
-    const deepResearch = skillDefaults.deepResearch;
-    const normalizedModel = typeof deepResearch.model === "string" ? deepResearch.model.trim() : "";
-    if (normalizedModel) {
-      payload.deepResearchModel = normalizedModel;
-      payload.deepResearchConfig = { model: normalizedModel };
-    }
-  }
-
-  if (enabled.has("computer_agents")) {
-    payload.computerAgents = true;
-  }
-
-  const customSkills = displayedSkills
-    .filter((skill) => skill.isCustom)
-    .map((skill) => skill.id)
-    .filter((id) => enabled.has(id));
-
-  if (customSkills.length > 0) {
-    payload.customSkills = customSkills;
-  }
-
-  return payload;
-}
-
 function formatDateTimeLocalValue(date: Date): string {
   const pad = (value: number) => String(value).padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
@@ -5652,5135 +1035,6 @@ function formatScheduleChipLabel(schedule: { scheduledTime: Date; scheduleType: 
   return `${schedule.scheduledTime.toLocaleDateString("en-US", { month: "short", day: "numeric" })} ${schedule.scheduledTime.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`;
 }
 
-function fileItemsForParent(items: RunnerChatFileNode[], parentId: string | null): RunnerChatFileNode[] {
-  return items.filter((item) => (item.parentId ?? null) === parentId);
-}
-
-function childFolderPath(items: RunnerChatFileNode[], rootLabel: string, folderId: string | null): Array<{ id: string | null; name: string }> {
-  const path: Array<{ id: string | null; name: string }> = [{ id: null, name: rootLabel }];
-  if (!folderId) return path;
-
-  const byId = new Map(items.map((item) => [item.id, item] as const));
-  const stack: RunnerChatFileNode[] = [];
-  let current = byId.get(folderId);
-
-  while (current) {
-    stack.unshift(current);
-    current = current.parentId ? byId.get(current.parentId) : undefined;
-  }
-
-  for (const item of stack) {
-    path.push({ id: item.id, name: item.name });
-  }
-
-  return path;
-}
-
-function parseSecondsFromClock(time: string): number | null {
-  const hhmmss = time.match(/^(\d{2}):(\d{2}):(\d{2})$/);
-  if (hhmmss) {
-    const [, hh, mm, ss] = hhmmss;
-    return Number(hh) * 3600 + Number(mm) * 60 + Number(ss);
-  }
-  const mmss = time.match(/^(\d{2}):(\d{2})$/);
-  if (mmss) {
-    const [, mm, ss] = mmss;
-    return Number(mm) * 60 + Number(ss);
-  }
-  return null;
-}
-
-function formatElapsedDurationLabel(secondsValue: number): string {
-  const totalSeconds = Math.max(0, Math.round(secondsValue));
-  if (totalSeconds < 120) {
-    return `${totalSeconds}s`;
-  }
-
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  if (minutes < 60) {
-    return seconds > 0 ? `${minutes} min ${seconds}s` : `${minutes} min`;
-  }
-
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-  return remainingMinutes > 0 ? `${hours}h ${remainingMinutes} min` : `${hours}h`;
-}
-
-function getRunnerLogTimestampMs(log: RunnerLog, relativeBaseMs?: number | null): number | null {
-  const absoluteTimestampMs = getRunnerLogAbsoluteTimestampMs(log);
-  if (absoluteTimestampMs !== null) {
-    return absoluteTimestampMs;
-  }
-
-  const relativeSeconds = log.time ? parseSecondsFromClock(log.time) : null;
-  if (relativeSeconds !== null && relativeBaseMs != null && Number.isFinite(relativeBaseMs)) {
-    return relativeBaseMs + relativeSeconds * 1000;
-  }
-
-  return null;
-}
-
-function getRunnerLogRelativeSeconds(log: RunnerLog, startedAtMs?: number | null): number | null {
-  const absoluteTimestampMs = getRunnerLogAbsoluteTimestampMs(log);
-  if (absoluteTimestampMs !== null && startedAtMs != null && Number.isFinite(startedAtMs)) {
-    return Math.max(0, Math.round((absoluteTimestampMs - startedAtMs) / 1000));
-  }
-
-  const clockSeconds = log.time ? parseSecondsFromClock(log.time) : null;
-  return clockSeconds !== null ? Math.max(0, clockSeconds) : null;
-}
-
-function getRunnerLogRangeDurationLabel(startLog: RunnerLog, endLog: RunnerLog, relativeBaseMs?: number | null): string | undefined {
-  const startMs = getRunnerLogTimestampMs(startLog, relativeBaseMs);
-  const endMs = getRunnerLogTimestampMs(endLog, relativeBaseMs);
-  if (startMs === null || endMs === null) {
-    return undefined;
-  }
-
-  return formatElapsedDurationLabel(Math.max(0, (endMs - startMs) / 1000));
-}
-
-function toDurationLabel(log: RunnerLog, startedAtMs?: number | null): string | undefined {
-  const relativeSeconds = getRunnerLogRelativeSeconds(log, startedAtMs);
-  if (relativeSeconds !== null) {
-    return formatElapsedDurationLabel(relativeSeconds);
-  }
-
-  const durationMs =
-    typeof log.metadata?.durationMs === "number"
-      ? log.metadata.durationMs
-      : typeof (log.metadata as { duration_ms?: unknown } | undefined)?.duration_ms === "number"
-        ? ((log.metadata as { duration_ms: number }).duration_ms)
-        : undefined;
-  if (typeof durationMs === "number" && durationMs >= 0) {
-    return formatElapsedDurationLabel(Math.max(1, Math.round(durationMs / 1000)));
-  }
-  if (log.time) return log.time;
-  return undefined;
-}
-
-function formatBrowserFileSize(bytes?: number): string {
-  if (!bytes || bytes < 1) return "";
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
-}
-
-function formatBrowserFileDate(isoString?: string): string {
-  if (!isoString) return "";
-  const date = new Date(isoString);
-  if (Number.isNaN(date.getTime())) return "";
-  const now = Date.now();
-  const diffMs = now - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return date.toLocaleDateString();
-}
-
-function summarizeSkill(command: string): string | null {
-  const skillPathMatch = command.match(/\.claude\/skills\/([^/]+)\//);
-  if (skillPathMatch?.[1]) {
-    return skillPathMatch[1]
-      .split("-")
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-      .join(" ");
-  }
-  const launchingMatch = command.match(/[Ll]aunching skill:\s*([^\s\n]+)/);
-  if (launchingMatch?.[1]) {
-    return launchingMatch[1]
-      .split("-")
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-      .join(" ");
-  }
-  return null;
-}
-
-type CommandRowSummary = {
-  label: string;
-  detail?: string;
-  icon: "read" | "list" | "write" | "terminal";
-};
-
-function summarizeCommandRow(log: RunnerLog): CommandRowSummary {
-  const command = (log.metadata?.command || log.message || "").trim();
-  const skill = summarizeSkill(command);
-  if (skill) {
-    return { label: `Using ${skill} Skill`, icon: "terminal" };
-  }
-
-  const listPath =
-    command.match(/\b(?:ls|ll)\s+(?:-[a-zA-Z]+\s+)?["']([^"']+)["']/)?.[1] ||
-    command.match(/\b(?:ls|ll)\s+(?:-[a-zA-Z]+\s+)?([^\s|&;>"']+)/)?.[1] ||
-    command.match(/\bfind\s+["']([^"']+)["']/)?.[1] ||
-    command.match(/\bfind\s+([^\s|&;>"']+)/)?.[1] ||
-    command.match(/\brg\s+--files\s+["']([^"']+)["']/)?.[1] ||
-    command.match(/\brg\s+--files\s+([^\s|&;>"']+)/)?.[1];
-  if (listPath) {
-    return { label: "List Files", detail: listPath, icon: "list" };
-  }
-
-  const headTailReadPath =
-    command.match(/\b(?:head|tail)\s+-n\s+\d+\s+["']([^"']+)["']/)?.[1] ||
-    command.match(/\b(?:head|tail)\s+-n\s+\d+\s+([^\s|&;>"']+)/)?.[1] ||
-    command.match(/\b(?:head|tail)\s+-\d+\s+["']([^"']+)["']/)?.[1] ||
-    command.match(/\b(?:head|tail)\s+-\d+\s+([^\s|&;>"']+)/)?.[1] ||
-    command.match(/\b(?:head|tail)\s+["']([^"']+)["']/)?.[1] ||
-    command.match(/\b(?:head|tail)\s+([^\s|&;>"']+)/)?.[1];
-  const readPath =
-    command.match(/sed\s+-n\s+['"][^'"]*['"]\s+["']([^"']+)["']/)?.[1] ||
-    command.match(/\b(?:cat|less)\s+["']([^"']+)["']/)?.[1] ||
-    command.match(/\b(?:cat|less)\s+([^\s|&;>"']+)/)?.[1] ||
-    (headTailReadPath && !headTailReadPath.startsWith("-") ? headTailReadPath : undefined);
-  if (readPath) {
-    const lines = command.match(/sed\s+-n\s+['"](\d+),(\d+)p['"]/);
-    const detail = lines ? `${readPath}  ·  ${lines[1]}-${lines[2]}` : readPath;
-    return { label: "Read File", detail, icon: "read" };
-  }
-
-  const writePath =
-    command.match(/>+\s*["']([^"']+)["']/)?.[1] ||
-    command.match(/>+\s*([^\s|&;>"']+)/)?.[1] ||
-    command.match(/\btee\s+["']([^"']+)["']/)?.[1] ||
-    command.match(/\btee\s+([^\s|&;>"']+)/)?.[1];
-  if (writePath) {
-    return { label: "Write File", detail: writePath, icon: "write" };
-  }
-
-  const trimmed = command.length > 80 ? `${command.slice(0, 77)}...` : command;
-  return { label: "Executed", detail: `$ ${trimmed}`, icon: "terminal" };
-}
-
-async function createThread(params: {
-  backendUrl: string;
-  apiKey: string;
-  requestHeaders?: HeadersInit;
-  title?: string;
-  appId?: string;
-  environmentId?: string;
-  projectId?: string | null;
-  agentId?: string;
-  reasoningEffort?: string | null;
-  metadata?: Record<string, unknown> | null;
-  privateMode?: boolean;
-}): Promise<{ threadId: string; title: string | null; environmentId: string | null }> {
-  const backendUrl = sanitizeBackendUrl(params.backendUrl);
-  const headers = new Headers(params.requestHeaders || {});
-  headers.set("Content-Type", "application/json");
-  headers.set("X-API-Key", params.apiKey);
-  const baseMetadata =
-    params.metadata && typeof params.metadata === "object" && !Array.isArray(params.metadata)
-      ? params.metadata
-      : undefined;
-  const runnerPlaygroundMetadata =
-    baseMetadata?.runnerPlayground && typeof baseMetadata.runnerPlayground === "object" && !Array.isArray(baseMetadata.runnerPlayground)
-      ? baseMetadata.runnerPlayground
-      : {};
-  const metadata =
-    baseMetadata || params.privateMode
-      ? {
-          ...(baseMetadata || {}),
-          runnerPlayground: {
-            ...runnerPlaygroundMetadata,
-            ...(params.privateMode
-              ? {
-                  privateMode: true,
-                  privateModeCreatedAt: new Date().toISOString(),
-                }
-              : {}),
-          },
-        }
-      : undefined;
-
-  const response = await fetch(`${backendUrl}/threads`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      title: params.title,
-      appId: params.appId,
-      environmentId: params.environmentId,
-      projectId: params.projectId || undefined,
-      agentId: params.agentId,
-      reasoningEffort: params.reasoningEffort || undefined,
-      metadata,
-    }),
-  });
-
-  const body = await response.text();
-  let parsed: any = {};
-  try {
-    parsed = body ? JSON.parse(body) : {};
-  } catch {
-    parsed = { message: body };
-  }
-
-  if (!response.ok) {
-    throw new Error(parsed?.message || parsed?.error || `Failed to create thread (${response.status})`);
-  }
-
-  const threadId = parsed?.thread?.id;
-  if (!threadId || typeof threadId !== "string") {
-    throw new Error("Thread creation succeeded but response.thread.id is missing");
-  }
-
-  return {
-    threadId,
-    title: typeof parsed?.thread?.title === "string" ? parsed.thread.title : null,
-    environmentId: typeof parsed?.thread?.environmentId === "string" ? parsed.thread.environmentId : null,
-  };
-}
-
-const DEFAULT_NEW_THREAD_TITLE = "New Thread";
-
-function isDefaultThreadTitle(title: string | null | undefined): boolean {
-  return !title || title.trim().toLowerCase() === DEFAULT_NEW_THREAD_TITLE.toLowerCase();
-}
-
-async function generateThreadTitle(params: {
-  backendUrl: string;
-  apiKey: string;
-  requestHeaders?: HeadersInit;
-  threadId: string;
-  message: string;
-}): Promise<string> {
-  const backendUrl = sanitizeBackendUrl(params.backendUrl);
-  const headers = new Headers(params.requestHeaders || {});
-  headers.set("Content-Type", "application/json");
-  headers.set("X-API-Key", params.apiKey);
-
-  const response = await fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/generate-title`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      message: params.message,
-    }),
-  });
-
-  const body = await response.text();
-  let parsed: any = {};
-  try {
-    parsed = body ? JSON.parse(body) : {};
-  } catch {
-    parsed = { message: body };
-  }
-
-  if (!response.ok) {
-    throw new Error(parsed?.message || parsed?.error || `Failed to generate thread title (${response.status})`);
-  }
-
-  const nextTitle =
-    (typeof parsed?.thread?.title === "string" ? parsed.thread.title : "") ||
-    (typeof parsed?.title === "string" ? parsed.title : "");
-  if (!nextTitle.trim()) {
-    throw new Error("Thread title generation succeeded but response title is missing");
-  }
-
-  return nextTitle.trim();
-}
-
-const environmentStartPromises = new Map<string, Promise<void>>();
-const environmentWarmCacheUntilMs = new Map<string, number>();
-const ENVIRONMENT_START_CACHE_TTL_MS = 90 * 1000;
-const ENVIRONMENT_START_TIMEOUT_MS = 8 * 1000;
-const ENVIRONMENT_START_TIMEOUT_ERROR_NAME = "EnvironmentStartTimeoutError";
-
-type SharedEnvironmentWarmCacheStore = Record<string, number>;
-
-function readSharedEnvironmentWarmCacheUntilMs(requestKey: string): number {
-  if (typeof window === "undefined") {
-    return 0;
-  }
-  const sharedCache = (window as typeof window & {
-    __runnerEnvironmentWarmCacheUntilMs?: SharedEnvironmentWarmCacheStore;
-  }).__runnerEnvironmentWarmCacheUntilMs;
-  return Number(sharedCache?.[requestKey] || 0);
-}
-
-function writeSharedEnvironmentWarmCacheUntilMs(requestKey: string, untilMs: number): void {
-  if (typeof window === "undefined") {
-    return;
-  }
-  const nextWindow = window as typeof window & {
-    __runnerEnvironmentWarmCacheUntilMs?: SharedEnvironmentWarmCacheStore;
-  };
-  const sharedCache = nextWindow.__runnerEnvironmentWarmCacheUntilMs || {};
-  if (untilMs > Date.now()) {
-    sharedCache[requestKey] = untilMs;
-  } else {
-    delete sharedCache[requestKey];
-  }
-  nextWindow.__runnerEnvironmentWarmCacheUntilMs = sharedCache;
-}
-
-function buildEnvironmentStartRequestKey(params: {
-  backendUrl: string;
-  environmentId: string;
-  agentId?: string;
-  enabledSkills?: Record<string, unknown> | null;
-}): string {
-  return JSON.stringify({
-    backendUrl: sanitizeBackendUrl(params.backendUrl),
-    environmentId: params.environmentId,
-    agentId: params.agentId || null,
-  });
-}
-
-function createEnvironmentStartTimeoutError(timeoutMs: number): Error {
-  const error = new Error(`Environment warm-up timed out after ${Math.round(timeoutMs / 1000)}s.`);
-  error.name = ENVIRONMENT_START_TIMEOUT_ERROR_NAME;
-  return error;
-}
-
-function isEnvironmentStartTimeoutError(error: unknown): error is Error {
-  return error instanceof Error && error.name === ENVIRONMENT_START_TIMEOUT_ERROR_NAME;
-}
-
-function reportRunnerLifecycleCallbackError(callbackName: string, error: unknown): void {
-  console.warn(`[RunnerChat] ${callbackName} callback failed; continuing run execution.`, error);
-}
-
-async function startEnvironment(params: {
-  backendUrl: string;
-  apiKey: string;
-  requestHeaders?: HeadersInit;
-  environmentId: string;
-  agentId?: string;
-  enabledSkills?: Record<string, unknown> | null;
-  force?: boolean;
-}): Promise<void> {
-  const requestKey = buildEnvironmentStartRequestKey(params);
-  if (!params.force) {
-    const cachedUntilMs = Math.max(
-      environmentWarmCacheUntilMs.get(requestKey) ?? 0,
-      readSharedEnvironmentWarmCacheUntilMs(requestKey),
-    );
-    if (cachedUntilMs > Date.now()) {
-      return;
-    }
-    environmentWarmCacheUntilMs.delete(requestKey);
-    writeSharedEnvironmentWarmCacheUntilMs(requestKey, 0);
-  }
-  if (!params.force && environmentStartPromises.has(requestKey)) {
-    return environmentStartPromises.get(requestKey);
-  }
-  const existingPromise = environmentStartPromises.get(requestKey);
-  if (existingPromise) {
-    return existingPromise;
-  }
-
-  const startPromise = (async () => {
-    const backendUrl = sanitizeBackendUrl(params.backendUrl);
-    const headers = new Headers(params.requestHeaders || {});
-    const controller = new AbortController();
-    let didTimeout = false;
-    const timeoutId = setTimeout(() => {
-      didTimeout = true;
-      controller.abort();
-    }, ENVIRONMENT_START_TIMEOUT_MS);
-
-    headers.set("Content-Type", "application/json");
-    headers.set("X-API-Key", params.apiKey);
-
-    try {
-      // Do not short-circuit on `/status === running`.
-      // The backend `/start` route is the idempotent warm-up trigger that restores workspace,
-      // syncs skills, and pre-warms the execution stream. A merely running container is not
-      // equivalent to a warm container.
-      const response = await fetch(`${backendUrl}/environments/${encodeURIComponent(params.environmentId)}/start`, {
-        method: "POST",
-        headers,
-        signal: controller.signal,
-        body: JSON.stringify({
-          ...(params.agentId ? { agentId: params.agentId } : {}),
-          ...(params.enabledSkills ? { enabledSkills: params.enabledSkills } : {}),
-        }),
-      });
-
-      if (!response.ok) {
-        const bodyText = await response.text().catch(() => "");
-        environmentWarmCacheUntilMs.delete(requestKey);
-        writeSharedEnvironmentWarmCacheUntilMs(requestKey, 0);
-        throw new Error(bodyText || `Failed to start environment (${response.status})`);
-      }
-      const nextWarmCacheUntilMs = Date.now() + ENVIRONMENT_START_CACHE_TTL_MS;
-      environmentWarmCacheUntilMs.set(requestKey, nextWarmCacheUntilMs);
-      writeSharedEnvironmentWarmCacheUntilMs(requestKey, nextWarmCacheUntilMs);
-    } catch (error) {
-      environmentWarmCacheUntilMs.delete(requestKey);
-      writeSharedEnvironmentWarmCacheUntilMs(requestKey, 0);
-      if (didTimeout && error instanceof Error && error.name === "AbortError") {
-        throw createEnvironmentStartTimeoutError(ENVIRONMENT_START_TIMEOUT_MS);
-      }
-      throw error;
-    } finally {
-      clearTimeout(timeoutId);
-    }
-  })().finally(() => {
-    environmentStartPromises.delete(requestKey);
-  });
-
-  environmentStartPromises.set(requestKey, startPromise);
-  return startPromise;
-}
-
-async function prepareGithubRepositorySelection(params: {
-  backendUrl: string;
-  apiKey: string;
-  requestHeaders?: HeadersInit;
-  environmentId: string;
-  repoFullName: string;
-  branch: string;
-}): Promise<void> {
-  const backendUrl = sanitizeBackendUrl(params.backendUrl);
-  const headers = new Headers(params.requestHeaders || {});
-  headers.set("Content-Type", "application/json");
-  headers.set("X-API-Key", params.apiKey);
-
-  const response = await fetch(
-    `${backendUrl}/environments/${encodeURIComponent(params.environmentId)}/github/prepare`,
-    {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        repoFullName: params.repoFullName,
-        branch: params.branch,
-      }),
-    }
-  );
-
-  if (!response.ok) {
-    const bodyText = await response.text().catch(() => "");
-    throw new Error(bodyText || `Failed to prepare GitHub repository (${response.status})`);
-  }
-}
-
-async function cancelThreadExecution(params: {
-  backendUrl: string;
-  apiKey: string;
-  threadId: string;
-  requestHeaders?: HeadersInit;
-}): Promise<void> {
-  const backendUrl = sanitizeBackendUrl(params.backendUrl);
-  const headers = buildRunnerHeaders(params.requestHeaders, params.apiKey);
-
-  const response = await fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/cancel`, {
-    method: "POST",
-    headers,
-  });
-
-  const bodyText = await response.text().catch(() => "");
-  let parsed: { message?: string; error?: string } = {};
-  try {
-    parsed = bodyText ? JSON.parse(bodyText) : {};
-  } catch {
-    parsed = { message: bodyText };
-  }
-
-  if (!response.ok) {
-    const message = parsed.message || parsed.error || `Failed to cancel thread (${response.status})`;
-    if (response.status === 400 && /no active execution|no running execution/i.test(message)) {
-      return;
-    }
-    throw new Error(message);
-  }
-}
-
-function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result !== "string") {
-        reject(new Error("Failed to encode attachment"));
-        return;
-      }
-      const commaIndex = reader.result.indexOf(",");
-      resolve(commaIndex >= 0 ? reader.result.slice(commaIndex + 1) : reader.result);
-    };
-    reader.onerror = () => reject(reader.error || new Error("Failed to encode attachment"));
-    reader.readAsDataURL(blob);
-  });
-}
-
-function normalizeBase64Content(value: string): string {
-  const rawValue = String(value || "");
-  const normalizedInput = rawValue.includes("base64,") ? rawValue.slice(rawValue.indexOf("base64,") + "base64,".length) : rawValue;
-  const sanitizedValue = normalizedInput.replace(/\s+/g, "").replace(/-/g, "+").replace(/_/g, "/");
-  const paddingLength = sanitizedValue.length % 4 === 0 ? 0 : 4 - (sanitizedValue.length % 4);
-  return sanitizedValue + "=".repeat(paddingLength);
-}
-
-function decodeBase64ToUint8Array(value: string): Uint8Array {
-  const normalizedValue = normalizeBase64Content(value);
-  const binaryString = atob(normalizedValue);
-  const bytes = new Uint8Array(binaryString.length);
-  for (let index = 0; index < binaryString.length; index += 1) {
-    bytes[index] = binaryString.charCodeAt(index);
-  }
-  return bytes;
-}
-
-function decodeBase64TextContent(value: string): string {
-  try {
-    const decodedBytes = decodeBase64ToUint8Array(value);
-    return new TextDecoder().decode(decodedBytes);
-  } catch {
-    return String(value || "");
-  }
-}
-
-function buildFileFromFetchedContent(item: RunnerChatFileNode, payload: RunnerChatFetchedFileContent): {
-  file: File;
-  type: RunnerAttachment["type"];
-  previewUrl?: string;
-} {
-  const filename = String(payload?.name || item.name || "file").trim() || "file";
-  const mimeType = String(payload?.mimeType || item.mimeType || "application/octet-stream").trim() || "application/octet-stream";
-  const base64Bytes = new Uint8Array(Array.from(decodeBase64ToUint8Array(typeof payload?.content === "string" ? payload.content : "")));
-  const blob = payload?.encoding === "text"
-    ? new Blob([typeof payload?.content === "string" ? payload.content : ""], { type: mimeType })
-    : new Blob([base64Bytes], { type: mimeType });
-  const file = new File([blob], filename, { type: mimeType });
-  const type = attachmentTypeForFile(mimeType, filename);
-  return {
-    file,
-    type,
-    previewUrl: type === "image" ? URL.createObjectURL(blob) : undefined,
-  };
-}
-
-async function uploadAttachment(params: {
-  backendUrl: string;
-  apiKey: string;
-  requestHeaders?: HeadersInit;
-  file: File;
-  environmentId?: string;
-}): Promise<RunnerAttachment> {
-  return uploadAttachmentContent({
-    backendUrl: params.backendUrl,
-    apiKey: params.apiKey,
-    requestHeaders: params.requestHeaders,
-    filename: params.file.name,
-    mimeType: params.file.type || "application/octet-stream",
-    data: await blobToBase64(params.file),
-    environmentId: params.environmentId,
-  });
-}
-
-async function uploadAttachmentContent(params: {
-  backendUrl: string;
-  apiKey: string;
-  requestHeaders?: HeadersInit;
-  filename: string;
-  mimeType: string;
-  data: string;
-  environmentId?: string;
-}): Promise<RunnerAttachment> {
-  const backendUrl = sanitizeBackendUrl(params.backendUrl);
-  const headers = buildRunnerHeaders(params.requestHeaders, params.apiKey);
-  headers.set("Content-Type", "application/json");
-
-  const response = await fetch(`${backendUrl}/attachments/upload`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      filename: params.filename,
-      mimeType: params.mimeType || "application/octet-stream",
-      data: params.data,
-      ...(params.environmentId ? { environmentId: params.environmentId } : {}),
-    }),
-  });
-
-  const body = await response.text();
-  let parsed: any = {};
-  try {
-    parsed = body ? JSON.parse(body) : {};
-  } catch {
-    parsed = { message: body };
-  }
-
-  if (!response.ok) {
-    throw new Error(parsed?.message || parsed?.error || `Failed to upload attachment (${response.status})`);
-  }
-
-  const attachment = parsed?.attachment;
-  if (!attachment || typeof attachment !== "object" || typeof attachment.id !== "string") {
-    throw new Error("Attachment upload succeeded but response.attachment is missing");
-  }
-
-  return {
-    ...attachment,
-    url: `${backendUrl}/attachments/${encodeURIComponent(attachment.id)}`,
-  };
-}
-
-async function fetchAllThreadMessages(params: {
-  backendUrl: string;
-  apiKey: string;
-  threadId: string;
-  requestHeaders?: HeadersInit;
-}): Promise<RunnerConversationMessage[]> {
-  const backendUrl = sanitizeBackendUrl(params.backendUrl);
-  const headers = buildRunnerHeaders(params.requestHeaders, params.apiKey);
-  const pageSize = 200;
-  const messages: RunnerConversationMessage[] = [];
-  let offset = 0;
-
-  while (true) {
-    const response = await fetch(
-      `${backendUrl}/threads/${encodeURIComponent(params.threadId)}/messages?limit=${pageSize}&offset=${offset}&compact=1`,
-      {
-        method: "GET",
-        headers,
-        cache: "no-store",
-      }
-    );
-
-    const body = await response.text();
-    let parsed: { data?: unknown[]; message?: string; error?: string; has_more?: boolean } = {};
-    try {
-      parsed = body ? JSON.parse(body) : {};
-    } catch {
-      parsed = {};
-    }
-
-    if (!response.ok) {
-      throw new Error(parsed.message || parsed.error || `Failed to load thread messages (${response.status})`);
-    }
-
-    const pageItems = Array.isArray(parsed.data)
-      ? parsed.data.map(normalizeRunnerConversationMessage).filter((message): message is RunnerConversationMessage => Boolean(message))
-      : [];
-    messages.push(...pageItems);
-
-    if (!parsed.has_more || pageItems.length === 0) {
-      break;
-    }
-
-    offset += pageItems.length;
-  }
-
-  return sortRunnerConversationMessagesChronologically(messages);
-}
-
-function normalizeRunnerThreadFeedback(value: unknown): Omit<RunnerThreadFeedbackState, "isSubmitting"> {
-  const record = value && typeof value === "object" && !Array.isArray(value)
-    ? value as Record<string, unknown>
-    : {};
-  const rawUserRating = getRecordString(record, ["userRating", "user_rating", "rating"]).trim().toLowerCase();
-  return {
-    userRating: rawUserRating === "up" || rawUserRating === "down" ? rawUserRating : null,
-    upCount: Math.max(0, Math.round(getRecordNumber(record, ["upCount", "up_count", "upvotes", "thumbsUp"]) ?? 0)),
-    downCount: Math.max(0, Math.round(getRecordNumber(record, ["downCount", "down_count", "downvotes", "thumbsDown"]) ?? 0)),
-    reportCount: Math.max(0, Math.round(getRecordNumber(record, ["reportCount", "report_count", "reports"]) ?? 0)),
-  };
-}
-
-async function fetchThreadFeedback(params: {
-  backendUrl: string;
-  apiKey: string;
-  threadId: string;
-  requestHeaders?: HeadersInit;
-}): Promise<Omit<RunnerThreadFeedbackState, "isSubmitting">> {
-  const backendUrl = sanitizeBackendUrl(params.backendUrl);
-  const response = await fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/feedback`, {
-    method: "GET",
-    headers: buildRunnerHeaders(params.requestHeaders, params.apiKey),
-    cache: "no-store",
-  });
-  const body = await response.text();
-  let parsed: unknown = {};
-  try {
-    parsed = body ? JSON.parse(body) : {};
-  } catch {
-    parsed = {};
-  }
-  if (!response.ok) {
-    const record = parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as Record<string, unknown> : {};
-    throw new Error(getRecordString(record, ["message", "error"]) || `Failed to load thread feedback (${response.status})`);
-  }
-  return normalizeRunnerThreadFeedback(parsed);
-}
-
-async function setThreadFeedback(params: {
-  backendUrl: string;
-  apiKey: string;
-  threadId: string;
-  rating: RunnerThreadFeedbackRating;
-  requestHeaders?: HeadersInit;
-}): Promise<Omit<RunnerThreadFeedbackState, "isSubmitting">> {
-  const backendUrl = sanitizeBackendUrl(params.backendUrl);
-  const headers = buildRunnerHeaders(params.requestHeaders, params.apiKey);
-  headers.set("Content-Type", "application/json");
-  const response = await fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/feedback`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ rating: params.rating }),
-  });
-  const body = await response.text();
-  let parsed: unknown = {};
-  try {
-    parsed = body ? JSON.parse(body) : {};
-  } catch {
-    parsed = {};
-  }
-  if (!response.ok) {
-    const record = parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as Record<string, unknown> : {};
-    throw new Error(getRecordString(record, ["message", "error"]) || `Failed to save thread feedback (${response.status})`);
-  }
-  return normalizeRunnerThreadFeedback(parsed);
-}
-
-async function reportThreadFeedbackIssue(params: {
-  backendUrl: string;
-  apiKey: string;
-  threadId: string;
-  reportType: RunnerThreadFeedbackReportType;
-  message: string;
-  metadata?: Record<string, unknown> | null;
-  requestHeaders?: HeadersInit;
-}): Promise<void> {
-  const backendUrl = sanitizeBackendUrl(params.backendUrl);
-  const headers = buildRunnerHeaders(params.requestHeaders, params.apiKey);
-  headers.set("Content-Type", "application/json");
-  const response = await fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/feedback/report`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      reportType: params.reportType,
-      message: params.message,
-      metadata: params.metadata ?? null,
-    }),
-  });
-  const body = await response.text();
-  let parsed: unknown = {};
-  try {
-    parsed = body ? JSON.parse(body) : {};
-  } catch {
-    parsed = {};
-  }
-  if (!response.ok) {
-    const record = parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as Record<string, unknown> : {};
-    throw new Error(getRecordString(record, ["message", "error"]) || `Failed to report issue (${response.status})`);
-  }
-}
-
-async function forkThreadRequest(params: {
-  backendUrl: string;
-  apiKey: string;
-  threadId: string;
-  truncateAtMessageIndex?: number;
-  environmentTarget?: RunnerForkTarget;
-  environmentName?: string;
-  targetEnvironmentId?: string;
-  fileCopyMode?: RunnerForkFileCopyMode;
-  requestHeaders?: HeadersInit;
-}): Promise<{ thread: { id: string }; environmentId?: string | null; environmentName?: string | null }> {
-  const backendUrl = sanitizeBackendUrl(params.backendUrl);
-  const headers = buildRunnerHeaders(params.requestHeaders, params.apiKey);
-  headers.set("Content-Type", "application/json");
-
-  const response = await fetch(
-    `${backendUrl}/threads/${encodeURIComponent(params.threadId)}/copy`,
-    {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        ...(typeof params.truncateAtMessageIndex === "number" ? { truncateAtMessageIndex: params.truncateAtMessageIndex } : {}),
-        environmentTarget: params.environmentTarget,
-        environmentName: params.environmentName,
-        targetEnvironmentId: params.targetEnvironmentId,
-        fileCopyMode: params.fileCopyMode,
-      }),
-    }
-  );
-
-  const body = await response.text();
-  let parsed: { thread?: { id?: string }; environmentId?: string | null; environmentName?: string | null; message?: string; error?: string } = {};
-  try {
-    parsed = body ? JSON.parse(body) : {};
-  } catch {
-    parsed = {};
-  }
-
-  if (!response.ok) {
-    throw new Error(parsed.message || parsed.error || `Failed to fork thread (${response.status})`);
-  }
-
-  const nextThreadId = parsed.thread?.id;
-  if (!nextThreadId || typeof nextThreadId !== "string") {
-    throw new Error("Fork completed without returning a new thread.");
-  }
-
-  return {
-    thread: {
-      id: nextThreadId,
-    },
-    environmentId: typeof parsed.environmentId === "string" && parsed.environmentId.trim() ? parsed.environmentId : null,
-    environmentName: typeof parsed.environmentName === "string" && parsed.environmentName.trim() ? parsed.environmentName : null,
-  };
-}
-
-function normalizeRunnerHydratedFilePath(value: string): string {
-  return value.trim().replace(/^\.?\//, "").replace(/^\/workspace\//, "");
-}
-
-function isRunnerHydratedNullDevicePath(value?: string | null): boolean {
-  const normalized = String(value || "").trim().replace(/^['"`]+|['"`]+$/g, "");
-  return normalized === "/dev/null" || normalized === "dev/null";
-}
-
-function parseThreadDiffEntries(value: unknown): RunnerThreadDiffEntry[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-  return value
-    .map((entry) => (entry && typeof entry === "object" ? (entry as Record<string, unknown>) : null))
-    .filter((entry): entry is Record<string, unknown> => !!entry)
-    .map((entry) => ({
-      path: typeof entry.path === "string" ? entry.path : undefined,
-      additions: typeof entry.additions === "number" ? entry.additions : undefined,
-      deletions: typeof entry.deletions === "number" ? entry.deletions : undefined,
-      changes: typeof entry.changes === "string" ? entry.changes : undefined,
-      diff: typeof entry.diff === "string" ? entry.diff : undefined,
-      createdAt: typeof entry.createdAt === "string" ? entry.createdAt : undefined,
-    }))
-    .filter((entry) => typeof entry.path === "string" && entry.path.trim().length > 0);
-}
-
-function parseThreadSteps(value: unknown): RunnerParsedThreadStep[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  return value
-    .map((entry) => (entry && typeof entry === "object" ? (entry as RunnerThreadStep) : null))
-    .filter((entry): entry is RunnerThreadStep => !!entry && typeof entry.id === "string")
-    .map((entry) => ({
-      id: entry.id,
-      sequence: typeof entry.sequence === "number" ? entry.sequence : 0,
-      stepKind: typeof entry.stepKind === "string" ? entry.stepKind : "",
-      eventType: typeof entry.eventType === "string" ? entry.eventType : null,
-      title: typeof entry.title === "string" ? entry.title : "",
-      createdAt: typeof entry.createdAt === "string" ? entry.createdAt : "",
-      metadata: entry.metadata && typeof entry.metadata === "object" ? entry.metadata : null,
-    }));
-}
-
-function formatHydratedRelativeLogTime(createdAt: string, startedAtMs: number | null): string {
-  const createdAtMs = Date.parse(createdAt);
-  if (!Number.isFinite(createdAtMs) || startedAtMs === null || !Number.isFinite(startedAtMs)) {
-    return "";
-  }
-
-  const elapsedSeconds = Math.max(0, Math.round((createdAtMs - startedAtMs) / 1000));
-  return formatElapsedDurationLabel(elapsedSeconds);
-}
-
-function inferHydratedChangeKindFromDiff(entry: RunnerThreadDiffEntry): "created" | "modified" | "deleted" {
-  const diffText = entry.diff || entry.changes || "";
-  if (/^---\s+\/dev\/null\b/m.test(diffText)) {
-    return "created";
-  }
-  if (/^\+\+\+\s+\/dev\/null\b/m.test(diffText)) {
-    return "deleted";
-  }
-  return "modified";
-}
-
-function countDiffLineStats(diffText: string): { additions: number; deletions: number } {
-  let additions = 0;
-  let deletions = 0;
-  for (const line of diffText.split("\n")) {
-    if (line.startsWith("+++") || line.startsWith("---")) {
-      continue;
-    }
-    if (line.startsWith("+")) {
-      additions += 1;
-      continue;
-    }
-    if (line.startsWith("-")) {
-      deletions += 1;
-    }
-  }
-  return { additions, deletions };
-}
-
-function parseHydratedStepDiffEntries(diffText: string, createdAt?: string): RunnerThreadDiffEntry[] {
-  if (typeof diffText !== "string" || diffText.trim().length === 0) {
-    return [];
-  }
-
-  const sections = diffText
-    .split(/^diff --git\s+/m)
-    .map((section) => section.trim())
-    .filter((section) => section.length > 0)
-    .map((section) => (section.startsWith("a/") ? `diff --git ${section}` : section));
-
-  const entries: RunnerThreadDiffEntry[] = [];
-  for (const section of sections) {
-      const plusPlusPlusMatch = /^\+\+\+\s+([^\n]+)$/m.exec(section);
-      const minusMinusMinusMatch = /^---\s+([^\n]+)$/m.exec(section);
-      const plusPath = plusPlusPlusMatch?.[1]?.trim() || "";
-      const minusPath = minusMinusMinusMatch?.[1]?.trim() || "";
-      const selectedPath = plusPath !== "/dev/null" ? plusPath : minusPath;
-      if (isRunnerHydratedNullDevicePath(selectedPath)) {
-        continue;
-      }
-      const normalizedPath = selectedPath.replace(/^[ab]\//, "").trim();
-      if (!normalizedPath) {
-        continue;
-      }
-      const { additions, deletions } = countDiffLineStats(section);
-      entries.push({
-        path: normalizedPath,
-        additions,
-        deletions,
-        diff: section,
-        createdAt,
-      });
-  }
-  return entries;
-}
-
-async function fetchHydratedStepDiffEntries(params: {
-  backendUrl: string;
-  threadId: string;
-  headers: Headers;
-  steps: RunnerParsedThreadStep[];
-}): Promise<RunnerThreadDiffEntry[]> {
-  const isGeneratedMediaPath = (value: unknown): boolean => {
-    if (typeof value !== "string" || !value.trim()) {
-      return false;
-    }
-    const normalizedPath = normalizeRunnerHydratedFilePath(value);
-    return /\.(?:png|jpe?g|gif|webp|svg|avif|bmp|mp4|mov|webm|mkv|avi)$/i.test(normalizedPath.split(/[?#]/)[0] || "");
-  };
-
-  const candidateSteps = params.steps.filter((step) => {
-    if (step.id.trim().length === 0) {
-      return false;
-    }
-    const metadata = step.metadata || {};
-    const hasDiffableFilePaths = Array.isArray(metadata.filePaths)
-      && metadata.filePaths.some((value) => typeof value === "string" && value.trim().length > 0 && !isGeneratedMediaPath(value));
-    const hasInlineDiffs = Boolean(metadata.diffs && typeof metadata.diffs === "object");
-    const stepKind = String(step.stepKind || "").toLowerCase();
-    const eventType = String(step.eventType || "").toLowerCase();
-    return hasDiffableFilePaths || hasInlineDiffs || stepKind === "file_change" || eventType === "file_change";
-  });
-  if (candidateSteps.length === 0) {
-    return [];
-  }
-
-  const entries = await Promise.all(
-    candidateSteps.map(async (step) => {
-      try {
-        const response = await fetch(
-          `${params.backendUrl}/threads/${encodeURIComponent(params.threadId)}/steps/${encodeURIComponent(step.id)}/diff`,
-          {
-            method: "GET",
-            headers: params.headers,
-          }
-        );
-        if (!response.ok) {
-          return [];
-        }
-        const body = (await response.json()) as Partial<RunnerThreadStepDiffResult> | null;
-        const parsedDiffEntries = parseHydratedStepDiffEntries(typeof body?.diff === "string" ? body.diff : "", step.createdAt);
-        if (parsedDiffEntries.length > 0) {
-          return parsedDiffEntries;
-        }
-
-        const changedPaths = Array.isArray(body?.changedPaths)
-          ? body.changedPaths.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
-          : [];
-        if (changedPaths.length !== 1) {
-          return [];
-        }
-
-        return [
-          {
-            path: changedPaths[0],
-            additions: typeof body?.additions === "number" ? body.additions : undefined,
-            deletions: typeof body?.deletions === "number" ? body.deletions : undefined,
-            diff: typeof body?.diff === "string" ? body.diff : undefined,
-            createdAt: step.createdAt,
-          } satisfies RunnerThreadDiffEntry,
-        ];
-      } catch {
-        return [];
-      }
-    })
-  );
-
-  return entries.flat();
-}
-
-function buildSyntheticFileChangeLog(params: {
-  path: string;
-  changeKind: "created" | "modified" | "deleted";
-  diff?: string;
-  changes?: string;
-  additions?: number;
-  deletions?: number;
-  createdAt?: string;
-  startedAtMs?: number | null;
-}): RunnerLog {
-  const normalizedPath = params.path.startsWith("/workspace/") ? params.path : `/workspace/${normalizeRunnerHydratedFilePath(params.path)}`;
-  const message =
-    params.changeKind === "created"
-      ? `Write: ${normalizedPath}`
-      : params.changeKind === "deleted"
-        ? `Delete: ${normalizedPath}`
-        : `Edit: ${normalizedPath}`;
-
-  return {
-    ...(params.createdAt ? { createdAt: params.createdAt } : {}),
-    time: params.createdAt ? formatHydratedRelativeLogTime(params.createdAt, params.startedAtMs ?? null) : "",
-    message,
-    type: "info",
-    eventType: "file_change",
-    metadata: {
-      filePaths: [normalizedPath],
-      changeKinds: [params.changeKind],
-      diffs: {
-        [normalizedPath]: {
-          ...(params.diff ? { diff: params.diff } : {}),
-          ...(params.changes ? { changes: params.changes } : {}),
-          ...(typeof params.additions === "number" ? { additions: params.additions } : {}),
-          ...(typeof params.deletions === "number" ? { deletions: params.deletions } : {}),
-        },
-      },
-    },
-  };
-}
-
-function mergeThreadStepsIntoLogs(
-  logs: RunnerLog[],
-  steps: RunnerParsedThreadStep[],
-  diffEntries: RunnerThreadDiffEntry[],
-  startedAtMs: number | null
-): RunnerLog[] {
-  const existingFileChangePaths = new Set<string>();
-  for (const log of logs) {
-    if (log.eventType !== "file_change" || isInternalFileChangeLog(log)) {
-      continue;
-    }
-    const filePaths = Array.isArray(log.metadata?.filePaths) ? log.metadata.filePaths : [];
-    for (const filePath of filePaths) {
-      if (typeof filePath !== "string" || !filePath.trim() || isRunnerHydratedNullDevicePath(filePath)) {
-        continue;
-      }
-      existingFileChangePaths.add(normalizeRunnerHydratedFilePath(filePath));
-    }
-  }
-  const hasFileChangeLogs = existingFileChangePaths.size > 0;
-
-  const syntheticLogsFromSteps = steps
-    .filter((step) => step.eventType === "file_change" || step.stepKind === "file_change")
-    .flatMap((step) => {
-      const metadata = step.metadata || {};
-      const filePaths = Array.isArray(metadata.filePaths)
-        ? metadata.filePaths.filter((value): value is string =>
-          typeof value === "string" && value.trim().length > 0 && !isRunnerHydratedNullDevicePath(value)
-        )
-        : [];
-      const changeKinds = Array.isArray(metadata.changeKinds)
-        ? metadata.changeKinds.filter(
-            (value): value is "created" | "modified" | "deleted" =>
-              value === "created" || value === "modified" || value === "deleted"
-          )
-        : [];
-      const diffs =
-        metadata.diffs && typeof metadata.diffs === "object"
-          ? (metadata.diffs as Record<string, { diff?: string; changes?: string; additions?: number; deletions?: number }>)
-          : {};
-
-      return filePaths.map((filePath, index) => {
-        if (isRunnerHydratedNullDevicePath(filePath)) {
-          return null;
-        }
-        const normalizedPreviewPath = normalizeRunnerPreviewPath(filePath);
-        if (normalizedPreviewPath && isInternalTurnPreviewPath(normalizedPreviewPath)) {
-          return null;
-        }
-        const normalizedPath = normalizeRunnerHydratedFilePath(filePath);
-        const diffEntry = diffs[filePath] || diffs[normalizedPath];
-        return buildSyntheticFileChangeLog({
-          path: filePath,
-          changeKind: changeKinds[index] || "modified",
-          diff: diffEntry?.diff,
-          changes: diffEntry?.changes,
-          additions: diffEntry?.additions,
-          deletions: diffEntry?.deletions,
-          createdAt: step.createdAt,
-          startedAtMs,
-        });
-      }).filter((entry): entry is RunnerLog => Boolean(entry));
-    });
-
-  const syntheticLogs =
-    syntheticLogsFromSteps.length > 0
-      ? syntheticLogsFromSteps
-        : diffEntries.map((entry) =>
-          entry.path && !isRunnerHydratedNullDevicePath(entry.path) && !isInternalTurnPreviewPath(normalizeRunnerHydratedFilePath(entry.path))
-            ? buildSyntheticFileChangeLog({
-                path: entry.path || "",
-                changeKind: inferHydratedChangeKindFromDiff(entry),
-                diff: entry.diff,
-                changes: entry.changes,
-                additions: entry.additions,
-                deletions: entry.deletions,
-                createdAt: entry.createdAt || steps[steps.length - 1]?.createdAt,
-                startedAtMs,
-              })
-            : null
-        ).filter((entry): entry is RunnerLog => Boolean(entry));
-
-  const hydratedSyntheticLogs = hasFileChangeLogs
-    ? syntheticLogs.filter((syntheticLog) => {
-        const filePaths = Array.isArray(syntheticLog.metadata?.filePaths) ? syntheticLog.metadata.filePaths : [];
-        return filePaths.some((filePath) => {
-          if (typeof filePath !== "string" || !filePath.trim() || isRunnerHydratedNullDevicePath(filePath)) {
-            return false;
-          }
-          const normalizedPath = normalizeRunnerHydratedFilePath(filePath);
-          return isRunnerHydratedVideoFilePath(normalizedPath) && !existingFileChangePaths.has(normalizedPath);
-        });
-      })
-    : syntheticLogs;
-
-  if (hydratedSyntheticLogs.length === 0) {
-    return logs;
-  }
-
-  const firstAgentMessageIndex = logs.findIndex((log) => log.eventType === "agent_message" || log.eventType === "llm_response");
-  if (firstAgentMessageIndex === -1) {
-    return [...logs, ...hydratedSyntheticLogs];
-  }
-
-  return [
-    ...logs.slice(0, firstAgentMessageIndex),
-    ...hydratedSyntheticLogs,
-    ...logs.slice(firstAgentMessageIndex),
-  ];
-}
-
-function mergeThreadDiffsIntoLogs(logs: RunnerLog[], diffEntries: RunnerThreadDiffEntry[]): RunnerLog[] {
-  if (diffEntries.length === 0) {
-    return logs;
-  }
-
-  const lastFileLogIndexByPath = new Map<string, number>();
-  for (const [index, log] of logs.entries()) {
-    if (log.eventType !== "file_change") continue;
-    const filePaths = Array.isArray(log.metadata?.filePaths) ? log.metadata.filePaths : [];
-    if (filePaths.length !== 1 || typeof filePaths[0] !== "string") continue;
-    if (isRunnerHydratedNullDevicePath(filePaths[0])) continue;
-    const normalizedPath = normalizeRunnerHydratedFilePath(filePaths[0]);
-    if (isInternalTurnPreviewPath(normalizedPath)) continue;
-    if (!normalizedPath) continue;
-    lastFileLogIndexByPath.set(normalizedPath, index);
-  }
-
-  const diffsByPath = new Map<
-    string,
-    {
-      diff?: string;
-      changes?: string;
-      additions?: number;
-      deletions?: number;
-    }
-  >();
-
-  for (const entry of diffEntries) {
-    if (!entry.path) continue;
-    if (isRunnerHydratedNullDevicePath(entry.path)) continue;
-    const normalizedPath = normalizeRunnerHydratedFilePath(entry.path);
-    if (isInternalTurnPreviewPath(normalizedPath)) continue;
-    if (!normalizedPath) continue;
-    diffsByPath.set(normalizedPath, {
-      ...(entry.diff ? { diff: entry.diff } : {}),
-      ...(entry.changes ? { changes: entry.changes } : {}),
-      ...(typeof entry.additions === "number" ? { additions: entry.additions } : {}),
-      ...(typeof entry.deletions === "number" ? { deletions: entry.deletions } : {}),
-    });
-  }
-
-  return logs.map((log, index) => {
-    if (log.eventType !== "file_change") {
-      return log;
-    }
-
-    const filePaths = Array.isArray(log.metadata?.filePaths) ? log.metadata.filePaths : [];
-    if (filePaths.length !== 1 || typeof filePaths[0] !== "string") {
-      return log;
-    }
-    if (isRunnerHydratedNullDevicePath(filePaths[0])) {
-      return log;
-    }
-
-    const normalizedPath = normalizeRunnerHydratedFilePath(filePaths[0]);
-    if (!normalizedPath || lastFileLogIndexByPath.get(normalizedPath) !== index) {
-      return log;
-    }
-
-    const diff = diffsByPath.get(normalizedPath);
-    if (!diff) {
-      return log;
-    }
-
-    const existingDiffs = log.metadata?.diffs as
-      | Record<
-          string,
-          {
-            diff?: string;
-            changes?: string;
-            additions?: number;
-            deletions?: number;
-          }
-        >
-      | undefined;
-    if (existingDiffs && (typeof existingDiffs[normalizedPath] === "object" || typeof existingDiffs[filePaths[0]] === "object")) {
-      return log;
-    }
-
-    return {
-      ...log,
-      metadata: {
-        ...log.metadata,
-        diffs: {
-          ...(existingDiffs || {}),
-          [filePaths[0]]: diff,
-        },
-      },
-    };
-  });
-}
-
-async function fetchThreadHydrationPayload(params: {
-  backendUrl: string;
-  apiKey: string;
-  threadId: string;
-  requestHeaders?: HeadersInit;
-  messagesPromise?: Promise<RunnerConversationMessage[]>;
-}): Promise<RunnerThreadHydrationPayload> {
-  const backendUrl = sanitizeBackendUrl(params.backendUrl);
-  const headers = buildRunnerHeaders(params.requestHeaders, params.apiKey);
-  const messagesPromise =
-    params.messagesPromise ||
-    fetchAllThreadMessages({
-      backendUrl,
-      apiKey: params.apiKey,
-      threadId: params.threadId,
-      requestHeaders: params.requestHeaders,
-    }).catch(() => []);
-
-  const [threadResponse, logsResponse, stepsResponse, messages] = await Promise.all([
-    fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}`, {
-      method: "GET",
-      headers,
-      cache: "no-store",
-    }),
-    fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/logs?compact=1&includeConversation=0`, {
-      method: "GET",
-      headers,
-      cache: "no-store",
-    }),
-    fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/steps?limit=500&compact=1`, {
-      method: "GET",
-      headers,
-      cache: "no-store",
-    }).catch(() => null),
-    messagesPromise,
-  ]);
-
-  const [threadBody, logsBody, stepsBody] = await Promise.all([
-    threadResponse.text(),
-    logsResponse.text(),
-    stepsResponse ? stepsResponse.text() : Promise.resolve(""),
-  ]);
-
-  let parsedThread: {
-    thread?: {
-      id?: string | null;
-      title?: string | null;
-      status?: string | null;
-      task?: string | null;
-      environmentId?: string | null;
-      duration?: string | number | null;
-      startedAt?: string | null;
-      completedAt?: string | null;
-      updatedAt?: string | null;
-      lastMessagePreview?: string | null;
-      metadata?: Record<string, unknown> | null;
-      agentName?: string | null;
-      environmentName?: string | null;
-    };
-    message?: string;
-    error?: string;
-  } = {};
-  let parsedLogs: {
-    logs?: RunnerLog[];
-    status?: string | null;
-    updatedAt?: string | null;
-    duration?: string | number | null;
-    agentName?: string | null;
-    environmentName?: string | null;
-    message?: string;
-    error?: string;
-  } = {};
-  let parsedSteps: {
-    data?: RunnerThreadStep[];
-    message?: string;
-    error?: string;
-  } = {};
-
-  try {
-    parsedThread = threadBody ? JSON.parse(threadBody) : {};
-  } catch {
-    parsedThread = {};
-  }
-
-  try {
-    parsedLogs = logsBody ? JSON.parse(logsBody) : {};
-  } catch {
-    parsedLogs = {};
-  }
-
-  if (stepsResponse?.ok) {
-    try {
-      parsedSteps = stepsBody ? JSON.parse(stepsBody) : {};
-    } catch {
-      parsedSteps = {};
-    }
-  }
-
-  if (!threadResponse.ok) {
-    throw new Error(parsedThread.message || parsedThread.error || `Failed to load thread (${threadResponse.status})`);
-  }
-
-  if (!logsResponse.ok) {
-    throw new Error(parsedLogs.message || parsedLogs.error || `Failed to load thread logs (${logsResponse.status})`);
-  }
-
-  const startedAtMs = parseIsoTimestampMs(parsedThread.thread?.startedAt);
-  const parsedStepsData = parseThreadSteps(parsedSteps.data);
-  let diffEntries: RunnerThreadDiffEntry[] = [];
-  const completedAtMs = parseIsoTimestampMs(parsedThread.thread?.completedAt);
-  const rawThreadStatus =
-    typeof parsedLogs.status === "string" && parsedLogs.status.trim()
-      ? parsedLogs.status.trim()
-      : typeof parsedThread.thread?.status === "string" && parsedThread.thread.status.trim()
-        ? parsedThread.thread.status.trim()
-        : null;
-  const parsedRunnerLogs = Array.isArray(parsedLogs.logs) ? parsedLogs.logs.map(normalizeHydratedLog) : [];
-  const chronologicalLogs = sortRunnerLogsChronologically(buildFailedThreadFallbackLogs({
-    logs: parsedRunnerLogs,
-    threadStatus: rawThreadStatus,
-    title: parsedThread.thread?.title,
-    task: parsedThread.thread?.task,
-    lastMessagePreview: parsedThread.thread?.lastMessagePreview,
-    updatedAt: parsedThread.thread?.updatedAt ?? parsedLogs.updatedAt,
-    completedAt: parsedThread.thread?.completedAt,
-    metadata: parsedThread.thread?.metadata ?? null,
-  }).map(normalizeHydratedLog));
-  const chronologicalMessages = mergeConversationMessageRunMetadataFromLogs(
-    sortRunnerConversationMessagesChronologically(messages),
-    chronologicalLogs
-  );
-  const canonicalConversationMessages = chronologicalMessages.filter(
-    (message) =>
-      (message.role === "user" || message.role === "assistant") &&
-      typeof message.content === "string" &&
-      message.content.trim().length > 0
-  );
-  const hydrationLogs = chronologicalLogs.filter((log) => {
-    if (canonicalConversationMessages.length === 0) {
-      return true;
-    }
-    if (log.eventType === "user_message" || (log as RunnerLog & { isUserMessage?: boolean }).isUserMessage) {
-      return false;
-    }
-    if (log.eventType === "agent_message" || log.eventType === "llm_response") {
-      return false;
-    }
-    return true;
-  });
-
-  const shouldHydrateStepDiffs =
-    hydrationLogs.some((log) => log.eventType === "file_change") ||
-    parsedStepsData.some((step) => {
-      const metadata = step.metadata || {};
-      const stepKind = String(step.stepKind || "").toLowerCase();
-      const eventType = String(step.eventType || "").toLowerCase();
-      return stepKind === "file_change"
-        || eventType === "file_change"
-        || Boolean(metadata.diffs && typeof metadata.diffs === "object");
-    });
-
-  if (shouldHydrateStepDiffs && diffEntries.length === 0 && parsedStepsData.length > 0) {
-    diffEntries = await fetchHydratedStepDiffEntries({
-      backendUrl,
-      threadId: params.threadId,
-      headers,
-      steps: parsedStepsData,
-    });
-  }
-  const mergedLogs = mergeThreadStepsIntoLogs(
-    mergeThreadDiffsIntoLogs(hydrationLogs, diffEntries),
-    parsedStepsData,
-    diffEntries,
-    startedAtMs
-  );
-
-  return {
-    threadId: typeof parsedThread.thread?.id === "string" && parsedThread.thread.id.trim() ? parsedThread.thread.id : params.threadId,
-    threadStatus: resolveHydratedThreadLifecycleStatus(rawThreadStatus, completedAtMs),
-    threadUpdatedAt:
-      typeof parsedLogs.updatedAt === "string" && parsedLogs.updatedAt.trim()
-        ? parsedLogs.updatedAt
-        : null,
-    threadEnvironmentId:
-      typeof parsedThread.thread?.environmentId === "string" && parsedThread.thread.environmentId.trim()
-        ? parsedThread.thread.environmentId
-        : null,
-    threadEnvironmentName:
-      parsedLogs.environmentName ?? parsedThread.thread?.environmentName ?? null,
-    threadMetadata: parsedThread.thread?.metadata ?? null,
-    initialPrompt: typeof parsedThread.thread?.task === "string" ? parsedThread.thread.task : "",
-    logs: mergedLogs,
-    messages: chronologicalMessages,
-    durationSeconds: parseDurationSecondsValue(parsedLogs.duration ?? parsedThread.thread?.duration),
-    startedAtMs,
-    completedAtMs,
-    agentName: parsedLogs.agentName ?? parsedThread.thread?.agentName ?? null,
-    environmentName: parsedLogs.environmentName ?? parsedThread.thread?.environmentName ?? null,
-  };
-}
-
-async function fetchThreadLogsSnapshot(params: {
-  backendUrl: string;
-  apiKey: string;
-  threadId: string;
-  requestHeaders?: HeadersInit;
-}): Promise<{
-  logs: RunnerLog[];
-  status: string | null;
-  durationSeconds: number | null;
-  agentName: string | null;
-  environmentName: string | null;
-}> {
-  const backendUrl = sanitizeBackendUrl(params.backendUrl);
-  const response = await fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/logs?compact=1&includeConversation=0`, {
-    method: "GET",
-    headers: buildRunnerHeaders(params.requestHeaders, params.apiKey),
-    cache: "no-store",
-  });
-
-  const bodyText = await response.text();
-  let parsed: {
-    logs?: RunnerLog[];
-    status?: string | null;
-    duration?: string | number | null;
-    agentName?: string | null;
-    environmentName?: string | null;
-    message?: string;
-    error?: string;
-  } = {};
-
-  try {
-    parsed = bodyText ? JSON.parse(bodyText) : {};
-  } catch {
-    parsed = {};
-  }
-
-  if (!response.ok) {
-    throw new Error(parsed.message || parsed.error || `Failed to load thread logs (${response.status})`);
-  }
-
-  const status = typeof parsed.status === "string" && parsed.status.trim() ? parsed.status.trim() : null;
-  const parsedRunnerLogs = Array.isArray(parsed.logs) ? parsed.logs.map(normalizeHydratedLog) : [];
-
-  return {
-    logs: buildFailedThreadFallbackLogs({
-      logs: parsedRunnerLogs,
-      threadStatus: status,
-    }),
-    status,
-    durationSeconds: parseDurationSecondsValue(parsed.duration),
-    agentName: parsed.agentName ?? null,
-    environmentName: parsed.environmentName ?? null,
-  };
-}
-
-async function fetchThreadStatusSnapshot(params: {
-  backendUrl: string;
-  apiKey: string;
-  threadId: string;
-  requestHeaders?: HeadersInit;
-}): Promise<{
-  threadId: string;
-  status: string | null;
-  updatedAt: string | null;
-  completedAt: string | null;
-}> {
-  const backendUrl = sanitizeBackendUrl(params.backendUrl);
-  const response = await fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/status`, {
-    method: "GET",
-    headers: buildRunnerHeaders(params.requestHeaders, params.apiKey),
-    cache: "no-store",
-  });
-
-  const bodyText = await response.text();
-  let parsed: {
-    threadId?: string;
-    id?: string;
-    status?: string | null;
-    updatedAt?: string | null;
-    completedAt?: string | null;
-    message?: string;
-    error?: string;
-  } = {};
-
-  try {
-    parsed = bodyText ? JSON.parse(bodyText) : {};
-  } catch {
-    parsed = {};
-  }
-
-  if (!response.ok) {
-    throw new Error(parsed.message || parsed.error || `Failed to load thread status (${response.status})`);
-  }
-
-  const completedAt = typeof parsed.completedAt === "string" && parsed.completedAt.trim() ? parsed.completedAt : null;
-
-  return {
-    threadId:
-      typeof parsed.threadId === "string" && parsed.threadId.trim()
-        ? parsed.threadId
-        : typeof parsed.id === "string" && parsed.id.trim()
-          ? parsed.id
-          : params.threadId,
-    status: resolveHydratedThreadLifecycleStatus(
-      typeof parsed.status === "string" && parsed.status.trim() ? parsed.status.trim() : null,
-      parseIsoTimestampMs(completedAt)
-    ),
-    updatedAt: typeof parsed.updatedAt === "string" && parsed.updatedAt.trim() ? parsed.updatedAt : null,
-    completedAt,
-  };
-}
-
-function normalizeRunnerDeepResearchSession(value: unknown): RunnerDeepResearchSession | null {
-  if (!value || typeof value !== "object") {
-    return null;
-  }
-  const session = value as Record<string, unknown>;
-  const metadata =
-    session.metadata && typeof session.metadata === "object" && !Array.isArray(session.metadata)
-      ? (session.metadata as Record<string, unknown>)
-      : null;
-  const metadataSources = Array.isArray(metadata?.sources)
-    ? metadata.sources.filter((entry): entry is string => typeof entry === "string" && entry.trim().length > 0)
-    : [];
-  const reportManifestPath =
-    typeof metadata?.reportManifestPath === "string" && metadata.reportManifestPath.trim()
-      ? metadata.reportManifestPath.trim()
-      : null;
-
-  return {
-    id: typeof session.id === "string" ? session.id : "",
-    threadId: typeof session.threadId === "string" ? session.threadId : "",
-    userId: typeof session.userId === "string" ? session.userId : "",
-    interactionId: typeof session.interactionId === "string" ? session.interactionId : null,
-    topic: typeof session.topic === "string" ? session.topic : "",
-    status: typeof session.status === "string" ? session.status : "starting",
-    createdAt: typeof session.createdAt === "string" ? session.createdAt : "",
-    startedAt: typeof session.startedAt === "string" ? session.startedAt : null,
-    completedAt: typeof session.completedAt === "string" ? session.completedAt : null,
-    elapsedSeconds: typeof session.elapsedSeconds === "number" ? session.elapsedSeconds : null,
-    thinkingSummaries: Array.isArray(session.thinkingSummaries)
-      ? session.thinkingSummaries
-          .map((entry) => {
-            if (!entry || typeof entry !== "object") return null;
-            const summary = entry as Record<string, unknown>;
-            const summaryText = typeof summary.summary === "string" ? summary.summary : "";
-            if (!summaryText.trim()) return null;
-            return {
-              timestamp: typeof summary.timestamp === "string" ? summary.timestamp : "",
-              phase: typeof summary.phase === "string" ? summary.phase : "Thinking",
-              summary: summaryText,
-            };
-          })
-          .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))
-      : [],
-    reportPath: typeof session.reportPath === "string" ? session.reportPath : null,
-    reportLength: typeof session.reportLength === "number" ? session.reportLength : null,
-    sourcesCount: typeof session.sourcesCount === "number" ? session.sourcesCount : null,
-    reportManifestPath,
-    sources: metadataSources,
-    errorMessage: typeof session.errorMessage === "string" ? session.errorMessage : null,
-    metadata,
-  };
-}
-
-async function fetchThreadResearchSessions(params: {
-  backendUrl: string;
-  apiKey: string;
-  threadId: string;
-  requestHeaders?: HeadersInit;
-}): Promise<RunnerDeepResearchSession[]> {
-  const backendUrl = sanitizeBackendUrl(params.backendUrl);
-  const response = await fetch(`${backendUrl}/threads/${encodeURIComponent(params.threadId)}/research`, {
-    method: "GET",
-    headers: buildRunnerHeaders(params.requestHeaders, params.apiKey),
-    cache: "no-store",
-  });
-
-  const bodyText = await response.text();
-  let parsed: {
-    data?: unknown[];
-    message?: string;
-    error?: string;
-  } = {};
-
-  try {
-    parsed = bodyText ? JSON.parse(bodyText) : {};
-  } catch {
-    parsed = {};
-  }
-
-  if (!response.ok) {
-    throw new Error(parsed.message || parsed.error || `Failed to load deep research sessions (${response.status})`);
-  }
-
-  return Array.isArray(parsed.data)
-    ? parsed.data.map((entry) => normalizeRunnerDeepResearchSession(entry)).filter((entry): entry is RunnerDeepResearchSession => Boolean(entry?.id))
-    : [];
-}
-
-function normalizeThreadLifecycleStatus(status: string | null | undefined): string {
-  return typeof status === "string" ? status.trim().toLowerCase() : "";
-}
-
-function resolveHydratedThreadLifecycleStatus(status: string | null | undefined, completedAtMs?: number | null): string | null {
-  const normalizedStatus = normalizeThreadLifecycleStatus(status);
-  if (isPendingPermissionThreadLifecycleStatus(normalizedStatus)) {
-    return "permission_asked";
-  }
-  if (isRunningThreadLifecycleStatus(normalizedStatus) && (normalizedStatus !== "active" || completedAtMs == null)) {
-    return normalizedStatus;
-  }
-  if (completedAtMs != null && !isTerminalThreadLifecycleStatus(normalizedStatus)) {
-    return "completed";
-  }
-  return typeof status === "string" && status.trim() ? status.trim() : null;
-}
-
-function buildFailedThreadFallbackLogs(params: {
-  logs: RunnerLog[];
-  threadStatus: string | null | undefined;
-  title?: string | null;
-  task?: string | null;
-  lastMessagePreview?: string | null;
-  updatedAt?: string | null;
-  completedAt?: string | null;
-  metadata?: Record<string, unknown> | null;
-}): RunnerLog[] {
-  if (params.logs.length > 0 || normalizeThreadLifecycleStatus(params.threadStatus) !== "failed") {
-    return params.logs;
-  }
-
-  const task = typeof params.task === "string" ? params.task.trim() : "";
-  const preview = typeof params.lastMessagePreview === "string" ? params.lastMessagePreview.trim() : "";
-  const scheduleId =
-    params.metadata &&
-    typeof params.metadata === "object" &&
-    !Array.isArray(params.metadata) &&
-    typeof params.metadata.scheduleId === "string"
-      ? params.metadata.scheduleId.trim()
-      : "";
-  const title = typeof params.title === "string" ? params.title.trim() : "";
-  const isScheduledThread = Boolean(scheduleId || /^scheduled:/i.test(title));
-  const fallbackTime =
-    (typeof params.completedAt === "string" && params.completedAt.trim()) ||
-    (typeof params.updatedAt === "string" && params.updatedAt.trim()) ||
-    new Date().toISOString();
-
-  return [{
-    createdAt: fallbackTime,
-    time: fallbackTime,
-    message: preview && preview !== task
-      ? preview
-      : isScheduledThread
-        ? "Scheduled task failed before working logs were recorded."
-        : "Thread failed before working logs were recorded.",
-    type: "error",
-    metadata: {
-      status: "failed",
-      error: {
-        source: isScheduledThread ? "scheduled_task" : "thread",
-        synthetic: true,
-        ...(scheduleId ? { scheduleId } : {}),
-      },
-    },
-  }];
-}
-
-function isRunningThreadLifecycleStatus(status: string | null | undefined): boolean {
-  return [
-    "queued",
-    "pending",
-    "starting",
-    "running",
-    "active",
-    "created",
-    "ready",
-  ].includes(normalizeThreadLifecycleStatus(status));
-}
-
-function isPendingPermissionThreadLifecycleStatus(status: string | null | undefined): boolean {
-  const normalizedStatus = normalizeThreadLifecycleStatus(status);
-  return normalizedStatus === "permission_asked" || normalizedStatus === "permission asked";
-}
-
-function isTerminalThreadLifecycleStatus(status: string | null | undefined): boolean {
-  return [
-    "completed",
-    "complete",
-    "done",
-    "succeeded",
-    "success",
-    "finished",
-    "failed",
-    "cancelled",
-    "canceled",
-    "archived",
-    "deleted",
-  ].includes(normalizeThreadLifecycleStatus(status));
-}
-
-function terminalTurnStatusFromThreadStatus(status: string | null | undefined): RunnerTurnStatus {
-  const normalizedStatus = normalizeThreadLifecycleStatus(status);
-  if (normalizedStatus === "failed") return "failed";
-  if (normalizedStatus === "cancelled" || normalizedStatus === "canceled") return "cancelled";
-  return "completed";
-}
-
-function threadLifecycleIsTerminal(meta?: {
-  threadStatus?: string | null;
-  completedAtMs?: number | null;
-}): boolean {
-  const normalizedStatus = normalizeThreadLifecycleStatus(meta?.threadStatus);
-  if (isPendingPermissionThreadLifecycleStatus(normalizedStatus)) {
-    return false;
-  }
-  if (isRunningThreadLifecycleStatus(normalizedStatus) && (normalizedStatus !== "active" || meta?.completedAtMs == null)) {
-    return false;
-  }
-  return isTerminalThreadLifecycleStatus(meta?.threadStatus) || meta?.completedAtMs != null;
-}
-
-function settleHydratedTerminalThreadTurns(
-  turns: RunnerTurn[],
-  meta?: {
-    threadStatus?: string | null;
-    completedAtMs?: number | null;
-  }
-): RunnerTurn[] {
-  if (!threadLifecycleIsTerminal(meta)) {
-    return turns;
-  }
-
-  const terminalStatus = terminalTurnStatusFromThreadStatus(meta?.threadStatus);
-  let changed = false;
-  const nextTurns = turns.map((turn) => {
-    if (turn.status !== "queued" && !isActiveTurnStatus(turn.status)) {
-      return turn;
-    }
-
-    changed = true;
-    return {
-      ...turn,
-      status: terminalStatus,
-      completedAtMs: turn.completedAtMs ?? meta?.completedAtMs ?? getTurnLatestProgressTimestampMs(turn),
-    };
-  });
-
-  return changed ? nextTurns : turns;
-}
-
-function buildHydratedTurnsFromMessages(
-  messages: RunnerConversationMessage[],
-  meta?: {
-    agentName?: string | null;
-    environmentName?: string | null;
-    backendUrl?: string;
-    threadStatus?: string | null;
-    completedAtMs?: number | null;
-    threadMetadata?: Record<string, unknown> | null;
-  }
-): RunnerTurn[] {
-  const chronologicalMessages = sortRunnerConversationMessagesChronologically(messages);
-  const turns: RunnerTurn[] = [];
-  let currentTurn: RunnerTurn | null = null;
-  let pendingBtwTurn: RunnerTurn | null = null;
-
-  function commitCurrentTurn() {
-    if (!currentTurn) return;
-    const hasPrompt = currentTurn.prompt.trim().length > 0;
-    const hasLogs = currentTurn.logs.length > 0;
-    if (hasPrompt || hasLogs) {
-      turns.push(currentTurn);
-    }
-    currentTurn = null;
-  }
-
-  function commitPendingBtwTurn() {
-    if (!pendingBtwTurn) return;
-    const hasPrompt = pendingBtwTurn.prompt.trim().length > 0;
-    const hasLogs = pendingBtwTurn.logs.length > 0;
-    if (hasPrompt || hasLogs) {
-      turns.push(pendingBtwTurn);
-    }
-    pendingBtwTurn = null;
-  }
-
-  for (let index = 0; index < chronologicalMessages.length; index += 1) {
-    const message = chronologicalMessages[index];
-    const createdAtMs = message.createdAt ? Date.parse(message.createdAt) : Number.NaN;
-    const safeTimestamp = Number.isFinite(createdAtMs) ? createdAtMs : Date.now() + index;
-
-    if (message.role === "user") {
-      if (isBtwTurnPrompt(message.content || "")) {
-        commitPendingBtwTurn();
-        pendingBtwTurn = {
-          id: message.id || generateId("turn"),
-          sourceMessageId: message.id || null,
-          prompt: message.content || "",
-          messageMetadata: normalizeRunnerTurnMessageMetadata(message.logMetadata, meta?.threadMetadata),
-          logs: [],
-          startedAtMs: safeTimestamp,
-          completedAtMs: safeTimestamp,
-          status: "running",
-          animateOnRender: false,
-          agentName: meta?.agentName ?? null,
-          environmentName: meta?.environmentName ?? null,
-          presentation: "btw",
-          quotedSelection: normalizeQuotedSelection(message.logMetadata?.quotedSelection),
-          attachments: normalizeTurnAttachments(message.logMetadata?.attachments, meta?.backendUrl),
-          slideCreationCommand: normalizeSlideCreationCommandFromMetadata(message.logMetadata),
-          researchCreationCommand: normalizeResearchCreationCommandFromMetadata(message.logMetadata),
-          scrapeCreationCommand: normalizeScrapeCreationCommandFromMetadata(message.logMetadata),
-          parseCreationCommand: normalizeParseCreationCommandFromMetadata(message.logMetadata),
-          adCreationCommand: normalizeAdCreationCommandFromMetadata(message.logMetadata),
-        };
-      } else {
-        commitPendingBtwTurn();
-        commitCurrentTurn();
-        currentTurn = {
-          id: message.id || generateId("turn"),
-          sourceMessageId: message.id || null,
-          prompt: message.content || "",
-          messageMetadata: normalizeRunnerTurnMessageMetadata(message.logMetadata, meta?.threadMetadata),
-          logs: [],
-          startedAtMs: safeTimestamp,
-          completedAtMs: safeTimestamp,
-          status: "completed",
-          animateOnRender: false,
-          agentName: meta?.agentName ?? null,
-          environmentName: meta?.environmentName ?? null,
-          presentation: "default",
-          quotedSelection: normalizeQuotedSelection(message.logMetadata?.quotedSelection),
-          attachments: normalizeTurnAttachments(message.logMetadata?.attachments, meta?.backendUrl),
-          slideCreationCommand: normalizeSlideCreationCommandFromMetadata(message.logMetadata),
-          researchCreationCommand: normalizeResearchCreationCommandFromMetadata(message.logMetadata),
-          scrapeCreationCommand: normalizeScrapeCreationCommandFromMetadata(message.logMetadata),
-          parseCreationCommand: normalizeParseCreationCommandFromMetadata(message.logMetadata),
-          adCreationCommand: normalizeAdCreationCommandFromMetadata(message.logMetadata),
-        };
-      }
-      continue;
-    }
-
-    if (message.role !== "assistant") {
-      continue;
-    }
-
-    const assistantBelongsToBtw =
-      Boolean(message.logMetadata?.isBTW) ||
-      (pendingBtwTurn !== null && turnPresentation(pendingBtwTurn) === "btw");
-
-    if (assistantBelongsToBtw && pendingBtwTurn) {
-      const existingResponseIndex = pendingBtwTurn.logs.findIndex(
-        (log) => log.eventType === "agent_message" || log.eventType === "llm_response"
-      );
-
-      if (existingResponseIndex === -1) {
-        pendingBtwTurn.logs.push({
-          time: message.createdAt || new Date(safeTimestamp).toISOString(),
-          message: message.content || "",
-          type: "info",
-          eventType: "agent_message",
-          metadata: buildAssistantMessageRunMetadata(message),
-        });
-      } else {
-        const existing = pendingBtwTurn.logs[existingResponseIndex];
-        const messageMetadata = buildAssistantMessageRunMetadata(message);
-        pendingBtwTurn.logs[existingResponseIndex] = {
-          ...existing,
-          message: `${existing.message}\n\n${message.content || ""}`.trim(),
-          metadata: {
-            ...(existing.metadata || {}),
-            ...(messageMetadata || {}),
-          },
-        };
-      }
-
-      pendingBtwTurn.completedAtMs = safeTimestamp;
-      pendingBtwTurn.status = "completed";
-      commitPendingBtwTurn();
-      continue;
-    }
-
-    if (!currentTurn) {
-      currentTurn = {
-        id: message.id || generateId("turn"),
-        sourceMessageId: null,
-        prompt: "",
-        logs: [],
-        startedAtMs: safeTimestamp,
-        completedAtMs: safeTimestamp,
-        status: "completed",
-        animateOnRender: false,
-        agentName: meta?.agentName ?? null,
-        environmentName: meta?.environmentName ?? null,
-        presentation: "default",
-      };
-    }
-
-    const existingResponseIndex = currentTurn.logs.findIndex(
-      (log) => log.eventType === "agent_message" || log.eventType === "llm_response"
-    );
-
-    if (existingResponseIndex === -1) {
-      currentTurn.logs.push({
-        time: message.createdAt || new Date(safeTimestamp).toISOString(),
-        message: message.content || "",
-        type: "info",
-        eventType: "agent_message",
-        metadata: buildAssistantMessageRunMetadata(message),
-      });
-    } else {
-      const existing = currentTurn.logs[existingResponseIndex];
-      const messageMetadata = buildAssistantMessageRunMetadata(message);
-      currentTurn.logs[existingResponseIndex] = {
-        ...existing,
-        message: `${existing.message}\n\n${message.content || ""}`.trim(),
-        metadata: {
-          ...(existing.metadata || {}),
-          ...(messageMetadata || {}),
-        },
-      };
-    }
-
-    currentTurn.completedAtMs = safeTimestamp;
-    currentTurn.status = "completed";
-  }
-
-  commitPendingBtwTurn();
-  commitCurrentTurn();
-  const sortedTurns = [...turns].sort((left, right) => {
-    if (left.startedAtMs !== right.startedAtMs) {
-      return left.startedAtMs - right.startedAtMs;
-    }
-    return left.id.localeCompare(right.id);
-  });
-  if (sortedTurns[0]) {
-    sortedTurns[0].isInitialTurn = true;
-  }
-  return applyHydratedRunningThreadState(
-    attachHydratedMessageIdsToTurns(sortedTurns, chronologicalMessages, meta?.backendUrl, meta?.threadMetadata),
-    meta
-  );
-}
-
-function hydratedThreadStatusIsRunning(meta?: {
-  threadStatus?: string | null;
-  completedAtMs?: number | null;
-}): boolean {
-  const normalizedStatus = typeof meta?.threadStatus === "string" ? meta.threadStatus.trim().toLowerCase() : "";
-  if (isRunningThreadLifecycleStatus(normalizedStatus)) {
-    return normalizedStatus !== "active" || meta?.completedAtMs == null;
-  }
-  if (normalizedStatus) {
-    return false;
-  }
-  if (!meta || !Object.prototype.hasOwnProperty.call(meta, "completedAtMs")) {
-    return false;
-  }
-  return meta.completedAtMs == null;
-}
-
-function turnHasResponse(turn: RunnerTurn): boolean {
-  return turn.logs.some(isTurnResponseLog);
-}
-
-function findLatestUnansweredUserTurnIndex(turns: RunnerTurn[]): number {
-  for (let index = turns.length - 1; index >= 0; index -= 1) {
-    const turn = turns[index];
-    if (!turn || turnPresentation(turn) === "context-action-notice" || !turn.prompt.trim()) {
-      continue;
-    }
-    return turnHasResponse(turn) ? -1 : index;
-  }
-  return -1;
-}
-
-function findStaleCompletedAtRunningTurnIndex(
-  turns: RunnerTurn[],
-  meta?: {
-    threadStatus?: string | null;
-    completedAtMs?: number | null;
-  }
-): number {
-  const completedAtMs = meta?.completedAtMs;
-  const normalizedStatus = normalizeThreadLifecycleStatus(meta?.threadStatus);
-  if (
-    completedAtMs == null ||
-    (isRunningThreadLifecycleStatus(normalizedStatus) && normalizedStatus !== "active") ||
-    isPendingPermissionThreadLifecycleStatus(normalizedStatus)
-  ) {
-    return -1;
-  }
-
-  const latestUnansweredTurnIndex = findLatestUnansweredUserTurnIndex(turns);
-  if (latestUnansweredTurnIndex === -1) {
-    return -1;
-  }
-
-  const latestUnansweredTurn = turns[latestUnansweredTurnIndex];
-  if (!latestUnansweredTurn) {
-    return -1;
-  }
-
-  return latestUnansweredTurn.startedAtMs > completedAtMs + 1000
-    ? latestUnansweredTurnIndex
-    : -1;
-}
-
-function applyHydratedRunningThreadState(
-  turns: RunnerTurn[],
-  meta?: {
-    threadStatus?: string | null;
-    completedAtMs?: number | null;
-  }
-): RunnerTurn[] {
-  if (turns.length === 0) {
-    return turns;
-  }
-
-  const staleCompletedAtRunningTurnIndex = findStaleCompletedAtRunningTurnIndex(turns, meta);
-  const terminalSettledTurns = staleCompletedAtRunningTurnIndex === -1
-    ? settleHydratedTerminalThreadTurns(turns, meta)
-    : turns;
-  if (terminalSettledTurns !== turns) {
-    return terminalSettledTurns;
-  }
-
-  let activeDeepResearchTurnIndex = -1;
-  for (let index = turns.length - 1; index >= 0; index -= 1) {
-    if (hasActiveDeepResearchLogGroup(turns[index]!.logs)) {
-      activeDeepResearchTurnIndex = index;
-      break;
-    }
-  }
-  const shouldForceRunningState =
-    hydratedThreadStatusIsRunning(meta) ||
-    activeDeepResearchTurnIndex !== -1 ||
-    staleCompletedAtRunningTurnIndex !== -1;
-
-  if (!shouldForceRunningState) {
-    return turns;
-  }
-
-  const targetIndex = activeDeepResearchTurnIndex !== -1
-    ? activeDeepResearchTurnIndex
-    : staleCompletedAtRunningTurnIndex !== -1
-      ? staleCompletedAtRunningTurnIndex
-      : turns.length - 1;
-  const targetTurn = turns[targetIndex];
-  if (!targetTurn || targetTurn.status === "failed" || targetTurn.status === "cancelled") {
-    return turns;
-  }
-
-  const shouldTargetPermissionAsked = isPendingPermissionThreadLifecycleStatus(meta?.threadStatus);
-  if (
-    targetTurn.completedAtMs == null &&
-    (targetTurn.status === "running" || (shouldTargetPermissionAsked && targetTurn.status === "permission_asked"))
-  ) {
-    return turns;
-  }
-
-  const nextTurns = turns.slice();
-  nextTurns[targetIndex] = {
-    ...targetTurn,
-    status: isPendingPermissionThreadLifecycleStatus(meta?.threadStatus) ? "permission_asked" : "running",
-    completedAtMs: undefined,
-  };
-  return nextTurns;
-}
-
-function attachHydratedMessageIdsToTurns(
-  turns: RunnerTurn[],
-  messages: RunnerConversationMessage[],
-  backendUrl?: string,
-  threadMetadata?: Record<string, unknown> | null
-): RunnerTurn[] {
-  const userMessages = messages.filter(
-    (message) =>
-      message.role === "user" &&
-      typeof message.id === "string" &&
-      message.id.trim().length > 0 &&
-      typeof message.content === "string"
-  );
-
-  if (userMessages.length === 0) {
-    return turns;
-  }
-
-  let nextUserMessageIndex = 0;
-
-  return turns.map((turn) => {
-    let matchedMessage: RunnerConversationMessage | null = null;
-
-    if (typeof turn.sourceMessageId === "string" && turn.sourceMessageId.trim().length > 0) {
-      matchedMessage =
-        userMessages.find((message) => message.id === turn.sourceMessageId) || null;
-    }
-
-    if (!matchedMessage && turn.prompt.trim().length > 0) {
-      let matchedMessageIndex = userMessages.findIndex(
-        (message, index) => index >= nextUserMessageIndex && message.content.trim() === turn.prompt.trim()
-      );
-
-      if (matchedMessageIndex === -1 && nextUserMessageIndex < userMessages.length) {
-        matchedMessageIndex = nextUserMessageIndex;
-      }
-
-      if (matchedMessageIndex !== -1) {
-        matchedMessage = userMessages[matchedMessageIndex] || null;
-        nextUserMessageIndex = matchedMessageIndex + 1;
-      }
-    }
-
-    if (!matchedMessage) {
-      return turn;
-    }
-
-    return {
-      ...turn,
-      id: turn.sourceMessageId ? turn.id : matchedMessage.id!,
-      sourceMessageId: matchedMessage.id!,
-      messageMetadata: normalizeRunnerTurnMessageMetadata(matchedMessage.logMetadata, threadMetadata),
-      quotedSelection: normalizeQuotedSelection(matchedMessage.logMetadata?.quotedSelection),
-      attachments: normalizeTurnAttachments(matchedMessage.logMetadata?.attachments, backendUrl),
-    };
-  });
-}
-
-function buildHydratedTurnsFromPayload(
-  payload: RunnerThreadHydrationPayload,
-  fallbackMeta?: { agentName?: string | null; environmentName?: string | null; backendUrl?: string }
-): RunnerTurn[] {
-  const chronologicalMessages = sortRunnerConversationMessagesChronologically(payload.messages);
-  const chronologicalLogs = sortRunnerLogsChronologically(payload.logs.map(normalizeHydratedLog));
-  const canonicalMessages = chronologicalMessages.filter(
-    (message) =>
-      (message.role === "user" || message.role === "assistant") &&
-      typeof message.content === "string" &&
-      message.content.trim().length > 0
-  );
-  if (canonicalMessages.length > 0) {
-    const messageTurns = buildHydratedTurnsFromMessages(chronologicalMessages, {
-      agentName: payload.agentName ?? fallbackMeta?.agentName ?? null,
-      environmentName: payload.environmentName ?? fallbackMeta?.environmentName ?? null,
-      backendUrl: fallbackMeta?.backendUrl,
-      threadStatus: payload.threadStatus,
-      completedAtMs: payload.completedAtMs,
-      threadMetadata: payload.threadMetadata,
-    });
-    if (messageTurns.length > 0) {
-      const messageTurnsWithTimeline = mergeHydratedTimelineLogsIntoMessageTurns(messageTurns, chronologicalLogs, {
-        startedAtMs: payload.startedAtMs,
-      });
-      if (messageTurnsWithTimeline) {
-        return applyHydratedRunningThreadState(messageTurnsWithTimeline, {
-          threadStatus: payload.threadStatus,
-          completedAtMs: payload.completedAtMs,
-        });
-      }
-    }
-  }
-
-  const turnsFromLogs = buildHydratedTurnsFromLogs(chronologicalLogs, payload.initialPrompt, chronologicalMessages, {
-    durationSeconds: payload.durationSeconds,
-    startedAtMs: payload.startedAtMs,
-    completedAtMs: payload.completedAtMs,
-    threadStatus: payload.threadStatus,
-    agentName: payload.agentName,
-    environmentName: payload.environmentName,
-    backendUrl: fallbackMeta?.backendUrl,
-    threadMetadata: payload.threadMetadata,
-  });
-  const turnsWithCanonicalMessages = mergeHydratedMessageTurnsIntoTurns(turnsFromLogs, chronologicalMessages, {
-    agentName: payload.agentName ?? fallbackMeta?.agentName ?? null,
-    environmentName: payload.environmentName ?? fallbackMeta?.environmentName ?? null,
-    backendUrl: fallbackMeta?.backendUrl,
-    threadStatus: payload.threadStatus,
-    completedAtMs: payload.completedAtMs,
-    threadMetadata: payload.threadMetadata,
-  });
-  const hasConversationMessages = chronologicalMessages.some(
-    (message) =>
-      (message.role === "user" || message.role === "assistant") &&
-      typeof message.content === "string" &&
-      message.content.trim().length > 0
-  );
-  const hasHydratedConversationTurns = turnsWithCanonicalMessages.some((turn) => {
-    if (turn.prompt.trim().length > 0) {
-      return true;
-    }
-    return turn.logs.some((log) => log.eventType === "agent_message" || log.eventType === "llm_response");
-  });
-
-  if (hasConversationMessages && !hasHydratedConversationTurns) {
-    return buildHydratedTurnsFromMessages(chronologicalMessages, {
-      agentName: payload.agentName ?? fallbackMeta?.agentName ?? null,
-      environmentName: payload.environmentName ?? fallbackMeta?.environmentName ?? null,
-      backendUrl: fallbackMeta?.backendUrl,
-      threadStatus: payload.threadStatus,
-      completedAtMs: payload.completedAtMs,
-      threadMetadata: payload.threadMetadata,
-    });
-  }
-
-  return turnsWithCanonicalMessages;
-}
-
-function isBtwTurnPrompt(prompt: string): boolean {
-  return /^\/btw\b/i.test(prompt.trim());
-}
-
-function normalizeTurnPrompt(prompt: string): string {
-  return stripSystemTags(prompt || "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .toLowerCase();
-}
-
-function sanitizeQuotedSelectionText(text: string): string {
-  const normalized = text.replace(/\r\n?/g, "\n").replace(/\u00a0/g, " ").trim();
-  if (normalized.length <= MAX_QUOTED_SELECTION_LENGTH) {
-    return normalized;
-  }
-  return `${normalized.slice(0, MAX_QUOTED_SELECTION_LENGTH - 1).trimEnd()}…`;
-}
-
-function previewQuotedSelectionText(text: string): string {
-  const singleLine = text.replace(/\s+/g, " ").trim();
-  if (singleLine.length <= QUOTED_SELECTION_PREVIEW_LENGTH) {
-    return singleLine;
-  }
-  return `${singleLine.slice(0, QUOTED_SELECTION_PREVIEW_LENGTH - 1).trimEnd()}…`;
-}
-
-function normalizeQuotedSelection(
-  value: unknown
-): RunnerQuotedSelection | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return null;
-  }
-  const candidate = value as { text?: unknown; sourceType?: unknown };
-  if (typeof candidate.text !== "string") {
-    return null;
-  }
-  const text = sanitizeQuotedSelectionText(candidate.text);
-  if (!text) {
-    return null;
-  }
-  const sourceType: RunnerQuotedSelectionSource =
-    candidate.sourceType === "run_summary" ? "run_summary" : "working_log";
-  return {
-    text,
-    sourceType,
-  };
-}
-
-function resolveAttachmentAssetUrl(url: string | undefined, backendUrl?: string, attachmentId?: string): string | undefined {
-  return resolveRunnerPreviewAssetUrl(url, backendUrl, attachmentId);
-}
-
-function normalizeImageUnderstandingPreviewItem(value: unknown, backendUrl?: string, attachmentId?: string): RunnerImageUnderstandingPreviewItem | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return null;
-  }
-  const candidate = value as { path?: unknown; name?: unknown; url?: unknown };
-  const path = typeof candidate.path === "string" ? candidate.path.trim() : "";
-  const url = resolveAttachmentAssetUrl(typeof candidate.url === "string" ? candidate.url : undefined, backendUrl, attachmentId) || undefined;
-  const name = typeof candidate.name === "string" && candidate.name.trim()
-    ? candidate.name.trim()
-    : path
-      ? path.split("/").pop() || "image"
-      : "image";
-  if (!path && !url) {
-    return null;
-  }
-  return {
-    path,
-    name,
-    url,
-  };
-}
-
-function normalizeImageUnderstandingPreviewData(value: unknown, backendUrl?: string, attachmentId?: string): RunnerImageUnderstandingPreviewData | undefined {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return undefined;
-  }
-  const candidate = value as { imageName?: unknown; images?: unknown; resultText?: unknown; isError?: unknown };
-  const images = Array.isArray(candidate.images)
-    ? candidate.images
-        .map((entry) => normalizeImageUnderstandingPreviewItem(entry, backendUrl, attachmentId))
-        .filter((entry): entry is RunnerImageUnderstandingPreviewItem => Boolean(entry))
-    : [];
-  const resultText = typeof candidate.resultText === "string" ? candidate.resultText : "";
-  if (images.length === 0 && !resultText.trim()) {
-    return undefined;
-  }
-  return {
-    imageName: typeof candidate.imageName === "string" && candidate.imageName.trim()
-      ? candidate.imageName.trim()
-      : images.length === 1
-        ? images[0]?.name || "image"
-        : `${images.length || "No"} images`,
-    images,
-    resultText,
-    isError: candidate.isError === true,
-  };
-}
-
-function normalizeWebSearchPreviewSource(value: unknown): RunnerWebSearchPreviewSource | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return null;
-  }
-  const candidate = value as { url?: unknown; title?: unknown; domain?: unknown; snippet?: unknown; thumbnail?: unknown };
-  const url = typeof candidate.url === "string" ? candidate.url.trim() : "";
-  if (!url) {
-    return null;
-  }
-  return {
-    url,
-    title: typeof candidate.title === "string" ? candidate.title.trim() : url,
-    domain: typeof candidate.domain === "string" && candidate.domain.trim() ? candidate.domain.trim() : undefined,
-    snippet: typeof candidate.snippet === "string" && candidate.snippet.trim() ? candidate.snippet.trim() : undefined,
-    thumbnail: typeof candidate.thumbnail === "string" && candidate.thumbnail.trim() ? candidate.thumbnail.trim() : undefined,
-  };
-}
-
-function normalizeWebSearchPreviewImage(value: unknown): RunnerWebSearchPreviewImage | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return null;
-  }
-  const candidate = value as { url?: unknown; thumbnail?: unknown; title?: unknown; source?: unknown };
-  const url = typeof candidate.url === "string" && candidate.url.trim()
-    ? candidate.url.trim()
-    : typeof candidate.thumbnail === "string" && candidate.thumbnail.trim()
-      ? candidate.thumbnail.trim()
-      : "";
-  if (!url) {
-    return null;
-  }
-  return {
-    url,
-    thumbnail: typeof candidate.thumbnail === "string" && candidate.thumbnail.trim() ? candidate.thumbnail.trim() : undefined,
-    title: typeof candidate.title === "string" && candidate.title.trim() ? candidate.title.trim() : undefined,
-    source: typeof candidate.source === "string" && candidate.source.trim() ? candidate.source.trim() : undefined,
-  };
-}
-
-function normalizeWebSearchPreviewData(value: unknown): RunnerWebSearchPreviewData | undefined {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return undefined;
-  }
-  const candidate = value as {
-    query?: unknown;
-    summary?: unknown;
-    sources?: unknown;
-    images?: unknown;
-    rawJsonText?: unknown;
-    isError?: unknown;
-    errorMessage?: unknown;
-  };
-  const sources = Array.isArray(candidate.sources)
-    ? candidate.sources
-        .map(normalizeWebSearchPreviewSource)
-        .filter((source): source is RunnerWebSearchPreviewSource => Boolean(source))
-    : [];
-  const images = Array.isArray(candidate.images)
-    ? candidate.images
-        .map(normalizeWebSearchPreviewImage)
-        .filter((image): image is RunnerWebSearchPreviewImage => Boolean(image))
-    : [];
-  const summary = typeof candidate.summary === "string" && candidate.summary.trim() ? candidate.summary : null;
-  const rawJsonText = typeof candidate.rawJsonText === "string" ? candidate.rawJsonText : "";
-  const errorMessage = typeof candidate.errorMessage === "string" ? candidate.errorMessage : "";
-  if (sources.length === 0 && images.length === 0 && !summary && !rawJsonText && !errorMessage) {
-    return undefined;
-  }
-  return {
-    query: typeof candidate.query === "string" && candidate.query.trim() ? candidate.query.trim() : null,
-    summary,
-    sources,
-    images,
-    rawJsonText,
-    isError: candidate.isError === true,
-    errorMessage,
-  };
-}
-
-function normalizeMediaGenerationPromptPreviewData(value: unknown): RunnerMediaGenerationPromptPreviewData | undefined {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return undefined;
-  }
-  const candidate = value as {
-    title?: unknown;
-    prompt?: unknown;
-  };
-  const prompt = typeof candidate.prompt === "string" && candidate.prompt.trim()
-    ? candidate.prompt.trim()
-    : "";
-  if (!prompt) {
-    return undefined;
-  }
-  return {
-    title: typeof candidate.title === "string" && candidate.title.trim()
-      ? candidate.title.trim()
-      : "Generation Prompt",
-    prompt,
-  };
-}
-
-function normalizeTurnAttachment(value: unknown, backendUrl?: string): RunnerTurnAttachment | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return null;
-  }
-  const candidate = value as {
-    id?: unknown;
-    filename?: unknown;
-    name?: unknown;
-    mimeType?: unknown;
-    type?: unknown;
-    uploadStatus?: unknown;
-    url?: unknown;
-    previewUrl?: unknown;
-    htmlPreviewUrl?: unknown;
-    htmlSandbox?: unknown;
-    environmentId?: unknown;
-    workspacePath?: unknown;
-    sourcePath?: unknown;
-    gcsPath?: unknown;
-    integrationSource?: unknown;
-    githubRepoFullName?: unknown;
-    githubRef?: unknown;
-    githubItemPath?: unknown;
-    githubSelectionType?: unknown;
-    hiddenFromTurnDisplay?: unknown;
-    runnerAttachmentRole?: unknown;
-    purpose?: unknown;
-    previewKindOverride?: unknown;
-    imageGenerationPromptPreview?: unknown;
-    imageUnderstandingPreview?: unknown;
-    webSearchPreview?: unknown;
-    videoGenerationPromptPreview?: unknown;
-  };
-  if (isRunnerTurnDisplayHiddenAttachment(candidate)) {
-    return null;
-  }
-  const attachmentId = typeof candidate.id === "string" && candidate.id.trim() ? candidate.id.trim() : generateId("att");
-  const filename =
-    typeof candidate.filename === "string" && candidate.filename.trim()
-      ? candidate.filename.trim()
-      : typeof candidate.name === "string" && candidate.name.trim()
-        ? candidate.name.trim()
-        : "";
-  if (!filename) {
-    return null;
-  }
-  const mimeType = typeof candidate.mimeType === "string" && candidate.mimeType.trim() ? candidate.mimeType.trim() : "application/octet-stream";
-  const type: RunnerAttachment["type"] =
-    candidate.type === "image" || candidate.type === "document"
-      ? candidate.type
-      : attachmentTypeForFile(mimeType, filename);
-  const url = resolveAttachmentAssetUrl(typeof candidate.url === "string" ? candidate.url : undefined, backendUrl, attachmentId);
-  const previewUrl = type === "image"
-    ? resolveAttachmentAssetUrl(
-        typeof candidate.previewUrl === "string" ? candidate.previewUrl : typeof candidate.url === "string" ? candidate.url : undefined,
-        backendUrl,
-        attachmentId
-      )
-    : undefined;
-  const environmentId = typeof candidate.environmentId === "string" && candidate.environmentId.trim()
-    ? candidate.environmentId.trim()
-    : undefined;
-  const workspacePath = typeof candidate.workspacePath === "string" && candidate.workspacePath.trim()
-    ? normalizeRunnerPreviewWorkspacePath(candidate.workspacePath)
-    : typeof candidate.sourcePath === "string" && candidate.sourcePath.trim()
-      ? normalizeRunnerPreviewWorkspacePath(candidate.sourcePath)
-      : undefined;
-  const explicitHtmlPreviewUrl = typeof candidate.htmlPreviewUrl === "string" && candidate.htmlPreviewUrl.trim()
-    ? resolveAttachmentAssetUrl(candidate.htmlPreviewUrl, backendUrl, attachmentId)
-    : undefined;
-  const threadHtmlPreviewUrl = buildRunnerPreviewHtmlPreviewUrlFromDownloadUrl(
-    typeof candidate.previewUrl === "string" && candidate.previewUrl.trim()
-      ? candidate.previewUrl
-      : typeof candidate.url === "string"
-        ? candidate.url
-        : undefined,
-    filename,
-    mimeType
-  );
-  const environmentHtmlPreviewUrl = isRunnerPreviewHtmlFile(filename, mimeType) && environmentId && workspacePath
-    ? buildRunnerPreviewHtmlPreviewUrl(backendUrl, environmentId, workspacePath) || undefined
-    : undefined;
-  const htmlPreviewUrl = explicitHtmlPreviewUrl
-    || resolveAttachmentAssetUrl(threadHtmlPreviewUrl, backendUrl, attachmentId)
-    || environmentHtmlPreviewUrl;
-  const imageUnderstandingPreview = candidate.previewKindOverride === "image-understanding"
-    ? normalizeImageUnderstandingPreviewData(candidate.imageUnderstandingPreview, backendUrl, attachmentId)
-    : undefined;
-  const webSearchPreview = candidate.previewKindOverride === "web-search"
-    ? normalizeWebSearchPreviewData(candidate.webSearchPreview)
-    : undefined;
-  const imageGenerationPromptPreview = candidate.previewKindOverride === "image-generation-prompt"
-    ? normalizeMediaGenerationPromptPreviewData(candidate.imageGenerationPromptPreview)
-    : undefined;
-  const videoGenerationPromptPreview = candidate.previewKindOverride === "video-generation-prompt"
-    ? normalizeMediaGenerationPromptPreviewData(candidate.videoGenerationPromptPreview)
-    : undefined;
-  return {
-    id: attachmentId,
-    filename,
-    mimeType,
-    type,
-    uploadStatus:
-      candidate.uploadStatus === "idle" ||
-      candidate.uploadStatus === "uploading" ||
-      candidate.uploadStatus === "uploaded" ||
-      candidate.uploadStatus === "failed"
-        ? candidate.uploadStatus
-        : undefined,
-    runnerAttachmentRole:
-      typeof candidate.runnerAttachmentRole === "string" && candidate.runnerAttachmentRole.trim()
-        ? candidate.runnerAttachmentRole.trim()
-        : undefined,
-    url,
-    previewUrl,
-    htmlPreviewUrl,
-    htmlSandbox:
-      typeof candidate.htmlSandbox === "string"
-        ? candidate.htmlSandbox
-        : candidate.htmlSandbox === null
-          ? null
-          : undefined,
-    environmentId,
-    workspacePath,
-    gcsPath:
-      typeof candidate.gcsPath === "string" && candidate.gcsPath.trim()
-        ? candidate.gcsPath.trim()
-        : undefined,
-    integrationSource:
-      candidate.integrationSource === "google-drive" || candidate.integrationSource === "one-drive" || candidate.integrationSource === "github"
-        ? candidate.integrationSource
-        : undefined,
-    githubRepoFullName:
-      typeof candidate.githubRepoFullName === "string" && candidate.githubRepoFullName.trim()
-        ? candidate.githubRepoFullName.trim()
-        : undefined,
-    githubRef:
-      typeof candidate.githubRef === "string" && candidate.githubRef.trim()
-        ? candidate.githubRef.trim()
-        : candidate.githubRef === null
-          ? null
-          : undefined,
-    githubItemPath:
-      typeof candidate.githubItemPath === "string" && candidate.githubItemPath.trim()
-        ? candidate.githubItemPath.trim()
-        : undefined,
-    githubSelectionType: candidate.githubSelectionType === "repo" || candidate.githubSelectionType === "file"
-      ? candidate.githubSelectionType
-      : undefined,
-    previewKindOverride: imageUnderstandingPreview
-      ? "image-understanding"
-      : webSearchPreview
-        ? "web-search"
-        : imageGenerationPromptPreview
-          ? "image-generation-prompt"
-          : videoGenerationPromptPreview
-            ? "video-generation-prompt"
-            : undefined,
-    imageGenerationPromptPreview,
-    imageUnderstandingPreview,
-    webSearchPreview,
-    videoGenerationPromptPreview,
-  };
-}
-
-function normalizeTurnAttachments(value: unknown, backendUrl?: string): RunnerTurnAttachment[] | null {
-  if (!Array.isArray(value)) {
-    return null;
-  }
-  const normalized = value
-    .map((entry) => normalizeTurnAttachment(entry, backendUrl))
-    .filter((attachment): attachment is RunnerTurnAttachment => Boolean(attachment));
-  return normalized.length > 0 ? normalized : null;
-}
-
-function buildTurnAttachmentsFromRunnerAttachments(
-  attachments: RunnerAttachment[] | undefined,
-  backendUrl?: string
-): RunnerTurnAttachment[] | null {
-  if (!attachments || attachments.length === 0) {
-    return null;
-  }
-  return normalizeTurnAttachments(attachments, backendUrl);
-}
-
-function buildTurnAttachmentsFromLocalAttachments(attachments: LocalAttachment[]): RunnerTurnAttachment[] | null {
-  const visibleAttachments = attachments.filter((attachment) => !isRunnerTurnDisplayHiddenAttachment(attachment));
-  if (visibleAttachments.length === 0) {
-    return null;
-  }
-  return visibleAttachments.map((attachment) => ({
-    id: attachment.id,
-    filename: attachment.file.name,
-    mimeType: attachment.file.type || "application/octet-stream",
-    type: attachment.type,
-    previewUrl: attachment.previewUrl,
-    integrationSource: attachment.integrationSource,
-    githubRepoFullName: attachment.githubRepoFullName,
-    githubRef: attachment.githubRef,
-    githubItemPath: attachment.githubItemPath,
-    githubSelectionType: attachment.githubSelectionType,
-    uploadStatus: attachment.uploadStatus,
-    runnerAttachmentRole: attachment.runnerAttachmentRole,
-  }));
-}
-
-function turnAttachmentMatchKey(filename: string, mimeType: string, type: RunnerAttachment["type"]): string {
-  return `${filename}\u0000${mimeType}\u0000${type}`;
-}
-
-function isRunnerTurnDisplayHiddenAttachment(value: unknown): boolean {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-  const candidate = value as {
-    file?: File;
-    filename?: unknown;
-    name?: unknown;
-    mimeType?: unknown;
-    hiddenFromTurnDisplay?: unknown;
-    runnerAttachmentRole?: unknown;
-    purpose?: unknown;
-  };
-  if (candidate.hiddenFromTurnDisplay === true) {
-    return true;
-  }
-  const role = String(candidate.runnerAttachmentRole || candidate.purpose || "").trim().toLowerCase();
-  if (role === "image_edit_mask" || role === "image-edit-mask") {
-    return true;
-  }
-  const filename = String(
-    typeof candidate.filename === "string"
-      ? candidate.filename
-      : typeof candidate.name === "string"
-        ? candidate.name
-        : candidate.file?.name || ""
-  ).trim().toLowerCase();
-  const mimeType = String(
-    typeof candidate.mimeType === "string"
-      ? candidate.mimeType
-      : candidate.file?.type || ""
-  ).trim().toLowerCase();
-  return filename.endsWith("-selected-region-mask.png") && (!mimeType || mimeType === "image/png");
-}
-
-function isRunnerEmailContextAttachment(value: unknown): boolean {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-  const candidate = value as Record<string, unknown>;
-  const file = candidate.file && typeof candidate.file === "object"
-    ? candidate.file as Record<string, unknown>
-    : null;
-  const metadata = candidate.metadata && typeof candidate.metadata === "object"
-    ? candidate.metadata as Record<string, unknown>
-    : null;
-  const strings: string[] = [];
-  const addString = (entry: unknown) => {
-    if (typeof entry === "string" && entry.trim()) {
-      strings.push(entry.trim().toLowerCase());
-    }
-  };
-  [
-    candidate.runnerAttachmentRole,
-    candidate.purpose,
-    candidate.attachmentRole,
-    candidate.contextType,
-    candidate.sourceType,
-    candidate.workspacePath,
-    candidate.sourcePath,
-    candidate.gcsPath,
-    candidate.filename,
-    candidate.name,
-    file?.name,
-    file?.type,
-    metadata?.runnerAttachmentRole,
-    metadata?.purpose,
-    metadata?.attachmentRole,
-    metadata?.contextType,
-    metadata?.sourceType,
-    metadata?.workspacePath,
-    metadata?.sourcePath,
-    metadata?.gcsPath,
-  ].forEach(addString);
-
-  const roleMatch = strings.some((entry) =>
-    entry === "email_context" ||
-    entry === "email-context" ||
-    entry === "email history" ||
-    entry === "email_history" ||
-    entry === "forwarded_email" ||
-    entry === "forwarded-email" ||
-    entry === "forwarded_email_context" ||
-    entry === "forwarded-email-context"
-  );
-  if (roleMatch) {
-    return true;
-  }
-  const filename = String(
-    typeof candidate.filename === "string"
-      ? candidate.filename
-      : typeof candidate.name === "string"
-        ? candidate.name
-        : file?.name || ""
-  ).trim().toLowerCase();
-  const mimeType = String(
-    typeof candidate.mimeType === "string"
-      ? candidate.mimeType
-      : file?.type || ""
-  ).trim().toLowerCase();
-  const looksLikeGeneratedEmailContextHtml =
-    /^\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}-.+\.html$/.test(filename) &&
-    (!mimeType || mimeType === "text/html" || mimeType === "application/html");
-  if (looksLikeGeneratedEmailContextHtml) {
-    return true;
-  }
-  return strings.some((entry) =>
-    entry.includes("/workspace/email/") ||
-    entry.includes("/email/") && entry.endsWith(".html")
-  );
-}
-
-function buildTurnAttachmentsForExecution(
-  attachmentEntries: LocalAttachment[],
-  resolvedAttachments: RunnerAttachment[] | undefined,
-  backendUrl?: string
-): RunnerTurnAttachment[] | null {
-  const localTurnAttachments = buildTurnAttachmentsFromLocalAttachments(attachmentEntries);
-  const hiddenDisplayKeys = new Set(
-    attachmentEntries
-      .filter((attachment) => isRunnerTurnDisplayHiddenAttachment(attachment))
-      .map((attachment) => turnAttachmentMatchKey(
-        attachment.file.name,
-        attachment.file.type || "application/octet-stream",
-        attachment.type
-      ))
-  );
-  const resolvedTurnAttachments = (buildTurnAttachmentsFromRunnerAttachments(resolvedAttachments, backendUrl) || [])
-    .filter((attachment) => !hiddenDisplayKeys.has(turnAttachmentMatchKey(attachment.filename, attachment.mimeType, attachment.type)));
-  const visibleResolvedTurnAttachments = resolvedTurnAttachments.length ? resolvedTurnAttachments : null;
-
-  if (!visibleResolvedTurnAttachments || visibleResolvedTurnAttachments.length === 0) {
-    return localTurnAttachments;
-  }
-  if (!localTurnAttachments || localTurnAttachments.length === 0) {
-    return visibleResolvedTurnAttachments;
-  }
-
-  const resolvedBuckets = new Map<string, RunnerTurnAttachment[]>();
-  for (const attachment of visibleResolvedTurnAttachments) {
-    const key = turnAttachmentMatchKey(attachment.filename, attachment.mimeType, attachment.type);
-    const bucket = resolvedBuckets.get(key);
-    if (bucket) {
-      bucket.push(attachment);
-    } else {
-      resolvedBuckets.set(key, [attachment]);
-    }
-  }
-
-  const merged = localTurnAttachments.map((attachment) => {
-    const key = turnAttachmentMatchKey(attachment.filename, attachment.mimeType, attachment.type);
-    const bucket = resolvedBuckets.get(key);
-    const resolvedAttachment = bucket?.shift();
-    if (!resolvedAttachment) {
-      return attachment;
-    }
-    if (attachment.type === "image" && attachment.previewUrl) {
-      return {
-        ...resolvedAttachment,
-        previewUrl: attachment.previewUrl,
-      };
-    }
-    return resolvedAttachment;
-  });
-
-  for (const bucket of resolvedBuckets.values()) {
-    merged.push(...bucket);
-  }
-
-  return merged;
-}
-
-function pickTurnAttachments(
-  preferred?: RunnerTurnAttachment[] | null,
-  fallback?: RunnerTurnAttachment[] | null
-): RunnerTurnAttachment[] | null {
-  if (preferred && preferred.length > 0) {
-    return preferred;
-  }
-  if (fallback && fallback.length > 0) {
-    return fallback;
-  }
-  return null;
-}
-
-function mergeRunnerTurnAttachments(
-  ...attachmentLists: Array<RunnerTurnAttachment[] | null | undefined>
-): RunnerTurnAttachment[] | null {
-  const merged: RunnerTurnAttachment[] = [];
-  const seen = new Set<string>();
-  for (const attachmentList of attachmentLists) {
-    if (!attachmentList || attachmentList.length === 0) {
-      continue;
-    }
-    for (const attachment of attachmentList) {
-      const key = [
-        attachment.id,
-        attachment.workspacePath,
-        attachment.url,
-        attachment.previewUrl,
-        attachment.filename,
-        attachment.mimeType,
-      ].map((value) => String(value || "")).join("\u0000");
-      if (seen.has(key)) {
-        continue;
-      }
-      seen.add(key);
-      merged.push(attachment);
-    }
-  }
-  return merged.length > 0 ? merged : null;
-}
-
-function mergeRunnerAttachments(
-  ...attachmentLists: Array<RunnerAttachment[] | null | undefined>
-): RunnerAttachment[] | undefined {
-  const merged: RunnerAttachment[] = [];
-  const seen = new Set<string>();
-  for (const attachmentList of attachmentLists) {
-    if (!attachmentList || attachmentList.length === 0) {
-      continue;
-    }
-    for (const attachment of attachmentList) {
-      const key = [
-        attachment.id,
-        attachment.workspacePath,
-        attachment.url,
-        attachment.filename,
-        attachment.mimeType,
-      ].map((value) => String(value || "")).join("\u0000");
-      if (seen.has(key)) {
-        continue;
-      }
-      seen.add(key);
-      merged.push(attachment);
-    }
-  }
-  return merged.length > 0 ? merged : undefined;
-}
-
-function isRunnerImagePreviewAttachment(
-  attachment?: RunnerPreviewAttachment | null
-): attachment is RunnerPreviewAttachment {
-  if (!attachment) {
-    return false;
-  }
-  const mimeType = String(attachment.mimeType || "").toLowerCase();
-  return attachment.type === "image" || mimeType.startsWith("image/");
-}
-
-function buildRunnerAttachmentFromPreviewAttachment(
-  attachment?: RunnerPreviewAttachment | null
-): RunnerAttachment | null {
-  if (!isRunnerImagePreviewAttachment(attachment)) {
-    return null;
-  }
-  const filename = String(attachment.filename || "image").trim() || "image";
-  const mimeType = String(attachment.mimeType || "image/png").trim() || "image/png";
-  const url = String(attachment.url || attachment.previewUrl || "").trim();
-  return {
-    id: String(attachment.id || attachment.workspacePath || filename),
-    filename,
-    mimeType,
-    size: Number((attachment as RunnerAttachment).size || 0),
-    type: "image",
-    uploadedAt: String((attachment as RunnerAttachment).uploadedAt || new Date().toISOString()),
-    ...(url ? { url } : {}),
-    ...(attachment.previewUrl ? { previewUrl: attachment.previewUrl } : {}),
-    ...(attachment.workspacePath ? { workspacePath: attachment.workspacePath } : {}),
-    ...(attachment.environmentId ? { environmentId: attachment.environmentId } : {}),
-    ...(attachment.integrationSource ? { integrationSource: attachment.integrationSource } : {}),
-    ...(attachment.githubRepoFullName ? { githubRepoFullName: attachment.githubRepoFullName } : {}),
-    ...(attachment.githubRef !== undefined ? { githubRef: attachment.githubRef } : {}),
-    ...(attachment.githubItemPath ? { githubItemPath: attachment.githubItemPath } : {}),
-    ...(attachment.githubSelectionType ? { githubSelectionType: attachment.githubSelectionType } : {}),
-  };
-}
-
-function drawRunnerImageSelectionMaskStroke(
-  ctx: CanvasRenderingContext2D,
-  stroke: RunnerImageMaskStroke
-) {
-  const points = Array.isArray(stroke.points) ? stroke.points : [];
-  if (!points.length) {
-    return;
-  }
-  const lineWidth = Math.max(2, Number(stroke.brushSize || 1));
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  ctx.lineWidth = lineWidth;
-  ctx.strokeStyle = "rgba(0, 0, 0, 1)";
-  ctx.fillStyle = "rgba(0, 0, 0, 1)";
-  if (points.length === 1) {
-    const point = points[0];
-    ctx.beginPath();
-    ctx.arc(Number(point?.x || 0), Number(point?.y || 0), lineWidth / 2, 0, Math.PI * 2);
-    ctx.fill();
-    return;
-  }
-  ctx.beginPath();
-  ctx.moveTo(Number(points[0]?.x || 0), Number(points[0]?.y || 0));
-  for (let index = 1; index < points.length; index += 1) {
-    ctx.lineTo(Number(points[index]?.x || 0), Number(points[index]?.y || 0));
-  }
-  ctx.stroke();
-}
-
-function createRunnerImageSelectionMaskFile(
-  selection: RunnerImagePreviewSelectionState,
-  sourceAttachment: RunnerAttachment
-): Promise<File | null> {
-  return new Promise((resolve, reject) => {
-    const width = Math.round(Number(selection.naturalSize?.width || 0));
-    const height = Math.round(Number(selection.naturalSize?.height || 0));
-    const strokes = Array.isArray(selection.strokes) ? selection.strokes : [];
-    if (!width || !height || !strokes.length || typeof document === "undefined" || typeof globalThis.File !== "function") {
-      resolve(null);
-      return;
-    }
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) {
-      resolve(null);
-      return;
-    }
-    ctx.fillStyle = "rgba(0, 0, 0, 1)";
-    ctx.fillRect(0, 0, width, height);
-    ctx.globalCompositeOperation = "destination-out";
-    strokes.forEach((stroke) => drawRunnerImageSelectionMaskStroke(ctx, stroke));
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        reject(new Error("Failed to create image edit mask."));
-        return;
-      }
-      const rawBaseName = String(sourceAttachment.filename || "image");
-      const lastDotIndex = rawBaseName.lastIndexOf(".");
-      const baseNameWithoutExtension = lastDotIndex > 0 ? rawBaseName.slice(0, lastDotIndex) : rawBaseName;
-      const normalizedBaseName = baseNameWithoutExtension
-        .replace(/[^a-zA-Z0-9._-]+/g, "_")
-        .replace(/^_+|_+$/g, "")
-        || "image";
-      resolve(new globalThis.File([blob], `${normalizedBaseName}-selected-region-mask.png`, { type: "image/png" }));
-    }, "image/png");
-  });
-}
-
-function buildRunnerImageSelectionInpaintPrompt(
-  sourceAttachment: RunnerAttachment,
-  maskFilename: string
-): string {
-  const sourceWorkspacePath = normalizeRunnerPreviewWorkspacePath(sourceAttachment.workspacePath);
-  return [
-    "<system>",
-    "The user painted a selected region on the source image before submitting this prompt.",
-    "Treat the request as an image editing/inpainting task and use the Image Generation skill.",
-    "Use the source image with --input and the selected-region mask with --mask.",
-    "Source image filename: " + String(sourceAttachment.filename || "image").trim(),
-    sourceWorkspacePath ? "Source image workspace path: /workspace/" + sourceWorkspacePath : "",
-    maskFilename ? "Mask attachment filename: " + maskFilename : "",
-    maskFilename ? "The mask attachment is available in the thread attachments alongside the source image." : "",
-    "The mask is an OpenAI edit mask: transparent pixels mark exactly the selected area to change, and opaque pixels must be preserved.",
-    "Only change the masked region. Preserve everything outside the selected region unless the user explicitly asks otherwise.",
-    "</system>",
-  ].filter(Boolean).join("\n");
-}
-
-function requiresAuthenticatedAttachmentPreview(url: string | undefined, backendUrl?: string): boolean {
-  if (!url) {
-    return false;
-  }
-  const normalizedUrl = url.trim();
-  if (!normalizedUrl) {
-    return false;
-  }
-  const normalizedBackendUrl = backendUrl ? sanitizeBackendUrl(backendUrl) : "";
-  const normalizedPath = normalizedUrl.replace(/^https?:\/\/[^/]+/i, "");
-  const isEnvironmentDownload = /(?:^|\/)(?:api\/)?environments\/[^/]+\/files\/download\//.test(normalizedPath);
-  return (
-    normalizedUrl.startsWith("/attachments/") ||
-    normalizedUrl.startsWith("/api/attachments/") ||
-    normalizedUrl.startsWith("/api/real/attachments/") ||
-    isEnvironmentDownload ||
-    (normalizedBackendUrl ? normalizedUrl.startsWith(`${normalizedBackendUrl}/attachments/`) : false)
-  );
-}
-
-function selectionNodeToElement(node: Node | null): Element | null {
-  if (!node) return null;
-  return node instanceof Element ? node : node.parentElement;
-}
-
-function findQuotedSelectionContainer(node: Node | null, root: HTMLElement | null): HTMLElement | null {
-  const element = selectionNodeToElement(node);
-  if (!element || !root) {
-    return null;
-  }
-  const container = element.closest(".agent-step-content, .tb-turn-summary, .tb-btw-turn-response");
-  if (!container || !root.contains(container)) {
-    return null;
-  }
-  if (element.closest(".tb-user-turn-shell, .tb-input-shell, .tb-selection-popup")) {
-    return null;
-  }
-  return container as HTMLElement;
-}
-
-function getQuotedSelectionSourceType(container: HTMLElement): RunnerQuotedSelectionSource {
-  return container.matches(".tb-turn-summary, .tb-btw-turn-response") ? "run_summary" : "working_log";
-}
-
-function getTurnAssistantMessageText(turn: RunnerTurn): string {
-  return turn.logs
-    .filter((log) => log.eventType === "agent_message" || log.eventType === "llm_response")
-    .map((log) => stripSystemTags(log.message || "").trim())
-    .filter(Boolean)
-    .join("\n\n")
-    .trim();
-}
-
-function runnerLogHasMetronomeWorkflowPromptReplacement(log: RunnerLog): boolean {
-  if (log.eventType !== "metronome_workflow" && !log.metadata?.metronomeWorkflow) {
-    return false;
-  }
-  const workflow = log.metadata?.metronomeWorkflow && typeof log.metadata.metronomeWorkflow === "object"
-    ? log.metadata.metronomeWorkflow as Record<string, unknown>
-    : null;
-  if (!workflow) {
-    return false;
-  }
-  if (workflow.displayAsPrompt === true) {
-    return true;
-  }
-  const status = String(workflow.status || log.metadata?.status || "").trim().toLowerCase();
-  const triggerCommand = String(workflow.triggerCommand || "").trim();
-  const triggerEventId = String(workflow.triggerEventId || "").trim();
-  const definitionSource = String(workflow.definitionSource || "").trim();
-  return status === "running" && !triggerCommand && !triggerEventId && !definitionSource;
-}
-
-function buildRunnerMetronomeWorkflowRunPayload(
-  log: RunnerLog,
-  threadId: string,
-  context?: {
-    userMessage?: string;
-    attachments?: RunnerAttachment[] | null;
-  }
-): RunnerChatMetronomeWorkflowRunPayload | null {
-  if (log.eventType !== "metronome_workflow" && !log.metadata?.metronomeWorkflow) {
-    return null;
-  }
-  const workflow = log.metadata?.metronomeWorkflow && typeof log.metadata.metronomeWorkflow === "object"
-    ? log.metadata.metronomeWorkflow as Record<string, unknown>
-    : null;
-  if (!workflow) {
-    return null;
-  }
-  const workflowId = String(workflow.metronomeId || workflow.workflowId || workflow.id || "").trim();
-  const runId = String(workflow.runId || workflow.workflowRunId || "").trim();
-  if (!workflowId || !runId) {
-    return null;
-  }
-  const nodeId = String(workflow.nodeId || workflow.node_id || "").trim();
-  const triggerCommand = String(workflow.triggerCommand || "").trim();
-  const triggerEventId = String(workflow.triggerEventId || "").trim();
-  const definitionSource = String(workflow.definitionSource || "").trim().toLowerCase();
-  const source = String(workflow.source || "").trim().toLowerCase();
-  const isOriginThread = workflow.isOriginThread === true || workflow.is_origin_thread === true;
-  const isExplicitNodeThread = Boolean(nodeId) || workflow.isOriginThread === false || workflow.is_origin_thread === false;
-  const hasThreadTriggerMarker = Boolean(
-    triggerCommand ||
-    triggerEventId ||
-    definitionSource === "thread" ||
-    definitionSource === "thread_event" ||
-    source === "thread_event" ||
-    isOriginThread
-  );
-  if (isExplicitNodeThread || !hasThreadTriggerMarker) {
-    return null;
-  }
-  return {
-    threadId: String(threadId || "").trim(),
-    workflowId,
-    runId,
-    workflowName: String(workflow.metronomeName || workflow.workflowName || workflow.name || "Metronome").trim() || "Metronome",
-    status: String(workflow.status || log.metadata?.status || "running").trim() || "running",
-    triggerCommand: triggerCommand || undefined,
-    triggerEventId: triggerEventId || undefined,
-    originThreadId: String(workflow.originThreadId || "").trim() || undefined,
-    sourceThreadId: String(workflow.sourceThreadId || "").trim() || undefined,
-    triggerThreadId: String(workflow.triggerThreadId || "").trim() || undefined,
-    nodeId: nodeId || undefined,
-    isOriginThread: isOriginThread || undefined,
-    userMessage: String(workflow.userMessage || workflow.displayMessage || workflow.inputPrompt || context?.userMessage || "").trim() || undefined,
-    activeNodeId: String(workflow.activeNodeId || "").trim() || undefined,
-    activeEdgeId: String(workflow.activeEdgeId || "").trim() || undefined,
-    workflowMap: workflow.workflowMap,
-    attachments: Array.isArray(context?.attachments) ? context.attachments : undefined,
-    log,
-  };
-}
-
-function turnHasMetronomeWorkflowPromptReplacement(turn: RunnerTurn): boolean {
-  return turn.logs.some(runnerLogHasMetronomeWorkflowPromptReplacement);
-}
-
-function turnPresentation(turn: RunnerTurn): RunnerTurn["presentation"] {
-  if (turn.presentation) return turn.presentation;
-  return isBtwTurnPrompt(turn.prompt) ? "btw" : "default";
-}
-
-function turnsLikelyMatch(localTurn: RunnerTurn, hydratedTurn: RunnerTurn): boolean {
-  const localPresentation = turnPresentation(localTurn);
-  const hydratedPresentation = turnPresentation(hydratedTurn);
-  const localPrompt = normalizeTurnPrompt(localTurn.prompt);
-  const hydratedPrompt = normalizeTurnPrompt(hydratedTurn.prompt);
-  const localAssistantText = normalizeTurnPrompt(getTurnAssistantMessageText(localTurn));
-  const hydratedAssistantText = normalizeTurnPrompt(getTurnAssistantMessageText(hydratedTurn));
-  const localTimelineCount = localTurn.logs.filter(shouldDisplayTimelineLog).length;
-  const hydratedTimelineCount = hydratedTurn.logs.filter(shouldDisplayTimelineLog).length;
-  const localSourceMessageId =
-    typeof localTurn.sourceMessageId === "string" && localTurn.sourceMessageId.trim()
-      ? localTurn.sourceMessageId.trim()
-      : "";
-  const hydratedSourceMessageId =
-    typeof hydratedTurn.sourceMessageId === "string" && hydratedTurn.sourceMessageId.trim()
-      ? hydratedTurn.sourceMessageId.trim()
-      : "";
-
-  if (localPresentation === "btw" || hydratedPresentation === "btw") {
-    if (localPresentation !== "btw" || hydratedPresentation !== "btw") {
-      return false;
-    }
-    if (localPrompt && hydratedPrompt && localPrompt === hydratedPrompt) {
-      return true;
-    }
-    const localAssistantText = getTurnAssistantMessageText(localTurn);
-    const hydratedAssistantText = getTurnAssistantMessageText(hydratedTurn);
-    if (!localAssistantText || !hydratedAssistantText) {
-      return false;
-    }
-    return (
-      localAssistantText === hydratedAssistantText ||
-      localAssistantText.startsWith(hydratedAssistantText) ||
-      hydratedAssistantText.startsWith(localAssistantText)
-    );
-  }
-
-  if (localTurn.status === "queued" && localPrompt && hydratedPrompt) {
-    return localPrompt === hydratedPrompt;
-  }
-
-  if (localPresentation === "context-action-notice" || hydratedPresentation === "context-action-notice") {
-    const localActionType = localTurn.logs.find((log) => log.eventType === "action_summary")?.metadata?.actionType;
-    const hydratedActionType = hydratedTurn.logs.find((log) => log.eventType === "action_summary")?.metadata?.actionType;
-    return Boolean(localActionType && hydratedActionType && localActionType === hydratedActionType);
-  }
-
-  if (localSourceMessageId && hydratedSourceMessageId && localSourceMessageId === hydratedSourceMessageId) {
-    return true;
-  }
-
-  if (localPrompt && hydratedPrompt && localPrompt === hydratedPrompt) {
-    const localRawAssistantText = getTurnAssistantMessageText(localTurn);
-    const hydratedRawAssistantText = getTurnAssistantMessageText(hydratedTurn);
-    if (!localRawAssistantText || !hydratedRawAssistantText) {
-      return true;
-    }
-    return (
-      localRawAssistantText === hydratedRawAssistantText ||
-      localRawAssistantText.startsWith(hydratedRawAssistantText) ||
-        hydratedRawAssistantText.startsWith(localRawAssistantText)
-    );
-  }
-
-  const oneSideMissingPrompt = (!localPrompt && hydratedPrompt) || (localPrompt && !hydratedPrompt);
-  if (oneSideMissingPrompt) {
-    const startedAtDeltaMs = Math.abs((localTurn.startedAtMs || 0) - (hydratedTurn.startedAtMs || 0));
-    if (startedAtDeltaMs <= 60_000) {
-      if (localAssistantText && hydratedAssistantText) {
-        const assistantResponseMatches =
-          localAssistantText === hydratedAssistantText ||
-          localAssistantText.startsWith(hydratedAssistantText) ||
-          hydratedAssistantText.startsWith(localAssistantText);
-        if (assistantResponseMatches) {
-          return true;
-        }
-      }
-
-      const localHasPrompt = localPrompt.length > 0;
-      const hydratedHasPrompt = hydratedPrompt.length > 0;
-      const localHasTimeline = localTimelineCount > 0;
-      const hydratedHasTimeline = hydratedTimelineCount > 0;
-      const promptAndTimelineComplement =
-        (localHasPrompt && !localHasTimeline && hydratedHasTimeline) ||
-        (hydratedHasPrompt && !hydratedHasTimeline && localHasTimeline) ||
-        (localHasPrompt && hydratedHasTimeline) ||
-        (hydratedHasPrompt && localHasTimeline);
-      if (promptAndTimelineComplement) {
-        return true;
-      }
-    }
-  }
-
-  if (!localPrompt && !hydratedPrompt) {
-    const localHasTimeline = localTimelineCount > 0;
-    const hydratedHasTimeline = hydratedTimelineCount > 0;
-    const localHasResponse = localAssistantText.length > 0;
-    const hydratedHasResponse = hydratedAssistantText.length > 0;
-    const oneSideIsTimelineHeavy =
-      (localHasTimeline && !hydratedHasTimeline && hydratedHasResponse) ||
-      (hydratedHasTimeline && !localHasTimeline && localHasResponse);
-
-    if (oneSideIsTimelineHeavy) {
-      const startedAtDeltaMs = Math.abs((localTurn.startedAtMs || 0) - (hydratedTurn.startedAtMs || 0));
-      if (startedAtDeltaMs <= 60_000) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
-
-function isTerminalTurnStatus(status: RunnerTurnStatus): boolean {
-  return status === "completed" || status === "failed" || status === "cancelled";
-}
-
-function isRunningTurnStatus(status: RunnerTurnStatus): boolean {
-  return status === "running";
-}
-
-function isActiveTurnStatus(status: RunnerTurnStatus): boolean {
-  return status === "running" || status === "permission_asked";
-}
-
-function getTurnLatestProgressTimestampMs(turn: RunnerTurn): number {
-  let latestTimestampMs = turn.completedAtMs ?? turn.startedAtMs;
-
-  for (const log of turn.logs) {
-    const createdAtMs = parseIsoTimestampMs(log.createdAt);
-    if (createdAtMs !== null) {
-      latestTimestampMs = Math.max(latestTimestampMs, createdAtMs);
-      continue;
-    }
-
-    const absoluteTimestampMs = parseIsoTimestampMs(log.time);
-    if (absoluteTimestampMs !== null) {
-      latestTimestampMs = Math.max(latestTimestampMs, absoluteTimestampMs);
-      continue;
-    }
-
-    const relativeSeconds = log.time ? parseSecondsFromClock(log.time) : null;
-    if (relativeSeconds !== null) {
-      latestTimestampMs = Math.max(latestTimestampMs, turn.startedAtMs + relativeSeconds * 1000);
-    }
-  }
-
-  return latestTimestampMs;
-}
-
-function turnHasVisibleExecutionProgress(turn: RunnerTurn): boolean {
-  if (turn.logs.length > 0) {
-    return true;
-  }
-  return getTurnAssistantMessageText(turn).trim().length > 0;
-}
-
-function stringifyRunnerLogField(value: unknown): string {
-  if (typeof value === "string") {
-    return value;
-  }
-  if (value == null) {
-    return "";
-  }
-  try {
-    return JSON.stringify(value);
-  } catch {
-    return "";
-  }
-}
-
-function runnerLogHasVisualBrowserScreenshot(log: RunnerLog): boolean {
-  if (log.eventType === "command_execution") {
-    const command = String(log.metadata?.command || log.message || "");
-    if (!isBrowserSkillCommand(command)) {
-      return false;
-    }
-    const output = `${String(log.metadata?.output || "")}\n${String(log.message || "")}`;
-    return /BROWSER_SKILL_RESULT::/.test(output) && /screenshotPaths?|browser-skill\/[^\s"'<>]+\.(?:png|jpe?g|webp)/i.test(output);
-  }
-
-  if (isComputerUseMcpLog(log)) {
-    const resultText = stringifyRunnerLogField(log.metadata?.result || log.message);
-    return /COMPUTER_USE_RESULT::/.test(resultText) && /screenshotPaths?|tmp\/computer-use\/[^\s"'<>]+\.(?:png|jpe?g|webp)/i.test(resultText);
-  }
-
-  return false;
-}
-
-function countTurnVisualBrowserScreenshotLogs(turn: RunnerTurn): number {
-  return turn.logs.reduce((count, log) => count + (runnerLogHasVisualBrowserScreenshot(log) ? 1 : 0), 0);
-}
-
-function shouldPreserveLocalTurnProgress(localTurn: RunnerTurn, hydratedTurn: RunnerTurn): boolean {
-  const localAssistantText = getTurnAssistantMessageText(localTurn);
-  const hydratedAssistantText = getTurnAssistantMessageText(hydratedTurn);
-  if (
-    localAssistantText.trim().length > 0 &&
-    !isFallbackAssistantResponseText(localAssistantText) &&
-    isFallbackAssistantResponseText(hydratedAssistantText)
-  ) {
-    return true;
-  }
-
-  if (countTurnVisualBrowserScreenshotLogs(localTurn) > countTurnVisualBrowserScreenshotLogs(hydratedTurn)) {
-    return true;
-  }
-
-  const localIsTerminal = isTerminalTurnStatus(localTurn.status);
-  const hydratedIsTerminal = isTerminalTurnStatus(hydratedTurn.status);
-  if (localIsTerminal !== hydratedIsTerminal) {
-    if (!localIsTerminal) {
-      return false;
-    }
-
-    const localHasProgress = turnHasVisibleExecutionProgress(localTurn);
-    const hydratedHasProgress = turnHasVisibleExecutionProgress(hydratedTurn);
-
-    if (!localHasProgress) {
-      return false;
-    }
-
-    if (hydratedHasProgress) {
-      return false;
-    }
-
-    return true;
-  }
-
-  if (localTurn.logs.length !== hydratedTurn.logs.length) {
-    return localTurn.logs.length > hydratedTurn.logs.length;
-  }
-
-  const localAssistantTextLength = localAssistantText.length;
-  const hydratedAssistantTextLength = hydratedAssistantText.length;
-  if (localAssistantTextLength !== hydratedAssistantTextLength) {
-    return localAssistantTextLength > hydratedAssistantTextLength;
-  }
-
-  const localLastLogMessageLength = String(localTurn.logs[localTurn.logs.length - 1]?.message || "").length;
-  const hydratedLastLogMessageLength = String(hydratedTurn.logs[hydratedTurn.logs.length - 1]?.message || "").length;
-  if (localLastLogMessageLength !== hydratedLastLogMessageLength) {
-    return localLastLogMessageLength > hydratedLastLogMessageLength;
-  }
-
-  const localLatestProgressTimestampMs = getTurnLatestProgressTimestampMs(localTurn);
-  const hydratedLatestProgressTimestampMs = getTurnLatestProgressTimestampMs(hydratedTurn);
-  if (localLatestProgressTimestampMs !== hydratedLatestProgressTimestampMs) {
-    return localLatestProgressTimestampMs > hydratedLatestProgressTimestampMs;
-  }
-
-  return false;
-}
-
-function isTurnResponseLog(log: RunnerLog): boolean {
-  return log.eventType === "agent_message" || log.eventType === "llm_response";
-}
-
-function isFallbackAssistantResponseText(value: string): boolean {
-  const normalized = String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
-  return normalized === "[task executed - no detailed response captured]";
-}
-
-function replaceTurnResponseLogs(logs: RunnerLog[], nextResponseLogs: RunnerLog[]): RunnerLog[] {
-  if (nextResponseLogs.length === 0) {
-    return logs;
-  }
-
-  const nextLogs: RunnerLog[] = [];
-  let insertedResponseLogs = false;
-
-  for (const log of logs) {
-    if (isTurnResponseLog(log)) {
-      if (!insertedResponseLogs) {
-        nextLogs.push(...nextResponseLogs);
-        insertedResponseLogs = true;
-      }
-      continue;
-    }
-    nextLogs.push(log);
-  }
-
-  if (!insertedResponseLogs) {
-    nextLogs.push(...nextResponseLogs);
-  }
-
-  return nextLogs;
-}
-
-function getHydratedTimelineLogTimestampMs(log: RunnerLog, threadStartedAtMs?: number | null): number | null {
-  const absoluteTimestampMs = getRunnerLogAbsoluteTimestampMs(log);
-  if (absoluteTimestampMs !== null) {
-    return absoluteTimestampMs;
-  }
-  const relativeSeconds = log.time ? parseSecondsFromClock(log.time) : null;
-  if (relativeSeconds !== null && threadStartedAtMs != null) {
-    return threadStartedAtMs + relativeSeconds * 1000;
-  }
-  return null;
-}
-
-function insertHydratedTimelineLogs(
-  turn: RunnerTurn,
-  logs: RunnerLog[],
-  meta?: { threadStartedAtMs?: number | null }
-): RunnerTurn {
-  if (logs.length === 0) {
-    return turn;
-  }
-
-  const visibleLogs: RunnerLog[] = [];
-  let status = turn.status;
-  let completedAtMs = turn.completedAtMs;
-  let durationSeconds = turn.durationSeconds ?? null;
-
-  for (const log of logs) {
-    if (log.eventType === "turn_completed") {
-      visibleLogs.push(log);
-      const durationMs = typeof log.metadata?.durationMs === "number" ? log.metadata.durationMs : null;
-      if (durationMs !== null && durationMs >= 0) {
-        durationSeconds = Math.max(0, Math.round(durationMs / 1000));
-        completedAtMs = turn.startedAtMs + durationMs;
-      }
-      if (log.type === "error") {
-        status = "failed";
-      } else if (isActiveTurnStatus(status)) {
-        status = "completed";
-      }
-      continue;
-    }
-
-    visibleLogs.push(log);
-
-    if (log.eventType === "permission_request") {
-      const permissionStatus = String(log.metadata?.status || log.metadata?.decision || "").trim().toLowerCase();
-      if (!permissionStatus || permissionStatus === "pending") {
-        status = "permission_asked";
-        completedAtMs = undefined;
-      } else if (status === "permission_asked") {
-        status = "running";
-      }
-      continue;
-    }
-
-    if (log.type === "error") {
-      status = "failed";
-    }
-  }
-
-  const latestVisibleLogTimestampMs = visibleLogs.reduce<number | null>((latestTimestampMs, log) => {
-    const timestampMs = getRunnerLogTimestampMs(log, meta?.threadStartedAtMs ?? turn.startedAtMs);
-    if (timestampMs === null) {
-      return latestTimestampMs;
-    }
-    return latestTimestampMs === null ? timestampMs : Math.max(latestTimestampMs, timestampMs);
-  }, null);
-
-  if (
-    !isActiveTurnStatus(status) &&
-    latestVisibleLogTimestampMs !== null &&
-    (completedAtMs == null || completedAtMs <= turn.startedAtMs || latestVisibleLogTimestampMs > completedAtMs)
-  ) {
-    completedAtMs = latestVisibleLogTimestampMs;
-  }
-
-  if (
-    (durationSeconds == null || durationSeconds <= 0) &&
-    completedAtMs != null &&
-    Number.isFinite(turn.startedAtMs) &&
-    completedAtMs >= turn.startedAtMs
-  ) {
-    durationSeconds = Math.max(0, Math.round((completedAtMs - turn.startedAtMs) / 1000));
-  }
-
-  const responseIndex = turn.logs.findIndex(isTurnResponseLog);
-  const nextLogs =
-    responseIndex === -1
-      ? [...turn.logs, ...visibleLogs]
-      : [
-          ...turn.logs.slice(0, responseIndex),
-          ...visibleLogs,
-          ...turn.logs.slice(responseIndex),
-        ];
-
-  return {
-    ...turn,
-    logs: dedupeAdjacentRunnerLogs(nextLogs),
-    status,
-    completedAtMs,
-    durationSeconds,
-  };
-}
-
-function mergeHydratedTimelineLogsIntoMessageTurns(
-  turns: RunnerTurn[],
-  logs: RunnerLog[],
-  meta?: {
-    startedAtMs?: number | null;
-  }
-): RunnerTurn[] | null {
-  if (turns.length === 0 || logs.length === 0) {
-    return turns;
-  }
-
-  const timelineLogs = dedupeAdjacentRunnerLogs(
-    sortRunnerLogsChronologically(logs.map(normalizeHydratedLog))
-  ).filter((log) => {
-    if (log.eventType === "user_message" || (log as RunnerLog & { isUserMessage?: boolean }).isUserMessage) {
-      return false;
-    }
-    return !isTurnResponseLog(log);
-  });
-  if (timelineLogs.length === 0) {
-    return turns;
-  }
-
-  const assignableTurns = turns
-    .map((turn, index) => ({ turn, index }))
-    .filter(({ turn }) => turnPresentation(turn) !== "context-action-notice" && turn.prompt.trim().length > 0);
-
-  if (assignableTurns.length === 0) {
-    return null;
-  }
-
-  const logBuckets = new Map<number, RunnerLog[]>();
-  const canAssignByTimestamp =
-    assignableTurns.every(({ turn }) => Number.isFinite(turn.startedAtMs)) &&
-    timelineLogs.every((log) => getHydratedTimelineLogTimestampMs(log, meta?.startedAtMs) !== null);
-
-  if (!canAssignByTimestamp && assignableTurns.length > 1) {
-    return null;
-  }
-
-  for (const log of timelineLogs) {
-    let targetTurnIndex = assignableTurns[0]!.index;
-
-    if (canAssignByTimestamp) {
-      const logTimestampMs = getHydratedTimelineLogTimestampMs(log, meta?.startedAtMs) ?? 0;
-      for (const { turn, index } of assignableTurns) {
-        if (turn.startedAtMs <= logTimestampMs + 1000) {
-          targetTurnIndex = index;
-        } else {
-          break;
-        }
-      }
-    }
-
-    const bucket = logBuckets.get(targetTurnIndex) || [];
-    bucket.push(log);
-    logBuckets.set(targetTurnIndex, bucket);
-  }
-
-  return turns.map((turn, index) => insertHydratedTimelineLogs(turn, logBuckets.get(index) || [], {
-    threadStartedAtMs: meta?.startedAtMs ?? null,
-  }));
-}
-
-function mergeHydratedMessageTurnsIntoTurns(
-  turns: RunnerTurn[],
-  messages: RunnerConversationMessage[],
-  meta?: {
-    agentName?: string | null;
-    environmentName?: string | null;
-    backendUrl?: string;
-    threadStatus?: string | null;
-    completedAtMs?: number | null;
-    threadMetadata?: Record<string, unknown> | null;
-  }
-): RunnerTurn[] {
-  if (turns.length === 0 || messages.length === 0) {
-    return turns;
-  }
-
-  const messageTurns = buildHydratedTurnsFromMessages(messages, meta);
-  if (messageTurns.length === 0) {
-    return turns;
-  }
-
-  function mergeMessageTurnIntoTurn(turn: RunnerTurn, messageTurn: RunnerTurn): RunnerTurn {
-    const messageResponseLogs = messageTurn.logs.filter(isTurnResponseLog);
-    const turnResponseText = getTurnAssistantMessageText(turn);
-    const messageResponseText = getTurnAssistantMessageText(messageTurn);
-    const messageResponseIsFallback = isFallbackAssistantResponseText(messageResponseText);
-    const turnResponseIsFallback = isFallbackAssistantResponseText(turnResponseText);
-    const shouldPreferMessageResponse =
-      messageResponseLogs.length > 0 &&
-      !messageResponseIsFallback &&
-      (!turnResponseText ||
-        turnResponseIsFallback ||
-        messageResponseText === turnResponseText ||
-        messageResponseText.startsWith(turnResponseText) ||
-        messageResponseText.length > turnResponseText.length);
-
-    return {
-      ...turn,
-      prompt: turn.prompt || messageTurn.prompt,
-      messageMetadata: turn.messageMetadata ?? messageTurn.messageMetadata ?? null,
-      sourceMessageId: turn.sourceMessageId ?? messageTurn.sourceMessageId ?? null,
-      quotedSelection: turn.quotedSelection ?? messageTurn.quotedSelection ?? null,
-      attachments: pickTurnAttachments(turn.attachments, messageTurn.attachments),
-      logs: shouldPreferMessageResponse ? replaceTurnResponseLogs(turn.logs, messageResponseLogs) : turn.logs,
-      completedAtMs: turn.completedAtMs ?? messageTurn.completedAtMs,
-      durationSeconds: turn.durationSeconds ?? messageTurn.durationSeconds ?? null,
-      agentName: turn.agentName ?? messageTurn.agentName ?? null,
-      environmentName: turn.environmentName ?? messageTurn.environmentName ?? null,
-      slideCreationCommand: turn.slideCreationCommand ?? messageTurn.slideCreationCommand ?? null,
-      researchCreationCommand: turn.researchCreationCommand ?? messageTurn.researchCreationCommand ?? null,
-      scrapeCreationCommand: turn.scrapeCreationCommand ?? messageTurn.scrapeCreationCommand ?? null,
-      parseCreationCommand: turn.parseCreationCommand ?? messageTurn.parseCreationCommand ?? null,
-      adCreationCommand: turn.adCreationCommand ?? messageTurn.adCreationCommand ?? null,
-    };
-  }
-
-  const consumedMessageTurnIndexes = new Set<number>();
-  let mergedTurns = turns.map((turn) => {
-    const matchedMessageTurnIndex = messageTurns.findIndex(
-      (messageTurn, index) => !consumedMessageTurnIndexes.has(index) && turnsLikelyMatch(turn, messageTurn)
-    );
-
-    if (matchedMessageTurnIndex === -1) {
-      return turn;
-    }
-
-    consumedMessageTurnIndexes.add(matchedMessageTurnIndex);
-    const messageTurn = messageTurns[matchedMessageTurnIndex]!;
-    return mergeMessageTurnIntoTurn(turn, messageTurn);
-  });
-
-  const unmatchedMessageTurns: RunnerTurn[] = [];
-  for (let index = 0; index < messageTurns.length; index += 1) {
-    if (consumedMessageTurnIndexes.has(index)) {
-      continue;
-    }
-    const messageTurn = messageTurns[index]!;
-    const isAssistantOnlyMessageTurn =
-      !messageTurn.prompt.trim() &&
-      messageTurn.logs.some(isTurnResponseLog);
-    if (isAssistantOnlyMessageTurn) {
-      const targetTurnIndex = mergedTurns.findIndex((turn) =>
-        turnHasMetronomeWorkflowPromptReplacement(turn) ||
-        (!turn.prompt.trim() && turn.logs.length > 0)
-      );
-      if (targetTurnIndex !== -1) {
-        mergedTurns = mergedTurns.map((turn, turnIndex) =>
-          turnIndex === targetTurnIndex ? mergeMessageTurnIntoTurn(turn, messageTurn) : turn
-        );
-        consumedMessageTurnIndexes.add(index);
-        continue;
-      }
-    }
-    unmatchedMessageTurns.push(messageTurn);
-  }
-
-  if (unmatchedMessageTurns.length === 0) {
-    return mergedTurns;
-  }
-
-  const sortedTurns = [...mergedTurns, ...unmatchedMessageTurns].sort((left, right) => {
-    const leftTime = left.startedAtMs || 0;
-    const rightTime = right.startedAtMs || 0;
-    if (leftTime !== rightTime) {
-      return leftTime - rightTime;
-    }
-    return left.id.localeCompare(right.id);
-  });
-
-  return sortedTurns.map((turn, index) => ({
-    ...turn,
-    isInitialTurn: index === 0,
-  }));
-}
-
-function mergeHydratedTurns(existingTurns: RunnerTurn[], hydratedTurns: RunnerTurn[]): RunnerTurn[] {
-  const mergedTurns = [...hydratedTurns];
-
-  for (const localTurn of existingTurns) {
-    const localPresentation = turnPresentation(localTurn);
-    const shouldCarryForwardIfUnmatched =
-      localTurn.status === "queued" ||
-      !isTerminalTurnStatus(localTurn.status) ||
-      localPresentation === "btw" ||
-      Boolean(localTurn.quotedSelection) ||
-      Boolean(localTurn.attachments?.length);
-
-    const hydratedIndex = mergedTurns.findIndex((hydratedTurn) => turnsLikelyMatch(localTurn, hydratedTurn));
-    if (hydratedIndex === -1) {
-      if (shouldCarryForwardIfUnmatched) {
-        mergedTurns.push(localTurn);
-      }
-      continue;
-    }
-
-    const hydratedTurn = mergedTurns[hydratedIndex];
-    const preferLocalTurn = shouldPreserveLocalTurnProgress(localTurn, hydratedTurn);
-
-    if (preferLocalTurn) {
-      mergedTurns[hydratedIndex] = {
-        ...hydratedTurn,
-        ...localTurn,
-        presentation: localPresentation,
-        quotedSelection: localTurn.quotedSelection ?? hydratedTurn.quotedSelection ?? null,
-        attachments: pickTurnAttachments(localTurn.attachments, hydratedTurn.attachments),
-        sourceMessageId: localTurn.sourceMessageId ?? hydratedTurn.sourceMessageId ?? null,
-      };
-      continue;
-    }
-
-    mergedTurns[hydratedIndex] = {
-      ...hydratedTurn,
-      ...(!hydratedTurn.presentation && localPresentation !== "default" ? { presentation: localPresentation } : {}),
-      quotedSelection: hydratedTurn.quotedSelection ?? localTurn.quotedSelection ?? null,
-      attachments: pickTurnAttachments(hydratedTurn.attachments, localTurn.attachments),
-      sourceMessageId: hydratedTurn.sourceMessageId ?? localTurn.sourceMessageId ?? null,
-      slideCreationCommand: hydratedTurn.slideCreationCommand ?? localTurn.slideCreationCommand ?? null,
-      researchCreationCommand: hydratedTurn.researchCreationCommand ?? localTurn.researchCreationCommand ?? null,
-      scrapeCreationCommand: hydratedTurn.scrapeCreationCommand ?? localTurn.scrapeCreationCommand ?? null,
-      parseCreationCommand: hydratedTurn.parseCreationCommand ?? localTurn.parseCreationCommand ?? null,
-      adCreationCommand: hydratedTurn.adCreationCommand ?? localTurn.adCreationCommand ?? null,
-    };
-  }
-
-  const sortedTurns = [...mergedTurns].sort((left, right) => {
-    const leftTime = left.startedAtMs || 0;
-    const rightTime = right.startedAtMs || 0;
-    if (leftTime !== rightTime) {
-      return leftTime - rightTime;
-    }
-    return left.id.localeCompare(right.id);
-  });
-
-  return sortedTurns.map((turn, index) => ({
-    ...turn,
-    isInitialTurn: index === 0,
-  }));
-}
-
-function mapExpandedTurns(
-  previousExpandedTurns: Record<string, boolean>,
-  previousTurns: RunnerTurn[],
-  nextTurns: RunnerTurn[],
-  options?: { defaultLatestExpanded?: boolean; collapseOnNewRunSummary?: boolean }
-): Record<string, boolean> {
-  if (options?.collapseOnNewRunSummary && hasNewTurnRunSummary(previousTurns, nextTurns)) {
-    return nextTurns.reduce<Record<string, boolean>>((accumulator, turn) => {
-      accumulator[turn.id] = false;
-      return accumulator;
-    }, {});
-  }
-
-  const latestTurnId = nextTurns.length > 0 ? nextTurns[nextTurns.length - 1]!.id : null;
-  return nextTurns.reduce<Record<string, boolean>>((accumulator, turn) => {
-    const directExpanded = previousExpandedTurns[turn.id];
-    if (typeof directExpanded === "boolean") {
-      accumulator[turn.id] = directExpanded;
-      return accumulator;
-    }
-
-    const matchedPreviousTurn = previousTurns.find((previousTurn) => turnsLikelyMatch(previousTurn, turn));
-    if (matchedPreviousTurn && typeof previousExpandedTurns[matchedPreviousTurn.id] === "boolean") {
-      accumulator[turn.id] = previousExpandedTurns[matchedPreviousTurn.id]!;
-      return accumulator;
-    }
-
-    if (options?.defaultLatestExpanded && latestTurnId === turn.id) {
-      accumulator[turn.id] = true;
-    }
-    return accumulator;
-  }, {});
-}
-
-function getTurnRunSummarySignature(turn: RunnerTurn | null | undefined): string {
-  const responseLog = turn?.logs
-    ? [...turn.logs].reverse().find(isTurnResponseLog)
-    : null;
-  const normalizedMessage = normalizeDuplicateSummaryText(responseLog?.message || "");
-  if (!normalizedMessage) {
-    return "";
-  }
-  return [
-    responseLog?.eventType || "",
-    responseLog?.time || "",
-    normalizedMessage.length,
-    normalizedMessage.slice(0, 160),
-  ].join(":");
-}
-
-function findMatchingPreviousTurn(previousTurns: RunnerTurn[], nextTurn: RunnerTurn): RunnerTurn | null {
-  return previousTurns.find((previousTurn) => previousTurn.id === nextTurn.id)
-    || previousTurns.find((previousTurn) => turnsLikelyMatch(previousTurn, nextTurn))
-    || null;
-}
-
-function hasNewTurnRunSummary(previousTurns: RunnerTurn[], nextTurns: RunnerTurn[]): boolean {
-  return nextTurns.some((nextTurn) => {
-    const nextSignature = getTurnRunSummarySignature(nextTurn);
-    if (!nextSignature) {
-      return false;
-    }
-    const previousTurn = findMatchingPreviousTurn(previousTurns, nextTurn);
-    return getTurnRunSummarySignature(previousTurn) !== nextSignature;
-  });
-}
-
-function parseDurationSecondsValue(value: unknown): number | null {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return Math.max(0, Math.round(value));
-  }
-  if (typeof value === "string") {
-    const parsed = Number.parseFloat(value.trim());
-    if (Number.isFinite(parsed)) {
-      return Math.max(0, Math.round(parsed));
-    }
-  }
-  return null;
-}
-
-function parseIsoTimestampMs(value: unknown): number | null {
-  if (typeof value !== "string" || !value.trim()) {
-    return null;
-  }
-  const parsed = Date.parse(value);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
-function resolveHydrationInitialPrompt(
-  turns: RunnerTurn[],
-  cachedPayload?: RunnerThreadHydrationPayload | null
-): string {
-  const cachedPrompt = typeof cachedPayload?.initialPrompt === "string" ? cachedPayload.initialPrompt.trim() : "";
-  if (cachedPrompt) {
-    return cachedPrompt;
-  }
-
-  const firstPromptTurn = turns.find((turn) => {
-    const normalizedPrompt = String(turn.prompt || "").trim();
-    if (!normalizedPrompt) {
-      return false;
-    }
-    return turnPresentation(turn) !== "context-action-notice";
-  });
-
-  return typeof firstPromptTurn?.prompt === "string" ? firstPromptTurn.prompt.trim() : "";
-}
-
-async function fetchThreadLiveRefreshPayload(params: {
-  backendUrl: string;
-  apiKey: string;
-  threadId: string;
-  requestHeaders?: HeadersInit;
-  statusSnapshot: {
-    status: string | null;
-    updatedAt: string | null;
-    completedAt: string | null;
-  };
-  existingTurns: RunnerTurn[];
-  cachedPayload?: RunnerThreadHydrationPayload | null;
-}): Promise<RunnerThreadHydrationPayload> {
-  const logsSnapshot = await fetchThreadLogsSnapshot({
-    backendUrl: params.backendUrl,
-    apiKey: params.apiKey,
-    threadId: params.threadId,
-    requestHeaders: params.requestHeaders,
-  });
-
-  const cachedPayload = params.cachedPayload || null;
-  const rawConversationMessages = sortRunnerConversationMessagesChronologically(
-    Array.isArray(cachedPayload?.messages) && cachedPayload.messages.length > 0
-      ? cachedPayload.messages
-      : await fetchAllThreadMessages({
-          backendUrl: params.backendUrl,
-          apiKey: params.apiKey,
-          threadId: params.threadId,
-          requestHeaders: params.requestHeaders,
-        }).catch(() => [])
-  );
-  const chronologicalSnapshotLogs = sortRunnerLogsChronologically(logsSnapshot.logs.map(normalizeHydratedLog));
-  const conversationMessages = mergeConversationMessageRunMetadataFromLogs(
-    rawConversationMessages,
-    chronologicalSnapshotLogs
-  );
-  const canonicalConversationMessages = conversationMessages.filter(
-    (message) =>
-      (message.role === "user" || message.role === "assistant") &&
-      typeof message.content === "string" &&
-      message.content.trim().length > 0
-  );
-  const hydrationLogs = chronologicalSnapshotLogs.filter((log) => {
-    if (canonicalConversationMessages.length === 0) {
-      return log.eventType !== "user_message" && log.eventType !== "agent_message" && log.eventType !== "llm_response";
-    }
-    if (log.eventType === "user_message" || (log as RunnerLog & { isUserMessage?: boolean }).isUserMessage) {
-      return false;
-    }
-    if (log.eventType === "agent_message" || log.eventType === "llm_response") {
-      return false;
-    }
-    return true;
-  });
-
-  const completedAtMs = parseIsoTimestampMs(params.statusSnapshot.completedAt) ?? cachedPayload?.completedAtMs ?? null;
-  const rawThreadStatus = logsSnapshot.status ?? params.statusSnapshot.status ?? cachedPayload?.threadStatus ?? null;
-
-  return {
-    threadId: params.threadId,
-    threadStatus: resolveHydratedThreadLifecycleStatus(rawThreadStatus, completedAtMs),
-    threadUpdatedAt: params.statusSnapshot.updatedAt ?? cachedPayload?.threadUpdatedAt ?? null,
-    threadEnvironmentId: cachedPayload?.threadEnvironmentId ?? null,
-    threadEnvironmentName:
-      logsSnapshot.environmentName
-      ?? cachedPayload?.threadEnvironmentName
-      ?? cachedPayload?.environmentName
-      ?? null,
-    initialPrompt: resolveHydrationInitialPrompt(params.existingTurns, cachedPayload),
-    logs: hydrationLogs,
-    messages: conversationMessages,
-    durationSeconds: logsSnapshot.durationSeconds ?? cachedPayload?.durationSeconds ?? null,
-    startedAtMs: cachedPayload?.startedAtMs ?? null,
-    completedAtMs,
-    agentName: logsSnapshot.agentName ?? cachedPayload?.agentName ?? null,
-    environmentName:
-      logsSnapshot.environmentName
-      ?? cachedPayload?.environmentName
-      ?? cachedPayload?.threadEnvironmentName
-      ?? null,
-  };
-}
-
-function isGenericShellRunnerCommand(command: string): boolean {
-  const normalized = String(command || "").trim().replace(/^\$\s*/, "").toLowerCase();
-  return normalized === "bash" || normalized === "sh" || normalized === "zsh" || normalized === "/bin/bash" || normalized === "/bin/sh";
-}
-
-function sanitizeImageGenerationPromptCandidate(value: unknown): string {
-  let normalized = String(value || "").trim();
-  if (!normalized) {
-    return "";
-  }
-
-  normalized = normalized.replace(/\\n/g, "\n");
-  const markerMatch = normalized.match(/\r?\n\s*(?:quality|generated with|openai size request|image saved to|size):/i);
-  if (markerMatch) {
-    normalized = normalized.slice(0, markerMatch.index).trim();
-  }
-  normalized = normalized.split(/\r?\n/)[0]?.trim() || "";
-  normalized = normalized.replace(/^["'`]+|["'`,\s]+$/g, "").trim();
-  return normalized;
-}
-
-function extractImageGenerationPromptFromCommand(command?: string): string {
-  const normalized = String(command || "").trim();
-  if (!normalized) {
-    return "";
-  }
-
-  const directPromptMatch = normalized.match(/generate-image\.py\s+(?:"([^"]+)"|'([^']+)')/);
-  const directPrompt = sanitizeImageGenerationPromptCandidate(directPromptMatch?.[1] || directPromptMatch?.[2] || "");
-  if (directPrompt) {
-    return directPrompt;
-  }
-
-  const quotedValues = [...normalized.matchAll(/"([^"]+)"/g), ...normalized.matchAll(/'([^']+)'/g)]
-    .map((match) => sanitizeImageGenerationPromptCandidate(match[1]))
-    .filter(
-      (value) =>
-        value.length >= 3 &&
-        !value.match(/\.(png|jpg|jpeg|gif|webp|py|sh|txt|md)$/i) &&
-        !value.startsWith("/") &&
-        !value.startsWith(".") &&
-        !value.startsWith("-") &&
-        !value.match(/^\d+:\d+$/) &&
-        !value.match(/^(1K|2K|4K)$/i)
-    );
-  return quotedValues.length > 0
-    ? quotedValues.reduce((longest, current) => (current.length > longest.length ? current : longest))
-    : "";
-}
-
-function extractImageGenerationPromptIdentity(log: RunnerLog): string {
-  const commandPrompt = extractImageGenerationPromptFromCommand(
-    typeof log.metadata?.command === "string" ? log.metadata.command : log.message
-  );
-  if (commandPrompt) {
-    return commandPrompt;
-  }
-
-  const metadataPrompt =
-    log.metadata?.args && typeof log.metadata.args === "object" && typeof (log.metadata.args as Record<string, unknown>).prompt === "string"
-      ? sanitizeImageGenerationPromptCandidate((log.metadata.args as Record<string, unknown>).prompt)
-      : "";
-  if (metadataPrompt) {
-    return metadataPrompt;
-  }
-  const metadataText =
-    log.metadata?.args && typeof log.metadata.args === "object" && typeof (log.metadata.args as Record<string, unknown>).text === "string"
-      ? sanitizeImageGenerationPromptCandidate((log.metadata.args as Record<string, unknown>).text)
-      : "";
-  if (metadataText) {
-    return metadataText;
-  }
-  const toolInputPrompt =
-    log.metadata?.toolInput && typeof log.metadata.toolInput === "object" && typeof (log.metadata.toolInput as Record<string, unknown>).prompt === "string"
-      ? sanitizeImageGenerationPromptCandidate((log.metadata.toolInput as Record<string, unknown>).prompt)
-      : "";
-  if (toolInputPrompt) {
-    return toolInputPrompt;
-  }
-  const toolInputText =
-    log.metadata?.toolInput && typeof log.metadata.toolInput === "object" && typeof (log.metadata.toolInput as Record<string, unknown>).text === "string"
-      ? sanitizeImageGenerationPromptCandidate((log.metadata.toolInput as Record<string, unknown>).text)
-      : "";
-  if (toolInputText) {
-    return toolInputText;
-  }
-
-  const output = typeof log.metadata?.output === "string" ? log.metadata.output : log.message;
-  const promptMatch = shouldScanRunnerMediaLogText(output)
-    ? output.match(/(?:Generating|Editing) image with [^:]+:\s*(.+?)(?:\.\.\.)?(?:\r?\n|$)/i)
-    : null;
-  return sanitizeImageGenerationPromptCandidate(promptMatch?.[1] || "");
-}
-
-const runnerImageGenerationLogIdentityCache = new WeakMap<RunnerLog, string | null>();
-const runnerVideoGenerationLogIdentityCache = new WeakMap<RunnerLog, string | null>();
-const runnerGeneratedVideoPathCache = new WeakMap<RunnerLog, string>();
-const RUNNER_MEDIA_LOG_TEXT_SCAN_LIMIT = 200_000;
-
-function shouldScanRunnerMediaLogText(value: unknown): value is string {
-  return typeof value === "string" && value.length > 0 && value.length <= RUNNER_MEDIA_LOG_TEXT_SCAN_LIMIT;
-}
-
-function normalizedImageGenerationLogIdentity(log: RunnerLog): string | null {
-  if (runnerImageGenerationLogIdentityCache.has(log)) {
-    return runnerImageGenerationLogIdentityCache.get(log) ?? null;
-  }
-  const command = typeof log.metadata?.command === "string" ? log.metadata.command.trim() : "";
-  const output = typeof log.metadata?.output === "string" ? log.metadata.output : "";
-  const outputHasImageMarker = shouldScanRunnerMediaLogText(output)
-    ? /(?:Generating|Editing) image with|Generated with|Image saved to:/i.test(output)
-    : false;
-  const messageHasImageMarker = shouldScanRunnerMediaLogText(log.message)
-    ? /(?:Generating|Editing) image with|Generated with|Image saved to:/i.test(log.message)
-    : false;
-  const savedImagePath = typeof log.metadata?.savedImagePath === "string" ? log.metadata.savedImagePath.trim() : "";
-  const metadataFilePaths = Array.isArray(log.metadata?.filePaths)
-    ? log.metadata.filePaths.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
-    : [];
-  const looksLikeImageGeneration =
-    log.metadata?.isImageGeneration
-    || command.includes("generate-image.py")
-    || command.includes(".claude/skills/image-generation/")
-    || Boolean(savedImagePath)
-    || metadataFilePaths.some((filePath) => /\.(?:png|jpe?g|gif|webp|svg|avif|bmp)$/i.test(filePath))
-    || outputHasImageMarker
-    || messageHasImageMarker;
-  if (!looksLikeImageGeneration) {
-    runnerImageGenerationLogIdentityCache.set(log, null);
-    return null;
-  }
-
-  const prompt = extractImageGenerationPromptIdentity(log);
-  const inputPath =
-    log.metadata?.args && typeof log.metadata.args === "object" && typeof (log.metadata.args as Record<string, unknown>).inputPath === "string"
-      ? String((log.metadata.args as Record<string, unknown>).inputPath).trim()
-      : "";
-
-  const identity = stableRunnerLogValue({
-    kind: "image_generation",
-    prompt,
-    inputPath,
-    command: prompt || inputPath || savedImagePath || metadataFilePaths.length > 0 ? "" : command || String(log.message || "").trim(),
-  });
-  runnerImageGenerationLogIdentityCache.set(log, identity);
-  return identity;
-}
-
-function sanitizeVideoGenerationPromptCandidate(value: unknown): string {
-  return sanitizeImageGenerationPromptCandidate(value);
-}
-
-function extractVideoGenerationPromptIdentity(log: RunnerLog): string {
-  const metadataPrompt =
-    log.metadata?.args && typeof log.metadata.args === "object" && typeof (log.metadata.args as Record<string, unknown>).prompt === "string"
-      ? sanitizeVideoGenerationPromptCandidate((log.metadata.args as Record<string, unknown>).prompt)
-      : "";
-  if (metadataPrompt) {
-    return metadataPrompt;
-  }
-  const metadataText =
-    log.metadata?.args && typeof log.metadata.args === "object" && typeof (log.metadata.args as Record<string, unknown>).text === "string"
-      ? sanitizeVideoGenerationPromptCandidate((log.metadata.args as Record<string, unknown>).text)
-      : "";
-  if (metadataText) {
-    return metadataText;
-  }
-  const toolInputPrompt =
-    log.metadata?.toolInput && typeof log.metadata.toolInput === "object" && typeof (log.metadata.toolInput as Record<string, unknown>).prompt === "string"
-      ? sanitizeVideoGenerationPromptCandidate((log.metadata.toolInput as Record<string, unknown>).prompt)
-      : "";
-  if (toolInputPrompt) {
-    return toolInputPrompt;
-  }
-  const toolInputText =
-    log.metadata?.toolInput && typeof log.metadata.toolInput === "object" && typeof (log.metadata.toolInput as Record<string, unknown>).text === "string"
-      ? sanitizeVideoGenerationPromptCandidate((log.metadata.toolInput as Record<string, unknown>).text)
-      : "";
-  if (toolInputText) {
-    return toolInputText;
-  }
-
-  const output = typeof log.metadata?.output === "string" ? log.metadata.output : log.message;
-  const promptMatch = shouldScanRunnerMediaLogText(output)
-    ? output.match(/Generating video(?:\s+with [^:]+)?:\s*(.+?)(?:\.\.\.)?(?:\r?\n|$)/i)
-      || output.match(/^\s*Video Generation\s+(.+?)(?:\s+generating\.{3}|(?:\r?\n|$))/i)
-    : null;
-  const promptFromOutput = sanitizeVideoGenerationPromptCandidate(promptMatch?.[1] || "");
-  if (promptFromOutput) {
-    return promptFromOutput;
-  }
-
-  const command = typeof log.metadata?.command === "string" ? log.metadata.command : log.message || "";
-  const quoted = [...String(command || "").matchAll(/"([^"]+)"/g), ...String(command || "").matchAll(/'([^']+)'/g)]
-    .map((match) => sanitizeVideoGenerationPromptCandidate(match[1]))
-    .filter(
-      (value) =>
-        value.length >= 3 &&
-        !value.match(/\.(mp4|mov|webm|mkv|avi|png|jpg|jpeg|gif|webp|py|sh|txt|md)$/i) &&
-        !value.startsWith("/") &&
-        !value.startsWith(".") &&
-        !value.startsWith("-") &&
-        !value.match(/^\d+:\d+$/) &&
-        !value.match(/^(720P|1080P)$/i)
-    );
-  return quoted.length > 0 ? quoted.reduce((longest, current) => (current.length > longest.length ? current : longest)) : "";
-}
-
-function isRunnerHydratedVideoFilePath(filePath?: string | null): boolean {
-  return /\.(?:mp4|mov|webm|mkv|avi)$/i.test(String(filePath || "").trim().split(/[?#]/)[0] || "");
-}
-
-function normalizeGeneratedVideoPathCandidate(value: unknown): string {
-  return String(value || "")
-    .trim()
-    .replace(/^\/workspace\//, "")
-    .replace(/^workspace\//, "");
-}
-
-function extractGeneratedVideoPathFromOutputText(output: unknown): string {
-  if (typeof output !== "string" || !output.trim()) {
-    return "";
-  }
-  const patterns = [
-    /video saved to:\s*["']?([^\s"'\n]+\.(?:mp4|mov|webm|mkv|avi))["']?/i,
-    /saved to:\s*["']?([^\s"'\n]+\.(?:mp4|mov|webm|mkv|avi))["']?/i,
-    /((?:\/workspace\/|workspace\/)?[A-Za-z0-9_./-]+\.(?:mp4|mov|webm|mkv|avi))/i,
-  ];
-  for (const pattern of patterns) {
-    const match = output.match(pattern);
-    const candidate = normalizeGeneratedVideoPathCandidate(match?.[1] || "");
-    if (isRunnerHydratedVideoFilePath(candidate)) {
-      return candidate;
-    }
-  }
-  return "";
-}
-
-function extractGeneratedVideoPathFromStructuredResult(result: unknown): string {
-  const candidates: string[] = [];
-  const visit = (value: unknown): void => {
-    if (!value) return;
-    if (typeof value === "string") {
-      const direct = normalizeGeneratedVideoPathCandidate(value);
-      if (isRunnerHydratedVideoFilePath(direct)) {
-        candidates.push(direct);
-        return;
-      }
-      const fromText = extractGeneratedVideoPathFromOutputText(value);
-      if (fromText) {
-        candidates.push(fromText);
-      }
-      return;
-    }
-    if (Array.isArray(value)) {
-      value.forEach(visit);
-      return;
-    }
-    if (typeof value === "object") {
-      Object.values(value as Record<string, unknown>).forEach(visit);
-    }
-  };
-  visit(result);
-  return candidates[0] || "";
-}
-
-function extractGeneratedVideoPathFromLog(log: RunnerLog): string {
-  const cached = runnerGeneratedVideoPathCache.get(log);
-  if (typeof cached === "string") {
-    return cached;
-  }
-  const savedVideoPath = extractDirectGeneratedVideoPathFromMetadata(log);
-  if (isRunnerHydratedVideoFilePath(savedVideoPath)) {
-    runnerGeneratedVideoPathCache.set(log, savedVideoPath);
-    return savedVideoPath;
-  }
-  const metadataFilePath = Array.isArray(log.metadata?.filePaths)
-    ? log.metadata.filePaths
-        .map((value) => normalizeGeneratedVideoPathCandidate(value))
-        .find((value) => isRunnerHydratedVideoFilePath(value))
-    : "";
-  if (metadataFilePath) {
-    runnerGeneratedVideoPathCache.set(log, metadataFilePath);
-    return metadataFilePath;
-  }
-  const outputForPath = shouldScanRunnerMediaLogText(log.metadata?.output) ? log.metadata?.output : undefined;
-  const messageForPath = shouldScanRunnerMediaLogText(log.message) ? log.message : undefined;
-  const resolvedPath = (
-    extractGeneratedVideoPathFromStructuredResult(log.metadata?.result)
-    || extractGeneratedVideoPathFromStructuredResult(outputForPath)
-    || extractGeneratedVideoPathFromOutputText(outputForPath)
-    || extractGeneratedVideoPathFromOutputText(messageForPath)
-  );
-  runnerGeneratedVideoPathCache.set(log, resolvedPath);
-  return resolvedPath;
-}
-
-function extractDirectGeneratedVideoPathFromMetadata(log: RunnerLog): string {
-  const metadata = log.metadata && typeof log.metadata === "object" && !Array.isArray(log.metadata)
-    ? log.metadata as Record<string, unknown>
-    : null;
-  if (!metadata) {
-    return "";
-  }
-  const directCandidates = [
-    metadata.savedVideoPath,
-    metadata.saved_video_path,
-    metadata.outputVideoPath,
-    metadata.output_video_path,
-  ];
-  for (const candidate of directCandidates) {
-    const normalized = normalizeGeneratedVideoPathCandidate(candidate);
-    if (isRunnerHydratedVideoFilePath(normalized)) {
-      return normalized;
-    }
-  }
-  return "";
-}
-
-function normalizedVideoGenerationLogIdentity(log: RunnerLog): string | null {
-  if (runnerVideoGenerationLogIdentityCache.has(log)) {
-    return runnerVideoGenerationLogIdentityCache.get(log) ?? null;
-  }
-  const command = typeof log.metadata?.command === "string" ? log.metadata.command.trim() : "";
-  const rawLog = log as RunnerLog & { event_type?: unknown; type?: unknown };
-  const normalizedEventType = String(rawLog.eventType || rawLog.event_type || rawLog.type || "").trim().toLowerCase();
-  const metadataToolName = String(log.metadata?.toolName || log.metadata?.toolId || "").trim().toLowerCase();
-  const metadataServerName = String(log.metadata?.serverName || "").trim().toLowerCase();
-  const metadataFilePaths = Array.isArray(log.metadata?.filePaths)
-    ? log.metadata.filePaths.filter((value): value is string => typeof value === "string" && isRunnerHydratedVideoFilePath(value))
-    : [];
-  const directSavedVideoPath = extractDirectGeneratedVideoPathFromMetadata(log);
-  const hasExplicitVideoSignal =
-    Boolean(
-      log.metadata?.isVideoGeneration
-      || normalizedEventType === "video_generation_skill"
-      || normalizedEventType === "video_generation"
-      || normalizedEventType === "generate_video"
-      || metadataToolName === "generate_video"
-      || metadataToolName === "video_generation"
-      || metadataServerName === "video-generation-skill"
-      || metadataServerName === "video_generation_skill"
-      || directSavedVideoPath
-      || command.includes("generate-video.py")
-      || command.includes(".claude/skills/video-generation/")
-    );
-  const savedVideoPath = hasExplicitVideoSignal
-    ? extractGeneratedVideoPathFromLog(log)
-    : "";
-  if (!hasExplicitVideoSignal) {
-    runnerVideoGenerationLogIdentityCache.set(log, null);
-    return null;
-  }
-
-  const prompt = extractVideoGenerationPromptIdentity(log);
-  const inputPath =
-    log.metadata?.args && typeof log.metadata.args === "object" && typeof (log.metadata.args as Record<string, unknown>).inputPath === "string"
-      ? String((log.metadata.args as Record<string, unknown>).inputPath).trim()
-      : "";
-
-  const identity = stableRunnerLogValue({
-    kind: "video_generation",
-    prompt: prompt || "",
-    inputPath: inputPath || "",
-    savedVideoPath: prompt || inputPath ? "" : savedVideoPath || metadataFilePaths[0] || "",
-    command: prompt || inputPath || savedVideoPath || metadataFilePaths.length > 0 ? "" : command || String(log.message || "").trim(),
-  });
-  runnerVideoGenerationLogIdentityCache.set(log, identity);
-  return identity;
-}
-
-function normalizeHydratedLog(log: RunnerLog): RunnerLog {
-  const rawLog = log as RunnerLog & Record<string, unknown>;
-  const rawMetadata =
-    log.metadata && typeof log.metadata === "object" && !Array.isArray(log.metadata)
-      ? log.metadata
-      : rawLog.metadata && typeof rawLog.metadata === "object" && !Array.isArray(rawLog.metadata)
-        ? rawLog.metadata as RunnerLog["metadata"]
-        : undefined;
-  const metadata =
-    rawMetadata && typeof (rawMetadata as { duration_ms?: unknown }).duration_ms === "number" && typeof rawMetadata.durationMs !== "number"
-      ? {
-          ...rawMetadata,
-          durationMs: (rawMetadata as { duration_ms: number }).duration_ms,
-        }
-      : rawMetadata;
-  const eventType = typeof log.eventType === "string"
-    ? log.eventType
-    : typeof rawLog.event_type === "string"
-      ? rawLog.event_type as RunnerLog["eventType"]
-      : undefined;
-  const createdAt = typeof log.createdAt === "string" && log.createdAt.trim()
-    ? log.createdAt
-    : typeof rawLog.created_at === "string" && rawLog.created_at.trim()
-      ? rawLog.created_at
-      : typeof rawLog.timestamp === "string" && rawLog.timestamp.trim()
-        ? rawLog.timestamp
-        : undefined;
-  const normalizedLog: RunnerLog = {
-    ...log,
-    ...(createdAt ? { createdAt } : {}),
-    ...(eventType ? { eventType } : {}),
-    ...(metadata ? { metadata } : {}),
-  };
-  if (typeof rawLog.is_reasoning === "boolean" && typeof normalizedLog.isReasoning !== "boolean") {
-    normalizedLog.isReasoning = rawLog.is_reasoning;
-  }
-  if (typeof rawLog.is_planning === "boolean" && typeof normalizedLog.isPlanning !== "boolean") {
-    normalizedLog.isPlanning = rawLog.is_planning;
-  }
-  if (typeof rawLog.is_llm_response === "boolean" && typeof normalizedLog.isLLMResponse !== "boolean") {
-    normalizedLog.isLLMResponse = rawLog.is_llm_response;
-  }
-  return normalizedLog;
-}
-
-function stableRunnerLogValue(value: unknown): string {
-  if (Array.isArray(value)) {
-    return `[${value.map((entry) => stableRunnerLogValue(entry)).join(",")}]`;
-  }
-  if (value && typeof value === "object") {
-    return `{${Object.keys(value as Record<string, unknown>)
-      .sort()
-      .map((key) => `${key}:${stableRunnerLogValue((value as Record<string, unknown>)[key])}`)
-      .join(",")}}`;
-  }
-  return JSON.stringify(value);
-}
-
-function normalizedToolLogIdentity(log: RunnerLog): string | null {
-  const normalizedImageIdentity = normalizedImageGenerationLogIdentity(log);
-  if (normalizedImageIdentity) {
-    return normalizedImageIdentity;
-  }
-  const normalizedVideoIdentity = normalizedVideoGenerationLogIdentity(log);
-  if (normalizedVideoIdentity) {
-    return normalizedVideoIdentity;
-  }
-
-  if (log.eventType === "command_execution") {
-    const command = typeof log.metadata?.command === "string" ? log.metadata.command.trim() : "";
-    const normalizedCommand = command || log.message.replace(/^Executed:\s*/i, "").trim();
-    if (!normalizedCommand) {
-      return null;
-    }
-    if (isGenericShellRunnerCommand(normalizedCommand)) {
-      const shellSignature = stableRunnerLogValue({
-        output: typeof log.metadata?.output === "string" ? log.metadata.output.trim() : "",
-        filePaths: Array.isArray(log.metadata?.filePaths) ? log.metadata.filePaths : [],
-        changeKinds: Array.isArray(log.metadata?.changeKinds) ? log.metadata.changeKinds : [],
-        toolInput: log.metadata?.toolInput,
-      });
-      return `command:${normalizedCommand}:${shellSignature}`;
-    }
-    return `command:${normalizedCommand}`;
-  }
-
-  if (log.eventType === "file_change") {
-    const filePath = Array.isArray(log.metadata?.filePaths) && typeof log.metadata.filePaths[0] === "string"
-      ? log.metadata.filePaths[0].trim()
-      : "";
-    const changeKind = Array.isArray(log.metadata?.changeKinds) && typeof log.metadata.changeKinds[0] === "string"
-      ? log.metadata.changeKinds[0].trim().toLowerCase()
-      : "";
-    const normalizedPath = filePath || log.message.replace(/^(created|modified|update|updated|deleted):\s*/i, "").replace(/\s+\((update|created|modified|deleted)\)$/i, "").trim();
-    const normalizedKind = changeKind || (/^\s*(created|modified|update|updated|deleted):/i.exec(log.message)?.[1]?.toLowerCase() ?? /\((update|created|modified|deleted)\)\s*$/i.exec(log.message)?.[1]?.toLowerCase() ?? "");
-    if (!normalizedPath) {
-      return null;
-    }
-    const canonicalKind = normalizedKind === "updated" ? "update" : normalizedKind;
-    return `file:${canonicalKind}:${normalizedPath}`;
-  }
-
-  return null;
-}
-
-function normalizeRunnerLogIdentityPart(value: unknown): string {
-  return typeof value === "string" ? value.trim() : "";
-}
-
-function getRunnerLogSubagentInvocationIdentity(log: RunnerLog): string {
-  const metadata = log.metadata;
-  const invocation = metadata?.subagentInvocation;
-  const invocationId =
-    normalizeRunnerLogIdentityPart(invocation?.invocationId) ||
-    normalizeRunnerLogIdentityPart(invocation?.parentToolUseId);
-  if (invocationId) {
-    return invocationId;
-  }
-
-  const source = normalizeRunnerLogIdentityPart(metadata?.source).toLowerCase();
-  const parentToolUseId = normalizeRunnerLogIdentityPart(metadata?.parentToolUseId);
-  if (parentToolUseId && (source === "claw_subagent_artifact" || source === "subagent_run_summary")) {
-    return parentToolUseId;
-  }
-
-  const actor = metadata?.actor;
-  if (actor?.kind === "subagent") {
-    const actorInvocationId =
-      normalizeRunnerLogIdentityPart(actor.invocationId) ||
-      normalizeRunnerLogIdentityPart(actor.parentToolUseId);
-    if (actorInvocationId) {
-      return actorInvocationId;
-    }
-
-    const actorIdentity = [
-      normalizeRunnerLogIdentityPart(actor.teamAgentId),
-      normalizeRunnerLogIdentityPart(actor.agentId),
-      normalizeRunnerLogIdentityPart(actor.subagentType),
-      normalizeRunnerLogIdentityPart(actor.agentName),
-    ].filter(Boolean).join(":");
-    if (actorIdentity) {
-      return `subagent:${actorIdentity}`;
-    }
-  }
-
-  const delegatedTo = metadata?.delegatedTo;
-  if (delegatedTo?.kind === "subagent") {
-    const delegatedInvocationId =
-      normalizeRunnerLogIdentityPart(delegatedTo.invocationId) ||
-      normalizeRunnerLogIdentityPart(delegatedTo.parentToolUseId);
-    if (delegatedInvocationId) {
-      return delegatedInvocationId;
-    }
-  }
-
-  return "";
-}
-
-function runnerLogSignature(log: RunnerLog): string {
-  const normalizedEventType =
-    log.eventType === "setup" || log.eventType === "startup"
-      ? "session_start"
-      : log.eventType === "reasoning" || log.eventType === "planning" || log.isReasoning || log.isPlanning
-        ? "thinking"
-        : log.eventType || "";
-  const normalizedMessage = normalizedEventType === "session_start" ? "Starting session" : log.message || "";
-  const normalizedToolIdentity = normalizedToolLogIdentity(log);
-  const normalizedThinkingActorIdentity =
-    normalizedEventType === "thinking" ? getRunnerLogSubagentInvocationIdentity(log) : "";
-  const normalizedMetadata =
-    normalizedEventType === "thinking"
-      ? (normalizedThinkingActorIdentity ? { subagentInvocationId: normalizedThinkingActorIdentity } : {})
-      : normalizedEventType === "session_start" || normalizedToolIdentity
-      ? {}
-      : log.metadata || {};
-  return [
-    normalizedToolIdentity ? "" : log.type || "",
-    normalizedEventType,
-    normalizedToolIdentity || stripSystemTags(normalizedMessage).replace(/\s+/g, " ").trim(),
-    stableRunnerLogValue(normalizedMetadata),
-  ].join("|");
-}
-
-function runnerLogMetadataWeight(log: RunnerLog): number {
-  if (!log.metadata || typeof log.metadata !== "object" || Array.isArray(log.metadata)) {
-    return 0;
-  }
-  return Object.keys(log.metadata).length;
-}
-
-function runnerLogReplacementScore(log: RunnerLog): number {
-  let score = runnerLogMetadataWeight(log);
-  const imageIdentity = normalizedImageGenerationLogIdentity(log);
-  if (imageIdentity) {
-    const savedImagePath = typeof log.metadata?.savedImagePath === "string" ? log.metadata.savedImagePath.trim() : "";
-    const filePaths = Array.isArray(log.metadata?.filePaths)
-      ? log.metadata.filePaths.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
-      : [];
-    if (savedImagePath || filePaths.length > 0) {
-      score += 100;
-    }
-    if (log.metadata?.status === "completed") {
-      score += 10;
-    }
-    if (typeof log.metadata?.output === "string" && /Image saved to:/i.test(log.metadata.output)) {
-      score += 20;
-    }
-    if (log.metadata?.error) {
-      score += 30;
-    }
-  }
-  const videoIdentity = normalizedVideoGenerationLogIdentity(log);
-  if (videoIdentity) {
-    const savedVideoPath = extractGeneratedVideoPathFromLog(log);
-    if (savedVideoPath) {
-      score += 100;
-    }
-    if (log.metadata?.status === "completed") {
-      score += 10;
-    }
-    if (typeof log.metadata?.output === "string" && /Video saved to:/i.test(log.metadata.output)) {
-      score += 20;
-    }
-    if (log.metadata?.error) {
-      score += 30;
-    }
-  }
-  return score;
-}
-
-function pruneSupersededMediaGenerationLogs(logs: RunnerLog[]): RunnerLog[] {
-  const bestScoreByIdentity = new Map<string, number>();
-  const keptFromEnd: RunnerLog[] = [];
-
-  for (let index = logs.length - 1; index >= 0; index -= 1) {
-    const log = logs[index];
-    const identity = normalizedImageGenerationLogIdentity(log) || normalizedVideoGenerationLogIdentity(log);
-    if (!identity) {
-      keptFromEnd.push(log);
-      continue;
-    }
-
-    const score = runnerLogReplacementScore(log);
-    const bestSeenScore = bestScoreByIdentity.get(identity);
-    if (typeof bestSeenScore === "number" && bestSeenScore > score) {
-      continue;
-    }
-
-    bestScoreByIdentity.set(identity, score);
-    keptFromEnd.push(log);
-  }
-
-  const kept = keptFromEnd.reverse();
-  const laterCompletedVideoCounts = new Array<number>(kept.length).fill(0);
-  let completedVideoLogsToRight = 0;
-  for (let index = kept.length - 1; index >= 0; index -= 1) {
-    laterCompletedVideoCounts[index] = completedVideoLogsToRight;
-    const log = kept[index];
-    if (normalizedVideoGenerationLogIdentity(log) && extractGeneratedVideoPathFromLog(log)) {
-      completedVideoLogsToRight += 1;
-    }
-  }
-  const videoPathsCoveredByCommandLogs = new Set<string>();
-  for (const log of kept) {
-    if (log.eventType === "file_change") {
-      continue;
-    }
-    if (!normalizedVideoGenerationLogIdentity(log)) {
-      continue;
-    }
-    const path = extractGeneratedVideoPathFromLog(log);
-    if (path) {
-      videoPathsCoveredByCommandLogs.add(path);
-    }
-  }
-
-  return kept.filter((log, index) => {
-    const videoIdentity = normalizedVideoGenerationLogIdentity(log);
-    if (
-      videoIdentity &&
-      log.eventType !== "file_change" &&
-      !extractGeneratedVideoPathFromLog(log) &&
-      laterCompletedVideoCounts[index] > 0
-    ) {
-      return false;
-    }
-    if (log.eventType !== "file_change" || !videoIdentity) {
-      return true;
-    }
-    if (videoPathsCoveredByCommandLogs.size === 0) {
-      return true;
-    }
-    const path = extractGeneratedVideoPathFromLog(log);
-    return !path || !videoPathsCoveredByCommandLogs.has(path);
-  });
-}
-
-function dedupeAdjacentRunnerLogs(logs: RunnerLog[]): RunnerLog[] {
-  const prunedLogs = pruneSupersededMediaGenerationLogs(logs);
-  const deduped: RunnerLog[] = [];
-  let lastSignature = "";
-
-  for (const log of prunedLogs) {
-    if (log.eventType === "deep_research") {
-      deduped.push(log);
-      lastSignature = "";
-      continue;
-    }
-    const signature = runnerLogSignature(log);
-    if (signature === lastSignature) {
-      const previousLog = deduped[deduped.length - 1];
-      if (previousLog && runnerLogReplacementScore(log) >= runnerLogReplacementScore(previousLog)) {
-        deduped[deduped.length - 1] = log;
-      }
-      continue;
-    }
-    deduped.push(log);
-    lastSignature = signature;
-  }
-
-  return deduped;
-}
-
-function isSyntheticProgressReasoningLog(log: RunnerLog): boolean {
-  if (log.eventType !== "reasoning" && log.eventType !== "planning" && !log.isReasoning && !log.isPlanning) {
-    return false;
-  }
-
-  const metadata = log.metadata as Record<string, unknown> | null | undefined;
-  const source = typeof metadata?.source === "string" ? metadata.source.trim().toLowerCase() : "";
-  return metadata?.synthetic === true
-    || (typeof metadata?.synthetic === "string" && metadata.synthetic.trim().toLowerCase() === "true")
-    || source === "synthetic_progress";
-}
-
-function isInternalUserMessageToolLog(log: RunnerLog): boolean {
-  if (log.eventType !== "command_execution") {
-    return false;
-  }
-
-  const metadata = log.metadata as Record<string, unknown> | null | undefined;
-  const candidates = [
-    metadata?.command,
-    metadata?.toolName,
-    metadata?.tool_name,
-    metadata?.name,
-    log.message,
-  ];
-
-  return candidates.some((candidate) => {
-    if (typeof candidate !== "string") {
-      return false;
-    }
-    const normalized = stripSystemTags(candidate)
-      .replace(/^\$\s*/, "")
-      .trim()
-      .toLowerCase();
-    return normalized === "sendusermessage" || normalized === "send_user_message" || normalized === "send-user-message";
-  });
-}
-
-function isTrivialSkillLaunchLog(log: RunnerLog): boolean {
-  if (log.eventType !== "command_execution") {
-    return false;
-  }
-
-  const command = stripSystemTags(String(log.metadata?.command || log.message || ""))
-    .replace(/^Executed:\s*/i, "")
-    .replace(/^\$\s*/, "")
-    .trim();
-  const output = stripSystemTags(String(log.metadata?.output || ""))
-    .replace(/\r\n/g, "\n")
-    .trim();
-
-  return /^Using Skill$/i.test(command) && /^Launching skill:\s*[\w.-]+$/i.test(output);
-}
-
-function shouldDisplayTimelineLog(log: RunnerLog): boolean {
-  const normalizedMessage = stripSystemTags(log.message || "").replace(/\s+/g, " ").trim().toLowerCase();
-  if (log.eventType === "turn_completed") return false;
-  if (log.eventType === "action_summary") return false;
-  if (log.eventType === "agent_message" || log.eventType === "llm_response") return false;
-  if (log.eventType === "setup" || log.eventType === "startup") return false;
-  if (isInternalFileChangeLog(log)) return false;
-  if (isSyntheticProgressReasoningLog(log)) return false;
-  if (isReasoningLikeTimelineLog(log) && !shouldRenderRunnerReasoningLog(log)) return false;
-  if (isInternalUserMessageToolLog(log)) return false;
-  if (isTrivialSkillLaunchLog(log)) return false;
-  if (log.eventType === "command_execution" && isBrowserSkillLaunchCommand(log.metadata?.command || log.message || "")) return false;
-  if (normalizedMessage === "starting session" || normalizedMessage === "starting session...") return false;
-  return true;
-}
-
-function isReasoningLikeTimelineLog(log: RunnerLog): boolean {
-  return log.eventType === "reasoning" || log.eventType === "planning" || Boolean(log.isReasoning || log.isPlanning);
-}
-
-function normalizeDuplicateSummaryText(value: string): string {
-  return stripSystemTags(value || "")
-    .replace(/\r\n/g, "\n")
-    .replace(/[ \t]+/g, " ")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-}
-
-function isDuplicateAssistantSummaryTimelineLog(log: RunnerLog, agentMessage?: RunnerLog): boolean {
-  if (!agentMessage?.message || !isReasoningLikeTimelineLog(log)) {
-    return false;
-  }
-
-  const logText = normalizeDuplicateSummaryText(log.message || "").replace(/^run summary:?\s*/i, "").trim();
-  const assistantText = normalizeDuplicateSummaryText(agentMessage.message || "");
-  return Boolean(logText && assistantText && logText === assistantText);
-}
-
-function buildHydratedTurnsFromLogs(
-  logs: RunnerLog[],
-  initialPrompt: string,
-  messages: RunnerConversationMessage[],
-  meta?: {
-    durationSeconds?: number | null;
-    startedAtMs?: number | null;
-    completedAtMs?: number | null;
-    threadStatus?: string | null;
-    agentName?: string | null;
-    environmentName?: string | null;
-    backendUrl?: string;
-    threadMetadata?: Record<string, unknown> | null;
-  }
-): RunnerTurn[] {
-  const turns: RunnerTurn[] = [];
-  const chronologicalMessages = sortRunnerConversationMessagesChronologically(messages);
-  const dedupedLogs = dedupeAdjacentRunnerLogs(sortRunnerLogsChronologically(logs.map(normalizeHydratedLog)));
-  let pendingBtwTurn: RunnerTurn | null = null;
-  let currentTurn: RunnerTurn | null = initialPrompt.trim()
-    ? {
-        id: generateId("turn"),
-        prompt: initialPrompt.trim(),
-        messageMetadata: normalizeRunnerTurnMessageMetadata(null, meta?.threadMetadata),
-        logs: [],
-        startedAtMs: meta?.startedAtMs ?? Date.now(),
-        completedAtMs: meta?.completedAtMs ?? meta?.startedAtMs ?? Date.now(),
-        durationSeconds: meta?.durationSeconds ?? null,
-        status: "completed",
-        animateOnRender: false,
-        isInitialTurn: true,
-        agentName: meta?.agentName ?? null,
-        environmentName: meta?.environmentName ?? null,
-      }
-    : null;
-
-  function ensureCurrentTurn(index: number): RunnerTurn {
-    if (currentTurn) return currentTurn;
-    const fallbackTime = Date.now() + index;
-    currentTurn = {
-      id: generateId("turn"),
-      prompt: "",
-      messageMetadata: null,
-      logs: [],
-      startedAtMs: fallbackTime,
-      completedAtMs: fallbackTime,
-      status: "completed",
-      animateOnRender: false,
-      agentName: meta?.agentName ?? null,
-      environmentName: meta?.environmentName ?? null,
-    };
-    return currentTurn;
-  }
-
-  function commitCurrentTurn() {
-    if (!currentTurn) return;
-    const hasPrompt = currentTurn.prompt.trim().length > 0;
-    const hasLogs = currentTurn.logs.length > 0;
-    if (hasPrompt || hasLogs) {
-      turns.push(currentTurn);
-    }
-    currentTurn = null;
-  }
-
-  function commitPendingBtwTurn() {
-    if (!pendingBtwTurn) return;
-    const hasPrompt = pendingBtwTurn.prompt.trim().length > 0;
-    const hasLogs = pendingBtwTurn.logs.length > 0;
-    if (hasPrompt || hasLogs) {
-      turns.push(pendingBtwTurn);
-    }
-    pendingBtwTurn = null;
-  }
-
-  function getSafeTimestamp(log: RunnerLog, index: number): number {
-    const logTimestampMs = parseIsoTimestampMs(log.time);
-    if (logTimestampMs !== null) {
-      return logTimestampMs;
-    }
-    const relativeSeconds = log.time ? parseSecondsFromClock(log.time) : null;
-    if (relativeSeconds !== null && meta?.startedAtMs != null) {
-      return meta.startedAtMs + relativeSeconds * 1000;
-    }
-    return Date.now() + index;
-  }
-
-  for (let index = 0; index < dedupedLogs.length; index += 1) {
-    const log = dedupedLogs[index];
-
-    if (log.eventType === "user_message" || (log as RunnerLog & { isUserMessage?: boolean }).isUserMessage) {
-      const rawPrompt = stripSystemTags(log.message || "");
-      const prompt = extractRunnerVisibleContentFromHiddenExecutionPrompt(rawPrompt);
-      if (isRunnerInternalHiddenExecutionPromptContent(rawPrompt) && !prompt) {
-        continue;
-      }
-      const startedAtMs = getSafeTimestamp(log, index);
-      const messageAttachments = normalizeTurnAttachments(
-        (log.metadata as Record<string, unknown> | undefined)?.attachments,
-        meta?.backendUrl
-      );
-      if (isBtwTurnPrompt(prompt)) {
-        commitPendingBtwTurn();
-        pendingBtwTurn = {
-          id: generateId("turn"),
-          prompt,
-          messageMetadata: normalizeRunnerTurnMessageMetadata(log.metadata, meta?.threadMetadata),
-          logs: [],
-          startedAtMs,
-          completedAtMs: startedAtMs,
-          status: "running",
-          animateOnRender: false,
-          agentName: meta?.agentName ?? null,
-          environmentName: meta?.environmentName ?? null,
-          presentation: "btw",
-          attachments: messageAttachments,
-        };
-      } else {
-        commitPendingBtwTurn();
-        commitCurrentTurn();
-        currentTurn = {
-          id: generateId("turn"),
-          prompt,
-          messageMetadata: normalizeRunnerTurnMessageMetadata(log.metadata, meta?.threadMetadata),
-          logs: [],
-          startedAtMs,
-          completedAtMs: startedAtMs,
-          status: "completed",
-          animateOnRender: false,
-          agentName: meta?.agentName ?? null,
-          environmentName: meta?.environmentName ?? null,
-          presentation: "default",
-          attachments: messageAttachments,
-        };
-      }
-      continue;
-    }
-
-    if ((log.eventType === "agent_message" || log.eventType === "llm_response") && pendingBtwTurn) {
-      pendingBtwTurn.logs.push(log);
-      pendingBtwTurn.completedAtMs = getSafeTimestamp(log, index);
-      pendingBtwTurn.status = log.type === "error" ? "failed" : "completed";
-      commitPendingBtwTurn();
-      continue;
-    }
-
-    const actionType = log.metadata?.actionType;
-    if (
-      log.eventType === "action_summary" &&
-      (actionType === "compact" || actionType === "clear" || actionType === "fork" || actionType === "revert" || actionType === "reapply")
-    ) {
-      let commandPrompt = "";
-      if (
-        currentTurn &&
-        currentTurn.prompt.trim().length > 0 &&
-        currentTurn.logs.length === 0 &&
-        isThreadContextCommandPrompt(currentTurn.prompt, actionType)
-      ) {
-        commandPrompt = currentTurn.prompt;
-        currentTurn = null;
-      } else {
-        commitCurrentTurn();
-      }
-      const logTimestampMs = parseIsoTimestampMs(log.time);
-      const safeTimestamp = logTimestampMs ?? Date.now() + index;
-      turns.push({
-        id: generateId("turn"),
-        prompt: commandPrompt,
-        logs: [log],
-        startedAtMs: safeTimestamp,
-        completedAtMs: safeTimestamp,
-        status: "completed",
-        animateOnRender: false,
-        agentName: meta?.agentName ?? null,
-        environmentName: meta?.environmentName ?? null,
-        presentation: "context-action-notice",
-      });
-      currentTurn = null;
-      continue;
-    }
-
-    const turn = ensureCurrentTurn(index);
-
-    if (log.eventType === "turn_completed") {
-      turn.logs.push(log);
-      const durationMs = typeof log.metadata?.durationMs === "number" ? log.metadata.durationMs : null;
-      if (durationMs && durationMs >= 0) {
-        turn.durationSeconds = Math.max(0, Math.round(durationMs / 1000));
-        turn.completedAtMs = turn.startedAtMs + durationMs;
-      }
-      if (log.type === "error") {
-        turn.status = "failed";
-      } else if (isActiveTurnStatus(turn.status)) {
-        turn.status = "completed";
-      }
-      continue;
-    }
-
-    turn.logs.push(log);
-
-    if (log.eventType === "permission_request") {
-      const permissionStatus = String(log.metadata?.status || log.metadata?.decision || "").trim().toLowerCase();
-      if (!permissionStatus || permissionStatus === "pending") {
-        turn.status = "permission_asked";
-        turn.completedAtMs = undefined;
-      } else if (turn.status === "permission_asked") {
-        if (isTerminalThreadLifecycleStatus(meta?.threadStatus) || meta?.completedAtMs != null) {
-          turn.status = terminalTurnStatusFromThreadStatus(meta?.threadStatus);
-          turn.completedAtMs = meta?.completedAtMs ?? getSafeTimestamp(log, index);
-        } else {
-          turn.status = "running";
-        }
-      }
-      continue;
-    }
-
-    if (log.eventType === "agent_message" || log.eventType === "llm_response") {
-      const durationMs =
-        typeof log.metadata?.durationMs === "number"
-          ? log.metadata.durationMs
-          : typeof (log.metadata as { duration_ms?: unknown } | undefined)?.duration_ms === "number"
-            ? ((log.metadata as { duration_ms: number }).duration_ms)
-            : null;
-      if (durationMs && durationMs >= 0) {
-        turn.durationSeconds = Math.max(0, Math.round(durationMs / 1000));
-        turn.completedAtMs = turn.startedAtMs + durationMs;
-      }
-      turn.status = log.type === "error" ? "failed" : "completed";
-      continue;
-    }
-
-    if (log.type === "error") {
-      turn.status = "failed";
-    }
-  }
-
-  commitPendingBtwTurn();
-  commitCurrentTurn();
-  const sortedTurns = [...turns].sort((left, right) => {
-    if (left.startedAtMs !== right.startedAtMs) {
-      return left.startedAtMs - right.startedAtMs;
-    }
-    return left.id.localeCompare(right.id);
-  });
-  for (let index = 0; index < sortedTurns.length; index += 1) {
-    const turn = sortedTurns[index];
-    if (!turn.agentName) {
-      turn.agentName = meta?.agentName ?? null;
-    }
-    if (!turn.environmentName) {
-      turn.environmentName = meta?.environmentName ?? null;
-    }
-    if (index === 0) {
-      turn.isInitialTurn = true;
-      if (meta?.durationSeconds != null) {
-        turn.durationSeconds = meta.durationSeconds;
-      }
-      if (meta?.startedAtMs != null) {
-        turn.startedAtMs = meta.startedAtMs;
-      }
-      if (meta?.completedAtMs != null) {
-        turn.completedAtMs = meta.completedAtMs;
-      }
-    }
-  }
-  return applyHydratedRunningThreadState(
-    attachHydratedMessageIdsToTurns(sortedTurns, chronologicalMessages, meta?.backendUrl, meta?.threadMetadata),
-    meta
-  );
-}
-
 function defaultAttachmentFromFile(file: File): RunnerAttachment {
   return {
     id: generateId("att"),
@@ -10792,48 +1046,8 @@ function defaultAttachmentFromFile(file: File): RunnerAttachment {
   };
 }
 
-type RunnerComposerPlanTier = "sandbox" | "builder" | "team" | "business" | "enterprise";
-
-function normalizeRunnerComposerPlanTier(value: unknown): RunnerComposerPlanTier {
-  const normalized = String(value || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
-  if (normalized === "enterprise" || normalized === "enterprise_plan" || normalized === "organization" || normalized === "org") {
-    return "enterprise";
-  }
-  if (normalized === "business" || normalized === "business_plan") {
-    return "business";
-  }
-  if (normalized === "team" || normalized === "team_plan" || normalized === "scale") {
-    return "team";
-  }
-  if (normalized === "builder" || normalized === "builder_plan" || normalized === "pro" || normalized === "pro_plan" || normalized === "individual" || normalized === "individual_plan" || normalized === "paid") {
-    return "builder";
-  }
-  return "sandbox";
-}
-
-function getRunnerComposerPlanDisplay(tierId: unknown): { label: string; Icon: typeof LucideStar } {
-  switch (normalizeRunnerComposerPlanTier(tierId)) {
-    case "enterprise":
-      return { label: "Enterprise Plan", Icon: LucideStar };
-    case "business":
-      return { label: "Business Plan", Icon: LucideUsersRound };
-    case "team":
-      return { label: "Team Plan", Icon: LucideUsersRound };
-    case "builder":
-      return { label: "Builder Plan", Icon: LucideStar };
-    case "sandbox":
-    default:
-      return { label: "Upgrade to Builder", Icon: LucideStar };
-  }
-}
-
 const LOGS_AUTO_SCROLL_BOTTOM_THRESHOLD_PX = 24;
 const LOGS_AUTO_SCROLL_SETTLE_FRAME_COUNT = 3;
-const REATTACH_RUNNING_THREAD_POLL_INTERVAL_MS = 900;
-const REATTACH_THREAD_RETRY_DELAY_MS = 1500;
-const REATTACH_THREAD_TERMINAL_SETTLE_POLL_LIMIT = 2;
-const REATTACH_THREAD_INITIAL_GRACE_POLL_LIMIT = 30;
-
 function isLogViewportPinnedToBottom(element: HTMLDivElement): boolean {
   return element.scrollHeight - element.scrollTop - element.clientHeight <= LOGS_AUTO_SCROLL_BOTTOM_THRESHOLD_PX;
 }
@@ -10973,7 +1187,7 @@ export function RunnerChat({
   const [visibleTimelineItemCountsByTurn, setVisibleTimelineItemCountsByTurn] = useState<Record<string, number>>({});
   const [visibleWorkLogItemCountsByTurn, setVisibleWorkLogItemCountsByTurn] = useState<Record<string, number>>({});
   const [thinkingStatusPhaseByTurn, setThinkingStatusPhaseByTurn] = useState<Record<string, RunnerThinkingStatusPhase>>({});
-  const [pendingQueuedMessages, setPendingQueuedMessages] = useState<PendingRunnerMessage[]>([]);
+  const [pendingQueuedMessages, setPendingQueuedMessages] = useState<RunnerPendingMessage[]>([]);
   const [editingTurnId, setEditingTurnId] = useState<string | null>(null);
   const [editingTurnDraft, setEditingTurnDraft] = useState("");
   const [forkingTurnId, setForkingTurnId] = useState<string | null>(null);
@@ -11116,9 +1330,6 @@ export function RunnerChat({
   const [githubBranchesByRepoFullName, setGithubBranchesByRepoFullName] = useState<Record<string, RunnerChatOption[]>>({});
   const [githubSelectedBranchByRepoFullName, setGithubSelectedBranchByRepoFullName] = useState<Record<string, string>>({});
   const [githubBranchLoadingRepoFullNames, setGithubBranchLoadingRepoFullNames] = useState<string[]>([]);
-  const [isListening, setIsListening] = useState(false);
-  const [recordingStartedAtMs, setRecordingStartedAtMs] = useState<number | null>(null);
-  const [recordingElapsedSeconds, setRecordingElapsedSeconds] = useState(0);
   const [stagedThreadContextCommand, setStagedThreadContextCommand] = useState<RunnerChatThreadContextAction | null>(null);
   const [stagedResourceCreationCommand, setStagedResourceCreationCommand] = useState<StagedResourceCreationCommand | null>(null);
   const [stagedAgentCreationCommand, setStagedAgentCreationCommand] = useState<StagedAgentCreationCommand | null>(null);
@@ -11163,18 +1374,6 @@ export function RunnerChat({
   const runSummaryMoreMenuRef = useRef<HTMLSpanElement | null>(null);
   const emailDeliveryAttachmentsPopoverRef = useRef<HTMLSpanElement | null>(null);
   const currentInputRef = useRef(initialTask);
-  const speechSocketRef = useRef<WebSocket | null>(null);
-  const speechSocketReadyRef = useRef(false);
-  const speechPendingChunksRef = useRef<SpeechClientMessage[]>([]);
-  const speechBaseInputRef = useRef(initialTask);
-  const speechTranscriptRef = useRef("");
-  const speechActivityOpenRef = useRef(false);
-  const speechLastVoiceMsRef = useRef(0);
-  const speechMediaStreamRef = useRef<MediaStream | null>(null);
-  const speechAudioContextRef = useRef<AudioContext | null>(null);
-  const speechSourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null);
-  const speechProcessorNodeRef = useRef<AudioWorkletNode | null>(null);
-  const speechSinkGainNodeRef = useRef<GainNode | null>(null);
   const fileBrowserPreviewObjectUrlRef = useRef<string | null>(null);
   const documentPreviewResizeStateRef = useRef<{ startX: number; startWidth: number } | null>(null);
   const documentPreviewActionMenuRef = useRef<HTMLSpanElement | null>(null);
@@ -11208,25 +1407,6 @@ export function RunnerChat({
   const rawTimelineItemCountsRef = useRef<Record<string, number>>({});
   const thinkingStatusEligibilityRef = useRef<Record<string, boolean>>({});
   const [isStoppingRun, setIsStoppingRun] = useState(false);
-  const [voiceModeState, setVoiceModeState] = useState<{
-    status: "idle" | "starting" | "connected" | "closing" | "error";
-    error: string;
-    sessionId: string;
-    threadId: string;
-    agentId: string;
-    agentName: string;
-    lastUserTranscript: string;
-    lastAssistantTranscript: string;
-  }>({
-    status: "idle",
-    error: "",
-    sessionId: "",
-    threadId: "",
-    agentId: "",
-    agentName: "",
-    lastUserTranscript: "",
-    lastAssistantTranscript: "",
-  });
   const [activeThreadHistoryItemId, setActiveThreadHistoryItemId] = useState<string | null>(null);
   const [hoveredThreadHistoryItemId, setHoveredThreadHistoryItemId] = useState<string | null>(null);
   const [isThreadHistoryRailHovered, setIsThreadHistoryRailHovered] = useState(false);
@@ -11237,28 +1417,26 @@ export function RunnerChat({
   const previousLogsScrollHeightRef = useRef(0);
   const autoScrollSettleFramesRef = useRef(0);
   const screenFileDragActiveRef = useRef(false);
-  const voiceModeWebSocketRef = useRef<WebSocket | null>(null);
-  const voiceModeAudioContextRef = useRef<AudioContext | null>(null);
-  const voiceModeMediaStreamRef = useRef<MediaStream | null>(null);
-  const voiceModeSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
-  const voiceModeProcessorRef = useRef<ScriptProcessorNode | null>(null);
-  const voiceModePlaybackTimeRef = useRef(0);
-  const voiceModeSessionIdRef = useRef<string | null>(null);
-  const voiceModePendingUserTranscriptRef = useRef("");
-  const voiceModePendingUserCanonicalPersistedRef = useRef(false);
-  const voiceModeLegacyTranscriptFallbackRef = useRef(false);
-  const voiceModeTranscriptWriteTailRef = useRef<Promise<void>>(Promise.resolve());
-  const voiceModeSessionGenerationRef = useRef(0);
-  const voiceModeThreadIdRef = useRef("");
-  const currentThreadIdForVoiceRef = useRef("");
 
   const { status, logs, execute, cancel, clear, result } = useRunnerExecution({ clearLogsOnExecute: false });
 
   const normalizedBackendUrl = useMemo(() => sanitizeBackendUrl(backendUrl), [backendUrl]);
-  const resolvedSpeechToTextUrl = useMemo(
-    () => resolveSpeechToTextUrl(speechToTextUrl, normalizedBackendUrl, requestHeaders),
-    [speechToTextUrl, normalizedBackendUrl, requestHeaders]
-  );
+  const {
+    isListening,
+    recordingElapsedSeconds,
+    resetDraft: resetSpeechDraft,
+    stop: stopSpeechToText,
+    supportsSpeechToText,
+    toggle: toggleSpeechToText,
+  } = useRunnerSpeechToText({
+    apiKey,
+    backendUrl: normalizedBackendUrl,
+    input,
+    onError: setInlineError,
+    onInputChange: setInput,
+    requestHeaders,
+    speechToTextUrl,
+  });
   const normalizedSkills = useMemo(() => normalizeComputerAgentSkills(skills), [skills]);
   const displayedSkills = useMemo(() => [...normalizedSkills, ...customSkills], [customSkills, normalizedSkills]);
   const controlledEnabledSkillIdsList = useMemo(
@@ -11288,17 +1466,7 @@ export function RunnerChat({
   const githubItems = githubConfig?.fetchItems ? remoteGithubItems : [];
   const notionItems = notionDatabasesToFileItems(notionDatabases);
   const currentThreadId = threadId ?? localThreadId;
-  currentThreadIdForVoiceRef.current = String(currentThreadId || "").trim();
   const hasCurrentThread = Boolean(currentThreadId);
-  useEffect(() => {
-    setInlineError(null);
-    const sessionId = String(voiceModeSessionIdRef.current || "").trim();
-    const sessionThreadId = voiceModeThreadIdRef.current;
-    const selectedThreadId = String(currentThreadId || "").trim();
-    if (sessionId && sessionThreadId && selectedThreadId !== sessionThreadId) {
-      void stopVoiceModeSession();
-    }
-  }, [currentThreadId]);
   const legacyTurnProjectionCacheRef = useRef(new Map<string, {
     projection: RunnerThreadProjection;
     logCount: number;
@@ -11412,16 +1580,6 @@ export function RunnerChat({
 	      }
 	    }
 	  }, [currentThreadId, onTaskListChange, turns]);
-  useEffect(() => {
-    return () => {
-      const sessionId = String(voiceModeSessionIdRef.current || "").trim();
-      voiceModeSessionGenerationRef.current += 1;
-      cleanupVoiceModeResources();
-      voiceModeSessionIdRef.current = null;
-      voiceModeThreadIdRef.current = "";
-      if (sessionId) void endBackendVoiceSession(sessionId);
-    };
-  }, []);
 	  const currentThreadHasWorkspaceChanges = useMemo(
     () => turns.some((turn) => collectTurnChangedFiles(turn.logs).length > 0),
     [turns]
@@ -11760,7 +1918,7 @@ export function RunnerChat({
     threadViewMode === "canonical"
     || (threadViewMode === "auto" && hasCanonicalTimelineContent && !hasLegacyOnlyThreadAffordances)
   );
-  voiceModeLegacyTranscriptFallbackRef.current = threadViewMode === "legacy"
+  const shouldUseLegacyVoiceTranscriptFallback = threadViewMode === "legacy"
     || (substantiveLegacyTurnCount > 0 && !shouldUseCanonicalThreadSurface);
   const activeCanonicalRun = canonicalProjectionMatchesThread
     ? Object.values(canonicalThread.projection.runsById)
@@ -11920,20 +2078,6 @@ export function RunnerChat({
     effectiveWorkspaceSelectorMode === "projects" ? selectedProjectEnvironmentId : "";
   const targetMainPopup = getMainPopupRenderId(activeInputPopup);
   const targetSidePopup = getSidePopupRenderId(activeInputPopup);
-  const supportsSpeechToText = useMemo(() => {
-    if (!hasApiKey || !resolvedSpeechToTextUrl || typeof window === "undefined" || typeof navigator === "undefined") {
-      return false;
-    }
-    const browserWindow = window as typeof window & {
-      webkitAudioContext?: typeof AudioContext;
-    };
-    return (
-      typeof WebSocket !== "undefined" &&
-      typeof AudioWorkletNode !== "undefined" &&
-      !!navigator.mediaDevices?.getUserMedia &&
-      !!(browserWindow.AudioContext || browserWindow.webkitAudioContext)
-    );
-  }, [hasApiKey, resolvedSpeechToTextUrl]);
   const effectiveAgentId = useComputerAgentsMode ? selectedAgentId || agentId : agentId;
   const explicitProjectId = typeof projectId === "string" && projectId.trim() ? projectId.trim() : null;
   const effectiveProjectId = explicitProjectId || (
@@ -11944,6 +2088,98 @@ export function RunnerChat({
   const effectiveEnvironmentId = useComputerAgentsMode
     ? effectiveProjectEnvironmentId || selectedEnvironmentId || environmentId
     : environmentId;
+  const selectedAgent =
+    agents.find((agent) => agent.id === selectedAgentId)
+    || getRunnerPreferredDefaultAgentOption(agents)
+    || agents[0];
+  const selectedEnvironment =
+    availableEnvironments.find((environment) => environment.id === selectedEnvironmentId)
+    || availableEnvironments.find((environment) => environment.isDefault)
+    || availableEnvironments[0];
+  const displayedAgentLabel = hasApiKey ? selectedAgent?.name || "Agent" : "Default Agent";
+  const displayedEnvironmentLabel = hasApiKey ? selectedEnvironment?.name || "Default" : "Default";
+  const displayedWorkspaceLabel = hasApiKey
+    ? effectiveWorkspaceSelectorMode === "projects" && selectedProject
+      ? selectedProject.name || "Project"
+      : displayedEnvironmentLabel
+    : "Default";
+  const {
+    start: startVoiceModeSession,
+    state: voiceModeState,
+    stop: stopVoiceModeSession,
+  } = useRunnerVoiceModeSession({
+    agent: selectedAgent,
+    agentId: effectiveAgentId,
+    agentName: displayedAgentLabel,
+    apiKey,
+    backendUrl: normalizedBackendUrl,
+    currentThreadId,
+    disabled,
+    environmentId: effectiveEnvironmentId,
+    isDictationListening: isListening,
+    isLegacyTranscriptFallback: shouldUseLegacyVoiceTranscriptFallback,
+    isPreparingRun,
+    onError: setInlineError,
+    onLegacyTranscript: ({ prompt, response, metadata }) => {
+      appendSyntheticActionTurn(prompt, response, "Voice mode", {
+        messageMetadata: metadata,
+      });
+    },
+    onThreadIdChange: (nextThreadId) => {
+      setLocalThreadId(nextThreadId);
+      try {
+        onThreadIdChange?.(nextThreadId);
+      } catch (error) {
+        reportRunnerLifecycleCallbackError("onThreadIdChange", error);
+      }
+    },
+    requestHeaders,
+    stopDictation: stopSpeechToText,
+  });
+  useRunnerThreadHistoryHydration({
+    agentName: displayedAgentLabel,
+    apiKey,
+    backendUrl: normalizedBackendUrl,
+    clearExecution: clear,
+    environmentName: displayedEnvironmentLabel,
+    externalRunRequest,
+    handledExternalRunTokenRef: handledExternalRunRequestTokenRef,
+    hasApiKey,
+    hasRunningTurn,
+    hydrationCacheRef: threadHydrationCacheRef,
+    initializedThreadIdRef: initializedThreadHistoryIdRef,
+    isPreparingRun,
+    locallyOwnedExecutionThreadIdRef,
+    onEnvironmentHydrated: applyHydratedThreadEnvironment,
+    pendingQueuedMessageCount: pendingQueuedMessages.length,
+    requestHeaders,
+    setError: setInlineError,
+    setExpandedStepRows,
+    setExpandedTurns,
+    setHydratedThreadStatus,
+    setIsLoading: setIsThreadHistoryLoading,
+    setTurns,
+    threadId,
+    turnsRef,
+  });
+  useRunnerRunningThreadReattachment({
+    agentName: displayedAgentLabel,
+    apiKey,
+    backendUrl: normalizedBackendUrl,
+    enabled: Boolean(currentThreadId && hasApiKey && normalizedBackendUrl),
+    environmentName: displayedEnvironmentLabel,
+    hasHydratedActivity: hasHydratedReattachActivity,
+    hasRunningTurn,
+    hydrationCacheRef: threadHydrationCacheRef,
+    locallyOwnedExecutionThreadIdRef,
+    onEnvironmentHydrated: applyHydratedThreadEnvironment,
+    requestHeaders,
+    setExpandedTurns,
+    setHydratedThreadStatus,
+    setTurns,
+    threadId: currentThreadId,
+    turnsRef,
+  });
   const effectiveReasoningEffort = useComputerAgentsMode
     ? selectedReasoningEffort
     : normalizeRunnerReasoningEffort(controlledReasoningEffort);
@@ -12144,24 +2380,12 @@ export function RunnerChat({
   }
 
   async function fetchThreadContextEstimate(nextThreadId: string): Promise<RunnerChatThreadContext | null> {
-    const headers = buildRunnerHeaders(requestHeaders, apiKey.trim());
-    const response = await fetch(`${normalizedBackendUrl}/threads/${encodeURIComponent(nextThreadId)}/context`, {
-      method: "GET",
-      headers,
+    return fetchRunnerThreadContext({
+      backendUrl: normalizedBackendUrl,
+      apiKey,
+      requestHeaders,
+      threadId: nextThreadId,
     });
-    const body = await response.text();
-    let parsed: { context?: RunnerChatThreadContext; message?: string; error?: string } = {};
-    try {
-      parsed = body ? JSON.parse(body) : {};
-    } catch {
-      parsed = {};
-    }
-
-    if (!response.ok) {
-      throw new Error(parsed.message || parsed.error || `Failed to load thread context (${response.status})`);
-    }
-
-    return parsed.context || null;
   }
 
   async function fetchThreadContextDetails(nextThreadId: string): Promise<{
@@ -12169,34 +2393,12 @@ export function RunnerChat({
     availableActions: RunnerChatThreadContextAvailableActions;
     nativeError: string | null;
   }> {
-    const headers = buildRunnerHeaders(requestHeaders, apiKey.trim());
-    const response = await fetch(`${normalizedBackendUrl}/threads/${encodeURIComponent(nextThreadId)}/context/details`, {
-      method: "GET",
-      headers,
+    return fetchRunnerThreadContextDetails({
+      backendUrl: normalizedBackendUrl,
+      apiKey,
+      requestHeaders,
+      threadId: nextThreadId,
     });
-    const body = await response.text();
-    let parsed: {
-      context?: RunnerChatThreadContextDetails;
-      availableActions?: RunnerChatThreadContextAvailableActions;
-      nativeError?: string | null;
-      message?: string;
-      error?: string;
-    } = {};
-    try {
-      parsed = body ? JSON.parse(body) : {};
-    } catch {
-      parsed = {};
-    }
-
-    if (!response.ok) {
-      throw new Error(parsed.message || parsed.error || `Failed to load thread context details (${response.status})`);
-    }
-
-    return {
-      context: parsed.context || null,
-      availableActions: parsed.availableActions || DEFAULT_THREAD_CONTEXT_ACTIONS,
-      nativeError: parsed.nativeError || null,
-    };
   }
 
   function appendSyntheticActionTurn(
@@ -12293,7 +2495,7 @@ export function RunnerChat({
       || /^(?:do not|don't|instead|also)\b/i.test(normalizedContent);
 
     try {
-      const headers = buildVoiceModeHeaders();
+      const headers = buildRunnerVoiceHeaders(requestHeaders, apiKey);
       let shouldUseCommunicator = fallbackLooksLikeStatusQuestion
         || (hasRoutableActiveRun && !fallbackLooksLikeWorkerInstruction);
       let targetRunId = activeCanonicalRun?.id || null;
@@ -12401,565 +2603,42 @@ export function RunnerChat({
     }
   }
 
-  function buildVoiceModeHeaders(): Headers {
-    const headers = new Headers(requestHeaders || {});
-    headers.set("Content-Type", "application/json");
-    if (apiKey.trim()) {
-      headers.set("X-API-Key", apiKey.trim());
-    }
-    return headers;
-  }
-
-  function buildVoiceModeSessionUpdate(sessionUpdatePayload: unknown, agentOption: RunnerChatOption | null | undefined): Record<string, unknown> {
-    const payloadRecord = sessionUpdatePayload && typeof sessionUpdatePayload === "object" && !Array.isArray(sessionUpdatePayload)
-      ? sessionUpdatePayload as Record<string, unknown>
-      : {};
-    const payloadSession = payloadRecord.session && typeof payloadRecord.session === "object" && !Array.isArray(payloadRecord.session)
-      ? payloadRecord.session as Record<string, unknown>
-      : {};
-    const payloadAudio = payloadSession.audio && typeof payloadSession.audio === "object" && !Array.isArray(payloadSession.audio)
-      ? payloadSession.audio as Record<string, unknown>
-      : {};
-    const payloadAudioInput = payloadAudio.input && typeof payloadAudio.input === "object" && !Array.isArray(payloadAudio.input)
-      ? payloadAudio.input as Record<string, unknown>
-      : {};
-    const payloadAudioOutput = payloadAudio.output && typeof payloadAudio.output === "object" && !Array.isArray(payloadAudio.output)
-      ? payloadAudio.output as Record<string, unknown>
-      : {};
-    const payloadTranscription = payloadAudioInput.transcription && typeof payloadAudioInput.transcription === "object" && !Array.isArray(payloadAudioInput.transcription)
-      ? payloadAudioInput.transcription as Record<string, unknown>
-      : {};
-    const languageHint = String(agentOption?.voiceLanguageHint || payloadTranscription.language_hint || "").trim();
-
-    return {
-      type: "session.update",
-      session: {
-        ...payloadSession,
-        voice: String(payloadSession.voice || agentOption?.voiceId || "eve").trim() || "eve",
-        turn_detection: payloadSession.turn_detection || { type: "server_vad" },
-        audio: {
-          ...payloadAudio,
-          input: {
-            ...payloadAudioInput,
-            format: {
-              type: "audio/pcm",
-              rate: RUNNER_CHAT_VOICE_SAMPLE_RATE,
-            },
-            transcription: {
-              model: "grok-transcribe",
-              ...payloadTranscription,
-              ...(languageHint ? { language_hint: languageHint } : {}),
-            },
-          },
-          output: {
-            ...payloadAudioOutput,
-            format: {
-              type: "audio/pcm",
-              rate: RUNNER_CHAT_VOICE_SAMPLE_RATE,
-            },
-          },
-        },
-      },
-    };
-  }
-
-  function cleanupVoiceModeResources() {
-    const websocket = voiceModeWebSocketRef.current;
-    voiceModeWebSocketRef.current = null;
-    if (websocket && websocket.readyState !== WebSocket.CLOSED && websocket.readyState !== WebSocket.CLOSING) {
-      try {
-        websocket.close();
-      } catch {}
+  async function tryHandleActiveCanonicalWorkerInstruction(content: string): Promise<boolean> {
+    const normalizedContent = content.trim();
+    const run = activeCanonicalRun;
+    if (
+      !normalizedContent
+      || !run
+      || !canonicalThreadEnabled
+      || !canonicalProjectionMatchesThread
+    ) {
+      return false;
     }
 
-    if (voiceModeProcessorRef.current) {
-      try {
-        voiceModeProcessorRef.current.disconnect();
-      } catch {}
-      voiceModeProcessorRef.current.onaudioprocess = null;
-      voiceModeProcessorRef.current = null;
-    }
-
-    if (voiceModeSourceRef.current) {
-      try {
-        voiceModeSourceRef.current.disconnect();
-      } catch {}
-      voiceModeSourceRef.current = null;
-    }
-
-    if (voiceModeMediaStreamRef.current) {
-      voiceModeMediaStreamRef.current.getTracks().forEach((track) => track.stop());
-      voiceModeMediaStreamRef.current = null;
-    }
-
-    const audioContext = voiceModeAudioContextRef.current;
-    voiceModeAudioContextRef.current = null;
-    voiceModePlaybackTimeRef.current = 0;
-    if (audioContext && audioContext.state !== "closed") {
-      void audioContext.close().catch(() => undefined);
-    }
-  }
-
-  async function endBackendVoiceSession(sessionId: string) {
-    const normalizedSessionId = String(sessionId || "").trim();
-    if (!normalizedSessionId || !normalizedBackendUrl || !hasApiKey) {
-      return;
-    }
-    await fetch(`${normalizedBackendUrl}/voice-agents/sessions/${encodeURIComponent(normalizedSessionId)}/end`, {
-      method: "POST",
-      credentials: "include",
-      headers: buildVoiceModeHeaders(),
-      body: JSON.stringify({}),
-    }).catch(() => undefined);
-  }
-
-  async function appendVoiceTranscriptMessage(
-    role: "user" | "assistant",
-    content: string,
-    event: Record<string, unknown>,
-    sessionId: string,
-    sessionGeneration: number,
-  ) {
-    const normalizedSessionId = String(sessionId || "").trim();
-    const normalizedContent = String(content || "").trim();
-    if (!normalizedSessionId || !normalizedContent || !normalizedBackendUrl || !hasApiKey) {
-      return;
-    }
-
-    const isCurrentVoiceSession = () => (
-      voiceModeSessionGenerationRef.current === sessionGeneration
-      && voiceModeSessionIdRef.current === normalizedSessionId
-      && Boolean(voiceModeThreadIdRef.current)
-      && currentThreadIdForVoiceRef.current === voiceModeThreadIdRef.current
-    );
-
-    if (role === "user" && isCurrentVoiceSession()) {
-      voiceModePendingUserTranscriptRef.current = normalizedContent;
-      voiceModePendingUserCanonicalPersistedRef.current = false;
-    }
-
-    if (isCurrentVoiceSession()) {
-      setVoiceModeState((current) => ({
-        ...current,
-        lastUserTranscript: role === "user" ? normalizedContent : current.lastUserTranscript,
-        lastAssistantTranscript: role === "assistant" ? normalizedContent : current.lastAssistantTranscript,
-      }));
-    }
-
-    let canonicalPersisted = false;
-    let persistenceError = "";
-    const transcriptEvent = {
-      ...event,
-      client_transcript_id: String(event.client_transcript_id || event.clientTranscriptId || generateId("voice-transcript")),
-    };
-    for (let attempt = 0; attempt < 2 && !canonicalPersisted; attempt += 1) {
-      try {
-        const response = await fetch(`${normalizedBackendUrl}/voice-agents/sessions/${encodeURIComponent(normalizedSessionId)}/messages`, {
-          method: "POST",
-          credentials: "include",
-          headers: buildVoiceModeHeaders(),
-          body: JSON.stringify({
-            role,
-            content: normalizedContent,
-            event: transcriptEvent,
-          }),
-        });
-        const payload = await response.json().catch(() => null) as {
-          event?: { id?: string };
-          message?: { id?: string } | string;
-          error?: string;
-        } | null;
-        const persistedMessageId = payload?.message && typeof payload.message === "object"
-          ? payload.message.id
-          : null;
-        canonicalPersisted = response.ok && Boolean(payload?.event?.id && persistedMessageId);
-        if (!canonicalPersisted) {
-          persistenceError = typeof payload?.message === "string"
-            ? payload.message
-            : payload?.error
-              ? payload.error
-            : `Voice transcript persistence failed (${response.status}).`;
-        }
-      } catch (error) {
-        persistenceError = error instanceof Error ? error.message : String(error);
-      }
-    }
-    if (!isCurrentVoiceSession()) return;
-    if (role === "user") {
-      voiceModePendingUserCanonicalPersistedRef.current = canonicalPersisted;
-    }
-
-    if (role === "assistant") {
-      const promptText = String(voiceModePendingUserTranscriptRef.current || "Voice input").trim() || "Voice input";
-      const hadPendingUserTranscript = Boolean(voiceModePendingUserTranscriptRef.current.trim());
-      const userCanonicalPersisted = !hadPendingUserTranscript || voiceModePendingUserCanonicalPersistedRef.current;
-      voiceModePendingUserTranscriptRef.current = "";
-      voiceModePendingUserCanonicalPersistedRef.current = false;
-      // New or already-canonical threads receive the transcript through the
-      // ordered Thread v2 event above. Keep a synthetic pair only while a
-      // hydrated legacy transcript is still the selected compatibility view.
-      if (voiceModeLegacyTranscriptFallbackRef.current || !canonicalPersisted || !userCanonicalPersisted) {
-        appendSyntheticActionTurn(promptText, normalizedContent, "Voice mode", {
-          messageMetadata: {
-            source: "voice",
-            channel: "web_voice",
-            canonicalPersistenceFailed: !canonicalPersisted || !userCanonicalPersisted,
-          },
-        });
-      }
-    }
-    if (!canonicalPersisted && persistenceError) {
-      setInlineError(`${persistenceError} The transcript remains visible locally; retrying the voice turn is safe.`);
-    }
-  }
-
-  function enqueueVoiceTranscriptMessage(role: "user" | "assistant", content: string, event: Record<string, unknown>) {
-    const sessionId = String(voiceModeSessionIdRef.current || "").trim();
-    const sessionGeneration = voiceModeSessionGenerationRef.current;
-    const nextWrite = voiceModeTranscriptWriteTailRef.current
-      .catch(() => undefined)
-      .then(() => appendVoiceTranscriptMessage(role, content, event, sessionId, sessionGeneration));
-    voiceModeTranscriptWriteTailRef.current = nextWrite.catch(() => undefined);
-  }
-
-  function playVoiceAudioDelta(base64Audio: string) {
-    const audioContext = voiceModeAudioContextRef.current;
-    if (!audioContext || audioContext.state === "closed") {
-      return;
-    }
-    const samples = base64Pcm16ToFloat32(base64Audio);
-    if (samples.length === 0) {
-      return;
-    }
-    const buffer = audioContext.createBuffer(1, samples.length, RUNNER_CHAT_VOICE_SAMPLE_RATE);
-    buffer.copyToChannel(samples as Float32Array<ArrayBuffer>, 0);
-    const source = audioContext.createBufferSource();
-    source.buffer = buffer;
-    source.connect(audioContext.destination);
-    const startAt = Math.max(audioContext.currentTime, voiceModePlaybackTimeRef.current);
-    source.start(startAt);
-    voiceModePlaybackTimeRef.current = startAt + buffer.duration;
-  }
-
-  function handleVoiceRealtimeEvent(event: Record<string, unknown>) {
-    const type = String(event.type || "");
-    if (type === "response.output_audio.delta") {
-      const audioDelta = String(event.delta || event.audio || "");
-      if (audioDelta) {
-        playVoiceAudioDelta(audioDelta);
-      }
-      return;
-    }
-    if (type === "conversation.item.input_audio_transcription.completed") {
-      const transcript = String(event.transcript || "");
-      enqueueVoiceTranscriptMessage("user", transcript, event);
-      return;
-    }
-    if (type === "response.output_audio_transcript.done") {
-      const transcript = String(event.transcript || "");
-      enqueueVoiceTranscriptMessage("assistant", transcript, event);
-      return;
-    }
-    if (type === "error") {
-      const errorRecord = event.error && typeof event.error === "object" && !Array.isArray(event.error)
-        ? event.error as Record<string, unknown>
-        : {};
-      const message = String(errorRecord.message || event.message || "Voice mode error.").trim();
-      setVoiceModeState((current) => ({
-        ...current,
-        status: "error",
-        error: message,
-      }));
-      setInlineError(message);
-    }
-  }
-
-  async function stopVoiceModeSession(options: { silent?: boolean } = {}) {
-    const sessionId = String(voiceModeSessionIdRef.current || voiceModeState.sessionId || "").trim();
-    if (!options.silent) {
-      setVoiceModeState((current) => ({
-        ...current,
-        status: current.status === "idle" ? "idle" : "closing",
-        error: "",
-      }));
-    }
-    cleanupVoiceModeResources();
-    voiceModeSessionGenerationRef.current += 1;
-    voiceModeSessionIdRef.current = null;
-    voiceModeThreadIdRef.current = "";
-    voiceModePendingUserTranscriptRef.current = "";
-    voiceModePendingUserCanonicalPersistedRef.current = false;
-    if (sessionId) {
-      await endBackendVoiceSession(sessionId);
-    }
-    if (!options.silent) {
-      setVoiceModeState({
-        status: "idle",
-        error: "",
-        sessionId: "",
-        threadId: "",
-        agentId: "",
-        agentName: "",
-        lastUserTranscript: "",
-        lastAssistantTranscript: "",
-      });
-    }
-  }
-
-  async function startVoiceModeSession() {
-    if (disabled || isPreparingRun || voiceModeState.status === "starting" || voiceModeState.status === "connected") {
-      return;
-    }
-    if (!hasApiKey) {
-      setInlineError("Enter an API key to start voice mode.");
-      return;
-    }
-    if (!normalizedBackendUrl) {
-      setInlineError("backendUrl is required.");
-      return;
-    }
-    if (typeof window === "undefined" || typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
-      setInlineError("Voice mode is not supported in this browser.");
-      return;
-    }
-
-    const selectedAgentOption = selectedAgent || (effectiveAgentId ? agents.find((agent) => agent.id === effectiveAgentId) : null) || null;
-    const normalizedAgentId = String(selectedAgentOption?.id || effectiveAgentId || agentId || "").trim();
-    if (!normalizedAgentId) {
-      setInlineError("Select an agent before starting voice mode.");
-      return;
-    }
-    if (!isRunnerChatWebVoiceMode(selectedAgentOption?.voiceMode)) {
-      setInlineError("Enable Web voice mode for this agent before starting voice mode.");
-      return;
-    }
-
-    voiceModeSessionGenerationRef.current += 1;
-    const startGeneration = voiceModeSessionGenerationRef.current;
-    let expectedThreadId = String(currentThreadId || "").trim();
-    const isVoiceStartCurrent = () => (
-      voiceModeSessionGenerationRef.current === startGeneration
-      && currentThreadIdForVoiceRef.current === expectedThreadId
-    );
-    const abandonVoiceStart = async (sessionId = "") => {
-      if (voiceModeSessionGenerationRef.current === startGeneration) {
-        voiceModeSessionGenerationRef.current += 1;
-        cleanupVoiceModeResources();
-        voiceModeSessionIdRef.current = null;
-        voiceModeThreadIdRef.current = "";
-        voiceModePendingUserTranscriptRef.current = "";
-        voiceModePendingUserCanonicalPersistedRef.current = false;
-        setVoiceModeState({
-          status: "idle",
-          error: "",
-          sessionId: "",
-          threadId: "",
-          agentId: "",
-          agentName: "",
-          lastUserTranscript: "",
-          lastAssistantTranscript: "",
-        });
-      }
-      if (sessionId) await endBackendVoiceSession(sessionId);
-    };
-
-    setVoiceModeState({
-      status: "starting",
-      error: "",
-      sessionId: "",
-      threadId: String(currentThreadId || ""),
-      agentId: normalizedAgentId,
-      agentName: selectedAgentOption?.name || displayedAgentLabel,
-      lastUserTranscript: "",
-      lastAssistantTranscript: "",
-    });
-    setInlineError(null);
-
+    const clientMessageId = generateId("worker-instruction");
     try {
-      if (isListening) {
-        await stopSpeechToText();
-      }
-      if (!isVoiceStartCurrent()) {
-        await abandonVoiceStart();
-        return;
-      }
-      cleanupVoiceModeResources();
-
-      const response = await fetch(`${normalizedBackendUrl}/voice-agents/agents/${encodeURIComponent(normalizedAgentId)}/sessions`, {
-        method: "POST",
-        credentials: "include",
-        headers: buildVoiceModeHeaders(),
-        body: JSON.stringify({
-          ...(currentThreadId ? { threadId: currentThreadId } : {}),
-          ...(effectiveEnvironmentId ? { environmentId: effectiveEnvironmentId } : {}),
-          title: `Voice session with ${selectedAgentOption?.name || "Agent"}`,
-        }),
+      const instruction = await persistRunnerActiveRunInstruction({
+        clientMessageId,
+        content: normalizedContent,
+        postMessage: canonicalThread.postMessage,
+        runId: run.id,
       });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(payload?.message || payload?.error || "Failed to create voice session.");
-      }
-
-      const sessionId = String(payload?.voiceSession?.id || payload?.voiceSessionId || "").trim();
-      const sessionThreadId = String(payload?.thread?.id || payload?.voiceSession?.threadId || currentThreadId || "").trim();
-      const realtimeUrl = String(payload?.xai?.realtimeUrl || "").trim();
-      const websocketProtocol = String(payload?.xai?.websocketProtocol || "").trim();
-      if (!sessionId || !realtimeUrl || !websocketProtocol) {
-        throw new Error("Voice session was created without realtime credentials.");
-      }
-      if (!isVoiceStartCurrent()) {
-        await abandonVoiceStart(sessionId);
-        return;
-      }
-      expectedThreadId = sessionThreadId;
-      voiceModePendingUserTranscriptRef.current = "";
-      voiceModePendingUserCanonicalPersistedRef.current = false;
-      voiceModeThreadIdRef.current = sessionThreadId;
-
-      if (sessionThreadId && sessionThreadId !== currentThreadId) {
-        currentThreadIdForVoiceRef.current = sessionThreadId;
-        setLocalThreadId(sessionThreadId);
-        try {
-          onThreadIdChange?.(sessionThreadId);
-        } catch (callbackError) {
-          reportRunnerLifecycleCallbackError("onThreadIdChange", callbackError);
-        }
-      }
-      setVoiceModeState((current) => ({
-        ...current,
-        sessionId,
-        threadId: sessionThreadId,
-      }));
-
-      const AudioContextCtor = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-      if (!AudioContextCtor) {
-        throw new Error("Voice mode is not supported in this browser.");
-      }
-      const audioContext = new AudioContextCtor({ sampleRate: RUNNER_CHAT_VOICE_SAMPLE_RATE });
-      voiceModeAudioContextRef.current = audioContext;
-      if (audioContext.state === "suspended") {
-        await audioContext.resume();
-      }
-      if (!isVoiceStartCurrent()) {
-        await abandonVoiceStart(sessionId);
-        return;
-      }
-
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          channelCount: 1,
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
-      });
-      if (!isVoiceStartCurrent()) {
-        mediaStream.getTracks().forEach((track) => track.stop());
-        await abandonVoiceStart(sessionId);
-        return;
-      }
-      voiceModeMediaStreamRef.current = mediaStream;
-
-      const websocket = new WebSocket(realtimeUrl, [websocketProtocol]);
-      voiceModeWebSocketRef.current = websocket;
-      voiceModeSessionIdRef.current = sessionId;
-
-      websocket.addEventListener("open", () => {
-        if (voiceModeWebSocketRef.current !== websocket || !isVoiceStartCurrent()) {
-          try { websocket.close(); } catch {}
-          void endBackendVoiceSession(sessionId);
-          return;
-        }
-        const sessionUpdate = buildVoiceModeSessionUpdate(payload?.xai?.sessionUpdate, selectedAgentOption);
-        websocket.send(JSON.stringify(sessionUpdate));
-
-        const source = audioContext.createMediaStreamSource(mediaStream);
-        const processor = audioContext.createScriptProcessor(4096, 1, 1);
-        processor.onaudioprocess = (event) => {
-          const output = event.outputBuffer.getChannelData(0);
-          output.fill(0);
-          if (voiceModeWebSocketRef.current !== websocket || websocket.readyState !== WebSocket.OPEN) {
-            return;
-          }
-          const inputSamples = event.inputBuffer.getChannelData(0);
-          const voiceSamples = resampleFloat32ToSampleRate(inputSamples, audioContext.sampleRate, RUNNER_CHAT_VOICE_SAMPLE_RATE);
-          const audio = float32ToBase64Pcm16(voiceSamples);
-          if (audio) {
-            websocket.send(JSON.stringify({
-              type: "input_audio_buffer.append",
-              audio,
-            }));
-          }
-        };
-        source.connect(processor);
-        processor.connect(audioContext.destination);
-        voiceModeSourceRef.current = source;
-        voiceModeProcessorRef.current = processor;
-
-        setVoiceModeState({
-          status: "connected",
-          error: "",
-          sessionId,
-          threadId: sessionThreadId,
-          agentId: normalizedAgentId,
-          agentName: selectedAgentOption?.name || displayedAgentLabel,
-          lastUserTranscript: "",
-          lastAssistantTranscript: "",
-        });
-      });
-
-      websocket.addEventListener("message", (messageEvent) => {
-        if (voiceModeWebSocketRef.current !== websocket) {
-          return;
-        }
-        if (typeof messageEvent.data !== "string") {
-          return;
-        }
-        try {
-          const event = JSON.parse(messageEvent.data) as Record<string, unknown>;
-          handleVoiceRealtimeEvent(event);
-        } catch {}
-      });
-
-      websocket.addEventListener("error", () => {
-        if (voiceModeWebSocketRef.current !== websocket) {
-          return;
-        }
-        setVoiceModeState((current) => ({
-          ...current,
-          status: "error",
-          error: "Voice mode connection failed.",
-        }));
-        setInlineError("Voice mode connection failed.");
-      });
-
-      websocket.addEventListener("close", () => {
-        if (voiceModeWebSocketRef.current !== websocket) {
-          return;
-        }
-        cleanupVoiceModeResources();
-        setVoiceModeState((current) => (
-          current.status === "closing"
-            ? current
-            : {
-                ...current,
-                status: "error",
-                error: "Voice mode disconnected.",
-              }
-        ));
-      });
+      const notice = getRunnerActiveRunInstructionNotice(instruction);
+      if (notice) setInlineError(notice);
+      return true;
     } catch (error) {
-      cleanupVoiceModeResources();
-      voiceModeSessionIdRef.current = null;
       const normalizedError = error instanceof Error ? error : new Error(String(error));
-      setVoiceModeState((current) => ({
-        ...current,
-        status: "error",
-        error: normalizedError.message || "Failed to start voice mode.",
-      }));
-      setInlineError(normalizedError.message || "Failed to start voice mode.");
+      setInlineError(
+        `${normalizedError.message || "Worker delivery could not be confirmed."} `
+        + "The message remains in the composer and was not placed in the page-local queue.",
+      );
+      setInput(normalizedContent);
+      currentInputRef.current = normalizedContent;
+      focusComposerSoon({ preventScroll: true });
+      return true;
     }
   }
+
 
   function appendThreadContextActionNotice(action: RunnerChatThreadContextAction, message: string) {
     const turnId = generateId("turn");
@@ -13151,8 +2830,7 @@ export function RunnerChat({
       setComposerQuotedSelection(null);
     }
     currentInputRef.current = "";
-    speechBaseInputRef.current = "";
-    speechTranscriptRef.current = "";
+    resetSpeechDraft("");
   }
 
   function clearQuotedSelectionPopup() {
@@ -13438,8 +3116,7 @@ export function RunnerChat({
     setStagedAdCreationCommand(null);
     setInput(prompt);
     currentInputRef.current = prompt;
-    speechBaseInputRef.current = prompt;
-    speechTranscriptRef.current = "";
+    resetSpeechDraft(prompt);
   }
 
   function stageThreadContextCommand(action: RunnerChatThreadContextAction, prompt = "") {
@@ -13456,8 +3133,7 @@ export function RunnerChat({
     setStagedThreadContextCommand(action);
     setInput(prompt);
     currentInputRef.current = prompt;
-    speechBaseInputRef.current = prompt;
-    speechTranscriptRef.current = "";
+    resetSpeechDraft(prompt);
   }
 
   function stageBacklogSubtaskCommand(ticketNumber: string, prompt?: string) {
@@ -13483,8 +3159,7 @@ export function RunnerChat({
     });
     setInput(nextPrompt);
     currentInputRef.current = nextPrompt;
-    speechBaseInputRef.current = nextPrompt;
-    speechTranscriptRef.current = "";
+    resetSpeechDraft(nextPrompt);
   }
 
   function stageBacklogMissionControlCommand(prompt = "") {
@@ -13504,8 +3179,7 @@ export function RunnerChat({
     });
     setInput(prompt);
     currentInputRef.current = prompt;
-    speechBaseInputRef.current = prompt;
-    speechTranscriptRef.current = "";
+    resetSpeechDraft(prompt);
   }
 
   function stageResourceCreationCommand(action: RunnerResourceCreationCommandType, prompt = "") {
@@ -13525,8 +3199,7 @@ export function RunnerChat({
     });
     setInput(prompt);
     currentInputRef.current = prompt;
-    speechBaseInputRef.current = prompt;
-    speechTranscriptRef.current = "";
+    resetSpeechDraft(prompt);
   }
 
   function stageAgentCreationCommand(action: RunnerAgentCreationCommandType, prompt = "") {
@@ -13546,8 +3219,7 @@ export function RunnerChat({
     });
     setInput(prompt);
     currentInputRef.current = prompt;
-    speechBaseInputRef.current = prompt;
-    speechTranscriptRef.current = "";
+    resetSpeechDraft(prompt);
   }
 
   function stageSkillCreationCommand(action: RunnerSkillCreationCommandType, prompt = "") {
@@ -13567,8 +3239,7 @@ export function RunnerChat({
     });
     setInput(prompt);
     currentInputRef.current = prompt;
-    speechBaseInputRef.current = prompt;
-    speechTranscriptRef.current = "";
+    resetSpeechDraft(prompt);
   }
 
   function stageSlideCreationCommand(prompt = "") {
@@ -13588,8 +3259,7 @@ export function RunnerChat({
     });
     setInput(prompt);
     currentInputRef.current = prompt;
-    speechBaseInputRef.current = prompt;
-    speechTranscriptRef.current = "";
+    resetSpeechDraft(prompt);
   }
 
   function stageResearchCreationCommand(prompt = "") {
@@ -13609,8 +3279,7 @@ export function RunnerChat({
     });
     setInput(prompt);
     currentInputRef.current = prompt;
-    speechBaseInputRef.current = prompt;
-    speechTranscriptRef.current = "";
+    resetSpeechDraft(prompt);
   }
 
   function stageScrapeCreationCommand(prompt = "") {
@@ -13630,8 +3299,7 @@ export function RunnerChat({
     });
     setInput(prompt);
     currentInputRef.current = prompt;
-    speechBaseInputRef.current = prompt;
-    speechTranscriptRef.current = "";
+    resetSpeechDraft(prompt);
   }
 
   function stageParseCreationCommand(prompt = "") {
@@ -13651,8 +3319,7 @@ export function RunnerChat({
     });
     setInput(prompt);
     currentInputRef.current = prompt;
-    speechBaseInputRef.current = prompt;
-    speechTranscriptRef.current = "";
+    resetSpeechDraft(prompt);
   }
 
   function stageAdCreationCommand(prompt = "") {
@@ -13669,8 +3336,7 @@ export function RunnerChat({
     setStagedAdCreationCommand(buildStagedRunnerAdCreationCommand(adCreationSettings));
     setInput(prompt);
     currentInputRef.current = prompt;
-    speechBaseInputRef.current = prompt;
-    speechTranscriptRef.current = "";
+    resetSpeechDraft(prompt);
   }
 
   function handleQuotedSelectionMouseUp(event: MouseEvent<HTMLDivElement>) {
@@ -14945,8 +4611,6 @@ export function RunnerChat({
       },
     ]);
 
-    const headers = buildRunnerHeaders(requestHeaders, apiKey.trim());
-    headers.set("Content-Type", "application/json");
     const agentGuardrailsHiddenPromptText = buildRunnerAgentGuardrailsHiddenPrompt(selectedAgent);
     const hiddenSystemPromptText = hiddenSystemPrompt.trim();
     const executionPrompt = buildRunnerExecutionPromptWithHiddenContext(
@@ -14955,47 +4619,16 @@ export function RunnerChat({
     );
 
     try {
-      const response = await fetch(`${normalizedBackendUrl}/threads/${encodeURIComponent(resolvedThreadId)}/context/actions/btw/stream`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ prompt: executionPrompt }),
+      await streamRunnerThreadBtw({
+        backendUrl: normalizedBackendUrl,
+        apiKey,
+        requestHeaders,
+        threadId: resolvedThreadId,
+        prompt: executionPrompt,
+        onMessage: (message) => {
+          upsertTurnAgentMessage(turnId, message);
+        },
       });
-
-      if (!response.ok) {
-        const bodyText = await response.text().catch(() => "");
-        throw new Error(bodyText || `Failed to execute /btw (${response.status})`);
-      }
-      if (!response.body) {
-        throw new Error("BTW stream response has no body");
-      }
-
-      let fullText = "";
-      for await (const data of iterateSseData(response.body)) {
-        if (!data || data === "[DONE]") continue;
-        let event: Record<string, unknown> | null = null;
-        try {
-          event = JSON.parse(data) as Record<string, unknown>;
-        } catch {
-          event = null;
-        }
-        if (!event) continue;
-        if (event.type === "btw.delta" && typeof event.text === "string") {
-          fullText = event.text;
-          upsertTurnAgentMessage(turnId, fullText);
-          continue;
-        }
-        if (event.type === "btw.completed" && typeof event.message === "string") {
-          fullText = event.message;
-          upsertTurnAgentMessage(turnId, fullText);
-        }
-        if (event.type === "stream.error") {
-          const errorMessage =
-            typeof event.error === "object" && event.error && typeof (event.error as { message?: unknown }).message === "string"
-              ? ((event.error as { message: string }).message || "Failed to execute /btw.")
-              : "Failed to execute /btw.";
-          throw new Error(errorMessage);
-        }
-      }
 
       updateTurn(turnId, (turn) => ({
         ...turn,
@@ -15026,535 +4659,64 @@ export function RunnerChat({
     }
   }
 
-  function buildSelectedGithubRepoReference(attachmentEntries: LocalAttachment[]): {
-    repoFullName: string;
-    repoName: string;
-    branch: string;
-  } | null {
-    const githubAttachments = attachmentEntries.filter((entry) => entry.integrationSource === "github" && entry.githubRepoFullName);
-    if (githubAttachments.length > 0) {
-      const repoFullNames = Array.from(
-        new Set(githubAttachments.map((entry) => String(entry.githubRepoFullName || "").trim()).filter(Boolean))
-      );
-      if (repoFullNames.length === 1) {
-        const repoFullName = repoFullNames[0];
-        const branch =
-          githubAttachments.map((entry) => String(entry.githubRef || "").trim()).find(Boolean)
-          || githubContexts.find((context) => context.id === selectedGithubContextId)?.name
-          || selectedGithubContextId;
-        if (branch) {
-          return {
-            repoFullName,
-            repoName: repoFullName.split("/").pop() || repoFullName,
-            branch,
-          };
-        }
-      }
-    }
-
-    const selectedRepository = githubRepositories.find((repository) => repository.id === selectedGithubRepositoryId);
-    if (!selectedRepository) {
-      return null;
-    }
-    const branch = githubContexts.find((context) => context.id === selectedGithubContextId)?.name || selectedGithubContextId;
-    if (!branch) {
-      return null;
-    }
-    return {
-      repoFullName: selectedRepository.id,
-      repoName: selectedRepository.name || selectedRepository.id,
-      branch,
-    };
-  }
-
-  async function executeThreadRun(
-    taskText: string,
-    attachmentEntries: LocalAttachment[],
-    options?: {
-      turnId?: string;
-      threadIdOverride?: string;
-      truncateAtMessageIndex?: number;
-      persistFileChanges?: boolean;
-      quotedSelection?: RunnerQuotedSelection | null;
-      environmentIdOverride?: string | null;
-      agentIdOverride?: string | null;
-      agentNameOverride?: string | null;
-      reasoningEffortOverride?: string | null;
-      backlogCommand?: StagedBacklogCommand | null;
-      resourceCreationCommand?: StagedResourceCreationCommand | null;
-      agentCreationCommand?: StagedAgentCreationCommand | null;
-      skillCreationCommand?: StagedSkillCreationCommand | null;
-      slideCreationCommand?: StagedSlideCreationCommand | null;
-      researchCreationCommand?: StagedResearchCreationCommand | null;
-      scrapeCreationCommand?: StagedScrapeCreationCommand | null;
-      parseCreationCommand?: StagedParseCreationCommand | null;
-      adCreationCommand?: StagedAdCreationCommand | null;
-      resolvedAttachmentsOverride?: RunnerAttachment[] | null;
-      extraResolvedAttachments?: RunnerAttachment[] | null;
-      githubRepoOverride?: {
-        repoFullName: string;
-        repoName: string;
-        branch: string;
-      } | null;
-      enabledSkillsOverride?: Record<string, unknown> | null;
-      displayPromptOverride?: string | null;
-    }
-  ) {
-    const agentGuardrailsHiddenPromptText = buildRunnerAgentGuardrailsHiddenPrompt(selectedAgent);
-    const hiddenSystemPromptText = hiddenSystemPrompt.trim();
-    const resourceCreationHiddenPromptText = options?.resourceCreationCommand
-      ? String(resourceCreationCommandHiddenPrompt?.(options.resourceCreationCommand.action) || "").trim()
-      : "";
-    const agentCreationHiddenPromptText = options?.agentCreationCommand
-      ? String(agentCreationCommandHiddenPrompt?.(options.agentCreationCommand.action) || "").trim()
-      : "";
-    const skillCreationHiddenPromptText = options?.skillCreationCommand
-      ? String(skillCreationCommandHiddenPrompt?.(options.skillCreationCommand.action) || "").trim()
-      : "";
-    const slideCreationHiddenPromptText = options?.slideCreationCommand
-      ? buildRunnerSlideCreationHiddenPrompt()
-      : "";
-    const researchCreationHiddenPromptText = options?.researchCreationCommand
-      ? buildRunnerResearchCreationHiddenPrompt()
-      : "";
-    const scrapeCreationHiddenPromptText = options?.scrapeCreationCommand
-      ? buildRunnerScrapeCreationHiddenPrompt()
-      : "";
-    const parseCreationHiddenPromptText = options?.parseCreationCommand
-      ? buildRunnerParseCreationHiddenPrompt()
-      : "";
-    const adCreationHiddenPromptText = options?.adCreationCommand
-      ? buildRunnerAdCreationHiddenPrompt(options.adCreationCommand)
-      : "";
-    const executionTaskText = buildRunnerExecutionPromptWithHiddenContext(
-      [agentGuardrailsHiddenPromptText, hiddenSystemPromptText, resourceCreationHiddenPromptText, agentCreationHiddenPromptText, skillCreationHiddenPromptText, slideCreationHiddenPromptText, researchCreationHiddenPromptText, scrapeCreationHiddenPromptText, parseCreationHiddenPromptText, adCreationHiddenPromptText],
-      taskText
-    );
-    const visibleTaskText =
-      options?.displayPromptOverride !== undefined
-        ? String(options.displayPromptOverride || "")
-        : taskText;
-    const hasResolvedThread = Boolean(options?.threadIdOverride || currentThreadId);
-    let runEnvironmentId =
-      options?.environmentIdOverride !== undefined
-        ? options.environmentIdOverride
-        : hasResolvedThread
-          ? activeThreadEnvironmentId || selectedEnvironment?.id || environmentId || null
-          : effectiveEnvironmentId || selectedEnvironment?.id || environmentId || null;
-	    const ensuredThread =
-	      options?.threadIdOverride
-	        ? {
-	            threadId: options.threadIdOverride,
-	            didCreateThread: false,
-	            initialTitle: null,
-	            environmentId: runEnvironmentId,
-	          }
-	        : await ensureThread(taskText, { reserveLocalExecution: true });
-    const threadId = ensuredThread.threadId;
-    if (!runEnvironmentId && ensuredThread.environmentId) {
-      runEnvironmentId = ensuredThread.environmentId;
-    }
-    const runAgentId =
-      options?.agentIdOverride !== undefined
-        ? String(options.agentIdOverride || "").trim()
-        : String(effectiveAgentId || "").trim();
-    const runAgentName = String(options?.agentNameOverride || "").trim() || selectedAgent?.name || displayedAgentLabel;
-    const runReasoningEffort = normalizeRunnerReasoningEffort(
-      options?.reasoningEffortOverride !== undefined ? options.reasoningEffortOverride : effectiveReasoningEffort
-    );
-    const baseEnabledSkillsPayload =
-      options?.enabledSkillsOverride !== undefined
-        ? options.enabledSkillsOverride || null
-        : enabledSkillsPayload;
-    const executionEnabledSkillsPayload = buildRunnerParseEnabledSkillsPayload(
-      options?.parseCreationCommand || null,
-      buildRunnerScrapeEnabledSkillsPayload(
-        options?.scrapeCreationCommand || null,
-        buildRunnerAdEnabledSkillsPayload(options?.adCreationCommand || null, baseEnabledSkillsPayload)
-      )
-    );
-    initializedThreadHistoryIdRef.current = threadId;
-    const githubRepo =
-      options?.githubRepoOverride !== undefined
-        ? options.githubRepoOverride
-        : buildSelectedGithubRepoReference(attachmentEntries);
-    const shouldHandoffExternalRun =
-      Boolean(onExternalRunRequestCreate)
-      && ensuredThread.didCreateThread
-      && !options?.threadIdOverride
-      && !options?.turnId
-      && !currentThreadId;
-
-    if (shouldHandoffExternalRun) {
-      const baseResolvedAttachments =
-        options?.resolvedAttachmentsOverride !== undefined
-          ? options.resolvedAttachmentsOverride || undefined
-          : await resolveAttachmentPayload(attachmentEntries, runEnvironmentId);
-      const resolvedAttachments = mergeRunnerAttachments(baseResolvedAttachments, options?.extraResolvedAttachments);
-      const didHandleExternalRunRequest = onExternalRunRequestCreate?.({
-        token: generateId("runreq"),
-        threadId,
-        prompt: executionTaskText,
-        displayPrompt: visibleTaskText || taskText,
-        reasoningEffort: runReasoningEffort,
-        agentId: runAgentId || null,
-        agentName: runAgentName || null,
-        attachments: resolvedAttachments || [],
-        githubRepo: githubRepo || null,
-        enabledSkills: executionEnabledSkillsPayload || null,
-        environmentId: typeof runEnvironmentId === "string" ? runEnvironmentId : "",
-        projectId: effectiveProjectId || null,
-        quotedSelection: options?.quotedSelection || null,
-        slideCreationCommand: options?.slideCreationCommand || null,
-        researchCreationCommand: options?.researchCreationCommand || null,
-        scrapeCreationCommand: options?.scrapeCreationCommand || null,
-        parseCreationCommand: options?.parseCreationCommand || null,
-        adCreationCommand: options?.adCreationCommand || null,
-      });
-      if (didHandleExternalRunRequest !== false) {
-        if (locallyOwnedExecutionThreadIdRef.current === threadId) {
-          locallyOwnedExecutionThreadIdRef.current = null;
-        }
-        return {
-          threadId,
-          executionResult: null,
-          turnId: null,
-        };
-      }
-    }
-
-    locallyOwnedExecutionThreadIdRef.current = threadId;
-
-    const initialTurnAttachments = mergeRunnerTurnAttachments(
-      buildTurnAttachmentsFromLocalAttachments(attachmentEntries),
-      buildTurnAttachmentsFromRunnerAttachments(options?.extraResolvedAttachments || undefined, normalizedBackendUrl)
-    );
-    const turnId = options?.turnId || generateId("turn");
-    const slideCreationCommand = options?.slideCreationCommand || null;
-    const researchCreationCommand = options?.researchCreationCommand || null;
-    const scrapeCreationCommand = options?.scrapeCreationCommand || null;
-    const parseCreationCommand = options?.parseCreationCommand || null;
-    const adCreationCommand = options?.adCreationCommand || null;
-    const startedAtMs = Date.now();
-    let releasedPreparationState = false;
-    const releasePreparationState = () => {
-      if (releasedPreparationState) {
+  const executeThreadRun = createRunnerThreadRunExecutor({
+    activeThreadEnvironmentId,
+    agentCreationCommandHiddenPrompt,
+    apiKey,
+    appendTurnLog,
+    backlogTaskConnectors,
+    currentThreadId,
+    displayedAgentLabel,
+    displayedEnvironmentLabel,
+    effectiveAgentId,
+    effectiveEnvironmentId,
+    effectiveProjectId,
+    effectiveReasoningEffort,
+    enabledSkillsPayload,
+    ensureThread,
+    environmentId,
+    execute,
+    fetchCustomSkills,
+    getTurnDurationSeconds,
+    githubContexts,
+    githubRepositories,
+    hiddenSystemPrompt,
+    initializedThreadHistoryIdRef,
+    locallyOwnedExecutionThreadIdRef,
+    normalizedBackendUrl,
+    normalizeIntentionalStopError,
+    notifyTaskListChange,
+    onCustomSkillsLoaded: (loadedSkills, succeeded) => {
+      if (succeeded && loadedSkills) {
+        setCustomSkills(loadedSkills);
+        setCustomSkillsLoaded(true);
         return;
       }
-      releasedPreparationState = true;
-      setIsPreparingRun(false);
-    };
-
-    if (options?.turnId) {
-      updateTurn(turnId, (turn) => ({
-        ...turn,
-        logs: [],
-        startedAtMs,
-        completedAtMs: undefined,
-        durationSeconds: null,
-        status: "running",
-        quotedSelection: options?.quotedSelection === undefined ? turn.quotedSelection : options.quotedSelection,
-        attachments: pickTurnAttachments(initialTurnAttachments, turn.attachments),
-        agentName: runAgentName || turn.agentName || null,
-        slideCreationCommand: slideCreationCommand || turn.slideCreationCommand || null,
-        researchCreationCommand: researchCreationCommand || turn.researchCreationCommand || null,
-        scrapeCreationCommand: scrapeCreationCommand || turn.scrapeCreationCommand || null,
-        parseCreationCommand: parseCreationCommand || turn.parseCreationCommand || null,
-        adCreationCommand: adCreationCommand || turn.adCreationCommand || null,
-      }));
-    } else {
-      setTurns((prev) => [
-        ...prev,
-        {
-          id: turnId,
-          prompt: visibleTaskText,
-          logs: [],
-          startedAtMs,
-          status: "running",
-          animateOnRender: true,
-          isInitialTurn: prev.length === 0,
-          agentName: runAgentName,
-          environmentName: selectedEnvironment?.name || displayedEnvironmentLabel,
-          quotedSelection: options?.quotedSelection || null,
-          attachments: initialTurnAttachments,
-          slideCreationCommand,
-          researchCreationCommand,
-          scrapeCreationCommand,
-          parseCreationCommand,
-          adCreationCommand,
-        },
-      ]);
-      setExpandedTurns((prev) => ({ ...prev, [turnId]: true }));
-    }
-
-    try {
-      onRunStart?.(threadId);
-    } catch (error) {
-      reportRunnerLifecycleCallbackError("onRunStart", error);
-    }
-    try {
-      if (runEnvironmentId && normalizedBackendUrl && apiKey.trim()) {
-        let didEnvironmentWarmupTimeout = false;
-        try {
-          await startEnvironment({
-            backendUrl: normalizedBackendUrl,
-            apiKey: apiKey.trim(),
-            requestHeaders,
-            environmentId: runEnvironmentId,
-            ...(runAgentId ? { agentId: runAgentId } : {}),
-            ...(options?.enabledSkillsOverride !== undefined
-              ? { enabledSkills: executionEnabledSkillsPayload || options.enabledSkillsOverride }
-              : executionEnabledSkillsPayload
-                ? { enabledSkills: executionEnabledSkillsPayload }
-                : {}),
-          });
-        } catch (error) {
-          if (!isEnvironmentStartTimeoutError(error)) {
-            throw error;
-          }
-          didEnvironmentWarmupTimeout = true;
-          console.warn("[RunnerChat] Environment warm-up timed out; continuing with thread execution.", error);
-        }
-        if (githubRepo?.repoFullName && githubRepo?.branch && !didEnvironmentWarmupTimeout) {
-          await prepareGithubRepoForThreadRun(
-            {
-              repoFullName: githubRepo.repoFullName,
-              branch: githubRepo.branch,
-            },
-            runEnvironmentId
-          );
-        } else if (githubRepo?.repoFullName && githubRepo?.branch && didEnvironmentWarmupTimeout) {
-          console.warn("[RunnerChat] Skipping GitHub preflight because environment warm-up timed out.");
-        }
-      }
-
-      const baseResolvedAttachments =
-        options?.resolvedAttachmentsOverride !== undefined
-          ? options.resolvedAttachmentsOverride || undefined
-          : await resolveAttachmentPayload(attachmentEntries, runEnvironmentId);
-      const resolvedAttachments = mergeRunnerAttachments(baseResolvedAttachments, options?.extraResolvedAttachments);
-      const turnAttachments = buildTurnAttachmentsForExecution(attachmentEntries, resolvedAttachments, normalizedBackendUrl);
-      if (turnAttachments) {
-        updateTurn(turnId, (turn) => ({
-          ...turn,
-          attachments: pickTurnAttachments(turnAttachments, turn.attachments),
-        }));
-      }
-
-      if (
-        ensuredThread.didCreateThread &&
-        !title?.trim() &&
-        taskText.trim() &&
-        isDefaultThreadTitle(ensuredThread.initialTitle)
-      ) {
-        void generateThreadTitle({
-          backendUrl: normalizedBackendUrl,
-          apiKey,
-          requestHeaders,
-          threadId,
-          message: visibleTaskText || taskText,
-        })
-          .then((nextTitle) => {
-            onThreadTitleChange?.(threadId, nextTitle);
-          })
-          .catch((error) => {
-            console.warn("[RunnerChat] Failed to generate thread title", error);
-          });
-      }
-
-      const subtaskBacklogCommand =
-        options?.backlogCommand?.action === "subtask"
-          ? options.backlogCommand
-          : null;
-
-      const executionResult = await execute({
-        run: {
-          url: `${normalizedBackendUrl}/threads/${encodeURIComponent(threadId)}/messages`,
-          headers: (() => {
-            const headers = new Headers(requestHeaders || {});
-            headers.set("Content-Type", "application/json");
-            headers.set("X-API-Key", apiKey);
-            return headers;
-          })(),
-          body: {
-            content: visibleTaskText || taskText,
-            reasoningEffort: runReasoningEffort,
-            ...(executionTaskText !== (visibleTaskText || taskText) ? { executionContent: executionTaskText } : {}),
-            ...(agentGuardrailsHiddenPromptText ? { useExecutionContentForUpstream: true } : {}),
-            ...(options?.slideCreationCommand || options?.researchCreationCommand || options?.scrapeCreationCommand || options?.parseCreationCommand || options?.adCreationCommand
-              ? {
-                  messageMetadata: {
-                    ...(options?.slideCreationCommand
-                      ? {
-                          slideCreationCommand: {
-                            action: "slides" as const,
-                            label: buildRunnerSlideCreationLabel(),
-                          },
-                        }
-                      : {}),
-                    ...(options?.researchCreationCommand
-                      ? {
-                          researchCreationCommand: {
-                            action: "research" as const,
-                            label: buildRunnerResearchCreationLabel(),
-                          },
-                        }
-                      : {}),
-                    ...(options?.scrapeCreationCommand
-                      ? {
-                          scrapeCreationCommand: {
-                            action: "scrape" as const,
-                            label: buildRunnerScrapeCreationLabel(),
-                          },
-                        }
-                      : {}),
-                    ...(options?.parseCreationCommand
-                      ? {
-                          parseCreationCommand: {
-                            action: "parse" as const,
-                            label: buildRunnerParseCreationLabel(),
-                          },
-                        }
-                      : {}),
-                    ...(options?.adCreationCommand
-                      ? {
-                          adCreationCommand: {
-                            action: "ad" as const,
-                            label: buildRunnerAdCreationLabel(),
-                            style: normalizeRunnerAdCreationSettings(options.adCreationCommand).style,
-                            quality: normalizeRunnerAdCreationSettings(options.adCreationCommand).quality,
-                            aspectRatio: normalizeRunnerAdCreationSettings(options.adCreationCommand).aspectRatio,
-                            variants: normalizeRunnerAdCreationSettings(options.adCreationCommand).variants,
-                            computeTokensPerImage: getRunnerAdCreationQualityComputeTokensPerImage(normalizeRunnerAdCreationSettings(options.adCreationCommand).quality),
-                          },
-                        }
-                      : {}),
-                  },
-                }
-              : {}),
-            ...(resolvedAttachments ? { attachments: resolvedAttachments } : {}),
-            ...(githubRepo ? { githubRepo } : {}),
-            ...(typeof options?.truncateAtMessageIndex === "number" ? { truncateAtMessageIndex: options.truncateAtMessageIndex } : {}),
-            ...(typeof options?.persistFileChanges === "boolean" ? { persistFileChanges: options.persistFileChanges } : {}),
-            ...(options?.quotedSelection ? { quotedSelection: options.quotedSelection } : {}),
-            ...(options?.enabledSkillsOverride !== undefined
-              ? (executionEnabledSkillsPayload ? { enabledSkills: executionEnabledSkillsPayload } : {})
-              : (executionEnabledSkillsPayload ? { enabledSkills: executionEnabledSkillsPayload } : {})),
-            ...(backlogTaskConnectors ? { connectors: backlogTaskConnectors } : {}),
-            ...(subtaskBacklogCommand
-              ? {
-                  backlogTaskCommand: {
-                    action: "subtask" as const,
-                    parentTicketNumber: subtaskBacklogCommand.ticketNumber,
-                  },
-                }
-              : {}),
-          },
-        },
-        onLog: (log) => {
-          releasePreparationState();
-          if (log.eventType === "permission_request") {
-            const permissionStatus = String(log.metadata?.status || log.metadata?.decision || "").trim().toLowerCase();
-            const nextTurnStatus: RunnerTurnStatus = !permissionStatus || permissionStatus === "pending" ? "permission_asked" : "running";
-            updateTurn(turnId, (turn) => ({
-              ...turn,
-              status: nextTurnStatus,
-              completedAtMs: undefined,
-            }));
-            try {
-              onThreadStatusChange?.(threadId, nextTurnStatus);
-            } catch (error) {
-              reportRunnerLifecycleCallbackError("onThreadStatusChange", error);
-            }
-          }
-          appendTurnLog(turnId, log);
-          notifyTaskListChange(threadId, normalizeHydratedLog(log));
-          const metronomeWorkflowRunPayload = buildRunnerMetronomeWorkflowRunPayload(log, threadId, {
-            userMessage: visibleTaskText || taskText,
-            attachments: resolvedAttachments || null,
-          });
-          if (metronomeWorkflowRunPayload) {
-            try {
-              onMetronomeWorkflowRun?.(metronomeWorkflowRunPayload);
-            } catch (error) {
-              reportRunnerLifecycleCallbackError("onMetronomeWorkflowRun", error);
-            }
-          }
-        },
-	      });
-
-	      releasePreparationState();
-	      updateTurn(turnId, (turn) => ({
-	        ...turn,
-	        status: executionResult.cancelled ? "cancelled" : "completed",
-	        completedAtMs: Date.now(),
-	        durationSeconds: executionResult.durationSeconds,
-	      }));
-
-	      refreshThreadContextDetailsInBackground(threadId);
-      if (options?.skillCreationCommand && fetchCustomSkills) {
-        void fetchCustomSkills()
-          .then((loadedSkills) => {
-            const filtered = (loadedSkills || []).filter((skill) => skill.isCustom);
-            setCustomSkills(filtered);
-            setCustomSkillsLoaded(true);
-          })
-          .catch(() => {
-            setCustomSkillsLoaded(false);
-          });
-      }
-      try {
-        onRunFinish?.(executionResult, threadId);
-      } catch (error) {
-        reportRunnerLifecycleCallbackError("onRunFinish", error);
-      }
-      return { threadId, executionResult, turnId };
-    } catch (error) {
-      releasePreparationState();
-      const normalizedError = normalizeIntentionalStopError(
-        error instanceof Error ? error : new Error(String(error)),
-        threadId
-      );
-      const isAbort = normalizedError.name === "AbortError";
-      const errorMessage = sanitizeRunnerMessage(normalizedError.message || "Execution failed.");
-      const isComputeTokenError = isComputeTokenBudgetErrorMessage(errorMessage);
-      updateTurn(turnId, (turn) => ({
-        ...turn,
-        status: isAbort ? "cancelled" : "failed",
-        completedAtMs: Date.now(),
-        durationSeconds: getTurnDurationSeconds(turn),
-        logs: isAbort
-          ? turn.logs
-          : [
-              ...turn.logs,
-              {
-                time: new Date().toISOString(),
-                message: errorMessage,
-                type: "error",
-                eventType: "agent_message",
-                metadata: {
-                  status: "failed",
-                  error: {
-                    source: "runner_stream",
-                    ...(isComputeTokenError
-                      ? {
-                          code: "compute_tokens_exhausted",
-                          action: "open_plans_budget",
-                        }
-                      : {}),
-                  },
-                },
-              },
-            ],
-      }));
-      throw normalizedError;
-    } finally {
-      if (locallyOwnedExecutionThreadIdRef.current === threadId) {
-        locallyOwnedExecutionThreadIdRef.current = null;
-      }
-      releasePreparationState();
-    }
-  }
+      setCustomSkillsLoaded(false);
+    },
+    onExternalRunRequestCreate,
+    onMetronomeWorkflowRun,
+    onRunFinish,
+    onRunStart,
+    onThreadStatusChange,
+    onThreadTitleChange,
+    prepareGithubRepoForThreadRun,
+    refreshThreadContextDetails:
+      refreshThreadContextDetailsInBackground,
+    requestHeaders,
+    resolveAttachmentPayload,
+    resourceCreationCommandHiddenPrompt,
+    selectedAgent,
+    selectedContextId: selectedGithubContextId,
+    selectedEnvironment,
+    selectedRepositoryId: selectedGithubRepositoryId,
+    setExpandedTurns,
+    setIsPreparingRun,
+    setTurns,
+    skillCreationCommandHiddenPrompt,
+    title,
+    updateTurn,
+  });
 
   useEffect(() => {
     screenFileDragActiveRef.current = isScreenFileDragActive;
@@ -15578,83 +4740,58 @@ export function RunnerChat({
     };
   }, [isScreenFileDragActive]);
 
-  useEffect(() => {
-    const normalizedRequestThreadId = String(externalRunRequest?.threadId || "").trim();
-    const normalizedPrompt = String(externalRunRequest?.prompt || "").trim();
-    const normalizedDisplayPrompt = typeof externalRunRequest?.displayPrompt === "string"
-      ? externalRunRequest.displayPrompt
-      : undefined;
-    const requestToken = externalRunRequest?.token;
-
-    if (
-      !externalRunRequest ||
-      requestToken === undefined ||
-      requestToken === null ||
-      handledExternalRunRequestTokenRef.current === requestToken ||
-      !normalizedRequestThreadId ||
-      normalizedRequestThreadId !== currentThreadId ||
-      !normalizedPrompt ||
-      !hasApiKey ||
-      !normalizedBackendUrl ||
-      disabled
-    ) {
-      return;
-    }
-
-    handledExternalRunRequestTokenRef.current = requestToken;
-    try {
-      onExternalRunRequestHandled?.(requestToken);
-    } catch (error) {
-      reportRunnerLifecycleCallbackError("onExternalRunRequestHandled", error);
-    }
-
-    void (async () => {
-      try {
-        setInlineError(null);
-        setPendingQueuedMessages([]);
-        setIsPreparingRun(true);
-        closeAllInputPopups();
-        await executeThreadRun(normalizedPrompt, [], {
-          threadIdOverride: normalizedRequestThreadId,
-          environmentIdOverride: externalRunRequest.environmentId ?? undefined,
-          agentIdOverride: externalRunRequest.agentId ?? undefined,
-          agentNameOverride: externalRunRequest.agentName ?? undefined,
-          reasoningEffortOverride: externalRunRequest.reasoningEffort ?? undefined,
-          quotedSelection: externalRunRequest.quotedSelection || null,
-          resolvedAttachmentsOverride: Array.isArray(externalRunRequest.attachments) ? externalRunRequest.attachments : undefined,
-          githubRepoOverride: externalRunRequest.githubRepo ?? undefined,
-          enabledSkillsOverride: externalRunRequest.enabledSkills ?? undefined,
-          displayPromptOverride: normalizedDisplayPrompt,
-          slideCreationCommand: externalRunRequest.slideCreationCommand || null,
-          researchCreationCommand: externalRunRequest.researchCreationCommand || null,
-          scrapeCreationCommand: externalRunRequest.scrapeCreationCommand || null,
-          parseCreationCommand: externalRunRequest.parseCreationCommand || null,
-          adCreationCommand: externalRunRequest.adCreationCommand || null,
-        });
-      } catch (error) {
-        const normalizedError = error instanceof Error ? error : new Error(String(error));
-        if (consumeIntentionalStopAbort(normalizedError, normalizedRequestThreadId)) {
-          return;
-        }
-        setInlineError(normalizedError.message);
-        try {
-          onRunError?.(normalizedError, normalizedRequestThreadId);
-        } catch (callbackError) {
-          reportRunnerLifecycleCallbackError("onRunError", callbackError);
-        }
-      } finally {
-        setIsPreparingRun(false);
-      }
-    })();
-  }, [
+  useRunnerExternalRunRequest({
     currentThreadId,
     disabled,
-    externalRunRequest,
-    hasApiKey,
-    normalizedBackendUrl,
-    onExternalRunRequestHandled,
-    onRunError,
-  ]);
+    enabled: Boolean(hasApiKey && normalizedBackendUrl),
+    execute: async (request, normalizedPrompt, normalizedRequestThreadId) => {
+      setPendingQueuedMessages([]);
+      closeAllInputPopups();
+      await executeThreadRun(normalizedPrompt, [], {
+        threadIdOverride: normalizedRequestThreadId,
+        environmentIdOverride: request.environmentId ?? undefined,
+        agentIdOverride: request.agentId ?? undefined,
+        agentNameOverride: request.agentName ?? undefined,
+        reasoningEffortOverride: request.reasoningEffort ?? undefined,
+        quotedSelection: request.quotedSelection || null,
+        resolvedAttachmentsOverride: Array.isArray(request.attachments)
+          ? request.attachments
+          : undefined,
+        githubRepoOverride: request.githubRepo ?? undefined,
+        enabledSkillsOverride: request.enabledSkills ?? undefined,
+        displayPromptOverride: typeof request.displayPrompt === "string"
+          ? request.displayPrompt
+          : undefined,
+        slideCreationCommand: request.slideCreationCommand || null,
+        researchCreationCommand: request.researchCreationCommand || null,
+        scrapeCreationCommand: request.scrapeCreationCommand || null,
+        parseCreationCommand: request.parseCreationCommand || null,
+        adCreationCommand: request.adCreationCommand || null,
+      });
+    },
+    handledTokenRef: handledExternalRunRequestTokenRef,
+    onError: (error, requestThreadId) => {
+      try {
+        onRunError?.(error, requestThreadId);
+      } catch (callbackError) {
+        reportRunnerLifecycleCallbackError("onRunError", callbackError);
+      }
+    },
+    onHandled: (token) => {
+      try {
+        onExternalRunRequestHandled?.(token);
+      } catch (error) {
+        reportRunnerLifecycleCallbackError(
+          "onExternalRunRequestHandled",
+          error,
+        );
+      }
+    },
+    request: externalRunRequest,
+    setError: setInlineError,
+    setIsPreparingRun,
+    wasIntentionalStop: consumeIntentionalStopAbort,
+  });
 
   async function executeThreadContextAction(
     action: RunnerChatThreadContextAction,
@@ -15675,9 +4812,6 @@ export function RunnerChat({
     setThreadContextDetailsError(null);
     let pendingNoticeTurnId: string | null = null;
 
-    const headers = buildRunnerHeaders(requestHeaders, apiKey.trim());
-    headers.set("Content-Type", "application/json");
-
     try {
       if (action === "compact") {
         pendingNoticeTurnId = appendPendingThreadContextActionNotice("compact", "Compacting context", {
@@ -15685,37 +4819,14 @@ export function RunnerChat({
         });
       }
 
-      const response = await fetch(`${normalizedBackendUrl}/threads/${encodeURIComponent(resolvedThreadId)}/context/actions`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          action,
-          ...(options?.prompt ? { prompt: options.prompt } : {}),
-        }),
+      const actionPayload = await requestRunnerThreadContextAction({
+        backendUrl: normalizedBackendUrl,
+        apiKey,
+        requestHeaders,
+        threadId: resolvedThreadId,
+        action,
+        prompt: options?.prompt,
       });
-      const body = await response.text();
-      let parsed: {
-        action?: {
-          type?: RunnerChatThreadContextAction;
-          message?: string;
-          responseText?: string;
-          sessionId?: string | null;
-          thread?: { id: string; title?: string };
-        };
-        message?: string;
-        error?: string;
-      } = {};
-      try {
-        parsed = body ? JSON.parse(body) : {};
-      } catch {
-        parsed = {};
-      }
-
-      if (!response.ok) {
-        throw new Error(parsed.message || parsed.error || `Failed to execute ${action} (${response.status})`);
-      }
-
-      const actionPayload = parsed.action || {};
       const commandText = options?.commandText || `/${action}`;
       const responseText = actionPayload.responseText || actionPayload.message || `Completed /${action}.`;
 
@@ -15978,143 +5089,6 @@ export function RunnerChat({
     };
   }, [quotedSelectionPopup]);
 
-  useEffect(() => {
-    let cancelled = false;
-    let hydrationApplied = false;
-    let previewRendered = false;
-    const hasPendingExternalRunForThread =
-      Boolean(externalRunRequest)
-      && handledExternalRunRequestTokenRef.current !== externalRunRequest?.token
-      && String(externalRunRequest?.threadId || "").trim() === String(threadId || "").trim()
-      && String(externalRunRequest?.prompt || "").trim().length > 0;
-    const isLocallyOwnedExecutionForRequestedThread =
-      Boolean(threadId) &&
-      locallyOwnedExecutionThreadIdRef.current === threadId;
-
-    if (!threadId || !hasApiKey || hasPendingExternalRunForThread || isLocallyOwnedExecutionForRequestedThread) {
-      setIsThreadHistoryLoading(false);
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    if (initializedThreadHistoryIdRef.current === threadId && turnsRef.current.length > 0) {
-      setIsThreadHistoryLoading(false);
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    clear();
-    setIsThreadHistoryLoading(true);
-    setInlineError(null);
-    setExpandedStepRows({});
-
-    const threadMessagesPromise = fetchAllThreadMessages({
-      backendUrl: normalizedBackendUrl,
-      apiKey: apiKey.trim(),
-      threadId,
-      requestHeaders,
-    });
-
-    void threadMessagesPromise
-      .then((messages) => {
-        if (cancelled || hydrationApplied) {
-          return;
-        }
-        const previewTurns = buildHydratedTurnsFromMessages(messages, {
-          agentName: displayedAgentLabel,
-          environmentName: displayedEnvironmentLabel,
-          backendUrl: normalizedBackendUrl,
-        });
-        if (previewTurns.length === 0) {
-          return;
-        }
-        previewRendered = true;
-        initializedThreadHistoryIdRef.current = threadId;
-        setTurns(previewTurns);
-        setExpandedTurns((previousExpandedTurns) =>
-          mapExpandedTurns(previousExpandedTurns, turnsRef.current, previewTurns, { collapseOnNewRunSummary: true })
-        );
-      })
-      .catch(() => undefined);
-
-    void fetchThreadHydrationPayload({
-      backendUrl: normalizedBackendUrl,
-      apiKey: apiKey.trim(),
-      threadId,
-      requestHeaders,
-      messagesPromise: threadMessagesPromise.catch(() => []),
-    })
-      .then((payload) => {
-        if (cancelled) return;
-        hydrationApplied = true;
-        threadHydrationCacheRef.current = payload;
-        setHydratedThreadStatus(payload.threadStatus ?? null);
-        applyHydratedThreadEnvironment(payload);
-        return buildHydratedTurnsFromPayload(payload, {
-          agentName: displayedAgentLabel,
-          environmentName: payload.threadEnvironmentName ?? payload.environmentName ?? displayedEnvironmentLabel,
-          backendUrl: normalizedBackendUrl,
-        });
-      })
-      .catch(() =>
-        fetchAllThreadMessages({
-          backendUrl: normalizedBackendUrl,
-          apiKey: apiKey.trim(),
-          threadId,
-          requestHeaders,
-        }).then((messages) =>
-          buildHydratedTurnsFromMessages(messages, {
-            agentName: displayedAgentLabel,
-            environmentName: displayedEnvironmentLabel,
-            backendUrl: normalizedBackendUrl,
-          })
-        )
-      )
-      .then((hydratedTurns) => {
-        if (cancelled || !hydratedTurns) return;
-        initializedThreadHistoryIdRef.current = threadId;
-        const mergedTurns = mergeHydratedTurns(turnsRef.current, hydratedTurns);
-        setTurns(mergedTurns);
-        setExpandedTurns((previousExpandedTurns) =>
-          mapExpandedTurns(previousExpandedTurns, turnsRef.current, mergedTurns, {
-            defaultLatestExpanded: true,
-            collapseOnNewRunSummary: true,
-          })
-        );
-      })
-      .catch((error) => {
-        if (cancelled) return;
-        if (previewRendered) {
-          return;
-        }
-        const normalizedError = error instanceof Error ? error : new Error(String(error));
-        setTurns([]);
-        setExpandedTurns({});
-        setInlineError(normalizedError.message || "Failed to load thread history.");
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setIsThreadHistoryLoading(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    apiKey,
-    clear,
-    externalRunRequest,
-    hasApiKey,
-    hasRunningTurn,
-    isPreparingRun,
-    normalizedBackendUrl,
-    pendingQueuedMessages.length,
-    requestHeaders,
-    threadId,
-  ]);
 
   useEffect(() => {
     setThreadContextDetails(null);
@@ -16857,20 +5831,6 @@ export function RunnerChat({
   }, [turns]);
 
   useEffect(() => {
-    if (!isListening || recordingStartedAtMs === null) {
-      setRecordingElapsedSeconds(0);
-      return;
-    }
-
-    setRecordingElapsedSeconds(Math.max(0, Math.floor((Date.now() - recordingStartedAtMs) / 1000)));
-    const timer = window.setInterval(() => {
-      setRecordingElapsedSeconds(Math.max(0, Math.floor((Date.now() - recordingStartedAtMs) / 1000)));
-    }, 1000);
-
-    return () => window.clearInterval(timer);
-  }, [isListening, recordingStartedAtMs]);
-
-  useEffect(() => {
     if (!textareaRef.current) return;
     const textarea = textareaRef.current;
     const computed = window.getComputedStyle(textarea);
@@ -17013,46 +5973,9 @@ export function RunnerChat({
   }, []);
 
   useEffect(() => {
-    return () => {
-      const socket = speechSocketRef.current;
-      const processorNode = speechProcessorNodeRef.current;
-      const sourceNode = speechSourceNodeRef.current;
-      const sinkGainNode = speechSinkGainNodeRef.current;
-      const stream = speechMediaStreamRef.current;
-      const audioContext = speechAudioContextRef.current;
-
-      speechSocketRef.current = null;
-      speechSocketReadyRef.current = false;
-      speechPendingChunksRef.current = [];
-      speechProcessorNodeRef.current = null;
-      speechSourceNodeRef.current = null;
-      speechSinkGainNodeRef.current = null;
-      speechMediaStreamRef.current = null;
-      speechAudioContextRef.current = null;
-      speechActivityOpenRef.current = false;
-      speechLastVoiceMsRef.current = 0;
-
-      processorNode?.disconnect();
-      if (processorNode) {
-        processorNode.port.onmessage = null;
-      }
-      sourceNode?.disconnect();
-      sinkGainNode?.disconnect();
-      stream?.getTracks().forEach((track) => track.stop());
-      if (audioContext) {
-        void audioContext.close().catch(() => undefined);
-      }
-
-      if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
-        socket.close(1000, "Speech-to-text stopped");
-      }
-    };
-  }, []);
-
-  useEffect(() => {
     if (!isRunning) return;
     void stopSpeechToText();
-  }, [isRunning]);
+  }, [isRunning, stopSpeechToText]);
 
   async function ensureThread(taskText: string, options?: { reserveLocalExecution?: boolean }): Promise<{
     threadId: string;
@@ -18141,281 +7064,9 @@ export function RunnerChat({
     }
   }
 
-  async function stopSpeechToText() {
-    const socket = speechSocketRef.current;
-    const processorNode = speechProcessorNodeRef.current;
-    const sourceNode = speechSourceNodeRef.current;
-    const sinkGainNode = speechSinkGainNodeRef.current;
-    const stream = speechMediaStreamRef.current;
-    const audioContext = speechAudioContextRef.current;
-    const wasActivityOpen = speechActivityOpenRef.current;
-
-    speechSocketRef.current = null;
-    speechSocketReadyRef.current = false;
-    speechPendingChunksRef.current = [];
-    speechProcessorNodeRef.current = null;
-    speechSourceNodeRef.current = null;
-    speechSinkGainNodeRef.current = null;
-    speechMediaStreamRef.current = null;
-    speechAudioContextRef.current = null;
-    speechTranscriptRef.current = "";
-    speechBaseInputRef.current = currentInputRef.current;
-    speechActivityOpenRef.current = false;
-    speechLastVoiceMsRef.current = 0;
-
-    if (processorNode) {
-      processorNode.port.onmessage = null;
-      processorNode.disconnect();
-    }
-    sourceNode?.disconnect();
-    sinkGainNode?.disconnect();
-    stream?.getTracks().forEach((track) => track.stop());
-
-    if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
-      if (socket.readyState === WebSocket.OPEN && wasActivityOpen) {
-        sendSpeechSignal(socket, "activity-end");
-        await new Promise((resolve) => window.setTimeout(resolve, 250));
-      }
-      socket.close(1000, "Speech-to-text stopped");
-    }
-
-    if (audioContext) {
-      await audioContext.close().catch(() => undefined);
-    }
-
-    setRecordingStartedAtMs(null);
-    setRecordingElapsedSeconds(0);
-    setIsListening(false);
-  }
-
-  function flushPendingSpeechChunks(socket: WebSocket) {
-    if (!speechPendingChunksRef.current.length || socket.readyState !== WebSocket.OPEN) {
-      return;
-    }
-
-    for (const message of speechPendingChunksRef.current) {
-      socket.send(JSON.stringify(message));
-    }
-    speechPendingChunksRef.current = [];
-  }
-
-  function sendSpeechChunk(socket: WebSocket, chunk: string) {
-    if (!chunk) return;
-
-    if (speechSocketReadyRef.current && socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify({ type: "audio", data: chunk }));
-      return;
-    }
-
-    const queue = speechPendingChunksRef.current;
-    queue.push({ type: "audio", data: chunk });
-    if (queue.length > SPEECH_QUEUE_LIMIT) {
-      queue.splice(0, queue.length - SPEECH_QUEUE_LIMIT);
-    }
-  }
-
-  function sendSpeechSignal(socket: WebSocket, type: "activity-start" | "activity-end") {
-    if (speechSocketReadyRef.current && socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify({ type }));
-      return;
-    }
-
-    if (socket.readyState !== WebSocket.OPEN && socket.readyState !== WebSocket.CONNECTING) {
-      return;
-    }
-
-    const queue = speechPendingChunksRef.current;
-    queue.push({ type });
-    if (queue.length > SPEECH_QUEUE_LIMIT) {
-      queue.splice(0, queue.length - SPEECH_QUEUE_LIMIT);
-    }
-  }
-
-  async function startSpeechToText() {
-    if (!hasApiKey) {
-      setInlineError("Enter an API key to enable speech-to-text.");
-      return;
-    }
-    if (!supportsSpeechToText || !resolvedSpeechToTextUrl) {
-      setInlineError("Speech-to-text is not supported in this browser.");
-      return;
-    }
-
-    await stopSpeechToText();
-    setInlineError(null);
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          channelCount: 1,
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
-      });
-      const browserWindow = window as typeof window & {
-        webkitAudioContext?: typeof AudioContext;
-      };
-      const AudioContextConstructor = browserWindow.AudioContext || browserWindow.webkitAudioContext;
-
-      if (!AudioContextConstructor) {
-        stream.getTracks().forEach((track) => track.stop());
-        throw new Error("Speech-to-text is not supported in this browser.");
-      }
-
-      const wsUrl = new URL(resolvedSpeechToTextUrl);
-      wsUrl.searchParams.set("apiKey", apiKey.trim());
-      const socket = new WebSocket(wsUrl.toString());
-      const audioContext = new AudioContextConstructor();
-      const workletUrl = createSpeechCaptureWorkletUrl();
-      try {
-        await audioContext.audioWorklet.addModule(workletUrl);
-      } finally {
-        URL.revokeObjectURL(workletUrl);
-      }
-      const sourceNode = audioContext.createMediaStreamSource(stream);
-      const processorNode = new AudioWorkletNode(audioContext, SPEECH_WORKLET_PROCESSOR_NAME, {
-        numberOfInputs: 1,
-        numberOfOutputs: 1,
-        channelCount: 1,
-        processorOptions: {
-          bufferSize: SPEECH_WORKLET_BUFFER_SIZE,
-        },
-      });
-      const sinkGainNode = audioContext.createGain();
-
-      sinkGainNode.gain.value = 0;
-
-      speechSocketRef.current = socket;
-      speechSocketReadyRef.current = false;
-      speechPendingChunksRef.current = [];
-      speechMediaStreamRef.current = stream;
-      speechAudioContextRef.current = audioContext;
-      speechSourceNodeRef.current = sourceNode;
-      speechProcessorNodeRef.current = processorNode;
-      speechSinkGainNodeRef.current = sinkGainNode;
-      speechBaseInputRef.current = currentInputRef.current;
-      speechTranscriptRef.current = "";
-      speechActivityOpenRef.current = false;
-      speechLastVoiceMsRef.current = 0;
-
-      socket.onmessage = (event) => {
-        let message: { type?: string; text?: string; message?: string };
-
-        try {
-          message = JSON.parse(String(event.data || ""));
-        } catch {
-          return;
-        }
-
-        if (message.type === "ready") {
-          speechSocketReadyRef.current = true;
-          flushPendingSpeechChunks(socket);
-          return;
-        }
-
-        if (message.type === "transcript" && typeof message.text === "string") {
-          speechTranscriptRef.current = combineInputWithTranscript(speechTranscriptRef.current, message.text);
-          setInput(combineInputWithTranscript(speechBaseInputRef.current, speechTranscriptRef.current));
-          return;
-        }
-
-        if (message.type === "turn-complete") {
-          const committedInput = combineInputWithTranscript(speechBaseInputRef.current, speechTranscriptRef.current);
-          speechBaseInputRef.current = committedInput;
-          speechTranscriptRef.current = "";
-          setInput(committedInput);
-          return;
-        }
-
-        if (message.type === "error") {
-          setInlineError(message.message || "Speech-to-text failed.");
-          void stopSpeechToText();
-        }
-      };
-      socket.onerror = () => {
-        setInlineError("Speech-to-text connection failed.");
-        void stopSpeechToText();
-      };
-      socket.onclose = (event) => {
-        const closeReason = event.reason?.trim();
-        if (speechSocketRef.current === socket && closeReason && closeReason !== "Speech-to-text stopped") {
-          setInlineError(`Speech-to-text stopped: ${closeReason}`);
-        }
-        if (speechSocketRef.current === socket) {
-          void stopSpeechToText();
-        }
-      };
-
-      processorNode.port.onmessage = (event) => {
-        if (socket.readyState !== WebSocket.OPEN) {
-          return;
-        }
-
-        const channelData = event.data;
-        const normalizedChunk =
-          channelData instanceof Float32Array
-            ? channelData
-            : channelData instanceof ArrayBuffer
-              ? new Float32Array(channelData)
-              : ArrayBuffer.isView(channelData)
-                ? new Float32Array(channelData.buffer.slice(channelData.byteOffset, channelData.byteOffset + channelData.byteLength))
-                : null;
-
-        if (!normalizedChunk || normalizedChunk.length === 0) {
-          return;
-        }
-
-        const rms = calculateRms(normalizedChunk);
-        const now = Date.now();
-        const isSpeechChunk = rms >= SPEECH_ACTIVITY_RMS_THRESHOLD;
-        if (isSpeechChunk) {
-          speechLastVoiceMsRef.current = now;
-          if (!speechActivityOpenRef.current) {
-            speechActivityOpenRef.current = true;
-            sendSpeechSignal(socket, "activity-start");
-          }
-        }
-
-        if (!isSpeechChunk && now - speechLastVoiceMsRef.current > SPEECH_ACTIVITY_HANGOVER_MS) {
-          if (speechActivityOpenRef.current) {
-            speechActivityOpenRef.current = false;
-            sendSpeechSignal(socket, "activity-end");
-          }
-          return;
-        }
-
-        const pcmChunk = downsampleTo16kHz(normalizedChunk, audioContext.sampleRate);
-        if (!pcmChunk.length) {
-          return;
-        }
-
-        sendSpeechChunk(socket, encodePcmChunkBase64(pcmChunk));
-      };
-
-      sourceNode.connect(processorNode);
-      processorNode.connect(sinkGainNode);
-      sinkGainNode.connect(audioContext.destination);
-      await audioContext.resume();
-      setRecordingStartedAtMs(Date.now());
-      setRecordingElapsedSeconds(0);
-      setIsListening(true);
-    } catch (error) {
-      const normalizedError = error instanceof Error ? error : new Error(String(error));
-      setInlineError(normalizedError.message === "Permission denied" ? "Microphone access was blocked." : normalizedError.message || "Speech-to-text failed to start.");
-      await stopSpeechToText();
-    }
-  }
-
   async function handleMicrophoneClick() {
     if (disabled || isPreparingRun) return;
-
-    if (isListening) {
-      await stopSpeechToText();
-      return;
-    }
-
-    await startSpeechToText();
+    await toggleSpeechToText();
   }
 
   function toggleMainMenu() {
@@ -18431,7 +7082,7 @@ export function RunnerChat({
   }
 
   function toggleSkill(skillId: string) {
-    const normalizedSkillId = RUNNER_CHAT_SKILL_ID_ALIASES[String(skillId || "").trim()] || String(skillId || "").trim();
+    const normalizedSkillId = normalizeRunnerSkillId(skillId);
     if (!normalizedSkillId) {
       return;
     }
@@ -19053,7 +7704,12 @@ export function RunnerChat({
       if (selectedComposerProjectTask && onComposerProjectTaskSubmit && taskText) {
         setIsPreparingRun(true);
         const resolvedAttachments = await resolveAttachmentPayload(attachmentEntries);
-        const githubRepo = buildSelectedGithubRepoReference(attachmentEntries);
+        const githubRepo = buildSelectedGithubRepoReference(attachmentEntries, {
+          repositories: githubRepositories,
+          contexts: githubContexts,
+          selectedRepositoryId: selectedGithubRepositoryId,
+          selectedContextId: selectedGithubContextId,
+        });
         const didHandleProjectTask = await onComposerProjectTaskSubmit({
           prompt: taskText,
           taskPreview: selectedComposerProjectTask,
@@ -19082,7 +7738,12 @@ export function RunnerChat({
       }
       if (stagedBacklogMissionControlCommand && onBacklogMissionControlSubmit) {
         const resolvedAttachments = await resolveAttachmentPayload(attachmentEntries);
-        const githubRepo = buildSelectedGithubRepoReference(attachmentEntries);
+        const githubRepo = buildSelectedGithubRepoReference(attachmentEntries, {
+          repositories: githubRepositories,
+          contexts: githubContexts,
+          selectedRepositoryId: selectedGithubRepositoryId,
+          selectedContextId: selectedGithubContextId,
+        });
         clearComposerDraft();
         clearComposerAttachments(composerAttachmentEntries, {
           revokePreviews: false,
@@ -19161,6 +7822,26 @@ export function RunnerChat({
         executionAttachmentEntries.length === 0 &&
         !quotedSelection &&
         await tryHandleThreadCommunicatorMessage(taskText)
+      ) {
+        return;
+      }
+      const hasSpecialExecutionCommand = Boolean(
+        backlogCommand
+        || resourceCreationCommand
+        || agentCreationCommand
+        || skillCreationCommand
+        || slideCreationCommand
+        || researchCreationCommand
+        || scrapeCreationCommand
+        || parseCreationCommand
+        || adCreationCommand
+      );
+      if (
+        executionAttachmentEntries.length === 0
+        && !(previewImageRunAttachments?.length)
+        && !quotedSelection
+        && !hasSpecialExecutionCommand
+        && await tryHandleActiveCanonicalWorkerInstruction(taskText)
       ) {
         return;
       }
@@ -19244,22 +7925,13 @@ export function RunnerChat({
     }
   }
 
-  useEffect(() => {
-    if (isPreparingRun || hasRoutableActiveRun || pendingQueuedMessages.length === 0 || isDrainingQueuedRunsRef.current) {
-      return;
-    }
-    const nextQueuedMessage = pendingQueuedMessages[0];
-    if (!nextQueuedMessage) {
-      return;
-    }
-
-    isDrainingQueuedRunsRef.current = true;
-    setPendingQueuedMessages((prev) => prev.filter((item) => item.id !== nextQueuedMessage.id));
-
-    void (async () => {
-      try {
-        setIsPreparingRun(true);
-        await executeThreadRun(nextQueuedMessage.prompt, nextQueuedMessage.attachments, {
+  useRunnerQueuedExecution({
+    currentThreadId,
+    execute: async (nextQueuedMessage) => {
+      await executeThreadRun(
+        nextQueuedMessage.prompt,
+        nextQueuedMessage.attachments,
+        {
           turnId: nextQueuedMessage.turnId,
           quotedSelection: nextQueuedMessage.quotedSelection,
           backlogCommand: nextQueuedMessage.backlogCommand,
@@ -19271,26 +7943,29 @@ export function RunnerChat({
           scrapeCreationCommand: nextQueuedMessage.scrapeCreationCommand,
           parseCreationCommand: nextQueuedMessage.parseCreationCommand,
           adCreationCommand: nextQueuedMessage.adCreationCommand,
-          extraResolvedAttachments: nextQueuedMessage.extraResolvedAttachments,
+          extraResolvedAttachments:
+            nextQueuedMessage.extraResolvedAttachments,
           displayPromptOverride: nextQueuedMessage.displayPrompt,
           reasoningEffortOverride: nextQueuedMessage.reasoningEffort,
-        });
-      } catch (error) {
-        const normalizedError = error instanceof Error ? error : new Error(String(error));
-        if (consumeIntentionalStopAbort(normalizedError, currentThreadId ?? null)) {
-          return;
-        }
-        setInlineError(normalizedError.message);
-        try {
-          onRunError?.(normalizedError, currentThreadId ?? undefined);
-        } catch (callbackError) {
-          reportRunnerLifecycleCallbackError("onRunError", callbackError);
-        }
-      } finally {
-        isDrainingQueuedRunsRef.current = false;
+        },
+      );
+    },
+    hasActiveRun: hasRoutableActiveRun,
+    isDrainingRef: isDrainingQueuedRunsRef,
+    isPreparingRun,
+    messages: pendingQueuedMessages,
+    onError: (error, queuedThreadId) => {
+      setInlineError(error.message);
+      try {
+        onRunError?.(error, queuedThreadId || undefined);
+      } catch (callbackError) {
+        reportRunnerLifecycleCallbackError("onRunError", callbackError);
       }
-    })();
-  }, [currentThreadId, hasRoutableActiveRun, isPreparingRun, onRunError, pendingQueuedMessages]);
+    },
+    setIsPreparingRun,
+    setMessages: setPendingQueuedMessages,
+    wasIntentionalStop: consumeIntentionalStopAbort,
+  });
 
   function applyComposerInputValue(nextValue: string, selectionStart: number) {
     setInputSelectionStart(selectionStart);
@@ -19364,8 +8039,7 @@ export function RunnerChat({
     setInput(nextValue);
 
     if (isListening) {
-      speechBaseInputRef.current = nextValue;
-      speechTranscriptRef.current = "";
+      resetSpeechDraft(nextValue);
     }
   }
 
@@ -19505,581 +8179,6 @@ export function RunnerChat({
         );
     const derivedDurationSeconds = Math.max(0, Math.round((derivedEndMs - turn.startedAtMs) / 1000));
     return derivedDurationSeconds > 0 ? derivedDurationSeconds : explicitDurationSeconds ?? derivedDurationSeconds;
-  }
-
-  function stepRowKey(turnId: string, index: number, log: RunnerLog): string {
-    return `${turnId}-${index}-${log.eventType || "log"}-${(log.message || "").slice(0, 24)}`;
-  }
-
-  type RunnerSubagentGroup = {
-    invocationLog: RunnerLog;
-    logs: RunnerLog[];
-    completionLog?: RunnerLog;
-  };
-  type RunnerComputerUseGroup = {
-    id: string;
-    startLog: RunnerLog;
-    endLog: RunnerLog;
-    logs: RunnerLog[];
-    sessionLogs: RunnerLog[];
-  };
-  type RunnerSubagentPresentation = {
-    invocationId: string;
-    title: string;
-    prompt?: string | null;
-    environmentName: string;
-    running: boolean;
-    timeLabel?: string;
-    responseMessage?: string | null;
-    responseFailed: boolean;
-    previewMessage: string;
-    workLabel: string;
-    nestedItems: RunnerTimelineItem[];
-  };
-  type RunnerComputerUsePresentation = {
-    kind: RunnerVisualDetailKind;
-    groupId: string;
-    title: string;
-    environmentName: string;
-    running: boolean;
-    timeLabel?: string;
-    workLabel: string;
-    nestedItems: RunnerTimelineItem[];
-  };
-  type RunnerTimelineItem =
-    | { kind: "log"; log: RunnerLog }
-    | { kind: "deep_research_group"; logs: RunnerLog[]; runningCommandLog?: RunnerLog }
-    | { kind: "browser_group"; logs: RunnerLog[] }
-    | { kind: "computer_use_group"; group: RunnerComputerUseGroup }
-    | { kind: "subagent_group"; invocationLog: RunnerLog; logs: RunnerLog[]; completionLog?: RunnerLog };
-  type RunnerTurnTimelineState = {
-    agentMessage?: RunnerLog;
-    displayedTimelineItems: RunnerTimelineItem[];
-  };
-
-  function isBrowserTimelineLog(log: RunnerLog): boolean {
-    if (log.eventType !== "command_execution") return false;
-    const command = log.metadata?.command || log.message || "";
-    return isBrowserSkillCommand(command) && !isBrowserSkillLaunchCommand(command);
-  }
-
-  function isComputerUseTimelineLog(log: RunnerLog): boolean {
-    return isComputerUseMcpLog(log);
-  }
-
-  function isTimelineTerminalLog(log: RunnerLog): boolean {
-    return (
-      log.eventType === "agent_message" ||
-      log.eventType === "llm_response" ||
-      log.eventType === "turn_completed"
-    );
-  }
-
-  function isMetronomeWorkflowRunnerLog(log: RunnerLog): boolean {
-    return log.eventType === "metronome_workflow" || Boolean(log.metadata?.metronomeWorkflow);
-  }
-
-  function isMetronomeWorkflowPromptReplacementLog(log: RunnerLog): boolean {
-    if (!isMetronomeWorkflowRunnerLog(log)) {
-      return false;
-    }
-    const workflow = log.metadata?.metronomeWorkflow && typeof log.metadata.metronomeWorkflow === "object"
-      ? log.metadata.metronomeWorkflow as Record<string, unknown>
-      : null;
-    if (!workflow) {
-      return false;
-    }
-    if (workflow.displayAsPrompt === true) {
-      return true;
-    }
-    const status = String(workflow.status || log.metadata?.status || "").trim().toLowerCase();
-    const triggerCommand = String(workflow.triggerCommand || "").trim();
-    const triggerEventId = String(workflow.triggerEventId || "").trim();
-    const definitionSource = String(workflow.definitionSource || "").trim();
-    return status === "running" && !triggerCommand && !triggerEventId && !definitionSource;
-  }
-
-  function getTurnMetronomeWorkflowPromptLog(turn: RunnerTurn): RunnerLog | null {
-    const workflowLogs = turn.logs.filter(isMetronomeWorkflowPromptReplacementLog);
-    if (workflowLogs.length === 0) {
-      return null;
-    }
-    return workflowLogs[0] || null;
-  }
-
-  function getSubagentInvocationMetadata(log: RunnerLog) {
-    return log.metadata?.subagentInvocation || null;
-  }
-
-  function getSubagentInvocationId(log: RunnerLog): string | null {
-    return getRunnerLogSubagentInvocationIdentity(log) || null;
-  }
-
-  function isSubagentInvocationLog(log: RunnerLog): boolean {
-    return log.eventType === "subagent_invocation" && Boolean(getSubagentInvocationMetadata(log));
-  }
-
-  function logBelongsToSubagentInvocation(log: RunnerLog, invocationId: string): boolean {
-    return getSubagentInvocationId(log) === invocationId;
-  }
-
-  function sanitizeSubagentResponseMessage(message: string | null | undefined): string {
-    const cleaned = stripSystemTags(String(message || ""))
-      .replace(/^\s*agentId:\s.*$/gim, "")
-      .replace(/<usage>[\s\S]*?<\/usage>/gi, "")
-      .replace(/\n{3,}/g, "\n\n")
-      .trim();
-    return cleaned;
-  }
-
-  function normalizeSubagentSummaryText(message: string | null | undefined): string {
-    return stripSystemTags(String(message || ""))
-      .normalize("NFKC")
-      .replace(/[’‘]/g, "'")
-      .replace(/[*_`#>\-\s]+/g, "")
-      .toLowerCase();
-  }
-
-  function buildSubagentTimelineGroups(logs: RunnerLog[]) {
-    const groups = new Map<string, RunnerSubagentGroup>();
-    const anchoredInvocationIds = new Set<string>();
-
-    for (const log of logs) {
-      if (!isSubagentInvocationLog(log)) {
-        continue;
-      }
-      const invocationId = getSubagentInvocationId(log);
-      if (invocationId) {
-        anchoredInvocationIds.add(invocationId);
-      }
-    }
-
-    for (const log of logs) {
-      const invocationId = getSubagentInvocationId(log);
-      if (!invocationId || !anchoredInvocationIds.has(invocationId)) {
-        continue;
-      }
-
-      const existing = groups.get(invocationId);
-      const invocationMetadata = getSubagentInvocationMetadata(log);
-      const invocationStatus = invocationMetadata?.status || log.metadata?.status;
-      const isCompletionLog = isSubagentInvocationLog(log) && invocationStatus && invocationStatus !== "started";
-
-      if (!existing) {
-        groups.set(invocationId, {
-          invocationLog: log,
-          logs: [],
-          completionLog: isCompletionLog ? log : undefined,
-        });
-        continue;
-      }
-
-      if (isSubagentInvocationLog(log) && (!isSubagentInvocationLog(existing.invocationLog) || invocationStatus === "started")) {
-        existing.invocationLog = log;
-      }
-      if (isCompletionLog) {
-        existing.completionLog = log;
-      }
-      existing.logs.push(log);
-    }
-
-    for (const group of groups.values()) {
-      const completionLog = group.completionLog && group.completionLog !== group.invocationLog ? group.completionLog : undefined;
-      group.completionLog = completionLog;
-      group.logs = group.logs.filter((log) => {
-        if (log === group.invocationLog) {
-          return false;
-        }
-        if (completionLog && log === completionLog) {
-          return false;
-        }
-        return !isSubagentInvocationLog(log);
-      });
-    }
-
-    return groups;
-  }
-
-  function collectBrowserTimelineLogs(logs: RunnerLog[], subagentGroups: Map<string, RunnerSubagentGroup>): RunnerLog[] {
-    const browserLogs: RunnerLog[] = [];
-
-    for (const currentLog of logs) {
-      const invocationId = getSubagentInvocationId(currentLog);
-      if (invocationId && subagentGroups.has(invocationId)) {
-        continue;
-      }
-      if (isBrowserTimelineLog(currentLog)) {
-        browserLogs.push(currentLog);
-      }
-    }
-
-    return browserLogs;
-  }
-
-  function collectComputerUseTimelineLogs(logs: RunnerLog[], subagentGroups: Map<string, RunnerSubagentGroup>): RunnerLog[] {
-    const computerUseLogs: RunnerLog[] = [];
-
-    for (const currentLog of logs) {
-      const invocationId = getSubagentInvocationId(currentLog);
-      if (invocationId && subagentGroups.has(invocationId)) {
-        continue;
-      }
-      if (isComputerUseTimelineLog(currentLog)) {
-        computerUseLogs.push(currentLog);
-      }
-    }
-
-    return computerUseLogs;
-  }
-
-  function buildComputerUseTimelineGroups(logs: RunnerLog[], subagentGroups: Map<string, RunnerSubagentGroup>) {
-    const groups: RunnerComputerUseGroup[] = [];
-    let activeGroup: RunnerComputerUseGroup | null = null;
-
-    function closeActiveGroup() {
-      if (!activeGroup) {
-        return;
-      }
-      groups.push(activeGroup);
-      activeGroup = null;
-    }
-
-    for (let index = 0; index < logs.length; index += 1) {
-      const currentLog = logs[index];
-      const invocationId = getSubagentInvocationId(currentLog);
-      const belongsToSubagent = Boolean(invocationId && subagentGroups.has(invocationId));
-      const isDeepResearchLog =
-        !belongsToSubagent &&
-        (currentLog.eventType === "deep_research" || isDeepResearchTimelineCommand(currentLog));
-      const isBrowserLog = !belongsToSubagent && isBrowserTimelineLog(currentLog);
-
-      if (belongsToSubagent || isDeepResearchLog || isBrowserLog || isTimelineTerminalLog(currentLog)) {
-        closeActiveGroup();
-        continue;
-      }
-
-      if (isComputerUseTimelineLog(currentLog)) {
-        if (!activeGroup) {
-          activeGroup = {
-            id: `computer-use-${index}-${currentLog.time || "00:00"}`,
-            startLog: currentLog,
-            endLog: currentLog,
-            logs: [currentLog],
-            sessionLogs: [currentLog],
-          };
-        } else {
-          activeGroup.logs.push(currentLog);
-          activeGroup.sessionLogs.push(currentLog);
-          activeGroup.endLog = currentLog;
-        }
-        continue;
-      }
-
-      if (activeGroup) {
-        activeGroup.sessionLogs.push(currentLog);
-      }
-    }
-
-    closeActiveGroup();
-    return groups;
-  }
-
-  function isDeepResearchTimelineCommand(log: RunnerLog): boolean {
-    return (
-      log.eventType === "command_execution" &&
-      isDeepResearchCommand(log.metadata?.command || log.message || "")
-    );
-  }
-
-  function collectDeepResearchTimelineLogs(logs: RunnerLog[], subagentGroups: Map<string, RunnerSubagentGroup>): RunnerLog[] {
-    const deepResearchLogs: RunnerLog[] = [];
-
-    for (const currentLog of logs) {
-      const invocationId = getSubagentInvocationId(currentLog);
-      if (invocationId && subagentGroups.has(invocationId)) {
-        continue;
-      }
-      if (currentLog.eventType === "deep_research") {
-        deepResearchLogs.push(currentLog);
-      }
-    }
-
-    return deepResearchLogs;
-  }
-
-  function buildTimelineItems(logs: RunnerLog[], options?: { groupComputerUse?: boolean }): RunnerTimelineItem[] {
-    const subagentGroups = buildSubagentTimelineGroups(logs);
-    const latestPermissionLogIndexById = new Map<string, number>();
-    const latestPermissionLogById = new Map<string, RunnerLog>();
-    logs.forEach((log, index) => {
-      if (log.eventType !== "permission_request") return;
-      const requestId = String(log.metadata?.permissionRequestId || "").trim();
-      if (!requestId) return;
-      latestPermissionLogIndexById.set(requestId, index);
-      const previousLog = latestPermissionLogById.get(requestId);
-      latestPermissionLogById.set(
-        requestId,
-        previousLog
-          ? {
-              ...log,
-              metadata: {
-                ...(previousLog.metadata || {}),
-                ...(log.metadata || {}),
-              },
-            }
-          : log
-      );
-    });
-    const deepResearchLogs = collectDeepResearchTimelineLogs(logs, subagentGroups);
-    const deepResearchCommandLog = logs.find((currentLog) => {
-      const invocationId = getSubagentInvocationId(currentLog);
-      if (invocationId && subagentGroups.has(invocationId)) {
-        return false;
-      }
-      return isDeepResearchTimelineCommand(currentLog);
-    });
-    const browserLogs = collectBrowserTimelineLogs(logs, subagentGroups);
-    const groupComputerUse = options?.groupComputerUse !== false;
-    const computerUseLogs = collectComputerUseTimelineLogs(logs, subagentGroups);
-    const computerUseGroups = groupComputerUse ? buildComputerUseTimelineGroups(logs, subagentGroups) : [];
-    const computerUseGroupsByStartLog = new Map<RunnerLog, RunnerComputerUseGroup>();
-    const computerUseSessionLogs = new Set<RunnerLog>();
-    for (const group of computerUseGroups) {
-      computerUseGroupsByStartLog.set(group.startLog, group);
-      for (const sessionLog of group.sessionLogs) {
-        computerUseSessionLogs.add(sessionLog);
-      }
-    }
-    const items: RunnerTimelineItem[] = [];
-    const shouldShowDeepResearchGroup = deepResearchLogs.length > 0 || Boolean(deepResearchCommandLog);
-    let deepResearchGroupInserted = false;
-    let browserGroupInserted = false;
-    const insertedComputerUseGroupIds = new Set<string>();
-    const insertedSubagentInvocations = new Set<string>();
-
-    for (let index = 0; index < logs.length; index += 1) {
-      const log = logs[index];
-      if (log.eventType === "permission_request") {
-        const requestId = String(log.metadata?.permissionRequestId || "").trim();
-        if (requestId && latestPermissionLogIndexById.get(requestId) !== index) {
-          continue;
-        }
-        items.push({ kind: "log", log: requestId ? latestPermissionLogById.get(requestId) || log : log });
-        continue;
-      }
-      const invocationId = getSubagentInvocationId(log);
-      if (invocationId && subagentGroups.has(invocationId)) {
-        const group = subagentGroups.get(invocationId)!;
-        if (!insertedSubagentInvocations.has(invocationId) && log === group.invocationLog) {
-          items.push({
-            kind: "subagent_group",
-            invocationLog: group.invocationLog,
-            logs: group.logs,
-            completionLog: group.completionLog,
-          });
-          insertedSubagentInvocations.add(invocationId);
-        }
-        continue;
-      }
-      if (groupComputerUse && computerUseSessionLogs.has(log) && !computerUseGroupsByStartLog.has(log)) {
-        continue;
-      }
-      if (log.eventType === "deep_research") {
-        if (!deepResearchGroupInserted && shouldShowDeepResearchGroup) {
-          items.push({ kind: "deep_research_group", logs: deepResearchLogs, runningCommandLog: deepResearchCommandLog });
-          deepResearchGroupInserted = true;
-        }
-        continue;
-      }
-      if (isDeepResearchTimelineCommand(log)) {
-        if (!deepResearchGroupInserted && shouldShowDeepResearchGroup) {
-          items.push({ kind: "deep_research_group", logs: deepResearchLogs, runningCommandLog: deepResearchCommandLog || log });
-          deepResearchGroupInserted = true;
-        }
-        continue;
-      }
-      if (isBrowserTimelineLog(log)) {
-        if (!browserGroupInserted) {
-          items.push({ kind: "browser_group", logs: browserLogs });
-          browserGroupInserted = true;
-        }
-        continue;
-      }
-      if (isComputerUseTimelineLog(log)) {
-        if (!groupComputerUse) {
-          items.push({ kind: "log", log });
-          continue;
-        }
-        const group = computerUseGroupsByStartLog.get(log);
-        if (group && !insertedComputerUseGroupIds.has(group.id)) {
-          items.push({ kind: "computer_use_group", group });
-          insertedComputerUseGroupIds.add(group.id);
-        }
-        continue;
-      }
-      items.push({ kind: "log", log });
-    }
-
-    if (!deepResearchGroupInserted && shouldShowDeepResearchGroup) {
-      items.push({ kind: "deep_research_group", logs: deepResearchLogs, runningCommandLog: deepResearchCommandLog });
-    }
-
-    if (!browserGroupInserted && browserLogs.length > 0) {
-      items.push({ kind: "browser_group", logs: browserLogs });
-    }
-
-    if (groupComputerUse && computerUseLogs.length > 0) {
-      for (const group of computerUseGroups) {
-        if (!insertedComputerUseGroupIds.has(group.id) && group.logs.length > 0) {
-          items.push({ kind: "computer_use_group", group });
-        }
-      }
-    }
-
-    return items;
-  }
-
-  function buildSubagentGroupPresentation(turn: RunnerTurn, item: RunnerSubagentGroup): RunnerSubagentPresentation {
-    const invocation = getSubagentInvocationMetadata(item.invocationLog);
-    const invocationId = getSubagentInvocationId(item.invocationLog) || `subagent-${turn.id}`;
-    const fallbackCompletionLog =
-      !item.completionLog &&
-      isSubagentInvocationLog(item.invocationLog) &&
-      getSubagentInvocationMetadata(item.invocationLog)?.status !== "started"
-        ? item.invocationLog
-        : undefined;
-    const completionLog = item.completionLog || fallbackCompletionLog;
-    const latestNestedLog = item.logs[item.logs.length - 1] || completionLog || item.invocationLog;
-    const subagentTitle =
-      invocation?.agentName ||
-      item.invocationLog.metadata?.delegatedTo?.agentName ||
-      turn.agentName ||
-      displayedAgentLabel ||
-      "Subagent";
-    const subagentEnvironmentLabel = turn.environmentName || displayedEnvironmentLabel || "Environment";
-    const isSubagentRunning = isRunningTurnStatus(turn.status) && !completionLog;
-    const completionOutput = sanitizeSubagentResponseMessage(
-      typeof completionLog?.metadata?.output === "string" ? completionLog.metadata.output : ""
-    );
-    const completionFailed =
-      completionLog?.metadata?.status === "failed" ||
-      completionLog?.type === "error" ||
-      completionLog?.metadata?.exitCode === 1;
-    const completionOutputFingerprint = normalizeSubagentSummaryText(completionOutput);
-    const hasCompletionOutputLog = Boolean(
-      completionOutputFingerprint &&
-      item.logs.some((log) => normalizeSubagentSummaryText(log.message) === completionOutputFingerprint)
-    );
-    const nestedLogs =
-      completionOutput.trim() && !hasCompletionOutputLog
-        ? [
-            ...item.logs,
-            {
-              createdAt: completionLog?.createdAt || item.invocationLog.createdAt,
-              time: completionLog?.time || latestNestedLog.time || item.invocationLog.time,
-              message: completionOutput,
-              type: completionFailed ? "error" : "success",
-              eventType: "reasoning",
-              isReasoning: true,
-              metadata: {
-                ...(completionLog?.metadata || {}),
-                actor: completionLog?.metadata?.delegatedTo || completionLog?.metadata?.actor,
-                parentToolUseId: invocationId,
-                source: "subagent_run_summary",
-                isReasoning: true,
-              },
-            } as RunnerLog,
-          ]
-        : item.logs;
-    const previewMessage = completionOutput.trim()
-      || (isSubagentRunning ? `${subagentTitle} is working` : completionFailed ? `${subagentTitle} failed` : `${subagentTitle} finished`);
-    const nestedDurationLabel =
-      completionLog && completionLog !== item.invocationLog
-        ? getRunnerLogRangeDurationLabel(item.invocationLog, completionLog, turn.startedAtMs)
-        : undefined;
-    const nestedWorkLabel = isSubagentRunning
-      ? "Working..."
-      : `Worked for ${nestedDurationLabel || toDurationLabel(completionLog || latestNestedLog, turn.startedAtMs) || "0s"}`;
-
-    return {
-      invocationId,
-      title: subagentTitle,
-      prompt: invocation?.message || invocation?.description,
-      environmentName: subagentEnvironmentLabel,
-      running: isSubagentRunning,
-      timeLabel: toDurationLabel(completionLog || latestNestedLog, turn.startedAtMs),
-      responseMessage: completionOutput,
-      responseFailed: completionFailed,
-      previewMessage,
-      workLabel: nestedWorkLabel,
-      nestedItems: buildTimelineItems(nestedLogs),
-    };
-  }
-
-  function buildComputerUseGroupPresentation(turn: RunnerTurn, item: RunnerComputerUseGroup): RunnerComputerUsePresentation {
-    const computerUseTitle = "Computer Use";
-    const computerUseEnvironmentLabel = turn.environmentName || displayedEnvironmentLabel || "Environment";
-    const interactionCount = item.logs.length;
-    const isComputerUseRunning =
-      isRunningTurnStatus(turn.status) &&
-      item.endLog.metadata?.status !== "failed" &&
-      item.endLog.metadata?.status !== "completed";
-
-    return {
-      kind: "computer_use",
-      groupId: item.id,
-      title: computerUseTitle,
-      environmentName: computerUseEnvironmentLabel,
-      running: isComputerUseRunning,
-      timeLabel: toDurationLabel(item.endLog || item.startLog, turn.startedAtMs),
-      workLabel: `${interactionCount} ${interactionCount === 1 ? "interaction" : "interactions"}`,
-      nestedItems: buildTimelineItems(item.sessionLogs, { groupComputerUse: false }),
-    };
-  }
-
-  function getBrowserTimelineGroupId(logs: RunnerLog[]): string {
-    return logs.length > 0 ? "browser" : "browser-empty";
-  }
-
-  function buildBrowserGroupPresentation(turn: RunnerTurn, logs: RunnerLog[]): RunnerComputerUsePresentation {
-    const browserEnvironmentLabel = turn.environmentName || displayedEnvironmentLabel || "Environment";
-    const latestLog = logs[logs.length - 1] || null;
-    const interactionCount = logs.length;
-    const isBrowserRunning =
-      isRunningTurnStatus(turn.status) &&
-      latestLog?.metadata?.status !== "failed" &&
-      latestLog?.metadata?.status !== "completed";
-
-    return {
-      kind: "browser",
-      groupId: getBrowserTimelineGroupId(logs),
-      title: "Browser",
-      environmentName: browserEnvironmentLabel,
-      running: isBrowserRunning,
-      timeLabel: latestLog ? toDurationLabel(latestLog, turn.startedAtMs) : undefined,
-      workLabel: `${interactionCount} ${interactionCount === 1 ? "interaction" : "interactions"}`,
-      nestedItems: logs.map((log) => ({ kind: "log" as const, log })),
-    };
-  }
-
-  function timelineItemKey(turnId: string, index: number, item: RunnerTimelineItem): string {
-    if (item.kind === "deep_research_group") {
-      const anchorLog = item.logs[0] || item.runningCommandLog;
-      return anchorLog ? `${turnId}-deep-research-${stepRowKey(turnId, index, anchorLog)}` : `${turnId}-deep-research-${index}`;
-    }
-    if (item.kind === "browser_group") {
-      const anchorLog = item.logs[0] || item.logs[item.logs.length - 1];
-      return anchorLog ? `${turnId}-browser-${stepRowKey(turnId, index, anchorLog)}` : `${turnId}-browser-${index}`;
-    }
-    if (item.kind === "computer_use_group") {
-      const anchorLog = item.group.startLog || item.group.endLog;
-      return anchorLog ? `${turnId}-computer-use-${item.group.id}-${stepRowKey(turnId, index, anchorLog)}` : `${turnId}-computer-use-${item.group.id}-${index}`;
-    }
-    if (item.kind === "subagent_group") {
-      const invocationId = getSubagentInvocationMetadata(item.invocationLog)?.invocationId || index;
-      return `${turnId}-subagent-${invocationId}-${item.logs.length}`;
-    }
-    return stepRowKey(turnId, index, item.log);
   }
 
   function getTurnTimelineState(turn: RunnerTurn): RunnerTurnTimelineState {
@@ -20339,13 +8438,6 @@ export function RunnerChat({
       }
     };
   }, []);
-
-  function renderCommandIcon(icon: CommandRowSummary["icon"]) {
-    if (icon === "read") return <IconReadFile className="tb-step-row-icon" />;
-    if (icon === "list") return <IconFolder className="tb-step-row-icon" />;
-    if (icon === "write") return <IconWriteFile className="tb-step-row-icon" />;
-    return <IconTerminal className="tb-step-row-icon" />;
-  }
 
   function renderNestedTimelineItems(turn: RunnerTurn, items: RunnerTimelineItem[], options?: { renderBrowserSkillAsGeneric?: boolean }) {
     return items.map((nestedItem, nestedIndex) => {
@@ -20678,7 +8770,10 @@ export function RunnerChat({
     }
 
     if (item.kind === "subagent_group") {
-      const presentation = buildSubagentGroupPresentation(turn, item);
+      const presentation = buildSubagentGroupPresentation(turn, item, {
+        displayedAgentLabel,
+        displayedEnvironmentLabel,
+      });
 
       return (
         <SubagentLogBox
@@ -20960,18 +9055,6 @@ export function RunnerChat({
 
   const effectiveStatus = isPreparingRun ? "running" : status;
   const statusToneValue = statusTone(effectiveStatus);
-  const selectedAgent = agents.find((agent) => agent.id === selectedAgentId) || getRunnerPreferredDefaultAgentOption(agents) || agents[0];
-  const selectedEnvironment =
-    availableEnvironments.find((environment) => environment.id === selectedEnvironmentId) ||
-    availableEnvironments.find((environment) => environment.isDefault) ||
-    availableEnvironments[0];
-  const displayedAgentLabel = hasApiKey ? selectedAgent?.name || "Agent" : "Default Agent";
-  const displayedEnvironmentLabel = hasApiKey ? selectedEnvironment?.name || "Default" : "Default";
-  const displayedWorkspaceLabel = hasApiKey
-    ? effectiveWorkspaceSelectorMode === "projects" && selectedProject
-      ? selectedProject.name || "Project"
-      : displayedEnvironmentLabel
-    : "Default";
   const availableAgentPhotoEntries = useMemo(
     () =>
       agents
@@ -21417,7 +9500,9 @@ export function RunnerChat({
 
       return {
         turn: selectedTurn,
-        ...buildBrowserGroupPresentation(selectedTurn, browserGroup.logs),
+        ...buildBrowserGroupPresentation(selectedTurn, browserGroup.logs, {
+          displayedEnvironmentLabel,
+        }),
       };
     }
 
@@ -21432,7 +9517,9 @@ export function RunnerChat({
 
     return {
       turn: selectedTurn,
-      ...buildComputerUseGroupPresentation(selectedTurn, computerUseGroup.group),
+      ...buildComputerUseGroupPresentation(selectedTurn, computerUseGroup.group, {
+        displayedEnvironmentLabel,
+      }),
     };
   }, [displayedEnvironmentLabel, selectedComputerUseDetail, turns]);
 
@@ -21469,7 +9556,10 @@ export function RunnerChat({
 
     return {
       turn: selectedTurn,
-      ...buildSubagentGroupPresentation(selectedTurn, selectedGroup),
+      ...buildSubagentGroupPresentation(selectedTurn, selectedGroup, {
+        displayedAgentLabel,
+        displayedEnvironmentLabel,
+      }),
     };
   }, [displayedAgentLabel, displayedEnvironmentLabel, selectedSubagentDetail, turns]);
   const orderedAgents = useMemo(() => orderOptionsWithPinnedTop(agents, initialAgentTopId), [agents, initialAgentTopId]);
@@ -22378,179 +10468,6 @@ export function RunnerChat({
     };
   }, [onDeepResearchDetailOpenChange]);
 
-  useEffect(() => {
-    if (!currentThreadId || !hasApiKey || !normalizedBackendUrl) {
-      return;
-    }
-
-    let cancelled = false;
-    let pollInFlight = false;
-    let timeoutId: number | null = null;
-    let trailingTerminalPollsRemaining = REATTACH_THREAD_TERMINAL_SETTLE_POLL_LIMIT;
-    let initialGracePollsRemaining = REATTACH_THREAD_INITIAL_GRACE_POLL_LIMIT;
-
-    const scheduleNextPoll = (delayMs: number) => {
-      if (cancelled) {
-        return;
-      }
-      if (timeoutId !== null) {
-        window.clearTimeout(timeoutId);
-      }
-      timeoutId = window.setTimeout(() => {
-        void pollRunningThread();
-      }, delayMs);
-    };
-
-    const pollRunningThread = async () => {
-      if (cancelled || pollInFlight) {
-        return;
-      }
-
-      pollInFlight = true;
-
-      try {
-        if (locallyOwnedExecutionThreadIdRef.current === currentThreadId) {
-          scheduleNextPoll(REATTACH_RUNNING_THREAD_POLL_INTERVAL_MS);
-          return;
-        }
-
-        const statusSnapshot = await fetchThreadStatusSnapshot({
-          backendUrl: normalizedBackendUrl,
-          apiKey: apiKey.trim(),
-          threadId: currentThreadId,
-          requestHeaders,
-        });
-
-        if (cancelled) {
-          return;
-        }
-        setHydratedThreadStatus(statusSnapshot.status ?? null);
-
-        const localHasRunningTurn = turnsRef.current.some((turn) => isRunningTurnStatus(turn.status));
-        const localHasPendingPermissionTurn = turnsRef.current.some((turn) => turn.status === "permission_asked");
-        const localHasActiveDeepResearch = turnsRef.current.some((turn) => hasActiveDeepResearchLogGroup(turn.logs));
-        const localHasNoHydratedTurns = turnsRef.current.length === 0;
-        const remoteThreadIsRunning = isRunningThreadLifecycleStatus(statusSnapshot.status);
-        const remoteThreadHasPendingPermission = isPendingPermissionThreadLifecycleStatus(statusSnapshot.status);
-        const shouldHydrateThread =
-          remoteThreadIsRunning
-          || localHasRunningTurn
-          || localHasActiveDeepResearch
-          || (remoteThreadHasPendingPermission && !localHasPendingPermissionTurn)
-          || (localHasPendingPermissionTurn && !remoteThreadHasPendingPermission)
-          || (localHasNoHydratedTurns && initialGracePollsRemaining > 0);
-
-        let nextHasRunningTurn = localHasRunningTurn;
-        let nextHasActiveDeepResearch = localHasActiveDeepResearch;
-
-        if (shouldHydrateThread) {
-          const cachedPayload =
-            threadHydrationCacheRef.current?.threadId === currentThreadId
-              ? threadHydrationCacheRef.current
-              : null;
-          const resolvedInitialPrompt = resolveHydrationInitialPrompt(turnsRef.current, cachedPayload);
-          const shouldUseFullHydration =
-            !remoteThreadIsRunning
-            || (!cachedPayload && !resolvedInitialPrompt);
-          const payload = shouldUseFullHydration
-            ? await fetchThreadHydrationPayload({
-                backendUrl: normalizedBackendUrl,
-                apiKey: apiKey.trim(),
-                threadId: currentThreadId,
-                requestHeaders,
-              })
-            : await fetchThreadLiveRefreshPayload({
-                backendUrl: normalizedBackendUrl,
-                apiKey: apiKey.trim(),
-                threadId: currentThreadId,
-                requestHeaders,
-                statusSnapshot,
-                existingTurns: turnsRef.current,
-                cachedPayload,
-              });
-
-          if (cancelled) {
-            return;
-          }
-
-          threadHydrationCacheRef.current = payload;
-          setHydratedThreadStatus(payload.threadStatus ?? statusSnapshot.status ?? null);
-          applyHydratedThreadEnvironment(payload);
-          const hydratedTurns = buildHydratedTurnsFromPayload(payload, {
-            agentName: displayedAgentLabel,
-            environmentName: payload.threadEnvironmentName ?? payload.environmentName ?? displayedEnvironmentLabel,
-            backendUrl: normalizedBackendUrl,
-          });
-
-          if (cancelled) {
-            return;
-          }
-
-          const mergedTurns = mergeHydratedTurns(turnsRef.current, hydratedTurns);
-          nextHasRunningTurn = mergedTurns.some((turn) => isRunningTurnStatus(turn.status));
-          nextHasActiveDeepResearch = mergedTurns.some((turn) => hasActiveDeepResearchLogGroup(turn.logs));
-          setTurns(mergedTurns);
-          setExpandedTurns((previousExpandedTurns) =>
-            mapExpandedTurns(previousExpandedTurns, turnsRef.current, mergedTurns, {
-              defaultLatestExpanded: true,
-              collapseOnNewRunSummary: true,
-            })
-          );
-        }
-
-        if (remoteThreadIsRunning || nextHasRunningTurn || nextHasActiveDeepResearch) {
-          trailingTerminalPollsRemaining = REATTACH_THREAD_TERMINAL_SETTLE_POLL_LIMIT;
-          initialGracePollsRemaining = REATTACH_THREAD_INITIAL_GRACE_POLL_LIMIT;
-          scheduleNextPoll(REATTACH_RUNNING_THREAD_POLL_INTERVAL_MS);
-          return;
-        }
-
-        if (remoteThreadHasPendingPermission) {
-          trailingTerminalPollsRemaining = REATTACH_THREAD_TERMINAL_SETTLE_POLL_LIMIT;
-          initialGracePollsRemaining = REATTACH_THREAD_INITIAL_GRACE_POLL_LIMIT;
-          scheduleNextPoll(REATTACH_THREAD_RETRY_DELAY_MS);
-          return;
-        }
-
-        if (shouldHydrateThread && trailingTerminalPollsRemaining > 0) {
-          trailingTerminalPollsRemaining -= 1;
-          scheduleNextPoll(REATTACH_RUNNING_THREAD_POLL_INTERVAL_MS);
-          return;
-        }
-
-        if (!shouldHydrateThread && initialGracePollsRemaining > 0) {
-          initialGracePollsRemaining -= 1;
-          scheduleNextPoll(REATTACH_RUNNING_THREAD_POLL_INTERVAL_MS);
-        }
-      } catch (error) {
-        if (!cancelled) {
-          console.warn("[RunnerChat] Failed to refresh hydrated running thread:", error);
-          scheduleNextPoll(REATTACH_THREAD_RETRY_DELAY_MS);
-        }
-      } finally {
-        pollInFlight = false;
-      }
-    };
-
-    void pollRunningThread();
-
-    return () => {
-      cancelled = true;
-      if (timeoutId !== null) {
-        window.clearTimeout(timeoutId);
-      }
-    };
-  }, [
-    apiKey,
-    currentThreadId,
-    displayedAgentLabel,
-    displayedEnvironmentLabel,
-    hasApiKey,
-    hasHydratedReattachActivity,
-    hasRunningTurn,
-    normalizedBackendUrl,
-    requestHeaders,
-  ]);
 
   function renderThreadContextPopup() {
     if (!hasApiKey) {
@@ -23294,140 +11211,62 @@ export function RunnerChat({
               </div>
             ) : null}
             {shouldUseCanonicalThreadSurface ? (
-              <div className="tb-canonical-thread-surface" data-connected={canonicalThread.connected ? "true" : "false"}>
-                {canonicalThread.reconnecting && hasCanonicalSurfaceContent ? (
-                  <div className="tb-canonical-thread-connection" role="status">
-                    <LucideLoaderCircle className="tb-context-action-notice-icon-spinner" strokeWidth={1.6} />
-                    Reconnecting live activity…
-                  </div>
-                ) : null}
-                {canonicalThread.loading && !hasCanonicalSurfaceContent ? (
-                  <div className="runner-log-empty">Loading conversation…</div>
-                ) : null}
-                {canonicalThread.error && !hasCanonicalSurfaceContent ? (
-                  <div className="tb-canonical-thread-error" role="alert">
-                    <span>{canonicalThread.error}</span>
-                    <button type="button" onClick={() => void canonicalThread.refresh().catch(() => undefined)}>Retry</button>
-                  </div>
-                ) : null}
-                {!canonicalThread.loading && !canonicalThread.error && !hasCanonicalSurfaceContent ? (
-                  <div className="runner-log-empty">No activity yet. Send a message to start this thread.</div>
-                ) : null}
-                {legacyCompatibilityHistoryEntries.length > 0 ? (
-                  <div className="tb-canonical-compatibility is-history" aria-label="Earlier compatible thread activity">
-                    {legacyCompatibilityHistoryEntries.map(({ turn, projection }) => (
-                      <RunnerThreadTimeline
-                        key={`legacy-compatibility:${turn.id}`}
-                        projection={projection}
-                        fallbackRunAgentName={displayedAgentLabel}
-                        fallbackRunWorkspaceName={displayedWorkspaceLabel}
-                        maxMountedItems={12}
-                        renderAction={renderCanonicalThreadAction}
-                        renderMessageContent={(message) => (
-                          <RunnerMarkdown
-                            content={stripSystemTags(message.content)}
-                            className="tb-thread-message-markdown"
-                            softBreaks
-                          />
-                        )}
-                      />
-                    ))}
-                  </div>
-                ) : null}
-                <RunnerThreadTimeline
-                  projection={canonicalThread.projection}
-                  fallbackRunAgentName={displayedAgentLabel}
-                  fallbackRunWorkspaceName={displayedWorkspaceLabel}
-                  maxMountedItems={200}
-                  runDetailStates={canonicalThread.runDetailStates}
-                  activityGroupActionStates={canonicalThread.activityGroupActionStates}
-                  onLoadRunDetails={(run) => canonicalThread.loadRunDetails(run.id)}
-                  onLoadActivityGroupActions={canonicalThread.loadActivityGroupActions}
-                  renderAction={renderCanonicalThreadAction}
-                  renderMessageContent={(message) => (
-                    <RunnerMarkdown
-                      content={stripSystemTags(message.content)}
-                      className="tb-thread-message-markdown"
-                      softBreaks
-                    />
-                  )}
-                  onLoadEarlier={async () => {
-                    const scrollElement = logsRef.current;
-                    const previousScrollHeight = scrollElement?.scrollHeight || 0;
-                    const previousScrollTop = scrollElement?.scrollTop || 0;
-                    try {
-                      const loaded = await canonicalThread.loadMore();
-                      if (loaded && scrollElement && typeof window !== "undefined") {
-                        window.requestAnimationFrame(() => {
-                          const heightDelta = scrollElement.scrollHeight - previousScrollHeight;
-                          scrollElement.scrollTop = Math.max(0, previousScrollTop + heightDelta);
-                        });
-                      }
-                      return loaded;
-                    } catch (error) {
-                      const normalizedError = error instanceof Error ? error : new Error(String(error));
-                      setInlineError(normalizedError.message || "Failed to load earlier thread activity.");
-                      throw normalizedError;
-                    }
-                  }}
-                  onControlRun={async (run, action) => {
-                    try {
-                      const command = await canonicalThread.controlRun(run.id, {
-                        action,
-                        idempotencyKey: `runner-chat:${run.id}:${action}:${Date.now()}`,
+              <RunnerCanonicalThreadSurface
+                projection={canonicalThread.projection}
+                connected={canonicalThread.connected}
+                reconnecting={canonicalThread.reconnecting}
+                loading={canonicalThread.loading}
+                error={canonicalThread.error}
+                hasContent={hasCanonicalSurfaceContent}
+                historyEntries={legacyCompatibilityHistoryEntries}
+                tailEntries={legacyCompatibilityTailEntries}
+                fallbackRunAgentName={displayedAgentLabel}
+                fallbackRunWorkspaceName={displayedWorkspaceLabel}
+                runDetailStates={canonicalThread.runDetailStates}
+                activityGroupActionStates={canonicalThread.activityGroupActionStates}
+                renderAction={renderCanonicalThreadAction}
+                onRefresh={canonicalThread.refresh}
+                onLoadRunDetails={(run) => canonicalThread.loadRunDetails(run.id)}
+                onLoadActivityGroupActions={canonicalThread.loadActivityGroupActions}
+                onLoadEarlier={async () => {
+                  const scrollElement = logsRef.current;
+                  const previousScrollHeight = scrollElement?.scrollHeight || 0;
+                  const previousScrollTop = scrollElement?.scrollTop || 0;
+                  try {
+                    const loaded = await canonicalThread.loadMore();
+                    if (loaded && scrollElement && typeof window !== "undefined") {
+                      window.requestAnimationFrame(() => {
+                        const heightDelta = scrollElement.scrollHeight - previousScrollHeight;
+                        scrollElement.scrollTop = Math.max(0, previousScrollTop + heightDelta);
                       });
-                      if (command.effectApplied === false) {
-                        setInlineError(command.limitation || "The control request was recorded and is waiting for the run coordinator.");
-                      }
-                    } catch (error) {
-                      const normalizedError = error instanceof Error ? error : new Error(String(error));
-                      setInlineError(normalizedError.message || `Failed to ${action} the run.`);
                     }
-                  }}
-                  onOpenChanges={onOpenChanges ? (run) => onOpenChanges(canonicalThreadId, run.id) : undefined}
-                  onPermissionDecision={(request, decision) => handlePermissionDecision({
-                    createdAt: request.createdAt,
-                    time: "",
-                    message: `Permission requested: ${request.toolName || request.actionLabel || "tool"}`,
-                    type: "warning",
-                    eventType: "permission_request",
-                    metadata: {
-                      permissionRequestId: request.id,
-                      permissionRing: request.permissionRing || undefined,
-                      permissionRingLabel: request.ringLabel || undefined,
-                      permissionRingDescription: request.ringDescription || undefined,
-                      permissionActionLabel: request.actionLabel || undefined,
-                      permissionActionDescription: request.actionDescription || undefined,
-                      toolName: request.toolName || undefined,
-                      input: typeof request.input === "string" ? request.input : JSON.stringify(request.input ?? {}),
-                      reason: request.reason || undefined,
-                      status: "pending",
-                      decision: "pending",
-                    },
-                  }, decision)}
-                />
-                {legacyCompatibilityTailEntries.length > 0 ? (
-                  <div className="tb-canonical-compatibility is-tail" aria-label="Locally queued thread activity">
-                    {legacyCompatibilityTailEntries.map(({ turn, projection }) => (
-                      <RunnerThreadTimeline
-                        key={`legacy-compatibility-tail:${turn.id}`}
-                        projection={projection}
-                        fallbackRunAgentName={displayedAgentLabel}
-                        fallbackRunWorkspaceName={displayedWorkspaceLabel}
-                        maxMountedItems={12}
-                        renderAction={renderCanonicalThreadAction}
-                        renderMessageContent={(message) => (
-                          <RunnerMarkdown
-                            content={stripSystemTags(message.content)}
-                            className="tb-thread-message-markdown"
-                            softBreaks
-                          />
-                        )}
-                      />
-                    ))}
-                  </div>
-                ) : null}
-              </div>
+                    return loaded;
+                  } catch (error) {
+                    const normalizedError = error instanceof Error ? error : new Error(String(error));
+                    setInlineError(normalizedError.message || "Failed to load earlier thread activity.");
+                    throw normalizedError;
+                  }
+                }}
+                onControlRun={async (run, action) => {
+                  try {
+                    const command = await canonicalThread.controlRun(run.id, {
+                      action,
+                      idempotencyKey: ["runner-chat", run.id, action, Date.now()].join(":"),
+                    });
+                    if (command.effectApplied === false) {
+                      setInlineError(command.limitation || "The control request was recorded and is waiting for the run coordinator.");
+                    }
+                  } catch (error) {
+                    const normalizedError = error instanceof Error ? error : new Error(String(error));
+                    setInlineError(normalizedError.message || `Failed to ${action} the run.`);
+                  }
+                }}
+                onOpenChanges={onOpenChanges ? (run) => onOpenChanges(canonicalThreadId, run.id) : undefined}
+                onPermissionDecision={(request, decision) => handlePermissionDecision(
+                  adaptRunnerThreadPermissionRequestToRunnerLog(request),
+                  decision,
+                )}
+              />
             ) : turns.map((turn, turnIndex) => {
               const isTurnRunning = isRunningTurnStatus(turn.status);
               const isTurnPermissionAsked = turn.status === "permission_asked";
@@ -24064,6 +11903,8 @@ export function RunnerChat({
                     </div>
                   )}
 
+                  {isQueuedTurn ? <RunnerPageQueueReceipt /> : null}
+
                   {!isQueuedTurn && !shouldRenderWorkSection ? (
                     <div className="tb-turn-meta" style={metaHeaderStyle}>
                       {renderTurnAgentTrigger(turn, turnAgentLabel, turnAgentPhotoUrl)}
@@ -24082,26 +11923,10 @@ export function RunnerChat({
                         fallbackAgentName={turnAgentLabel}
                         fallbackWorkspaceName={effectiveWorkspaceSelectorMode === "projects" ? displayedWorkspaceLabel : turnEnvironmentLabel}
                         renderAction={renderCanonicalThreadAction}
-                        onPermissionDecision={(request: RunnerThreadPermissionRequest, decision) => handlePermissionDecision({
-                          createdAt: request.createdAt,
-                          time: "",
-                          message: `Permission requested: ${request.toolName || request.actionLabel || "tool"}`,
-                          type: "warning",
-                          eventType: "permission_request",
-                          metadata: {
-                            permissionRequestId: request.id,
-                            permissionRing: request.permissionRing || undefined,
-                            permissionRingLabel: request.ringLabel || undefined,
-                            permissionRingDescription: request.ringDescription || undefined,
-                            permissionActionLabel: request.actionLabel || undefined,
-                            permissionActionDescription: request.actionDescription || undefined,
-                            toolName: request.toolName || undefined,
-                            input: typeof request.input === "string" ? request.input : JSON.stringify(request.input ?? {}),
-                            reason: request.reason || undefined,
-                            status: "pending",
-                            decision: "pending",
-                          },
-                        }, decision)}
+                        onPermissionDecision={(request, decision) => handlePermissionDecision(
+                          adaptRunnerThreadPermissionRequestToRunnerLog(request),
+                          decision,
+                        )}
                       />
                     </div>
                   ) : null}
@@ -25076,791 +12901,156 @@ export function RunnerChat({
 
       {shouldRenderInlineComposerWithEmptyState ? emptyStateAfterComposer : null}
 
-      {reportIssueTurn ? (
-        <PlatformModal
-          open
-          visible
-          size="small"
-          title="Report an issue"
-          backdropClassName="tb-popup-modal-scrim"
-          className="tb-popup-modal tb-report-issue-modal"
-          onClose={closeReportIssueModal}
-          closeButtonLabel="Close report issue dialog"
-          closeButtonDisabled={isReportIssueSubmitting}
-        >
-            <div className="tb-report-issue-modal-body">
-              <label className="tb-report-issue-field">
-                <span className="tb-report-issue-label">Feedback type</span>
-                <select
-                  className="tb-report-issue-select"
-                  value={reportIssueType}
-                  onChange={(event) => {
-                    setReportIssueType(event.target.value as RunnerThreadFeedbackReportType);
-                    setReportIssueError("");
-                  }}
-                  disabled={isReportIssueSubmitting}
-                >
-                  {RUNNER_THREAD_FEEDBACK_REPORT_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
-                  ))}
-                </select>
-              </label>
+      <RunnerReportIssueDialog
+        open={Boolean(reportIssueTurn)}
+        type={reportIssueType}
+        message={reportIssueMessage}
+        error={reportIssueError}
+        submitting={isReportIssueSubmitting}
+        onTypeChange={(nextType) => {
+          setReportIssueType(nextType);
+          setReportIssueError("");
+        }}
+        onMessageChange={(message) => {
+          setReportIssueMessage(message);
+          setReportIssueError("");
+        }}
+        onSubmit={submitReportIssue}
+        onClose={closeReportIssueModal}
+      />
 
-              <label className="tb-report-issue-field">
-                <span className="tb-report-issue-label">Your feedback</span>
-                <textarea
-                  className="tb-report-issue-textarea"
-                  value={reportIssueMessage}
-                  placeholder="Please describe the issue or feedback."
-                  maxLength={5000}
-                  onChange={(event) => {
-                    setReportIssueMessage(event.target.value);
-                    setReportIssueError("");
-                  }}
-                  disabled={isReportIssueSubmitting}
-                />
-              </label>
+      <RunnerForkThreadDialog
+        open={Boolean(pendingForkConfiguration)}
+        source={pendingForkConfiguration?.source || "thread"}
+        stagedPrompt={pendingForkConfiguration?.stagedPrompt || ""}
+        target={forkTarget}
+        onTargetChange={setForkTarget}
+        environments={orderedForkTargetEnvironments}
+        selectedEnvironmentId={forkTargetEnvironmentId}
+        selectedEnvironmentName={selectedForkExistingEnvironment?.name || null}
+        onEnvironmentSelect={setForkTargetEnvironmentId}
+        environmentPopupOpen={showForkEnvironmentPopup}
+        onEnvironmentPopupOpenChange={setShowForkEnvironmentPopup}
+        environmentPopupRef={forkEnvironmentPopupRef}
+        newEnvironmentName={forkNewEnvironmentName}
+        onNewEnvironmentNameChange={setForkNewEnvironmentName}
+        newEnvironmentFileCopyMode={forkNewEnvironmentFileCopyMode}
+        onNewEnvironmentFileCopyModeChange={setForkNewEnvironmentFileCopyMode}
+        existingEnvironmentFileCopyMode={forkExistingEnvironmentFileCopyMode}
+        onExistingEnvironmentFileCopyModeChange={setForkExistingEnvironmentFileCopyMode}
+        showExistingEnvironmentCopyOptions={shouldShowForkExistingEnvironmentCopyOptions}
+        error={forkDialogError}
+        creating={Boolean(forkingTurnId)}
+        onClearError={() => setForkDialogError(null)}
+        onConfirm={confirmForkFromPendingConfiguration}
+        onClose={cancelPendingForkConfiguration}
+      />
 
-              {reportIssueError ? <div className="runner-inline-error tb-report-issue-error">{reportIssueError}</div> : null}
-
-              <div className="tb-edit-confirmation-actions tb-report-issue-actions">
-                <PlatformSecondaryButton
-                  size="large"
-                  type="button"
-                  className="tb-popup-action tb-popup-action-secondary"
-                  onClick={closeReportIssueModal}
-                  disabled={isReportIssueSubmitting}
-                >
-                  Cancel
-                </PlatformSecondaryButton>
-                <PlatformPrimaryButton
-                  size="large"
-                  type="button"
-                  className={`tb-popup-action tb-popup-action-primary ${isReportIssueSubmitting ? "loading" : ""}`.trim()}
-                  onClick={() => void submitReportIssue()}
-                  disabled={isReportIssueSubmitting || !reportIssueMessage.trim()}
-                >
-                  {isReportIssueSubmitting ? "Sending..." : "Send"}
-                </PlatformPrimaryButton>
-              </div>
-            </div>
-        </PlatformModal>
-      ) : null}
-
-      {pendingForkConfiguration ? (
-        <PlatformModal
-          open
-          visible
-          size="medium"
-          title="Fork Thread"
-          description={
-            pendingForkConfiguration.source === "message"
-              ? "Choose where the forked thread should run before opening the new chat. The selected user message will be staged in the composer and not sent automatically."
-              : pendingForkConfiguration.stagedPrompt.trim()
-                ? "Choose where the forked thread should run before opening the new chat. Your /fork prompt will be sent in the new thread after the fork is created."
-                : "Choose where the forked thread should run before opening the new chat. The full conversation will be copied into the new thread."
-          }
-          backdropClassName="tb-popup-modal-scrim"
-          className="tb-popup-modal tb-fork-thread-modal"
-          onClose={() => {
-            if (forkingTurnId) return;
-            cancelPendingForkConfiguration();
-          }}
-          closeButtonLabel="Close fork thread dialog"
-          closeButtonDisabled={Boolean(forkingTurnId)}
-        >
-            <div className="tb-fork-thread-modal-body">
-              <div className="tb-fork-thread-section">
-                <div className="tb-fork-thread-section-header">
-                  <div className="tb-fork-thread-section-title">Environment</div>
-                  <div className="tb-fork-thread-section-copy">Pick an existing Environment or create a new Environment for this branch.</div>
-                </div>
-                <div className="tb-fork-thread-environment-list">
-                  <div
-                    className={`tb-popup-row tb-popup-row-select tb-fork-thread-environment-row ${forkTarget === "existing_environment" ? "selected" : ""}`.trim()}
-                    role="button"
-                    tabIndex={0}
-                    aria-pressed={forkTarget === "existing_environment"}
-                    onClick={() => {
-                      setForkTarget("existing_environment");
-                      setForkDialogError(null);
-                    }}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        setForkTarget("existing_environment");
-                        setForkDialogError(null);
-                      }
-                    }}
-                  >
-                    <span className="tb-popup-check-slot">
-                      {forkTarget === "existing_environment" ? <IconCheck className="tb-popup-check" /> : null}
-                    </span>
-                    <span className="tb-fork-thread-environment-main">
-                      <span className="tb-fork-thread-environment-copy">
-                        <span className="tb-fork-thread-environment-name">Existing Environment</span>
-                      </span>
-                    </span>
-                    <div className="tb-fork-thread-row-control">
-                      <div className="tb-fork-thread-selector-anchor" ref={forkEnvironmentPopupRef}>
-                        <button
-                          type="button"
-                          className={`tb-inline-selector tb-fork-thread-inline-selector ${showForkEnvironmentPopup ? "active" : ""}`.trim()}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            setForkTarget("existing_environment");
-                            setShowForkEnvironmentPopup((current) => !current);
-                            setForkDialogError(null);
-                          }}
-                          disabled={Boolean(forkingTurnId) || availableEnvironments.length === 0}
-                        >
-                          <span>{selectedForkExistingEnvironment?.name || "Select Environment"}</span>
-                          <IconChevronDown className="tb-inline-selector-chevron" />
-                        </button>
-
-                        {showForkEnvironmentPopup ? (
-                          <PlatformPopupSurface className="tb-popup-menu-inline tb-fork-thread-environment-popup">
-                            <div className="tb-popup-menu-inline-body">
-                              {orderedForkTargetEnvironments.map((environment) => (
-                                <button
-                                  key={environment.id}
-                                  type="button"
-                                  className={`tb-popup-row tb-popup-row-select ${forkTargetEnvironmentId === environment.id ? "selected" : ""}`}
-                                  onClick={() => {
-                                    setForkTarget("existing_environment");
-                                    setForkTargetEnvironmentId(environment.id);
-                                    setForkExistingEnvironmentFileCopyMode("none");
-                                    setShowForkEnvironmentPopup(false);
-                                    setForkDialogError(null);
-                                  }}
-                                >
-                                  <span className="tb-popup-check-slot">
-                                    {forkTargetEnvironmentId === environment.id ? <IconCheck className="tb-popup-check" /> : null}
-                                  </span>
-                                  <span className="tb-popup-label">{environment.name}</span>
-                                </button>
-                              ))}
-                            </div>
-                          </PlatformPopupSurface>
-                        ) : null}
-                      </div>
-                    </div>
-                  </div>
-                  <div
-                    className={`tb-popup-row tb-popup-row-select tb-fork-thread-environment-row ${forkTarget === "new_forked_environment" ? "selected" : ""}`.trim()}
-                    role="button"
-                    tabIndex={0}
-                    aria-pressed={forkTarget === "new_forked_environment"}
-                    onClick={() => {
-                      setForkTarget("new_forked_environment");
-                      setShowForkEnvironmentPopup(false);
-                      setForkDialogError(null);
-                    }}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        setForkTarget("new_forked_environment");
-                        setShowForkEnvironmentPopup(false);
-                        setForkDialogError(null);
-                      }
-                    }}
-                  >
-                    <span className="tb-popup-check-slot">
-                      {forkTarget === "new_forked_environment" ? <IconCheck className="tb-popup-check" /> : null}
-                    </span>
-                    <span className="tb-fork-thread-environment-main">
-                      <span className="tb-fork-thread-environment-copy">
-                        <span className="tb-fork-thread-environment-name">Create new Environment</span>
-                      </span>
-                    </span>
-                    <div className="tb-fork-thread-row-control">
-                      <input
-                        type="text"
-                        className="tb-fork-thread-name-input"
-                        value={forkNewEnvironmentName}
-                        placeholder="Environment name"
-                        disabled={Boolean(forkingTurnId)}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setForkTarget("new_forked_environment");
-                          setShowForkEnvironmentPopup(false);
-                        }}
-                        onChange={(event) => {
-                          setForkTarget("new_forked_environment");
-                          setForkNewEnvironmentName(event.target.value);
-                          setForkDialogError(null);
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {forkTarget === "new_forked_environment" ? (
-                <div className="tb-fork-thread-section">
-                  <div className="tb-fork-thread-section-header">
-                    <div className="tb-fork-thread-section-title">Workspace files</div>
-                    <div className="tb-fork-thread-section-copy">Choose what the new Environment should contain.</div>
-                  </div>
-                  <div className="tb-fork-thread-copy-options">
-                    <button
-                      type="button"
-                      className={`tb-fork-thread-copy-option ${forkNewEnvironmentFileCopyMode === "all" ? "selected" : ""}`.trim()}
-                      onClick={() => {
-                        setForkNewEnvironmentFileCopyMode("all");
-                        setForkDialogError(null);
-                      }}
-                      disabled={Boolean(forkingTurnId)}
-                    >
-                      <span className="tb-fork-thread-copy-option-icon-shell">
-                        <LucideCloud className="tb-fork-thread-copy-option-icon" strokeWidth={1.75} />
-                      </span>
-                      <span className="tb-fork-thread-copy-option-main">
-                        <span className="tb-fork-thread-copy-option-copy">
-                          <span className="tb-fork-thread-copy-option-title">Copy full current workspace</span>
-                          <span className="tb-fork-thread-copy-option-description">Create a new Environment from the source thread&apos;s current workspace.</span>
-                        </span>
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      className={`tb-fork-thread-copy-option ${forkNewEnvironmentFileCopyMode === "thread_only" ? "selected" : ""}`.trim()}
-                      onClick={() => {
-                        setForkNewEnvironmentFileCopyMode("thread_only");
-                        setForkDialogError(null);
-                      }}
-                      disabled={Boolean(forkingTurnId)}
-                    >
-                      <span className="tb-fork-thread-copy-option-icon-shell">
-                        <LucideGitBranch className="tb-fork-thread-copy-option-icon" strokeWidth={1.75} />
-                      </span>
-                      <span className="tb-fork-thread-copy-option-main">
-                        <span className="tb-fork-thread-copy-option-copy">
-                          <span className="tb-fork-thread-copy-option-title">Copy only thread-touched files</span>
-                          <span className="tb-fork-thread-copy-option-description">Start from an empty workspace and bring over only files the thread changed before this message.</span>
-                        </span>
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      className={`tb-fork-thread-copy-option ${forkNewEnvironmentFileCopyMode === "none" ? "selected" : ""}`.trim()}
-                      onClick={() => {
-                        setForkNewEnvironmentFileCopyMode("none");
-                        setForkDialogError(null);
-                      }}
-                      disabled={Boolean(forkingTurnId)}
-                    >
-                      <span className="tb-fork-thread-copy-option-icon-shell">
-                        <LucideServer className="tb-fork-thread-copy-option-icon" strokeWidth={1.75} />
-                      </span>
-                      <span className="tb-fork-thread-copy-option-main">
-                        <span className="tb-fork-thread-copy-option-copy">
-                          <span className="tb-fork-thread-copy-option-title">Start with an empty workspace</span>
-                          <span className="tb-fork-thread-copy-option-description">Create a fresh Environment with no files copied from the source thread.</span>
-                        </span>
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              ) : shouldShowForkExistingEnvironmentCopyOptions ? (
-                <div className="tb-fork-thread-section">
-                  <div className="tb-fork-thread-section-header">
-                    <div className="tb-fork-thread-section-title">Workspace files</div>
-                    <div className="tb-fork-thread-section-copy">Decide whether the selected Environment should receive files from the source thread before the fork opens.</div>
-                  </div>
-                  <div className="tb-fork-thread-copy-options">
-                    <button
-                      type="button"
-                      className={`tb-fork-thread-copy-option ${forkExistingEnvironmentFileCopyMode === "thread_only" ? "selected" : ""}`.trim()}
-                      onClick={() => {
-                        setForkExistingEnvironmentFileCopyMode("thread_only");
-                        setForkDialogError(null);
-                      }}
-                      disabled={Boolean(forkingTurnId)}
-                    >
-                      <span className="tb-fork-thread-copy-option-icon-shell">
-                        <LucideGitBranch className="tb-fork-thread-copy-option-icon" strokeWidth={1.75} />
-                      </span>
-                      <span className="tb-fork-thread-copy-option-main">
-                        <span className="tb-fork-thread-copy-option-copy">
-                          <span className="tb-fork-thread-copy-option-title">Copy thread-touched files</span>
-                          <span className="tb-fork-thread-copy-option-description">Overlay files the thread changed before this message onto the selected Environment.</span>
-                        </span>
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      className={`tb-fork-thread-copy-option ${forkExistingEnvironmentFileCopyMode === "none" ? "selected" : ""}`.trim()}
-                      onClick={() => {
-                        setForkExistingEnvironmentFileCopyMode("none");
-                        setForkDialogError(null);
-                      }}
-                      disabled={Boolean(forkingTurnId)}
-                    >
-                      <span className="tb-fork-thread-copy-option-icon-shell">
-                        <LucideServer className="tb-fork-thread-copy-option-icon" strokeWidth={1.75} />
-                      </span>
-                      <span className="tb-fork-thread-copy-option-main">
-                        <span className="tb-fork-thread-copy-option-copy">
-                          <span className="tb-fork-thread-copy-option-title">Keep the selected Environment as-is</span>
-                          <span className="tb-fork-thread-copy-option-description">Do not copy any files from the source thread into the selected Environment.</span>
-                        </span>
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              ) : null}
-
-              {forkDialogError ? <div className="runner-inline-error tb-fork-thread-error">{forkDialogError}</div> : null}
-
-              <div className="tb-edit-confirmation-actions tb-fork-thread-actions">
-                <PlatformSecondaryButton
-                  size="large"
-                  type="button"
-                  className="tb-popup-action tb-popup-action-secondary"
-                  onClick={cancelPendingForkConfiguration}
-                  disabled={Boolean(forkingTurnId)}
-                >
-                  Cancel
-                </PlatformSecondaryButton>
-                <PlatformPrimaryButton
-                  size="large"
-                  type="button"
-                  className={`tb-popup-action tb-popup-action-primary ${forkingTurnId ? "loading" : ""}`.trim()}
-                  onClick={() => void confirmForkFromPendingConfiguration()}
-                  disabled={
-                    Boolean(forkingTurnId) ||
-                    (forkTarget === "existing_environment"
-                      ? !forkTargetEnvironmentId
-                      : !forkNewEnvironmentName.trim())
-                  }
-                >
-                  {forkingTurnId ? (
-                    <span className="tb-fork-thread-action-loading">
-                      <span className="runner-spinner tb-fork-thread-action-spinner" />
-                      <span>Creating Fork...</span>
-                    </span>
-                  ) : (
-                    "Create Fork"
-                  )}
-                </PlatformPrimaryButton>
-              </div>
-            </div>
-        </PlatformModal>
-      ) : null}
-
-      {pendingEditConfirmation ? (
-        <PlatformModal
-          open
-          visible
-          size="small"
-          title="File changes detected"
-          description="The following files were changed by this message or later messages. Do you want to keep those workspace changes when rerunning from the edited message?"
-          backdropClassName="tb-popup-modal-scrim"
-          className="tb-popup-modal tb-edit-confirmation-modal"
-          onClose={() => setPendingEditConfirmation(null)}
-          closeButtonLabel="Close file changes dialog"
-        >
-            {pendingEditConfirmation.changedFiles.length > 0 ? (
-              <div className="tb-edit-confirmation-files">
-                {pendingEditConfirmation.changedFiles.map((file) => (
-                  <div key={file.path} className="tb-edit-confirmation-file">
-                    <div className="tb-edit-confirmation-file-main">
-                      <span className={`tb-edit-confirmation-file-kind is-${file.kind}`}>{file.kind}</span>
-                      <span className="tb-edit-confirmation-file-path" title={file.path}>{file.path}</span>
-                    </div>
-                    {(typeof file.additions === "number" || typeof file.deletions === "number") ? (
-                      <div className="tb-edit-confirmation-file-stats">
-                        {typeof file.additions === "number" ? <span className="tb-edit-confirmation-file-stat is-added">+{file.additions}</span> : null}
-                        {typeof file.deletions === "number" ? <span className="tb-edit-confirmation-file-stat is-removed">-{file.deletions}</span> : null}
-                      </div>
-                    ) : null}
-                  </div>
-                ))}
-              </div>
-            ) : null}
-            <div className="tb-edit-confirmation-actions">
-              <PlatformSecondaryButton size="large" type="button" className="tb-popup-action tb-popup-action-secondary" onClick={() => setPendingEditConfirmation(null)}>
-                Cancel
-              </PlatformSecondaryButton>
-              <PlatformSecondaryButton
-                size="large"
-                type="button"
-                className="tb-popup-action tb-popup-action-secondary"
-                onClick={() => {
-                  const confirmation = pendingEditConfirmation;
-                  if (!confirmation) return;
-                  void submitEditedTurn(confirmation.turnId, confirmation.nextPrompt, false);
-                }}
-              >
-                Revert file changes
-              </PlatformSecondaryButton>
-              <PlatformPrimaryButton
-                size="large"
-                type="button"
-                className="tb-popup-action tb-popup-action-primary"
-                onClick={() => {
-                  const confirmation = pendingEditConfirmation;
-                  if (!confirmation) return;
-                  void submitEditedTurn(confirmation.turnId, confirmation.nextPrompt, true);
-                }}
-              >
-                Keep file changes
-              </PlatformPrimaryButton>
-            </div>
-        </PlatformModal>
-      ) : null}
+      <RunnerEditConfirmationDialog
+        open={Boolean(pendingEditConfirmation)}
+        changedFiles={pendingEditConfirmation?.changedFiles || []}
+        onCancel={() => setPendingEditConfirmation(null)}
+        onConfirm={(keepFileChanges) => {
+          const confirmation = pendingEditConfirmation;
+          if (!confirmation) return;
+          return submitEditedTurn(confirmation.turnId, confirmation.nextPrompt, keepFileChanges);
+        }}
+      />
 
       {deepResearchDetailDrawer}
       {computerUseDetailDrawer}
       {subagentDetailDrawer}
       {documentAttachmentPreviewDrawer}
 
-      {showFileBrowserModal && typeof document !== "undefined"
-        ? createPortal(
-            <div className="tb-runner-chat">
-              <PlatformModal
-                open
-                visible
-                portal={false}
-                size="full"
-                title="Attach files"
-                backdropClassName="tb-file-browser-scrim"
-                className="tb-file-browser-modal"
-                onClose={closeFileBrowserModal}
-                closeButtonLabel="Close file browser"
-              >
-                  <div className="tb-file-browser-body">
-                    <div className="tb-file-browser-sidebar">
-                      <div className="tb-file-browser-search-wrap">
-                        <div className="tb-file-browser-search">
-                          <IconSearch className="tb-file-browser-search-icon" />
-                          <input
-                            type="text"
-                            placeholder="Search files..."
-                            value={fileBrowserSearchQuery}
-                            onChange={(event) => setFileBrowserSearchQuery(event.target.value)}
-                            className="tb-file-browser-search-input"
-                          />
-                          {fileBrowserSearchQuery ? (
-                            <button type="button" className="tb-file-browser-search-clear" onClick={() => setFileBrowserSearchQuery("")}>
-                              <IconX className="tb-file-browser-search-clear-icon" />
-                            </button>
-                          ) : null}
-                        </div>
-                      </div>
-
-                      {availableEnvironments.length > 0 ? (
-                        <div className="tb-file-browser-sidebar-section tb-file-browser-sidebar-section-environments">
-                          <div className="tb-file-browser-sidebar-title">Environments</div>
-                          <div className="tb-file-browser-sidebar-list tb-file-browser-sidebar-list-environments">
-                            {availableEnvironments.map((environment) => (
-                              <button
-                                key={environment.id}
-                                type="button"
-                                className={`tb-file-browser-source-row ${currentFileBrowserSource === "workspace" && selectedEnvironmentId === environment.id ? "active" : ""}`}
-                                onClick={() => handleWorkspaceFileBrowserEnvironmentSelect(environment.id)}
-                              >
-                                <IconCloud className="tb-file-browser-source-icon" />
-                                <span className="tb-file-browser-source-label">{environment.name}</span>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      ) : null}
-
-                      <div className="tb-file-browser-sidebar-section">
-                        <div className="tb-file-browser-sidebar-title">Integrations</div>
-                        <div className="tb-file-browser-sidebar-list">
-                          <button
-                            type="button"
-                            className={`tb-file-browser-source-row ${currentFileBrowserSource === "google-drive" ? "active" : ""}`}
-                            onClick={() => switchFileBrowserSource("google-drive")}
-                          >
-                            <IconGoogleDrive className="tb-file-browser-source-brand-icon" />
-                            <span className="tb-file-browser-source-label">Google Drive</span>
-                            {!googleDriveConnected ? <span className="tb-file-browser-source-note">Connect</span> : null}
-                          </button>
-                          <button
-                            type="button"
-                            className={`tb-file-browser-source-row ${currentFileBrowserSource === "notion" ? "active" : ""}`}
-                            onClick={() => switchFileBrowserSource("notion")}
-                          >
-                            <IconNotion className="tb-file-browser-source-brand-icon" />
-                            <span className="tb-file-browser-source-label">Notion</span>
-                            {!notionConnected ? <span className="tb-file-browser-source-note">Connect</span> : null}
-                          </button>
-                          <button
-                            type="button"
-                            className={`tb-file-browser-source-row ${currentFileBrowserSource === "one-drive" ? "active" : ""}`}
-                            onClick={() => switchFileBrowserSource("one-drive")}
-                          >
-                            <IconOneDrive className="tb-file-browser-source-brand-icon" />
-                            <span className="tb-file-browser-source-label">OneDrive</span>
-                            {!oneDriveConnected ? <span className="tb-file-browser-source-note">Connect</span> : null}
-                          </button>
-                          <button
-                            type="button"
-                            className={`tb-file-browser-source-row ${currentFileBrowserSource === "github" ? "active" : ""}`}
-                            onClick={() => switchFileBrowserSource("github")}
-                          >
-                            <IconGithub className="tb-file-browser-source-brand-icon" />
-                            <span className="tb-file-browser-source-label">GitHub</span>
-                            {!githubConnected ? <span className="tb-file-browser-source-note">Connect</span> : null}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="tb-file-browser-main">
-                      {showGoogleDriveAuthScreen || showOneDriveAuthScreen || showGithubAuthScreen || showNotionAuthScreen ? (
-                        <div className="tb-file-browser-auth-screen">
-                          <div className="tb-file-browser-auth-card">
-                            <div className="tb-file-browser-auth-icon-wrap">
-                              {showGoogleDriveAuthScreen ? (
-                                <IconGoogleDrive className="tb-file-browser-auth-icon" />
-                              ) : showNotionAuthScreen ? (
-                                <IconNotion className="tb-file-browser-auth-icon" />
-                              ) : showOneDriveAuthScreen ? (
-                                <IconOneDrive className="tb-file-browser-auth-icon" />
-                              ) : (
-                                <IconGithub className="tb-file-browser-auth-icon" />
-                              )}
-                            </div>
-                            <h3 className="tb-file-browser-auth-title">
-                              {showGoogleDriveAuthScreen ? "Connect to Google Drive" : showNotionAuthScreen ? "Connect to Notion" : showOneDriveAuthScreen ? "Connect to OneDrive" : "Connect to GitHub"}
-                            </h3>
-                            <p className="tb-file-browser-auth-copy">
-                              {showGoogleDriveAuthScreen
-                                ? "Connect your Google Drive to browse and attach files."
-                                : showNotionAuthScreen
-                                  ? "Connect your Notion workspace to browse and select databases."
-                                : showOneDriveAuthScreen
-                                  ? "Connect your OneDrive to browse and attach files."
-                                  : "Connect your GitHub to browse and attach repository files."}
-                            </p>
-                            <button
-                              type="button"
-                              className="tb-file-browser-auth-button"
-                              onClick={() => {
-                                if (showGoogleDriveAuthScreen) {
-                                  googleDriveConfig?.onConnect?.();
-                                  return;
-                                }
-                                if (showNotionAuthScreen) {
-                                  notionConfig?.onConnect?.();
-                                  return;
-                                }
-                                if (showOneDriveAuthScreen) {
-                                  oneDriveConfig?.onConnect?.();
-                                  return;
-                                }
-                                githubConfig?.onConnect?.();
-                              }}
-                            >
-                              {showGoogleDriveAuthScreen ? "Connect Google Drive" : showNotionAuthScreen ? "Connect Notion" : showOneDriveAuthScreen ? "Connect OneDrive" : "Connect GitHub"}
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="tb-file-browser-header">
-                            <button type="button" className="tb-file-browser-nav-button" onClick={goFileBrowserBack} disabled={fileBrowserHistoryIndex <= 0}>
-                              <IconChevronLeft className="tb-file-browser-nav-icon" />
-                            </button>
-                            <button type="button" className="tb-file-browser-nav-button" onClick={goFileBrowserForward} disabled={fileBrowserHistoryIndex >= fileBrowserHistory.length - 1}>
-                              <IconChevronRight className="tb-file-browser-nav-icon" />
-                            </button>
-                            <div className="tb-file-browser-header-icon">
-                              {currentFileBrowserSource === "google-drive" ? (
-                                <IconGoogleDrive className="tb-file-browser-source-brand-icon" />
-                              ) : currentFileBrowserSource === "notion" ? (
-                                <IconNotion className="tb-file-browser-source-brand-icon" />
-                              ) : currentFileBrowserSource === "github" ? (
-                                <IconGithub className="tb-file-browser-source-brand-icon" />
-                              ) : currentFileBrowserSource === "one-drive" ? (
-                                <IconOneDrive className="tb-file-browser-source-brand-icon" />
-                              ) : (
-                                <IconCloud className="tb-file-browser-source-icon" />
-                              )}
-                            </div>
-                            <div className="tb-file-browser-breadcrumbs">
-                              {fileBrowserPath.map((crumb, index) => (
-                                <span key={`${crumb.id || "root"}-${index}`} className="tb-file-browser-breadcrumb-chip">
-                                  {index > 0 ? <span className="tb-file-browser-breadcrumb-sep">/</span> : null}
-                                  <button
-                                    type="button"
-                                    className={`tb-file-browser-breadcrumb ${index === fileBrowserPath.length - 1 ? "active" : ""}`}
-                                    onClick={() => navigateFileBrowserToBreadcrumb(index)}
-                                  >
-                                    {crumb.name}
-                                  </button>
-                                </span>
-                              ))}
-                            </div>
-                            {currentFileBrowserSource === "google-drive" && googleDriveItems.length > 0 && googleDriveConfig?.onManageAccess ? (
-                              <button type="button" className="tb-file-browser-toolbar-button" onClick={handleGoogleDriveManageAccess} disabled={isGoogleDrivePickerLoading} title="Manage file access">
-                                {isGoogleDrivePickerLoading ? <IconLoader2 className="tb-file-browser-toolbar-icon tb-file-browser-folder-chevron-spin" /> : <IconFolderPlus className="tb-file-browser-toolbar-icon" />}
-                              </button>
-                            ) : null}
-                            {currentFileBrowserSource === "google-drive" && googleDriveConfig?.onDisconnect ? (
-                              <button type="button" className="tb-file-browser-toolbar-button" onClick={() => googleDriveConfig.onDisconnect?.()} title="Disconnect Google Drive">
-                                <IconLogout className="tb-file-browser-toolbar-icon" />
-                              </button>
-                            ) : null}
-                            {currentFileBrowserSource === "notion" && notionConfig?.onDisconnect ? (
-                              <button type="button" className="tb-file-browser-toolbar-button" onClick={() => notionConfig.onDisconnect?.()} title="Disconnect Notion">
-                                <IconLogout className="tb-file-browser-toolbar-icon" />
-                              </button>
-                            ) : null}
-                            {currentFileBrowserSource === "one-drive" && oneDriveConfig?.onDisconnect ? (
-                              <button type="button" className="tb-file-browser-toolbar-button" onClick={() => oneDriveConfig.onDisconnect?.()} title="Disconnect OneDrive">
-                                <IconLogout className="tb-file-browser-toolbar-icon" />
-                              </button>
-                            ) : null}
-                            {currentFileBrowserSource === "github" && githubConfig?.onDisconnect ? (
-                              <button type="button" className="tb-file-browser-toolbar-button" onClick={() => githubConfig.onDisconnect?.()} title="Disconnect GitHub">
-                                <IconLogout className="tb-file-browser-toolbar-icon" />
-                              </button>
-                            ) : null}
-                          </div>
-
-                          <div className="tb-file-browser-list">
-                            {currentFileBrowserSource === "workspace" && isWorkspaceBrowserLoading ? (
-                              <div className="tb-file-browser-empty">Loading workspace files...</div>
-                            ) : currentFileBrowserSource === "workspace" && workspaceBrowserError ? (
-                              <div className="tb-file-browser-empty">{workspaceBrowserError}</div>
-                            ) : currentFileBrowserSource === "google-drive" && isGoogleDriveBrowserLoading ? (
-                              <div className="tb-file-browser-empty">Loading Google Drive files...</div>
-                            ) : currentFileBrowserSource === "google-drive" && googleDriveBrowserError ? (
-                              <div className="tb-file-browser-empty">{googleDriveBrowserError}</div>
-                            ) : currentFileBrowserSource === "notion" && isNotionBrowserLoading ? (
-                              <div className="tb-file-browser-empty">Loading Notion databases...</div>
-                            ) : currentFileBrowserSource === "notion" && notionBrowserError ? (
-                              <div className="tb-file-browser-empty">{notionBrowserError}</div>
-                            ) : currentFileBrowserSource === "one-drive" && isOneDriveBrowserLoading ? (
-                              <div className="tb-file-browser-empty">Loading OneDrive files...</div>
-                            ) : currentFileBrowserSource === "one-drive" && oneDriveBrowserError ? (
-                              <div className="tb-file-browser-empty">{oneDriveBrowserError}</div>
-                            ) : currentFileBrowserSource === "github" && isGithubBrowserLoading ? (
-                              <div className="tb-file-browser-empty">Loading GitHub files...</div>
-                            ) : currentFileBrowserSource === "github" && githubBrowserError ? (
-                              <div className="tb-file-browser-empty">{githubBrowserError}</div>
-                            ) : showGoogleDrivePickerPrompt ? (
-                              <div className="tb-file-browser-empty-state">
-                                <div className="tb-file-browser-auth-icon-wrap">
-                                  <IconGoogleDrive className="tb-file-browser-auth-icon" />
-                                </div>
-                                <h3 className="tb-file-browser-auth-title">Select files to share</h3>
-                                <p className="tb-file-browser-auth-copy">Choose which files and folders from your Google Drive you want to access in Testbase.</p>
-                                <button type="button" className="tb-file-browser-auth-button" onClick={handleGoogleDriveManageAccess} disabled={isGoogleDrivePickerLoading}>
-                                  {isGoogleDrivePickerLoading ? "Opening picker..." : "Select Files from Google Drive"}
-                                </button>
-                              </div>
-                            ) : filteredFileBrowserItems.length === 0 ? (
-                              <div className="tb-file-browser-empty">
-                                {fileBrowserSearchQuery ? "No files match your search" : currentFileBrowserSource === "notion" ? "No Notion databases found" : "This folder is empty"}
-                              </div>
-                            ) : (
-                              <div className="tb-file-browser-list-inner">
-                                {filteredFileBrowserItems.map((item) => renderFileBrowserItem(item))}
-                              </div>
-                            )}
-                          </div>
-                        </>
-                      )}
-                    </div>
-
-                    {previewFileBrowserItem ? (
-                      <div className="tb-file-browser-preview">
-                        <div className="tb-file-browser-preview-header">
-                          <div className="tb-file-browser-preview-art">
-                            {isFileBrowserPreviewLoading ? (
-                              <IconLoader2 className="tb-file-browser-preview-loader" />
-                            ) : fileBrowserPreviewContent && fileBrowserPreviewKind === "image" ? (
-                              <img src={fileBrowserPreviewContent} alt={previewFileBrowserItem.name} className="tb-file-browser-preview-image" />
-                            ) : fileBrowserPreviewContent && fileBrowserPreviewKind === "video" ? (
-                              <video src={fileBrowserPreviewContent} className="tb-file-browser-preview-video" controls playsInline preload="metadata" />
-                            ) : fileBrowserPreviewContent && fileBrowserPreviewKind === "text" ? (
-                              <pre className="tb-file-browser-preview-text">{fileBrowserPreviewContent}</pre>
-                            ) : (
-                              renderBrowserFileIcon(previewFileBrowserItem, "tb-file-browser-preview-glyph")
-                            )}
-                          </div>
-                          <h3 className="tb-file-browser-preview-name">{previewFileBrowserItem.name}</h3>
-                          <p className="tb-file-browser-preview-subtitle">
-                            {previewFileBrowserItem.isFolder ? "Folder" : formatBrowserFileSize(previewFileBrowserItem.size)}
-                          </p>
-                        </div>
-                        <div className="tb-file-browser-preview-info">
-                          <div className="tb-file-browser-preview-info-title">Information</div>
-                          <div className="tb-file-browser-preview-info-row">
-                            <span>Modified</span>
-                            <span>{formatBrowserFileDate(previewFileBrowserItem.modifiedTime)}</span>
-                          </div>
-                          <div className="tb-file-browser-preview-info-row">
-                            <span>Created</span>
-                            <span>{formatBrowserFileDate(previewFileBrowserItem.createdTime)}</span>
-                          </div>
-                          <div className="tb-file-browser-preview-info-row">
-                            <span>Type</span>
-                            <span>{previewFileBrowserItem.isFolder ? "folder" : getBrowserFileType(previewFileBrowserItem.mimeType, previewFileBrowserItem.name)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <div className="tb-file-browser-footer">
-                    <PlatformSecondaryButton type="button" className="tb-file-browser-footer-button tb-file-browser-footer-button-secondary" onClick={closeFileBrowserModal}>
-                      Cancel
-                    </PlatformSecondaryButton>
-                    <PlatformPrimaryButton
-                      type="button"
-                      className="tb-file-browser-footer-button tb-file-browser-footer-button-primary"
-                      onClick={() => void handleFileBrowserAttach()}
-                      disabled={selectedFileBrowserIds.length === 0 || isFileBrowserAttaching}
-                    >
-                      <span className="tb-file-browser-footer-button-content">
-                        {isFileBrowserAttaching ? <span className="runner-spinner tb-file-browser-footer-button-spinner" /> : null}
-                        <span className="tb-file-browser-footer-button-label">
-                          {isFileBrowserAttaching
-                            ? "Attaching Files..."
-                            : `${currentFileBrowserSource === "notion" ? "Use" : "Attach"} ${selectedFileBrowserIds.length > 0 ? selectedFileBrowserLabel : currentFileBrowserSource === "notion" ? "Database" : "Files"}`}
-                        </span>
-                      </span>
-                    </PlatformPrimaryButton>
-                  </div>
-              </PlatformModal>
-            </div>,
-            document.body,
-          )
-        : null}
-      {showFileBrowserApiKeyPrompt && typeof document !== "undefined"
-        ? createPortal(
-            <div className="tb-runner-chat">
-              <PlatformModal
-                open
-                visible
-                portal={false}
-                size="compact"
-                title="API key required"
-                description="Enter an API key in the playground sidebar to browse workspace files."
-                backdropClassName="tb-file-browser-scrim"
-                className="tb-file-browser-api-key-modal"
-                onClose={closeFileBrowserApiKeyPrompt}
-                closeButtonLabel="Close API key dialog"
-              >
-                  <div className="tb-file-browser-api-key-footer">
-                    <PlatformSecondaryButton type="button" className="tb-file-browser-footer-button tb-file-browser-footer-button-secondary" onClick={closeFileBrowserApiKeyPrompt}>
-                      Close
-                    </PlatformSecondaryButton>
-                  </div>
-              </PlatformModal>
-            </div>,
-            document.body,
-          )
-        : null}
+      <RunnerFileBrowserDialog
+        open={showFileBrowserModal}
+        apiKeyPromptOpen={showFileBrowserApiKeyPrompt}
+        source={currentFileBrowserSource}
+        searchQuery={fileBrowserSearchQuery}
+        onSearchQueryChange={setFileBrowserSearchQuery}
+        environments={availableEnvironments}
+        selectedEnvironmentId={selectedEnvironmentId}
+        onEnvironmentSelect={handleWorkspaceFileBrowserEnvironmentSelect}
+        onSourceChange={switchFileBrowserSource}
+        connections={{
+          "google-drive": {
+            connected: googleDriveConnected,
+            onConnect: googleDriveConfig?.onConnect,
+            onDisconnect: googleDriveConfig?.onDisconnect,
+          },
+          notion: {
+            connected: notionConnected,
+            onConnect: notionConfig?.onConnect,
+            onDisconnect: notionConfig?.onDisconnect,
+          },
+          "one-drive": {
+            connected: oneDriveConnected,
+            onConnect: oneDriveConfig?.onConnect,
+            onDisconnect: oneDriveConfig?.onDisconnect,
+          },
+          github: {
+            connected: githubConnected,
+            onConnect: githubConfig?.onConnect,
+            onDisconnect: githubConfig?.onDisconnect,
+          },
+        }}
+        authSource={
+          showGoogleDriveAuthScreen
+            ? "google-drive"
+            : showNotionAuthScreen
+              ? "notion"
+              : showOneDriveAuthScreen
+                ? "one-drive"
+                : showGithubAuthScreen
+                  ? "github"
+                  : null
+        }
+        path={fileBrowserPath}
+        historyIndex={fileBrowserHistoryIndex}
+        historyLength={fileBrowserHistory.length}
+        onBack={goFileBrowserBack}
+        onForward={goFileBrowserForward}
+        onBreadcrumbSelect={navigateFileBrowserToBreadcrumb}
+        googleDriveItemCount={googleDriveItems.length}
+        onManageGoogleDriveAccess={googleDriveConfig?.onManageAccess ? handleGoogleDriveManageAccess : undefined}
+        isGoogleDrivePickerLoading={isGoogleDrivePickerLoading}
+        loading={
+          currentFileBrowserSource === "workspace"
+            ? isWorkspaceBrowserLoading
+            : currentFileBrowserSource === "google-drive"
+              ? isGoogleDriveBrowserLoading
+              : currentFileBrowserSource === "notion"
+                ? isNotionBrowserLoading
+                : currentFileBrowserSource === "one-drive"
+                  ? isOneDriveBrowserLoading
+                  : isGithubBrowserLoading
+        }
+        error={
+          currentFileBrowserSource === "workspace"
+            ? workspaceBrowserError
+            : currentFileBrowserSource === "google-drive"
+              ? googleDriveBrowserError
+              : currentFileBrowserSource === "notion"
+                ? notionBrowserError
+                : currentFileBrowserSource === "one-drive"
+                  ? oneDriveBrowserError
+                  : githubBrowserError
+        }
+        showGoogleDrivePickerPrompt={showGoogleDrivePickerPrompt}
+        items={filteredFileBrowserItems}
+        renderItem={renderFileBrowserItem}
+        previewItem={previewFileBrowserItem}
+        previewContent={fileBrowserPreviewContent}
+        previewKind={fileBrowserPreviewKind}
+        isPreviewLoading={isFileBrowserPreviewLoading}
+        renderPreviewIcon={(item) => renderBrowserFileIcon(item, "tb-file-browser-preview-glyph")}
+        selectedItemCount={selectedFileBrowserIds.length}
+        selectedItemLabel={selectedFileBrowserLabel}
+        isAttaching={isFileBrowserAttaching}
+        onAttach={handleFileBrowserAttach}
+        onClose={closeFileBrowserModal}
+        onApiKeyPromptClose={closeFileBrowserApiKeyPrompt}
+      />
     </div>
   );
 }

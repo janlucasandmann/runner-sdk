@@ -14,6 +14,7 @@ import {
   IMAGINE_TEMPLATE_PAGE_SCRIPT_FRAGMENTS,
   createImagineService,
 } from "./index.mjs";
+import { readPlatformCompositionSource } from "../../../../apps/platform/testing/platform-composition-source.mjs";
 
 assert.match(IMAGINE_PAGE_SCRIPT_FRAGMENTS.foundation, /function normalizePlaygroundImagineTemplateAssets/);
 assert.match(IMAGINE_PAGE_SCRIPT_FRAGMENTS.templateMedia, /function PlaygroundImagineTemplatePreviewMedia/);
@@ -45,27 +46,24 @@ assert.match(IMAGINE_SHELL_STYLE_FRAGMENTS.toolbar, /\.playground-imagine-media-
 assert.doesNotThrow(() => new Function(IMAGINE_PAGE_SCRIPT));
 assert.doesNotThrow(() => new Function(IMAGINE_TEMPLATE_PAGE_SCRIPT));
 
-const demoServerSource = await fs.readFile(
-  new URL("../../../../examples/demo-server.mjs", import.meta.url),
-  "utf8",
-);
+const platformEntrySource = await readPlatformCompositionSource();
 const filesToolbarSource = await fs.readFile(
   new URL("../files/client/styles/toolbar.mjs", import.meta.url),
   "utf8",
 );
 
-assert.match(demoServerSource, /from "\.\.\/src\/platform-services\/create-mode\/imagine\/index\.mjs"/);
-assert.match(demoServerSource, /imagineService\.handleRequest\(req, res, url\)/);
-assert.match(demoServerSource, /\$\{IMAGINE_PAGE_SCRIPT\}/);
-assert.match(demoServerSource, /\$\{IMAGINE_APP_SCRIPT_FRAGMENTS\.topNavigation\}/);
-assert.match(demoServerSource, /\$\{IMAGINE_SHELL_STYLE_FRAGMENTS\.toolbar\}/);
-assert.doesNotMatch(demoServerSource, /demo-imagine-page\.mjs/);
-assert.doesNotMatch(demoServerSource, /function PlaygroundImaginePage/);
-assert.doesNotMatch(demoServerSource, /function PlaygroundImagineTemplatePage/);
-assert.doesNotMatch(demoServerSource, /function renderImagineTopNavControls/);
-assert.doesNotMatch(demoServerSource, /function openImaginePage/);
-assert.doesNotMatch(demoServerSource, /function readTeamPageCustomImagineTemplates/);
-assert.doesNotMatch(demoServerSource, /url\.pathname === "\/api\/aios\/user\/imagine-preferences"/);
+assert.match(platformEntrySource, /from "\.\.\/\.\.\/\.\.\/src\/platform-services\/create-mode\/imagine\/index\.mjs"/);
+assert.match(platformEntrySource, /imagineService\.handleRequest\(req, res, url\)/);
+assert.match(platformEntrySource, /\$\{IMAGINE_PAGE_SCRIPT\}/);
+assert.match(platformEntrySource, /\$\{IMAGINE_APP_SCRIPT_FRAGMENTS\.topNavigation\}/);
+assert.match(platformEntrySource, /\$\{IMAGINE_SHELL_STYLE_FRAGMENTS\.toolbar\}/);
+assert.doesNotMatch(platformEntrySource, /demo-imagine-page\.mjs/);
+assert.doesNotMatch(platformEntrySource, /function PlaygroundImaginePage/);
+assert.doesNotMatch(platformEntrySource, /function PlaygroundImagineTemplatePage/);
+assert.doesNotMatch(platformEntrySource, /function renderImagineTopNavControls/);
+assert.doesNotMatch(platformEntrySource, /function openImaginePage/);
+assert.doesNotMatch(platformEntrySource, /function readTeamPageCustomImagineTemplates/);
+assert.doesNotMatch(platformEntrySource, /url\.pathname === "\/api\/aios\/user\/imagine-preferences"/);
 assert.doesNotMatch(filesToolbarSource, /\.playground-imagine-media-mode-selector/);
 
 const calls = [];

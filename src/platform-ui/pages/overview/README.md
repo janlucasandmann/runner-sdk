@@ -24,7 +24,7 @@ Resource-specific behavior does not belong here. Each resource module under `pla
 import {
   ResourceOverviewPage,
   type ResourceOverviewAnalyticsModel,
-} from "@computer-agents/runner-web-sdk/platform-ui/pages";
+} from "@computer-agents/platform/platform-ui/pages";
 
 <ResourceOverviewPage
   period={period}
@@ -43,7 +43,7 @@ import {
 Load the shared stylesheet through:
 
 ```ts
-import "@computer-agents/runner-web-sdk/platform-ui/pages/styles.css";
+import "@computer-agents/platform/platform-ui/pages/styles.css";
 ```
 
 ## Extension rules

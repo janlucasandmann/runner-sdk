@@ -20,6 +20,7 @@ import {
   normalizeEvaluationSet,
   parseEvaluatorResult,
 } from "./server/domain/index.mjs";
+import { readPlatformCompositionSource } from "../../../../apps/platform/testing/platform-composition-source.mjs";
 
 assert.match(PLAYGROUND_EVALUATIONS_CSS, /\.playground-evaluations-page/);
 assert.match(PLAYGROUND_EVALUATIONS_CSS, /\.playground-evaluations-table/);
@@ -64,24 +65,21 @@ assert.doesNotMatch(EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.view, /pagination\s*:/);
 assert.match(EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.modal, /renderAgentEvaluationRunModal/);
 assert.match(EVALUATIONS_AGENT_STYLE_FRAGMENTS.page, /playground-agents-detail-evaluations-section/);
 
-const demoServerSource = await fs.readFile(
-  new URL("../../../../examples/demo-server.mjs", import.meta.url),
-  "utf8",
-);
+const platformEntrySource = await readPlatformCompositionSource();
 
-assert.match(demoServerSource, /from "\.\.\/src\/platform-services\/configure-mode\/evaluations\/index\.mjs"/);
-assert.match(demoServerSource, /const evaluationsService = createEvaluationsService\(/);
-assert.match(demoServerSource, /evaluationsService\.handleRequest\(req, res, url\)/);
-assert.match(demoServerSource, /\$\{PLAYGROUND_EVALUATIONS_CSS\}/);
-assert.match(demoServerSource, /\$\{PLAYGROUND_EVALUATIONS_SCRIPT\}/);
-assert.match(demoServerSource, /\$\{EVALUATIONS_APP_SCRIPT_FRAGMENTS\.pageView\}/);
-assert.match(demoServerSource, /\$\{EVALUATIONS_AGENT_SCRIPT_FRAGMENTS\.view\}/);
-assert.doesNotMatch(demoServerSource, /playground-evaluations-page\.mjs/);
-assert.doesNotMatch(demoServerSource, /playground-evaluations-runtime\.mjs/);
-assert.doesNotMatch(demoServerSource, /function openEvaluationsPage\(/);
-assert.doesNotMatch(demoServerSource, /function renderEvaluationsPage\(/);
-assert.doesNotMatch(demoServerSource, /function renderEvaluationsPageNav\(/);
-assert.doesNotMatch(demoServerSource, /const playgroundEvaluationsRuntime/);
+assert.match(platformEntrySource, /from "\.\.\/\.\.\/\.\.\/src\/platform-services\/configure-mode\/evaluations\/index\.mjs"/);
+assert.match(platformEntrySource, /const evaluationsService = createEvaluationsService\(/);
+assert.match(platformEntrySource, /evaluationsService\.handleRequest\(req, res, url\)/);
+assert.match(platformEntrySource, /\$\{PLAYGROUND_EVALUATIONS_CSS\}/);
+assert.match(platformEntrySource, /\$\{PLAYGROUND_EVALUATIONS_SCRIPT\}/);
+assert.match(platformEntrySource, /\$\{EVALUATIONS_APP_SCRIPT_FRAGMENTS\.pageView\}/);
+assert.match(platformEntrySource, /\$\{EVALUATIONS_AGENT_SCRIPT_FRAGMENTS\.view\}/);
+assert.doesNotMatch(platformEntrySource, /playground-evaluations-page\.mjs/);
+assert.doesNotMatch(platformEntrySource, /playground-evaluations-runtime\.mjs/);
+assert.doesNotMatch(platformEntrySource, /function openEvaluationsPage\(/);
+assert.doesNotMatch(platformEntrySource, /function renderEvaluationsPage\(/);
+assert.doesNotMatch(platformEntrySource, /function renderEvaluationsPageNav\(/);
+assert.doesNotMatch(platformEntrySource, /const playgroundEvaluationsRuntime/);
 
 const evaluationSet = normalizeEvaluationSet({
   id: "evaluation_1",
