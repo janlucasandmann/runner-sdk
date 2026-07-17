@@ -135,6 +135,7 @@ export interface PlatformDataTableToolbarConfig<TData> {
   view?: PlatformDataTableViewConfig;
   primaryAction?: PlatformDataTablePrimaryAction;
   leading?: ReactNode;
+  controlsLeading?: ReactNode;
   trailing?: ReactNode;
   className?: string;
 }

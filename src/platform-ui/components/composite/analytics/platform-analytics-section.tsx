@@ -9,12 +9,9 @@ export function PlatformAnalyticsSection({
   variant = "default",
   title,
   timeframe,
-  headerActions,
-  chartContent,
 }: PlatformAnalyticsSectionProps) {
   const resolvedTitle = title ?? analytics.title;
-  const hasHeader = variant === "framed" && Boolean(resolvedTitle || timeframe || headerActions);
-  const hasHeaderActions = Boolean(timeframe || headerActions);
+  const hasHeader = variant === "framed" && Boolean(resolvedTitle || timeframe);
 
   return (
     <section
@@ -25,19 +22,16 @@ export function PlatformAnalyticsSection({
       {hasHeader ? (
         <div className="platform-analytics__header">
           {resolvedTitle ? <h2 className="platform-analytics__title">{resolvedTitle}</h2> : null}
-          {hasHeaderActions ? (
+          {timeframe ? (
             <div className="platform-analytics__header-actions">
-              {timeframe ? (
-                <PlatformSwitch
-                  value={timeframe.value}
-                  options={timeframe.options}
-                  onValueChange={timeframe.onValueChange}
-                  ariaLabel={timeframe.ariaLabel || "Analytics time frame"}
-                  className={timeframe.className}
-                  disabled={timeframe.disabled}
-                />
-              ) : null}
-              {headerActions}
+              <PlatformSwitch
+                value={timeframe.value}
+                options={timeframe.options}
+                onValueChange={timeframe.onValueChange}
+                ariaLabel={timeframe.ariaLabel || "Analytics time frame"}
+                className={timeframe.className}
+                disabled={timeframe.disabled}
+              />
             </div>
           ) : null}
         </div>
@@ -58,7 +52,7 @@ export function PlatformAnalyticsSection({
         ))}
       </div>
       <div className="platform-analytics__chart">
-        {chartContent ?? <PlatformAnalyticsChart analytics={analytics} chartType={chartType} />}
+        <PlatformAnalyticsChart analytics={analytics} chartType={chartType} />
       </div>
     </section>
   );

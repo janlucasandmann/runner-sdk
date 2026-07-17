@@ -20353,63 +20353,20 @@ export function createLegacyPlatformDocument(bindings) {
           max-height: min(700px, calc(100vh - 48px));
           display: flex;
           flex-direction: column;
-          overflow: visible;
+          overflow: hidden;
           scrollbar-width: none;
-        }
-  
-        .playground-agents-model-picker-search-row {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          margin: 0 0 12px;
-        }
-  
-        .playground-agents-model-picker-search-field {
-          position: relative;
-          flex: 1 1 auto;
-          min-width: 0;
-        }
-  
-        .playground-agents-model-picker-search-icon {
-          position: absolute;
-          top: 50%;
-          left: 12px;
-          width: 14px;
-          height: 14px;
-          color: rgba(255, 255, 255, 0.4);
-          transform: translateY(-50%);
-          pointer-events: none;
-        }
-  
-        .playground-agents-model-picker-search-input {
-          width: 100%;
-          padding-left: 36px;
-          border-radius: 999px;
         }
   
         .playground-agents-model-picker-filter-anchor {
           flex: 0 0 auto;
         }
   
-        .playground-agents-model-picker-filter-anchor .playground-tasks-toolbar-popup-menu {
-          min-width: 250px;
-          width: 250px;
-          padding: 12px;
-          box-sizing: border-box;
+        .playground-agents-model-picker-filter-menu .tb-popup-row {
+          align-items: flex-start;
         }
-  
-        .playground-agents-model-picker-filter-button {
-          min-height: 36px;
-          border-radius: 999px;
-        }
-  
-        .playground-agents-model-picker-filter-anchor .playground-files-toolbar-menu-title {
-          padding: 0 0 10px;
-        }
-  
-        .playground-agents-model-picker-filter-anchor .playground-files-toolbar-menu-item {
-          border-radius: 10px;
+
+        .playground-agents-model-picker-filter-menu .tb-popup-check-slot {
+          margin-top: 1px;
         }
   
         .playground-agents-model-picker-modal .playground-agents-model-picker-body {
@@ -23429,7 +23386,7 @@ export function createLegacyPlatformDocument(bindings) {
           background: rgba(0, 0, 0, 0);
           backdrop-filter: none;
           -webkit-backdrop-filter: none;
-          transition: background-color 75ms linear !important;
+          transition: background-color 60ms ease-out !important;
         }
   
         .playground-tasks-project-modal-backdrop.playground-tasks-project-initial-setup-backdrop.is-visible,
@@ -23444,7 +23401,7 @@ export function createLegacyPlatformDocument(bindings) {
           background: rgba(0, 0, 0, 0);
           backdrop-filter: none;
           -webkit-backdrop-filter: none;
-          transition: background-color 75ms linear !important;
+          transition: background-color 60ms ease-out !important;
         }
   
         .playground-tasks-project-modal-backdrop.playground-project-overview-outcome-editor-backdrop {
@@ -24214,8 +24171,8 @@ export function createLegacyPlatformDocument(bindings) {
           -webkit-backdrop-filter: blur(20px) !important;
           transform-origin: center;
           opacity: 0.5;
-          transform: scale(0.5);
-          transition: opacity 75ms linear, transform 75ms linear !important;
+          transform: scale(0.75);
+          transition: opacity 60ms ease-out, transform 60ms cubic-bezier(0.16, 1, 0.3, 1) !important;
           will-change: opacity, transform;
         }
   
@@ -24245,8 +24202,8 @@ export function createLegacyPlatformDocument(bindings) {
           -webkit-backdrop-filter: blur(20px) !important;
           transform-origin: center;
           opacity: 0.5;
-          transform: scale(0.5);
-          transition: opacity 75ms linear, transform 75ms linear !important;
+          transform: scale(0.75);
+          transition: opacity 60ms ease-out, transform 60ms cubic-bezier(0.16, 1, 0.3, 1) !important;
           will-change: opacity, transform;
         }
   
@@ -29580,7 +29537,7 @@ export function createLegacyPlatformDocument(bindings) {
   
         .playground-agents-detail-overview-layout.playground-project-overview-layout {
           column-gap: 42px;
-          row-gap: 20px;
+          row-gap: 24px;
         }
   
         .playground-agents-detail-overview-layout.is-sidebar-collapsed {
@@ -35184,7 +35141,7 @@ export function createLegacyPlatformDocument(bindings) {
   	      import { PlatformApplicationBoundary } from "/dist/platform-app/legacy/platform-application-boundary.js";
   	      import { AgentPermissionMeters, AgentPermissionRingIcons, AgentPublishControl, AgentsOverviewAnalyticsRequestError, ComputersOverviewAnalyticsRequestError, createAgentsOverviewAnalytics, createComputersOverviewAnalytics, deleteComputerResource, fetchAgentsOverviewAnalytics, fetchComputersOverviewAnalytics, getAgentPermissionSummary, invalidateAgentsOverviewAnalytics, invalidateComputersOverviewAnalytics, normalizeComputerOverviewRows, readCachedAgentsOverviewAnalytics, readCachedComputersOverviewAnalytics, saveComputerResource } from "/dist/platform-app/legacy/platform-resource-api.js";
   	      import { ApiKeysOverviewAnalyticsRequestError, createApiKeysOverviewAnalytics, createDevelopResourceOverviewRows, createDevelopVoiceAgentOverviewRows, deleteDevelopResource, fetchApiKeysOverviewAnalytics, invalidateApiKeysOverviewAnalytics, readCachedApiKeysOverviewAnalytics, saveDevelopResource } from "/dist/platform-app/legacy/platform-develop-api.js";
-  	      import { AgentDetailPage, AgentPermissionsPage, AgentsOverviewPage, ComputersOverviewPage, ConfigureHomeOverviewPage, DevelopApiKeysOverviewPage, DevelopHomeOverviewPage, DevelopResourceOverviewRoute, DevelopVoiceAgentsOverviewPage, DevelopWebhooksOverviewPage, ModelsOverviewPage, PluginsOverviewPage, SkillsOverviewPage, TagsOverviewPage } from "/dist/platform-app/routing/platform-lazy-pages.js";
+        import { AgentDetailPage, AgentPermissionsPage, AgentsOverviewPage, ComputerDetailPage, ComputersOverviewPage, ConfigureHomeOverviewPage, DevelopApiKeysOverviewPage, DevelopHomeOverviewPage, DevelopResourceOverviewRoute, DevelopVoiceAgentsOverviewPage, DevelopWebhooksOverviewPage, ModelsOverviewPage, PluginsOverviewPage, SkillsOverviewPage, TagsOverviewPage } from "/dist/platform-app/routing/platform-lazy-pages.js";
   	      import { openGoogleDrivePicker } from "/dist/platform-integrations/google-drive/google-drive-picker.js";
   
   	      function getPlaygroundSafeIconComponent(Icon, fallbackIcon = Circle) {

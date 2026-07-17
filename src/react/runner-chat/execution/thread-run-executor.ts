@@ -178,6 +178,7 @@ export interface RunnerThreadRunExecutorDependencies {
   ) => void;
   onExternalRunRequestCreate?: (
     request: RunnerExternalRunHandoff,
+    // biome-ignore lint/suspicious/noConfusingVoidType: Preserves the public compatibility callback contract.
   ) => boolean | void;
   onMetronomeWorkflowRun?: (
     payload: RunnerChatMetronomeWorkflowRunPayload,

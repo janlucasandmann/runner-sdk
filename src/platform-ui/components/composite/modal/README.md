@@ -6,8 +6,14 @@ The canonical dialog variants are `small` (400px), `medium` (640px), and `large`
 
 `PlatformModalBackdrop` and `PlatformModalSurface` are composable escape hatches for externally managed portal or transition lifecycles. They retain the same canonical classes and presentation; new modal flows should prefer `PlatformModal`.
 
-Every `PlatformModal` requires exactly one visible `title`, accepts an optional `description`, and renders its own plain Lucide X close control. Consumers provide body and footer content only; they must not render a second modal heading.
+Every `PlatformModal` requires exactly one `title`, accepts an optional `description`, and renders its own plain Lucide X close control. The default header displays that title; specialized headers retain it as the accessible dialog name. Consumers provide body and footer content only; they must not render a second modal heading.
 
-The title area ends with 12px bottom padding and a white/10 divider. Because the description is part of the same header, the divider naturally appears below the description when one exists and below the title otherwise.
+Set `headerVariant="search"` and provide `headerSearchProps` for search-first selection dialogs. This variant keeps `title` as the dialog's visually hidden accessible name, renders the shared search input as the header content, and focuses that input whenever the modal opens. Optional `headerActions` appear after the search field for filters or other tightly related controls.
 
-The canonical surface is intentionally solid and minimal: `#1a1a1a` background, a `1px` white/7.5 border, 15px radius, 24px padding, no decorative pseudo-border, no backdrop blur, and visually hidden scrollbars while preserving scrolling.
+The high-level modal always owns three structural slots: header, body, and footer. Children become body content and the optional `footer` prop becomes footer content. Existing explicit `PlatformModalBody` and `PlatformModalFooter` children are recognized without adding nested slots. Set `showHeader`, `showBody`, or `showFooter` to `false` when a flow intentionally omits that part; an omitted visual header retains the title as the accessible dialog name.
+
+The structured surface itself has no padding. The body owns 24px padding, while the header and footer each own 12px vertical and 24px horizontal padding. Empty body and footer slots collapse visually. Low-level `PlatformModalSurface` usage retains 24px compatibility padding unless it opts into the structured layout.
+
+Opening is synchronous with the render that sets `open=true`; callers must not stage a separate `visible` frame. The browser handles the 60ms transition through `@starting-style`, beginning at 75% scale, so ordinary React rerenders cannot restart the animation. The same duration controls retained rendering during close.
+
+The canonical surface is intentionally solid and minimal: `#1a1a1a` background, a `1px` white/7.5 border, 15px radius, no decorative pseudo-border, and visually hidden scrollbars while preserving scrolling. The backdrop applies the shared 10px blur while visible and closing.

@@ -33,6 +33,7 @@ export interface RunnerCanonicalThreadSurfaceProps {
     groupId: string,
     runId: string,
   ) => Promise<void> | void;
+  // biome-ignore lint/suspicious/noConfusingVoidType: Preserves the existing thread pagination callback contract.
   onLoadEarlier?: () => Promise<boolean | void> | boolean | void;
   onLoadRunDetails?: (run: RunnerThreadRun) => Promise<void> | void;
   onOpenChanges?: (run: RunnerThreadRun) => void;
@@ -129,7 +130,10 @@ export function RunnerCanonicalThreadSurface({
       ) : null}
 
       {historyEntries.length > 0 ? (
-        <div className="tb-canonical-compatibility is-history" aria-label="Earlier compatible thread activity">
+        <section
+          className="tb-canonical-compatibility is-history"
+          aria-label="Earlier compatible thread activity"
+        >
           {historyEntries.map((entry) => (
             <CompatibilityTimeline
               key={`legacy-compatibility:${entry.turn.id}`}
@@ -139,7 +143,7 @@ export function RunnerCanonicalThreadSurface({
               renderAction={renderAction}
             />
           ))}
-        </div>
+        </section>
       ) : null}
 
       <RunnerThreadTimeline
@@ -160,7 +164,10 @@ export function RunnerCanonicalThreadSurface({
       />
 
       {tailEntries.length > 0 ? (
-        <div className="tb-canonical-compatibility is-tail" aria-label="Locally queued thread activity">
+        <section
+          className="tb-canonical-compatibility is-tail"
+          aria-label="Locally queued thread activity"
+        >
           {tailEntries.map((entry) => (
             <CompatibilityTimeline
               key={`legacy-compatibility-tail:${entry.turn.id}`}
@@ -170,7 +177,7 @@ export function RunnerCanonicalThreadSurface({
               renderAction={renderAction}
             />
           ))}
-        </div>
+        </section>
       ) : null}
     </div>
   );

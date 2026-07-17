@@ -6,7 +6,7 @@
 
 - Responsive grid columns and alignment
 - Controlled or uncontrolled sorting, search, and selection
-- Optional search, filter, view, and primary-action toolbar outside the table surface
+- Optional search, filter, view, leading-control, and primary-action toolbar outside the table surface
 - Keyboard row activation and accessible table semantics
 - Portal-based row and context menus, including multi-selection actions
 - Loading, error, empty, and no-results states
@@ -25,13 +25,20 @@
   columns={columns}
   sorting={{ value: sort, onChange: setSort }}
   selection={{ enabled: true, value: selectedIds, onChange: handleSelection }}
-  toolbar={{ title: "All Agents", search: { placeholder: "Search agents" }, filters }}
+  toolbar={{
+    title: "All Agents",
+    controlsLeading: <PlatformSecondaryButton>Import</PlatformSecondaryButton>,
+    search: { placeholder: "Search agents" },
+    filters,
+  }}
   layout="fill"
   pagination={{ defaultValue: { pageSize: 20 } }}
   getRowActions={(agent) => buildAgentActions(agent)}
   onRowActivate={openAgent}
 />
 ```
+
+Use `controlsLeading` for secondary actions that must sit immediately before the search field. Use `leading` for navigation or mode controls that belong at the left edge, and `primaryAction` for the trailing primary command.
 
 `layout="content"` is the default and grows with its rows. `layout="fill"` uses its intrinsic content height up to a constrained flex parent's remaining height and animates between intrinsic heights as its rendered rows change. Once that maximum is reached, only the row body scrolls; the toolbar, column header, and pagination remain outside the scroll viewport. Every parent in a fill-height chain must provide `min-height: 0`.
 

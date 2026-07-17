@@ -227,10 +227,14 @@ export function attachHydratedMessageIdsToTurns(
     if (!matchedMessage) {
       return turn;
     }
+    const matchedMessageId = matchedMessage.id;
+    if (!matchedMessageId) {
+      return turn;
+    }
     return {
       ...turn,
-      id: turn.sourceMessageId ? turn.id : matchedMessage.id!,
-      sourceMessageId: matchedMessage.id!,
+      id: turn.sourceMessageId ? turn.id : matchedMessageId,
+      sourceMessageId: matchedMessageId,
       messageMetadata: normalizeRunnerTurnMessageMetadata(
         matchedMessage.logMetadata,
         threadMetadata,

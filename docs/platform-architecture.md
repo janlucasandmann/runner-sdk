@@ -97,21 +97,34 @@ dock remains mounted independently of historical timeline virtualization so a
 pending permission cannot scroll out of reach.
 
 `RunnerChat` remains a compatibility composition root while older execution
-and composer flows are migrated. Its extracted modules have explicit roles:
+and composer flows are migrated. The governing decision and extraction rules
+are recorded in
+[`ADR 0002`](architecture/decisions/0002-runner-chat-composition-root.md).
+Its extracted modules have explicit roles:
 
 - `canonical-thread-surface.tsx`: canonical loading, reconnect, and timeline
   composition;
+- `public-types.ts`: the stable compatibility contract exported by the
+  composition root;
+- `canonical-action-log-index.ts` and `turn-timeline-state.ts`: pure adapters
+  from execution records to causal timeline presentation;
 - `legacy-timeline.ts`: pure log grouping and causal timeline projection;
 - `legacy-timeline-presentation.ts`: pure group presentation models;
+- `use-thinking-status.ts`, `use-log-auto-scroll.ts`, and
+  `use-thread-history-rail.ts`: independently tested viewport and live-status
+  controllers;
+- `attachment-preview-chip.tsx`: attachment rendering and preview activation;
 - `file-browser-dialog.tsx`: file-browser presentation;
 - `workflow-dialogs.tsx`: report, fork, and edit-confirmation presentation;
 - `execution/active-run-instruction.ts`: durable checkpoint delivery for
   instructions sent to an active worker.
 
-`src/react/runner-log-boxes.tsx` is the compatibility renderer dispatch point.
-Specialized renderers live in `src/react/runner-log-boxes/` and share types
-through leaf contracts such as `log-entry-types.ts`; leaf modules must not
-import the composition root.
+`src/react/runner-log-boxes.tsx` is a compatibility facade. The renderer
+dispatch point and specialized renderers live under
+`src/platform-ui/components/thread-components/log-boxes/` and share types
+through leaf contracts such as `log-entry-types.ts`. Shared renderers may
+depend on small Runner contracts while the migration is in progress, but must
+not import `RunnerChat` or another composition root.
 
 ## Development and HMR
 
@@ -143,6 +156,7 @@ development command once and leave it running while editing.
 - bounded RunnerChat, log-renderer, and canonical-thread modules;
 - required extracted seams;
 - no reverse imports from RunnerChat leaf modules into the composition root;
+- lint-clean RunnerChat leaf modules as part of the mandatory static gate;
 - production HTML and compressed asset budgets;
 - permanent removal of retired demo-server paths.
 
@@ -162,12 +176,7 @@ typechecks when frontend code is involved, and the architecture test when
 ownership changes. Before release:
 
 ```bash
-npm run build
-npm run platform:client:build
-npm run platform:architecture-test
-npm run platform:legacy-client-audit
-npm run thread-ui-test
-npm run thread-proxy-test
+npm run check
 ```
 
 Production deployment and user-facing server restarts are separate operational

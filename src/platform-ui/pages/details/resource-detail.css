@@ -5,7 +5,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
   column-gap: 42px;
-  row-gap: 20px;
+  row-gap: 24px;
   align-items: start;
   color: #fff;
   transition:
@@ -49,6 +49,11 @@
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
+}
+.resource-detail-page__external-tab-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 .resource-detail-page__content { min-width: 0; display: flex; flex-direction: column; gap: 20px; }
 

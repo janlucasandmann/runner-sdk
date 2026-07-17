@@ -5,7 +5,7 @@ import {
   Cpu as LucideCpu,
   Rocket as LucideRocket,
 } from "lucide-react";
-import type { RunnerCreatedResourcePreview } from "../runner-log-boxes.js";
+import type { RunnerCreatedResourcePreview } from "../../platform-ui/components/thread-components/log-boxes/index.js";
 
 export function renderTurnAgentAvatar(
   name: string,

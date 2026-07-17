@@ -32,28 +32,28 @@ describe("PlatformAnalyticsSection", () => {
     expect(screen.queryByRole("heading", { name: "Usage" })).toBeNull();
   });
 
-  it("renders the framed analytics composition with title, actions, KPIs, and custom chart content", () => {
+  it("renders the framed analytics composition with title, timeframe, KPIs, and the shared chart state", () => {
     const onTimeframeValueChange = vi.fn();
     const { container } = render(
       <PlatformAnalyticsSection
         variant="framed"
         title="Analytics"
         timeframe={{
-          value: "5d",
+          value: "day",
           options: [
-            { value: "5d", label: "5D" },
-            { value: "1m", label: "1M" },
+            { value: "day", label: "24H" },
+            { value: "week", label: "7D" },
+            { value: "month", label: "30D" },
           ],
           onValueChange: onTimeframeValueChange,
           ariaLabel: "Performance range",
         }}
-        headerActions={<button type="button">Download chart</button>}
-        chartContent={<div data-testid="specialized-chart">Specialized chart</div>}
         analytics={{
           ariaLabel: "Agent analytics",
           metrics: [{ id: "runs", label: "Total Runs", value: "24", color: "#7effff" }],
-          labels: ["Mon"],
-          series: [{ id: "runs", label: "Runs", values: [24], color: "#7effff" }],
+          labels: [],
+          series: [],
+          emptyState: "No agent usage yet.",
         }}
       />,
     );
@@ -63,13 +63,13 @@ describe("PlatformAnalyticsSection", () => {
     expect(section.getAttribute("data-platform-analytics-variant")).toBe("framed");
     expect(screen.getByRole("heading", { name: "Analytics", level: 2 })).not.toBeNull();
     expect(screen.getByRole("radiogroup", { name: "Performance range" })).not.toBeNull();
-    expect(screen.getByRole("button", { name: "Download chart" })).not.toBeNull();
     expect(screen.getByText("Total Runs")).not.toBeNull();
-    expect(screen.getByTestId("specialized-chart")).not.toBeNull();
+    expect(screen.getByText("No agent usage yet.")).not.toBeNull();
     expect(container.querySelector(".platform-analytics__header-actions")).not.toBeNull();
+    expect(container.querySelector(".platform-analytics-chart__state")).not.toBeNull();
 
-    fireEvent.click(screen.getByRole("radio", { name: "1M" }));
-    expect(onTimeframeValueChange).toHaveBeenCalledWith("1m");
+    fireEvent.click(screen.getByRole("radio", { name: "30D" }));
+    expect(onTimeframeValueChange).toHaveBeenCalledWith("month");
   });
 
   it("owns the analytics loading state", () => {

@@ -95,10 +95,13 @@ describe("legacy thread timeline projection", () => {
     expect(group?.invocationLog).toBe(invocation);
     expect(group?.logs).toEqual([nested]);
     expect(group?.completionLog).toBe(completion);
+    if (!group) {
+      throw new Error("Expected a subagent timeline group.");
+    }
 
     const presentation = buildSubagentGroupPresentation(
       turn([invocation, nested, completion], { agentName: "Worker" }),
-      group!,
+      group,
       { displayedEnvironmentLabel: "Development VM" },
     );
     expect(presentation).toMatchObject({

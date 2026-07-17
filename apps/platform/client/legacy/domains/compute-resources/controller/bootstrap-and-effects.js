@@ -114,7 +114,6 @@
           const environmentListActionMenuCloseTimerRef = useRef(null);
           const environmentBulkActionMenuCloseTimerRef = useRef(null);
           const environmentRenameInputRef = useRef(null);
-          const environmentDescriptionTextareaRef = useRef(null);
           const databaseActionsPopoverRef = useRef(null);
           const serverOwnerPopoverRef = useRef(null);
           const serverOwnerTransferModalCloseTimerRef = useRef(null);
@@ -425,7 +424,6 @@
           const [environmentRenameState, setEnvironmentRenameState] = useState(null);
           const [environmentRenameValue, setEnvironmentRenameValue] = useState("");
           const [environmentRenameError, setEnvironmentRenameError] = useState("");
-          const [isEnvironmentDescriptionEditing, setIsEnvironmentDescriptionEditing] = useState(false);
           const [serverActionsPopoverOpen, setServerActionsPopoverOpen] = useState(false);
           const [resourceOverviewTopNavMenuOpen, setResourceOverviewTopNavMenuOpen] = useState(false);
           const [serverPublishMenuOpen, setServerPublishMenuOpen] = useState(false);

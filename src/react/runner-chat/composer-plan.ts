@@ -62,7 +62,6 @@ export function getRunnerComposerPlanDisplay(
       return { label: "Team Plan", Icon: LucideUsersRound };
     case "builder":
       return { label: "Builder Plan", Icon: LucideStar };
-    case "sandbox":
     default:
       return { label: "Upgrade to Builder", Icon: LucideStar };
   }

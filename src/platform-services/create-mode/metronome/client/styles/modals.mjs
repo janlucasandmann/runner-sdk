@@ -66,7 +66,7 @@ export const METRONOME_MODALS_CSS = String.raw`
         background: rgba(0, 0, 0, 0) !important;
         backdrop-filter: blur(20px) !important;
         -webkit-backdrop-filter: blur(20px) !important;
-        transition: background-color 75ms linear !important;
+        transition: background-color 60ms ease-out !important;
       }
 
       .playground-tasks-project-modal-backdrop.playground-metronome-workflow-modal-backdrop.is-visible,
@@ -96,8 +96,8 @@ export const METRONOME_MODALS_CSS = String.raw`
         -webkit-backdrop-filter: none !important;
         transform-origin: center;
         opacity: 0.5;
-        transform: scale(0.5);
-        transition: opacity 75ms linear, transform 75ms linear !important;
+        transform: scale(0.75);
+        transition: opacity 60ms ease-out, transform 60ms cubic-bezier(0.16, 1, 0.3, 1) !important;
         will-change: opacity, transform;
       }
 

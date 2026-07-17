@@ -8,7 +8,7 @@ import {
   isBrowserSkillLaunchCommand,
   isComputerUseMcpLog,
   isDeepResearchCommand,
-} from "../runner-log-boxes.js";
+} from "../../platform-ui/components/thread-components/log-boxes/index.js";
 import { stripRunnerSystemTags } from "../runner-markdown.js";
 
 export type RunnerSubagentGroup = {
@@ -377,18 +377,20 @@ export function buildTimelineItems(
       continue;
     }
     const invocationId = getSubagentInvocationId(log);
-    if (invocationId && subagentGroups.has(invocationId)) {
-      const group = subagentGroups.get(invocationId)!;
-      if (!insertedSubagentInvocations.has(invocationId) && log === group.invocationLog) {
-        items.push({
-          kind: "subagent_group",
-          invocationLog: group.invocationLog,
-          logs: group.logs,
-          completionLog: group.completionLog,
-        });
-        insertedSubagentInvocations.add(invocationId);
+    if (invocationId) {
+      const group = subagentGroups.get(invocationId);
+      if (group) {
+        if (!insertedSubagentInvocations.has(invocationId) && log === group.invocationLog) {
+          items.push({
+            kind: "subagent_group",
+            invocationLog: group.invocationLog,
+            logs: group.logs,
+            completionLog: group.completionLog,
+          });
+          insertedSubagentInvocations.add(invocationId);
+        }
+        continue;
       }
-      continue;
     }
     if (
       groupComputerUse

@@ -6,6 +6,7 @@ const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "
 const componentRoot = path.join(packageRoot, "src", "platform-ui", "components");
 const primitiveComponents = ["button", "label", "search", "selector", "switch"];
 const compositeComponents = ["analytics", "code-preview-box", "data-table", "detail-sidebar", "detail-tab-bar", "empty-state", "instructions-editor", "modal", "popup", "widgets"];
+const threadComponents = ["document-preview", "log-boxes"];
 const retiredRootComponents = [...primitiveComponents, ...compositeComponents];
 const allowedUiCompositeDependencies = new Map([
   ["selector", new Set(["popup"])],
@@ -44,6 +45,11 @@ for (const componentName of primitiveComponents) {
 for (const componentName of compositeComponents) {
   if (!await pathExists(path.join(componentRoot, "composite", componentName, "index.ts"))) {
     failures.push(`composite/${componentName} is missing its index.ts`);
+  }
+}
+for (const componentName of threadComponents) {
+  if (!await pathExists(path.join(componentRoot, "thread-components", componentName, "index.ts"))) {
+    failures.push(`thread-components/${componentName} is missing its index.ts`);
   }
 }
 for (const componentName of retiredRootComponents) {
@@ -96,6 +102,9 @@ const canonicalExports = new Map([
   ["./platform-ui/components/composite/modal", "./dist/platform-ui/components/composite/modal/index.js"],
   ["./platform-ui/components/composite/popup", "./dist/platform-ui/components/composite/popup/index.js"],
   ["./platform-ui/components/composite/widgets", "./dist/platform-ui/components/composite/widgets/index.js"],
+  ["./platform-ui/components/thread-components", "./dist/platform-ui/components/thread-components/index.js"],
+  ["./platform-ui/components/thread-components/document-preview", "./dist/platform-ui/components/thread-components/document-preview/index.js"],
+  ["./platform-ui/components/thread-components/log-boxes", "./dist/platform-ui/components/thread-components/log-boxes/index.js"],
 ]);
 for (const [exportName, expectedPath] of canonicalExports) {
   if (packageJson.exports?.[exportName]?.default !== expectedPath) {
@@ -125,5 +134,5 @@ if (failures.length > 0) {
 }
 
 console.log(
-  `Platform component invariant passed (${primitiveComponents.length} UI, ${compositeComponents.length} composite).`
+  `Platform component invariant passed (${primitiveComponents.length} UI, ${compositeComponents.length} composite, ${threadComponents.length} thread).`
 );

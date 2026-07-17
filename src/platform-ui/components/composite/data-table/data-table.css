@@ -142,6 +142,7 @@
 }
 
 .platform-data-table__toolbar-leading,
+.platform-data-table__toolbar-controls-leading,
 .platform-data-table__toolbar-trailing,
 .platform-data-table__toolbar-controls {
   display: flex;
@@ -157,6 +158,10 @@
 }
 
 .platform-data-table__toolbar-trailing {
+  flex: 0 0 auto;
+}
+
+.platform-data-table__toolbar-controls-leading {
   flex: 0 0 auto;
 }
 

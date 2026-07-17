@@ -128,7 +128,7 @@ export function mergeRunnerChatOptions(
     }
   }
   for (const option of additions) {
-    if (!option || !option.id.trim()) {
+    if (!option?.id.trim()) {
       continue;
     }
     const existing = merged.get(option.id);
@@ -834,15 +834,17 @@ export function getRunnerAgentGuardrailTexts(
     candidate.invisible_prompt_adaptions,
     ...adaptationKeys.map((key) => metadata?.[key]),
     ...adaptationKeys.map((key) => runnerGuardrails?.[key]),
-  ].forEach((value) =>
-    collectRunnerPromptAdaptationTexts(texts, seen, value)
-  );
+  ].forEach((value) => {
+    collectRunnerPromptAdaptationTexts(texts, seen, value);
+  });
 
   [
     candidate.guardrails,
     metadata?.guardrails,
     runnerGuardrails?.guardrails,
-  ].forEach((value) => collectRunnerGuardrailSetTexts(texts, seen, value));
+  ].forEach((value) => {
+    collectRunnerGuardrailSetTexts(texts, seen, value);
+  });
 
   return texts;
 }

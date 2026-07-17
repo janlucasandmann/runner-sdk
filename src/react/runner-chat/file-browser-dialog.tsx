@@ -314,7 +314,7 @@ export function RunnerFileBrowserDialog({
                           <div className="tb-file-browser-breadcrumbs">
                             {path.map((crumb, index) => (
                               <span
-                                key={`${crumb.id || "root"}-${index}`}
+                                key={crumb.id || crumb.name}
                                 className="tb-file-browser-breadcrumb-chip"
                               >
                                 {index > 0 ? (
@@ -420,6 +420,7 @@ export function RunnerFileBrowserDialog({
                               className="tb-file-browser-preview-image"
                             />
                           ) : previewContent && previewKind === "video" ? (
+                            // biome-ignore lint/a11y/useMediaCaption: Workspace files do not provide caption tracks alongside arbitrary video previews.
                             <video
                               src={previewContent}
                               className="tb-file-browser-preview-video"

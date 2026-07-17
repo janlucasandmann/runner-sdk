@@ -1,8 +1,13 @@
 import {
+  Children,
+  Fragment,
   createElement,
   forwardRef,
+  isValidElement,
+  useCallback,
   useEffect,
   useId,
+  useLayoutEffect,
   useRef,
   useState,
   type CSSProperties,
@@ -14,14 +19,24 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
+import {
+  PlatformSearch,
+  type PlatformSearchProps,
+} from "../../ui/search/platform-search.js";
 
 export type PlatformModalVariant = "small" | "medium" | "large";
 export type PlatformModalSize = PlatformModalVariant | "compact" | "wide" | "full";
 export type PlatformModalCloseReason = "backdrop" | "escape" | "close-button";
+export type PlatformModalHeaderVariant = "default" | "search";
+
+export interface PlatformModalHeaderSearchProps extends PlatformSearchProps {
+  inputRef?: Ref<HTMLInputElement>;
+}
 
 export interface PlatformModalSurfaceProps extends HTMLAttributes<HTMLElement> {
   as?: ElementType;
   size?: PlatformModalSize;
+  structured?: boolean;
   visible?: boolean;
   closing?: boolean;
   width?: CSSProperties["width"];
@@ -39,6 +54,10 @@ export interface PlatformModalProps {
   open: boolean;
   title: ReactNode;
   description?: ReactNode;
+  headerVariant?: PlatformModalHeaderVariant;
+  headerSearchProps?: PlatformModalHeaderSearchProps;
+  headerActions?: ReactNode;
+  footer?: ReactNode;
   children?: ReactNode;
   onClose: (reason: PlatformModalCloseReason) => void;
   onExited?: () => void;
@@ -61,7 +80,12 @@ export interface PlatformModalProps {
   animationDurationMs?: number;
   className?: string;
   backdropClassName?: string;
+  showHeader?: boolean;
+  showBody?: boolean;
+  showFooter?: boolean;
   headerClassName?: string;
+  bodyClassName?: string;
+  footerClassName?: string;
   titleClassName?: string;
   descriptionClassName?: string;
   closeButtonClassName?: string;
@@ -69,7 +93,9 @@ export interface PlatformModalProps {
   closeButtonDisabled?: boolean;
   surfaceRef?: Ref<HTMLElement>;
   backdropRef?: Ref<HTMLDivElement>;
-  surfaceProps?: Omit<PlatformModalSurfaceProps, "as" | "children" | "className" | "size" | "visible" | "closing">;
+  bodyProps?: Omit<HTMLAttributes<HTMLDivElement>, "children" | "className">;
+  footerProps?: Omit<HTMLAttributes<HTMLDivElement>, "children" | "className">;
+  surfaceProps?: Omit<PlatformModalSurfaceProps, "as" | "children" | "className" | "size" | "structured" | "visible" | "closing">;
   backdropProps?: Omit<PlatformModalBackdropProps, "children" | "className" | "visible" | "closing">;
   role?: "dialog" | "alertdialog";
   ariaLabel?: string;
@@ -78,8 +104,11 @@ export interface PlatformModalProps {
 }
 
 export interface PlatformModalHeaderProps extends Omit<HTMLAttributes<HTMLDivElement>, "title" | "onClose"> {
+  variant?: PlatformModalHeaderVariant;
   title?: ReactNode;
   description?: ReactNode;
+  searchProps?: PlatformModalHeaderSearchProps;
+  actions?: ReactNode;
   titleId?: string;
   descriptionId?: string;
   titleClassName?: string;
@@ -145,6 +174,40 @@ function getFocusableElements(surface: HTMLElement | null) {
   ));
 }
 
+function flattenModalChildren(children: ReactNode): ReactNode[] {
+  return Children.toArray(children).flatMap((child) => {
+    if (
+      isValidElement<{ children?: ReactNode }>(child)
+      && child.type === Fragment
+    ) {
+      return flattenModalChildren(child.props.children);
+    }
+    return [child];
+  });
+}
+
+function partitionModalChildren(children: ReactNode) {
+  const bodyElements: ReactNode[] = [];
+  const footerElements: ReactNode[] = [];
+  const bodyContent: ReactNode[] = [];
+
+  for (const child of flattenModalChildren(children)) {
+    if (isValidElement(child) && child.type === PlatformModalBody) {
+      bodyElements.push(child);
+    } else if (isValidElement(child) && child.type === PlatformModalFooter) {
+      footerElements.push(child);
+    } else {
+      bodyContent.push(child);
+    }
+  }
+
+  return {
+    bodyContent,
+    bodyElements,
+    footerElements,
+  };
+}
+
 export const PlatformModalBackdrop = forwardRef<HTMLDivElement, PlatformModalBackdropProps>(
   function PlatformModalBackdrop({ visible, closing, className = "", children, ...props }, ref) {
     const resolvedClosing = closing ?? className.split(/\s+/).includes("is-closing");
@@ -172,6 +235,7 @@ export const PlatformModalSurface = forwardRef<HTMLElement, PlatformModalSurface
   function PlatformModalSurface({
     as = "div",
     size = "medium",
+    structured = false,
     visible,
     closing,
     width,
@@ -192,6 +256,7 @@ export const PlatformModalSurface = forwardRef<HTMLElement, PlatformModalSurface
         "platform-modal-surface",
         "playground-platform-modal",
         `is-size-${size}`,
+        structured && "is-structured",
         resolvedVisible && "is-visible",
         resolvedClosing && "is-closing",
         scrollable && "is-scrollable",
@@ -212,6 +277,10 @@ export function PlatformModal({
   open,
   title,
   description,
+  headerVariant = "default",
+  headerSearchProps,
+  headerActions,
+  footer,
   children,
   onClose,
   onExited,
@@ -231,10 +300,15 @@ export function PlatformModal({
   scrollable = false,
   visible: controlledVisible,
   closing = false,
-  animationDurationMs = 75,
+  animationDurationMs = 60,
   className = "",
   backdropClassName = "",
+  showHeader = true,
+  showBody = true,
+  showFooter = true,
   headerClassName = "",
+  bodyClassName = "",
+  footerClassName = "",
   titleClassName = "",
   descriptionClassName = "",
   closeButtonClassName = "",
@@ -242,6 +316,8 @@ export function PlatformModal({
   closeButtonDisabled = false,
   surfaceRef,
   backdropRef,
+  bodyProps = {},
+  footerProps = {},
   surfaceProps = {},
   backdropProps = {},
   role = "dialog",
@@ -250,55 +326,65 @@ export function PlatformModal({
   ariaDescribedBy,
 }: PlatformModalProps) {
   const generatedId = useId().replace(/:/g, "");
-  const [present, setPresent] = useState(open);
-  const [automaticVisible, setAutomaticVisible] = useState(false);
+  const [retained, setRetained] = useState(open);
   const localSurfaceRef = useRef<HTMLElement | null>(null);
+  const localHeaderSearchInputRef = useRef<HTMLInputElement | null>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
-  const resolvedVisible = controlledVisible ?? automaticVisible;
-  const resolvedClosing = closing || (!open && present);
+  const onExitedRef = useRef(onExited);
+  const shouldRender = open || retained;
+  const resolvedAnimationDurationMs = Math.max(0, animationDurationMs);
+  const resolvedClosing = closing || (!open && shouldRender);
+  const resolvedVisible = !resolvedClosing && (controlledVisible ?? open);
   const titleId = ariaLabelledBy || `platform-modal-title-${generatedId}`;
   const descriptionId = ariaDescribedBy || `platform-modal-description-${generatedId}`;
+  const forwardedHeaderSearchInputRef = headerSearchProps?.inputRef;
+  const setHeaderSearchInputRef = useCallback((element: HTMLInputElement | null) => {
+    localHeaderSearchInputRef.current = element;
+    assignRef(forwardedHeaderSearchInputRef, element);
+  }, [forwardedHeaderSearchInputRef]);
+
+  useLayoutEffect(() => {
+    onExitedRef.current = onExited;
+  }, [onExited]);
 
   useEffect(() => {
     if (open) {
-      setPresent(true);
-      const frame = requestAnimationFrame(() => setAutomaticVisible(true));
-      return () => cancelAnimationFrame(frame);
+      setRetained(true);
     }
-    setAutomaticVisible(false);
-    if (!present) return;
-    const timer = window.setTimeout(() => {
-      setPresent(false);
-      onExited?.();
-    }, Math.max(0, animationDurationMs));
-    return () => window.clearTimeout(timer);
-  }, [animationDurationMs, onExited, open, present]);
+  }, [open]);
 
   useEffect(() => {
-    if (!present || !lockScroll) return;
+    if (open || !retained) return;
+    const timer = window.setTimeout(() => {
+      setRetained(false);
+      onExitedRef.current?.();
+    }, resolvedAnimationDurationMs);
+    return () => window.clearTimeout(timer);
+  }, [open, resolvedAnimationDurationMs, retained]);
+
+  useEffect(() => {
+    if (!shouldRender || !lockScroll) return;
     lockDocumentScroll();
     return unlockDocumentScroll;
-  }, [lockScroll, present]);
+  }, [lockScroll, shouldRender]);
 
-  useEffect(() => {
-    if (!present || !resolvedVisible || typeof document === "undefined") return;
+  useLayoutEffect(() => {
+    if (!shouldRender || !resolvedVisible || typeof document === "undefined") return;
     previouslyFocusedRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const frame = requestAnimationFrame(() => {
-      const surface = localSurfaceRef.current;
-      const preferred = initialFocusRef?.current;
-      const target = preferred && surface?.contains(preferred)
-        ? preferred
-        : getFocusableElements(surface)[0] || surface;
-      target?.focus({ preventScroll: true });
-    });
+    const surface = localSurfaceRef.current;
+    const preferred = initialFocusRef?.current
+      ?? (headerVariant === "search" ? localHeaderSearchInputRef.current : null);
+    const target = preferred && surface?.contains(preferred)
+      ? preferred
+      : getFocusableElements(surface)[0] || surface;
+    target?.focus({ preventScroll: true });
     return () => {
-      cancelAnimationFrame(frame);
       if (restoreFocus) previouslyFocusedRef.current?.focus({ preventScroll: true });
     };
-  }, [initialFocusRef, present, resolvedVisible, restoreFocus]);
+  }, [headerVariant, initialFocusRef, resolvedVisible, restoreFocus, shouldRender]);
 
   useEffect(() => {
-    if (!present || typeof document === "undefined") return;
+    if (!shouldRender || typeof document === "undefined") return;
     const handleKeyDown = (event: globalThis.KeyboardEvent) => {
       if (event.key === "Escape" && closeOnEscape && typeof onClose === "function") {
         event.preventDefault();
@@ -327,10 +413,15 @@ export function PlatformModal({
     };
     document.addEventListener("keydown", handleKeyDown, true);
     return () => document.removeEventListener("keydown", handleKeyDown, true);
-  }, [closeOnEscape, onClose, present, trapFocus]);
+  }, [closeOnEscape, onClose, shouldRender, trapFocus]);
 
-  if (!present) return null;
+  if (!shouldRender) return null;
 
+  const {
+    bodyContent,
+    bodyElements,
+    footerElements,
+  } = partitionModalChildren(children);
   const {
     onClick: surfaceOnClick,
     tabIndex: surfaceTabIndex,
@@ -338,6 +429,7 @@ export function PlatformModal({
   } = surfaceProps;
   const {
     onClick: backdropOnClick,
+    style: backdropStyle,
     ...restBackdropProps
   } = backdropProps;
   const modal = (
@@ -347,6 +439,10 @@ export function PlatformModal({
       className={backdropClassName}
       visible={resolvedVisible}
       closing={resolvedClosing}
+      style={{
+        "--platform-modal-animation-duration": `${resolvedAnimationDurationMs}ms`,
+        ...backdropStyle,
+      } as CSSProperties}
       onClick={(event) => {
         backdropOnClick?.(event);
         if (
@@ -367,6 +463,7 @@ export function PlatformModal({
         }}
         as={as}
         size={size}
+        structured
         visible={resolvedVisible}
         closing={resolvedClosing}
         width={width}
@@ -385,11 +482,17 @@ export function PlatformModal({
           surfaceOnClick?.(event);
         }}
       >
-        {title != null ? (
+        {showHeader && title != null ? (
           <PlatformModalHeader
             className={headerClassName}
+            variant={headerVariant}
             title={title}
             description={description}
+            searchProps={headerVariant === "search" ? {
+              ...headerSearchProps,
+              inputRef: setHeaderSearchInputRef,
+            } : undefined}
+            actions={headerActions}
             titleId={titleId}
             descriptionId={descriptionId}
             titleClassName={titleClassName}
@@ -399,8 +502,58 @@ export function PlatformModal({
             closeButtonLabel={closeButtonLabel}
             closeButtonDisabled={closeButtonDisabled}
           />
+        ) : title != null ? (
+          <>
+            <h2
+              id={titleId}
+              className={joinClassNames(
+                "platform-modal-header__title",
+                "platform-modal-header__visually-hidden",
+                titleClassName,
+              )}
+            >
+              {title}
+            </h2>
+            {description != null ? (
+              <p
+                id={descriptionId}
+                className={joinClassNames(
+                  "platform-modal-header__description",
+                  "platform-modal-header__visually-hidden",
+                  descriptionClassName,
+                )}
+              >
+                {description}
+              </p>
+            ) : null}
+          </>
         ) : null}
-        {children}
+        {showBody ? (
+          <>
+            {bodyContent.length > 0 || bodyElements.length === 0 ? (
+              <PlatformModalBody
+                {...bodyProps}
+                className={bodyClassName}
+              >
+                {bodyContent}
+              </PlatformModalBody>
+            ) : null}
+            {bodyElements}
+          </>
+        ) : null}
+        {showFooter ? (
+          <>
+            {footerElements}
+            {footer !== undefined || footerElements.length === 0 ? (
+              <PlatformModalFooter
+                {...footerProps}
+                className={footerClassName}
+              >
+                {footer}
+              </PlatformModalFooter>
+            ) : null}
+          </>
+        ) : null}
       </PlatformModalSurface>
     </PlatformModalBackdrop>
   );
@@ -410,8 +563,11 @@ export function PlatformModal({
 }
 
 export function PlatformModalHeader({
+  variant = "default",
   title,
   description,
+  searchProps = {},
+  actions,
   titleId,
   descriptionId,
   titleClassName = "",
@@ -424,15 +580,92 @@ export function PlatformModalHeader({
   children,
   ...props
 }: PlatformModalHeaderProps) {
+  const closeControl = onClose ? (
+    <button
+      type="button"
+      className={joinClassNames("platform-modal-header__close", closeButtonClassName)}
+      aria-label={closeButtonLabel}
+      onClick={onClose}
+      disabled={closeButtonDisabled}
+    >
+      <X width={16} height={16} strokeWidth={2} aria-hidden="true" />
+    </button>
+  ) : null;
+
+  if (variant === "search") {
+    const {
+      inputRef,
+      className: searchClassName = "",
+      inputClassName: searchInputClassName = "",
+      autoFocus = true,
+      ...inputProps
+    } = searchProps;
+    return (
+      <div
+        {...props}
+        data-platform-modal-part="header"
+        className={joinClassNames("platform-modal-header", "is-search", className)}
+      >
+        {title != null ? (
+          <h2
+            id={titleId}
+            className={joinClassNames(
+              "platform-modal-header__title",
+              "platform-modal-header__visually-hidden",
+              titleClassName,
+            )}
+          >
+            {title}
+          </h2>
+        ) : null}
+        {description != null ? (
+          <p
+            id={descriptionId}
+            className={joinClassNames(
+              "platform-modal-header__description",
+              "platform-modal-header__visually-hidden",
+              descriptionClassName,
+            )}
+          >
+            {description}
+          </p>
+        ) : null}
+        <PlatformSearch
+          {...inputProps}
+          ref={inputRef}
+          autoFocus={autoFocus}
+          className={joinClassNames("platform-modal-header__search", searchClassName)}
+          inputClassName={joinClassNames(
+            "platform-modal-header__search-input",
+            searchInputClassName,
+          )}
+        />
+        {actions != null ? (
+          <div className="platform-modal-header__actions">{actions}</div>
+        ) : null}
+        {closeControl}
+        {children}
+      </div>
+    );
+  }
+
   if (title == null) {
     return (
-      <div {...props} className={joinClassNames("platform-modal-header", className)}>
+      <div
+        {...props}
+        data-platform-modal-part="header"
+        className={joinClassNames("platform-modal-header", className)}
+      >
         {children}
       </div>
     );
   }
   return (
-    <div {...props} className={joinClassNames("platform-modal-header", className)}>
+    <div
+      {...props}
+      data-platform-modal-part="header"
+      className={joinClassNames("platform-modal-header", className)}
+    >
       <div className="platform-modal-header__copy">
         <h2
           id={titleId}
@@ -449,26 +682,31 @@ export function PlatformModalHeader({
           </p>
         ) : null}
       </div>
-      {onClose ? (
-        <button
-          type="button"
-          className={joinClassNames("platform-modal-header__close", closeButtonClassName)}
-          aria-label={closeButtonLabel}
-          onClick={onClose}
-          disabled={closeButtonDisabled}
-        >
-          <X width={16} height={16} strokeWidth={2} aria-hidden="true" />
-        </button>
+      {actions != null ? (
+        <div className="platform-modal-header__actions">{actions}</div>
       ) : null}
+      {closeControl}
       {children}
     </div>
   );
 }
 
 export function PlatformModalBody({ className = "", ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div {...props} className={joinClassNames("platform-modal-body", className)} />;
+  return (
+    <div
+      {...props}
+      data-platform-modal-part="body"
+      className={joinClassNames("platform-modal-body", className)}
+    />
+  );
 }
 
 export function PlatformModalFooter({ className = "", ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div {...props} className={joinClassNames("platform-modal-footer", className)} />;
+  return (
+    <div
+      {...props}
+      data-platform-modal-part="footer"
+      className={joinClassNames("platform-modal-footer", className)}
+    />
+  );
 }

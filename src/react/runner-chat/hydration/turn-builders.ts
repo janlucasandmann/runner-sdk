@@ -250,8 +250,7 @@ export function buildHydratedTurnsFromLogs(
     ) {
       let commandPrompt = "";
       if (
-        currentTurn &&
-        currentTurn.prompt.trim() &&
+        currentTurn?.prompt.trim() &&
         currentTurn.logs.length === 0 &&
         isThreadContextCommandPrompt(currentTurn.prompt, actionType)
       ) {

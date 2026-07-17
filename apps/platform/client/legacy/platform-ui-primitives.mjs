@@ -1,7 +1,7 @@
 export const PLATFORM_UI_PRIMITIVES_CSS = String.raw``;
 
 export const PLATFORM_UI_PRIMITIVES_SCRIPT = String.raw`
-      const PLAYGROUND_PLATFORM_MODAL_ANIMATION_MS = 75;
+      const PLAYGROUND_PLATFORM_MODAL_ANIMATION_MS = 60;
 
       function joinPlaygroundPlatformClassNames(...classNames) {
         return classNames
@@ -13,7 +13,6 @@ export const PLATFORM_UI_PRIMITIVES_SCRIPT = String.raw`
 
       function renderPlaygroundPlatformModal({
         open,
-        visible = true,
         closing = false,
         onClose,
         closeOnBackdrop = true,
@@ -31,6 +30,17 @@ export const PLATFORM_UI_PRIMITIVES_SCRIPT = String.raw`
         ariaLabel = "",
         title,
         description,
+        headerVariant,
+        headerSearchProps,
+        headerActions,
+        footer,
+        showHeader = true,
+        showBody = true,
+        showFooter = true,
+        bodyClassName = "",
+        footerClassName = "",
+        bodyProps = {},
+        footerProps = {},
         closeButtonLabel,
         closeButtonDisabled = false,
         portal = true,
@@ -38,9 +48,8 @@ export const PLATFORM_UI_PRIMITIVES_SCRIPT = String.raw`
         children,
       } = {}) {
         return React.createElement(PlatformModal, {
-          open: Boolean(open),
-          visible,
-          closing,
+          open: Boolean(open) && !closing,
+          animationDurationMs: PLAYGROUND_PLATFORM_MODAL_ANIMATION_MS,
           onClose: typeof onClose === "function" ? () => onClose() : undefined,
           closeOnBackdrop,
           closeOnEscape,
@@ -57,6 +66,17 @@ export const PLATFORM_UI_PRIMITIVES_SCRIPT = String.raw`
           ariaLabel,
           title,
           description,
+          headerVariant,
+          headerSearchProps,
+          headerActions,
+          footer,
+          showHeader,
+          showBody,
+          showFooter,
+          bodyClassName,
+          footerClassName,
+          bodyProps,
+          footerProps,
           closeButtonLabel,
           closeButtonDisabled,
           portal,

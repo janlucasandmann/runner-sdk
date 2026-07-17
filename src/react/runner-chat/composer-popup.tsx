@@ -220,7 +220,9 @@ export function useComposerAnchoredPopupStyle({
 
     return () => {
       window.cancelAnimationFrame(frameId);
-      settleFrameIds.forEach((id) => window.cancelAnimationFrame(id));
+      settleFrameIds.forEach((id) => {
+        window.cancelAnimationFrame(id);
+      });
       window.removeEventListener("resize", scheduleUpdate);
       window.removeEventListener("scroll", scheduleUpdate, true);
       window.visualViewport?.removeEventListener("resize", scheduleUpdate);

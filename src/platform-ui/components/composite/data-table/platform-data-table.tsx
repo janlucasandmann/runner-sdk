@@ -572,6 +572,7 @@ export function PlatformDataTable<TData>({
       || toolbar.search
       || filters.length
       || viewOptions.length
+      || toolbar.controlsLeading
       || toolbar.trailing
       || toolbar.primaryAction,
     );
@@ -598,6 +599,9 @@ export function PlatformDataTable<TData>({
         : null,
       createElement("div", { className: "platform-data-table__toolbar-spacer" }),
       createElement("div", { className: "platform-data-table__toolbar-controls" },
+        toolbar.controlsLeading
+          ? createElement("div", { className: "platform-data-table__toolbar-controls-leading" }, toolbar.controlsLeading)
+          : null,
         toolbar.search
           ? createElement(PlatformSearch, {
               className: "platform-data-table__search",

@@ -756,6 +756,15 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   background: transparent;
 }
 
+.platform-popup-surface .tb-popup-check-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 var(--platform-popup-icon-size);
+  width: var(--platform-popup-icon-size);
+  height: var(--platform-popup-icon-size);
+}
+
 .platform-popup-surface :where(button, a, [role="button"], [role="menuitem"]) svg,
 .platform-popup-surface :where(.tb-popup-icon, .tb-popup-chevron, .tb-popup-check) {
   width: var(--platform-popup-icon-size);
@@ -1278,6 +1287,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 
 
 .platform-modal-backdrop {
+  --platform-modal-animation-duration: 60ms;
   position: fixed;
   inset: 0;
   z-index: 10020;
@@ -1287,11 +1297,20 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   padding: 24px;
   overflow: auto;
   background: rgba(0, 0, 0, 0);
-  transition: background-color 75ms linear;
+  transition: background-color var(--platform-modal-animation-duration) ease-out;
 }
 
 .platform-modal-backdrop.is-visible {
   background: rgba(0, 0, 0, 0.5);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.platform-modal-backdrop.is-closing {
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
 
 .platform-modal-surface {
@@ -1299,18 +1318,24 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   box-sizing: border-box;
   width: min(640px, calc(100vw - 48px));
   max-height: calc(100dvh - 48px);
-  padding: 24px;
-  overflow: visible;
+  padding: 0;
+  overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.075) !important;
   border-radius: 15px !important;
   outline: none;
   background: #1a1a1a !important;
   box-shadow: var(--platform-modal-shadow, 0 24px 70px rgba(0, 0, 0, 0.48)) !important;
   transform-origin: center;
-  opacity: 0.5;
-  transform: scale(0.5);
-  transition: opacity 75ms linear, transform 75ms linear;
+  opacity: 1;
+  transform: scale(1);
+  transition:
+    opacity var(--platform-modal-animation-duration) ease-out,
+    transform var(--platform-modal-animation-duration) cubic-bezier(0.16, 1, 0.3, 1);
   will-change: opacity, transform;
+}
+
+.platform-modal-surface:not(.is-structured) {
+  padding: 24px;
 }
 
 .platform-modal-surface *,
@@ -1333,6 +1358,9 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 
 .platform-modal-surface.is-closing {
   pointer-events: none;
+  opacity: 0;
+  transform: scale(0.75);
+  transition-timing-function: ease-in;
 }
 
 .platform-modal-surface.is-scrollable {
@@ -1377,9 +1405,57 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   justify-content: space-between;
   flex: 0 0 auto;
   min-width: 0;
-  padding-bottom: 12px;
+  padding: 12px 24px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  margin-bottom: 12px;
+  margin: 0;
+}
+
+.platform-modal-header.is-search {
+  align-items: center;
+}
+
+.platform-modal-header__search.platform-search {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.platform-modal-header__search .platform-search__icon {
+  width: 16px;
+  height: 16px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.platform-modal-header__search-input.platform-search__input {
+  font-size: 14px;
+}
+
+.platform-modal-header__actions {
+  min-width: 0;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.platform-modal-header.is-search .platform-modal-header__close {
+  margin: 0;
+}
+
+.platform-modal-header__visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
 }
 
 .platform-modal-header__copy {
@@ -1435,13 +1511,34 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .platform-modal-body {
+  box-sizing: border-box;
   min-width: 0;
+  padding: 24px;
 }
 
 .platform-modal-footer {
   align-items: center;
   justify-content: flex-end;
-  margin-top: 12px;
+  padding: 12px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.075);
+  margin: 0;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.platform-modal-body:empty,
+.platform-modal-footer:empty {
+  display: none;
+}
+
+@starting-style {
+  .platform-modal-backdrop.is-visible {
+    background: rgba(0, 0, 0, 0);
+  }
+
+  .platform-modal-surface.is-visible {
+    opacity: 0;
+    transform: scale(0.75);
+  }
 }
 
 @media (max-width: 640px) {
@@ -1460,7 +1557,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 @media (prefers-reduced-motion: reduce) {
   .platform-modal-backdrop,
   .platform-modal-surface {
-    transition-duration: 1ms;
+    --platform-modal-animation-duration: 1ms;
   }
 }
 
@@ -16750,6 +16847,50 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   font-weight: 400;
   letter-spacing: 0;
   white-space: nowrap;
+}
+
+.platform-label.has-icon {
+  gap: 4px;
+}
+
+.platform-label__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  line-height: 0;
+}
+
+.platform-priority-bars-icon {
+  width: 14px;
+  height: 10px;
+  display: inline-flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  flex: 0 0 14px;
+}
+
+.platform-priority-bars-icon__bar {
+  width: 2px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.platform-priority-bars-icon__bar:nth-child(1) {
+  height: 4px;
+}
+
+.platform-priority-bars-icon__bar:nth-child(2) {
+  height: 7px;
+}
+
+.platform-priority-bars-icon__bar:nth-child(3) {
+  height: 10px;
+}
+
+.platform-priority-bars-icon__bar.is-active {
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .platform-label.is-green {

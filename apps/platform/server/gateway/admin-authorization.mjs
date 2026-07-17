@@ -135,7 +135,7 @@ export function createAdminAuthorization({
     const apiKey = (
       process.env.FIREBASE_REST_API_KEY
       || process.env.NEXT_PUBLIC_FIREBASE_API_KEY
-      || "AIzaSyC_aSR8bjU02Kb1ROYUA7Yki_2Fogvs6-o"
+      || ""
     ).trim();
     if (!apiKey) return "";
     try {

@@ -197,6 +197,22 @@ describe("PlatformDataTable", () => {
     expect(leading?.nextElementSibling).toBe(filterButton);
   });
 
+  it("places controls-leading content immediately before search", () => {
+    const { container } = renderTable({
+      toolbar: {
+        search: { placeholder: "Search resources" },
+        controlsLeading: <button type="button">Create resource</button>,
+      },
+    });
+
+    const controls = container.querySelector(".platform-data-table__toolbar-controls");
+    const controlsLeading = container.querySelector(".platform-data-table__toolbar-controls-leading");
+    const search = screen.getByRole("searchbox", { name: "Search resources" });
+
+    expect(controls?.firstElementChild).toBe(controlsLeading);
+    expect(controlsLeading?.nextElementSibling?.contains(search)).toBe(true);
+  });
+
   it("keeps the fill-layout header outside the row scroll viewport", () => {
     const { container } = renderTable({ layout: "fill" });
     const root = container.querySelector(".platform-data-table");

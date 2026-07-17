@@ -1,5 +1,5 @@
 import type { RunnerLog } from "../../types.js";
-import { collectRunnerLogFileChangePreviews } from "../runner-log-boxes.js";
+import { collectRunnerLogFileChangePreviews } from "../../platform-ui/components/thread-components/log-boxes/index.js";
 import { normalizeRunnerPreviewPath } from "../runner-document-preview.js";
 import { isInternalTurnPreviewPath } from "./hydration/file-paths.js";
 

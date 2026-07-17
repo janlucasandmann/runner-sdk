@@ -1,8 +1,11 @@
 # Runner client compatibility API
 
-Standalone runner integration for web apps that want streamed agent execution logs (SSE), setup-phase logs, and a drop-in runner-style chat UI.
+Private compatibility surface for platform modules that need streamed agent
+execution logs (SSE), setup-phase logs, and the existing Runner-style chat UI.
 
-This package is extracted from the aiOS runner behavior, but is independent from the aiOS app shell and UI components.
+This API predates the platform application. It remains supported internally
+while consumers migrate to typed platform domains, but it is not a separately
+published SDK.
 
 ## What this package provides
 
@@ -23,11 +26,10 @@ This package is extracted from the aiOS runner behavior, but is independent from
   - `stream.error`
   - `deep_research`
 
-## Install
+## Internal imports
 
-```bash
-npm install @computer-agents/platform
-```
+Workspace consumers may import the private package exports after the platform
+has been built or linked. External npm installation is not supported.
 
 Optional static stylesheet import:
 
@@ -55,13 +57,8 @@ This serves a browser UI that connects to your **real backend** through local pr
 - `POST /api/real/threads`
 - `POST /api/real/threads/:threadId/messages` (SSE streaming)
 
-In the UI, provide:
-
-- Upstream backend URL (for example `https://api.computer-agents.com`)
-- Real API key
-- Optional `environmentId` / `agentId`
-
-The demo renders the **actual `RunnerChat` React component** from this SDK and proxies requests through the local demo server to avoid local CORS friction while still hitting your real backend.
+The platform renders the real `RunnerChat` compatibility component and proxies
+requests through the local platform host.
 
 ## Basic usage
 
@@ -374,7 +371,7 @@ renderers. This parity gate prevents an automatic cutover from hiding existing
 content. Use `threadViewMode="canonical"` to opt into the unified surface
 explicitly or `"legacy"` as a temporary rollout override.
 
-See [Thread v2 architecture](./docs/thread-v2-architecture.md) for invariants,
+See [Thread v2 architecture](./thread-v2-architecture.md) for invariants,
 delivery semantics, and the migration contract.
 
 ## Next runtime milestones

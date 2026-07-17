@@ -14,6 +14,50 @@
   white-space: nowrap;
 }
 
+.platform-label.has-icon {
+  gap: 4px;
+}
+
+.platform-label__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  line-height: 0;
+}
+
+.platform-priority-bars-icon {
+  width: 14px;
+  height: 10px;
+  display: inline-flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  flex: 0 0 14px;
+}
+
+.platform-priority-bars-icon__bar {
+  width: 2px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.platform-priority-bars-icon__bar:nth-child(1) {
+  height: 4px;
+}
+
+.platform-priority-bars-icon__bar:nth-child(2) {
+  height: 7px;
+}
+
+.platform-priority-bars-icon__bar:nth-child(3) {
+  height: 10px;
+}
+
+.platform-priority-bars-icon__bar.is-active {
+  background: rgba(255, 255, 255, 0.92);
+}
+
 .platform-label.is-green {
   color: #85df7b;
   background: rgba(133, 223, 123, 0.1);

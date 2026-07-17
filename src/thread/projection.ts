@@ -8,7 +8,7 @@ import {
   normalizeRunnerThreadRun,
   normalizeRunnerThreadTimelineItem,
 } from "./normalize.js";
-import {
+import type {
   RunnerThreadActivityGroup,
   RunnerThreadPermissionRequest,
   RunnerThreadProjection,

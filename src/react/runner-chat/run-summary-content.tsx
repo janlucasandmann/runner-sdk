@@ -5,7 +5,7 @@ import {
   ChevronUp as LucideChevronUp,
 } from "lucide-react";
 import type { RunnerLog } from "../../types.js";
-import { RunnerCodeViewer } from "../runner-log-boxes.js";
+import { RunnerCodeViewer } from "../../platform-ui/components/thread-components/log-boxes/index.js";
 import {
   RunnerMarkdown,
   stripRunnerSystemTags as stripSystemTags,
@@ -106,13 +106,12 @@ export function splitRunnerRunSummaryContent(content: string): RunnerRunSummaryS
   const fenceRegex = /```([^\n`]*)\n([\s\S]*?)```/g;
   let cursor = 0;
   let jsonIndex = 0;
-  let match: RegExpExecArray | null;
 
-  while ((match = fenceRegex.exec(normalizedContent))) {
+  for (const match of normalizedContent.matchAll(fenceRegex)) {
     const fullMatch = match[0] || "";
     const language = String(match[1] || "").trim().toLowerCase();
     const body = String(match[2] || "").trim();
-    const startsAt = match.index;
+    const startsAt = match.index ?? 0;
     const jsonValue = (!language || language === "json" || language === "jsonc") ? parseRunnerSummaryJsonValue(body) : null;
 
     if (!jsonValue) {
@@ -249,10 +248,12 @@ export function CollapsibleRunnerUserPrompt({
   const [isOverflowing, setIsOverflowing] = useState(false);
 
   useEffect(() => {
+    void content;
     setIsExpanded(false);
   }, [content]);
 
   useLayoutEffect(() => {
+    void content;
     const node = containerRef.current;
     if (!node) {
       return;

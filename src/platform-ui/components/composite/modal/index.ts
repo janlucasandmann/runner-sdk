@@ -11,7 +11,9 @@ export { PlatformUnsavedChangesModal } from "./platform-unsaved-changes-modal.js
 export type {
   PlatformModalBackdropProps,
   PlatformModalCloseReason,
+  PlatformModalHeaderSearchProps,
   PlatformModalHeaderProps,
+  PlatformModalHeaderVariant,
   PlatformModalProps,
   PlatformModalSize,
   PlatformModalVariant,

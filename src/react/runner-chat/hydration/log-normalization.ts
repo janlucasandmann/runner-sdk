@@ -2,7 +2,7 @@ import type { RunnerLog } from "../../../types.js";
 import {
   isBrowserSkillLaunchCommand,
   shouldRenderRunnerReasoningLog,
-} from "../../runner-log-boxes.js";
+} from "../../../platform-ui/components/thread-components/log-boxes/index.js";
 import { stripRunnerSystemTags as stripSystemTags } from "../../runner-markdown.js";
 import { isInternalFileChangeLog } from "./file-paths.js";
 

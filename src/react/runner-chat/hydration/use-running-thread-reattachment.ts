@@ -5,7 +5,7 @@ import {
   type MutableRefObject,
   type SetStateAction,
 } from "react";
-import { hasActiveDeepResearchLogGroup } from "../../runner-log-boxes.js";
+import { hasActiveDeepResearchLogGroup } from "../../../platform-ui/components/thread-components/log-boxes/index.js";
 import type { RunnerTurn } from "../turn-types.js";
 import { mapExpandedTurns } from "../turn-expansion.js";
 import {
@@ -129,6 +129,8 @@ export function useRunnerRunningThreadReattachment({
   };
 
   useEffect(() => {
+    void hasHydratedActivity;
+    void hasRunningTurn;
     const normalizedThreadId = String(threadId || "").trim();
     if (!enabled || !normalizedThreadId || !apiKey.trim() || !backendUrl) {
       return;

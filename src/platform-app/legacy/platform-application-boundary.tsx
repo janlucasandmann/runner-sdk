@@ -18,6 +18,18 @@ interface PlatformErrorBoundaryState {
   error: Error | null;
 }
 
+const PLATFORM_ROUTE_LOADING_DOT_IDS = [
+  "route-loading-dot-1",
+  "route-loading-dot-2",
+  "route-loading-dot-3",
+  "route-loading-dot-4",
+  "route-loading-dot-5",
+  "route-loading-dot-6",
+  "route-loading-dot-7",
+  "route-loading-dot-8",
+  "route-loading-dot-9",
+] as const;
+
 class PlatformErrorBoundary extends Component<PropsWithChildren, PlatformErrorBoundaryState> {
   state: PlatformErrorBoundaryState = { error: null };
 
@@ -51,7 +63,9 @@ function PlatformRouteLoadingFallback() {
       <div className="playground-static-boot-card">
         <div className="playground-static-boot-row">
           <span className="playground-static-boot-dots" aria-hidden="true">
-            {Array.from({ length: 9 }, (_, index) => <span key={index} />)}
+            {PLATFORM_ROUTE_LOADING_DOT_IDS.map((dotId) => (
+              <span key={dotId} />
+            ))}
           </span>
           <span className="playground-static-boot-title">Opening page</span>
         </div>

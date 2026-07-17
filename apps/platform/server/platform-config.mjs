@@ -18,6 +18,21 @@ function isLocalOrigin(value) {
   }
 }
 
+function splitCommaSeparatedValues(value) {
+  return String(value || "")
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}
+
+function splitPathList(value) {
+  return String(value || "")
+    .split(path.delimiter)
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .map((entry) => path.resolve(entry));
+}
+
 export function createPlatformConfig(env = process.env) {
   const port = Number(env.PORT || 4177);
   const aiosOrigin = trimOrigin(
@@ -33,11 +48,33 @@ export function createPlatformConfig(env = process.env) {
     || "https://api.computer-agents.com/v1",
   );
   const aiosHostingRoot = path.resolve(
-    packageRoot,
-    "..",
-    "..",
-    "web",
-    "hosting",
+    env.AIOS_HOSTING_ROOT
+    || path.join(packageRoot, "..", "..", "web", "hosting"),
+  );
+  const cloudInfrastructureRoot = path.resolve(
+    env.COMPUTER_AGENTS_CLOUD_INFRASTRUCTURE_ROOT
+    || path.join(
+      packageRoot,
+      "..",
+      "..",
+      "computer-agents",
+      "packages",
+      "cloud-infrastructure",
+    ),
+  );
+  const configuredRuntimeEnvFiles = splitPathList(
+    env.PLATFORM_RUNTIME_ENV_FILES,
+  );
+  const runtimeEnvFileCandidates = configuredRuntimeEnvFiles.length > 0
+    ? configuredRuntimeEnvFiles
+    : [
+        path.join(aiosHostingRoot, ".env.local"),
+        path.join(aiosHostingRoot, ".env.production"),
+        path.join(aiosHostingRoot, ".env"),
+        path.join(cloudInfrastructureRoot, ".env"),
+      ];
+  const configuredGithubOrigins = splitCommaSeparatedValues(
+    env.GITHUB_OAUTH_ALLOWED_ORIGINS,
   );
 
   return Object.freeze({
@@ -58,33 +95,22 @@ export function createPlatformConfig(env = process.env) {
       || "firechatbot-a9654",
     ).trim(),
     distRoot: path.join(packageRoot, "dist"),
-    feedbackSummaryAdminEnvFileCandidates: [
-      path.join(aiosHostingRoot, ".env.production"),
-      path.resolve(
-        packageRoot,
-        "..",
-        "..",
-        "computer-agents",
-        "packages",
-        "cloud-infrastructure",
-        ".env",
-      ),
-      path.join(aiosHostingRoot, ".env.local"),
-      path.join(aiosHostingRoot, ".env"),
-    ],
-    feedbackSummaryAllowedEmail: "janls2601@icloud.com",
-    githubOauthAllowedOrigins: [
-      "https://computer-agents.com",
-      "https://platform.computer-agents.com",
-      "https://testbaseai.web.app",
-      "http://localhost:3000",
-      "http://localhost:4177",
-    ],
-    githubOauthEnvFileCandidates: [
-      path.join(aiosHostingRoot, ".env.local"),
-      path.join(aiosHostingRoot, ".env.production"),
-      path.join(aiosHostingRoot, ".env"),
-    ],
+    feedbackSummaryAdminEnvFileCandidates: runtimeEnvFileCandidates,
+    feedbackSummaryAllowedEmail: String(
+      env.PLATFORM_ADMIN_EMAIL
+      || env.FEEDBACK_SUMMARY_ALLOWED_EMAIL
+      || "",
+    ).trim().toLowerCase(),
+    githubOauthAllowedOrigins: configuredGithubOrigins.length > 0
+      ? configuredGithubOrigins
+      : [
+          "https://computer-agents.com",
+          "https://platform.computer-agents.com",
+          "https://testbaseai.web.app",
+          "http://localhost:3000",
+          "http://localhost:4177",
+        ],
+    githubOauthEnvFileCandidates: runtimeEnvFileCandidates,
     noVncNextRoot: path.join(packageRoot, "node_modules", "novnc-next"),
     notionOauthCallbackUri: String(
       env.NOTION_OAUTH_REDIRECT_URI
@@ -95,13 +121,8 @@ export function createPlatformConfig(env = process.env) {
     platformOrigin,
     platformViteOrigin: trimOrigin(env.PLATFORM_VITE_ORIGIN),
     playgroundSystemSkillsRoot: path.resolve(
-      packageRoot,
-      "..",
-      "..",
-      "computer-agents",
-      "packages",
-      "cloud-infrastructure",
-      "skills",
+      env.PLATFORM_SYSTEM_SKILLS_ROOT
+      || path.join(cloudInfrastructureRoot, "skills"),
     ),
     port,
     shouldForwardLocalCloudApiOverride: isLocalOrigin(defaultUpstreamOrigin),

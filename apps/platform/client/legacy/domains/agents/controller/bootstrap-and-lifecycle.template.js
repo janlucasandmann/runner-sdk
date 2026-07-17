@@ -89,7 +89,6 @@
           const agentCreationNameAutofocusedRef = useRef(false);
           const agentModelPopoverRef = useRef(null);
           const agentModelPickerCloseTimerRef = useRef(null);
-          const agentModelPickerFrameRef = useRef(null);
           const agentCreationPermissionModalCloseTimerRef = useRef(null);
           const agentCreationPermissionModalFrameRef = useRef(null);
           const agentComposerModelPopoverRef = useRef(null);
@@ -160,7 +159,7 @@
           const agentsOverviewAnalyticsFallbackScopeRef = useRef("");
           const [agentsAnalyticsMenuOpen, setAgentsAnalyticsMenuOpen] = useState(false);
           const [agentDetailChartTimescale, setAgentDetailChartTimescale] = useState("month");
-          const [agentDetailPerformanceRange, setAgentDetailPerformanceRange] = useState("1m");
+          const [agentDetailPerformanceRange, setAgentDetailPerformanceRange] = useState("month");
           const [agentsHomeCreationCommandRequest, setAgentsHomeCreationCommandRequest] = useState(null);
           const [agentsHomeActiveCreationCommand, setAgentsHomeActiveCreationCommand] = useState("");
           const [agentListMode, setAgentListMode] = useState(() => {
@@ -225,7 +224,6 @@
           const [agentModelPopover, setAgentModelPopover] = useState("");
           const [agentVoicePopoverOpen, setAgentVoicePopoverOpen] = useState(false);
           const [agentModelPickerState, setAgentModelPickerState] = useState(null);
-          const [agentModelPickerVisible, setAgentModelPickerVisible] = useState(false);
           const [agentModelPickerClosing, setAgentModelPickerClosing] = useState(false);
           const [agentComposerOpen, setAgentComposerOpen] = useState(false);
           const [agentComposerDraft, setAgentComposerDraft] = useState(() => buildPlaygroundDefaultAgentDraft());

@@ -91,6 +91,15 @@
   background: transparent;
 }
 
+.platform-popup-surface .tb-popup-check-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 var(--platform-popup-icon-size);
+  width: var(--platform-popup-icon-size);
+  height: var(--platform-popup-icon-size);
+}
+
 .platform-popup-surface :where(button, a, [role="button"], [role="menuitem"]) svg,
 .platform-popup-surface :where(.tb-popup-icon, .tb-popup-chevron, .tb-popup-check) {
   width: var(--platform-popup-icon-size);

@@ -47,7 +47,7 @@ export function ConfigureHomeRoute({
   const [sortValue, setSortValue] =
     useState<ConfigureHomeNotificationSort>("newest");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [, setError] = useState("");
 
   const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);

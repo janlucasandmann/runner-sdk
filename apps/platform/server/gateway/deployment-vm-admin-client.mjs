@@ -26,7 +26,6 @@ export function createDeploymentVmAdminClient({
     ].map((candidate) => String(candidate || "").trim()).filter(Boolean);
     const candidates = [
       ...configuredCandidates.filter((candidate) => candidate.includes("/")),
-      "/Users/jansandmann/google-cloud-sdk/bin/gcloud",
       "/opt/homebrew/bin/gcloud",
       "/usr/local/bin/gcloud",
       ...configuredCandidates.filter((candidate) => !candidate.includes("/")),

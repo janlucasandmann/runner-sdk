@@ -716,6 +716,16 @@
               || ""
             ).trim();
             const readAgentDetailThreadTotalCT = (thread) => Math.max(0, Number(readSettingsComputeTokens(thread, "totalCT", "totalCost") || 0));
+            const readAgentDetailThreadUsageTokens = (thread) => {
+              const totalTokens = Number(thread?.totalTokens ?? thread?.total_tokens);
+              if (Number.isFinite(totalTokens) && totalTokens > 0) {
+                return Math.round(totalTokens);
+              }
+              const inputTokens = Math.max(0, Number(thread?.inputTokens ?? thread?.input_tokens) || 0);
+              const outputTokens = Math.max(0, Number(thread?.outputTokens ?? thread?.output_tokens) || 0);
+              const cacheTokens = Math.max(0, Number(thread?.cacheTokens ?? thread?.cache_tokens) || 0);
+              return Math.round(inputTokens + outputTokens + cacheTokens);
+            };
             const getAgentDetailPeriodStartMs = (period) => {
               const now = new Date();
               const start = new Date(now);
@@ -1805,13 +1815,12 @@
             );
   
             const agentDetailPerformanceRangeOptions = [
-              { id: "5d", label: "5D", bucketCount: 5 },
-              { id: "1m", label: "1M", bucketCount: 30 },
-              { id: "6m", label: "6M", bucketCount: 180 },
-              { id: "1y", label: "1Y", bucketCount: 365 },
+              { id: "day", label: "24H", bucketCount: 1 },
+              { id: "week", label: "7D", bucketCount: 7 },
+              { id: "month", label: "30D", bucketCount: 30 },
             ];
             const activeAgentDetailPerformanceRange = agentDetailPerformanceRangeOptions.find((option) => option.id === agentDetailPerformanceRange)
-              || agentDetailPerformanceRangeOptions[1];
+              || agentDetailPerformanceRangeOptions[2];
             const formatAgentDetailPerformanceInteger = (value) => {
               const numericValue = Math.max(0, Math.round(Number(value || 0)));
               return numericValue.toLocaleString("en-US");
@@ -1868,6 +1877,7 @@
                   runCount: 0,
                   completedCount: 0,
                   totalCT: 0,
+                  totalTokens: 0,
                 };
               });
             };
@@ -1884,6 +1894,7 @@
               let runCount = 0;
               let completedCount = 0;
               let totalCT = 0;
+              let totalTokens = 0;
               agentDetailPerformanceThreads.forEach((thread) => {
                 const createdAtMs = readAgentDetailThreadCreatedAtMs(thread);
                 if (!Number.isFinite(createdAtMs) || createdAtMs < bucket.startMs || createdAtMs >= bucket.endMs) {
@@ -1891,6 +1902,7 @@
                 }
                 runCount += 1;
                 totalCT += readAgentDetailThreadTotalCT(thread);
+                totalTokens += readAgentDetailThreadUsageTokens(thread);
                 if (isAgentDetailThreadCompleted(thread)) {
                   completedCount += 1;
                 }
@@ -1898,6 +1910,7 @@
               bucket.runCount = runCount;
               bucket.completedCount = completedCount;
               bucket.totalCT = totalCT;
+              bucket.totalTokens = totalTokens;
             });
             const buildAgentDetailPerformanceSeries = () => {
               return [
@@ -1908,16 +1921,17 @@
             const agentDetailPerformanceRunCount = agentDetailPerformanceThreads.length;
             const agentDetailPerformanceCompletedCount = agentDetailPerformanceBuckets.reduce((sum, bucket) => sum + Math.max(0, Number(bucket?.completedCount || 0)), 0);
             const agentDetailPerformanceCost = agentDetailPerformanceBuckets.reduce((sum, bucket) => sum + Math.max(0, Number(bucket?.totalCT || 0)), 0);
-            const agentDetailPerformanceAvgCost = agentDetailPerformanceRunCount > 0
-              ? agentDetailPerformanceCost / agentDetailPerformanceRunCount
-              : 0;
+            const agentDetailPerformanceConsumedTokens = agentDetailPerformanceBuckets.reduce(
+              (sum, bucket) => sum + Math.max(0, Number(bucket?.totalTokens || 0)),
+              0
+            );
             const agentDetailPerformanceSuccessRate = agentDetailPerformanceRunCount > 0
               ? Math.round((agentDetailPerformanceCompletedCount / agentDetailPerformanceRunCount) * 100)
               : 0;
             const agentDetailPerformanceKpis = [
               { id: "total-runs", label: "Total Runs", value: formatAgentDetailPerformanceInteger(agentDetailPerformanceRunCount) },
               { id: "cost", label: "Cost", value: formatSettingsComputeTokens(agentDetailPerformanceCost) },
-              { id: "avg-ct", label: "Avg cost / Run", value: formatSettingsComputeTokens(agentDetailPerformanceAvgCost) },
+              { id: "consumed-tokens", label: "Consumed Tokens", value: formatAgentDetailPerformanceInteger(agentDetailPerformanceConsumedTokens) },
               { id: "success-rate", label: "Success Rate", value: String(agentDetailPerformanceSuccessRate) + "%" },
             ];
             const maxAgentDetailPerformanceValue = Math.max(
@@ -2253,23 +2267,10 @@
                 })
               );
             }
-            const handleAgentDetailPerformanceChartDownload = () => {
-              if (typeof document === "undefined") {
-                return;
-              }
-              const canvas = document.querySelector(".playground-agents-detail-progress-combo-canvas");
-              if (!canvas || typeof canvas.toDataURL !== "function") {
-                return;
-              }
-              const link = document.createElement("a");
-              link.href = canvas.toDataURL("image/png");
-              link.download = "agent-analytics.png";
-              link.click();
-            };
             const agentDetailAnalyticsMetricColors = {
               "total-runs": "#7effff",
               cost: "rgb(95, 112, 230)",
-              "avg-ct": "#4da3ff",
+              "consumed-tokens": "#fff",
               "success-rate": "#54e5a6",
             };
             const agentDetailAnalyticsModel = {
@@ -2287,7 +2288,7 @@
                   id: "cost",
                   label: "Cost",
                   values: agentDetailPerformanceBuckets.map((bucket) => Math.max(0, Number(bucket?.totalCT || 0))),
-                  color: "rgb(95, 112, 230)",
+                  color: "#8fc4ff",
                   type: "bar",
                   axis: "secondary",
                   valueKind: "tokens",
@@ -2319,29 +2320,6 @@
                   onValueChange: setAgentDetailPerformanceRange,
                   ariaLabel: "Performance range",
                 },
-                headerActions: React.createElement("button", {
-                    type: "button",
-                    className: "playground-project-overview-progress-combo-download",
-                    onClick: handleAgentDetailPerformanceChartDownload,
-                    title: "Download chart",
-                    "aria-label": "Download analytics chart",
-                  }, React.createElement(Download, { width: 15, height: 15, strokeWidth: 1.8 })),
-                chartContent: agentsHomeThreadsLoading
-                  ? React.createElement("div", { className: "playground-project-overview-progress-combo-chart-frame" },
-                      React.createElement("div", {
-                          className: "playground-overview-chart-loading",
-                          style: { position: "static", inset: "auto", height: "100%" },
-                          "aria-label": "Loading chart data",
-                        },
-                        React.createElement(Loader2, { className: "playground-overview-chart-loading-icon", strokeWidth: 1.8 })
-                      )
-                    )
-                  : React.createElement(PlaygroundAgentDetailPerformanceChart, {
-                      dailyCtBuckets: agentDetailPerformanceBuckets,
-                      maxDailyCt: maxAgentDetailPerformanceDailyCt,
-                      maxRunValue: maxAgentDetailPerformanceValue,
-                      series: agentDetailPerformanceSeries,
-                    }),
               }
             );
   

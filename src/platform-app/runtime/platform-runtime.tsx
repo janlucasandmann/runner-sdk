@@ -53,7 +53,7 @@ export function PlatformRuntimeProvider({
 }: PlatformRuntimeProviderProps) {
   const value = useMemo(
     () => normalizePlatformRuntimeConfig(config),
-    [config?.aiosOrigin, config?.apiOrigin, config?.appOrigin, config?.environment],
+    [config],
   );
 
   return (

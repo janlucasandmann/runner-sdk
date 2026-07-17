@@ -84,6 +84,10 @@ for (const file of [
   "src/platform-resources/agents/detail/agent-permissions-page.test.tsx",
   "src/platform-resources/agents/detail/agent-publish-control.tsx",
   "src/platform-resources/agents/detail/agent-publish-control.css",
+  "src/platform-resources/computers/detail/index.ts",
+  "src/platform-resources/computers/detail/README.md",
+  "src/platform-resources/computers/detail/computer-detail-page.tsx",
+  "src/platform-resources/computers/detail/computer-detail-page.test.tsx",
   "src/platform-services/configure-mode/configure-home/client/page/configure-home-overview-page.tsx",
 ]) {
   if (!await pathExists(path.join(packageRoot, file))) {
@@ -210,8 +214,31 @@ const agentAnalyticsSource = agentAnalyticsStart >= 0 && agentAnalyticsEnd > age
 if (!agentAnalyticsSource.includes("timeframe: {")) {
   failures.push("agent detail Insights analytics must delegate its timeframe selector to PlatformAnalyticsSection");
 }
+if (
+  !platformEntrySource.includes('{ id: "day", label: "24H", bucketCount: 1 }')
+  || !platformEntrySource.includes('{ id: "week", label: "7D", bucketCount: 7 }')
+  || !platformEntrySource.includes('{ id: "month", label: "30D", bucketCount: 30 }')
+) {
+  failures.push("agent detail Insights analytics must use the standard 24H, 7D, and 30D timeframes");
+}
+const agentPerformanceKpiStart = platformEntrySource.indexOf("const agentDetailPerformanceKpis =");
+const agentPerformanceKpiEnd = agentPerformanceKpiStart >= 0
+  ? platformEntrySource.indexOf("const maxAgentDetailPerformanceValue", agentPerformanceKpiStart)
+  : -1;
+const agentPerformanceKpiSource = agentPerformanceKpiStart >= 0 && agentPerformanceKpiEnd > agentPerformanceKpiStart
+  ? platformEntrySource.slice(agentPerformanceKpiStart, agentPerformanceKpiEnd)
+  : "";
+if (
+  !agentPerformanceKpiSource.includes('label: "Consumed Tokens"')
+  || agentPerformanceKpiSource.includes('label: "Avg cost / Run"')
+) {
+  failures.push("agent detail Insights analytics must report consumed tokens instead of average run cost");
+}
 if (agentAnalyticsSource.includes('className: "playground-project-overview-progress-combo-ranges"')) {
   failures.push("agent detail Insights must not render a local analytics timeframe control");
+}
+if (agentAnalyticsSource.includes("headerActions:") || agentAnalyticsSource.includes("chartContent:")) {
+  failures.push("agent detail Insights analytics must use the shared PlatformAnalyticsSection header and chart renderer");
 }
 if (!/const agentInsightsSection = React\.createElement\(React\.Fragment, null,\s*agentUsageChartSection,\s*agentThreadsSection/.test(platformEntrySource)) {
   failures.push("agent detail Insights must render the centralized analytics section above the threads table");
@@ -250,6 +277,36 @@ const agentDetailPageSource = await fs.readFile(
 );
 if (!agentDetailPageSource.includes("AgentPermissionsPage")) {
   failures.push("AgentDetailPage must own its permissions-tab composition");
+}
+
+const computerDetailPageSource = await fs.readFile(
+  path.join(packageRoot, "src", "platform-resources", "computers", "detail", "computer-detail-page.tsx"),
+  "utf8",
+);
+if (!computerDetailPageSource.includes("ResourceDetailPage")) {
+  failures.push("ComputerDetailPage must compose the shared ResourceDetailPage");
+}
+const computerDetailControllerSource = await fs.readFile(
+  path.join(packageRoot, "apps", "platform", "client", "legacy", "domains", "compute-resources", "controller", "computer-detail-view.js"),
+  "utf8",
+);
+if (!computerDetailControllerSource.includes("React.createElement(ComputerDetailPage")) {
+  failures.push("the computer detail controller must consume the modular ComputerDetailPage");
+}
+if (!computerDetailControllerSource.includes("React.createElement(PlatformAnalyticsSection")) {
+  failures.push("computer detail analytics must use PlatformAnalyticsSection");
+}
+if (!computerDetailControllerSource.includes("React.createElement(PlatformInstructionsEditor")) {
+  failures.push("computer descriptions must use PlatformInstructionsEditor");
+}
+for (const retiredComputerDetailRenderer of [
+  "renderEnvironmentDetailTimescaleControl",
+  "renderEnvironmentDetailActivityChart",
+  "environmentDescriptionFormatActions",
+]) {
+  if (computerDetailControllerSource.includes(retiredComputerDetailRenderer)) {
+    failures.push(`computer detail still owns retired shared UI: ${retiredComputerDetailRenderer}`);
+  }
 }
 
 const packageJson = JSON.parse(await fs.readFile(path.join(packageRoot, "package.json"), "utf8"));

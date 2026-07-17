@@ -357,15 +357,10 @@
               window.clearTimeout(agentModelPickerCloseTimerRef.current);
               agentModelPickerCloseTimerRef.current = null;
             }
-            if (agentModelPickerFrameRef.current) {
-              window.cancelAnimationFrame(agentModelPickerFrameRef.current);
-              agentModelPickerFrameRef.current = null;
-            }
             const normalizedTarget = target === "composer" ? "composer" : "detail";
             const activeModelId = normalizedTarget === "composer"
               ? (agentComposerDraft?.model || "claude-haiku-4-5")
               : (draftAgent?.model || "claude-haiku-4-5");
-            setAgentModelPickerVisible(false);
             setAgentModelPickerClosing(false);
             setAgentModelPickerState({
               target: normalizedTarget,
@@ -374,12 +369,6 @@
               providerFilters: [],
               isProviderFilterOpen: false,
             });
-            agentModelPickerFrameRef.current = window.requestAnimationFrame(() => {
-              agentModelPickerFrameRef.current = window.requestAnimationFrame(() => {
-                agentModelPickerFrameRef.current = null;
-                setAgentModelPickerVisible(true);
-              });
-            });
           }
   
           function finishCloseAgentModelPicker() {
@@ -387,28 +376,18 @@
               window.clearTimeout(agentModelPickerCloseTimerRef.current);
               agentModelPickerCloseTimerRef.current = null;
             }
-            if (agentModelPickerFrameRef.current) {
-              window.cancelAnimationFrame(agentModelPickerFrameRef.current);
-              agentModelPickerFrameRef.current = null;
-            }
-            setAgentModelPickerVisible(false);
             setAgentModelPickerClosing(false);
             setAgentModelPickerState(null);
           }
   
           function closeAgentModelPicker(options = {}) {
-            if (options?.animate === false || (!agentModelPickerState && !agentModelPickerVisible && !agentModelPickerClosing)) {
+            if (options?.animate === false || (!agentModelPickerState && !agentModelPickerClosing)) {
               finishCloseAgentModelPicker();
               return;
             }
             if (agentModelPickerClosing) {
               return;
             }
-            if (agentModelPickerFrameRef.current) {
-              window.cancelAnimationFrame(agentModelPickerFrameRef.current);
-              agentModelPickerFrameRef.current = null;
-            }
-            setAgentModelPickerVisible(false);
             setAgentModelPickerClosing(true);
             if (agentModelPickerCloseTimerRef.current) {
               window.clearTimeout(agentModelPickerCloseTimerRef.current);
@@ -416,7 +395,7 @@
             agentModelPickerCloseTimerRef.current = window.setTimeout(() => {
               agentModelPickerCloseTimerRef.current = null;
               finishCloseAgentModelPicker();
-            }, 75);
+            }, typeof PLAYGROUND_PLATFORM_MODAL_ANIMATION_MS === "number" ? PLAYGROUND_PLATFORM_MODAL_ANIMATION_MS : 60);
           }
   
           useEffect(() => {
@@ -424,10 +403,6 @@
               if (agentModelPickerCloseTimerRef.current) {
                 window.clearTimeout(agentModelPickerCloseTimerRef.current);
                 agentModelPickerCloseTimerRef.current = null;
-              }
-              if (agentModelPickerFrameRef.current) {
-                window.cancelAnimationFrame(agentModelPickerFrameRef.current);
-                agentModelPickerFrameRef.current = null;
               }
             };
           }, []);
@@ -747,22 +722,98 @@
                 )
               );
             };
+            const modelPickerFilterControl = React.createElement(
+              PlatformPopup,
+              {
+                open: agentModelPickerState.isProviderFilterOpen,
+                variant: "minimal",
+                portal: true,
+                placement: "bottom-end",
+                rootClassName: "playground-files-toolbar-anchor playground-agents-model-picker-filter-anchor",
+                surfaceClassName: "playground-agents-model-picker-filter-menu",
+                surfaceProps: {
+                  role: "menu",
+                  "aria-label": "Filter models by provider",
+                  width: 250,
+                },
+                animation: "down-in",
+                trigger: React.createElement(PlatformSecondaryButton, {
+                  type: "button",
+                  size: "small",
+                  className: "playground-agents-model-picker-filter-button",
+                  active: agentModelPickerState.isProviderFilterOpen || activeProviderFilters.length > 0,
+                  onClick: toggleProviderFilterMenu,
+                  "aria-haspopup": "menu",
+                  "aria-expanded": agentModelPickerState.isProviderFilterOpen,
+                },
+                  React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", null, "Filter")
+                ),
+              },
+              providerFilterOptions.map((option) => {
+                const isActive = activeProviderFilters.includes(option.id);
+                return React.createElement("button", {
+                    key: option.id,
+                    type: "button",
+                    role: "menuitemcheckbox",
+                    "aria-checked": isActive,
+                    className: "tb-popup-row" + (isActive ? " is-selected" : ""),
+                    onClick: () => toggleProviderFilter(option.id),
+                  },
+                  React.createElement("span", { className: "tb-popup-check-slot", "aria-hidden": "true" },
+                    isActive
+                      ? React.createElement(Check, { className: "tb-popup-check", width: 13, height: 13, strokeWidth: 1.8 })
+                      : null
+                  ),
+                  React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
+                    React.createElement("span", null, option.label),
+                    React.createElement("span", null, option.description)
+                  )
+                );
+              })
+            );
   
             return React.createElement(PlatformModal, {
-              open: Boolean(agentModelPickerState),
-              visible: agentModelPickerVisible,
-              closing: agentModelPickerClosing,
+              open: Boolean(agentModelPickerState) && !agentModelPickerClosing,
+              animationDurationMs: typeof PLAYGROUND_PLATFORM_MODAL_ANIMATION_MS === "number" ? PLAYGROUND_PLATFORM_MODAL_ANIMATION_MS : 60,
               onClose: () => closeAgentModelPicker(),
               closeOnEscape: !agentModelPickerState.isProviderFilterOpen,
               backdropClassName: "playground-agents-model-picker-backdrop",
               className: "playground-agents-model-picker-modal",
               size: "large",
               title: "Select Model",
+              headerVariant: "search",
+              headerSearchProps: {
+                value: agentModelPickerState.searchQuery || "",
+                onChange: (event) => setAgentModelPickerState((current) => current ? {
+                  ...current,
+                  searchQuery: event.target.value,
+                  isProviderFilterOpen: false,
+                } : current),
+                placeholder: "Search models",
+                "aria-label": "Search models",
+              },
+              headerActions: modelPickerFilterControl,
+              bodyClassName: "playground-agents-model-picker-body",
+              footerClassName: "playground-agents-model-picker-actions",
+              footer: React.createElement(React.Fragment, null,
+                React.createElement(PlatformSecondaryButton, {
+                  size: "medium",
+                  type: "button",
+                  onClick: () => closeAgentModelPicker(),
+                }, "Cancel"),
+                React.createElement(PlatformPrimaryButton, {
+                  size: "medium",
+                  type: "button",
+                  onClick: confirmModelSelection,
+                  disabled: !pendingModelId || pendingModelId === activeModelId,
+                }, "Confirm")
+              ),
               closeButtonLabel: "Close model selector",
               surfaceProps: {
                 onClick: (event) => {
                   const target = event?.target instanceof Element ? event.target : null;
-                  if (!target || !target.closest(".playground-agents-model-picker-filter-anchor")) {
+                  if (!target || !target.closest(".playground-agents-model-picker-filter-anchor, .playground-agents-model-picker-filter-menu")) {
                     setAgentModelPickerState((current) => current ? {
                       ...current,
                       isProviderFilterOpen: false,
@@ -770,83 +821,20 @@
                   }
                 },
               },
-              children: React.createElement(React.Fragment, null,
-                React.createElement("div", { className: "playground-agents-model-picker-search-row" },
-                  React.createElement("div", { className: "playground-agents-model-picker-search-field" },
-                    React.createElement(Search, { className: "playground-agents-model-picker-search-icon", strokeWidth: 1.8 }),
-                    React.createElement("input", {
-                      type: "text",
-                      className: "playground-settings-input playground-agents-model-picker-search-input",
-                      value: agentModelPickerState.searchQuery || "",
-                      onChange: (event) => setAgentModelPickerState((current) => current ? {
-                        ...current,
-                        searchQuery: event.target.value,
-                        isProviderFilterOpen: false,
-                      } : current),
-                      placeholder: "Search models",
-                      autoFocus: true,
-                    })
-                  ),
-                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-agents-model-picker-filter-anchor" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-control-button playground-agents-model-picker-filter-button" + ((agentModelPickerState.isProviderFilterOpen || activeProviderFilters.length > 0) ? " is-active" : ""),
-                      onClick: toggleProviderFilterMenu,
-                    },
-                      React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Filter")
-                    ),
-                    agentModelPickerState.isProviderFilterOpen
-                      ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                          React.createElement("div", { className: "playground-files-toolbar-menu-title" }, activeProviderFilters.length > 0 ? "Provider filters" : "All providers"),
-                          providerFilterOptions.map((option) =>
-                            React.createElement("button", {
-                                key: option.id,
-                                type: "button",
-                                className: "playground-files-toolbar-menu-item" + (activeProviderFilters.includes(option.id) ? " is-active" : ""),
-                                onClick: () => toggleProviderFilter(option.id),
-                              },
-                              React.createElement("span", { className: "playground-files-toolbar-menu-check" }, activeProviderFilters.includes(option.id) ? "•" : ""),
-                              React.createElement("div", { className: "playground-files-toolbar-menu-item-copy" },
-                                React.createElement("span", null, option.label),
-                                React.createElement("span", null, option.description)
-                              )
-                            )
-                          )
+              children: groupedVisibleModelOptions.length > 0
+                ? React.createElement("div", { className: "playground-agents-model-picker-groups" },
+                    groupedVisibleModelOptions.map((group) =>
+                      React.createElement("section", { key: group.id, className: "playground-agents-model-picker-group" },
+                        React.createElement("div", { className: "playground-agents-model-picker-group-title" }, providerLabelById[group.id] || group.label),
+                        React.createElement("div", { className: "playground-agents-model-picker-grid" },
+                          group.items.map(renderModelPickerCard)
                         )
-                      : null
+                      )
+                    )
                   )
-                ),
-                React.createElement(PlatformModalBody, { className: "playground-agents-model-picker-body" },
-                  groupedVisibleModelOptions.length > 0
-                    ? React.createElement("div", { className: "playground-agents-model-picker-groups" },
-                        groupedVisibleModelOptions.map((group) =>
-                          React.createElement("section", { key: group.id, className: "playground-agents-model-picker-group" },
-                            React.createElement("div", { className: "playground-agents-model-picker-group-title" }, providerLabelById[group.id] || group.label),
-                            React.createElement("div", { className: "playground-agents-model-picker-grid" },
-                              group.items.map(renderModelPickerCard)
-                            )
-                          )
-                        )
-                      )
-                    : React.createElement("div", { className: "playground-agents-model-picker-empty" },
-                        "No models match your search."
-                      )
-                ),
-                React.createElement(PlatformModalFooter, { className: "playground-agents-model-picker-actions" },
-                  React.createElement(PlatformSecondaryButton, {
-                    size: "medium",
-                    type: "button",
-                    onClick: () => closeAgentModelPicker(),
-                  }, "Cancel"),
-                  React.createElement(PlatformPrimaryButton, {
-                    size: "medium",
-                    type: "button",
-                    onClick: confirmModelSelection,
-                    disabled: !pendingModelId || pendingModelId === activeModelId,
-                  }, "Confirm")
-                )
-              )
+                : React.createElement("div", { className: "playground-agents-model-picker-empty" },
+                    "No models match your search."
+                  )
             });
           }
   

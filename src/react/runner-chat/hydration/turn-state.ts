@@ -1,5 +1,5 @@
 import type { RunnerLog } from "../../../types.js";
-import { hasActiveDeepResearchLogGroup } from "../../runner-log-boxes.js";
+import { hasActiveDeepResearchLogGroup } from "../../../platform-ui/components/thread-components/log-boxes/index.js";
 import { stripRunnerSystemTags as stripSystemTags } from "../../runner-markdown.js";
 import { parseIsoTimestampMs, parseSecondsFromClock } from "../time-utils.js";
 import type { RunnerTurn, RunnerTurnStatus } from "../turn-types.js";
@@ -132,7 +132,7 @@ function hydratedThreadStatusIsRunning(meta?: {
   if (normalizedStatus) {
     return false;
   }
-  if (!meta || !Object.prototype.hasOwnProperty.call(meta, "completedAtMs")) {
+  if (!meta || !("completedAtMs" in meta)) {
     return false;
   }
   return meta.completedAtMs == null;
@@ -198,7 +198,8 @@ export function applyHydratedRunningThreadState(
 
   let activeDeepResearchIndex = -1;
   for (let index = turns.length - 1; index >= 0; index -= 1) {
-    if (hasActiveDeepResearchLogGroup(turns[index]!.logs)) {
+    const turn = turns[index];
+    if (turn && hasActiveDeepResearchLogGroup(turn.logs)) {
       activeDeepResearchIndex = index;
       break;
     }

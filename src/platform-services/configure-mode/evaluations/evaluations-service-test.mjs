@@ -61,6 +61,8 @@ assert.equal(
   EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.view.match(/variant: "minimalistic-ui"/g)?.length,
   2,
 );
+assert.match(EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.view, /controlsLeading: React\.createElement\(PlatformSecondaryButton/);
+assert.doesNotMatch(EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.view, /primaryAction:\s*\{[\s\S]{0,300}Run Evaluation/);
 assert.doesNotMatch(EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.view, /pagination\s*:/);
 assert.match(EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.modal, /renderAgentEvaluationRunModal/);
 assert.match(EVALUATIONS_AGENT_STYLE_FRAGMENTS.page, /playground-agents-detail-evaluations-section/);

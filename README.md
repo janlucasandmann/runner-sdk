@@ -69,8 +69,8 @@ src/
   platform-services/   Create, Configure, and Develop domain services
   platform-resources/  Shared resource domains
   platform-shell/      App shell modules
-  platform-ui/         Shared UI primitives and composite components
-  react/               Runner compatibility components
+  platform-ui/         Shared UI primitives, composites, and thread components
+  react/               Runner composition and compatibility facades
 ```
 
 The compatibility browser document is intentionally isolated under
@@ -81,19 +81,28 @@ The complete ownership map and migration rules are documented in
 
 ## Verification
 
-Useful checks:
+Run the complete local/CI gate:
 
 ```bash
-npm run build
-npm run platform:asset-test
-npm run platform:architecture-test
-npm run thread-proxy-test
+npm run check
 ```
 
-Domain-specific service tests are exposed as npm scripts in `package.json`.
+Focused commands are also available:
+
+```bash
+npm run check:static
+npm run test
+npm run test:unit
+npm run test:contracts
+npm run build
+```
+
+See [`docs/development/testing.md`](docs/development/testing.md) for the test
+matrix and [`docs/development/configuration.md`](docs/development/configuration.md)
+for runtime configuration.
 
 ## Runner compatibility API
 
-The former SDK surface remains available internally for `RunnerClient`,
+The former SDK surface remains as a private compatibility API for `RunnerClient`,
 `RunnerChat`, and embedded execution views. Its documentation is in
 [`docs/runner-client.md`](docs/runner-client.md).

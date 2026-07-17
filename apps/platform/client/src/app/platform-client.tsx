@@ -99,7 +99,10 @@ function PlatformClientShell({
           <Blocks size={17} aria-hidden="true" />
           <span>Computer Agents</span>
         </div>
-        <div className="platform-client-mode-selector" aria-label="Platform mode">
+        <fieldset
+          className="platform-client-mode-selector"
+          aria-label="Platform mode"
+        >
           {PLATFORM_MODES.map((mode) => {
             const Icon = MODE_ICONS[mode];
             return (
@@ -115,7 +118,7 @@ function PlatformClientShell({
               </button>
             );
           })}
-        </div>
+        </fieldset>
         <nav className="platform-client-navigation" aria-label={`${route.mode} pages`}>
           {routes.map((item) => (
             <a

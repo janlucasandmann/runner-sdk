@@ -1,7 +1,10 @@
 import { Copy, Plus, SquarePen, Trash2, UsersRound } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { PlatformDataTableAction, PlatformDataTableColumn } from "../../../platform-ui/components/composite/data-table/index.js";
-import { PlatformLabel, type PlatformLabelVariant } from "../../../platform-ui/components/ui/label/index.js";
+import {
+  PlatformLabel,
+  type PlatformLabelVariant,
+} from "../../../platform-ui/components/ui/label/index.js";
 import {
   ResourceOverviewIdentityCell,
   ResourceOverviewPage,

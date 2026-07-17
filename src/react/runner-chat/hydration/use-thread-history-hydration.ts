@@ -138,6 +138,9 @@ export function useRunnerThreadHistoryHydration({
   };
 
   useEffect(() => {
+    void hasRunningTurn;
+    void isPreparingRun;
+    void pendingQueuedMessageCount;
     let cancelled = false;
     let hydrationApplied = false;
     let previewRendered = false;

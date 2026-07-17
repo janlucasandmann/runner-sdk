@@ -71,8 +71,7 @@ export function mapExpandedTurns(
     }, {});
   }
 
-  const latestTurnId =
-    nextTurns.length > 0 ? nextTurns[nextTurns.length - 1]!.id : null;
+  const latestTurnId = nextTurns.at(-1)?.id ?? null;
   return nextTurns.reduce<Record<string, boolean>>((accumulator, turn) => {
     const directExpanded = previousExpandedTurns[turn.id];
     if (typeof directExpanded === "boolean") {
@@ -82,11 +81,11 @@ export function mapExpandedTurns(
 
     const matchedPreviousTurn = previousTurns.find((previousTurn) =>
       turnsLikelyMatch(previousTurn, turn));
-    if (
-      matchedPreviousTurn
-      && typeof previousExpandedTurns[matchedPreviousTurn.id] === "boolean"
-    ) {
-      accumulator[turn.id] = previousExpandedTurns[matchedPreviousTurn.id]!;
+    const matchedPreviousExpansion = matchedPreviousTurn
+      ? previousExpandedTurns[matchedPreviousTurn.id]
+      : undefined;
+    if (typeof matchedPreviousExpansion === "boolean") {
+      accumulator[turn.id] = matchedPreviousExpansion;
       return accumulator;
     }
 

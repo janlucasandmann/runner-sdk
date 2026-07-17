@@ -2,7 +2,7 @@ import type { RunnerLog } from "../../../types.js";
 import {
   isBrowserSkillCommand,
   isComputerUseMcpLog,
-} from "../../runner-log-boxes.js";
+} from "../../../platform-ui/components/thread-components/log-boxes/index.js";
 import { stripRunnerSystemTags as stripSystemTags } from "../../runner-markdown.js";
 import {
   getRunnerLogAbsoluteTimestampMs,
@@ -459,10 +459,14 @@ export function mergeHydratedTimelineLogsIntoMessageTurns(
   if (!canAssignByTimestamp && assignableTurns.length > 1) {
     return null;
   }
+  const firstAssignableTurn = assignableTurns[0];
+  if (!firstAssignableTurn) {
+    return null;
+  }
 
   const buckets = new Map<number, RunnerLog[]>();
   for (const log of timelineLogs) {
-    let targetIndex = assignableTurns[0]!.index;
+    let targetIndex = firstAssignableTurn.index;
     if (canAssignByTimestamp) {
       const timestampMs = getTimelineTimestampMs(log, meta?.startedAtMs) ?? 0;
       for (const candidate of assignableTurns) {
@@ -544,8 +548,12 @@ export function mergeHydratedMessageTurnsIntoTurns(
     if (index === -1) {
       return turn;
     }
+    const matchedMessageTurn = messageTurns[index];
+    if (!matchedMessageTurn) {
+      return turn;
+    }
     consumed.add(index);
-    return mergeMessageTurn(turn, messageTurns[index]!);
+    return mergeMessageTurn(turn, matchedMessageTurn);
   });
 
   const unmatched: RunnerTurn[] = [];

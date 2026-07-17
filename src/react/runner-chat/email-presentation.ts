@@ -197,8 +197,7 @@ function extractRunnerEmailAttachmentFilesFromSummary(summaryText?: string | nul
   }
   const files: RunnerEmailDeliveryAttachmentFile[] = [];
   const pattern = /<!--\s*email-attachments\s*:\s*([\s\S]*?)\s*-->/gi;
-  let match: RegExpExecArray | null = null;
-  while ((match = pattern.exec(content)) !== null) {
+  for (const match of content.matchAll(pattern)) {
     const rawManifest = String(match[1] || "").trim();
     if (!rawManifest) {
       continue;

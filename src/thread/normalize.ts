@@ -1,4 +1,4 @@
-import {
+import type {
   RunnerThreadAction,
   RunnerThreadActionResource,
   RunnerThreadActivityGroup,
@@ -606,8 +606,9 @@ function upsertCompatibilityParticipant(
     createdAt: previous?.createdAt || null,
     updatedAt: previous?.updatedAt || null,
   };
-  participants.set(id, { ...previous, ...participant });
-  return participants.get(id)!;
+  const normalizedParticipant = { ...previous, ...participant };
+  participants.set(id, normalizedParticipant);
+  return normalizedParticipant;
 }
 
 function compatibilityRowSequence(record: UnknownRecord): number {

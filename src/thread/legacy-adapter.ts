@@ -1,4 +1,4 @@
-import { RunnerLog, RunnerThreadStep } from "../types.js";
+import type { RunnerLog, RunnerThreadStep } from "../types.js";
 import {
   normalizeRunnerThreadAction,
   normalizeRunnerThreadActivityGroup,
@@ -6,13 +6,12 @@ import {
   normalizeRunnerThreadPermissionRequest,
 } from "./normalize.js";
 import { createInitialRunnerThreadProjection, reduceRunnerThreadEvents } from "./projection.js";
-import {
+import type {
   RunnerThreadAction,
   RunnerThreadActivityGroup,
   RunnerThreadEvent,
   RunnerThreadMessage,
   RunnerThreadParticipant,
-  RunnerThreadPermissionRequest,
   RunnerThreadProjection,
   RunnerThreadRun,
   RunnerThreadRunStatus,

@@ -204,6 +204,8 @@ describe("resource overview pages", () => {
     expect(screen.getByText("Standard").getAttribute("data-platform-label-variant")).toBe("blue");
     expect(screen.getByText("Power").getAttribute("data-platform-label-variant")).toBe("yellow");
     expect(screen.getByText("Desktop").getAttribute("data-platform-label-variant")).toBe("green");
+    expect(screen.getByText("Light").querySelector(".platform-label__icon")).toBeNull();
+    expect(screen.getByText("Desktop").querySelector(".platform-label__icon")).toBeNull();
     expect(screen.getByText("Computer Agents").closest(".resource-overview-identity")?.querySelector("img")?.getAttribute("src")).toBe("/img/agent-profile-pics/ca-profilepic.jpg");
     expect(container.querySelectorAll(".platform-label")).toHaveLength(4);
   });

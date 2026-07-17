@@ -24,6 +24,7 @@
 
 .platform-analytics__header {
   min-width: 0;
+  margin-bottom: 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -107,7 +108,7 @@
   color: rgba(255, 255, 255, 0.62);
   font-size: 12px;
   line-height: 1.25;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .platform-analytics.is-framed .platform-analytics__metric-dot {

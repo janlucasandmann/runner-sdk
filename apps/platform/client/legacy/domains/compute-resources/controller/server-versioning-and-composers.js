@@ -1167,49 +1167,6 @@
             });
           }
   
-          function applyEnvironmentDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
-            updateEnvironmentField("description", nextValue);
-            window.requestAnimationFrame(() => {
-              const textarea = environmentDescriptionTextareaRef.current;
-              if (!textarea) {
-                return;
-              }
-              const maxLength = nextValue.length;
-              const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
-              const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
-              textarea.focus();
-              textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
-              resizeEnvironmentDescriptionTextarea(textarea);
-            });
-          }
-  
-          function handleEnvironmentDescriptionFormat(formatType) {
-            const textarea = environmentDescriptionTextareaRef.current;
-            if (!textarea || !draftEnvironment) {
-              return;
-            }
-            const value = String(draftEnvironment?.description || "");
-            const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
-            const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
-            let edit = null;
-  
-            if (formatType === "bold") {
-              edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "**");
-            } else if (formatType === "italic") {
-              edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "*");
-            } else if (formatType === "underline") {
-              edit = buildWrappedEnvironmentDescriptionEdit(value, selectionStart, selectionEnd, "++");
-            } else if (formatType === "list") {
-              edit = buildEnvironmentDescriptionListEdit(value, selectionStart, selectionEnd);
-            }
-  
-            if (!edit) {
-              return;
-            }
-  
-            applyEnvironmentDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
-          }
-  
           function closeEnvironmentRenameDialog() {
             setEnvironmentRenameState(null);
             setEnvironmentRenameValue("");

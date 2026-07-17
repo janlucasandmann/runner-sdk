@@ -80,7 +80,9 @@ function disconnectSpeechResources(resources: RunnerSpeechResources): void {
   }
   sourceNode?.disconnect();
   sinkGainNode?.disconnect();
-  mediaStream?.getTracks().forEach((track) => track.stop());
+  mediaStream?.getTracks().forEach((track) => {
+    track.stop();
+  });
   if (audioContext) {
     void audioContext.close().catch(() => undefined);
   }
@@ -197,7 +199,9 @@ export function useRunnerSpeechToText({
     }
     sourceNode?.disconnect();
     sinkGainNode?.disconnect();
-    mediaStream?.getTracks().forEach((track) => track.stop());
+    mediaStream?.getTracks().forEach((track) => {
+      track.stop();
+    });
 
     if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
       if (socket.readyState === WebSocket.OPEN && wasActivityOpen) {
@@ -383,7 +387,9 @@ export function useRunnerSpeechToText({
       setRecordingElapsedSeconds(0);
       setIsListening(true);
     } catch (error) {
-      pendingStream?.getTracks().forEach((track) => track.stop());
+      pendingStream?.getTracks().forEach((track) => {
+        track.stop();
+      });
       if (pendingAudioContext) {
         await pendingAudioContext.close().catch(() => undefined);
       }

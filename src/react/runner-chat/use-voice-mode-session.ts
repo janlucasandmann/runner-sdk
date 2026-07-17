@@ -164,7 +164,9 @@ export function useRunnerVoiceModeSession(
         source.disconnect();
       } catch {}
     }
-    mediaStream?.getTracks().forEach((track) => track.stop());
+    mediaStream?.getTracks().forEach((track) => {
+      track.stop();
+    });
     if (audioContext && audioContext.state !== "closed") {
       void audioContext.close().catch(() => undefined);
     }
@@ -525,7 +527,9 @@ export function useRunnerVoiceModeSession(
         RUNNER_VOICE_MEDIA_CONSTRAINTS,
       );
       if (!isStartCurrent()) {
-        mediaStream.getTracks().forEach((track) => track.stop());
+        mediaStream.getTracks().forEach((track) => {
+          track.stop();
+        });
         await abandonStart(connection.sessionId);
         return;
       }

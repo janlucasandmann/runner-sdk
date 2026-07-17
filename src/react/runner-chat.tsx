@@ -50,7 +50,7 @@ import {
   X as LucideX,
   Zap as LucideZap,
 } from "lucide-react";
-import { RunnerDeepResearchSession, RunnerExecuteResult, RunnerLog } from "../types.js";
+import { RunnerDeepResearchSession, RunnerLog } from "../types.js";
 import {
   PlatformPopupSurface,
   type PlatformPopupAnimation,
@@ -63,12 +63,14 @@ import { PlatformSwitch } from "../platform-ui/components/ui/switch/index.js";
 import { adaptLegacyThreadToProjection } from "../thread/legacy-adapter.js";
 import type { RunnerThreadAction, RunnerThreadMessage, RunnerThreadProjection, RunnerThreadRoutedMessageResult, RunnerThreadRunStatus } from "../thread/types.js";
 import { useRunnerExecution } from "./use-runner-execution.js";
-import { RUNNER_CHAT_ENTER_ANIMATION_DURATION_MS, getRunnerChatEnterAnimationStyle } from "./runner-chat-animations.js";
+import { getRunnerChatEnterAnimationStyle } from "./runner-chat-animations.js";
 import { mountRunnerChatStyles } from "./runner-chat-styles.js";
 import { RunnerThreadRunActivityCard } from "./thread/run-activity-card.js";
 import { adaptRunnerThreadActionToRunnerLog } from "./thread/activity-action-list.js";
 import { RunnerThreadUserMessageTime } from "./thread/thread-message.js";
 import { useRunnerThreadProjection } from "./thread/use-runner-thread-projection.js";
+import { useRunnerLogAutoScroll } from "./runner-chat/use-log-auto-scroll.js";
+import { useRunnerThreadHistoryRail } from "./runner-chat/use-thread-history-rail.js";
 import { RunnerDocumentPreviewDrawer } from "./runner-document-preview-drawer.js";
 import {
   buildRunnerPreviewAttachmentFromPath,
@@ -87,9 +89,7 @@ import {
   type RunnerWebSearchPreviewImage,
   type RunnerWebSearchPreviewSource,
 } from "./runner-document-preview.js";
-import { RunnerImagePreviewSurface } from "./runner-image-preview-surface.js";
-import { LazyMediaPreviewMount, RunnerLazyMediaPreviewLoader } from "./runner-lazy-media-preview.js";
-import { BrowserSkillLogBox, ComputerUseDetailDrawer, DeepResearchDetailDrawer, DeepResearchLogBox, InlineStatusLogBox, RunnerCodeViewer, RunnerWorkLogEntry, SubagentDetailDrawer, SubagentLogBox, type RunnerCreatedResourcePreview, hasActiveDeepResearchLogGroup, isBrowserSkillCommand, isBrowserSkillLaunchCommand, isComputerUseMcpLog, isDeepResearchCommand } from "./runner-log-boxes.js";
+import { BrowserSkillLogBox, ComputerUseDetailDrawer, DeepResearchDetailDrawer, DeepResearchLogBox, InlineStatusLogBox, RunnerCodeViewer, RunnerWorkLogEntry, SubagentDetailDrawer, SubagentLogBox, hasActiveDeepResearchLogGroup, isBrowserSkillCommand, isBrowserSkillLaunchCommand, isComputerUseMcpLog, isDeepResearchCommand } from "../platform-ui/components/thread-components/log-boxes/index.js";
 import { RunnerMarkdown, stripRunnerSystemTags as stripSystemTags } from "./runner-markdown.js";
 import { DotLoader } from "./dot-loader.js";
 import {
@@ -111,8 +111,6 @@ import {
   CollapsibleRunnerUserPrompt,
   RunnerRunSummaryJsonDocument,
   splitRunnerRunSummaryContent,
-  type RunnerChatRunSummaryJsonRenderContext,
-  type RunnerChatUserPromptRenderContext,
 } from "./runner-chat/run-summary-content.js";
 export type {
   RunnerChatRunSummaryJsonRenderContext,
@@ -253,22 +251,17 @@ import {
   buildSelectedGithubRepoReference,
   createGithubBrowserNodeId,
   createGithubBrowserRepoFolderId,
-  getAttachmentDisplayName,
-  getAttachmentPreviewUrl,
   getBrowserFileType,
-  getGithubAttachmentRef,
   getGithubRepoName,
   isAttachmentDocumentPreviewable,
-  isGithubAttachmentSelection,
-  isLocalAttachmentRecord,
   parseGithubBrowserFolderId,
 } from "./runner-chat/attachment-utils.js";
+import { RunnerAttachmentPreviewChip } from "./runner-chat/attachment-preview-chip.js";
 import {
   RUNNER_THREAD_HISTORY_ACTIVE_LINE_WIDTH,
+  buildRunnerThreadHistoryItems,
   buildRunnerThreadHistoryItemId,
-  buildRunnerThreadHistoryPreviewText,
   getRunnerThreadHistoryLineWidth,
-  type RunnerThreadHistoryItem,
 } from "./runner-chat/thread-history.js";
 import {
   fetchAllThreadMessages,
@@ -327,7 +320,6 @@ import {
   buildRunnerAttachmentFromPreviewAttachment,
   buildTurnAttachmentsFromLocalAttachments,
   buildTurnAttachmentsFromRunnerAttachments,
-  isRunnerEmailContextAttachment,
   isRunnerImagePreviewAttachment,
   isRunnerTurnDisplayHiddenAttachment,
   mergeRunnerTurnAttachments,
@@ -346,14 +338,12 @@ import type {
 } from "./runner-chat/hydration/types.js";
 import {
   dedupeAdjacentRunnerLogs,
-  isDuplicateAssistantSummaryTimelineLog,
   normalizeHydratedLog,
   runnerLogSignature,
   shouldDisplayTimelineLog,
 } from "./runner-chat/hydration/log-normalization.js";
 import {
   buildSubagentTimelineGroups,
-  buildTimelineItems,
   getTurnMetronomeWorkflowPromptLog,
   isBrowserTimelineLog,
   isComputerUseTimelineLog,
@@ -381,7 +371,6 @@ import {
 import {
   applyHydratedRunningThreadState,
   getTurnAssistantMessageText,
-  getTurnLatestProgressTimestampMs,
   isActiveTurnStatus,
   isRunningTurnStatus,
   isTurnResponseLog,
@@ -443,7 +432,6 @@ import {
   getRunnerMissionControlAgentPhotoUrl,
   renderRunnerMissionControlPreviewCard,
   renderRunnerTaskPreviewCard,
-  type RunnerMissionControlPreview,
   type RunnerTaskPreview,
 } from "./runner-chat/task-preview.js";
 import {
@@ -472,9 +460,49 @@ import {
   mapExpandedTurns,
 } from "./runner-chat/turn-expansion.js";
 import {
-  type RunnerChatMetronomeWorkflowRunPayload,
-} from "./runner-chat/metronome-workflow.js";
+  normalizeRunnerFileBrowserSource,
+  type RunnerFileBrowserSource,
+} from "./runner-chat/file-browser-source.js";
+import type {
+  RunnerChatFollowUpAction,
+  RunnerChatProps,
+  RunnerChatSchedulePreset,
+} from "./runner-chat/public-types.js";
+export type {
+  RunnerChatActionSummaryClickPayload,
+  RunnerChatAgentTurnClickPayload,
+  RunnerChatComputerAgentsConfig,
+  RunnerChatDriveConfig,
+  RunnerChatExternalFileBrowserRequest,
+  RunnerChatExternalRunRequest,
+  RunnerChatFollowUpAction,
+  RunnerChatGithubConfig,
+  RunnerChatInputMode,
+  RunnerChatNotionConfig,
+  RunnerChatProjectTaskSubmitPayload,
+  RunnerChatProjectsConfig,
+  RunnerChatProps,
+  RunnerChatScheduleConfig,
+  RunnerChatSchedulePreset,
+  RunnerChatSummaryWorkspacePathClickPayload,
+  RunnerChatWorkspaceConfig,
+} from "./runner-chat/public-types.js";
+export type {
+  RunnerFileBrowserSource,
+} from "./runner-chat/file-browser-source.js";
 import { useRunnerExternalRunRequest } from "./runner-chat/execution/external-run-request.js";
+import { useRunnerThinkingStatus } from "./runner-chat/use-thinking-status.js";
+import {
+  getRunnerTurnDurationSeconds,
+  getRunnerTurnLiveWorkSummary,
+} from "./runner-chat/turn-status-presentation.js";
+import {
+  buildRunnerOriginalActionLogIndex,
+  resolveRunnerOriginalActionLog,
+} from "./runner-chat/canonical-action-log-index.js";
+import {
+  buildRunnerTurnTimelineState,
+} from "./runner-chat/turn-timeline-state.js";
 import {
   useRunnerQueuedExecution,
   type RunnerPendingMessage,
@@ -521,7 +549,6 @@ import {
 import {
   buildRunnerImageSelectionInpaintPrompt,
   createRunnerImageSelectionMaskFile,
-  requiresAuthenticatedAttachmentPreview,
   type RunnerImagePreviewSelectionState,
 } from "./runner-chat/image-selection.js";
 import {
@@ -543,7 +570,6 @@ import {
   normalizeRunnerSkillId,
   persistEnabledSkillIds,
   type RunnerChatSkill,
-  type RunnerChatSkillDefaults,
 } from "./runner-chat/skill-configuration.js";
 export type {
   RunnerChatThreadContext,
@@ -574,61 +600,16 @@ const RUNNER_TEXT_FILE_ICON_URL = new URL("./assets/txtfile.png", import.meta.ur
 const RUNNER_IMAGE_FILE_ICON_URL = new URL("./assets/imgicon.webp", import.meta.url).toString();
 const RUNNER_EMAIL_ATTACHMENT_FILE_ICON_URL = new URL("./assets/email-attachment.webp", import.meta.url).toString();
 const RUNNER_TRANSPARENT_LOGO_URL = "https://computer-agents.com/img/logos/runnertransparent.png";
-const RUNNER_THINKING_STATUS_FADE_DURATION_MS = 120;
-const RUNNER_THINKING_STATUS_REAPPEAR_DELAY_MS = 500;
 const RUNNER_WORK_LOG_PAGE_SIZE = 10;
 // Live runs stay intentionally quiet at the conversation altitude. The header
 // carries the current semantic summary; concrete actions are mounted only when
 // the user expands the run.
 const RUNNER_LIVE_WORK_LOG_PREVIEW_COUNT = 0;
-export type RunnerFileBrowserSource = "workspace" | "google-drive" | "one-drive" | "github" | "notion";
-type RunnerThinkingStatusPhase = "visible" | "fading" | "hidden";
-
-function normalizeRunnerFileBrowserSource(source: unknown): RunnerFileBrowserSource {
-  const normalized = String(source || "").trim().toLowerCase();
-  if (normalized === "google-drive" || normalized === "google_drive" || normalized === "drive") {
-    return "google-drive";
-  }
-  if (normalized === "one-drive" || normalized === "onedrive" || normalized === "one_drive") {
-    return "one-drive";
-  }
-  if (normalized === "github") {
-    return "github";
-  }
-  if (normalized === "notion") {
-    return "notion";
-  }
-  return "workspace";
-}
 
 interface RunnerQuotedSelectionPopupState {
   selection: RunnerQuotedSelection;
   x: number;
   y: number;
-}
-
-export interface RunnerChatAgentTurnClickPayload {
-  turnId: string;
-  agentId?: string;
-  agentName?: string;
-}
-
-export interface RunnerChatSummaryWorkspacePathClickPayload {
-  path: string;
-  turnId: string;
-  threadId?: string | null;
-  environmentId?: string | null;
-  agentName?: string | null;
-  sourceType: "run_summary" | "working_log" | "deep_research_report";
-}
-
-export interface RunnerChatFollowUpAction {
-  id: string;
-  label: string;
-  disabled?: boolean;
-  pending?: boolean;
-  focusComposer?: boolean;
-  onClick?: () => Promise<void> | void;
 }
 
 interface PendingEditConfirmation {
@@ -680,14 +661,6 @@ interface PendingForkConfiguration {
 
 const COMPOSER_QUOTED_SELECTION_ANIMATION_MS = 220;
 
-export type RunnerChatInputMode = "minimal" | "computer-agents";
-
-export interface RunnerChatProjectsConfig {
-  items?: RunnerChatProjectOption[];
-  selectedProjectId?: string | null;
-  onProjectChange?: (projectId: string) => void;
-}
-
 function renderRunnerAgentOptionIcon(agent: RunnerChatOption): ReactNode {
   const providerIcon = getRunnerAgentProviderIcon(getRunnerAgentOptionProviderType(agent));
   if (!providerIcon) {
@@ -706,289 +679,6 @@ function renderRunnerAgentOptionIcon(agent: RunnerChatOption): ReactNode {
       draggable={false}
     />
   );
-}
-
-export interface RunnerChatExternalRunRequest {
-  token: string | number;
-  threadId: string;
-  prompt: string;
-  displayPrompt?: string | null;
-  reasoningEffort?: string | null;
-  agentId?: string | null;
-  agentName?: string | null;
-  attachments?: RunnerAttachment[] | null;
-  githubRepo?: {
-    repoFullName: string;
-    repoName: string;
-    branch: string;
-  } | null;
-  enabledSkills?: Record<string, unknown> | null;
-  environmentId?: string | null;
-  projectId?: string | null;
-  quotedSelection?: RunnerQuotedSelection | null;
-  slideCreationCommand?: StagedSlideCreationCommand | null;
-  researchCreationCommand?: StagedResearchCreationCommand | null;
-  scrapeCreationCommand?: StagedScrapeCreationCommand | null;
-  parseCreationCommand?: StagedParseCreationCommand | null;
-  adCreationCommand?: StagedAdCreationCommand | null;
-}
-
-export interface RunnerChatExternalFileBrowserRequest {
-  token: string | number;
-  source?: RunnerFileBrowserSource | string | null;
-}
-
-export interface RunnerChatProjectTaskSubmitPayload {
-  prompt: string;
-  taskPreview: RunnerTaskPreview;
-  attachments: RunnerAttachment[];
-  environmentId: string | null;
-  projectId?: string | null;
-  agentId: string | null;
-  agentName?: string | null;
-  reasoningEffort?: string | null;
-  githubRepo?: {
-    repoFullName: string;
-    repoName: string;
-    branch: string;
-  } | null;
-  enabledSkills?: Record<string, unknown> | null;
-  quotedSelection?: RunnerQuotedSelection | null;
-}
-
-export interface RunnerChatSchedulePreset {
-  id: string;
-  label: string;
-  cron?: string;
-}
-
-export interface RunnerChatGithubConfig {
-  connected?: boolean;
-  repositories?: RunnerChatOption[];
-  selectedRepositoryId?: string;
-  contexts?: RunnerChatOption[];
-  selectedContextId?: string;
-  contextLabel?: string;
-  onAttach?: (fileIds: string[]) => void;
-  onRepositoryChange?: (repositoryId: string) => void;
-  onContextChange?: (contextId: string) => void;
-  onConnect?: () => void;
-  onDisconnect?: () => void;
-  fetchItems?: (folderId: string) => Promise<RunnerChatFileNode[]>;
-  fetchBranches?: (repoFullName: string) => Promise<RunnerChatOption[]>;
-  fetchFileContent?: (file: RunnerChatFileNode) => Promise<RunnerChatFetchedFileContent>;
-}
-
-export interface RunnerChatNotionConfig {
-  connected?: boolean;
-  databases?: RunnerChatNotionDatabase[];
-  selectedDatabaseId?: string;
-  onDatabaseChange?: (databaseId: string) => void;
-  onConnect?: () => void;
-  onDisconnect?: () => void;
-  fetchDatabases?: () => Promise<RunnerChatNotionDatabase[]>;
-}
-
-export interface RunnerChatDriveConfig {
-  connected?: boolean;
-  items?: RunnerChatFileNode[];
-  rootLabel?: string;
-  onAttach?: (fileIds: string[]) => void;
-  onConnect?: () => void;
-  onDisconnect?: () => void;
-  fetchItems?: (folderId: string) => Promise<RunnerChatFileNode[]>;
-  fetchFileContent?: (file: RunnerChatFileNode) => Promise<RunnerChatFetchedFileContent>;
-  onManageAccess?: () => Promise<void> | void;
-}
-
-export interface RunnerChatWorkspaceConfig {
-  items?: RunnerChatFileNode[];
-  rootLabel?: string;
-  onAttach?: (fileIds: string[]) => void;
-}
-
-export interface RunnerChatScheduleConfig {
-  enabled?: boolean;
-  presets?: RunnerChatSchedulePreset[];
-  onQuickSchedule?: (schedule: {
-    scheduledTime: Date;
-    scheduleType: "one-time" | "recurring";
-    cronExpression?: string;
-  }) => void;
-  onOpenCalendarApp?: () => void;
-}
-
-export interface RunnerChatComputerAgentsConfig {
-  github?: RunnerChatGithubConfig;
-  notion?: RunnerChatNotionConfig;
-  googleDrive?: RunnerChatDriveConfig;
-  oneDrive?: RunnerChatDriveConfig;
-  workspace?: RunnerChatWorkspaceConfig;
-  schedule?: RunnerChatScheduleConfig;
-  projects?: RunnerChatProjectsConfig;
-}
-
-export interface RunnerChatProps {
-  backendUrl: string;
-  apiKey: string;
-  speechToTextUrl?: string;
-  fetchCustomSkills?: () => Promise<RunnerChatSkill[]>;
-  requestHeaders?: HeadersInit;
-  environmentId?: string;
-  projectId?: string | null;
-  agentId?: string;
-  appId?: string;
-  threadId?: string;
-  title?: string;
-  threadMetadata?: Record<string, unknown> | null;
-  /**
-   * Selects the thread renderer. `auto` promotes a thread to the canonical
-   * event timeline only when Thread v2 data exists and no rich legacy-only
-   * affordance would be hidden. Otherwise it keeps the legacy turn renderer as
-   * a deployment-safe compatibility fallback.
-   */
-  threadViewMode?: "auto" | "canonical" | "legacy";
-  placeholder?: string;
-  privateMode?: boolean;
-  initialTask?: string;
-  hiddenSystemPrompt?: string;
-  emptyState?: ReactNode;
-  emptyStateAfterComposer?: ReactNode;
-  composerLeadingControl?: ReactNode;
-  composerBeforeAgentControl?: ReactNode;
-  className?: string;
-  disabled?: boolean;
-  autoCreateThread?: boolean;
-  maxAttachments?: number;
-  implicitAttachments?: RunnerChatImplicitAttachment[];
-  showUsageInStatus?: boolean;
-  inputMode?: RunnerChatInputMode;
-  agents?: RunnerChatOption[];
-  hideAgentSelector?: boolean;
-  isAgentSelectionBlocked?: (agent: RunnerChatOption) => boolean;
-  onBlockedAgentSelect?: (agent: RunnerChatOption) => void;
-  reasoningEffort?: string | null;
-  onReasoningEffortChange?: (reasoningEffort: string) => void;
-  environments?: RunnerChatOption[];
-  hideEnvironmentSelector?: boolean;
-  skills?: RunnerChatSkill[];
-  enabledSkillIds?: string[];
-  skillDefaults?: RunnerChatSkillDefaults;
-  computerAgents?: RunnerChatComputerAgentsConfig;
-  uploadFiles?: (files: File[]) => Promise<RunnerAttachment[]>;
-  mapFileToAttachment?: (file: File) => Promise<RunnerAttachment> | RunnerAttachment;
-  onThreadIdChange?: (threadId: string) => void;
-  onThreadTitleChange?: (threadId: string, title: string) => void;
-  onThreadStatusChange?: (threadId: string, status: RunnerTurnStatus) => void;
-  onRunStart?: (threadId: string) => void;
-  onRunFinish?: (result: RunnerExecuteResult, threadId: string) => void;
-  onRunCancel?: (threadId: string) => void;
-  onRunError?: (error: Error, threadId?: string) => void;
-  onMetronomeWorkflowRun?: (payload: RunnerChatMetronomeWorkflowRunPayload) => void;
-  onAgentChange?: (agentId: string) => void;
-  onEnvironmentChange?: (environmentId: string) => void;
-  onSkillsChange?: (skillIds: string[]) => void;
-  onContextIndicatorClick?: (context: RunnerChatThreadContext | null) => void;
-  onActionSummaryClick?: (summary: RunnerChatActionSummaryClickPayload) => void;
-  onOpenChanges?: (threadId: string, runId?: string) => void;
-  onSubagentDetailOpenChange?: (isOpen: boolean) => void;
-  onDocumentPreviewOpenChange?: (isOpen: boolean) => void;
-  onDeepResearchDetailOpenChange?: (isOpen: boolean) => void;
-  threadTaskPreview?: RunnerTaskPreview | null;
-  threadMissionControlPreview?: RunnerMissionControlPreview | null;
-  composerProjectTasks?: RunnerTaskPreview[];
-  selectedComposerProjectTask?: RunnerTaskPreview | null;
-  composerPlanTierId?: string | null;
-  composerOrganizations?: RunnerChatOption[];
-  composerOrganizationId?: string | null;
-  showComposerCreateAgentAction?: boolean;
-  onComposerCreateAgentClick?: () => void;
-  onComposerOrganizationChange?: (organizationId: string) => void;
-  onComposerProjectTaskChange?: (preview: RunnerTaskPreview | null) => void;
-  onComposerProjectTaskSubmit?: (payload: RunnerChatProjectTaskSubmitPayload) => Promise<boolean | void> | boolean | void;
-  activeTaskPreviewId?: string | null;
-  onTaskPreviewClick?: (preview: RunnerTaskPreview) => void;
-  onOpenTaskList?: () => void;
-  onTaskListChange?: (threadId: string, log: RunnerLog) => void;
-  onResourcePreviewClick?: (resource: RunnerCreatedResourcePreview) => void;
-  onAgentTurnClick?: (payload: RunnerChatAgentTurnClickPayload) => void;
-  onSummaryWorkspacePathClick?: (payload: RunnerChatSummaryWorkspacePathClickPayload) => void;
-  documentPreviewPortalTarget?: Element | null;
-  documentPreviewPortalOnly?: boolean;
-  initialDocumentPreviewAttachment?: RunnerTurnAttachment | RunnerAttachment | null;
-  initialDocumentPreviewToken?: string | number | null;
-  subagentDetailPortalTarget?: Element | null;
-  disableSubagentDetailDrawer?: boolean;
-  externalRunRequest?: RunnerChatExternalRunRequest | null;
-  externalFileBrowserRequest?: RunnerChatExternalFileBrowserRequest | null;
-  onExternalRunRequestHandled?: (token: string | number) => void;
-  onExternalRunRequestCreate?: (request: RunnerChatExternalRunRequest) => boolean | void;
-  autoFocusComposer?: boolean;
-  keepFocusOnSubmit?: boolean;
-  enableBacklogSubtaskCommand?: boolean;
-  backlogTaskConnectors?: Record<string, unknown> | null;
-  backlogSubtaskCommand?: {
-    ticketNumber: string;
-    token: string | number;
-    label?: string;
-  } | null;
-  enableBacklogMissionControlCommand?: boolean;
-  backlogMissionControlCommand?: {
-    token: string | number;
-    label?: string;
-  } | null;
-  enableResourceCreationCommand?: boolean;
-  resourceCreationCommand?: {
-    type: RunnerResourceCreationCommandType;
-    token: string | number;
-    label?: string;
-  } | null;
-  resourceCreationCommandHiddenPrompt?: (commandType: RunnerResourceCreationCommandType) => string;
-  onResourceCreationCommandChange?: (commandType: RunnerResourceCreationCommandType | null) => void;
-  enableAgentCreationCommand?: boolean;
-  agentCreationCommand?: {
-    type: RunnerAgentCreationCommandType;
-    token: string | number;
-    label?: string;
-  } | null;
-  agentCreationCommandHiddenPrompt?: (commandType: RunnerAgentCreationCommandType) => string;
-  onAgentCreationCommandChange?: (commandType: RunnerAgentCreationCommandType | null) => void;
-  enableSkillCreationCommand?: boolean;
-  skillCreationCommand?: {
-    type: RunnerSkillCreationCommandType;
-    token: string | number;
-    label?: string;
-  } | null;
-  skillCreationCommandHiddenPrompt?: (commandType: RunnerSkillCreationCommandType) => string;
-  onSkillCreationCommandChange?: (commandType: RunnerSkillCreationCommandType | null) => void;
-  onOpenPluginsOverview?: () => void;
-  onOpenPlansBudget?: () => void;
-  onBacklogMissionControlSubmit?: (payload: {
-    prompt: string;
-    attachments: RunnerAttachment[];
-    environmentId: string | null;
-    projectId?: string | null;
-    agentId: string | null;
-    reasoningEffort?: string | null;
-    githubRepo?: {
-      repoFullName: string;
-      repoName: string;
-      branch: string;
-    } | null;
-    enabledSkills?: Record<string, unknown> | null;
-  }) => Promise<void> | void;
-  followUpActions?: RunnerChatFollowUpAction[];
-  followUpError?: string;
-  renderUserPromptContent?: (context: RunnerChatUserPromptRenderContext) => ReactNode | undefined;
-  renderRunSummaryJsonSegment?: (context: RunnerChatRunSummaryJsonRenderContext) => ReactNode | undefined;
-}
-
-export interface RunnerChatActionSummaryClickPayload {
-  actionType?: "compact" | "clear" | "fork" | "btw" | "revert" | "reapply" | "voice";
-  message: string;
-  revertedChangeStepId?: string | null;
-  revertedFilePath?: string | null;
-  revertedFileName?: string | null;
 }
 
 const DEFAULT_SCHEDULE_PRESETS: RunnerChatSchedulePreset[] = [
@@ -1044,12 +734,6 @@ function defaultAttachmentFromFile(file: File): RunnerAttachment {
     type: file.type.startsWith("image/") ? "image" : "document",
     uploadedAt: new Date().toISOString(),
   };
-}
-
-const LOGS_AUTO_SCROLL_BOTTOM_THRESHOLD_PX = 24;
-const LOGS_AUTO_SCROLL_SETTLE_FRAME_COUNT = 3;
-function isLogViewportPinnedToBottom(element: HTMLDivElement): boolean {
-  return element.scrollHeight - element.scrollTop - element.clientHeight <= LOGS_AUTO_SCROLL_BOTTOM_THRESHOLD_PX;
 }
 
 export function RunnerChat({
@@ -1184,9 +868,15 @@ export function RunnerChat({
   const [turns, setTurns] = useState<RunnerTurn[]>([]);
   const [deepResearchSessions, setDeepResearchSessions] = useState<RunnerDeepResearchSession[]>([]);
   const [hydratedThreadStatus, setHydratedThreadStatus] = useState<string | null>(null);
-  const [visibleTimelineItemCountsByTurn, setVisibleTimelineItemCountsByTurn] = useState<Record<string, number>>({});
-  const [visibleWorkLogItemCountsByTurn, setVisibleWorkLogItemCountsByTurn] = useState<Record<string, number>>({});
-  const [thinkingStatusPhaseByTurn, setThinkingStatusPhaseByTurn] = useState<Record<string, RunnerThinkingStatusPhase>>({});
+  const {
+    thinkingStatusPhaseByTurn,
+    visibleTimelineItemCountsByTurn,
+    visibleWorkLogItemCountsByTurn,
+    setVisibleWorkLogItemCountsByTurn,
+  } = useRunnerThinkingStatus({
+    turns,
+    getTurnTimelineState,
+  });
   const [pendingQueuedMessages, setPendingQueuedMessages] = useState<RunnerPendingMessage[]>([]);
   const [editingTurnId, setEditingTurnId] = useState<string | null>(null);
   const [editingTurnDraft, setEditingTurnDraft] = useState("");
@@ -1352,8 +1042,6 @@ export function RunnerChat({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const logsRef = useRef<HTMLDivElement | null>(null);
   const contentWidthRef = useRef<HTMLDivElement | null>(null);
-  const threadHistoryAnchorElementsRef = useRef<Record<string, HTMLDivElement | null>>({});
-  const threadHistoryMeasureFrameRef = useRef<number | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const editingTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const popupAreaRef = useRef<HTMLDivElement | null>(null);
@@ -1401,21 +1089,7 @@ export function RunnerChat({
   const workspacePreferenceAppliedRef = useRef(false);
   const lastAppliedControlledProjectIdRef = useRef<string | null>(null);
   const stopRequestedThreadIdRef = useRef<string | null>(null);
-  const visibleTimelineItemCountsRef = useRef<Record<string, number>>({});
-  const thinkingStatusPhaseByTurnRef = useRef<Record<string, RunnerThinkingStatusPhase>>({});
-  const thinkingStatusTimersRef = useRef<Record<string, { hideTimer?: number; showTimer?: number }>>({});
-  const rawTimelineItemCountsRef = useRef<Record<string, number>>({});
-  const thinkingStatusEligibilityRef = useRef<Record<string, boolean>>({});
   const [isStoppingRun, setIsStoppingRun] = useState(false);
-  const [activeThreadHistoryItemId, setActiveThreadHistoryItemId] = useState<string | null>(null);
-  const [hoveredThreadHistoryItemId, setHoveredThreadHistoryItemId] = useState<string | null>(null);
-  const [isThreadHistoryRailHovered, setIsThreadHistoryRailHovered] = useState(false);
-  const [isThreadHistoryAtMaxWidth, setIsThreadHistoryAtMaxWidth] = useState(true);
-  const shouldAutoScrollLogsRef = useRef(true);
-  const isProgrammaticLogsAutoScrollRef = useRef(false);
-  const autoScrollAnimationFrameRef = useRef<number | null>(null);
-  const previousLogsScrollHeightRef = useRef(0);
-  const autoScrollSettleFramesRef = useRef(0);
   const screenFileDragActiveRef = useRef(false);
 
   const { status, logs, execute, cancel, clear, result } = useRunnerExecution({ clearLogsOnExecute: false });
@@ -4986,9 +4660,6 @@ export function RunnerChat({
 
   useEffect(() => {
     return () => {
-      if (threadHistoryMeasureFrameRef.current !== null) {
-        window.cancelAnimationFrame(threadHistoryMeasureFrameRef.current);
-      }
       if (mainPopupAnimationTimerRef.current !== null) {
         window.clearTimeout(mainPopupAnimationTimerRef.current);
       }
@@ -5668,158 +5339,19 @@ export function RunnerChat({
   }, [schedulePresets]);
 
   useLayoutEffect(() => {
-    shouldAutoScrollLogsRef.current = true;
-    isProgrammaticLogsAutoScrollRef.current = false;
-    previousLogsScrollHeightRef.current = 0;
-    autoScrollSettleFramesRef.current = 0;
     threadHydrationCacheRef.current = null;
-    if (autoScrollAnimationFrameRef.current !== null) {
-      window.cancelAnimationFrame(autoScrollAnimationFrameRef.current);
-      autoScrollAnimationFrameRef.current = null;
-    }
   }, [currentThreadId]);
 
-  useEffect(() => {
-    const scrollElement = logsRef.current;
-    if (!scrollElement) {
-      return;
-    }
-    const resolvedScrollElement = scrollElement;
-
-    function stopProgrammaticLogsAutoScroll() {
-      shouldAutoScrollLogsRef.current = false;
-      isProgrammaticLogsAutoScrollRef.current = false;
-      autoScrollSettleFramesRef.current = 0;
-      if (autoScrollAnimationFrameRef.current !== null) {
-        window.cancelAnimationFrame(autoScrollAnimationFrameRef.current);
-        autoScrollAnimationFrameRef.current = null;
-      }
-    }
-
-    function handleLogViewportScroll() {
-      const isPinnedToBottom = isLogViewportPinnedToBottom(resolvedScrollElement);
-      if (isProgrammaticLogsAutoScrollRef.current) {
-        shouldAutoScrollLogsRef.current = true;
-        if (isPinnedToBottom) {
-          isProgrammaticLogsAutoScrollRef.current = false;
-        }
-        return;
-      }
-      shouldAutoScrollLogsRef.current = isPinnedToBottom;
-    }
-
-    function handleLogViewportUserIntent(event: WheelEvent | TouchEvent) {
-      const wheelDeltaY = "deltaY" in event ? Number(event.deltaY || 0) : 0;
-      if (wheelDeltaY < 0 || !isLogViewportPinnedToBottom(resolvedScrollElement)) {
-        stopProgrammaticLogsAutoScroll();
-      }
-    }
-
-    handleLogViewportScroll();
-    resolvedScrollElement.addEventListener("scroll", handleLogViewportScroll, { passive: true });
-    resolvedScrollElement.addEventListener("wheel", handleLogViewportUserIntent, { passive: true });
-    resolvedScrollElement.addEventListener("touchmove", handleLogViewportUserIntent, { passive: true });
-
-    return () => {
-      resolvedScrollElement.removeEventListener("scroll", handleLogViewportScroll);
-      resolvedScrollElement.removeEventListener("wheel", handleLogViewportUserIntent);
-      resolvedScrollElement.removeEventListener("touchmove", handleLogViewportUserIntent);
-    };
-  }, [currentThreadId]);
-
-  const scheduleLogsAutoScrollToBottom = useCallback((settleFrames = LOGS_AUTO_SCROLL_SETTLE_FRAME_COUNT) => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    if (autoScrollAnimationFrameRef.current !== null) {
-      window.cancelAnimationFrame(autoScrollAnimationFrameRef.current);
-    }
-    isProgrammaticLogsAutoScrollRef.current = true;
-    autoScrollSettleFramesRef.current = Math.max(settleFrames, 0);
-
-    const applyPinnedLogsAutoScroll = () => {
-      const scrollElement = logsRef.current;
-      if (!scrollElement || !shouldAutoScrollLogsRef.current) {
-        autoScrollAnimationFrameRef.current = null;
-        autoScrollSettleFramesRef.current = 0;
-        return;
-      }
-
-      const prefersReducedMotion =
-        typeof window !== "undefined"
-        && typeof window.matchMedia === "function"
-        && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      if (typeof scrollElement.scrollTo === "function") {
-        scrollElement.scrollTo({
-          top: scrollElement.scrollHeight,
-          behavior: prefersReducedMotion ? "auto" : "smooth",
-        });
-      } else {
-        scrollElement.scrollTop = scrollElement.scrollHeight;
-      }
-      previousLogsScrollHeightRef.current = scrollElement.scrollHeight;
-
-      if (autoScrollSettleFramesRef.current > 0) {
-        autoScrollSettleFramesRef.current -= 1;
-        autoScrollAnimationFrameRef.current = window.requestAnimationFrame(applyPinnedLogsAutoScroll);
-        return;
-      }
-
-      if (isLogViewportPinnedToBottom(scrollElement)) {
-        isProgrammaticLogsAutoScrollRef.current = false;
-      }
-      autoScrollAnimationFrameRef.current = null;
-    };
-
-    autoScrollAnimationFrameRef.current = window.requestAnimationFrame(applyPinnedLogsAutoScroll);
-  }, []);
-
-  useLayoutEffect(() => {
-    if (!logsRef.current) return;
-    if (hasCustomEmptyStateActive) {
-      logsRef.current.scrollTop = 0;
-      previousLogsScrollHeightRef.current = logsRef.current.scrollHeight;
-      return;
-    }
-    if (!shouldAutoScrollLogsRef.current) return;
-    const scrollElement = logsRef.current;
-    const nextScrollHeight = scrollElement.scrollHeight;
-    previousLogsScrollHeightRef.current = nextScrollHeight;
-    scheduleLogsAutoScrollToBottom();
-  }, [
-    canonicalThread.projection.latestSequence,
-    hasCustomEmptyStateActive,
-    logs,
-    scheduleLogsAutoScrollToBottom,
-    shouldUseCanonicalThreadSurface,
+  useRunnerLogAutoScroll({
+    canonicalSequence: canonicalThread.projection.latestSequence,
+    contentWidthRef,
+    executionLogs: logs,
+    hasCustomEmptyState: hasCustomEmptyStateActive,
+    logsRef,
+    threadId: currentThreadId,
     turns,
-  ]);
-
-  useLayoutEffect(() => {
-    const contentElement = contentWidthRef.current;
-    if (!contentElement || typeof ResizeObserver === "undefined" || hasCustomEmptyStateActive) {
-      return;
-    }
-    const resolvedContentElement = contentElement;
-    const resizeObserver = new ResizeObserver(() => {
-      if (!shouldAutoScrollLogsRef.current) {
-        return;
-      }
-      scheduleLogsAutoScrollToBottom();
-    });
-    resizeObserver.observe(resolvedContentElement);
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, [currentThreadId, hasCustomEmptyStateActive, scheduleLogsAutoScrollToBottom]);
-
-  useEffect(() => {
-    return () => {
-      if (autoScrollAnimationFrameRef.current !== null) {
-        window.cancelAnimationFrame(autoScrollAnimationFrameRef.current);
-      }
-    };
-  }, []);
+    usesCanonicalThreadSurface: shouldUseCanonicalThreadSurface,
+  });
 
   useEffect(() => {
     const hasRunningTurn = turns.some((turn) => isRunningTurnStatus(turn.status));
@@ -8163,281 +7695,17 @@ export function RunnerChat({
   }
 
   function getTurnDurationSeconds(turn: RunnerTurn): number {
-    const explicitDurationSeconds =
-      typeof turn.durationSeconds === "number" && Number.isFinite(turn.durationSeconds)
-        ? Math.max(0, Math.round(turn.durationSeconds))
-        : null;
-    if (explicitDurationSeconds !== null && explicitDurationSeconds > 0) {
-      return explicitDurationSeconds;
-    }
-
-    const derivedEndMs = isRunningTurnStatus(turn.status)
-      ? nowMs
-      : Math.max(
-          turn.completedAtMs ?? turn.startedAtMs,
-          getTurnLatestProgressTimestampMs(turn)
-        );
-    const derivedDurationSeconds = Math.max(0, Math.round((derivedEndMs - turn.startedAtMs) / 1000));
-    return derivedDurationSeconds > 0 ? derivedDurationSeconds : explicitDurationSeconds ?? derivedDurationSeconds;
+    return getRunnerTurnDurationSeconds(turn, nowMs);
   }
 
   function getTurnTimelineState(turn: RunnerTurn): RunnerTurnTimelineState {
-    const agentMessage = [...turn.logs]
-      .reverse()
-      .find((log) => log.eventType === "agent_message" || log.eventType === "llm_response");
-    const timelineLogs = dedupeAdjacentRunnerLogs(
-      turn.logs.filter((log) => shouldDisplayTimelineLog(log) && !isDuplicateAssistantSummaryTimelineLog(log, agentMessage))
-    );
-    const displayedTimelineLogs =
-      timelineLogs.length === 0 && isRunningTurnStatus(turn.status)
-        ? [
-            {
-              time: "00:00",
-              message: "Setting up workspace...",
-              type: "info" as const,
-              eventType: "setup" as const,
-            },
-          ]
-        : timelineLogs;
-    const displayedTimelineItems = buildTimelineItems(displayedTimelineLogs);
-    const hasDeepResearchGroup = displayedTimelineItems.some((item) => item.kind === "deep_research_group");
-    const fallbackDeepResearchCommandLog = displayedTimelineLogs.find((log) => isDeepResearchTimelineCommand(log));
-    const matchedDeepResearchSession = resolveDeepResearchSessionForGroup({
-      logs: [],
-      runningCommandLog: fallbackDeepResearchCommandLog,
+    return buildRunnerTurnTimelineState({
       turn,
-      sessions: deepResearchSessions,
-    });
-    const latestPrimaryTurn =
-      [...turns].reverse().find(
-        (candidateTurn) => candidateTurn.presentation !== "btw" && candidateTurn.presentation !== "context-action-notice"
-      ) || null;
-    const fallbackSessionForLatestTurn =
-      !matchedDeepResearchSession &&
-      latestPrimaryTurn?.id === turn.id
-        ? activeDeepResearchThreadSession
-        : null;
-    const effectiveDeepResearchSession = matchedDeepResearchSession || fallbackSessionForLatestTurn;
-    const shouldInjectSessionBackedDeepResearchGroup =
-      !hasDeepResearchGroup &&
-      Boolean(effectiveDeepResearchSession);
-
-    return {
-      agentMessage,
-      displayedTimelineItems:
-        shouldInjectSessionBackedDeepResearchGroup
-          ? [{ kind: "deep_research_group", logs: [], runningCommandLog: fallbackDeepResearchCommandLog }, ...displayedTimelineItems]
-          : displayedTimelineItems,
-    };
-  }
-
-  function getTurnLiveWorkSummary(turn: RunnerTurn): string | null {
-    const cleanSummary = (value: unknown): string | null => {
-      const normalized = typeof value === "string"
-        ? value.replace(/\s+/g, " ").replace(/^(?:status|progress|working)\s*:\s*/i, "").trim()
-        : "";
-      if (!normalized) return null;
-      const sentence = normalized.length > 132 ? `${normalized.slice(0, 129).trimEnd()}…` : normalized;
-      return sentence.charAt(0).toUpperCase() + sentence.slice(1);
-    };
-
-    for (const log of [...turn.logs].reverse()) {
-      const metadata = (log.metadata || {}) as Record<string, unknown>;
-      const explicitSummary =
-        cleanSummary(metadata.liveSummary) ||
-        cleanSummary(metadata.observerSummary) ||
-        cleanSummary(metadata.thinkingSummary) ||
-        cleanSummary((metadata.deepResearch as { thinkingSummary?: unknown } | undefined)?.thinkingSummary);
-      if (explicitSummary) return explicitSummary;
-    }
-
-    const actionSummary = [...turn.logs]
-      .reverse()
-      .find((log) => log.isActionSummary || log.eventType === "action_summary");
-    const actionSummaryText = cleanSummary(actionSummary?.message);
-    if (actionSummaryText) return actionSummaryText;
-
-    const latestUsefulLog = [...turn.logs].reverse().find((log) => {
-      if (!log.message?.trim()) return false;
-      if (log.eventType === "agent_message" || log.eventType === "llm_response" || log.eventType === "user_message") return false;
-      if (log.eventType === "permission_request") return false;
-      if (log.isReasoning && log.message.length > 180) return false;
-      return true;
-    });
-    return cleanSummary(latestUsefulLog?.message);
-  }
-
-  function clearThinkingStatusTimers(turnId: string) {
-    const timers = thinkingStatusTimersRef.current[turnId];
-    if (timers?.hideTimer) {
-      window.clearTimeout(timers.hideTimer);
-    }
-    if (timers?.showTimer) {
-      window.clearTimeout(timers.showTimer);
-    }
-    delete thinkingStatusTimersRef.current[turnId];
-  }
-
-  function setVisibleTimelineItemCount(turnId: string, nextCount: number) {
-    setVisibleTimelineItemCountsByTurn((prev) => {
-      if (prev[turnId] === nextCount) {
-        return prev;
-      }
-      const next = { ...prev, [turnId]: nextCount };
-      visibleTimelineItemCountsRef.current = next;
-      return next;
+      turns,
+      deepResearchSessions,
+      activeDeepResearchThreadSession,
     });
   }
-
-  function setThinkingStatusPhase(turnId: string, nextPhase: RunnerThinkingStatusPhase) {
-    setThinkingStatusPhaseByTurn((prev) => {
-      if (prev[turnId] === nextPhase) {
-        return prev;
-      }
-      const next = { ...prev, [turnId]: nextPhase };
-      thinkingStatusPhaseByTurnRef.current = next;
-      return next;
-    });
-  }
-
-  function removeThinkingStatusState(turnId: string) {
-    setVisibleTimelineItemCountsByTurn((prev) => {
-      if (!(turnId in prev)) {
-        return prev;
-      }
-      const next = { ...prev };
-      delete next[turnId];
-      visibleTimelineItemCountsRef.current = next;
-      return next;
-    });
-    setThinkingStatusPhaseByTurn((prev) => {
-      if (!(turnId in prev)) {
-        return prev;
-      }
-      const next = { ...prev };
-      delete next[turnId];
-      thinkingStatusPhaseByTurnRef.current = next;
-      return next;
-    });
-    delete rawTimelineItemCountsRef.current[turnId];
-    delete thinkingStatusEligibilityRef.current[turnId];
-    clearThinkingStatusTimers(turnId);
-  }
-
-  useEffect(() => {
-    visibleTimelineItemCountsRef.current = visibleTimelineItemCountsByTurn;
-  }, [visibleTimelineItemCountsByTurn]);
-
-  useEffect(() => {
-    const activeTurnIds = new Set(turns.map((turn) => turn.id));
-    setVisibleWorkLogItemCountsByTurn((previousCounts) => {
-      let didChange = false;
-      const nextCounts = { ...previousCounts };
-      for (const turnId of Object.keys(nextCounts)) {
-        if (!activeTurnIds.has(turnId)) {
-          delete nextCounts[turnId];
-          didChange = true;
-        }
-      }
-      return didChange ? nextCounts : previousCounts;
-    });
-  }, [turns]);
-
-  useEffect(() => {
-    thinkingStatusPhaseByTurnRef.current = thinkingStatusPhaseByTurn;
-  }, [thinkingStatusPhaseByTurn]);
-
-  useEffect(() => {
-    const activeTurnIds = new Set<string>();
-
-    for (const turn of turns) {
-      const { agentMessage, displayedTimelineItems } = getTurnTimelineState(turn);
-      const rawItemCount = displayedTimelineItems.length;
-      const canShowThinkingStatus = isRunningTurnStatus(turn.status) && rawItemCount > 0 && !agentMessage?.message;
-      const visibleItemCount = visibleTimelineItemCountsRef.current[turn.id];
-      const thinkingPhase = thinkingStatusPhaseByTurnRef.current[turn.id] ?? "hidden";
-
-      activeTurnIds.add(turn.id);
-      rawTimelineItemCountsRef.current[turn.id] = rawItemCount;
-      thinkingStatusEligibilityRef.current[turn.id] = canShowThinkingStatus;
-
-      if (visibleItemCount === undefined) {
-        setVisibleTimelineItemCount(turn.id, rawItemCount);
-      }
-
-      if (!canShowThinkingStatus) {
-        clearThinkingStatusTimers(turn.id);
-        setVisibleTimelineItemCount(turn.id, rawItemCount);
-        setThinkingStatusPhase(turn.id, "hidden");
-        continue;
-      }
-
-      const currentVisibleItemCount = visibleTimelineItemCountsRef.current[turn.id] ?? rawItemCount;
-
-      if (rawItemCount < currentVisibleItemCount) {
-        clearThinkingStatusTimers(turn.id);
-        setVisibleTimelineItemCount(turn.id, rawItemCount);
-        setThinkingStatusPhase(turn.id, "visible");
-        continue;
-      }
-
-      if (rawItemCount > currentVisibleItemCount) {
-        if (thinkingPhase === "visible") {
-          setThinkingStatusPhase(turn.id, "fading");
-          clearThinkingStatusTimers(turn.id);
-          const timers = thinkingStatusTimersRef.current[turn.id] || {};
-          timers.hideTimer = window.setTimeout(() => {
-            const latestVisibleItemCount = rawTimelineItemCountsRef.current[turn.id] ?? 0;
-            setVisibleTimelineItemCount(turn.id, latestVisibleItemCount);
-            setThinkingStatusPhase(turn.id, "hidden");
-
-            const nextTimers = thinkingStatusTimersRef.current[turn.id] || {};
-            if (nextTimers.showTimer) {
-              window.clearTimeout(nextTimers.showTimer);
-            }
-            nextTimers.showTimer = window.setTimeout(() => {
-              if (thinkingStatusEligibilityRef.current[turn.id]) {
-                setThinkingStatusPhase(turn.id, "visible");
-              }
-            }, RUNNER_CHAT_ENTER_ANIMATION_DURATION_MS + RUNNER_THINKING_STATUS_REAPPEAR_DELAY_MS);
-            thinkingStatusTimersRef.current[turn.id] = nextTimers;
-          }, RUNNER_THINKING_STATUS_FADE_DURATION_MS);
-          thinkingStatusTimersRef.current[turn.id] = timers;
-        } else if (thinkingPhase === "hidden") {
-          setVisibleTimelineItemCount(turn.id, rawItemCount);
-          const timers = thinkingStatusTimersRef.current[turn.id] || {};
-          if (timers.showTimer) {
-            window.clearTimeout(timers.showTimer);
-          }
-          timers.showTimer = window.setTimeout(() => {
-            if (thinkingStatusEligibilityRef.current[turn.id]) {
-              setThinkingStatusPhase(turn.id, "visible");
-            }
-          }, RUNNER_CHAT_ENTER_ANIMATION_DURATION_MS + RUNNER_THINKING_STATUS_REAPPEAR_DELAY_MS);
-          thinkingStatusTimersRef.current[turn.id] = timers;
-        }
-        continue;
-      }
-
-      if (thinkingPhase !== "fading" && thinkingPhase !== "visible") {
-        setThinkingStatusPhase(turn.id, "visible");
-      }
-    }
-
-    for (const turnId of Object.keys(rawTimelineItemCountsRef.current)) {
-      if (!activeTurnIds.has(turnId)) {
-        removeThinkingStatusState(turnId);
-      }
-    }
-  }, [turns]);
-
-  useEffect(() => {
-    return () => {
-      for (const turnId of Object.keys(thinkingStatusTimersRef.current)) {
-        clearThinkingStatusTimers(turnId);
-      }
-    };
-  }, []);
 
   function renderNestedTimelineItems(turn: RunnerTurn, items: RunnerTimelineItem[], options?: { renderBrowserSkillAsGeneric?: boolean }) {
     return items.map((nestedItem, nestedIndex) => {
@@ -8454,90 +7722,10 @@ export function RunnerChat({
     });
   }
 
-  const originalThreadActionLogIndex = useMemo(() => {
-    const byIdentity = new Map<string, { log: RunnerLog; turn: RunnerTurn; logIndex: number }>();
-    const entries: Array<{ log: RunnerLog; turn: RunnerTurn; logIndex: number }> = [];
-    const addIdentity = (value: unknown, entry: { log: RunnerLog; turn: RunnerTurn; logIndex: number }) => {
-      const normalized = String(value || "").trim();
-      if (normalized && !byIdentity.has(normalized)) byIdentity.set(normalized, entry);
-    };
-
-    turns.forEach((turn) => {
-      turn.logs.forEach((log, logIndex) => {
-        const entry = { log, turn, logIndex };
-        const metadata = (log.metadata || {}) as Record<string, unknown>;
-        entries.push(entry);
-        [
-          metadata.toolId,
-          metadata.tool_id,
-          metadata.actionId,
-          metadata.action_id,
-          metadata.logId,
-          metadata.log_id,
-          metadata.stepId,
-          metadata.step_id,
-          metadata.eventId,
-          metadata.event_id,
-        ].forEach((value) => addIdentity(value, entry));
-      });
-    });
-
-    return { byIdentity, entries };
-  }, [turns]);
-
-  function resolveOriginalThreadActionLog(action: RunnerThreadAction) {
-    const metadata = (action.metadata || {}) as Record<string, unknown>;
-    const identities = [
-      action.id,
-      action.sourceEventId,
-      metadata.toolId,
-      metadata.tool_id,
-      metadata.actionId,
-      metadata.action_id,
-      metadata.logId,
-      metadata.log_id,
-      metadata.stepId,
-      metadata.step_id,
-      metadata.eventId,
-      metadata.event_id,
-    ];
-    for (const identity of identities) {
-      const normalized = String(identity || "").trim();
-      const exact = normalized ? originalThreadActionLogIndex.byIdentity.get(normalized) : null;
-      if (exact) return exact;
-    }
-
-    const actionMessage = String(action.summary || action.title || "").replace(/\s+/g, " ").trim();
-    const actionEventType = String(metadata.legacyEventType || metadata.eventType || action.type || "").trim();
-    const actionToolName = String(action.toolName || metadata.toolName || metadata.tool_name || "").trim();
-    const actionInput = action.input && typeof action.input === "object" && !Array.isArray(action.input)
-      ? action.input as Record<string, unknown>
-      : null;
-    const actionCommand = String(metadata.command || actionInput?.command || "").trim();
-    const actionCreatedAtMs = Date.parse(action.createdAt || "");
-    let bestMatch: { entry: { log: RunnerLog; turn: RunnerTurn; logIndex: number }; score: number } | null = null;
-
-    for (const entry of originalThreadActionLogIndex.entries) {
-      const logMetadata = (entry.log.metadata || {}) as Record<string, unknown>;
-      const logMessage = String(entry.log.message || "").replace(/\s+/g, " ").trim();
-      const logToolName = String(logMetadata.toolName || logMetadata.tool_name || "").trim();
-      const logCommand = String(logMetadata.command || "").trim();
-      let score = 0;
-      if (actionMessage && logMessage === actionMessage) score += 8;
-      if (actionEventType && entry.log.eventType === actionEventType) score += 4;
-      if (actionToolName && logToolName === actionToolName) score += 5;
-      if (actionCommand && logCommand === actionCommand) score += 10;
-      const logCreatedAtMs = Date.parse(entry.log.createdAt || "");
-      if (Number.isFinite(actionCreatedAtMs) && Number.isFinite(logCreatedAtMs)) {
-        const deltaMs = Math.abs(actionCreatedAtMs - logCreatedAtMs);
-        if (deltaMs <= 1_000) score += 4;
-        else if (deltaMs <= 30_000) score += 1;
-      }
-      if (score > (bestMatch?.score || 0)) bestMatch = { entry, score };
-    }
-
-    return bestMatch && bestMatch.score >= 8 ? bestMatch.entry : null;
-  }
+  const originalThreadActionLogIndex = useMemo(
+    () => buildRunnerOriginalActionLogIndex(turns),
+    [turns],
+  );
 
   async function handlePermissionDecision(log: RunnerLog, decision: "allow" | "deny") {
     const requestId = String(log.metadata?.permissionRequestId || "").trim();
@@ -8602,7 +7790,10 @@ export function RunnerChat({
   }
 
   function renderCanonicalThreadAction(action: RunnerThreadAction) {
-    const original = resolveOriginalThreadActionLog(action);
+    const original = resolveRunnerOriginalActionLog(
+      action,
+      originalThreadActionLogIndex,
+    );
     if (original) {
       const timelineState = getTurnTimelineState(original.turn);
       const originalTimelineItemIndex = timelineState.displayedTimelineItems.findIndex((item) => {
@@ -8876,183 +8067,6 @@ export function RunnerChat({
     return <LucideLayers className={className} strokeWidth={1.75} />;
   }
 
-  function renderAttachmentPreviewChip(
-    attachment: LocalAttachment | RunnerTurnAttachment,
-    options?: { removable?: boolean; onRemove?: () => void; onPreview?: (attachment: RunnerTurnAttachment) => void }
-  ) {
-    const filename = getAttachmentDisplayName(attachment);
-    const githubBranch = isGithubAttachmentSelection(attachment) ? getGithubAttachmentRef(attachment) : "";
-    const previewUrl = getAttachmentPreviewUrl(attachment);
-    const isImage = attachment.type === "image";
-    const isGithubAttachment = isGithubAttachmentSelection(attachment);
-    const isEmailContextAttachment = isRunnerEmailContextAttachment(attachment);
-    const isUploading = attachment.uploadStatus === "uploading";
-    const isAttachmentPreviewable =
-      !isGithubAttachment && !options?.removable && !isLocalAttachmentRecord(attachment) && isAttachmentDocumentPreviewable(attachment);
-    const isDocumentPreviewable = !isImage && isAttachmentPreviewable;
-    const isImagePreviewable = isImage && isAttachmentPreviewable;
-    const isDocumentPreviewActive =
-      isAttachmentPreviewable && previewedDocumentAttachment?.id === attachment.id;
-    const imageFetchHeaders =
-      isImage && !isLocalAttachmentRecord(attachment) && requiresAuthenticatedAttachmentPreview(previewUrl, normalizedBackendUrl)
-        ? authenticatedAttachmentFetchHeaders
-        : undefined;
-    const openAttachmentPreview = () => {
-      if (isLocalAttachmentRecord(attachment) || !isAttachmentPreviewable) {
-        return;
-      }
-      if (options?.onPreview) {
-        options.onPreview(attachment);
-        return;
-      }
-      toggleDocumentAttachmentPreview(attachment);
-    };
-    const renderAttachmentFileIcon = () => {
-      if (isUploading) {
-        return <LucideLoaderCircle className="runner-attachment-file-upload-indicator tb-context-action-notice-icon-spinner" strokeWidth={1.9} />;
-      }
-      if (isGithubAttachment) {
-        return <IconGithub className="runner-attachment-file-brand-icon runner-attachment-file-brand-icon-github" />;
-      }
-      if (isEmailContextAttachment) {
-        return (
-          <img
-            src={RUNNER_EMAIL_ATTACHMENT_FILE_ICON_URL}
-            alt=""
-            aria-hidden="true"
-            draggable={false}
-            className="runner-attachment-file-icon runner-attachment-file-email-icon"
-          />
-        );
-      }
-      return (
-        <img
-          src={RUNNER_TEXT_FILE_ICON_URL}
-          alt=""
-          aria-hidden="true"
-          draggable={false}
-          className="runner-attachment-file-icon"
-        />
-      );
-    };
-
-    return (
-      <div
-        className={`runner-attachment ${isImage ? "runner-attachment-image" : "runner-attachment-file"} ${isGithubAttachment ? "runner-attachment-github" : ""} ${isUploading ? "runner-attachment-uploading" : ""} ${options?.removable ? "runner-attachment-removable" : "runner-attachment-readonly"} ${isAttachmentPreviewable ? "runner-attachment-document-previewable" : ""} ${isDocumentPreviewActive ? "runner-attachment-document-active" : ""}`.trim()}
-        key={attachment.id}
-      >
-        {isImage ? (
-          <>
-            <span className="runner-attachment-image-frame">
-              {previewUrl ? (
-                <LazyMediaPreviewMount
-                  mediaKey={`${attachment.id}:${previewUrl}`}
-                  className="runner-attachment-image-lazy-preview"
-                  placeholder={
-                    <span className="runner-attachment-image-placeholder" aria-hidden="true">
-                      <RunnerLazyMediaPreviewLoader dotSize={3} gap={2} />
-                    </span>
-                  }
-                >
-                  <RunnerImagePreviewSurface
-                    src={previewUrl}
-                    alt={filename}
-                    mimeType={isLocalAttachmentRecord(attachment) ? attachment.file.type : attachment.mimeType}
-                    className={`runner-attachment-image-button ${previewUrl && isImagePreviewable ? "is-clickable" : ""}`.trim()}
-                    imageClassName="runner-attachment-image-preview"
-                    fetchHeaders={imageFetchHeaders}
-                    loadStrategy="immediate"
-                    interactive={Boolean(previewUrl && isImagePreviewable)}
-                    onActivate={previewUrl && isImagePreviewable ? openAttachmentPreview : undefined}
-                  />
-                </LazyMediaPreviewMount>
-              ) : (
-                <span className="runner-attachment-image-placeholder" aria-hidden="true">
-                  <img src={RUNNER_IMAGE_FILE_ICON_URL} alt="" aria-hidden="true" draggable={false} />
-                </span>
-              )}
-              {isUploading ? (
-                <span className="runner-attachment-upload-indicator" aria-hidden="true">
-                  <LucideLoaderCircle className="runner-attachment-upload-indicator-icon tb-context-action-notice-icon-spinner" strokeWidth={1.9} />
-                </span>
-              ) : null}
-            </span>
-            {options?.removable && options.onRemove ? (
-              <button
-                type="button"
-                className="runner-attachment-remove runner-attachment-remove-image"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  options.onRemove?.();
-                }}
-                aria-label={`Remove ${filename}`}
-              >
-                <LucideX className="runner-attachment-remove-icon" strokeWidth={2} />
-              </button>
-            ) : null}
-          </>
-        ) : (
-          <>
-            {isDocumentPreviewable ? (
-              <button
-                type="button"
-                className="runner-attachment-file-button"
-                onClick={() => {
-                  if (options?.onPreview && !isLocalAttachmentRecord(attachment)) {
-                    options.onPreview(attachment);
-                    return;
-                  }
-                  toggleDocumentAttachmentPreview(attachment);
-                }}
-                aria-label={`Preview ${filename}`}
-              >
-                <span className="runner-attachment-file-icon-slot" aria-hidden="true">
-                  {renderAttachmentFileIcon()}
-                </span>
-                <div className="runner-attachment-file-copy">
-                  <div className="runner-attachment-file-name" title={filename}>
-                    {filename}
-                  </div>
-                  {githubBranch ? (
-                    <span className="runner-attachment-file-branch" title={githubBranch}>
-                      {githubBranch}
-                    </span>
-                  ) : null}
-                </div>
-              </button>
-            ) : (
-              <>
-                <span className="runner-attachment-file-icon-slot" aria-hidden="true">
-                  {renderAttachmentFileIcon()}
-                </span>
-                <div className="runner-attachment-file-copy">
-                  <div className="runner-attachment-file-name" title={filename}>
-                    {filename}
-                  </div>
-                  {githubBranch ? (
-                    <span className="runner-attachment-file-branch" title={githubBranch}>
-                      {githubBranch}
-                    </span>
-                  ) : null}
-                </div>
-              </>
-            )}
-            {options?.removable && options.onRemove ? (
-              <button
-                type="button"
-                className="runner-attachment-remove runner-attachment-remove-file"
-                onClick={options.onRemove}
-                aria-label={`Remove ${filename}`}
-              >
-                <LucideX className="runner-attachment-remove-icon" strokeWidth={2} />
-              </button>
-            ) : null}
-          </>
-        )}
-      </div>
-    );
-  }
-
   const effectiveStatus = isPreparingRun ? "running" : status;
   const statusToneValue = statusTone(effectiveStatus);
   const availableAgentPhotoEntries = useMemo(
@@ -9160,274 +8174,39 @@ export function RunnerChat({
       sourceType,
     });
   }, [normalizedBackendUrl, onSummaryWorkspacePathClick, summaryPreviewEnvironmentId, threadId]);
-  const threadHistoryItems = useMemo<RunnerThreadHistoryItem[]>(() => {
-    return turns.flatMap((turn, turnIndex) => {
-      const items: RunnerThreadHistoryItem[] = [];
-      const normalizedPrompt = turn.prompt.trim();
-      const isBtwTurn = turn.presentation === "btw" || normalizedPrompt.toLowerCase().startsWith("/btw");
-      const taskPreviewForTurn =
-        threadTaskPreview &&
-        !isBtwTurn &&
-        turn.presentation !== "context-action-notice" &&
-        (turn.isInitialTurn || turnIndex === 0)
-          ? threadTaskPreview
-          : null;
-      const missionControlPreviewForTurn =
-        !taskPreviewForTurn &&
-        threadMissionControlPreview &&
-        !isBtwTurn &&
-        turn.presentation !== "context-action-notice" &&
-        (turn.isInitialTurn || turnIndex === 0)
-          ? threadMissionControlPreview
-          : null;
-      const isMissionControlThreadTurn = Boolean(threadMissionControlPreview) && !isBtwTurn && turn.presentation !== "context-action-notice";
-      const hasSpecialPromptPreview = Boolean(taskPreviewForTurn || missionControlPreviewForTurn);
-      const shouldUseTaskPromptPreview = Boolean(
-        (taskPreviewForTurn?.reviewRequest === true || taskPreviewForTurn?.showPromptPreview === true) && normalizedPrompt
-      );
-      const specialPromptPreviewText = taskPreviewForTurn
-        ? `${taskPreviewForTurn.ticketNumber} ${taskPreviewForTurn.title}`
-        : (missionControlPreviewForTurn?.prompt || "Run mission control.");
-      const promptPreview = buildRunnerThreadHistoryPreviewText(
-        shouldUseTaskPromptPreview ? normalizedPrompt : (hasSpecialPromptPreview ? specialPromptPreviewText : normalizedPrompt)
-      );
-      const turnAgentLabel = isMissionControlThreadTurn
-        ? getRunnerMissionControlAgentName(threadMissionControlPreview)
-        : turn.agentName || displayedAgentLabel || "Agent";
-
-      if (promptPreview) {
-        items.push({
-          id: buildRunnerThreadHistoryItemId(turn.id, "user"),
-          turnId: turn.id,
-          role: "user",
-          label: "Me",
-          preview: promptPreview,
-        });
-      }
-
-      if (turn.presentation === "context-action-notice") {
-        const actionSummaryLog =
-          turn.logs.find((log) => log.eventType === "action_summary" && typeof log.message === "string" && log.message.trim()) || null;
-        if (actionSummaryLog?.message) {
-          items.push({
-            id: buildRunnerThreadHistoryItemId(turn.id, "assistant"),
-            turnId: turn.id,
-            role: "assistant",
-            label: turnAgentLabel,
-            preview: buildRunnerThreadHistoryPreviewText(actionSummaryLog.message),
-          });
-        }
-        return items;
-      }
-
-      const agentMessage = [...turn.logs]
-        .reverse()
-        .find((log) => (log.eventType === "agent_message" || log.eventType === "llm_response") && typeof log.message === "string" && log.message.trim());
-
-      if (agentMessage?.message) {
-        items.push({
-          id: buildRunnerThreadHistoryItemId(turn.id, "assistant"),
-          turnId: turn.id,
-          role: "assistant",
-          label: turnAgentLabel,
-          preview: buildRunnerThreadHistoryPreviewText(agentMessage.message),
-        });
-      }
-
-      return items;
-    });
-  }, [displayedAgentLabel, threadMissionControlPreview, threadTaskPreview, turns]);
-  const threadHistoryUserMessageCount = useMemo(
-    () => threadHistoryItems.reduce((count, item) => count + (item.role === "user" ? 1 : 0), 0),
-    [threadHistoryItems]
+  const threadHistoryItems = useMemo(
+    () =>
+      buildRunnerThreadHistoryItems({
+        displayedAgentLabel,
+        missionControlPreview: threadMissionControlPreview,
+        taskPreview: threadTaskPreview,
+        turns,
+      }),
+    [displayedAgentLabel, threadMissionControlPreview, threadTaskPreview, turns],
   );
-  const shouldRenderThreadHistoryRail = threadHistoryUserMessageCount > 1 && threadHistoryItems.length > 0;
-  const shouldDisplayThreadHistoryRail = !shouldUseCanonicalThreadSurface && shouldRenderThreadHistoryRail && isThreadHistoryAtMaxWidth;
-  const activeThreadHistoryIndex = threadHistoryItems.findIndex((item) => item.id === activeThreadHistoryItemId);
-  const hoveredThreadHistoryIndex = threadHistoryItems.findIndex((item) => item.id === hoveredThreadHistoryItemId);
-  const previousThreadHistoryItem =
-    activeThreadHistoryIndex > 0 ? threadHistoryItems[activeThreadHistoryIndex - 1] : null;
-  const nextThreadHistoryItem =
-    activeThreadHistoryIndex >= 0 && activeThreadHistoryIndex < threadHistoryItems.length - 1
-      ? threadHistoryItems[activeThreadHistoryIndex + 1]
-      : null;
-  const areThreadHistoryControlsVisible = isThreadHistoryRailHovered || hoveredThreadHistoryIndex >= 0;
-
-  function setThreadHistoryAnchorElement(itemId: string, element: HTMLDivElement | null) {
-    if (element) {
-      threadHistoryAnchorElementsRef.current[itemId] = element;
-      return;
-    }
-    delete threadHistoryAnchorElementsRef.current[itemId];
-  }
-
-  function updateActiveThreadHistoryItem() {
-    if (!shouldDisplayThreadHistoryRail) {
-      setActiveThreadHistoryItemId(null);
-      return;
-    }
-
-    const scrollElement = logsRef.current;
-    if (!scrollElement) {
-      return;
-    }
-    if (scrollElement.scrollTop <= 8 && threadHistoryItems[0]) {
-      setActiveThreadHistoryItemId((current) => current === threadHistoryItems[0].id ? current : threadHistoryItems[0].id);
-      return;
-    }
-
-    const scrollRect = scrollElement.getBoundingClientRect();
-    const viewportCenter = scrollRect.top + scrollRect.height / 2;
-    let nextActiveId: string | null = null;
-    let nearestDistance = Number.POSITIVE_INFINITY;
-
-    for (const item of threadHistoryItems) {
-      const anchor = threadHistoryAnchorElementsRef.current[item.id];
-      if (!anchor) {
-        continue;
-      }
-      const anchorRect = anchor.getBoundingClientRect();
-      const anchorCenter = anchorRect.top + anchorRect.height / 2;
-      const distance = Math.abs(anchorCenter - viewportCenter);
-      if (distance < nearestDistance) {
-        nearestDistance = distance;
-        nextActiveId = item.id;
-      }
-    }
-
-    if (!nextActiveId && threadHistoryItems[threadHistoryItems.length - 1]) {
-      nextActiveId = threadHistoryItems[threadHistoryItems.length - 1].id;
-    }
-
-    setActiveThreadHistoryItemId((current) => current === nextActiveId ? current : nextActiveId);
-  }
-
-  function scheduleThreadHistoryMeasurement() {
-    if (threadHistoryMeasureFrameRef.current !== null) {
-      window.cancelAnimationFrame(threadHistoryMeasureFrameRef.current);
-    }
-    threadHistoryMeasureFrameRef.current = window.requestAnimationFrame(() => {
-      threadHistoryMeasureFrameRef.current = null;
-      updateActiveThreadHistoryItem();
-    });
-  }
-
-  function scrollThreadHistoryItemIntoView(itemId: string) {
-    const scrollElement = logsRef.current;
-    const anchor = threadHistoryAnchorElementsRef.current[itemId];
-    if (!scrollElement || !anchor) {
-      return;
-    }
-
-    const scrollRect = scrollElement.getBoundingClientRect();
-    const anchorRect = anchor.getBoundingClientRect();
-    const targetCenter = anchorRect.top - scrollRect.top + scrollElement.scrollTop + anchorRect.height / 2;
-    const nextScrollTop = Math.max(
-      0,
-      Math.min(targetCenter - scrollElement.clientHeight / 2, scrollElement.scrollHeight - scrollElement.clientHeight)
-    );
-    const prefersReducedMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    scrollElement.scrollTo({
-      top: nextScrollTop,
-      behavior: prefersReducedMotion ? "auto" : "smooth",
-    });
-    setActiveThreadHistoryItemId(itemId);
-  }
-
-  function navigateThreadHistory(direction: -1 | 1) {
-    if (activeThreadHistoryIndex < 0) {
-      return;
-    }
-    const targetItem = threadHistoryItems[activeThreadHistoryIndex + direction];
-    if (!targetItem) {
-      return;
-    }
-    setHoveredThreadHistoryItemId(null);
-    scrollThreadHistoryItemIntoView(targetItem.id);
-  }
-
-  useLayoutEffect(() => {
-    if (!shouldDisplayThreadHistoryRail) {
-      return;
-    }
-    scheduleThreadHistoryMeasurement();
-  }, [expandedTurns, logs, shouldDisplayThreadHistoryRail, threadHistoryItems, turns]);
-
-  useEffect(() => {
-    if (!shouldDisplayThreadHistoryRail) {
-      setHoveredThreadHistoryItemId(null);
-      setIsThreadHistoryRailHovered(false);
-      setActiveThreadHistoryItemId(null);
-      return;
-    }
-
-    const scrollElement = logsRef.current;
-    if (!scrollElement) {
-      return;
-    }
-
-    function handleThreadHistoryViewportChange() {
-      scheduleThreadHistoryMeasurement();
-    }
-
-    scrollElement.addEventListener("scroll", handleThreadHistoryViewportChange, { passive: true });
-    const resizeObserver = typeof ResizeObserver !== "undefined"
-      ? new ResizeObserver(() => {
-          scheduleThreadHistoryMeasurement();
-        })
-      : null;
-    resizeObserver?.observe(scrollElement);
-    window.addEventListener("resize", handleThreadHistoryViewportChange);
-    scheduleThreadHistoryMeasurement();
-
-    return () => {
-      scrollElement.removeEventListener("scroll", handleThreadHistoryViewportChange);
-      resizeObserver?.disconnect();
-      window.removeEventListener("resize", handleThreadHistoryViewportChange);
-    };
-  }, [shouldDisplayThreadHistoryRail, threadHistoryItems]);
-
-  useEffect(() => {
-    if (activeThreadHistoryItemId && !threadHistoryItems.some((item) => item.id === activeThreadHistoryItemId)) {
-      setActiveThreadHistoryItemId(null);
-    }
-    if (hoveredThreadHistoryItemId && !threadHistoryItems.some((item) => item.id === hoveredThreadHistoryItemId)) {
-      setHoveredThreadHistoryItemId(null);
-    }
-  }, [activeThreadHistoryItemId, hoveredThreadHistoryItemId, threadHistoryItems]);
-
-  useLayoutEffect(() => {
-    const contentElement = contentWidthRef.current;
-    if (!contentElement) {
-      return;
-    }
-    const resolvedContentElement = contentElement;
-
-    function updateThreadHistoryWidthEligibility() {
-      const computedMaxWidth = Number.parseFloat(window.getComputedStyle(resolvedContentElement).maxWidth);
-      const actualWidth = resolvedContentElement.getBoundingClientRect().width;
-      const nextIsAtMaxWidth =
-        Number.isFinite(computedMaxWidth) && computedMaxWidth > 0
-          ? actualWidth >= computedMaxWidth - 1
-          : true;
-      setIsThreadHistoryAtMaxWidth((current) => current === nextIsAtMaxWidth ? current : nextIsAtMaxWidth);
-    }
-
-    updateThreadHistoryWidthEligibility();
-    const resizeObserver = typeof ResizeObserver !== "undefined"
-      ? new ResizeObserver(() => {
-          updateThreadHistoryWidthEligibility();
-        })
-      : null;
-    resizeObserver?.observe(resolvedContentElement);
-    window.addEventListener("resize", updateThreadHistoryWidthEligibility);
-
-    return () => {
-      resizeObserver?.disconnect();
-      window.removeEventListener("resize", updateThreadHistoryWidthEligibility);
-    };
-  }, [previewedDocumentAttachment, turns.length]);
+  const {
+    activeItemId: activeThreadHistoryItemId,
+    activeItemIndex: activeThreadHistoryIndex,
+    areControlsVisible: areThreadHistoryControlsVisible,
+    hoveredItemId: hoveredThreadHistoryItemId,
+    navigate: navigateThreadHistory,
+    nextItem: nextThreadHistoryItem,
+    previousItem: previousThreadHistoryItem,
+    scrollItemIntoView: scrollThreadHistoryItemIntoView,
+    setAnchorElement: setThreadHistoryAnchorElement,
+    setHoveredItemId: setHoveredThreadHistoryItemId,
+    setRailHovered: setIsThreadHistoryRailHovered,
+    shouldDisplay: shouldDisplayThreadHistoryRail,
+  } = useRunnerThreadHistoryRail({
+    contentWidthRef,
+    expandedTurns,
+    executionLogs: logs,
+    items: threadHistoryItems,
+    logsRef,
+    previewedDocumentAttachment,
+    surfaceEnabled: !shouldUseCanonicalThreadSurface,
+    turns,
+  });
 
   const selectedDeepResearchDetailPresentation = useMemo<RunnerSelectedDeepResearchDetailPresentation | null>(() => {
     if (!selectedDeepResearchDetail) {
@@ -11385,7 +10164,9 @@ export function RunnerChat({
               const turnAgentPhotoUrl = resolveTurnAgentPhotoUrl(turnAgentLabel);
               const turnEnvironmentLabel = turn.environmentName || displayedEnvironmentLabel || "Environment";
               const turnComputerLabel = getRunnerComputerDisplayLabel(turnEnvironmentLabel);
-              const liveWorkSummary = isTurnRunning ? getTurnLiveWorkSummary(turn) : null;
+              const liveWorkSummary = isTurnRunning
+                ? getRunnerTurnLiveWorkSummary(turn)
+                : null;
               const workLabel = isWorkLogsLoading
                 ? `${turnAgentLabel} loading working logs...`
                 : turn.status === "permission_asked"
@@ -11828,7 +10609,16 @@ export function RunnerChat({
                     >
                       {turn.attachments && turn.attachments.length > 0 ? (
                         <div className="runner-attachments runner-attachments-turn">
-                          {turn.attachments.map((attachment) => renderAttachmentPreviewChip(attachment))}
+                          {turn.attachments.map((attachment) => (
+                            <RunnerAttachmentPreviewChip
+                              key={attachment.id}
+                              activePreviewAttachmentId={previewedDocumentAttachment?.id || null}
+                              attachment={attachment}
+                              authenticatedFetchHeaders={authenticatedAttachmentFetchHeaders}
+                              backendUrl={normalizedBackendUrl}
+                              onPreview={toggleDocumentAttachmentPreview}
+                            />
+                          ))}
                         </div>
                       ) : null}
                       {turn.quotedSelection ? (
@@ -12141,12 +10931,16 @@ export function RunnerChat({
 
               {attachments.length > 0 ? (
                 <div className="runner-attachments">
-                  {attachments.map((attachment) =>
-                    renderAttachmentPreviewChip(attachment, {
-                      removable: true,
-                      onRemove: () => removeAttachment(attachment.id),
-                    })
-                  )}
+                  {attachments.map((attachment) => (
+                    <RunnerAttachmentPreviewChip
+                      key={attachment.id}
+                      attachment={attachment}
+                      authenticatedFetchHeaders={authenticatedAttachmentFetchHeaders}
+                      backendUrl={normalizedBackendUrl}
+                      removable
+                      onRemove={() => removeAttachment(attachment.id)}
+                    />
+                  ))}
                 </div>
               ) : null}
 

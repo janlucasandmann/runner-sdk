@@ -26,7 +26,10 @@ describe("quoted selection DOM projection", () => {
       root,
     );
     expect(summaryContainer?.classList.contains("tb-turn-summary")).toBe(true);
-    expect(getQuotedSelectionSourceType(summaryContainer!)).toBe("run_summary");
+    if (!summaryContainer) {
+      throw new Error("Expected a run-summary selection container.");
+    }
+    expect(getQuotedSelectionSourceType(summaryContainer)).toBe("run_summary");
   });
 
   it("rejects selection from user and composer surfaces", () => {

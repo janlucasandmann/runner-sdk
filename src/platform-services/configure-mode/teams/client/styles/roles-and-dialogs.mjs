@@ -376,7 +376,7 @@ export const TEAMS_ROLES_AND_DIALOGS_CSS = `      .playground-team-roles-panel {
         background: rgba(0, 0, 0, 0);
         -webkit-backdrop-filter: none;
         backdrop-filter: none;
-        transition: background-color 75ms linear !important;
+        transition: background-color 60ms ease-out !important;
       }
 
       .playground-team-modal-backdrop.playground-team-mission-modal-backdrop.is-visible {
@@ -402,8 +402,8 @@ export const TEAMS_ROLES_AND_DIALOGS_CSS = `      .playground-team-roles-panel {
         backdrop-filter: blur(20px) !important;
         transform-origin: center;
         opacity: 0.5;
-        transform: scale(0.5);
-        transition: opacity 75ms linear, transform 75ms linear !important;
+        transform: scale(0.75);
+        transition: opacity 60ms ease-out, transform 60ms cubic-bezier(0.16, 1, 0.3, 1) !important;
         will-change: opacity, transform;
       }
 
@@ -797,4 +797,3 @@ export const TEAMS_ROLES_AND_DIALOGS_CSS = `      .playground-team-roles-panel {
       }
 
 `;
-

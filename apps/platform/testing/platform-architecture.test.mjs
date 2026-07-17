@@ -173,22 +173,206 @@ for (const serverModulePath of serverModulePaths) {
   );
 }
 
-const runnerChatBudget = await readSourceBudget("src/react/runner-chat.tsx", 13_200);
-const runnerLogBoxesBudget = await readSourceBudget("src/react/runner-log-boxes.tsx", 4_300);
+const runnerChatBudget = await readSourceBudget("src/react/runner-chat.tsx", 12_000);
+const runnerLogBoxesBudget = await readSourceBudget(
+  "src/platform-ui/components/thread-components/log-boxes/runner-log-boxes.tsx",
+  2_800,
+);
+const runnerLogBoxesCompatibilityBudget = await readSourceBudget(
+  "src/react/runner-log-boxes.tsx",
+  12,
+);
+const documentPreviewDrawerBudget = await readSourceBudget(
+  "src/platform-ui/components/thread-components/document-preview/document-preview-drawer.tsx",
+  1_800,
+);
+const documentPreviewDrawerCompatibilityBudget = await readSourceBudget(
+  "src/react/runner-document-preview-drawer.tsx",
+  12,
+);
+assert.match(
+  runnerLogBoxesCompatibilityBudget.source,
+  /platform-ui\/components\/thread-components\/log-boxes/,
+  "The former log-box path must remain a compatibility facade only.",
+);
+assert.doesNotMatch(
+  runnerLogBoxesCompatibilityBudget.source,
+  /\bfunction\b|\bclass\b/,
+  "The former log-box path must not regain implementation details.",
+);
+assert.match(
+  documentPreviewDrawerCompatibilityBudget.source,
+  /platform-ui\/components\/thread-components\/document-preview/,
+  "The former document-preview drawer path must remain a compatibility facade only.",
+);
+assert.doesNotMatch(
+  documentPreviewDrawerCompatibilityBudget.source,
+  /\bfunction\b|\bclass\b/,
+  "The former document-preview drawer path must not regain implementation details.",
+);
 for (const relativePath of [
+  "src/react/runner-chat/attachment-preview-chip.tsx",
+  "src/react/runner-chat/canonical-action-log-index.ts",
   "src/react/runner-chat/canonical-thread-surface.tsx",
   "src/react/runner-chat/file-browser-dialog.tsx",
+  "src/react/runner-chat/file-browser-source.ts",
   "src/react/runner-chat/legacy-timeline.ts",
   "src/react/runner-chat/legacy-timeline-presentation.ts",
+  "src/react/runner-chat/public-types.ts",
+  "src/react/runner-chat/thread-history.ts",
+  "src/react/runner-chat/turn-status-presentation.ts",
+  "src/react/runner-chat/turn-timeline-state.ts",
+  "src/react/runner-chat/use-log-auto-scroll.ts",
+  "src/react/runner-chat/use-thinking-status.ts",
+  "src/react/runner-chat/use-thread-history-rail.ts",
   "src/react/runner-chat/workflow-dialogs.tsx",
-  "src/react/runner-log-boxes/log-entry-types.ts",
-  "src/react/runner-log-boxes/platform-action-view.tsx",
-  "src/react/runner-log-boxes/visual-interaction-view.tsx",
-  "src/react/runner-log-boxes/web-activity-view.tsx",
+  "src/platform-ui/components/thread-components/log-boxes/log-entry-types.ts",
+  "src/platform-ui/components/thread-components/log-boxes/list-files-state.ts",
+  "src/platform-ui/components/thread-components/log-boxes/list-files-view.tsx",
+  "src/platform-ui/components/thread-components/log-boxes/metronome-workflow-state.ts",
+  "src/platform-ui/components/thread-components/log-boxes/metronome-workflow-view.tsx",
+  "src/platform-ui/components/thread-components/log-boxes/permission-request-view.tsx",
+  "src/platform-ui/components/thread-components/log-boxes/platform-action-view.tsx",
+  "src/platform-ui/components/thread-components/log-boxes/visual-interaction-view.tsx",
+  "src/platform-ui/components/thread-components/log-boxes/web-activity-view.tsx",
+  "src/platform-ui/components/thread-components/document-preview/directory-preview.tsx",
+  "src/platform-ui/components/thread-components/document-preview/document-preview-drawer.tsx",
+  "src/platform-ui/components/thread-components/document-preview/image-preview-state.ts",
+  "src/platform-ui/components/thread-components/document-preview/pdf-preview-state.ts",
+  "src/platform-ui/components/thread-components/document-preview/pdf-preview.tsx",
+  "src/platform-ui/components/thread-components/document-preview/preview-state.ts",
+  "src/platform-ui/components/thread-components/document-preview/specialized-preview-view.tsx",
   "src/react/thread/live-supervision-dock.tsx",
   "src/react/thread/pending-permissions-dock.tsx",
 ]) {
   await fs.access(path.join(packageRoot, relativePath));
+}
+for (const extractedRunnerChatModule of [
+  "attachment-preview-chip",
+  "canonical-action-log-index",
+  "public-types",
+  "turn-status-presentation",
+  "turn-timeline-state",
+  "use-log-auto-scroll",
+  "use-thinking-status",
+  "use-thread-history-rail",
+]) {
+  assert.match(
+    runnerChatBudget.source,
+    new RegExp(`runner-chat/${extractedRunnerChatModule}\\.js`),
+    `RunnerChat must compose the extracted ${extractedRunnerChatModule} module.`,
+  );
+}
+for (const extractedLogRendererModule of [
+  "list-files-state",
+  "list-files-view",
+  "metronome-workflow-view",
+  "permission-request-view",
+]) {
+  assert.match(
+    runnerLogBoxesBudget.source,
+    new RegExp(`\\./${extractedLogRendererModule}\\.js`),
+    `The log renderer must compose the extracted ${extractedLogRendererModule} module.`,
+  );
+}
+for (const extractedDocumentPreviewModule of [
+  "directory-preview",
+  "image-preview-state",
+  "pdf-preview",
+  "preview-state",
+  "specialized-preview-view",
+]) {
+  assert.match(
+    documentPreviewDrawerBudget.source,
+    new RegExp(`\\./${extractedDocumentPreviewModule}\\.js`),
+    `The document-preview drawer must compose the extracted ${extractedDocumentPreviewModule} module.`,
+  );
+}
+for (const [relativePath, maxLines] of new Map([
+  [
+    "src/platform-ui/components/thread-components/document-preview/directory-preview.tsx",
+    550,
+  ],
+  [
+    "src/platform-ui/components/thread-components/document-preview/image-preview-state.ts",
+    180,
+  ],
+  [
+    "src/platform-ui/components/thread-components/document-preview/pdf-preview.tsx",
+    450,
+  ],
+  [
+    "src/platform-ui/components/thread-components/document-preview/pdf-preview-state.ts",
+    80,
+  ],
+  [
+    "src/platform-ui/components/thread-components/document-preview/preview-state.ts",
+    180,
+  ],
+  [
+    "src/platform-ui/components/thread-components/document-preview/specialized-preview-view.tsx",
+    250,
+  ],
+])) {
+  await readSourceBudget(relativePath, maxLines);
+}
+for (const [viewPath, stateModule] of [
+  [
+    "src/platform-ui/components/thread-components/document-preview/directory-preview.tsx",
+    "preview-state",
+  ],
+  [
+    "src/platform-ui/components/thread-components/document-preview/pdf-preview.tsx",
+    "pdf-preview-state",
+  ],
+]) {
+  const viewSource = await fs.readFile(path.join(packageRoot, viewPath), "utf8");
+  assert.match(
+    viewSource,
+    new RegExp(`\\./${stateModule}\\.js`),
+    `${viewPath} must consume its extracted state module.`,
+  );
+}
+for (const [relativePath, maxLines] of new Map([
+  [
+    "src/platform-ui/components/thread-components/log-boxes/list-files-state.ts",
+    550,
+  ],
+  [
+    "src/platform-ui/components/thread-components/log-boxes/list-files-view.tsx",
+    90,
+  ],
+  [
+    "src/platform-ui/components/thread-components/log-boxes/metronome-workflow-state.ts",
+    425,
+  ],
+  [
+    "src/platform-ui/components/thread-components/log-boxes/metronome-workflow-view.tsx",
+    325,
+  ],
+  [
+    "src/platform-ui/components/thread-components/log-boxes/permission-request-view.tsx",
+    425,
+  ],
+])) {
+  await readSourceBudget(relativePath, maxLines);
+}
+for (const [viewPath, stateModule] of [
+  [
+    "src/platform-ui/components/thread-components/log-boxes/list-files-view.tsx",
+    "list-files-state",
+  ],
+  [
+    "src/platform-ui/components/thread-components/log-boxes/metronome-workflow-view.tsx",
+    "metronome-workflow-state",
+  ],
+]) {
+  const viewSource = await fs.readFile(path.join(packageRoot, viewPath), "utf8");
+  assert.match(
+    viewSource,
+    new RegExp(`\\./${stateModule}\\.js`),
+    `${viewPath} must consume its extracted state module.`,
+  );
 }
 
 for (const modulePath of await collectSourceFiles(path.join(packageRoot, "src", "react", "runner-chat"))) {
@@ -200,7 +384,15 @@ for (const modulePath of await collectSourceFiles(path.join(packageRoot, "src", 
     `${relativePath} must consume leaf contracts instead of importing the RunnerChat composition root.`,
   );
 }
-for (const modulePath of await collectSourceFiles(path.join(packageRoot, "src", "react", "runner-log-boxes"))) {
+for (const modulePath of await collectSourceFiles(path.join(
+  packageRoot,
+  "src",
+  "platform-ui",
+  "components",
+  "thread-components",
+  "log-boxes",
+))) {
+  if (path.basename(modulePath) === "runner-log-boxes.tsx") continue;
   await readSourceBudget(path.relative(packageRoot, modulePath), 3_000);
 }
 for (const modulePath of await collectSourceFiles(path.join(packageRoot, "src", "react", "thread"))) {
@@ -212,6 +404,7 @@ for (const retiredPath of [
   "examples/served.html",
   "examples/served_inline_check.js",
   "examples/inline_check.js",
+  "src/react/runner-log-boxes",
   "apps/platform/client/legacy/domains/compute-resources/compute-resources-page.js",
   "apps/platform/client/legacy/domains/agents/agents-page.template.js",
   "apps/platform/client/legacy/domains/shell/platform-shell.template.js",
@@ -254,6 +447,7 @@ console.log(
   `Platform architecture budgets passed (${serverEntryLines} entry lines, `
   + `${runnerChatBudget.lines} RunnerChat lines, `
   + `${runnerLogBoxesBudget.lines} log-renderer lines, `
+  + `${documentPreviewDrawerBudget.lines} document-preview lines, `
   + `${assets.metrics.documentBytes}B HTML, `
   + `${assets.metrics.cssBrotliBytes}B CSS br, `
   + `${assets.metrics.moduleBrotliBytes}B JS br).`,

@@ -5,7 +5,6 @@ import {
 } from "../../ui/button/index.js";
 import {
   PlatformModal,
-  PlatformModalFooter,
   type PlatformModalCloseReason,
 } from "./platform-modal.js";
 
@@ -42,19 +41,21 @@ export function PlatformUnsavedChangesModal({
       size="small"
       className="platform-unsaved-changes-modal"
       closeButtonLabel="Close unsaved changes dialog"
-    >
-      <PlatformModalFooter>
-        <PlatformSecondaryButton size="medium" onClick={onStay}>
-          {stayLabel}
-        </PlatformSecondaryButton>
-        <PlatformPrimaryButton
-          size="medium"
-          className="is-destructive"
-          onClick={onLeave}
-        >
-          {leaveLabel}
-        </PlatformPrimaryButton>
-      </PlatformModalFooter>
-    </PlatformModal>
+      showBody={false}
+      footer={(
+        <>
+          <PlatformSecondaryButton size="medium" onClick={onStay}>
+            {stayLabel}
+          </PlatformSecondaryButton>
+          <PlatformPrimaryButton
+            size="medium"
+            className="is-destructive"
+            onClick={onLeave}
+          >
+            {leaveLabel}
+          </PlatformPrimaryButton>
+        </>
+      )}
+    />
   );
 }

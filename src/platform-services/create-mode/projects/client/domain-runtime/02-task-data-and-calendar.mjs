@@ -1550,13 +1550,13 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
           });
         }
         return React.createElement("span", {
-            className: ["playground-tasks-priority-value-icon", "playground-tasks-priority-bars-icon", className].filter(Boolean).join(" "),
+            className: ["platform-priority-bars-icon", "playground-tasks-priority-value-icon", "playground-tasks-priority-bars-icon", className].filter(Boolean).join(" "),
             "aria-hidden": "true",
           },
           [1, 2, 3].map((barLevel) =>
             React.createElement("span", {
               key: barLevel,
-              className: "playground-tasks-priority-bars-bar" + (barLevel <= presentation.level ? " is-active" : ""),
+              className: "platform-priority-bars-icon__bar playground-tasks-priority-bars-bar" + (barLevel <= presentation.level ? " is-active" : ""),
             })
           )
         );

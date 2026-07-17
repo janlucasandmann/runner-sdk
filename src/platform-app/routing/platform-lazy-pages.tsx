@@ -1,5 +1,6 @@
 import { lazy, type ComponentType, type LazyExoticComponent } from "react";
 
+// biome-ignore lint/suspicious/noExplicitAny: The concrete component props are preserved by Extract.
 type AnyComponent = ComponentType<any>;
 
 function lazyNamed<
@@ -34,6 +35,10 @@ export const AgentsOverviewPage = lazyNamed(
 export const ComputersOverviewPage = lazyNamed(
   () => import("../../platform-resources/computers/overview/computers-overview-page.js"),
   "ComputersOverviewPage",
+);
+export const ComputerDetailPage = lazyNamed(
+  () => import("../../platform-resources/computers/detail/computer-detail-page.js"),
+  "ComputerDetailPage",
 );
 export const PluginsOverviewPage = lazyNamed(
   () => import("../../platform-resources/plugins/overview/plugins-overview-page.js"),

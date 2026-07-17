@@ -41,6 +41,11 @@ assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.sidebarEntry, /label: "Guardrails"/
 assert.match(GUARDRAILS_AGENT_DOMAIN_SCRIPT, /function buildPlaygroundAgentGuardrailBundle/);
 assert.match(GUARDRAILS_AGENT_PAGE_SCRIPT, /const agentGuardrailsSection/);
 assert.match(GUARDRAILS_AGENT_PAGE_SCRIPT, /variant: "minimalistic-ui"/);
+assert.match(GUARDRAILS_AGENT_PAGE_SCRIPT, /controlsLeading: React\.createElement\(PlatformPopup/);
+assert.match(GUARDRAILS_AGENT_PAGE_SCRIPT, /React\.createElement\(PlatformSecondaryButton/);
+assert.match(GUARDRAILS_AGENT_PAGE_SCRIPT, /portal: true/);
+assert.doesNotMatch(GUARDRAILS_AGENT_PAGE_SCRIPT, /function renderAgentGuardrailImportMenu\(\)/);
+assert.doesNotMatch(GUARDRAILS_AGENT_PAGE_SCRIPT, /trailing: React\.createElement\("div"[\s\S]{0,900}Add Guardrail/);
 assert.doesNotMatch(GUARDRAILS_AGENT_PAGE_SCRIPT, /pagination\s*:/);
 assert.match(GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.versionDiffPayload, /invisiblePromptAdaptations/);
 assert.match(GUARDRAILS_STYLE_FRAGMENTS.page, /\.playground-guardrails-page/);

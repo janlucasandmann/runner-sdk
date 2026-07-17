@@ -639,12 +639,15 @@ export const EVALUATIONS_AGENT_VIEW_SCRIPT = `          const agentEvaluationEnv
                       onChange: setAgentDetailEvaluationFilterMode,
                     },
                   ],
-                  primaryAction: {
-                    label: "Run Evaluation",
-                    icon: Play,
-                    onClick: () => openAgentEvaluationRunModal(filteredAgentEvaluationRows[0]?.set?.id || agentEvaluationSets[0]?.id || ""),
-                    disabled: !agentEvaluationSets.length || typeof setEvaluationSets !== "function",
-                  },
+                  controlsLeading: React.createElement(PlatformSecondaryButton, {
+                      size: "small",
+                      type: "button",
+                      onClick: () => openAgentEvaluationRunModal(filteredAgentEvaluationRows[0]?.set?.id || agentEvaluationSets[0]?.id || ""),
+                      disabled: !agentEvaluationSets.length || typeof setEvaluationSets !== "function",
+                    },
+                    React.createElement(Play, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Run Evaluation")
+                  ),
                 },
                 emptyState: agentDetailEvaluationFilterMode === "all"
                   ? "No evaluations have been run for this agent yet."

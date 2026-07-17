@@ -263,6 +263,7 @@ export function RunnerForkThreadDialog({
             </div>
           </div>
           <div className="tb-fork-thread-environment-list">
+            {/* biome-ignore lint/a11y/useSemanticElements: This selectable row contains its own interactive environment selector. */}
             <div
               className={`tb-popup-row tb-popup-row-select tb-fork-thread-environment-row ${
                 target === "existing_environment" ? "selected" : ""
@@ -342,6 +343,7 @@ export function RunnerForkThreadDialog({
               </div>
             </div>
 
+            {/* biome-ignore lint/a11y/useSemanticElements: This selectable row contains its own interactive environment-name input. */}
             <div
               className={`tb-popup-row tb-popup-row-select tb-fork-thread-environment-row ${
                 target === "new_forked_environment" ? "selected" : ""

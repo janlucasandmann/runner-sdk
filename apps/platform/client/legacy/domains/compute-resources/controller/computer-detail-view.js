@@ -83,75 +83,54 @@
               React.createElement("div", { className: "playground-tasks-detail-fact-control" }, control)
             );
             const environmentDetailTimescaleOptions = [
-              { id: "day", label: "1D" },
-              { id: "week", label: "1W" },
-              { id: "month", label: "1M" },
+              { value: "day", label: "24H" },
+              { value: "week", label: "7D" },
+              { value: "month", label: "30D" },
             ];
-            const renderEnvironmentDetailTimescaleControl = () => React.createElement("div", {
-                className: "playground-project-overview-progress-combo-ranges",
-                role: "group",
-                "aria-label": "Computer detail chart timescale",
-              },
-              environmentDetailTimescaleOptions.map((option) =>
-                React.createElement("button", {
-                  key: option.id,
-                  type: "button",
-                  className: "playground-project-overview-progress-combo-range" + (normalizedEnvironmentDetailChartTimescale === option.id ? " is-active" : ""),
-                  onClick: () => setEnvironmentDetailChartTimescale(option.id),
-                  "aria-pressed": normalizedEnvironmentDetailChartTimescale === option.id ? "true" : "false",
-                }, option.label)
-              )
-            );
-            const renderEnvironmentDetailActivityChart = () => renderHomeStackedUsageChartShared({
-              ariaLabel: "Computer run activity",
+            const environmentDetailAnalyticsMetricColors = {
+              runs: "#7effff",
+              "success-rate": "#54e5a6",
+              runtime: "#ffffff",
+              failed: "#f53b3a",
+            };
+            const environmentDetailAnalyticsModel = {
+              title: "Analytics",
+              ariaLabel: "Computer analytics",
+              metrics: environmentDetailKpis.map((item) => ({
+                id: item.id,
+                label: item.label,
+                value: item.value,
+                color: environmentDetailAnalyticsMetricColors[item.id] || "rgba(255, 255, 255, 0.72)",
+              })),
               labels: activeEnvironmentActivityLabels,
               series: [
                 {
-                  id: "computer-runs",
+                  id: "runs",
                   label: "Runs",
-                  color: "rgb(143,196,255)",
                   values: activeEnvironmentActivityCounts,
+                  color: "#7effff",
+                  type: "line",
+                  axis: "primary",
+                  valueKind: "count",
                 },
               ],
-              emptyText: environmentAnalyticsError || "No computer activity yet",
-              emptyContent: isEnvironmentAnalyticsLoading
-                ? null
-                : React.createElement("div", { className: "playground-settings-usage-chart-empty is-tall playground-auth-users-empty-state" },
-                    React.createElement("div", { className: "playground-auth-users-empty-state-title" }, "No Computer Usage yet"),
-                    React.createElement("div", { className: "playground-auth-users-empty-state-copy" }, "Computer usage appears here once agents run work inside this computer.")
-                  ),
-              tickFormatter: (value) => String(Math.round(Number(value) || 0)),
-              isLoading: isEnvironmentAnalyticsLoading && !activeEnvironmentAnalytics,
-              showLegend: true,
-              timescaleControl: null,
-              controlsInFooter: false,
-              hideHeader: true,
+              loading: isEnvironmentAnalyticsLoading && !activeEnvironmentAnalytics,
+              error: shouldShowEnvironmentAnalytics && environmentAnalyticsError ? environmentAnalyticsError : undefined,
+              emptyState: "Computer usage appears here once agents run work inside this computer.",
+            };
+            const environmentAnalyticsSection = React.createElement(PlatformAnalyticsSection, {
+              variant: "framed",
+              className: "playground-computer-detail-analytics",
+              analytics: environmentDetailAnalyticsModel,
+              chartType: "line",
+              title: "Analytics",
+              timeframe: {
+                value: normalizedEnvironmentDetailChartTimescale,
+                options: environmentDetailTimescaleOptions,
+                onValueChange: setEnvironmentDetailChartTimescale,
+                ariaLabel: "Computer analytics time frame",
+              },
             });
-            const environmentAnalyticsSection = React.createElement("section", { className: "playground-project-overview-progress-combo-card playground-agents-detail-progress-combo-card playground-computer-detail-progress-combo-card" },
-              React.createElement("div", { className: "playground-project-overview-progress-combo-topbar" },
-                React.createElement("h2", { className: "playground-project-overview-progress-combo-title" }, "Analytics"),
-                React.createElement("div", { className: "playground-project-overview-progress-combo-actions" },
-                  renderEnvironmentDetailTimescaleControl()
-                )
-              ),
-              React.createElement("div", { className: "playground-project-overview-progress-combo-metrics" },
-                environmentDetailKpis.map((item) =>
-                  React.createElement("div", { key: item.id, className: "playground-project-overview-progress-combo-metric" },
-                    React.createElement("div", { className: "playground-project-overview-progress-combo-metric-label" },
-                      React.createElement("span", { className: "playground-project-overview-progress-combo-metric-dot is-" + item.id, "aria-hidden": "true" }),
-                      React.createElement("span", null, item.label)
-                    ),
-                    React.createElement("div", { className: "playground-project-overview-progress-combo-metric-value" }, item.value)
-                  )
-                )
-              ),
-              shouldShowEnvironmentAnalytics && environmentAnalyticsError
-                ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, environmentAnalyticsError)
-                : null,
-              React.createElement("div", { className: "playground-project-overview-progress-combo-chart playground-computer-detail-progress-combo-chart" },
-                renderEnvironmentDetailActivityChart()
-              )
-            );
             const normalizedEnvironmentRuntimeStatus = String(environmentRuntimeState.status || "idle").trim().toLowerCase();
             const environmentDesktopStatusLabel = normalizedEnvironmentRuntimeStatus === "running"
               ? "Running"
@@ -342,67 +321,22 @@
                   )
                 )
               : null;
-            const environmentDescriptionFormatActions = React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-              [
-                { id: "bold", label: "Bold", icon: Bold, strokeWidth: 2.7 },
-                { id: "italic", label: "Italic", icon: Italic },
-                { id: "underline", label: "Underline", icon: Underline },
-                { id: "list", label: "List", icon: List },
-              ].map((action) =>
-                React.createElement("button", {
-                  key: "computer-description-" + action.id,
-                  type: "button",
-                  className: "playground-tasks-detail-format-button",
-                  title: action.label,
-                  "aria-label": action.label,
-                  onMouseDown: (event) => event.preventDefault(),
-                  onClick: () => handleEnvironmentDescriptionFormat(action.id),
-                }, React.createElement(action.icon, {
-                  width: 14,
-                  height: 14,
-                  strokeWidth: action.strokeWidth || 1.8,
-                }))
-              )
-            );
-            const descriptionSection = React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section playground-computer-detail-description-section" },
-              React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
-                environmentDescriptionFormatActions
-              ),
-              React.createElement("div", {
-                  className: "playground-tasks-detail-description-editor"
-                    + (isEnvironmentDescriptionEditing ? " is-editing" : " is-preview"),
-                },
-                !isEnvironmentDescriptionEditing
-                  ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                      String(draftEnvironment.description || "").trim()
-                        ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                            content: draftEnvironment.description,
-                            className: "playground-tasks-detail-description-preview tb-message-markdown",
-                          })
-                        : React.createElement("div", {
-                            className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                          }, "Add Description here")
-                    )
-                  : null,
-                React.createElement("textarea", {
-                  ref: environmentDescriptionTextareaRef,
-                  className: "playground-tasks-detail-description-input " + (isEnvironmentDescriptionEditing ? "is-editing" : "is-preview"),
-                  rows: 1,
-                  placeholder: isEnvironmentDescriptionEditing ? "Add Description here" : "",
-                  value: draftEnvironment.description || "",
-                  onFocus: () => setIsEnvironmentDescriptionEditing(true),
-                  onChange: (event) => {
-                    updateEnvironmentField("description", event.target.value);
-                    resizeEnvironmentDescriptionTextarea(event.currentTarget);
-                  },
-                  onBlur: () => {
-                    setIsEnvironmentDescriptionEditing(false);
-                    commitDraftEnvironmentIfDirty();
-                  },
-                })
-              )
-            );
+            const descriptionSection = React.createElement(PlatformInstructionsEditor, {
+              value: draftEnvironment.description || "",
+              onChange: (value) => updateEnvironmentField("description", value),
+              title: "Description",
+              placeholder: "Add Description here",
+              ariaLabel: "Computer description",
+              readOnly: isEnvironmentDescriptionLocked,
+              stickyHeader: !isEnvironmentDescriptionLocked,
+              historyKey: draftEnvironment.id || "draft-computer",
+              className: "playground-computer-detail-description-section",
+              onEditingChange: (editing) => {
+                if (!editing) {
+                  commitDraftEnvironmentIfDirty();
+                }
+              },
+            });
   
             const runtimesSection = React.createElement("div", { className: "playground-tasks-connectors playground-environments-runtimes-section" },
               React.createElement("div", { className: "playground-tasks-connectors-list" },
@@ -1079,17 +1013,14 @@
                 ))
               )
             });
-            const renderEnvironmentControlRow = (className) =>
-              React.createElement("div", { className },
-                canShowEnvironmentDetailHeaderPublish
-                  ? renderEnvironmentPublishSplitButton()
-                  : null,
-                renderEnvironmentSidebarToggleButton()
-              );
-            const environmentDetailSidebarControls = renderEnvironmentControlRow("playground-agents-detail-sidebar-controls playground-agents-detail-top-controls-actions playground-computer-detail-sidebar-controls playground-computer-detail-top-controls-actions");
-            const environmentDetailTopControls = React.createElement("div", { className: "playground-agents-detail-top-controls playground-computer-detail-top-controls" },
-              renderEnvironmentVersionSelector(),
-              environmentDetailSidebarControls
+            const environmentDetailTabBarActions = renderEnvironmentVersionSelector();
+            const environmentDetailSidebarToggle = React.createElement("div", {
+                className: "playground-agents-detail-sidebar-controls playground-agents-detail-top-controls-actions playground-computer-detail-sidebar-controls playground-computer-detail-top-controls-actions",
+              },
+              canShowEnvironmentDetailHeaderPublish
+                ? renderEnvironmentPublishSplitButton()
+                : null,
+              renderEnvironmentSidebarToggleButton()
             );
             const environmentProfileSection = React.createElement("div", { className: "playground-agents-profile-section playground-computer-detail-profile-section" },
               React.createElement("div", { className: "playground-agents-profile-copy" },
@@ -1237,10 +1168,7 @@
                 : null
             );
             const canMutateEnvironmentRecord = Boolean(draftEnvironment.id && !draftEnvironment.isSystem && !draftEnvironment.isDefault);
-            const environmentSidebar = React.createElement("aside", {
-                className: "playground-project-overview-sidebar playground-agents-detail-sidebar playground-computer-detail-sidebar",
-                "aria-label": (draftEnvironment.name || "Computer") + " settings",
-              },
+            const environmentSidebar = React.createElement(React.Fragment, null,
               React.createElement("section", { className: "playground-project-overview-sidebar-card playground-computer-detail-properties-card" },
                 React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
                   React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Properties")
@@ -1353,38 +1281,6 @@
               });
             };
             const normalizedEnvironmentDetailTab = environmentDetailTab === "advanced" ? "advanced" : "general";
-            const environmentDetailTabs = React.createElement("div", { className: "playground-agents-overview-tabs playground-agents-detail-tabs playground-computer-detail-tabs" },
-              React.createElement("div", { className: "playground-project-overview-chart-tabs" },
-                [
-                  { id: "general", label: "General", Icon: LayoutGrid },
-                  { id: "advanced", label: "Advanced Settings", Icon: Settings2 },
-                ].map((tab) => {
-                  const TabIcon = tab.Icon;
-                  return React.createElement("button", {
-                      key: tab.id,
-                      type: "button",
-                      className: "playground-project-overview-chart-tab" + (normalizedEnvironmentDetailTab === tab.id ? " is-active" : ""),
-                      onClick: () => setEnvironmentDetailTab(tab.id),
-                      "aria-pressed": normalizedEnvironmentDetailTab === tab.id ? "true" : "false",
-                    },
-                    React.createElement(TabIcon, { className: "playground-agents-detail-tab-icon", strokeWidth: 1.8 }),
-                    tab.label
-                  );
-                }),
-                React.createElement("button", {
-                    type: "button",
-                    className: "playground-project-overview-chart-tab playground-computer-detail-filebase-tab",
-                    onClick: openEnvironmentFilebase,
-                    disabled: !draftEnvironment?.id || draftEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID || typeof onOpenFilesPage !== "function",
-                    title: "Open Filebase",
-                    "aria-label": "Open Filebase for this computer",
-                  },
-                  React.createElement(FolderOpen, { className: "playground-agents-detail-tab-icon", strokeWidth: 1.8 }),
-                  React.createElement("span", null, "Filebase"),
-                  React.createElement(ExternalLink, { width: 12, height: 12, strokeWidth: 1.8 })
-                )
-              )
-            );
             const environmentDetailGeneralSection = React.createElement(React.Fragment, null,
               environmentAnalyticsSection,
               descriptionSection
@@ -1977,15 +1873,23 @@
                 : modal;
             }
   
-            const environmentDetailWorkspaceSection = React.createElement("div", {
-                className: "playground-project-overview-layout playground-agents-detail-overview-layout playground-computer-detail-overview-layout" + (environmentSidebarCollapsed ? " is-sidebar-collapsed" : ""),
+            const environmentDetailWorkspaceSection = React.createElement(ComputerDetailPage, {
+                header: environmentProfileSection,
+                tabBarActions: environmentDetailTabBarActions,
+                sidebarToggle: environmentDetailSidebarToggle,
+                sidebar: environmentSidebar,
+                activeTab: normalizedEnvironmentDetailTab,
+                onTabChange: setEnvironmentDetailTab,
+                onOpenFilebase: openEnvironmentFilebase,
+                filebaseDisabled: !draftEnvironment?.id
+                  || draftEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID
+                  || typeof onOpenFilesPage !== "function",
+                sidebarCollapsed: environmentSidebarCollapsed,
+                sidebarPopoverOpen: environmentRuntimePopover === "compute-profile",
+                ariaLabel: "Computer details for " + (draftEnvironment.name || "Untitled"),
+                sidebarAriaLabel: (draftEnvironment.name || "Computer") + " settings",
               },
-              environmentDetailTabs,
-              environmentDetailTopControls,
-              React.createElement("div", { className: "playground-project-overview-main playground-agents-detail-overview-main playground-computer-detail-overview-main" },
-                environmentDetailActiveSection
-              ),
-              environmentSidebar
+              environmentDetailActiveSection
             );
   
             return React.createElement(React.Fragment, null,
@@ -2004,7 +1908,6 @@
                           ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, environmentGuiState.error)
                           : null,
                         environmentResourceDetailBackButton,
-                        environmentProfileSection,
                         environmentDetailWorkspaceSection
                       )
                 )

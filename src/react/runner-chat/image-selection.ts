@@ -81,8 +81,9 @@ export function createRunnerImageSelectionMaskFile(
     ctx.fillStyle = "rgba(0, 0, 0, 1)";
     ctx.fillRect(0, 0, width, height);
     ctx.globalCompositeOperation = "destination-out";
-    strokes.forEach((stroke) =>
-      drawRunnerImageSelectionMaskStroke(ctx, stroke));
+    strokes.forEach((stroke) => {
+      drawRunnerImageSelectionMaskStroke(ctx, stroke);
+    });
     canvas.toBlob((blob) => {
       if (!blob) {
         reject(new Error("Failed to create image edit mask."));
