@@ -19,8 +19,8 @@ possible for new shared behavior to drift back into compatibility files.
 `src/platform-ui` is an independent presentation layer. It may depend on
 external packages and root data contracts, but it must not import:
 
-- `src/platform-app`;
 - `src/platform-resources`;
+- `src/platform-runtime`;
 - `src/platform-services`;
 - `src/platform-shell`;
 - `src/react`.

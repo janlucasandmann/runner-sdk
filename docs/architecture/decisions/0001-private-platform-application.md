@@ -23,7 +23,7 @@ domains, not in the compatibility surface.
 
 ## Consequences
 
-- CI verifies the application, server, typed client, architecture, and emitted
+- CI verifies the application, server, typed domains, architecture, and emitted
   artifacts together.
 - Package exports are maintained only for known internal consumers.
 - Compatibility removals require an explicit migration and can reduce exports

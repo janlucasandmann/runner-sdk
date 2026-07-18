@@ -28,12 +28,15 @@ Open `http://127.0.0.1:4177`.
 - React Fast Refresh for typed frontend modules;
 - in-place HMR for RunnerChat and shared platform source CSS, without running
   the generated-asset build;
-- automatic full-page reloads when compatibility shell or backend modules
+- automatic full-page reloads when browser-composition or backend modules
   change.
 
 Ports can be overridden with `PLATFORM_API_PORT` and `PLATFORM_VITE_PORT`.
 Keep this command running while editing; normal frontend changes are visible in
 the open platform automatically.
+
+Port `4177` is the only application URL. Port `5173` is an HMR/source-module
+server; browser navigation to it redirects to the platform host.
 
 ## Production
 
@@ -53,8 +56,7 @@ Deployment files live in [`deployment/platform`](deployment/platform).
 ```text
 apps/platform/
   client/
-    src/               Typed Vite/React application
-    legacy/            Quarantined compatibility composition
+    legacy/            Current fragment-based browser composition
   server/
     admin/             Restricted operational page renderers
     gateway/           Authenticated upstream transports
@@ -69,18 +71,20 @@ tests/                 Executable integration and smoke tests
 examples/              Consumer examples and the thread UI preview
 
 src/
+  platform-runtime/    Browser runtime, API client, and React providers
   platform-services/   Create, Configure, and Develop domain services
   platform-resources/  Shared resource domains
-  platform-shell/      App shell modules
+  platform-shell/      App shell and presentation composition
   platform-ui/         Shared UI primitives, composites, and thread components
   react/               Runner composition and compatibility facades
 ```
 
-The compatibility browser sources are intentionally isolated under
-`apps/platform/client/legacy` and are served through an explicit static
-HTML/style/module contract. New application UI must be implemented as typed
-React modules under `apps/platform/client/src` or the owning domain in `src`.
-The complete ownership map and migration rules are documented in
+The platform has exactly one browser document. Its remaining fragment-based
+sources are isolated under `apps/platform/client/legacy` and served through an
+explicit HTML/style/module contract. New UI belongs in typed modules under its
+owning domain in `src`; the fragment composition is reduced in place instead of
+being replaced by a parallel application. The complete ownership map and
+migration rules are documented in
 [`docs/platform-architecture.md`](docs/platform-architecture.md).
 
 ## Verification

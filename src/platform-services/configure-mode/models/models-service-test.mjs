@@ -101,7 +101,7 @@ assert.match(platformEntrySource, /const MODELS_APP_SCRIPT_FRAGMENTS = createMod
 assert.match(platformEntrySource, /modelsService:\s*createModelsService\(/);
 assert.match(
   platformEntrySource,
-  /import \{[^}]*ModelsOverviewPage[^}]*\} from "\/dist\/platform-app\/routing\/platform-lazy-pages\.js"/,
+  /import \{[^}]*ModelsOverviewPage[^}]*\} from "\/dist\/platform-shell\/presentation\/platform-pages\.js"/,
 );
 assert.match(platformEntrySource, /modelsService\.handleRequest\(req, res, url\)/);
 assert.match(platformEntrySource, /\$\{MODELS_PAGE_CSS\}/);

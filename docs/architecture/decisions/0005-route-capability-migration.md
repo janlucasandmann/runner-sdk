@@ -1,7 +1,13 @@
 # ADR 0005: Migrate platform routes by capability behind an explicit fallback
 
-- Status: Accepted
+- Status: Superseded by ADR 0006
 - Date: 2026-07-18
+
+This ADR records the abandoned parallel-client migration. The preview runtime,
+its fallback document, and its route/session capability registry were removed
+after they produced two divergent platform experiences. Current architecture
+is defined by
+[`ADR 0006`](0006-single-platform-document.md).
 
 ## Context
 
@@ -29,10 +35,11 @@ renderer no longer receives a compatibility command fallback.
 
 During migration:
 
-- `/platform-client/...` serves the typed application;
+- `/create`, `/configure`, and `/develop` serve the typed application;
+- `/platform-client/...` permanently redirects to the corresponding canonical
+  path so saved preview URLs remain valid;
 - `/compat` serves the quarantined compatibility application;
-- `/` remains on the compatibility application until the root-cutover exit
-  criteria are satisfied.
+- `/` redirects to `/create` while preserving query parameters.
 
 Typed routes may hand an unsupported action to `/compat` with explicit route,
 action, and resource identifiers. Native routes may not receive that escape
@@ -43,10 +50,14 @@ compatibility handoff.
 Configure Home owns presentation, resource-count queries, cross-route
 navigation, pricing, and documentation links without a compatibility command
 handoff.
+The Thread route owns typed session bootstrapping, direct links, browser
+history, and new-thread URL transitions. Its internal query, detail, and
+execution capabilities remain recorded as `mixed` while `RunnerChat` is still
+the shrinking compatibility composition root.
 
 ## Root-cutover exit criteria
 
-The typed application becomes the primary entry only when:
+The typed application became the primary entry after verifying:
 
 1. the default landing route and global navigation are native;
 2. authentication redirects can return to the typed entry;
@@ -56,9 +67,11 @@ The typed application becomes the primary entry only when:
 6. production assets and development HMR serve both entries;
 7. the compatibility application can be restored without a rebuild.
 
-The cutover is a routing change, not a renderer rewrite. `/compat` remains
-available through the observation period and is removed only after route
-telemetry shows no required fallback traffic.
+The cutover is a routing change, not a flag-day renderer rewrite. `/compat`
+remains available through the observation period and is removed only after
+route telemetry shows no required fallback traffic. Compatibility handoffs
+carry route, action, and resource identifiers, and the compatibility shell
+restores the corresponding destination on load.
 
 ## Consequences
 
@@ -73,10 +86,6 @@ telemetry shows no required fallback traffic.
 
 ## Verification
 
-- `src/platform-app/routing/platform-route-capabilities.test.ts` checks route
-  coverage, presentation registration, and migration ratchets.
-- `apps/platform/server/routes/page-and-static-routes.test.mjs` preserves the
-  explicit `/compat` document route.
-- Typed route tests cover domain adapters, commands, and browser behavior.
-- Both TypeScript typechecks and `npm run platform:architecture-test` remain
-  required for capability ownership changes.
+The original route-capability tests and fallback document were retired with the
+parallel client. `apps/platform/testing/platform-architecture.test.mjs` now
+guards their absence.

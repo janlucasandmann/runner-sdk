@@ -8,8 +8,8 @@ const sourceRoot = path.join(repositoryRoot, "src");
 const platformUiRoot = path.join(sourceRoot, "platform-ui");
 const runnerRoot = path.join(sourceRoot, "react");
 const forbiddenPlatformUiRoots = [
-  path.join(sourceRoot, "platform-app"),
   path.join(sourceRoot, "platform-resources"),
+  path.join(sourceRoot, "platform-runtime"),
   path.join(sourceRoot, "platform-services"),
   path.join(sourceRoot, "platform-shell"),
 ];

@@ -46,8 +46,8 @@ document-preview-drawer
 
 The modules still consume a small set of legacy Runner preview contracts and
 renderers through the documented temporary import-boundary seam. Dependencies
-must not flow from reusable platform UI into `platform-app`,
-`platform-resources`, `platform-services`, or `platform-shell`.
+must not flow from reusable platform UI into `platform-resources`,
+`platform-runtime`, `platform-services`, or `platform-shell`.
 
 ## Verification
 

@@ -30,9 +30,9 @@ export function createPlatformBackendWatchRoots(packageRoot) {
 }
 
 /**
- * Vite owns typed client modules and source CSS. The backend only restarts for
- * server code and fragment-based compatibility sources that must be recomposed
- * in Node. This preserves Fast Refresh for ordinary React edits.
+ * Vite owns typed modules and source CSS. The backend only restarts for server
+ * code and fragment-based browser sources that must be recomposed in Node.
+ * This preserves Fast Refresh for ordinary React edits.
  */
 export function shouldReloadPlatformBackend(packageRoot, changedPath) {
   const absolutePath = path.resolve(changedPath);

@@ -16,10 +16,10 @@ const PLATFORM_DOCUMENT_TEMPLATE = readTemplate(
   "platform-shell.template.html",
 );
 const PLATFORM_STYLE_TEMPLATE = readTemplate(
-  "platform-compatibility.template.css",
+  "platform.template.css",
 );
 const PLATFORM_MODULE_TEMPLATE = readTemplate(
-  "platform-compatibility.template.js",
+  "platform.template.js",
 );
 
 function renderCompatibilityTemplate(
@@ -49,11 +49,12 @@ function renderCompatibilityTemplate(
 }
 
 /**
- * Composes the quarantined compatibility program as explicit source assets.
+ * Composes the platform browser program as explicit source assets.
  *
  * The server receives an HTML shell, stylesheet, and browser module directly;
  * it never generates a monolithic inline document or parses assets back out of
- * HTML. New platform routes belong in the typed Vite client.
+ * HTML. Extracted domain modules are imported through explicit presentation
+ * boundaries while the remaining fragments continue to be modularized.
  */
 export function createLegacyPlatformSources(bindings) {
   const templateBindings =

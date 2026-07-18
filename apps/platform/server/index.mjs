@@ -45,7 +45,6 @@ const {
 } = createPlatformConfig();
 const {
   serveDistAsset,
-  servePlatformClient,
   serveAiosPublicAsset,
   serveVendorAsset,
 } = createStaticAssetService({
@@ -101,6 +100,7 @@ const platformServices = createPlatformServices({
 const server = http.createServer(createPlatformRequestHandler({
   ...platformGateway,
   ...platformServices,
+  aiosOrigin,
   githubOauthAllowedOrigins,
   githubOauthEnvFileCandidates,
   handleGithubApiRequest,
@@ -115,7 +115,6 @@ const server = http.createServer(createPlatformRequestHandler({
   port,
   serveAiosPublicAsset,
   serveDistAsset,
-  servePlatformClient,
   serveEnvironmentGuiViewerPage,
   serveVendorAsset,
   wantsThreadEventStream,

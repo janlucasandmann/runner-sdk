@@ -125,7 +125,7 @@ assert.match(platformEntrySource, /const CONFIGURE_HOME_PAGE_SCRIPT_FRAGMENTS = 
 assert.match(platformEntrySource, /configureHomeService:\s*createConfigureHomeService\(/);
 assert.match(
   platformEntrySource,
-  /import \{[^}]*ConfigureHomeOverviewPage[^}]*\} from "\/dist\/platform-app\/routing\/platform-lazy-pages\.js"/,
+  /import \{[^}]*ConfigureHomeOverviewPage[^}]*\} from "\/dist\/platform-shell\/presentation\/platform-pages\.js"/,
 );
 assert.match(platformEntrySource, /configureHomeService\.handleRequest\(req, res, url\)/);
 assert.match(platformEntrySource, /\$\{CONFIGURE_HOME_DOMAIN_SCRIPT_FRAGMENTS\.storage\}/);

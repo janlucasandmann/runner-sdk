@@ -16,7 +16,8 @@ const vitePort = Number(process.env.PLATFORM_VITE_PORT || 5173);
 const appOrigin = String(
   process.env.PLATFORM_APP_ORIGIN || `http://localhost:${backendPort}`,
 ).replace(/\/+$/, "");
-const viteOrigin = `http://127.0.0.1:${vitePort}`;
+const appUrl = new URL(appOrigin);
+const viteOrigin = `${appUrl.protocol}//${appUrl.hostname}:${vitePort}`;
 const backendEntry = path.join(platformRoot, "server", "index.mjs");
 const viteConfig = path.join(platformRoot, "vite.config.mjs");
 
@@ -139,7 +140,7 @@ vite.watcher.on("all", (eventName, changedPath) => {
   clearTimeout(restartTimer);
   restartTimer = setTimeout(() => {
     console.log(
-      `[platform:dev] Reloading compatibility runtime after ${path.relative(packageRoot, changedPath)} changed.`,
+      `[platform:dev] Reloading platform runtime after ${path.relative(packageRoot, changedPath)} changed.`,
     );
     void restartBackend();
   }, 80);

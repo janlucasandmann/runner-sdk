@@ -1,7 +1,7 @@
 const PLATFORM_STYLE_MARKER =
-  /<link\s+data-platform-compatibility-style\s*\/>/;
+  /<link\s+data-platform-style\s*\/>/;
 const PLATFORM_MODULE_MARKER =
-  /<script\s+type="module"\s+data-platform-compatibility-module><\/script>/;
+  /<script\s+type="module"\s+data-platform-module><\/script>/;
 
 export function normalizePlatformSources(sources) {
   const documentTemplate = String(sources?.documentTemplate || "");
@@ -41,12 +41,12 @@ export function renderPlatformDocument(
     documentTemplate,
     PLATFORM_STYLE_MARKER,
     styleTag,
-    "compatibility style marker",
+    "style marker",
   );
   return replaceRequiredMarker(
     withStyle,
     PLATFORM_MODULE_MARKER,
     moduleTag,
-    "compatibility module marker",
+    "module marker",
   );
 }

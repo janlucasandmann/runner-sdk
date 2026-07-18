@@ -1,4 +1,4 @@
-import type { PlatformApiClient } from "../../../../../platform-app/runtime/platform-api-client.js";
+import type { PlatformApiClient } from "../../../../../platform-runtime/platform-api-client.js";
 import type { VoiceAgentUpdatePayload } from "../domain/voice-agent-configuration.js";
 
 export interface VoiceAgentRepository {

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import { usePlatformApiClient } from "../../../../../platform-app/runtime/platform-api-provider.js";
+import { usePlatformApiClient } from "../../../../../platform-runtime/platform-api-provider.js";
 import {
   createConfigureHomeRepository,
   type ConfigureHomeRepository,

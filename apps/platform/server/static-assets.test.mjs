@@ -26,15 +26,6 @@ const publicRoot = path.join(packageRoot, "public");
 await fs.mkdir(distRoot, { recursive: true });
 await fs.mkdir(publicRoot, { recursive: true });
 await fs.writeFile(path.join(distRoot, "module.js"), "export const ready = true;\n");
-await fs.mkdir(path.join(distRoot, "platform-client", "assets"), { recursive: true });
-await fs.writeFile(
-  path.join(distRoot, "platform-client", "index.html"),
-  "<!doctype html><div id=\"app\"></div>",
-);
-await fs.writeFile(
-  path.join(distRoot, "platform-client", "assets", "client.js"),
-  "export const platformClient = true;\n",
-);
 
 try {
   const assets = createStaticAssetService({
@@ -71,30 +62,6 @@ try {
     missingResponse,
   );
   assert.equal(missingResponse.statusCode, 404);
-
-  const clientDocumentResponse = createResponseRecorder();
-  await assets.servePlatformClient(
-    { method: "GET", url: "/platform-client/configure/computers", headers: {} },
-    clientDocumentResponse,
-    new URL("http://localhost:4177/platform-client/configure/computers"),
-  );
-  assert.equal(clientDocumentResponse.statusCode, 200);
-  assert.equal(clientDocumentResponse.headers["Content-Type"], "text/html; charset=utf-8");
-  assert.equal(clientDocumentResponse.headers["Cache-Control"], "no-store");
-  assert.match(String(clientDocumentResponse.body), /id="app"/);
-
-  const clientAssetResponse = createResponseRecorder();
-  await assets.servePlatformClient(
-    { method: "GET", url: "/platform-client/assets/client.js", headers: {} },
-    clientAssetResponse,
-    new URL("http://localhost:4177/platform-client/assets/client.js"),
-  );
-  assert.equal(clientAssetResponse.statusCode, 200);
-  assert.equal(
-    clientAssetResponse.headers["Cache-Control"],
-    "public, max-age=31536000, immutable",
-  );
-  assert.match(String(clientAssetResponse.body), /platformClient = true/);
 
   console.log("Platform static asset containment, MIME, and HEAD contracts passed.");
 } finally {

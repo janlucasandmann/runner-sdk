@@ -8,8 +8,11 @@ the deployment secret/configuration mechanism.
 ## Local defaults
 
 `npm run dev` starts the platform API at `http://localhost:4177` and Vite at
-`http://127.0.0.1:5173`. `PLATFORM_API_PORT` and `PLATFORM_VITE_PORT` override
-those ports.
+`http://localhost:5173`. The HMR origin inherits the platform hostname so
+local authentication cookies never cross from `localhost` to `127.0.0.1`.
+`PLATFORM_API_PORT` and `PLATFORM_VITE_PORT` override those ports.
+Only the API origin is an application URL. Vite serves source modules and Fast
+Refresh; HTML navigation to its port redirects to the platform application.
 
 The historical monorepo layout is still used as a compatibility fallback for
 landing-page assets and system skills. Standalone checkouts should set:

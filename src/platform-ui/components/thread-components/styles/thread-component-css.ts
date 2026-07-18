@@ -16990,4 +16990,9 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   color: #ffe717;
   background: rgba(255, 231, 23, 0.1);
 }
+
+.platform-label.is-red {
+  color: #ff8f8f;
+  background: rgba(255, 143, 143, 0.1);
+}
 `;

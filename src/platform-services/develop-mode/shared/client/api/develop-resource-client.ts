@@ -1,7 +1,7 @@
 import {
   createPlatformApiClient,
   type PlatformApiClient,
-} from "../../../../../platform-app/runtime/platform-api-client.js";
+} from "../../../../../platform-runtime/platform-api-client.js";
 
 export type DevelopMutableResourceType = "server" | "database";
 

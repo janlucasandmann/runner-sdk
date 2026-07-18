@@ -30,9 +30,7 @@ function replaceSerializedExpression(source, expression, value) {
 }
 
 /**
- * Composes the legacy application shell from domain-owned fragments. This is
- * the final compatibility boundary before those controllers become typed
- * routes and providers.
+ * Composes the platform application shell from domain-owned fragments.
  */
 export function createLegacyPlatformShellScript(bindings) {
   const {

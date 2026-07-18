@@ -13,13 +13,13 @@ const platformSources = {
   documentTemplate: `<!doctype html>
 <html>
   <head>
-    <link data-platform-compatibility-style />
+    <link data-platform-style />
     <link rel="stylesheet" href="/dist/platform-ui/components/composite/data-table/data-table.css" />
     <link rel="stylesheet" href="/dist/platform-ui/pages/styles.css" />
   </head>
   <body>
     <div id="app"></div>
-    <script type="module" data-platform-compatibility-module></script>
+    <script type="module" data-platform-module></script>
   </body>
 </html>`,
   styleSource: "body { color: white; }",
@@ -41,15 +41,15 @@ assert.match(
   assets.documentHtml,
   /window\.__vite_plugin_react_preamble_installed__ = true/,
 );
-assert.match(assets.documentHtml, /\/platform\/dev\/platform-legacy\.css/);
-assert.match(assets.documentHtml, /\/platform\/dev\/platform-legacy\.js/);
+assert.match(assets.documentHtml, /\/platform\/dev\/platform\.css/);
+assert.match(assets.documentHtml, /\/platform\/dev\/platform\.js/);
 assert.ok(
   assets.documentHtml.indexOf("/@react-refresh")
-    < assets.documentHtml.indexOf("/platform/dev/platform-legacy.js"),
+    < assets.documentHtml.indexOf("/platform/dev/platform.js"),
   "React Refresh preamble must run before the platform module.",
 );
-assert.doesNotMatch(assets.documentHtml, /data-platform-compatibility-style/);
-assert.doesNotMatch(assets.documentHtml, /data-platform-compatibility-module/);
+assert.doesNotMatch(assets.documentHtml, /data-platform-style/);
+assert.doesNotMatch(assets.documentHtml, /data-platform-module/);
 assert.doesNotMatch(assets.documentHtml, /window\.RunnerClient/);
 assert.doesNotMatch(assets.documentHtml, /\/dist\/platform-ui\/[^"]+\.css/);
 assert.match(
@@ -89,7 +89,7 @@ assert.equal(
   assets.handleRequest(
     { method: "GET" },
     moduleResponse,
-    new URL("http://localhost/platform/dev/platform-legacy.js"),
+    new URL("http://localhost/platform/dev/platform.js"),
   ),
   true,
 );
@@ -102,7 +102,7 @@ assert.equal(
   assets.handleRequest(
     { method: "HEAD" },
     headResponse,
-    new URL("http://localhost/platform/dev/platform-legacy.css"),
+    new URL("http://localhost/platform/dev/platform.css"),
   ),
   true,
 );

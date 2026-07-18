@@ -38,6 +38,14 @@ const computeControllerRoot = path.join(
 const packageJson = JSON.parse(
   await fs.readFile(path.join(packageRoot, "package.json"), "utf8"),
 );
+const pageRoutesSource = await fs.readFile(
+  path.join(platformRoot, "server", "routes", "page-and-static-routes.mjs"),
+  "utf8",
+);
+const viteConfigSource = await fs.readFile(
+  path.join(platformRoot, "vite.config.mjs"),
+  "utf8",
+);
 
 async function readSourceBudget(relativePath, maxLines) {
   const absolutePath = path.join(packageRoot, relativePath);
@@ -91,6 +99,18 @@ assert.doesNotMatch(serverEntrySource, /url\.pathname\.match/);
 assert.match(serverEntrySource, /createLegacyPlatformApplicationSources/);
 assert.match(serverEntrySource, /createPlatformGateway/);
 assert.match(serverEntrySource, /createPlatformRequestHandler/);
+assert.match(pageRoutesSource, /isRetiredPlatformDocumentPath/);
+assert.match(pageRoutesSource, /new URL\("\/", platformOrigin\)/);
+assert.match(pageRoutesSource, /url\.pathname === "\/"/);
+assert.doesNotMatch(pageRoutesSource, /servePlatformClient/);
+assert.doesNotMatch(pageRoutesSource, /platformViteOrigin/);
+assert.match(viteConfigSource, /base:\s*"\/"/);
+assert.match(viteConfigSource, /appType:\s*"custom"/);
+assert.match(viteConfigSource, /platform-hmr-only-navigation/);
+assert.doesNotMatch(viteConfigSource, /\bbuild\s*:/);
+assert.equal(packageJson.exports?.["./platform-app"], undefined);
+assert.equal(packageJson.scripts?.["platform:client:build"], undefined);
+assert.equal(packageJson.scripts?.["platform:client:typecheck"], undefined);
 
 const computeControllerEntries = await fs.readdir(
   computeControllerRoot,
@@ -179,6 +199,7 @@ for (const serverModulePath of serverModulePaths) {
 
 let boundedOwnedSourceCount = 0;
 for (const relativeRoot of [
+  "src/platform-runtime",
   "src/platform-resources",
   "src/platform-services",
   "src/platform-shell",
@@ -604,6 +625,11 @@ for (const retiredPath of [
   "apps/platform/client/legacy/domains/compute-resources/compute-resources-page.js",
   "apps/platform/client/legacy/domains/agents/agents-page.template.js",
   "apps/platform/client/legacy/domains/shell/platform-shell.template.js",
+  "apps/platform/client/index.html",
+  "apps/platform/client/src",
+  "apps/platform/client/tsconfig.json",
+  "apps/platform/server/routes/platform-client-route-contract.mjs",
+  "src/platform-app",
 ]) {
   await assert.rejects(
     fs.access(path.join(packageRoot, retiredPath)),
@@ -625,8 +651,8 @@ const platformSources = createLegacyPlatformApplicationSources({
   platformOrigin: "http://localhost:4177",
 });
 const assets = createPlatformDocumentAssets(platformSources);
-const compatibilityStyleLines = platformSources.styleSource.split("\n").length;
-const compatibilityModuleLines = platformSources.moduleSource.split("\n").length;
+const assembledStyleLines = platformSources.styleSource.split("\n").length;
+const assembledModuleLines = platformSources.moduleSource.split("\n").length;
 
 assert.ok(
   assets.metrics.documentBytes <= 10_000,
@@ -638,15 +664,15 @@ assert.ok(
 );
 assert.ok(
   assets.metrics.moduleBrotliBytes <= 1_500_000,
-  `Brotli compatibility runtime exceeded 1.5 MB (${assets.metrics.moduleBrotliBytes}).`,
+  `Brotli platform runtime exceeded 1.5 MB (${assets.metrics.moduleBrotliBytes}).`,
 );
 assert.ok(
-  compatibilityStyleLines <= 76_000,
-  `Compatibility stylesheet exceeded 76,000 assembled lines (${compatibilityStyleLines}).`,
+  assembledStyleLines <= 76_000,
+  `Platform stylesheet exceeded 76,000 assembled lines (${assembledStyleLines}).`,
 );
 assert.ok(
-  compatibilityModuleLines <= 210_000,
-  `Compatibility browser program exceeded 210,000 assembled lines (${compatibilityModuleLines}).`,
+  assembledModuleLines <= 209_000,
+  `Platform browser program exceeded 209,000 assembled lines (${assembledModuleLines}).`,
 );
 
 console.log(
@@ -655,8 +681,8 @@ console.log(
   + `${runnerLogBoxesBudget.lines} log-renderer lines, `
   + `${documentPreviewDrawerBudget.lines} document-preview lines, `
   + `${boundedOwnedSourceCount} bounded owned sources, `
-  + `${compatibilityModuleLines} compatibility JS lines, `
-  + `${compatibilityStyleLines} compatibility CSS lines, `
+  + `${assembledModuleLines} assembled JS lines, `
+  + `${assembledStyleLines} assembled CSS lines, `
   + `${assets.metrics.documentBytes}B HTML, `
   + `${assets.metrics.cssBrotliBytes}B CSS br, `
   + `${assets.metrics.moduleBrotliBytes}B JS br).`,

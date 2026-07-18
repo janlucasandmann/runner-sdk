@@ -8,12 +8,13 @@ It is both a map of the current repository and a constraint for future work.
 ```text
 Browser
   |
-  | typed Vite entry + immutable production assets
+  | one platform document on :4177
   v
-apps/platform/client/src
+apps/platform/client/legacy        current browser composition
   |
-  +--> src/platform-app            application routing and legacy boundary
+  +--> src/platform-runtime        API client, providers, error/Suspense boundary
   +--> src/platform-shell          global navigation and shell behavior
+  |     +--> presentation/         typed page registry and composition facades
   +--> src/platform-resources      shared resource domains
   +--> src/platform-services       Create / Configure / Develop services
   +--> src/platform-ui             shared UI system
@@ -35,35 +36,39 @@ The browser and server meet only through HTTP, WebSocket, and shared data
 contracts. Server modules must not compose frontend source strings, and typed
 frontend modules must not depend on server implementation details.
 
-## Application and legacy boundary
+## Single application boundary
 
-`apps/platform/client/src` is the typed application entry. Route definitions,
-lazy page loading, and application providers belong there or under
-`src/platform-app`.
+The platform deliberately has one document owner and one user-facing runtime:
 
-`apps/platform/client/legacy` is a quarantined compatibility runtime. It exists
-so that services can be migrated without a flag day. New UI behavior must not
-be added there when it can be implemented in a typed owning domain. Every
-migration should:
+- `http://localhost:4177/` is the application entry in development;
+- port `5173` serves Vite source transforms and Fast Refresh only;
+- `/create`, `/configure`, `/develop`, `/platform-client`, `/compat`, and
+  `/demo` are retired document roots that permanently redirect to `/`;
+- thread deep links use `/?thread=<thread-id>`; raw `/thread_*` links are
+  normalized to that form by the host.
+
+There is no standalone preview SPA, alternate route registry, or second session
+model. This decision and the guardrails that prevent the duplicate runtime from
+returning are recorded in
+[`ADR 0006`](architecture/decisions/0006-single-platform-document.md).
+
+The current browser program still contains fragment-based composition under
+`apps/platform/client/legacy`. That directory name describes implementation
+debt, not a second application. It is reduced in place as behavior moves into
+typed owning domains. Every extraction should:
 
 1. introduce a typed domain model and API adapter;
 2. expose a typed page or controller from the owning domain;
-3. register it in the typed route registry;
-4. remove the equivalent legacy implementation;
-5. add an invariant or budget that prevents the old ownership from returning.
+3. expose it through `src/platform-shell/presentation` when the browser
+   composition needs a stable import;
+4. remove the equivalent fragment implementation;
+5. lower an invariant or budget so the old ownership cannot return.
 
 Legacy browser fragments under `src/platform-services` are transitional domain
 assets, not a license to rebuild a central document renderer. They should be
 replaced service by service.
 
-Route migration is tracked by presentation, query, detail, and command
-ownership rather than by component presence. The typed client is available
-under `/platform-client/...`, and the compatibility application has the
-explicit fallback entry `/compat`. Root-cutover criteria and the deletion
-sequence are recorded in
-[`ADR 0005`](architecture/decisions/0005-route-capability-migration.md).
-
-The compatibility host uses an explicit HTML/style/module source contract. The
+The platform host uses an explicit HTML/style/module source contract. The
 HTML shell is a static template; production hashes and compresses the style and
 module sources directly, while development rewrites them for Vite. The server
 does not generate a document containing inline source and then parse that
@@ -179,8 +184,10 @@ port `5173`.
 - Typed React modules use Vite React Fast Refresh.
 - RunnerChat and shared source CSS update in place through the development
   asset bridge.
-- Compatibility document or backend module changes trigger a full browser
+- Browser-composition or backend module changes trigger a full browser
   reload and, when required, a watched backend restart.
+- HTML navigation on Vite's port redirects to the canonical application host;
+  Vite does not own or serve another application document.
 - Production still uses generated, content-hashed assets.
 
 The old one-shot server process does not acquire HMR retroactively. Start the
@@ -200,8 +207,10 @@ development command once and leave it running while editing.
 - ordered, bounded thread feature styles backed by the shared HMR manifest;
 - lint-clean RunnerChat leaf modules as part of the mandatory static gate;
 - production HTML and compressed asset budgets;
-- assembled compatibility JavaScript and CSS line budgets that only move
-  downward as native route capabilities replace browser fragments;
+- assembled browser JavaScript and CSS line budgets that only move downward as
+  typed domain capabilities replace browser fragments;
+- permanent absence of the retired standalone client sources, route/session
+  registry, package export, and production artifacts;
 - permanent removal of retired demo-server paths.
 
 Run it directly with:

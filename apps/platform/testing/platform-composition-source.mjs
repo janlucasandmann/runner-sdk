@@ -88,11 +88,11 @@ function createNormalizedCompatibilityBindingIndex(filePath, source) {
 }
 
 /**
- * Temporary source-level compatibility contract for the fragment-based shell.
+ * Source-level contract for the fragment-based platform composition.
  *
  * Tests should prefer direct module behavior. This reader exists only for
- * invariants that still need to inspect the quarantined legacy composition
- * while the typed application replaces it route by route.
+ * invariants that still need to inspect assembled browser fragments while
+ * those fragments are progressively extracted behind domain boundaries.
  */
 export async function readPlatformCompositionSource() {
   const paths = (

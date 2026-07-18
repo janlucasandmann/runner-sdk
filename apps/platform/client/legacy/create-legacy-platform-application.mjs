@@ -145,8 +145,8 @@ import {
 import { createLegacyPlatformSources } from "./create-legacy-platform-sources.mjs";
 
 /**
- * Assembles the quarantined fragment-based browser application. New routes
- * belong in the typed Vite client, not in this compatibility composition.
+ * Assembles the fragment-based platform browser program. Extracted domain
+ * modules are composed through explicit presentation boundaries.
  */
 export function createLegacyPlatformApplicationBindings({
   aiosOrigin,

@@ -74,7 +74,24 @@ assert.deepEqual(
   `Package exports reference missing build artifacts:\n${missingExportTargets.join("\n")}`,
 );
 
+const retiredApplicationArtifacts = distributionFiles
+  .map((file) => path.relative(distributionRoot, file))
+  .filter(
+    (file) =>
+      file === "platform-app" ||
+      file.startsWith("platform-app/") ||
+      file === "platform-client" ||
+      file.startsWith("platform-client/"),
+  );
+assert.deepEqual(
+  retiredApplicationArtifacts,
+  [],
+  `Production build contains retired application artifacts:\n${retiredApplicationArtifacts.join(
+    "\n",
+  )}`,
+);
+
 console.log(
   `Build artifacts verified: ${distributionFiles.length} files, ` +
-    `${exportTargets.size} package targets, no emitted tests.`,
+    `${exportTargets.size} package targets, no emitted tests or retired clients.`,
 );

@@ -73,42 +73,6 @@ export function createStaticAssetService({
     }
   }
 
-  async function servePlatformClient(req, res, url) {
-    const clientRoot = path.join(distRoot, "platform-client");
-    const pathname = url?.pathname
-      || new URL(req.url, `http://localhost:${port}`).pathname;
-    const relativePath = pathname.startsWith("/platform-client/")
-      ? pathname.slice("/platform-client/".length)
-      : "";
-    const requestedPath = relativePath && path.extname(relativePath)
-      ? relativePath
-      : "index.html";
-    const normalized = resolvePathInsideRoot(clientRoot, requestedPath);
-
-    if (!normalized) {
-      res.writeHead(403);
-      res.end("Forbidden");
-      return;
-    }
-
-    try {
-      const file = await fs.readFile(normalized);
-      const isDocument = requestedPath === "index.html";
-      sendFileResponse(
-        req,
-        res,
-        file,
-        getContentType(requestedPath),
-        isDocument
-          ? "no-store"
-          : "public, max-age=31536000, immutable",
-      );
-    } catch {
-      res.writeHead(404);
-      res.end("Platform client has not been built.");
-    }
-  }
-
   async function serveAiosPublicAsset(req, res, assetPath = "") {
     const pathname = assetPath || new URL(req.url, `http://localhost:${port}`).pathname;
     const contentType = getContentType(pathname);
@@ -210,7 +174,6 @@ export function createStaticAssetService({
 
   return Object.freeze({
     serveDistAsset,
-    servePlatformClient,
     serveAiosPublicAsset,
     serveVendorAsset,
   });

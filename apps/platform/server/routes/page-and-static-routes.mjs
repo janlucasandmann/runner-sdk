@@ -1,6 +1,21 @@
-/** Ordered page and static compatibility routes. */
+const RETIRED_PLATFORM_DOCUMENT_PATHS = Object.freeze([
+    "/compat",
+    "/demo",
+    "/platform-client",
+    "/create",
+    "/configure",
+    "/develop",
+]);
+
+function isRetiredPlatformDocumentPath(pathname) {
+    const normalizedPathname = String(pathname || "").replace(/\/+$/, "") || "/";
+    return RETIRED_PLATFORM_DOCUMENT_PATHS.some((routeRoot) => (normalizedPathname === routeRoot
+        || normalizedPathname.startsWith(`${routeRoot}/`)));
+}
+
+/** Ordered routes for the single platform document and its static assets. */
 export function createPageAndStaticRoutes(bindings) {
-    const { githubOauthAllowedOrigins, githubOauthEnvFileCandidates, handleFeedbackSummaryPageRequest, handleGithubApiRequest, handleProductUsageSummaryPageRequest, isGithubApiRequestPath, noVncNextRoot, platformDocumentHtml, platformOrigin, platformViteOrigin, serveAiosPublicAsset, serveDistAsset, serveEnvironmentGuiViewerPage, servePlatformClient, serveVendorAsset, xlsxRoot, } = bindings;
+    const { githubOauthAllowedOrigins, githubOauthEnvFileCandidates, handleFeedbackSummaryPageRequest, handleGithubApiRequest, handleProductUsageSummaryPageRequest, isGithubApiRequestPath, noVncNextRoot, platformDocumentHtml, platformOrigin, serveAiosPublicAsset, serveDistAsset, serveEnvironmentGuiViewerPage, serveVendorAsset, xlsxRoot, } = bindings;
     return function handlePageAndStaticRoutes(req, res, url) {
         const rawThreadPathMatch = url.pathname.match(/^\/(thread[_-][A-Za-z0-9_-]+)\/?$/);
         if ((req.method === "GET" || req.method === "HEAD") && rawThreadPathMatch) {
@@ -27,11 +42,15 @@ export function createPageAndStaticRoutes(bindings) {
             return true;
         }
         if ((req.method === "GET" || req.method === "HEAD")
+            && isRetiredPlatformDocumentPath(url.pathname)) {
+            const target = new URL("/", platformOrigin);
+            target.search = url.search;
+            res.writeHead(308, { Location: target.toString() });
+            res.end();
+            return true;
+        }
+        if ((req.method === "GET" || req.method === "HEAD")
             && (url.pathname === "/"
-                || url.pathname === "/demo"
-                || url.pathname === "/demo/"
-                || url.pathname === "/compat"
-                || url.pathname === "/compat/"
                 || url.pathname === "/login"
                 || url.pathname === "/signup"
                 || url.pathname === "/logout")) {
@@ -68,24 +87,6 @@ export function createPageAndStaticRoutes(bindings) {
         }
         if ((req.method === "GET" || req.method === "HEAD") && url.pathname.startsWith("/dist/")) {
             void serveDistAsset(req, res);
-            return true;
-        }
-        if ((req.method === "GET" || req.method === "HEAD")
-            && (url.pathname === "/platform-client"
-                || url.pathname.startsWith("/platform-client/"))) {
-            if (platformViteOrigin) {
-                const target = new URL(
-                    url.pathname === "/platform-client"
-                        ? "/platform-client/"
-                        : url.pathname,
-                    platformViteOrigin,
-                );
-                target.search = url.search;
-                res.writeHead(307, { Location: target.toString() });
-                res.end();
-                return true;
-            }
-            void servePlatformClient(req, res, url);
             return true;
         }
         if ((req.method === "GET" || req.method === "HEAD") && url.pathname.startsWith("/img/")) {

@@ -45,9 +45,9 @@ function createDevelopmentRuntimeScripts(viteOrigin) {
 }
 
 /**
- * Serves the compatibility runtime without an SDK build while rewriting its
- * compiled /dist imports to Vite-served source modules. Typed frontend modules
- * therefore receive Fast Refresh even before the legacy shell is fully retired.
+ * Serves the platform runtime without a production build while rewriting its
+ * compiled /dist imports to Vite-served source modules. Extracted React modules
+ * therefore receive Fast Refresh inside the canonical platform document.
  */
 export async function createPlatformDevelopmentAssets(
   sources,
@@ -74,8 +74,8 @@ export async function createPlatformDevelopmentAssets(
         : match;
     },
   );
-  const cssUrl = "/platform/dev/platform-legacy.css";
-  const moduleUrl = "/platform/dev/platform-legacy.js";
+  const cssUrl = "/platform/dev/platform.css";
+  const moduleUrl = "/platform/dev/platform.js";
   const assetsByPath = new Map([
     [cssUrl, {
       contentType: "text/css; charset=utf-8",

@@ -8,9 +8,11 @@ import { resolveLegacyBrowserSourcePath } from "./shared/legacy-source-resolutio
 
 const platformRoot = path.dirname(fileURLToPath(import.meta.url));
 const packageRoot = path.resolve(platformRoot, "../..");
-const clientRoot = path.join(platformRoot, "client");
 const backendPort = Number(process.env.PLATFORM_API_PORT || process.env.PORT || 4177);
 const vitePort = Number(process.env.PLATFORM_VITE_PORT || 5173);
+const platformAppOrigin = String(
+  process.env.PLATFORM_APP_ORIGIN || `http://localhost:${backendPort}`,
+).replace(/\/+$/, "");
 const remoteBrowserImports = Object.freeze({
   react: "https://esm.sh/react@18.3.1",
   "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
@@ -38,13 +40,41 @@ const remoteBrowserImports = Object.freeze({
   jszip: "https://esm.sh/jszip@3.10.1?bundle",
   xlsx: `http://127.0.0.1:${backendPort}/vendor/xlsx/xlsx.mjs`,
 });
-
-function platformLegacySourceResolver() {
+function platformSourceResolver() {
   return {
-    name: "platform-legacy-source-resolver",
+    name: "platform-source-resolver",
     enforce: "pre",
     resolveId(id) {
       return resolveLegacyBrowserSourcePath(packageRoot, id);
+    },
+  };
+}
+
+function platformHmrOnlyNavigation() {
+  return {
+    name: "platform-hmr-only-navigation",
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const method = String(req.method || "GET").toUpperCase();
+        const acceptsHtml = String(req.headers.accept || "").includes("text/html");
+        if (!["GET", "HEAD"].includes(method) || !acceptsHtml) {
+          next();
+          return;
+        }
+        const requestUrl = new URL(req.url || "/", platformAppOrigin);
+        const target = new URL("/", platformAppOrigin);
+        target.search = requestUrl.search;
+        const threadPathMatch = requestUrl.pathname.match(
+          /^\/(thread[_-][A-Za-z0-9_-]+)\/?$/,
+        );
+        if (threadPathMatch && !target.searchParams.has("thread")) {
+          target.searchParams.set("thread", threadPathMatch[1]);
+        }
+        res.statusCode = 307;
+        res.setHeader("Location", target.toString());
+        res.setHeader("Cache-Control", "no-store");
+        res.end();
+      });
     },
   };
 }
@@ -60,20 +90,18 @@ function platformRemoteBrowserImports() {
   };
 }
 
-export default defineConfig(({ command }) => ({
-  root: clientRoot,
-  // The compatibility document loads Vite-native /@vite and /@fs URLs
-  // directly from the development origin. The production client remains
-  // mounted below /platform-client/.
-  base: command === "serve" ? "/" : "/platform-client/",
-  appType: "spa",
+export default defineConfig(() => ({
+  root: packageRoot,
+  // Vite serves source modules and Fast Refresh only. The platform document
+  // itself has exactly one owner: the application server on port 4177.
+  base: "/",
+  appType: "custom",
   plugins: [
+    platformHmrOnlyNavigation(),
     platformRemoteBrowserImports(),
-    platformLegacySourceResolver(),
+    platformSourceResolver(),
     createRunnerChatCssHmrPlugin({ packageRoot }),
-    react({
-      exclude: [/\.platform-dev\/platform-legacy\.js$/],
-    }),
+    react(),
   ],
   server: {
     host: "127.0.0.1",
@@ -83,7 +111,6 @@ export default defineConfig(({ command }) => ({
     fs: {
       allow: [
         packageRoot,
-        path.join(packageRoot, ".platform-dev"),
       ],
     },
     hmr: {
@@ -95,11 +122,5 @@ export default defineConfig(({ command }) => ({
       "/img": `http://127.0.0.1:${backendPort}`,
       "/vendor": `http://127.0.0.1:${backendPort}`,
     },
-  },
-  build: {
-    outDir: path.join(packageRoot, "dist", "platform-client"),
-    emptyOutDir: true,
-    manifest: true,
-    sourcemap: true,
   },
 }));

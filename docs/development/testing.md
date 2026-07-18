@@ -4,11 +4,11 @@
 
 `npm run check` is the local equivalent of CI. It runs, in order:
 
-1. both TypeScript typechecks, the ratcheted Biome lint scope, and formatting
+1. TypeScript typechecking, the ratcheted Biome lint scope, and formatting
    checks;
 2. all Vitest unit/component tests;
 3. all discovered Node contract and service tests;
-4. the production library build and Vite client build;
+4. the production library build;
 5. architecture budgets and production-artifact verification.
 
 The production build uses `tsconfig.build.json`, which excludes test sources.
@@ -22,7 +22,6 @@ npm run check:static
 npm run test:unit
 npm run test:contracts
 npm run build
-npm run platform:client:build
 npm run platform:architecture-test
 ```
 
@@ -44,7 +43,7 @@ syntax and behavior, then update the fixture in the owning change.
 ## Formatting ratchet
 
 Biome formatting is initially enforced for repository quality tooling and root
-configuration. Linting covers the typed application/runtime seams and the full
+configuration. Linting covers typed runtime seams and the full
 decomposed `src/react/runner-chat/` leaf-module tree. The oversized
 compatibility composition root remains protected by architecture budgets while
 its extracted modules satisfy the normal lint gate. Expand these scopes as

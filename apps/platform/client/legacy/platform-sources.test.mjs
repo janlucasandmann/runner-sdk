@@ -23,11 +23,11 @@ assert.equal(sources.moduleSource, repeatedSources.moduleSource);
 
 assert.match(
   sources.documentTemplate,
-  /<link\s+data-platform-compatibility-style\s*\/>/,
+  /<link\s+data-platform-style\s*\/>/,
 );
 assert.match(
   sources.documentTemplate,
-  /<script\s+type="module"\s+data-platform-compatibility-module><\/script>/,
+  /<script\s+type="module"\s+data-platform-module><\/script>/,
 );
 assert.doesNotMatch(sources.documentTemplate, /<style>/);
 assert.doesNotMatch(
