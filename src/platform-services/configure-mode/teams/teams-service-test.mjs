@@ -122,8 +122,6 @@ assert.doesNotMatch(platformEntrySource, /const teamsProxyMatch =/);
 
 function createService(overrides = {}) {
   return createTeamsService({
-    extractIdToken: () => "",
-    fetchImpl: async () => ({ ok: false, json: async () => ({}) }),
     fetchUpstreamJsonForProxyExactPath: async () => ({ status: 404, data: {} }),
     hasAiosSession: () => true,
     proxyUpstreamGet: () => {},
@@ -232,9 +230,17 @@ handled = unauthorizedService.handleRequest(
 assert.equal(handled, true);
 assert.equal((await unauthorizedResponse).status, 401);
 
+const memberProfileServerSource = await fs.readFile(
+  new URL("./server/member-profiles.mjs", import.meta.url),
+  "utf8",
+);
+assert.doesNotMatch(
+  memberProfileServerSource,
+  /identitytoolkit|FIREBASE_REST_API_KEY|NEXT_PUBLIC_FIREBASE_API_KEY/,
+);
 assert.throws(
   () => createTeamsService({}),
-  /Teams service requires the extractIdToken adapter/,
+  /Teams service requires the fetchUpstreamJsonForProxyExactPath adapter/,
 );
 
 console.log("Teams client ownership, browser syntax, member-profile lookup, and route contracts passed.");

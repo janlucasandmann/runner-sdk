@@ -12,7 +12,7 @@ describe("ProjectDetailPage", () => {
     const { container } = render(
       <ProjectDetailPage
         header={<h1>Launch Project</h1>}
-        headerActions={<button type="button">Mission Control</button>}
+        tabBarActions={<button type="button">Mission Control</button>}
         sidebarToggle={<button type="button">Toggle sidebar</button>}
         sidebar={<div>Project properties</div>}
         activeTab="general"
@@ -36,6 +36,10 @@ describe("ProjectDetailPage", () => {
     expect(onTabChange).toHaveBeenCalledWith("strategy");
     expect(screen.getByRole("button", { name: "Mission Control" })).not.toBeNull();
     expect(screen.getByRole("button", { name: "Toggle sidebar" })).not.toBeNull();
+    expect(container.querySelector(".resource-detail-page__header-actions")).toBeNull();
+    expect(container.querySelector(".resource-detail-page__tab-bar-actions")?.textContent).toBe(
+      "Mission ControlToggle sidebar",
+    );
   });
 
   it("hides Settings when the viewer cannot access project settings", () => {

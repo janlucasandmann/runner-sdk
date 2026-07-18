@@ -66,6 +66,7 @@ assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, /React\.createEl
 assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, /buttonVariant: "primary"/);
 assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, /popupVariant: "minimal"/);
 assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, /label: "New"/);
+assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, /closeOnSelect: true/);
 for (const label of ["Agent", "Computer", "Skill", "Team", "Organization"]) {
   assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, new RegExp(`label: "${label}"`));
 }

@@ -1052,7 +1052,7 @@
           }
   
           function renderSkillsOverviewPage() {
-            const rows = displaySkills.map((skill) => {
+            const rows = allSkills.map((skill) => {
               const updatedAt = Date.parse(String(skill?.updatedAt || skill?.createdAt || ""));
               return {
                 ...skill,
@@ -1067,27 +1067,27 @@
               };
             });
   
-            return React.createElement("section", { className: "playground-environments-detail playground-plugins-detail playground-skills-page" },
-              React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" },
-                React.createElement(SkillsOverviewPage, {
-                  rows,
-                  mode: skillListMode,
-                  onModeChange: handleSkillListModeChange,
-                  period: skillsOverviewChartTimescale,
-                  onPeriodChange: setSkillsOverviewChartTimescale,
-                  controlsPortalId: "playground-tools-overview-controls",
-                  loading: skillsLoading && !skillsLoaded,
-                  mutating: skillSaveState.isSaving || skillComposerSaveState.isSaving,
-                  onOpen: (skill) => handleSkillSelect(skill.id),
-                  onCreate: openSkillComposer,
-                  onEdit: openSkillEditDialog,
-                  onRename: openSkillRenameDialog,
-                  onDelete: (skillsToDelete) => {
-                    const [skill] = skillsToDelete;
-                    if (skill) void handleDeleteSelectedSkill(skill);
-                  },
-                })
-              )
+            return React.createElement("section", {
+                className: "playground-environments-detail playground-plugins-detail playground-skills-page playground-resources-page playground-skills-overview-page is-develop-configure-page",
+              },
+              React.createElement(SkillsOverviewPage, {
+                rows,
+                mode: skillListMode,
+                onModeChange: handleSkillListModeChange,
+                period: skillsOverviewChartTimescale,
+                onPeriodChange: setSkillsOverviewChartTimescale,
+                controlsPortalId: "playground-tools-overview-controls",
+                loading: skillsLoading && !skillsLoaded,
+                mutating: skillSaveState.isSaving || skillComposerSaveState.isSaving,
+                onOpen: (skill) => handleSkillSelect(skill.id),
+                onCreate: openSkillComposer,
+                onEdit: openSkillEditDialog,
+                onRename: openSkillRenameDialog,
+                onDelete: (skillsToDelete) => {
+                  const [skill] = skillsToDelete;
+                  if (skill) void handleDeleteSelectedSkill(skill);
+                },
+              })
             );
           }
   

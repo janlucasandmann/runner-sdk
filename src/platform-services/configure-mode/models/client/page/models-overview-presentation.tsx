@@ -11,6 +11,7 @@ import type { ReactNode } from "react";
 import type {
   PlatformDataTableColumn,
 } from "../../../../../platform-ui/components/composite/data-table/index.js";
+import { PlatformUiCard } from "../../../../../platform-ui/components/composite/ui-card/index.js";
 import {
   ResourceOverviewValue,
 } from "../../../../../platform-ui/pages/overview/index.js";
@@ -374,8 +375,10 @@ export function ModelsFeaturedSection({
         {entries.map(({ definition, model }) => {
           const RecommendationIcon = definition.icon;
           return (
-            <article
+            <PlatformUiCard
               key={definition.id}
+              as="article"
+              variant="feature"
               className={`playground-models-featured-card ${definition.className}`}
             >
               <div className="playground-models-featured-card-top">
@@ -399,10 +402,10 @@ export function ModelsFeaturedSection({
                   <span>{definition.badge}</span>
                 </span>
               </div>
-              <h3 className="playground-models-featured-name">
+              <h3 className="platform-ui-card__feature-title playground-models-featured-name">
                 {definition.displayName}
               </h3>
-              <p className="playground-models-featured-description">
+              <p className="platform-ui-card__feature-description playground-models-featured-description">
                 {definition.description}
               </p>
               <div className="playground-models-featured-metrics">
@@ -426,7 +429,7 @@ export function ModelsFeaturedSection({
                   );
                 })}
               </div>
-            </article>
+            </PlatformUiCard>
           );
         })}
       </div>

@@ -23,7 +23,13 @@ describe("PlatformVersionHistorySidebar", () => {
       <PlatformVersionHistorySidebar
         open
         versions={[
-          { id: "v2", label: "Version 2", status: "active", createdAt: "Today" },
+          {
+            id: "v2",
+            label: "Version 2",
+            description: "Internal subtitle",
+            status: "active",
+            createdAt: "Today",
+          },
           { id: "v1", label: "Version 1", createdAt: "Yesterday" },
         ]}
         activeVersionId="v2"
@@ -36,7 +42,23 @@ describe("PlatformVersionHistorySidebar", () => {
 
     await act(async () => {});
     expect(screen.getByRole("table", { name: "Saved versions" })).not.toBeNull();
-    expect(screen.getByText("Published")).not.toBeNull();
+    expect(screen.getByRole("heading", { name: "Saved versions" })).not.toBeNull();
+    expect(screen.getByRole("columnheader", { name: "Version" })).not.toBeNull();
+    expect(screen.getByRole("columnheader", { name: "Created" })).not.toBeNull();
+    expect(screen.getByRole("cell", { name: "Today" })).not.toBeNull();
+    expect(screen.queryByText("Internal subtitle")).toBeNull();
+    const publishedLabel = screen.getByText("Published");
+    expect(publishedLabel.classList.contains("platform-label")).toBe(true);
+    expect(
+      publishedLabel.classList.contains("platform-version-history-sidebar__status-label"),
+    ).toBe(true);
+    expect(publishedLabel.querySelector("svg")).toBeNull();
+    expect(
+      screen
+        .getByRole("button", { name: "Display Version 2" })
+        .closest(".platform-data-table__row")
+        ?.classList.contains("is-selected"),
+    ).toBe(false);
     expect(onViewChanges).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole("button", { name: "Display Version 1" }));
@@ -77,6 +99,34 @@ describe("PlatformVersionHistorySidebar", () => {
       "v1",
       expect.objectContaining({ id: "v1" }),
       expect.objectContaining({ versionId: "v1" }),
+    );
+  });
+
+  it("renders publishing as a row-menu action instead of a table column", async () => {
+    const onPublishVersion = vi.fn();
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => {
+      callback(0);
+      return 1;
+    });
+
+    const { container } = render(
+      <PlatformVersionHistorySidebar
+        open
+        versions={[{ id: "v1", label: "Version 1" }]}
+        onClose={() => {}}
+        onPublishVersion={onPublishVersion}
+      />,
+    );
+
+    await act(async () => {});
+    expect(screen.queryByRole("columnheader", { name: "Publish" })).toBeNull();
+    expect(container.querySelector("[data-column-id='publish']")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Open actions for Version 1" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Publish" }));
+    expect(onPublishVersion).toHaveBeenCalledWith(
+      "v1",
+      expect.objectContaining({ id: "v1" }),
     );
   });
 

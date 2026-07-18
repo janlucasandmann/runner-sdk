@@ -61,6 +61,10 @@ assert.match(
   computerCreationControllerSource,
   /headerSearchProps: \{[\s\S]*inputRef: environmentCreationNameInputRef/,
 );
+assert.match(
+  computerCreationControllerSource,
+  /headerSearchProps: \{[\s\S]*icon: Monitor/,
+);
 assert.doesNotMatch(
   computerCreationControllerSource,
   /playground-computer-creation-modal-avatar/,
@@ -74,6 +78,22 @@ assert.doesNotMatch(
   /function renderEnvironmentComposerDialog/,
 );
 
+const computerCreationLifecycleSource = await fs.readFile(
+  new URL(
+    "../../../apps/platform/client/legacy/domains/compute-resources/controller/bootstrap-and-effects.js",
+    import.meta.url,
+  ),
+  "utf8",
+);
+assert.match(
+  computerCreationLifecycleSource,
+  /useEffect\(\(\) => \{\s*if \(creationOnly\) \{\s*return;\s*\}\s*const normalizedTargetEnvironmentId/,
+);
+assert.match(
+  computerCreationLifecycleSource,
+  /\[creationOnly, environmentComposerOpen, navigationTargetEnvironmentId, navigationToken, orderedEnvironments\]/,
+);
+
 const resourceNavigationSource = await fs.readFile(
   new URL(
     "../../../apps/platform/client/legacy/domains/shell/controller/data-lifecycle-and-navigation.template.js",
@@ -84,6 +104,34 @@ const resourceNavigationSource = await fs.readFile(
 assert.match(
   resourceNavigationSource,
   /normalizedView === "computers" && options\.create === true[\s\S]*openPlatformResourceCreationModal\("computer"\)/,
+);
+
+const computerCreationRoutingSource = await fs.readFile(
+  new URL(
+    "../../../apps/platform/client/legacy/domains/compute-resources/controller/routing-access-and-connections.js",
+    import.meta.url,
+  ),
+  "utf8",
+);
+assert.match(
+  computerCreationRoutingSource,
+  /function openEnvironmentComposer\(\)[\s\S]*setEnvironmentComposerDraft\(\{[\s\S]*name: "",/,
+);
+
+const platformStylesSource = await fs.readFile(
+  new URL(
+    "../../../apps/platform/client/legacy/templates/platform.template.css",
+    import.meta.url,
+  ),
+  "utf8",
+);
+assert.match(
+  platformStylesSource,
+  /\.playground-computer-creation-modal \.playground-environment-profile-selector\s*\{[\s\S]*margin-bottom:\s*12px;/,
+);
+assert.match(
+  platformStylesSource,
+  /\.playground-computer-creation-modal \.playground-environment-profile-card\s*\{[\s\S]*border-radius:\s*10px;/,
 );
 
 console.log("Platform resource creation host contracts passed.");

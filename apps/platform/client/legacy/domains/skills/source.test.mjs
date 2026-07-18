@@ -16,10 +16,18 @@ assert.deepEqual(
 );
 assert.equal(
   createHash("sha256").update(SKILLS_PAGE_SCRIPT).digest("hex"),
-  "e863104964aa7c0d2a2f9374a4e89981cc7766f1e1df575bf26dbf179fe28333",
+  "c28a6116fcac75cb324cc109995d1ac487de182f13f5c9f7118522878713c54f",
   "The Skills fragment composition must remain byte-compatible with the reviewed controller.",
 );
 assert.match(SKILLS_PAGE_SCRIPT, /requestedAction === "create"/);
 assert.match(SKILLS_PAGE_SCRIPT, /openSkillComposer\(\)/);
+assert.match(
+  SKILLS_PAGE_SCRIPT,
+  /systemSkillFamilyId === "computer_agents"[\s\S]*src: COMPUTER_AGENTS_CREATOR_PROFILE_URL/,
+);
+assert.doesNotMatch(
+  SKILLS_PAGE_SCRIPT,
+  /systemSkillFamilyId === "computer_agents"[\s\S]{0,300}src: RUNNER_TRANSPARENT_LOGO_URL/,
+);
 
 console.log("Legacy Skills controller composition passed.");

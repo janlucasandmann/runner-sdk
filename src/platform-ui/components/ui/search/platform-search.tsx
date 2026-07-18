@@ -1,34 +1,38 @@
-import {
-  forwardRef,
-  type InputHTMLAttributes,
-} from "react";
-import { Search } from "lucide-react";
+import { type LucideIcon, Search } from "lucide-react";
+import { forwardRef, type InputHTMLAttributes } from "react";
 
 export interface PlatformSearchProps
   extends Omit<InputHTMLAttributes<HTMLInputElement>, "className" | "type"> {
   className?: string;
+  icon?: LucideIcon;
   inputClassName?: string;
 }
 
 function joinPlatformSearchClassNames(...classNames: Array<string | false | null | undefined>) {
   return classNames
-    .filter((className): className is string => typeof className === "string" && Boolean(className.trim()))
+    .filter(
+      (className): className is string =>
+        typeof className === "string" && Boolean(className.trim()),
+    )
     .map((className) => className.trim())
     .join(" ");
 }
 
 export const PlatformSearch = forwardRef<HTMLInputElement, PlatformSearchProps>(
-  function PlatformSearch({
-    className = "",
-    inputClassName = "",
-    placeholder = "Search",
-    disabled = false,
-    "aria-label": ariaLabel,
-    "aria-labelledby": ariaLabelledBy,
-    ...props
-  }, ref) {
-    const resolvedAriaLabel = ariaLabel
-      || (ariaLabelledBy ? undefined : placeholder || "Search");
+  function PlatformSearch(
+    {
+      className = "",
+      icon: Icon = Search,
+      inputClassName = "",
+      placeholder = "Search",
+      disabled = false,
+      "aria-label": ariaLabel,
+      "aria-labelledby": ariaLabelledBy,
+      ...props
+    },
+    ref,
+  ) {
+    const resolvedAriaLabel = ariaLabel || (ariaLabelledBy ? undefined : placeholder || "Search");
 
     return (
       <label
@@ -39,7 +43,7 @@ export const PlatformSearch = forwardRef<HTMLInputElement, PlatformSearchProps>(
         )}
         data-platform-search="true"
       >
-        <Search
+        <Icon
           className="platform-search__icon"
           width={14}
           height={14}

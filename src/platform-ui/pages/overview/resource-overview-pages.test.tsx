@@ -147,22 +147,23 @@ describe("resource overview pages", () => {
     )],
   ])("renders the canonical shell for %s", (kind, createPage) => {
     const { container } = renderWithOverviewControls(createPage());
-    const isTagsOverview = kind === "tags";
+    const isGuideOverview = kind === "tags" || kind === "skills";
     const toolbarTitles: Record<string, string> = {
       computers: "All Computers",
-      skills: "All Skills",
       tags: "All Tags",
       plugins: "All Plugins",
     };
 
     expect(container.querySelectorAll(".resource-overview-page")).toHaveLength(1);
     expect(container.querySelector(".resource-overview-page__header")).toBeNull();
-    expect(container.querySelectorAll(".platform-analytics")).toHaveLength(isTagsOverview ? 0 : 1);
+    expect(container.querySelectorAll(".platform-analytics")).toHaveLength(isGuideOverview ? 0 : 1);
     expect(container.querySelector(".resource-overview-analytics__chart-header")).toBeNull();
     expect(container.querySelectorAll(".resource-overview-page__table-section")).toHaveLength(1);
-    if (isTagsOverview) {
+    if (isGuideOverview) {
       expect(screen.queryByRole("radiogroup", { name: "Analytics time frame" })).toBeNull();
-      expect(screen.getByRole("region", { name: "Get started with Tags and Plugins" })).not.toBeNull();
+      expect(screen.getByRole("region", {
+        name: kind === "tags" ? "Get started with Tags and Plugins" : "Get started with Skills",
+      })).not.toBeNull();
       expect(screen.queryByText("No activity yet.")).toBeNull();
     } else {
       expect(screen.getByRole("radiogroup", { name: "Analytics time frame" }).getAttribute("data-platform-switch")).toBe("true");
@@ -170,21 +171,28 @@ describe("resource overview pages", () => {
       expect(screen.getByText("Analytics will appear here once activity has been recorded.")).not.toBeNull();
     }
     expect(container.querySelector(".platform-data-table.is-fill-layout.is-minimalistic-ui")).not.toBeNull();
-    if (isTagsOverview) {
+    if (isGuideOverview) {
       expect(screen.queryByRole("navigation", { name: /pagination/ })).toBeNull();
     } else {
       expect(screen.getByRole("navigation", { name: /pagination/ })).not.toBeNull();
     }
-    if (kind === "agents" || kind === "tags") {
+    if (kind === "agents" || kind === "tags" || kind === "skills") {
       const tabBar = screen.getByRole("navigation", {
-        name: kind === "agents" ? "Agent categories" : "Tag and plugin categories",
+        name: kind === "agents"
+          ? "Agent categories"
+          : kind === "tags"
+            ? "Tag and plugin categories"
+            : "Skill categories",
       });
       expect(tabBar.getAttribute("data-platform-detail-tab-bar-variant")).toBe("minimal");
-      expect(screen.queryByRole("heading", { name: `All ${kind === "agents" ? "Agents" : "Tags"}`, level: 2 })).toBeNull();
+      expect(screen.queryByRole("heading", {
+        name: `All ${kind === "agents" ? "Agents" : kind === "tags" ? "Tags" : "Skills"}`,
+        level: 2,
+      })).toBeNull();
     } else {
       expect(screen.getByRole("heading", { name: toolbarTitles[kind], level: 2 })).not.toBeNull();
     }
-    if (!isTagsOverview) {
+    if (!isGuideOverview) {
       expect(screen.getByText("1-1 of 1")).not.toBeNull();
     }
     expect(screen.getByRole("button", { name: /Sort Name/ })).not.toBeNull();
@@ -321,6 +329,68 @@ describe("resource overview pages", () => {
     expect(screen.getByText("GitHub")).not.toBeNull();
     expect(screen.queryByText("Email")).toBeNull();
     expect(screen.queryByRole("group", { name: "Plugin category" })).toBeNull();
+  });
+
+  it("renders the Skills guide and switches between system and custom skills", async () => {
+    const user = userEvent.setup();
+    const onModeChange = vi.fn();
+    const onCreate = vi.fn();
+    const rows = [
+      {
+        id: "browser",
+        name: "Browser",
+        isActive: true,
+        isCustom: false,
+        updatedLabel: "System",
+      },
+      {
+        id: "audit",
+        name: "Audit",
+        isActive: true,
+        isCustom: true,
+        updatedLabel: "Today",
+      },
+    ];
+    const sharedProps = {
+      rows,
+      onModeChange,
+      period: "month" as const,
+      onPeriodChange: vi.fn(),
+      analytics,
+      onOpen: vi.fn(),
+      onCreate,
+      onEdit: vi.fn(),
+      onRename: vi.fn(),
+      onDelete: vi.fn(),
+    };
+    const { container, rerender } = render(
+      <SkillsOverviewPage mode="system" {...sharedProps} />,
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Give agents reusable expertise", level: 1 }),
+    ).not.toBeNull();
+    expect(screen.getByRole("heading", { name: "System Skills", level: 2 })).not.toBeNull();
+    expect(screen.getByRole("heading", { name: "Custom Skills", level: 2 })).not.toBeNull();
+    expect(
+      container.querySelectorAll(
+        ".platform-ui-card.is-feature[data-platform-ui-card-variant='feature']",
+      ),
+    ).toHaveLength(2);
+    expect(screen.getByText("Browser")).not.toBeNull();
+    expect(screen.queryByText("Audit")).toBeNull();
+    expect(screen.getAllByText("1 skill")).toHaveLength(2);
+    expect(container.querySelector(".platform-data-table__pagination")).toBeNull();
+
+    const tabBar = screen.getByRole("navigation", { name: "Skill categories" });
+    await user.click(within(tabBar).getByRole("tab", { name: "Custom Skills" }));
+    expect(onModeChange).toHaveBeenCalledWith("custom");
+    await user.click(screen.getByRole("button", { name: "Create a Skill" }));
+    expect(onCreate).toHaveBeenCalledTimes(1);
+
+    rerender(<SkillsOverviewPage mode="custom" {...sharedProps} />);
+    expect(screen.getByText("Audit")).not.toBeNull();
+    expect(screen.queryByText("Browser")).toBeNull();
   });
 
   it("routes period changes through the common selector", async () => {

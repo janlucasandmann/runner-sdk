@@ -60,7 +60,7 @@
   	      import { PlatformApplicationBoundary } from "/dist/platform-runtime/platform-application-boundary.js";
   	      import { AgentPermissionMeters, AgentPermissionRingIcons, AgentPublishControl, AgentsOverviewAnalyticsRequestError, ComputersOverviewAnalyticsRequestError, createAgentsOverviewAnalytics, createComputersOverviewAnalytics, deleteComputerResource, fetchAgentsOverviewAnalytics, fetchComputersOverviewAnalytics, getAgentPermissionSummary, invalidateAgentsOverviewAnalytics, invalidateComputersOverviewAnalytics, normalizeComputerOverviewRows, readCachedAgentsOverviewAnalytics, readCachedComputersOverviewAnalytics, saveComputerResource } from "/dist/platform-shell/presentation/platform-resource-api.js";
   	      import { ApiKeysOverviewAnalyticsRequestError, createApiKeysOverviewAnalytics, createDevelopResourceOverviewRows, createDevelopVoiceAgentOverviewRows, deleteDevelopResource, fetchApiKeysOverviewAnalytics, invalidateApiKeysOverviewAnalytics, readCachedApiKeysOverviewAnalytics, saveDevelopResource } from "/dist/platform-shell/presentation/platform-develop-api.js";
-        import { AgentDetailPage, AgentPermissionsPage, AgentsOverviewPage, ComputerDetailPage, ComputersOverviewPage, ConfigureHomeOverviewPage, DevelopApiKeysOverviewPage, DevelopHomeOverviewPage, DevelopResourceOverviewRoute, DevelopVoiceAgentsOverviewPage, DevelopWebhooksOverviewPage, EvaluationsOverviewPage, FineTuningOverviewPage, GuardrailsOverviewPage, MetronomesOverviewPage, ModelsOverviewPage, NotificationsOverviewPage, OrganizationsOverviewPage, ProjectDetailPage, SkillsOverviewPage, TagDetailPage, TagsOverviewPage, TeamsOverviewPage } from "/dist/platform-shell/presentation/platform-pages.js";
+        import { AgentDetailPage, AgentPermissionsPage, AgentsOverviewPage, ComputerDetailPage, ComputersOverviewPage, ConfigureHomeOverviewPage, DevelopApiKeysOverviewPage, DevelopHomeOverviewPage, DevelopResourceOverviewRoute, DevelopVoiceAgentsOverviewPage, DevelopWebhooksOverviewPage, EvaluationsOverviewPage, FineTuningOverviewPage, GuardrailsOverviewPage, MetronomesOverviewPage, ModelsFeaturedSection, ModelsOverviewPage, NotificationsOverviewPage, OrganizationsOverviewPage, ProjectDetailPage, SkillsOverviewPage, TagDetailPage, TagsOverviewPage, TeamsOverviewPage } from "/dist/platform-shell/presentation/platform-pages.js";
   	      import { openGoogleDrivePicker } from "/dist/platform-integrations/google-drive/google-drive-picker.js";
   
   	      function getPlaygroundSafeIconComponent(Icon, fallbackIcon = Circle) {
@@ -110,6 +110,7 @@
   	        renderOwner,
   	        getRowActions,
   	        renderNewMenu,
+          renderNewMenuItems,
   	        renderEmptyContent,
   	        onNewButtonClick,
   	        onRowOpen,
@@ -127,9 +128,13 @@
           ownerHeader = "Owner",
           emptyLabel = "No resources yet.",
           noMatchesLabel = "No resources match this view yet.",
+          toolbarTitle = "",
           showNewButton = true,
           showFilterButton = true,
-  	        showViewToggle = true,
+          showViewToggle = true,
+          useCentralSearch = false,
+          useCentralNewSelector = false,
+          useCentralFilterPopup = false,
   	        showListSubtitle = false,
   	        metaCellsStopRowOpen = true,
   	        showSelectionColumn = false,
@@ -236,6 +241,34 @@
           const renderFilterOption = (type) => {
             const typeId = String(type?.id || "all").trim() || "all";
             const active = activeFilter === typeId;
+            if (useCentralFilterPopup) {
+              return React.createElement("button", {
+                  key: typeId,
+                  type: "button",
+                  role: "menuitemradio",
+                  "aria-checked": active ? "true" : "false",
+                  className: "platform-data-table__menu-item",
+                  onClick: () => {
+                    closeRowMenu();
+                    if (typeof onFilterChange === "function") {
+                      onFilterChange(typeId);
+                    }
+                    setToolbarPopover("");
+                  },
+                },
+                React.createElement("span", { className: "platform-data-table__menu-icon" },
+                  active
+                    ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" })
+                    : null
+                ),
+                React.createElement("span", { className: "platform-data-table__menu-copy" },
+                  React.createElement("span", { className: "platform-data-table__menu-label" }, type?.label || typeId),
+                  type?.description
+                    ? React.createElement("span", { className: "platform-data-table__menu-description" }, type.description)
+                    : null
+                )
+              );
+            }
             return React.createElement("button", {
                 key: typeId,
                 type: "button",
@@ -272,21 +305,14 @@
               resourceTypeFilters.map(renderFilterOption)
             );
           };
-          const renderSharedNewMenu = () => {
-            if (activeToolbarPopover !== "new") {
-              return null;
-            }
-            if (typeof renderNewMenu === "function") {
-              return renderNewMenu();
+          const renderSharedNewMenuItems = () => {
+            if (typeof renderNewMenuItems === "function") {
+              return renderNewMenuItems();
             }
             if (typeof onNewButtonClick !== "function") {
               return null;
             }
-            return React.createElement(PlatformPopupSurface, {
-                className: "playground-tasks-toolbar-popup-menu playground-project-resources-new-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                onClick: (event) => event.stopPropagation(),
-              },
-              React.createElement("button", {
+            return React.createElement("button", {
                   type: "button",
                   className: "tb-popup-row playground-project-team-menu-item",
                   onClick: () => {
@@ -296,7 +322,24 @@
                 },
                 React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
                 React.createElement("span", null, "Add resource")
-              )
+              );
+          };
+          const renderSharedNewMenu = () => {
+            if (activeToolbarPopover !== "new") {
+              return null;
+            }
+            if (typeof renderNewMenu === "function") {
+              return renderNewMenu();
+            }
+            const menuItems = renderSharedNewMenuItems();
+            if (!menuItems) {
+              return null;
+            }
+            return React.createElement(PlatformPopupSurface, {
+                className: "playground-tasks-toolbar-popup-menu playground-project-resources-new-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+                onClick: (event) => event.stopPropagation(),
+              },
+              menuItems
             );
           };
           const renderEmptyRows = () => {
@@ -445,83 +488,186 @@
               noResultsState: noMatchesLabel,
             });
           };
+          const normalizedToolbarTitle = String(toolbarTitle || "").trim();
+          const renderSharedSearchControl = () => useCentralSearch
+            ? React.createElement(PlatformSearch, {
+                className: "playground-project-resources-central-search",
+                value: searchQuery,
+                onChange: (event) => typeof onSearchQueryChange === "function" && onSearchQueryChange(event.target.value),
+                placeholder: searchPlaceholder,
+                "aria-label": searchAriaLabel,
+              })
+            : React.createElement("label", { className: "playground-project-resources-search" },
+                React.createElement(Search, { className: "playground-files-library-search-icon", strokeWidth: 1.8 }),
+                React.createElement("input", {
+                  type: "search",
+                  value: searchQuery,
+                  onChange: (event) => typeof onSearchQueryChange === "function" && onSearchQueryChange(event.target.value),
+                  className: "playground-project-resources-search-input",
+                  placeholder: searchPlaceholder,
+                  "aria-label": searchAriaLabel,
+                })
+              );
+          const renderSharedNewControl = () => {
+            if (!showNewButton) {
+              return null;
+            }
+            if (useCentralNewSelector) {
+              return React.createElement(PlatformButtonSelector, {
+                  mode: "popup",
+                  buttonVariant: "secondary",
+                  buttonSize: "small",
+                  label: newButtonLabel,
+                  open: activeToolbarPopover === "new",
+                  onOpenChange: (nextOpen) => {
+                    closeRowMenu();
+                    if (nextOpen) {
+                      setToolbarPopover("new");
+                    } else if (activeToolbarPopover === "new") {
+                      setToolbarPopover("");
+                    }
+                  },
+                  closeOnSelect: true,
+                  popupAriaLabel: "Create project resource",
+                  popupAlignment: "right",
+                  popupRole: "menu",
+                  popupVariant: "minimal",
+                  popupWidth: 230,
+                  className: "playground-project-resources-new-selector",
+                  buttonClassName: newButtonClassName,
+                  popupClassName: "playground-project-resources-new-selector-menu",
+                },
+                renderSharedNewMenuItems()
+              );
+            }
+            return React.createElement("div", {
+                className: "playground-project-resources-new-shell playground-files-library-new-anchor playground-tasks-toolbar-popup-shell"
+                  + (activeToolbarPopover === "new" ? " is-open" : ""),
+              },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-files-library-new-button"
+                  + (newButtonClassName ? " " + newButtonClassName : "")
+                  + (activeToolbarPopover === "new" ? " is-active" : ""),
+                onClick: (event) => {
+                  event.stopPropagation();
+                  closeRowMenu();
+                  setToolbarPopover((current) => current === "new" ? "" : "new");
+                },
+              },
+                React.createElement("span", null, newButtonLabel),
+                React.createElement(ChevronDown, { width: 18, height: 18, strokeWidth: 1.8 })
+              ),
+              renderSharedNewMenu()
+            );
+          };
+          const renderSharedFilterControl = () => {
+            if (!showFilterButton) {
+              return null;
+            }
+            if (useCentralFilterPopup) {
+              return React.createElement(PlatformPopup, {
+                  open: activeToolbarPopover === "filter",
+                  rootClassName: "playground-project-resources-filter-shell is-central-popup",
+                  surfaceClassName: "platform-data-table__floating-menu playground-project-resources-filter-menu is-central-popup",
+                  surfaceProps: {
+                    role: "menu",
+                    "aria-label": "Filter resources",
+                  },
+                  animation: "down-in",
+                  variant: "minimal",
+                  placement: "bottom-start",
+                  trigger: React.createElement("button", {
+                    type: "button",
+                    className: "platform-data-table__toolbar-button is-icon-only"
+                      + (activeToolbarPopover === "filter" || activeFilter !== "all" ? " is-open" : ""),
+                    onClick: (event) => {
+                      event.stopPropagation();
+                      closeRowMenu();
+                      setToolbarPopover((current) => current === "filter" ? "" : "filter");
+                    },
+                    title: "Filter resources",
+                    "aria-label": "Filter resources",
+                    "aria-haspopup": "menu",
+                    "aria-expanded": activeToolbarPopover === "filter" ? "true" : "false",
+                  }, React.createElement(ListFilter, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" })),
+                },
+                resourceTypeFilters.map(renderFilterOption)
+              );
+            }
+            return React.createElement("div", {
+                className: "playground-project-resources-filter-shell playground-files-library-control-anchor playground-tasks-toolbar-popup-shell"
+                  + (activeToolbarPopover === "filter" ? " is-open" : ""),
+              },
+              React.createElement("button", {
+                type: "button",
+                className: "playground-files-library-icon-button"
+                  + (activeToolbarPopover === "filter" || activeFilter !== "all" ? " is-active" : ""),
+                onClick: (event) => {
+                  event.stopPropagation();
+                  closeRowMenu();
+                  setToolbarPopover((current) => current === "filter" ? "" : "filter");
+                },
+                title: "Filter resources",
+                "aria-label": "Filter resources",
+              }, React.createElement(SlidersHorizontal, { width: 19, height: 19, strokeWidth: 1.8 })),
+              renderSharedFilterMenu()
+            );
+          };
+          const renderSharedViewToggle = () => showViewToggle
+            ? React.createElement(React.Fragment, null,
+                React.createElement("span", { className: "playground-files-library-divider", "aria-hidden": "true" }),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-files-library-icon-button" + (activeViewMode === "grid" ? " is-active" : ""),
+                  onClick: () => {
+                    closeRowMenu();
+                    typeof onViewModeChange === "function" && onViewModeChange("grid");
+                  },
+                  title: "Grid view",
+                  "aria-label": "Grid view",
+                }, React.createElement(Grid3x3, { width: 20, height: 20, strokeWidth: 1.8 })),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-files-library-icon-button" + (activeViewMode === "list" ? " is-active" : ""),
+                  onClick: () => {
+                    closeRowMenu();
+                    typeof onViewModeChange === "function" && onViewModeChange("list");
+                  },
+                  title: "List view",
+                  "aria-label": "List view",
+                }, React.createElement(List, { width: 21, height: 21, strokeWidth: 1.8 }))
+              )
+            : null;
+          const renderSharedToolbar = () => normalizedToolbarTitle
+            ? React.createElement("div", {
+                className: "playground-project-resources-toolbar playground-files-library-title-row is-titled",
+              },
+              React.createElement("div", { className: "playground-project-resources-toolbar-title-group" },
+                React.createElement("h2", { className: "playground-project-resources-toolbar-title" }, normalizedToolbarTitle),
+                renderSharedFilterControl()
+              ),
+              React.createElement("div", { className: "playground-files-library-actions playground-project-resources-toolbar-actions" },
+                renderSharedNewControl(),
+                renderSharedSearchControl(),
+                renderSharedViewToggle()
+              )
+            )
+            : React.createElement("div", {
+                className: "playground-project-resources-toolbar playground-files-library-title-row",
+              },
+              renderSharedSearchControl(),
+              React.createElement("div", { className: "playground-files-library-actions playground-project-resources-toolbar-actions" },
+                renderSharedNewControl(),
+                renderSharedFilterControl(),
+                renderSharedViewToggle()
+              )
+            );
   
           return React.createElement("div", { className: "playground-project-overview-resources-home" },
             React.createElement("section", { className: "playground-project-resources-table-card" },
               React.createElement("div", { className: "playground-project-resources-table-inner" },
-                React.createElement("div", { className: "playground-project-resources-toolbar playground-files-library-title-row" },
-  	                React.createElement("label", { className: "playground-project-resources-search" },
-  	                  React.createElement(Search, { className: "playground-files-library-search-icon", strokeWidth: 1.8 }),
-  	                  React.createElement("input", {
-  	                    type: "search",
-  	                    value: searchQuery,
-  	                    onChange: (event) => typeof onSearchQueryChange === "function" && onSearchQueryChange(event.target.value),
-  	                    className: "playground-project-resources-search-input",
-  	                    placeholder: searchPlaceholder,
-  	                    "aria-label": searchAriaLabel,
-  	                  })
-                  ),
-                  React.createElement("div", { className: "playground-files-library-actions playground-project-resources-toolbar-actions" },
-                    showNewButton
-                      ? React.createElement("div", { className: "playground-project-resources-new-shell playground-files-library-new-anchor playground-tasks-toolbar-popup-shell" + (activeToolbarPopover === "new" ? " is-open" : "") },
-  	                        React.createElement("button", {
-  	                          type: "button",
-  	                          className: "playground-files-library-new-button" + (newButtonClassName ? " " + newButtonClassName : "") + (activeToolbarPopover === "new" ? " is-active" : ""),
-                            onClick: (event) => {
-                              event.stopPropagation();
-                              closeRowMenu();
-                              setToolbarPopover((current) => current === "new" ? "" : "new");
-                            },
-                          },
-                            React.createElement("span", null, newButtonLabel),
-                            React.createElement(ChevronDown, { width: 18, height: 18, strokeWidth: 1.8 })
-                          ),
-                          renderSharedNewMenu()
-                        )
-                      : null,
-                    showFilterButton
-                      ? React.createElement("div", { className: "playground-project-resources-filter-shell playground-files-library-control-anchor playground-tasks-toolbar-popup-shell" + (activeToolbarPopover === "filter" ? " is-open" : "") },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-files-library-icon-button" + (activeToolbarPopover === "filter" || activeFilter !== "all" ? " is-active" : ""),
-                            onClick: (event) => {
-                              event.stopPropagation();
-                              closeRowMenu();
-                              setToolbarPopover((current) => current === "filter" ? "" : "filter");
-                            },
-                            title: "Filter resources",
-                            "aria-label": "Filter resources",
-                          }, React.createElement(SlidersHorizontal, { width: 19, height: 19, strokeWidth: 1.8 })),
-                          renderSharedFilterMenu()
-                        )
-                      : null,
-                    showViewToggle
-                      ? React.createElement(React.Fragment, null,
-                          React.createElement("span", { className: "playground-files-library-divider", "aria-hidden": "true" }),
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-files-library-icon-button" + (activeViewMode === "grid" ? " is-active" : ""),
-                            onClick: () => {
-                              closeRowMenu();
-                              typeof onViewModeChange === "function" && onViewModeChange("grid");
-                            },
-                            title: "Grid view",
-                            "aria-label": "Grid view",
-                          }, React.createElement(Grid3x3, { width: 20, height: 20, strokeWidth: 1.8 })),
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-files-library-icon-button" + (activeViewMode === "list" ? " is-active" : ""),
-                            onClick: () => {
-                              closeRowMenu();
-                              typeof onViewModeChange === "function" && onViewModeChange("list");
-                            },
-                            title: "List view",
-                            "aria-label": "List view",
-                          }, React.createElement(List, { width: 21, height: 21, strokeWidth: 1.8 }))
-                        )
-                      : null
-                  )
-                ),
+                renderSharedToolbar(),
   	              activeViewMode === "list"
   	                ? React.createElement("div", { className: "playground-project-resources-list-shell" }, renderRows())
   	                : renderRows()

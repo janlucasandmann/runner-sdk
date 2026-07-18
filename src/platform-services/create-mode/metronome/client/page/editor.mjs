@@ -132,16 +132,9 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
               canPublishVersion: (deployment) => canPublishMetronomeDeploymentVersion(deployment),
               onViewChanges: () => openMetronomeVersionChangesPage(),
               getVersionTitle: (deployment) => String(deployment.label || ("Version " + deployment.version)).trim(),
-              getVersionDescription: () => "",
-              getVersionMeta: (deployment) => (
-                (deployment.publishedAt ? "Published " : "Saved ")
-                + formatMetronomeDeploymentTimestamp(deployment.publishedAt || deployment.createdAt)
-                + " · "
-                + String(deployment.nodeCount || 0)
-                + " nodes · "
-                + String(deployment.edgeCount || 0)
-                + " connections"
-              ),
+              getVersionCreatedAt: (deployment) => deployment.createdAt
+                ? formatMetronomeDeploymentTimestamp(deployment.createdAt)
+                : "-",
               getVersionActions: (deployment) => [
                 {
                   id: "edit",

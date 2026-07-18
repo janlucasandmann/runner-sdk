@@ -23,7 +23,6 @@ function buildTeamsUpstreamPath(match) {
 /** Creates the Teams API and member-profile proxy service from host transport adapters. */
 export function createTeamsService(adapters = {}) {
   [
-    "extractIdToken",
     "fetchUpstreamJsonForProxyExactPath",
     "hasAiosSession",
     "proxyUpstreamGet",
@@ -33,15 +32,9 @@ export function createTeamsService(adapters = {}) {
     "sendJson",
   ].forEach((name) => assertAdapter(adapters, name));
 
-  const runtimeAdapters = Object.freeze({
-    ...adapters,
-    fetchImpl: typeof adapters.fetchImpl === "function" ? adapters.fetchImpl : globalThis.fetch,
-    firebaseRestApiKey: String(adapters.firebaseRestApiKey || "").trim(),
-  });
-  if (typeof runtimeAdapters.fetchImpl !== "function") {
-    throw new TypeError("Teams service requires a fetch implementation.");
-  }
-  const handleTeamMemberProfileLookup = createTeamMemberProfileLookupHandler(runtimeAdapters);
+  const handleTeamMemberProfileLookup = createTeamMemberProfileLookupHandler(
+    Object.freeze({ ...adapters }),
+  );
 
   return Object.freeze({
     handleRequest(req, res, url) {

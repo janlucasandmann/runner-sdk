@@ -8,6 +8,8 @@ Selector surfaces are portal-positioned by default, so table, panel, and sidebar
 
 `popupAlignment` controls which horizontal edge is anchored. It defaults to `"left"`; use `"right"` when the popup should end where the selector column ends. This is independent from `alignment`, which controls the trigger label layout.
 
+Set `closeOnSelect` for action menus whose popup should close as soon as a button, link, menu item, or option is selected. The selected child action still runs before the popup is dismissed.
+
 The component owns controlled or uncontrolled popup state, outside-click and Escape dismissal, keyboard option navigation, selected-state presentation, loading and empty states, and optional leading content such as profile pictures.
 
 ```tsx

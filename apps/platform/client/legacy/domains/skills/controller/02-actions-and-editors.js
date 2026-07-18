@@ -222,12 +222,12 @@
             ).trim().toLowerCase();
             if (systemSkillFamilyId === "computer_agents") {
               return React.createElement("img", {
-                src: RUNNER_TRANSPARENT_LOGO_URL,
+                src: COMPUTER_AGENTS_CREATOR_PROFILE_URL,
                 alt: "",
                 "aria-hidden": "true",
                 draggable: false,
                 className,
-                style: { objectFit: "contain" },
+                style: { objectFit: "cover", borderRadius: "50%" },
               });
             }
             const Icon = getPlaygroundSkillIconComponent(skill);

@@ -100,9 +100,19 @@ cd computer-agents/packages/cloud-infrastructure
 npm run identity:provision -- --input /secure/path/identity-links.json --apply
 ```
 
+The apply command performs a read-back verification automatically. It can also
+be repeated independently without writing:
+
+```bash
+cd computer-agents/packages/cloud-infrastructure
+npm run identity:provision -- --input /secure/path/identity-links.json --verify
+```
+
 The preflight verifies every target user, rejects duplicate subjects and
 existing ownership conflicts before the first write, and never queries users by
-email.
+email. Updates preserve optional profile fields that are omitted from a later
+mapping. Verification checks the target user, provider, ownership, and every
+profile field explicitly supplied by the mapping.
 
 See `deployment/topologies/on-prem.env.example` at the workspace root for the
 complete profile.

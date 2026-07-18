@@ -74,6 +74,8 @@ export interface PlatformVersionHistorySidebarProps<
   selectedVersionId?: string;
   title?: ReactNode;
   sectionTitle?: ReactNode;
+  versionColumnLabel?: ReactNode;
+  createdAtColumnLabel?: ReactNode;
   activeLabel?: ReactNode;
   createVersionLabel?: ReactNode;
   publishVersionLabel?: ReactNode;
@@ -102,10 +104,16 @@ export interface PlatformVersionHistorySidebarProps<
     version: TVersion,
     context: PlatformVersionHistoryContext<TVersion>,
   ) => ReactNode;
+  /** @deprecated Version-history rows no longer render title subtitles. */
   getVersionDescription?: (
     version: TVersion,
     context: PlatformVersionHistoryContext<TVersion>,
   ) => ReactNode;
+  getVersionCreatedAt?: (
+    version: TVersion,
+    context: PlatformVersionHistoryContext<TVersion>,
+  ) => ReactNode;
+  /** @deprecated Use getVersionCreatedAt. */
   getVersionMeta?: (
     version: TVersion,
     context: PlatformVersionHistoryContext<TVersion>,
@@ -129,8 +137,7 @@ interface PlatformVersionHistoryTableRow<
   context: PlatformVersionHistoryContext<TVersion>;
   title: ReactNode;
   accessibleTitle: string;
-  description: ReactNode;
-  meta: ReactNode;
+  createdAt: ReactNode;
   canSelect: boolean;
   canPublish: boolean;
   actions: PlatformVersionHistoryAction<TVersion>[];
@@ -171,6 +178,8 @@ export function PlatformVersionHistorySidebar<
   selectedVersionId = "",
   title = "Version history",
   sectionTitle = "Saved versions",
+  versionColumnLabel = "Version",
+  createdAtColumnLabel = "Created",
   activeLabel = "Published",
   createVersionLabel = "Version",
   publishVersionLabel = "Publish",
@@ -193,7 +202,7 @@ export function PlatformVersionHistorySidebar<
   canPublishVersion,
   getVersionId,
   getVersionTitle,
-  getVersionDescription,
+  getVersionCreatedAt,
   getVersionMeta,
   getVersionActions,
   portal = false,
@@ -251,10 +260,9 @@ export function PlatformVersionHistorySidebar<
         || (version.version !== undefined ? `Version ${version.version}` : ""),
       ) || "Version";
       const versionTitle = getVersionTitle?.(version, context) ?? fallbackTitle;
-      const versionDescription = getVersionDescription?.(version, context)
-        ?? normalizeId(version.description);
-      const versionMeta = getVersionMeta?.(version, context)
-        ?? normalizeId(version.publishedAt || version.updatedAt || version.createdAt);
+      const versionCreatedAt = getVersionCreatedAt?.(version, context)
+        ?? getVersionMeta?.(version, context)
+        ?? normalizeId(version.createdAt);
       const actions = (getVersionActions?.(version, context) || [])
         .filter((action): action is PlatformVersionHistoryAction<TVersion> => Boolean(action))
         .filter((action) => !(
@@ -267,8 +275,7 @@ export function PlatformVersionHistorySidebar<
         context,
         title: versionTitle,
         accessibleTitle: getAccessibleVersionTitle(version, versionTitle, index),
-        description: versionDescription,
-        meta: versionMeta,
+        createdAt: versionCreatedAt,
         canSelect: Boolean(onSelectVersion) && !busy && !isSelectedVersion,
         canPublish: canPublishVersion
           ? canPublishVersion(version, context)
@@ -281,7 +288,7 @@ export function PlatformVersionHistorySidebar<
   const columns: PlatformDataTableColumn<PlatformVersionHistoryTableRow<TVersion>>[] = [
     {
       id: "version",
-      header: sectionTitle,
+      header: versionColumnLabel,
       width: "minmax(0, 1fr)",
       cell: ({ row }) => (
         <div className="platform-version-history-sidebar__version-cell">
@@ -305,55 +312,42 @@ export function PlatformVersionHistorySidebar<
             <span className="platform-version-history-sidebar__row-title-line">
               <span className="platform-version-history-sidebar__row-title">{row.title}</span>
               {row.context.isActiveVersion ? (
-                <PlatformLabel variant="green" icon={<Check />}>
+                <PlatformLabel
+                  className="platform-version-history-sidebar__status-label"
+                  variant="green"
+                >
                   {activeLabel}
                 </PlatformLabel>
               ) : null}
             </span>
-            {row.description ? (
-              <span className="platform-version-history-sidebar__row-description">
-                {row.description}
-              </span>
-            ) : null}
-            {row.meta ? (
-              <span className="platform-version-history-sidebar__row-meta">{row.meta}</span>
-            ) : null}
           </div>
         </div>
       ),
     },
+    {
+      id: "createdAt",
+      header: createdAtColumnLabel,
+      width: "112px",
+      cell: ({ row }) => (
+        <span className="platform-version-history-sidebar__created-at">
+          {row.createdAt || "-"}
+        </span>
+      ),
+    },
   ];
 
-  if (onPublishVersion) {
-    columns.push({
-      id: "publish",
-      header: publishVersionLabel,
-      width: "88px",
-      cell: ({ row }) => (
-        <PlatformSecondaryButton
-          type="button"
-          size="compact"
-          disabled={busy || !row.canPublish}
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            if (row.canPublish) {
-              void onPublishVersion(row.versionId, row.version);
-            }
-          }}
-        >
-          <Rocket aria-hidden="true" />
-          <span>{publishVersionLabel}</span>
-        </PlatformSecondaryButton>
-      ),
-    });
-  }
-
-  const getRowActions = getVersionActions
+  const getRowActions = onPublishVersion || getVersionActions
     ? (
         row: PlatformVersionHistoryTableRow<TVersion>,
-      ): readonly PlatformDataTableAction<PlatformVersionHistoryTableRow<TVersion>>[] => (
-        row.actions.map((action) => ({
+      ): readonly PlatformDataTableAction<PlatformVersionHistoryTableRow<TVersion>>[] => [
+        ...(onPublishVersion ? [{
+          id: "publish-version",
+          label: publishVersionLabel,
+          icon: Rocket,
+          disabled: busy || !row.canPublish,
+          onSelect: () => onPublishVersion(row.versionId, row.version),
+        }] : []),
+        ...row.actions.map((action) => ({
           id: action.id,
           label: action.label,
           icon: action.Icon || action.icon,
@@ -364,8 +358,8 @@ export function PlatformVersionHistorySidebar<
             row.version,
             row.context,
           ),
-        }))
-      )
+        })),
+      ]
     : undefined;
 
   const emptyState = loading ? (
@@ -411,7 +405,6 @@ export function PlatformVersionHistorySidebar<
   ) => joinClassNames(
     "platform-version-history-sidebar__row",
     row.context.isActiveVersion && "is-active",
-    row.context.isSelectedVersion && "is-selected",
   );
 
   const tableAriaLabel = typeof sectionTitle === "string"
@@ -453,7 +446,8 @@ export function PlatformVersionHistorySidebar<
         variant="minimalistic-ui"
         sticky={false}
         pagination={false}
-        rowMinHeight={64}
+        toolbar={{ title: sectionTitle }}
+        rowMinHeight={48}
         getRowActions={getRowActions}
         onRowActivate={onSelectVersion ? handleRowActivate : undefined}
         getRowClassName={getRowClassName}

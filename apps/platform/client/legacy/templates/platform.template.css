@@ -19796,6 +19796,11 @@
 
         .playground-computer-creation-modal .playground-environment-profile-selector {
           width: 100%;
+          margin-bottom: 12px;
+        }
+
+        .playground-computer-creation-modal .playground-environment-profile-card {
+          border-radius: 10px;
         }
 
         .playground-computer-creation-modal .playground-environments-editor-notice {

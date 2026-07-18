@@ -3,8 +3,9 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { Monitor } from "lucide-react";
 import { createRef } from "react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { PlatformSearch } from "./platform-search.js";
 
 afterEach(cleanup);
@@ -21,13 +22,7 @@ describe("PlatformSearch", () => {
 
   it("renders the shared search surface and emits input changes", () => {
     const onChange = vi.fn();
-    render(
-      <PlatformSearch
-        aria-label="Search agents"
-        value=""
-        onChange={onChange}
-      />,
-    );
+    render(<PlatformSearch aria-label="Search agents" value="" onChange={onChange} />);
 
     const input = screen.getByRole("searchbox", { name: "Search agents" });
     expect(input.closest("[data-platform-search='true']")).not.toBeNull();
@@ -41,6 +36,14 @@ describe("PlatformSearch", () => {
     render(<PlatformSearch placeholder="Search computers" />);
 
     expect(screen.getByRole("searchbox", { name: "Search computers" })).not.toBeNull();
+  });
+
+  it("supports a custom Lucide icon without changing the input contract", () => {
+    render(<PlatformSearch icon={Monitor} placeholder="New Computer" />);
+
+    const search = screen.getByRole("searchbox", { name: "New Computer" });
+    expect(search.closest(".platform-search")?.querySelector(".lucide-monitor")).not.toBeNull();
+    expect(search.closest(".platform-search")?.querySelector(".lucide-search")).toBeNull();
   });
 
   it("forwards its input ref and disabled state", () => {

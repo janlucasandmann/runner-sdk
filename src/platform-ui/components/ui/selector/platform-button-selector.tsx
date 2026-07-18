@@ -1,20 +1,18 @@
+import { ChevronDown } from "lucide-react";
 import {
+  type AriaRole,
+  type CSSProperties,
   forwardRef,
+  type KeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
+  type ReactNode,
+  type Ref,
   useCallback,
   useEffect,
   useRef,
   useState,
-  type AriaRole,
-  type CSSProperties,
-  type KeyboardEvent,
-  type ReactNode,
-  type Ref,
 } from "react";
-import { ChevronDown } from "lucide-react";
-import {
-  PlatformPopup,
-  type PlatformPopupVariant,
-} from "../../composite/popup/index.js";
+import { PlatformPopup, type PlatformPopupVariant } from "../../composite/popup/index.js";
 import {
   PlatformButton,
   type PlatformButtonSize,
@@ -42,6 +40,7 @@ export interface PlatformButtonSelectorProps {
   popupDisabled?: boolean;
   active?: boolean;
   closeOnAction?: boolean;
+  closeOnSelect?: boolean;
   popupAlignment?: PlatformSelectorPopupAlignment;
   popupRole?: AriaRole;
   popupVariant?: PlatformPopupVariant;
@@ -61,7 +60,10 @@ function joinPlatformButtonSelectorClassNames(
   ...classNames: Array<string | false | null | undefined>
 ) {
   return classNames
-    .filter((className): className is string => typeof className === "string" && Boolean(className.trim()))
+    .filter(
+      (className): className is string =>
+        typeof className === "string" && Boolean(className.trim()),
+    )
     .map((className) => className.trim())
     .join(" ");
 }
@@ -75,38 +77,42 @@ function assignPlatformButtonSelectorRef<T>(ref: Ref<T> | undefined, value: T | 
 }
 
 export const PlatformButtonSelector = forwardRef<HTMLDivElement, PlatformButtonSelectorProps>(
-  function PlatformButtonSelector({
-    label,
-    children,
-    popupAriaLabel,
-    mode = "popup",
-    buttonVariant = "secondary",
-    buttonSize = "small",
-    leading,
-    open,
-    defaultOpen = false,
-    onOpenChange,
-    onAction,
-    actionAriaLabel,
-    disabled = false,
-    actionDisabled = disabled,
-    popupDisabled = disabled,
-    active = false,
-    closeOnAction = true,
-    popupAlignment = "left",
-    popupRole = "menu",
-    popupVariant = "minimal",
-    popupWidth,
-    popupMaxWidth,
-    popupMaxHeight = "min(320px, calc(100vh - 32px))",
-    matchTriggerWidth = false,
-    className = "",
-    buttonClassName = "",
-    actionButtonClassName = "",
-    popupButtonClassName = "",
-    popupClassName = "",
-    rootRef,
-  }, forwardedRef) {
+  function PlatformButtonSelector(
+    {
+      label,
+      children,
+      popupAriaLabel,
+      mode = "popup",
+      buttonVariant = "secondary",
+      buttonSize = "small",
+      leading,
+      open,
+      defaultOpen = false,
+      onOpenChange,
+      onAction,
+      actionAriaLabel,
+      disabled = false,
+      actionDisabled = disabled,
+      popupDisabled = disabled,
+      active = false,
+      closeOnAction = true,
+      closeOnSelect = false,
+      popupAlignment = "left",
+      popupRole = "menu",
+      popupVariant = "minimal",
+      popupWidth,
+      popupMaxWidth,
+      popupMaxHeight = "min(320px, calc(100vh - 32px))",
+      matchTriggerWidth = false,
+      className = "",
+      buttonClassName = "",
+      actionButtonClassName = "",
+      popupButtonClassName = "",
+      popupClassName = "",
+      rootRef,
+    },
+    forwardedRef,
+  ) {
     const anchorRef = useRef<HTMLDivElement | null>(null);
     const popupRef = useRef<HTMLDivElement | null>(null);
     const primaryPopupTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -116,21 +122,26 @@ export const PlatformButtonSelector = forwardRef<HTMLDivElement, PlatformButtonS
     const controlled = open !== undefined;
     const resolvedOpen = controlled ? Boolean(open) : internalOpen;
     const resolvedActionDisabled = actionDisabled || (mode === "split-action" && !onAction);
-    const selectorDisabled = mode === "popup"
-      ? popupDisabled
-      : resolvedActionDisabled && popupDisabled;
+    const selectorDisabled =
+      mode === "popup" ? popupDisabled : resolvedActionDisabled && popupDisabled;
 
-    const commitOpen = useCallback((nextOpen: boolean) => {
-      if (popupDisabled && nextOpen) return;
-      if (!controlled) setInternalOpen(nextOpen);
-      onOpenChange?.(nextOpen);
-    }, [controlled, onOpenChange, popupDisabled]);
+    const commitOpen = useCallback(
+      (nextOpen: boolean) => {
+        if (popupDisabled && nextOpen) return;
+        if (!controlled) setInternalOpen(nextOpen);
+        onOpenChange?.(nextOpen);
+      },
+      [controlled, onOpenChange, popupDisabled],
+    );
 
-    const setAnchorRef = useCallback((element: HTMLDivElement | null) => {
-      anchorRef.current = element;
-      assignPlatformButtonSelectorRef(rootRef, element);
-      assignPlatformButtonSelectorRef(forwardedRef, element);
-    }, [forwardedRef, rootRef]);
+    const setAnchorRef = useCallback(
+      (element: HTMLDivElement | null) => {
+        anchorRef.current = element;
+        assignPlatformButtonSelectorRef(rootRef, element);
+        assignPlatformButtonSelectorRef(forwardedRef, element);
+      },
+      [forwardedRef, rootRef],
+    );
 
     const togglePopup = (trigger?: HTMLButtonElement | null) => {
       if (popupDisabled) return;
@@ -151,16 +162,26 @@ export const PlatformButtonSelector = forwardRef<HTMLDivElement, PlatformButtonS
       void onAction();
     };
 
+    const handlePopupContentClick = (event: ReactMouseEvent<HTMLDivElement>) => {
+      event.stopPropagation();
+      if (!closeOnSelect) return;
+
+      const target = event.target instanceof Element ? event.target : null;
+      const selectableTarget = target?.closest(
+        "button:not([disabled]), a[href], [role='menuitem']:not([aria-disabled='true']), [role='option']:not([aria-disabled='true'])",
+      );
+      if (selectableTarget) {
+        commitOpen(false);
+      }
+    };
+
     useEffect(() => {
       if (!resolvedOpen) return undefined;
 
-      function handlePointerDown(event: MouseEvent) {
+      function handlePointerDown(event: globalThis.MouseEvent) {
         const target = event.target instanceof Node ? event.target : null;
-        if (
-          !target
-          || anchorRef.current?.contains(target)
-          || popupRef.current?.contains(target)
-        ) return;
+        if (!target || anchorRef.current?.contains(target) || popupRef.current?.contains(target))
+          return;
         commitOpen(false);
       }
 
@@ -168,9 +189,9 @@ export const PlatformButtonSelector = forwardRef<HTMLDivElement, PlatformButtonS
         if (event.key !== "Escape") return;
         commitOpen(false);
         (
-          lastPopupTriggerRef.current
-          || primaryPopupTriggerRef.current
-          || chevronPopupTriggerRef.current
+          lastPopupTriggerRef.current ||
+          primaryPopupTriggerRef.current ||
+          chevronPopupTriggerRef.current
         )?.focus();
       }
 
@@ -221,9 +242,9 @@ export const PlatformButtonSelector = forwardRef<HTMLDivElement, PlatformButtonS
           aria-haspopup={mainButtonIsPopupTrigger ? popupAriaHasPopup : undefined}
           aria-expanded={mainButtonIsPopupTrigger ? resolvedOpen : undefined}
           disabled={mainButtonIsPopupTrigger ? popupDisabled : resolvedActionDisabled}
-          onClick={mainButtonIsPopupTrigger
-            ? (event) => togglePopup(event.currentTarget)
-            : handleAction}
+          onClick={
+            mainButtonIsPopupTrigger ? (event) => togglePopup(event.currentTarget) : handleAction
+          }
           onKeyDown={mainButtonIsPopupTrigger ? handlePopupTriggerKeyDown : undefined}
         >
           {sharedButtonContent}
@@ -278,7 +299,7 @@ export const PlatformButtonSelector = forwardRef<HTMLDivElement, PlatformButtonS
           width: popupWidth,
           maxWidth: popupMaxWidth,
           maxHeight: popupMaxHeight,
-          onClick: (event) => event.stopPropagation(),
+          onClick: handlePopupContentClick,
         }}
         animation="down-in"
         variant={popupVariant}

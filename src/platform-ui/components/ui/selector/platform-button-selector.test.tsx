@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 
-import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { GitBranch, Rocket } from "lucide-react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { PlatformButtonSelector } from "./platform-button-selector.js";
 
 afterEach(() => {
@@ -24,7 +24,9 @@ describe("PlatformButtonSelector", () => {
         popupAriaLabel="Choose version"
         onOpenChange={onOpenChange}
       >
-        <button type="button" role="menuitem">Version 1</button>
+        <button type="button" role="menuitem">
+          Version 1
+        </button>
       </PlatformButtonSelector>,
     );
 
@@ -61,7 +63,9 @@ describe("PlatformButtonSelector", () => {
         popupAriaLabel="Version options"
         onAction={onAction}
       >
-        <button type="button" role="menuitem">Save Version</button>
+        <button type="button" role="menuitem">
+          Save Version
+        </button>
       </PlatformButtonSelector>,
     );
 
@@ -83,12 +87,10 @@ describe("PlatformButtonSelector", () => {
     const onMenuAction = vi.fn();
     render(
       <div>
-        <PlatformButtonSelector
-          mode="popup"
-          label="Versions"
-          popupAriaLabel="Choose version"
-        >
-          <button type="button" role="menuitem" onClick={onMenuAction}>Version 1</button>
+        <PlatformButtonSelector mode="popup" label="Versions" popupAriaLabel="Choose version">
+          <button type="button" role="menuitem" onClick={onMenuAction}>
+            Version 1
+          </button>
         </PlatformButtonSelector>
         <button type="button">Outside</button>
       </div>,
@@ -106,5 +108,23 @@ describe("PlatformButtonSelector", () => {
     fireEvent.keyDown(window, { key: "Escape" });
     expect(screen.queryByRole("menu", { name: "Choose version" })).toBeNull();
     expect(document.activeElement).toBe(trigger);
+  });
+
+  it("can dismiss its popup immediately after a menu selection", async () => {
+    const user = userEvent.setup();
+    const onMenuAction = vi.fn();
+    render(
+      <PlatformButtonSelector mode="popup" label="New" popupAriaLabel="Create new" closeOnSelect>
+        <button type="button" role="menuitem" onClick={onMenuAction}>
+          Computer
+        </button>
+      </PlatformButtonSelector>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Create new" }));
+    await user.click(screen.getByRole("menuitem", { name: "Computer" }));
+
+    expect(onMenuAction).toHaveBeenCalledOnce();
+    expect(screen.queryByRole("menu", { name: "Create new" })).toBeNull();
   });
 });

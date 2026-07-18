@@ -123,6 +123,60 @@ for (const relativePath of sourceFiles) {
   violations.push(...collectLegacyRendererViolations(relativePath, source));
 }
 
+const dataTableCssPath = path.join(
+  packageRoot,
+  "src",
+  "platform-ui",
+  "components",
+  "composite",
+  "data-table",
+  "data-table.css",
+);
+const dataTableCss = await fs.readFile(dataTableCssPath, "utf8");
+const minimalScrollRule = dataTableCss.match(
+  /\.platform-data-table\.is-minimalistic-ui\s+\.platform-data-table__scroll\s*\{([^}]*)\}/,
+)?.[1] || "";
+if (!/\bwidth:\s*100%\s*;/.test(minimalScrollRule)) {
+  violations.push("Minimal PlatformDataTable scroll view must remain within 100% width");
+}
+if (
+  !/\bmargin-right:\s*0\s*;/.test(minimalScrollRule)
+  || !/\bmargin-left:\s*0\s*;/.test(minimalScrollRule)
+) {
+  violations.push("Minimal PlatformDataTable scroll view must not use horizontal bleed margins");
+}
+if (!/\bborder-radius:\s*0\s*;/.test(minimalScrollRule)) {
+  violations.push("Minimal PlatformDataTable scroll view must not have rounded corners");
+}
+const minimalBodyRule = dataTableCss.match(
+  /\.platform-data-table\.is-minimalistic-ui\s+\.platform-data-table__body,\s*\.platform-data-table\.is-minimalistic-ui\s+\.platform-data-table__row,\s*\.platform-data-table\.is-minimalistic-ui\s+\.platform-data-table__expanded-row\s*\{([^}]*)\}/,
+)?.[1] || "";
+if (!/\bborder-radius:\s*0\s*;/.test(minimalBodyRule)) {
+  violations.push("Minimal PlatformDataTable body and rows must not have rounded corners");
+}
+const minimalHeaderRule = dataTableCss.match(
+  /\.platform-data-table\.is-minimalistic-ui\s+\.platform-data-table__header\s*\{([^}]*)\}/,
+)?.[1] || "";
+const minimalRowsRule = Array.from(dataTableCss.matchAll(
+  /\.platform-data-table\.is-minimalistic-ui\s+\.platform-data-table__row,\s*\.platform-data-table\.is-minimalistic-ui\s+\.platform-data-table__expanded-row\s*\{([^}]*)\}/g,
+))
+  .map((match) => match[1] || "")
+  .find((rule) => rule.includes("padding-right")) || "";
+const minimalInlinePadding = "var(--platform-data-table-minimal-inline-padding)";
+for (const [label, rule] of [
+  ["header", minimalHeaderRule],
+  ["rows", minimalRowsRule],
+]) {
+  if (
+    !rule.includes(`padding-right: ${minimalInlinePadding};`)
+    || !rule.includes(`padding-left: ${minimalInlinePadding};`)
+  ) {
+    violations.push(
+      `Minimal PlatformDataTable ${label} must use the shared inline padding`,
+    );
+  }
+}
+
 if (violations.length) {
   console.error(
     `Platform table invariant failed:\n${violations.map((violation) => `- ${violation}`).join("\n")}`,

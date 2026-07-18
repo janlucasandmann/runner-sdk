@@ -37,6 +37,7 @@ export const CONFIGURE_HOME_TOP_NAVIGATION_SCRIPT = `        function openConfig
             buttonVariant: "primary",
             buttonSize: "small",
             label: "New",
+            closeOnSelect: true,
             leading: React.createElement(Plus, {
               width: 14,
               height: 14,

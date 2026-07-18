@@ -148,63 +148,6 @@ function normalizeTeamMemberLookupProfilesPayload(data) {
   return [];
 }
 
-async function lookupTeamMemberProfilesViaFirebase(req, identifiers, adapters) {
-  const idToken = adapters.extractIdToken(req);
-  const apiKey = (
-    adapters.firebaseRestApiKey
-    || process.env.FIREBASE_REST_API_KEY
-    || process.env.NEXT_PUBLIC_FIREBASE_API_KEY
-    || "AIzaSyC_aSR8bjU02Kb1ROYUA7Yki_2Fogvs6-o"
-  ).trim();
-  if (!idToken || !apiKey || (!identifiers.emails.length && !identifiers.userIds.length)) {
-    return [];
-  }
-  try {
-    const response = await adapters.fetchImpl(
-      `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(apiKey)}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          idToken,
-          email: identifiers.emails,
-          localId: identifiers.userIds,
-        }),
-      },
-    );
-    if (!response.ok) {
-      return [];
-    }
-    const payload = await response.json().catch(() => ({}));
-    return (Array.isArray(payload?.users) ? payload.users : []).map((user) => {
-      const providerUserInfo = Array.isArray(user.providerUserInfo) ? user.providerUserInfo : [];
-      const providerDisplayName = providerUserInfo
-        .map((entry) => String(entry?.displayName || entry?.name || "").trim())
-        .find(Boolean) || "";
-      const providerPhotoUrl = providerUserInfo
-        .map((entry) => String(entry?.photoURL || entry?.photoUrl || entry?.picture || "").trim())
-        .find(Boolean) || "";
-      const displayName = String(user.displayName || providerDisplayName || "").trim();
-      const photoUrl = String(user.photoURL || user.photoUrl || user.picture || providerPhotoUrl || "").trim();
-      return {
-        id: user.localId || user.userId || user.id || "",
-        uid: user.localId || user.userId || user.id || "",
-        userId: user.localId || user.userId || user.id || "",
-        localId: user.localId || "",
-        email: user.email || "",
-        displayName,
-        name: displayName,
-        photoURL: photoUrl,
-        photoUrl,
-        providerUserInfo,
-        providerData: providerUserInfo,
-      };
-    });
-  } catch {
-    return [];
-  }
-}
-
 export function createTeamMemberProfileLookupHandler(adapters) {
   return async function handleTeamMemberProfileLookup(req, res) {
     let body = {};
@@ -284,10 +227,9 @@ export function createTeamMemberProfileLookupHandler(adapters) {
       } catch {}
     }
 
-    const firebaseProfiles = await lookupTeamMemberProfilesViaFirebase(req, identifiers, adapters);
     return adapters.sendJson(res, 200, {
-      profiles: firebaseProfiles,
-      source: firebaseProfiles.length > 0 ? "firebase" : "none",
+      profiles: [],
+      source: "none",
     });
   };
 }

@@ -1224,6 +1224,13 @@ export const PROJECT_OVERVIEW_CSS_03_FRAGMENT = String.raw`        position: rel
         margin-bottom: 24px;
       }
 
+      .playground-project-overview-threads-load-more {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        padding-top: 12px;
+      }
+
       .playground-project-overview-threads-table {
         display: flex;
         flex-direction: column;

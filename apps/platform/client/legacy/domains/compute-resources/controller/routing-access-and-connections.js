@@ -21,7 +21,7 @@
             });
             setEnvironmentComposerDraft({
               ...buildPlaygroundDefaultEnvironmentDraft(),
-              name: "New Computer",
+              name: "",
             });
             setEnvironmentComposerOpen(true);
           }

@@ -8,6 +8,7 @@
   --platform-data-table-header-background: transparent;
   --platform-data-table-border: rgba(255, 255, 255, 0.075);
   --platform-data-table-sticky-background: transparent;
+  --platform-data-table-minimal-inline-padding: 6px;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -621,26 +622,36 @@
 }
 
 .platform-data-table.is-minimalistic-ui .platform-data-table__header {
-  padding-right: 6px;
-  padding-left: 6px;
+  padding-right: var(--platform-data-table-minimal-inline-padding);
+  padding-left: var(--platform-data-table-minimal-inline-padding);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   background: #000;
 }
 
 .platform-data-table.is-minimalistic-ui .platform-data-table__scroll {
-  width: calc(100% + 30px);
-  margin-left: -15px;
+  width: 100%;
+  margin-right: 0;
+  margin-left: 0;
+  border-radius: 0;
+}
+
+.platform-data-table.is-minimalistic-ui .platform-data-table__body,
+.platform-data-table.is-minimalistic-ui .platform-data-table__row,
+.platform-data-table.is-minimalistic-ui .platform-data-table__expanded-row {
+  border-radius: 0;
+  border-bottom: 0;
 }
 
 .platform-data-table.is-minimalistic-ui .platform-data-table__row,
 .platform-data-table.is-minimalistic-ui .platform-data-table__expanded-row {
-  border-bottom: 0;
+  padding-right: var(--platform-data-table-minimal-inline-padding);
+  padding-left: var(--platform-data-table-minimal-inline-padding);
 }
 
 .platform-data-table.is-minimalistic-ui .platform-data-table__footer,
 .platform-data-table.is-minimalistic-ui .platform-data-table__pagination {
-  padding-right: 6px;
-  padding-left: 6px;
+  padding-right: var(--platform-data-table-minimal-inline-padding);
+  padding-left: var(--platform-data-table-minimal-inline-padding);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0;
   background: #000;

@@ -614,15 +614,9 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
             );
           }
 
-          function renderProjectOverviewResourceNewMenu() {
-            if (projectOverviewResourceToolbarPopover !== "new") {
-              return null;
-            }
+          function renderProjectOverviewResourceNewMenuItems() {
             const resourceTypes = projectOverviewResourceTypeFilters.filter((type) => String(type?.id || "") !== "all");
-            return React.createElement(PlatformPopupSurface, {
-                className: "playground-tasks-toolbar-popup-menu playground-project-resources-new-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                onClick: (event) => event.stopPropagation(),
-              },
+            return React.createElement(React.Fragment, null,
               resourceTypes.map((type) => {
                 const meta = getProjectOverviewResourceTypeMeta(type.id);
                 const Icon = meta.Icon || Layers;
@@ -1087,8 +1081,7 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
               filter: projectOverviewResourceFilter,
               onFilterChange: setProjectOverviewResourceFilter,
               typeFilters: projectOverviewResourceTypeFilters,
-              viewMode: projectOverviewResourceViewMode,
-              onViewModeChange: setProjectOverviewResourceViewMode,
+              viewMode: "list",
               menuId: projectOverviewResourceMenuId,
               onMenuIdChange: setProjectOverviewResourceMenuId,
               getTypeMeta: getProjectOverviewResourceTypeMeta,
@@ -1102,10 +1095,15 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
                 danger: true,
                 onSelect: () => handleRemoveProjectOverviewResourceFromProject(row),
               }],
-              renderNewMenu: renderProjectOverviewResourceNewMenu,
+              renderNewMenuItems: renderProjectOverviewResourceNewMenuItems,
               renderEmptyContent: renderProjectOverviewRecommendedTemplatesEmptyState,
               onRowOpen: openProjectOverviewResourceRow,
               searchAriaLabel: "Search project resources",
+              useCentralSearch: true,
+              useCentralNewSelector: true,
+              useCentralFilterPopup: true,
+              toolbarTitle: "All Resources",
+              showViewToggle: false,
               emptyLabel: "No resources yet.",
               noMatchesLabel: "No resources match this view yet.",
             });

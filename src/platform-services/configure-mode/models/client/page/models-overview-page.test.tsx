@@ -10,6 +10,7 @@ import {
   ModelsOverviewPage,
   type ModelsOverviewRow,
 } from "./models-overview-page.js";
+import { ModelsFeaturedSection } from "./models-overview-presentation.js";
 
 afterEach(cleanup);
 
@@ -62,6 +63,31 @@ const columns: PlatformDataTableColumn<ModelsOverviewRow>[] = [
 ];
 
 describe("ModelsOverviewPage", () => {
+  it("renders featured models with the centralized feature card component", () => {
+    const { container } = render(
+      <ModelsFeaturedSection
+        models={[{
+          id: "deepseek-v4-flash",
+          label: "DeepSeek V4 Flash",
+          description: "Fast model",
+          provider: "DeepSeek",
+          providerType: "deepseek",
+          category: "agent",
+          contextWindow: "128k",
+          speed: "Fast",
+        }]}
+      />,
+    );
+
+    const card = container.querySelector(".playground-models-featured-card");
+    expect(card?.classList.contains("platform-ui-card")).toBe(true);
+    expect(card?.classList.contains("is-feature")).toBe(true);
+    expect(card?.getAttribute("data-platform-ui-card-variant")).toBe("feature");
+    expect(screen.getByText("DeepSeek V4 Flash")).not.toBeNull();
+    expect(screen.getByText("Speed & value")).not.toBeNull();
+    expect(screen.getByText(/Fast, cost-efficient execution/)).not.toBeNull();
+  });
+
   it("maps context capacities to the shared label variants", () => {
     expect(getModelContextLabelVariant(undefined)).toBe("gray");
     expect(getModelContextLabelVariant("Custom")).toBe("gray");

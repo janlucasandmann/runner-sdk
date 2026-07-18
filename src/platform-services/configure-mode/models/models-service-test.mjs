@@ -40,8 +40,8 @@ assert.match(MODELS_PAGE_SCRIPT, /React\.createElement\(ModelsOverviewPage/);
 assert.doesNotMatch(MODELS_PAGE_SCRIPT_FRAGMENTS.view, /React\.createElement\(PlatformDataTable/);
 assert.doesNotMatch(MODELS_PAGE_SCRIPT_FRAGMENTS.view, /playground-files-browser-header playground-models-browser-header/);
 assert.doesNotMatch(MODELS_PAGE_SCRIPT_FRAGMENTS.view, /playground-models-overview-category-switch/);
-assert.doesNotMatch(MODELS_PAGE_SCRIPT_FRAGMENTS.view, /if \(!isAgentTab \|\| featuredModels\.length === 0\)/);
-assert.match(MODELS_PAGE_SCRIPT_FRAGMENTS.view, /if \(featuredModels\.length === 0\) return null/);
+assert.doesNotMatch(MODELS_PAGE_SCRIPT_FRAGMENTS.view, /featuredModelDefinitions/);
+assert.match(MODELS_PAGE_SCRIPT_FRAGMENTS.view, /React\.createElement\(ModelsFeaturedSection/);
 assert.doesNotThrow(() => new Function(MODELS_PAGE_SCRIPT));
 assert.equal(Object.values(MODELS_PAGE_SCRIPT_FRAGMENTS).join(""), MODELS_PAGE_SCRIPT);
 assert.match(MODELS_PAGE_SCRIPT_FRAGMENTS.catalog, /getPlaygroundManagedVideoModelOptions/);
@@ -101,7 +101,7 @@ assert.match(platformEntrySource, /const MODELS_APP_SCRIPT_FRAGMENTS = createMod
 assert.match(platformEntrySource, /modelsService:\s*createModelsService\(/);
 assert.match(
   platformEntrySource,
-  /import \{[^}]*ModelsOverviewPage[^}]*\} from "\/dist\/platform-shell\/presentation\/platform-pages\.js"/,
+  /import \{[^}]*ModelsFeaturedSection[^}]*ModelsOverviewPage[^}]*\} from "\/dist\/platform-shell\/presentation\/platform-pages\.js"/,
 );
 assert.match(platformEntrySource, /modelsService\.handleRequest\(req, res, url\)/);
 assert.match(platformEntrySource, /\$\{MODELS_PAGE_CSS\}/);
@@ -130,6 +130,14 @@ assert.match(modelsOverviewPageSource, /getRowActions/);
 assert.match(modelsOverviewPageSource, /label: "Create Agent"/);
 assert.match(modelsOverviewPageSource, /label: "View Details"/);
 assert.match(modelsOverviewPageSource, /<ModelDetailsModal/);
+
+const modelsOverviewPresentationSource = await fs.readFile(
+  new URL("./client/page/models-overview-presentation.tsx", import.meta.url),
+  "utf8",
+);
+assert.match(modelsOverviewPresentationSource, /<PlatformUiCard/);
+assert.match(modelsOverviewPresentationSource, /variant="feature"/);
+assert.match(modelsOverviewPresentationSource, /className=\{`playground-models-featured-card/);
 
 const modelDetailsModalSource = await fs.readFile(
   new URL("./client/page/model-details-modal.tsx", import.meta.url),

@@ -78,6 +78,28 @@ export const PROJECT_OVERVIEW_CSS_04_FRAGMENT = String.raw`        cursor: point
         min-width: 0;
       }
 
+      .playground-project-resources-toolbar-title-group {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        flex: 0 1 auto;
+      }
+
+      .playground-project-resources-toolbar-title {
+        margin: 0;
+        color: #fff;
+        font-size: 14px;
+        line-height: 1.3;
+        font-weight: 400;
+        letter-spacing: 0;
+        white-space: nowrap;
+      }
+
+      .playground-project-resources-toolbar.is-titled .playground-project-resources-toolbar-actions {
+        margin-left: auto;
+      }
+
       .playground-project-resources-toolbar .playground-files-library-search {
         flex: 1 1 360px;
         max-width: 360px;
@@ -134,6 +156,14 @@ export const PROJECT_OVERVIEW_CSS_04_FRAGMENT = String.raw`        cursor: point
         backdrop-filter: blur(10px);
         z-index: 420;
         transform-origin: top right;
+      }
+
+      .playground-project-resources-filter-menu.is-central-popup {
+        right: auto;
+        left: 0;
+        width: 230px;
+        min-width: 230px;
+        transform-origin: top left;
       }
 
       .playground-project-resources-menu-divider {

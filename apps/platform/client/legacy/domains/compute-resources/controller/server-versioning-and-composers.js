@@ -1826,6 +1826,7 @@
               description: "Configure the profile and runtime versions for the new computer.",
               headerVariant: "search",
               headerSearchProps: {
+                icon: Monitor,
                 inputRef: environmentCreationNameInputRef,
                 value: composerDraft.name || "",
                 placeholder: "New Computer",

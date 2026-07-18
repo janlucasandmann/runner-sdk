@@ -1,14 +1,15 @@
 import { ChevronRight, Plus, Sparkles, SquarePen, Trash2 } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import type { PlatformDataTableAction, PlatformDataTableColumn } from "../../../platform-ui/components/composite/data-table/index.js";
+import { PlatformDetailTabBar } from "../../../platform-ui/components/composite/detail-tab-bar/index.js";
 import {
-  ResourceOverviewIdentityCell,
   ResourceOverviewPage,
   ResourceOverviewStatus,
   ResourceOverviewValue,
   type ResourceOverviewAnalyticsModel,
   type ResourceOverviewPeriod,
 } from "../../../platform-ui/pages/overview/index.js";
+import { SkillsOverviewGuide } from "./skills-overview-guide.js";
 
 export interface SkillOverviewRow {
   id: string;
@@ -40,23 +41,6 @@ export interface SkillsOverviewPageProps {
   onDelete: (rows: readonly SkillOverviewRow[]) => void;
 }
 
-function createSkillsFallbackAnalytics(rows: readonly SkillOverviewRow[]): ResourceOverviewAnalyticsModel {
-  const active = rows.filter((row) => row.isActive).length;
-  const custom = rows.filter((row) => row.isCustom).length;
-  return {
-    title: "Skill activity",
-    ariaLabel: "Skill activity overview",
-    metrics: [
-      { id: "skills", label: "Skills", value: String(rows.length), color: "#8fc4ff" },
-      { id: "active", label: "Active", value: String(active), color: "#7effff" },
-      { id: "custom", label: "Custom", value: String(custom), color: "#6750ff" },
-      { id: "disabled", label: "Disabled", value: String(rows.length - active), color: "#8a8a8a" },
-    ],
-    labels: [],
-    series: [],
-  };
-}
-
 export function SkillsOverviewPage({
   rows,
   mode,
@@ -75,12 +59,15 @@ export function SkillsOverviewPage({
   onDelete,
 }: SkillsOverviewPageProps) {
   const [statusFilter, setStatusFilter] = useState("all");
+  const systemSkillCount = useMemo(() => rows.filter((row) => !row.isCustom).length, [rows]);
+  const customSkillCount = rows.length - systemSkillCount;
   const filteredRows = useMemo(() => rows.filter((row) => {
+    if (mode === "system" && row.isCustom) return false;
+    if (mode === "custom" && !row.isCustom) return false;
     if (statusFilter === "active") return row.isActive;
     if (statusFilter === "disabled") return !row.isActive;
     return true;
-  }), [rows, statusFilter]);
-  const resolvedAnalytics = analytics || createSkillsFallbackAnalytics(rows);
+  }), [mode, rows, statusFilter]);
 
   const columns = useMemo<PlatformDataTableColumn<SkillOverviewRow>[]>(() => [
     {
@@ -148,18 +135,35 @@ export function SkillsOverviewPage({
     ];
   };
 
-  const modeSwitch = (
-    <div className="resource-overview-segmented" role="group" aria-label="Skill type">
-      <button type="button" className={mode === "system" ? "is-active" : ""} onClick={() => onModeChange("system")} aria-pressed={mode === "system"}>System</button>
-      <button type="button" className={mode === "custom" ? "is-active" : ""} onClick={() => onModeChange("custom")} aria-pressed={mode === "custom"}>Custom</button>
-    </div>
+  const modeTabs = (
+    <PlatformDetailTabBar<"system" | "custom">
+      ariaLabel="Skill categories"
+      value={mode}
+      tabs={[
+        { id: "system", label: "System Skills" },
+        { id: "custom", label: "Custom Skills" },
+      ]}
+      onValueChange={onModeChange}
+      variant="minimal"
+      className="skills-overview-tab-bar"
+    />
   );
 
   return (
     <ResourceOverviewPage<SkillOverviewRow>
       period={period}
       onPeriodChange={onPeriodChange}
-      analytics={resolvedAnalytics}
+      analytics={analytics}
+      heroContent={(
+        <SkillsOverviewGuide
+          systemSkillCount={systemSkillCount}
+          customSkillCount={customSkillCount}
+          onBrowseSystem={() => onModeChange("system")}
+          onBrowseCustom={() => onModeChange("custom")}
+          onCreate={onCreate}
+        />
+      )}
+      showPeriodSelector={false}
       controlsPortalId={controlsPortalId}
       headerActions={headerActions}
       className="is-skills"
@@ -171,8 +175,9 @@ export function SkillsOverviewPage({
         className: "resource-overview-table is-skills",
         sorting: { defaultValue: { id: "updated", direction: "desc" } },
         selection: { enabled: true, ariaLabel: (row) => `Select ${row.name}` },
+        pagination: false,
         toolbar: {
-          title: "All Skills",
+          leading: modeTabs,
           search: { placeholder: "Search skills", getSearchText: (row) => row.searchText || row.name },
           filters: [{
             id: "status",
@@ -185,7 +190,6 @@ export function SkillsOverviewPage({
               { id: "disabled", label: "Disabled" },
             ],
           }],
-          trailing: modeSwitch,
           primaryAction: { label: "Skill", icon: Plus, onClick: onCreate },
         },
         getRowActions,
@@ -193,6 +197,7 @@ export function SkillsOverviewPage({
         getRowAriaLabel: (row) => row.name,
         loading,
         emptyState: mode === "custom" ? "No custom skills yet." : "No system skills available.",
+        noResultsState: "No skills match this view.",
       }}
     />
   );

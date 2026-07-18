@@ -1349,7 +1349,7 @@ export const PROJECT_OVERVIEW_FILES_ACTIVITY_FRAGMENT = String.raw`
                 tableOptions: {
                   key: "project-overview-threads-" + String(selectedProject?.id || ""),
                   ariaLabel: "Project threads",
-                  variant: "default",
+                  variant: "minimalistic-ui",
                   toolbar: {
                     title: "Threads",
                     search: {
@@ -1375,15 +1375,6 @@ export const PROJECT_OVERVIEW_FILES_ACTIVITY_FRAGMENT = String.raw`
                         onChange: setProjectOverviewThreadFilterMode,
                       },
                     ],
-                    trailing: React.createElement(PlatformSecondaryButton, {
-                      type: "button",
-                      className: "playground-project-overview-toolbar-action",
-                      onClick: () => typeof setProjectOverviewVisibleThreadCount === "function" && setProjectOverviewVisibleThreadCount((current) => current + 10),
-                      disabled: !hasMoreProjectThreads,
-                    },
-                      React.createElement(List, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Show more")
-                    ),
                   },
                   emptyState: hasProjectOverviewThreadListFilters ? "No matching project threads." : "No project threads yet.",
                   noResultsState: "No matching project threads.",
@@ -1398,7 +1389,15 @@ export const PROJECT_OVERVIEW_FILES_ACTIVITY_FRAGMENT = String.raw`
                   onToggleSelection: toggleProjectOverviewThreadSelection,
                   onToggleVisibleSelection: toggleVisibleProjectOverviewThreadSelection,
                 },
-              })
+              }),
+              hasMoreProjectThreads
+                ? React.createElement("div", { className: "playground-project-overview-threads-load-more" },
+                    React.createElement(PlatformSecondaryButton, {
+                      type: "button",
+                      onClick: () => typeof setProjectOverviewVisibleThreadCount === "function" && setProjectOverviewVisibleThreadCount((current) => current + 10),
+                    }, "Show more")
+                  )
+                : null
             );
           }
 

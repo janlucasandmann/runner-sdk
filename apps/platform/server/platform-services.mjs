@@ -22,7 +22,6 @@ export function createPlatformServices({
   port,
 }) {
   const {
-    extractFeedbackSummaryIdToken,
     fetchAiosApi,
     fetchAiosCloud,
     fetchUpstreamJsonForProxyExactPath,
@@ -153,7 +152,6 @@ export function createPlatformServices({
       sendJson,
     }),
     teamsService: createTeamsService({
-      extractIdToken: extractFeedbackSummaryIdToken,
       fetchUpstreamJsonForProxyExactPath,
       hasAiosSession,
       proxyUpstreamGet,

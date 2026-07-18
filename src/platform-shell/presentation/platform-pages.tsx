@@ -113,6 +113,13 @@ export const ModelsOverviewPage = lazyNamed(
   () => import("../../platform-services/configure-mode/models/client/page/models-overview-page.js"),
   "ModelsOverviewPage",
 );
+export const ModelsFeaturedSection = lazyNamed(
+  () =>
+    import(
+      "../../platform-services/configure-mode/models/client/page/models-overview-presentation.js"
+    ),
+  "ModelsFeaturedSection",
+);
 export const DevelopApiKeysOverviewPage = lazyNamed(
   () =>
     import("../../platform-services/develop-mode/api-keys/client/page/api-keys-overview-page.js"),

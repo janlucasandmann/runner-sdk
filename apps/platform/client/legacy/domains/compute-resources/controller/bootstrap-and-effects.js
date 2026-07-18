@@ -5828,6 +5828,9 @@
           }, [creationOnly, creationRequestToken]);
 
           useEffect(() => {
+            if (creationOnly) {
+              return;
+            }
             const normalizedTargetEnvironmentId = String(navigationTargetEnvironmentId || "").trim();
             const previousRequest = environmentNavigationRequestRef.current || {
               token: null,
@@ -5926,7 +5929,7 @@
               targetId: "",
               handled: true,
             };
-          }, [environmentComposerOpen, navigationTargetEnvironmentId, navigationToken, orderedEnvironments]);
+          }, [creationOnly, environmentComposerOpen, navigationTargetEnvironmentId, navigationToken, orderedEnvironments]);
   
           useEffect(() => {
             const normalizedTargetId = String(navigationTargetResourceId || "").trim();

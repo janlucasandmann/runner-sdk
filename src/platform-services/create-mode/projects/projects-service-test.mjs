@@ -63,7 +63,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects overview runtime",
     source: PROJECT_OVERVIEW_SCRIPT,
-    expectedSha256: "bcc1e5f5e29f38e59fd79b600e52873e04c14ad0585ad723d49b74dcb328ae7d",
+    expectedSha256: "06623463067aca819aba592062d620d9b1775f65bd6c4945e0b79131dfad13e9",
     fragmentGroups: [{
       baseUrl: projectsOverviewUrl,
       paths: PROJECT_OVERVIEW_SCRIPT_FRAGMENT_PATHS,
@@ -73,7 +73,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects overview styles",
     source: PROJECT_OVERVIEW_CSS,
-    expectedSha256: "f12e1c3e420cc14e5c8bac29f978d7c9eb67aa806df2cf5a84f8ea31380bd480",
+    expectedSha256: "5e18726190503dc134c38aa2b556a9ec4389a105d6eb2b7c705daa816c18adaa",
     fragmentGroups: [{
       baseUrl: projectsOverviewUrl,
       paths: PROJECT_OVERVIEW_CSS_FRAGMENT_PATHS,
@@ -113,7 +113,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects views runtime",
     source: PROJECTS_PAGE_VIEWS_SCRIPT,
-    expectedSha256: "15ba3247b140b1feddf6b7e8626ab8bc3d5caec3f8dde7802baf38e0a2c7a5be",
+    expectedSha256: "0808bb7d6cd296af7eb702097b00a5842e798366afbbfcf89cf61abd28b4f139",
     fragmentGroups: [{
       baseUrl: projectsPageUrl,
       paths: PROJECTS_PAGE_VIEWS_FRAGMENT_PATHS,
@@ -138,6 +138,15 @@ assert.match(PROJECTS_INTEGRATIONS_RUNTIME_SCRIPT, /buildPlaygroundProjectLinked
 assert.match(PROJECTS_INTEGRATIONS_RUNTIME_SCRIPT, /createPlaygroundProjectTeamRolePermissionSet/);
 assert.match(PROJECTS_PAGE_RUNTIME_SCRIPT, /function PlaygroundTasksPage/);
 assert.match(PROJECTS_PAGE_RUNTIME_SCRIPT, /function renderProjectOverviewView/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /tabBarActions: activeProjectOverviewHomeTab === "general"/);
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /headerActions: React\.createElement\(PlatformSecondaryButton/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /ariaLabel: "Project threads",\s*variant: "minimalistic-ui"/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /useCentralSearch: true,\s*useCentralNewSelector: true,\s*useCentralFilterPopup: true/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /viewMode: "list"/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /toolbarTitle: "All Resources",\s*showViewToggle: false/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /renderNewMenuItems: renderProjectOverviewResourceNewMenuItems/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /hasMoreProjectThreads\s*\? React\.createElement\("div", \{ className: "playground-project-overview-threads-load-more"/);
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /trailing: React\.createElement\(PlatformSecondaryButton/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(PlatformLoadingState/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /message: "Loading projects\.\.\."/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(PlatformSearch/);
@@ -153,6 +162,12 @@ assert.match(PROJECTS_STYLE_FRAGMENTS.core, /playground-tasks-page/);
 assert.match(PROJECTS_STYLE_FRAGMENTS.connectorBrowser, /playground-tasks-connector-browser-portal/);
 
 const platformEntrySource = await readPlatformCompositionSource();
+assert.match(platformEntrySource, /React\.createElement\(PlatformSearch, \{\s*className: "playground-project-resources-central-search"/);
+assert.match(platformEntrySource, /React\.createElement\(PlatformButtonSelector, \{\s*mode: "popup",\s*buttonVariant: "secondary"[\s\S]*?popupVariant: "minimal"/);
+assert.match(platformEntrySource, /React\.createElement\(PlatformPopup, \{[\s\S]*?variant: "minimal",\s*placement: "bottom-start"/);
+assert.match(platformEntrySource, /React\.createElement\(ListFilter, \{ width: 14/);
+assert.match(platformEntrySource, /playground-project-resources-toolbar-title-group/);
+assert.match(platformEntrySource, /renderSharedFilterControl\(\)[\s\S]*?renderSharedNewControl\(\),\s*renderSharedSearchControl\(\)/);
 assert.match(platformEntrySource, /from "\.\.\/\.\.\/\.\.\/src\/platform-services\/create-mode\/projects\/index\.mjs"/);
 assert.doesNotMatch(platformEntrySource, /function PlaygroundTasksPage/);
 assert.doesNotMatch(platformEntrySource, /async function proxyProjectResourceIndexGet/);

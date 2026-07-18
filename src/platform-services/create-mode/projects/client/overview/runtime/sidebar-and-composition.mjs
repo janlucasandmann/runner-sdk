@@ -2068,14 +2068,16 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
                       React.createElement("h1", { className: "playground-project-overview-summary-title" }, selectedProject.name || "Untitled Project")
                     )
                   ),
-                  headerActions: React.createElement(PlatformSecondaryButton, {
-                    type: "button",
-                    className: "playground-files-control-button playground-project-overview-summary-mission-button",
-                    onClick: openMissionControlComposer,
-                  },
-                    React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", { className: "playground-project-overview-summary-mission-label" }, "Mission Control")
-                  ),
+                  tabBarActions: activeProjectOverviewHomeTab === "general"
+                    ? React.createElement(PlatformSecondaryButton, {
+                        type: "button",
+                        className: "playground-files-control-button playground-project-overview-summary-mission-button",
+                        onClick: openMissionControlComposer,
+                      },
+                        React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
+                        React.createElement("span", { className: "playground-project-overview-summary-mission-label" }, "Mission Control")
+                      )
+                    : null,
                   activeTab: activeProjectOverviewHomeTab,
                   onTabChange: handleProjectOverviewHomeTabChange,
                   showSettings: canViewProjectSettings,
