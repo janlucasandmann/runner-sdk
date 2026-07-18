@@ -1,7 +1,7 @@
 import {
   buildRunnerPreviewAttachmentFromPath,
   type RunnerPreviewAttachment,
-} from "../../../../react/runner-document-preview.js";
+} from "../document-preview/preview-contracts.js";
 import type { RunnerLog } from "../../../../types.js";
 import { extractReadFilePath, formatBytes, stripShellInlineComments } from "./command-parsing.js";
 import { resolveCommandOutputText } from "./structured-command-output.js";

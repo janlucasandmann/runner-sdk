@@ -1,16 +1,14 @@
-import { CSSProperties, ChangeEvent, ClipboardEvent, DragEvent as ReactDragEvent, Fragment, KeyboardEvent, MouseEvent, PointerEvent as ReactPointerEvent, ReactNode, SyntheticEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { CSSProperties, ChangeEvent, ClipboardEvent, Fragment, KeyboardEvent, MouseEvent, ReactNode, SyntheticEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   ArrowUp as LucideArrowUp,
   AudioLines as LucideAudioLines,
   Bot as LucideBot,
   Brain as LucideBrain,
-  Building2 as LucideBuilding2,
   Calendar as LucideCalendar,
   Check as LucideCheck,
   ChevronDown as LucideChevronDown,
   CornerDownRight as LucideCornerDownRight,
-  Rocket as LucideRocket,
   Cloud as LucideCloud,
   Code as LucideCode,
   Copy as LucideCopy,
@@ -35,7 +33,6 @@ import {
   Presentation as LucidePresentation,
   Plus as LucidePlus,
   RefreshCw as LucideRefreshCw,
-  Eraser as LucideEraser,
   Split as LucideSplit,
   Star as LucideStar,
   Telescope as LucideTelescope,
@@ -61,12 +58,11 @@ import {
 } from "../platform-ui/components/ui/button/index.js";
 import { PlatformSwitch } from "../platform-ui/components/ui/switch/index.js";
 import { adaptLegacyThreadToProjection } from "../thread/legacy-adapter.js";
-import type { RunnerThreadAction, RunnerThreadMessage, RunnerThreadProjection, RunnerThreadRoutedMessageResult, RunnerThreadRunStatus } from "../thread/types.js";
+import type { RunnerThreadAction, RunnerThreadMessage, RunnerThreadProjection, RunnerThreadRunStatus } from "../thread/types.js";
 import { useRunnerExecution } from "./use-runner-execution.js";
 import { getRunnerChatEnterAnimationStyle } from "./runner-chat-animations.js";
 import { mountRunnerChatStyles } from "./runner-chat-styles.js";
 import { RunnerThreadRunActivityCard } from "./thread/run-activity-card.js";
-import { adaptRunnerThreadActionToRunnerLog } from "./thread/activity-action-list.js";
 import { RunnerThreadUserMessageTime } from "./thread/thread-message.js";
 import { useRunnerThreadProjection } from "./thread/use-runner-thread-projection.js";
 import { useRunnerLogAutoScroll } from "./runner-chat/use-log-auto-scroll.js";
@@ -75,12 +71,9 @@ import { RunnerDocumentPreviewDrawer } from "./runner-document-preview-drawer.js
 import {
   buildRunnerPreviewAttachmentFromPath,
   buildRunnerPreviewDownloadUrl,
-  buildRunnerPreviewHtmlPreviewUrlFromDownloadUrl,
   buildRunnerPreviewHtmlPreviewUrl,
   inferRunnerPreviewMimeType,
-  isRunnerPreviewHtmlFile,
   normalizeRunnerPreviewWorkspacePath,
-  resolveRunnerPreviewAssetUrl,
   type RunnerImageUnderstandingPreviewData,
   type RunnerImageUnderstandingPreviewItem,
   type RunnerMediaGenerationPromptPreviewData,
@@ -89,7 +82,7 @@ import {
   type RunnerWebSearchPreviewImage,
   type RunnerWebSearchPreviewSource,
 } from "./runner-document-preview.js";
-import { BrowserSkillLogBox, ComputerUseDetailDrawer, DeepResearchDetailDrawer, DeepResearchLogBox, InlineStatusLogBox, RunnerCodeViewer, RunnerWorkLogEntry, SubagentDetailDrawer, SubagentLogBox, hasActiveDeepResearchLogGroup, isBrowserSkillCommand, isBrowserSkillLaunchCommand, isComputerUseMcpLog, isDeepResearchCommand } from "../platform-ui/components/thread-components/log-boxes/index.js";
+import { ComputerUseDetailDrawer, DeepResearchDetailDrawer, InlineStatusLogBox, RunnerCodeViewer, SubagentDetailDrawer, hasActiveDeepResearchLogGroup, isBrowserSkillCommand, isBrowserSkillLaunchCommand, isComputerUseMcpLog, isDeepResearchCommand } from "../platform-ui/components/thread-components/log-boxes/index.js";
 import { RunnerMarkdown, stripRunnerSystemTags as stripSystemTags } from "./runner-markdown.js";
 import { DotLoader } from "./dot-loader.js";
 import {
@@ -137,93 +130,68 @@ import {
   IconGoogleDrive,
   IconImages,
   IconLayers,
-  IconLoader2,
   IconLogout,
   IconMic,
-  IconMusic,
   IconNotion,
   IconOneDrive,
   IconPaperclip,
   IconPlus,
   IconSearch,
   IconStop,
-  IconUser,
-  IconVideo,
   IconX,
 } from "./runner-chat/icons.js";
 import {
-  isRunnerChatWebVoiceMode,
-  normalizeRunnerChatVoiceMode,
   type RunnerAgentSelectorMode,
   type RunnerReasoningEffortId,
-  type RunnerWorkspaceSelectorMode,
 } from "./runner-chat/voice-audio.js";
-import { buildRunnerVoiceHeaders } from "./runner-chat/voice-realtime-protocol.js";
 import { useRunnerSpeechToText } from "./runner-chat/use-speech-to-text.js";
 import { useRunnerVoiceModeSession } from "./runner-chat/use-voice-mode-session.js";
+import {
+  RunnerVoiceModeControl,
+  RunnerVoiceModeStatusBar,
+} from "./runner-chat/voice-mode-presentation.js";
+import {
+  RunnerAgentSelectorControl,
+  RunnerComposerOrganizationSelector,
+  RunnerWorkspaceSelectorControl,
+} from "./runner-chat/composer-selector-controls.js";
+import { RunnerThreadContextControl } from "./runner-chat/thread-context-control.js";
+import {
+  RunnerFileBrowserItem,
+  renderRunnerBrowserFileIcon,
+} from "./runner-chat/file-browser-item.js";
+import {
+  RunnerTimelineWorkLogEntry,
+  renderRunnerCanonicalThreadAction,
+  renderRunnerNestedTimelineItems,
+  renderRunnerTimelineItem,
+  type RunnerTimelineRenderContext,
+} from "./runner-chat/timeline-renderer.js";
 import {
   RUNNER_AD_ASPECT_RATIO_OPTIONS,
   RUNNER_AD_CREATION_DEFAULT_SETTINGS,
   RUNNER_AD_QUALITY_OPTIONS,
   RUNNER_AD_STYLE_OPTIONS,
   RUNNER_AD_VARIANT_OPTIONS,
-  buildRunnerAdCreationLabel,
-  buildRunnerAgentCreationLabel,
-  buildRunnerBacklogSubtaskLabel,
-  buildRunnerMissionControlLabel,
-  buildRunnerParseCreationLabel,
-  buildRunnerResearchCreationLabel,
-  buildRunnerResourceCreationLabel,
-  buildRunnerScrapeCreationLabel,
-  buildRunnerSkillCreationLabel,
-  buildRunnerSlideCreationLabel,
   buildStagedRunnerAdCreationCommand,
   formatRunnerAdCreationComputeTokens,
   getRunnerAdCreationQualityComputeTokensPerImage,
   normalizeRunnerAdCreationSettings,
-  normalizeRunnerBacklogTicketNumber,
-  parseAutoStageAdCreationCommand,
-  parseAutoStageAgentCreationCommand,
-  parseAutoStageBacklogMissionControlCommand,
-  parseAutoStageBacklogSubtaskCommand,
-  parseAutoStageParseCreationCommand,
-  parseAutoStageResearchCreationCommand,
-  parseAutoStageResourceCreationCommand,
-  parseAutoStageScrapeCreationCommand,
-  parseAutoStageSkillCreationCommand,
-  parseAutoStageSlideCreationCommand,
   resolveRunnerSlashCommandInputState,
   type RunnerAdCreationAspectRatioId,
   type RunnerAdCreationQualityId,
   type RunnerAdCreationSettings,
   type RunnerAdCreationStyleId,
   type RunnerAdCreationVariantCount,
-  type RunnerAgentCreationCommandType,
-  type RunnerResourceCreationCommandType,
-  type RunnerSkillCreationCommandType,
-  type StagedAdCreationCommand,
-  type StagedAgentCreationCommand,
   type StagedBacklogCommand,
-  type StagedBacklogMissionControlCommand,
-  type StagedBacklogSubtaskCommand,
-  type StagedParseCreationCommand,
-  type StagedResearchCreationCommand,
-  type StagedResourceCreationCommand,
-  type StagedScrapeCreationCommand,
-  type StagedSkillCreationCommand,
-  type StagedSlideCreationCommand,
 } from "./runner-chat/composer-commands.js";
 import {
-  RUNNER_REASONING_EFFORT_OPTIONS,
   buildRunnerAgentGuardrailsHiddenPrompt,
   buildRunnerExecutionPromptWithHiddenContext,
   getRunnerAgentOptionPhotoUrl,
-  getRunnerAgentOptionProviderType,
-  getRunnerAgentProviderIcon,
   getRunnerAgentSelectorMode,
   getRunnerPreferredDefaultAgentOption,
   getRunnerProjectEnvironmentId,
-  getRunnerReasoningEffortOption,
   isRunnerHumanAgentOption,
   isRunnerTeamAgentOption,
   mergeRunnerChatOptions,
@@ -238,8 +206,6 @@ export type {
 } from "./runner-chat/agent-options.js";
 import type {
   LocalAttachment,
-  RunnerAttachment,
-  RunnerChatImplicitAttachment,
   RunnerTurnAttachment,
 } from "./runner-chat/attachment-types.js";
 export type {
@@ -251,8 +217,6 @@ import {
   buildSelectedGithubRepoReference,
   createGithubBrowserNodeId,
   createGithubBrowserRepoFolderId,
-  getBrowserFileType,
-  getGithubRepoName,
   isAttachmentDocumentPreviewable,
   parseGithubBrowserFolderId,
 } from "./runner-chat/attachment-utils.js";
@@ -276,46 +240,30 @@ import {
 import {
   formatElapsedDurationLabel,
   parseSecondsFromClock,
-  parseIsoTimestampMs,
 } from "./runner-chat/time-utils.js";
 import {
   buildRunnerHeaders,
   sanitizeBackendUrl,
 } from "./runner-chat/api-utils.js";
 import {
-  cancelThreadExecution,
   createThread,
   DEFAULT_NEW_THREAD_TITLE,
   forkThreadRequest,
   type RunnerForkExistingEnvironmentFileCopyMode,
-  type RunnerForkFileCopyMode,
-  type RunnerForkTarget,
 } from "./runner-chat/thread-api.js";
 import {
-  prepareGithubRepositorySelection,
   reportRunnerLifecycleCallbackError,
   startEnvironment,
 } from "./runner-chat/environment-api.js";
 import {
-  blobToBase64,
   buildFileFromFetchedContent,
-  decodeBase64TextContent,
-  normalizeBase64Content,
-  uploadAttachment,
-  uploadAttachmentContent,
-  type RunnerChatFetchedFileContent,
 } from "./runner-chat/attachment-api.js";
+import {
+  createRunnerImplicitAttachments,
+} from "./runner-chat/attachment-factories.js";
 export type {
   RunnerChatFetchedFileContent,
 } from "./runner-chat/attachment-api.js";
-import {
-  fetchThreadFeedback,
-  reportThreadFeedbackIssue,
-  setThreadFeedback,
-  type RunnerThreadFeedbackRating,
-  type RunnerThreadFeedbackReportType,
-  type RunnerThreadFeedbackState,
-} from "./runner-chat/thread-feedback.js";
 import {
   buildRunnerAttachmentFromPreviewAttachment,
   buildTurnAttachmentsFromLocalAttachments,
@@ -323,7 +271,6 @@ import {
   isRunnerImagePreviewAttachment,
   isRunnerTurnDisplayHiddenAttachment,
   mergeRunnerTurnAttachments,
-  normalizeTurnAttachment,
   normalizeTurnAttachments,
   pickTurnAttachments,
 } from "./runner-chat/turn-attachments.js";
@@ -366,7 +313,6 @@ import {
 } from "./runner-chat/hydration/lifecycle-status.js";
 import {
   fetchThreadHydrationPayload,
-  fetchThreadResearchSessions,
 } from "./runner-chat/hydration/api.js";
 import {
   applyHydratedRunningThreadState,
@@ -399,34 +345,20 @@ import {
 } from "./runner-chat/quoted-selection-dom.js";
 import { generateRunnerClientId as generateId } from "./runner-chat/id-utils.js";
 import {
-  DEFAULT_THREAD_CONTEXT_ACTIONS,
-  EMPTY_THREAD_CONTEXT_CATEGORIES,
-  buildContextIndicatorTitle,
-  deriveThreadContextDisplayMetrics,
-  formatCompactTokenCount,
   formatThreadContextCommandText,
-  getContextCategoryDisplayTokens,
-  isThreadContextCommandPrompt,
-  parseAutoStageThreadContextCommand,
   parseThreadContextCommand,
   stagedThreadContextCommandOffset,
   stagedThreadContextCommandTone,
   threadContextActionAllowsPrompt,
-  threadContextCategoryColor,
   type ParsedThreadContextCommand,
-  type RunnerChatThreadContext,
   type RunnerChatThreadContextAction,
-  type RunnerChatThreadContextAvailableActions,
-  type RunnerChatThreadContextCategory,
-  type RunnerChatThreadContextCategoryKey,
-  type RunnerChatThreadContextDetails,
 } from "./runner-chat/thread-context-utils.js";
 import {
-  fetchRunnerThreadContext,
-  fetchRunnerThreadContextDetails,
-  requestRunnerThreadContextAction,
   streamRunnerThreadBtw,
 } from "./runner-chat/thread-context-api.js";
+import {
+  executeRunnerThreadContextAction,
+} from "./runner-chat/thread-context-action.js";
 import {
   getRunnerMissionControlAgentName,
   getRunnerMissionControlAgentPhotoUrl,
@@ -435,27 +367,21 @@ import {
   type RunnerTaskPreview,
 } from "./runner-chat/task-preview.js";
 import {
-  buildEnvironmentFileDownloadUrl,
-  buildEnvironmentFileListUrl,
   buildWorkspaceSelectionStorageKey,
   childFolderPath,
   fileItemsForParent,
-  formatBrowserFileDate,
   formatBrowserFileSize,
-  isBrowserFilePreviewable,
-  loadPersistedWorkspaceSelection,
-  mergeDriveFolderItems,
   notionDatabasesToFileItems,
-  normalizeEnvironmentWorkspaceItems,
-  normalizeRunnerWorkspaceFolderPath,
   normalizeWorkspaceSelectorMode,
   persistWorkspaceSelection,
   type RunnerChatFileNode,
-  type RunnerChatNotionDatabase,
 } from "./runner-chat/workspace-files.js";
 import {
   collectTurnChangedFiles,
 } from "./runner-chat/turn-file-changes.js";
+import {
+  resolveRunnerEditableTurnBoundary,
+} from "./runner-chat/editable-turn-boundary.js";
 import {
   mapExpandedTurns,
 } from "./runner-chat/turn-expansion.js";
@@ -463,10 +389,34 @@ import {
   normalizeRunnerFileBrowserSource,
   type RunnerFileBrowserSource,
 } from "./runner-chat/file-browser-source.js";
+import { useRunnerFileBrowserNavigation } from "./runner-chat/use-file-browser-navigation.js";
+import { useRunnerFileBrowserPreview } from "./runner-chat/use-file-browser-preview.js";
+import { useRunnerFileBrowserSourceLoaders } from "./runner-chat/use-file-browser-source-loaders.js";
+import { useRunnerFileBrowserSourceState } from "./runner-chat/use-file-browser-source-state.js";
+import { useRunnerFileDropController } from "./runner-chat/use-file-drop-controller.js";
+import { useRunnerFileBrowserAttachmentController } from "./runner-chat/use-file-browser-attachment-controller.js";
+import { useRunnerAttachmentController } from "./runner-chat/use-attachment-controller.js";
+import { useRunnerForkConfigurationController } from "./runner-chat/use-fork-configuration-controller.js";
+import { useRunnerRunStopController } from "./runner-chat/use-run-stop-controller.js";
+import { useRunnerThreadContextController } from "./runner-chat/use-thread-context-controller.js";
+import { useRunnerDeepResearchSessionsController } from "./runner-chat/use-deep-research-sessions-controller.js";
+import { tryRouteRunnerCommunicatorMessage } from "./runner-chat/communicator-router.js";
+import { useRunnerGithubBranchSelection } from "./runner-chat/use-github-branch-selection.js";
+import { useRunnerAgentSelectionController } from "./runner-chat/use-agent-selection-controller.js";
+import { useRunnerCustomSkillsController } from "./runner-chat/use-custom-skills-controller.js";
+import { useRunnerEnabledSkillsController } from "./runner-chat/use-enabled-skills-controller.js";
+import { useRunnerExternalComposerCommandStaging } from "./runner-chat/use-external-composer-command-staging.js";
+import { useRunnerIntegrationSelectionController } from "./runner-chat/use-integration-selection-controller.js";
+import { useRunnerStagedComposerCommands } from "./runner-chat/use-staged-composer-commands.js";
+import { useRunnerWorkspaceSelectionController } from "./runner-chat/use-workspace-selection-controller.js";
+import {
+  formatRunnerDateTimeLocalValue,
+  formatRunnerScheduleChipLabel,
+  useRunnerScheduleController,
+} from "./runner-chat/use-schedule-controller.js";
 import type {
   RunnerChatFollowUpAction,
   RunnerChatProps,
-  RunnerChatSchedulePreset,
 } from "./runner-chat/public-types.js";
 export type {
   RunnerChatActionSummaryClickPayload,
@@ -498,7 +448,6 @@ import {
 } from "./runner-chat/turn-status-presentation.js";
 import {
   buildRunnerOriginalActionLogIndex,
-  resolveRunnerOriginalActionLog,
 } from "./runner-chat/canonical-action-log-index.js";
 import {
   buildRunnerTurnTimelineState,
@@ -507,14 +456,18 @@ import {
   useRunnerQueuedExecution,
   type RunnerPendingMessage,
 } from "./runner-chat/execution/queued-execution.js";
+import { useRunnerTurnNoticeController } from "./runner-chat/use-turn-notice-controller.js";
 import {
-  getRunnerActiveRunInstructionNotice,
-  persistRunnerActiveRunInstruction,
+  tryRouteRunnerActiveRunInstruction,
 } from "./runner-chat/execution/active-run-instruction.js";
 import { RunnerPageQueueReceipt } from "./runner-chat/execution/page-queue-receipt.js";
 import { createRunnerThreadRunExecutor } from "./runner-chat/execution/thread-run-executor.js";
 import { RunnerCanonicalThreadSurface } from "./runner-chat/canonical-thread-surface.js";
 import { adaptRunnerThreadPermissionRequestToRunnerLog } from "./runner-chat/permission-log-adapter.js";
+import {
+  applyRunnerPermissionDecision,
+  submitRunnerPermissionDecision,
+} from "./runner-chat/permission-decision.js";
 import { RunnerFileBrowserDialog } from "./runner-chat/file-browser-dialog.js";
 import {
   RunnerEditConfirmationDialog,
@@ -525,50 +478,43 @@ import {
   getRunnerComposerPlanDisplay,
 } from "./runner-chat/composer-plan.js";
 import {
-  POPUP_ANIMATION_DURATION_MS,
-  RUNNER_COMPOSER_POPUP_OPEN_EVENT,
-  emitRunnerComposerPopupOpen,
-  getMainPopupRenderId,
-  getRunnerComposerPopupEventSource,
-  getSidePopupRenderId,
   isPlusPopupId,
   renderComposerPopupPortal,
   useComposerAnchoredPopupStyle,
-  type InputPopupId,
-  type MainPopupRenderId,
-  type PopupAnimationPhase,
-  type SidePopupExitDirection,
-  type SidePopupRenderId,
 } from "./runner-chat/composer-popup.js";
+import {
+  useRunnerComposerPopupController,
+} from "./runner-chat/use-composer-popup-controller.js";
+import {
+  useRunnerComposerQuotedSelection,
+} from "./runner-chat/use-composer-quoted-selection.js";
+import {
+  useRunnerDocumentPreviewController,
+} from "./runner-chat/use-document-preview-controller.js";
+import {
+  useRunnerThreadFeedbackController,
+} from "./runner-chat/use-thread-feedback-controller.js";
 import {
   extractDeepResearchSessionIdFromLogs,
   extractDeepResearchTopicFromGroup,
-  isDeepResearchSessionActive,
   resolveDeepResearchSessionForGroup,
 } from "./runner-chat/deep-research-session.js";
 import {
   buildRunnerImageSelectionInpaintPrompt,
   createRunnerImageSelectionMaskFile,
-  type RunnerImagePreviewSelectionState,
 } from "./runner-chat/image-selection.js";
 import {
   getRunnerLogRangeDurationLabel,
   getRunnerLogTimestampMs,
-  isBtwTurnPrompt,
   runnerExecutionStatusTone as statusTone,
   toRunnerLogDurationLabel as toDurationLabel,
 } from "./runner-chat/log-presentation.js";
 import {
-  areStringArraysEqual,
   buildEnabledSkillsPayload,
   buildEnabledSkillsStorageKey,
   customSkillIconComponent,
-  defaultEnabledSkillIds,
-  loadPersistedEnabledSkillIds,
   normalizeComputerAgentSkills,
   normalizeEnabledSkillIdList,
-  normalizeRunnerSkillId,
-  persistEnabledSkillIds,
   type RunnerChatSkill,
 } from "./runner-chat/skill-configuration.js";
 export type {
@@ -595,10 +541,10 @@ export type {
   RunnerChatMetronomeWorkflowRunPayload,
 } from "./runner-chat/metronome-workflow.js";
 
-const RUNNER_FOLDER_ICON_URL = new URL("./assets/folder.png", import.meta.url).toString();
-const RUNNER_TEXT_FILE_ICON_URL = new URL("./assets/txtfile.png", import.meta.url).toString();
-const RUNNER_IMAGE_FILE_ICON_URL = new URL("./assets/imgicon.webp", import.meta.url).toString();
-const RUNNER_EMAIL_ATTACHMENT_FILE_ICON_URL = new URL("./assets/email-attachment.webp", import.meta.url).toString();
+const RUNNER_EMAIL_ATTACHMENT_FILE_ICON_URL = new URL(
+  "../platform-ui/components/thread-components/assets/email-attachment.webp",
+  import.meta.url,
+).toString();
 const RUNNER_TRANSPARENT_LOGO_URL = "https://computer-agents.com/img/logos/runnertransparent.png";
 const RUNNER_WORK_LOG_PAGE_SIZE = 10;
 // Live runs stay intentionally quiet at the conversation altitude. The header
@@ -649,92 +595,8 @@ interface RunnerSelectedDeepResearchDetailPresentation {
   fallbackTopic?: string | null;
 }
 
-interface PendingForkConfiguration {
-  source: "message" | "thread";
-  sourceThreadId: string;
-  stagedPrompt: string;
-  attachments?: LocalAttachment[];
-  quotedSelection?: RunnerQuotedSelection | null;
-  turn?: RunnerTurn;
-  restoreSelectedEnvironmentId?: string | null;
-}
-
-const COMPOSER_QUOTED_SELECTION_ANIMATION_MS = 220;
-
-function renderRunnerAgentOptionIcon(agent: RunnerChatOption): ReactNode {
-  const providerIcon = getRunnerAgentProviderIcon(getRunnerAgentOptionProviderType(agent));
-  if (!providerIcon) {
-    return <IconUser className="tb-popup-icon" />;
-  }
-  const className = ["tb-popup-icon", "tb-popup-provider-icon", providerIcon.className || ""]
-    .filter(Boolean)
-    .join(" ");
-  return (
-    <img
-      className={className}
-      src={providerIcon.src}
-      alt=""
-      title={providerIcon.alt}
-      aria-hidden="true"
-      draggable={false}
-    />
-  );
-}
-
-const DEFAULT_SCHEDULE_PRESETS: RunnerChatSchedulePreset[] = [
-  { id: "daily", label: "Every day", cron: "0 9 * * *" },
-  { id: "weekdays", label: "Every weekday", cron: "0 9 * * 1-5" },
-  { id: "weekly", label: "Every week", cron: "0 9 * * 1" },
-];
-
 const ATTACH_FILES_SHORTCUT_KEY = "u";
 const SCHEDULE_SHORTCUT_KEY = "s";
-
-function renderBrowserFileIcon(file: RunnerChatFileNode, className: string) {
-  if (file.isFolder) {
-    return <img src={RUNNER_FOLDER_ICON_URL} alt="" aria-hidden="true" draggable={false} className={`${className} tb-file-browser-icon-asset`} />;
-  }
-
-  if (file.mimeType === "application/x-notion-database" || file.mimeType === "application/x-notion-workspace") {
-    return <IconNotion className={className} />;
-  }
-
-  const fileType = getBrowserFileType(file.mimeType, file.name);
-  if (fileType === "image") {
-    return <img src={RUNNER_IMAGE_FILE_ICON_URL} alt="" aria-hidden="true" draggable={false} className={`${className} tb-file-browser-icon-asset`} />;
-  }
-  if (fileType === "video") {
-    return <IconVideo className={`${className} tb-file-browser-item-icon-video`} />;
-  }
-  if (fileType === "audio") {
-    return <IconMusic className={`${className} tb-file-browser-item-icon-audio`} />;
-  }
-  return <img src={RUNNER_TEXT_FILE_ICON_URL} alt="" aria-hidden="true" draggable={false} className={`${className} tb-file-browser-icon-asset`} />;
-}
-
-function formatDateTimeLocalValue(date: Date): string {
-  const pad = (value: number) => String(value).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
-
-function formatScheduleChipLabel(schedule: { scheduledTime: Date; scheduleType: "one-time" | "recurring" }): string {
-  if (schedule.scheduleType === "recurring") {
-    return "Recurring";
-  }
-
-  return `${schedule.scheduledTime.toLocaleDateString("en-US", { month: "short", day: "numeric" })} ${schedule.scheduledTime.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`;
-}
-
-function defaultAttachmentFromFile(file: File): RunnerAttachment {
-  return {
-    id: generateId("att"),
-    filename: file.name,
-    mimeType: file.type || "application/octet-stream",
-    size: file.size,
-    type: file.type.startsWith("image/") ? "image" : "document",
-    uploadedAt: new Date().toISOString(),
-  };
-}
 
 export function RunnerChat({
   backendUrl,
@@ -849,24 +711,21 @@ export function RunnerChat({
 }: RunnerChatProps) {
   const [input, setInput] = useState(initialTask);
   const [inputSelectionStart, setInputSelectionStart] = useState(() => initialTask.length);
-  const [composerQuotedSelection, setComposerQuotedSelection] = useState<RunnerQuotedSelection | null>(null);
-  const [renderedComposerQuotedSelection, setRenderedComposerQuotedSelection] = useState<RunnerQuotedSelection | null>(null);
-  const [isComposerQuotedSelectionVisible, setIsComposerQuotedSelectionVisible] = useState(false);
+  const {
+    selection: composerQuotedSelection,
+    setSelection: setComposerQuotedSelection,
+    renderedSelection: renderedComposerQuotedSelection,
+    visible: isComposerQuotedSelectionVisible,
+    clear: clearComposerQuotedSelection,
+  } = useRunnerComposerQuotedSelection();
   const [localThreadId, setLocalThreadId] = useState<string | null>(threadId ?? null);
-  const [attachments, setAttachments] = useState<LocalAttachment[]>([]);
-  const [previewedDocumentAttachment, setPreviewedDocumentAttachment] = useState<RunnerTurnAttachment | null>(null);
-  const [previewImageSelectionState, setPreviewImageSelectionState] = useState<RunnerImagePreviewSelectionState | null>(null);
-  const [isDocumentPreviewMaximized, setIsDocumentPreviewMaximized] = useState(false);
-  const [documentPreviewActionMenuOpen, setDocumentPreviewActionMenuOpen] = useState(false);
   const [selectedSubagentDetail, setSelectedSubagentDetail] = useState<RunnerSelectedSubagentDetail | null>(null);
   const [selectedDeepResearchDetail, setSelectedDeepResearchDetail] = useState<RunnerSelectedDeepResearchDetail | null>(null);
   const [selectedComputerUseDetail, setSelectedComputerUseDetail] = useState<RunnerSelectedComputerUseDetail | null>(null);
-  const [documentPreviewDrawerWidth, setDocumentPreviewDrawerWidth] = useState<number | null>(null);
   const [isThreadHistoryLoading, setIsThreadHistoryLoading] = useState(false);
   const [inlineError, setInlineError] = useState<string | null>(null);
   const [isPreparingRun, setIsPreparingRun] = useState(false);
   const [turns, setTurns] = useState<RunnerTurn[]>([]);
-  const [deepResearchSessions, setDeepResearchSessions] = useState<RunnerDeepResearchSession[]>([]);
   const [hydratedThreadStatus, setHydratedThreadStatus] = useState<string | null>(null);
   const {
     thinkingStatusPhaseByTurn,
@@ -880,164 +739,157 @@ export function RunnerChat({
   const [pendingQueuedMessages, setPendingQueuedMessages] = useState<RunnerPendingMessage[]>([]);
   const [editingTurnId, setEditingTurnId] = useState<string | null>(null);
   const [editingTurnDraft, setEditingTurnDraft] = useState("");
-  const [forkingTurnId, setForkingTurnId] = useState<string | null>(null);
-  const [threadFeedback, setThreadFeedbackState] = useState<RunnerThreadFeedbackState>({
-    userRating: null,
-    upCount: 0,
-    downCount: 0,
-    reportCount: 0,
-    isSubmitting: false,
-  });
   const [runSummaryMoreTurnId, setRunSummaryMoreTurnId] = useState<string | null>(null);
   const [emailDeliveryAttachmentsTurnId, setEmailDeliveryAttachmentsTurnId] = useState<string | null>(null);
-  const [reportIssueTurn, setReportIssueTurn] = useState<{ turnId: string; summaryText: string } | null>(null);
-  const [reportIssueType, setReportIssueType] = useState<RunnerThreadFeedbackReportType>("bug");
-  const [reportIssueMessage, setReportIssueMessage] = useState("");
-  const [reportIssueError, setReportIssueError] = useState("");
-  const [isReportIssueSubmitting, setIsReportIssueSubmitting] = useState(false);
-  const [pendingForkConfiguration, setPendingForkConfiguration] = useState<PendingForkConfiguration | null>(null);
-  const [forkTarget, setForkTarget] = useState<RunnerForkTarget>("existing_environment");
-  const [forkTargetEnvironmentId, setForkTargetEnvironmentId] = useState<string>(environmentId ?? "");
-  const [forkNewEnvironmentName, setForkNewEnvironmentName] = useState("");
-  const [forkNewEnvironmentFileCopyMode, setForkNewEnvironmentFileCopyMode] = useState<RunnerForkFileCopyMode>("all");
-  const [forkExistingEnvironmentFileCopyMode, setForkExistingEnvironmentFileCopyMode] = useState<RunnerForkExistingEnvironmentFileCopyMode>("none");
-  const [showForkEnvironmentPopup, setShowForkEnvironmentPopup] = useState(false);
-  const [forkDialogError, setForkDialogError] = useState<string | null>(null);
   const [pendingEditConfirmation, setPendingEditConfirmation] = useState<PendingEditConfirmation | null>(null);
   const [expandedTurns, setExpandedTurns] = useState<Record<string, boolean>>({});
   const [expandedStepRows, setExpandedStepRows] = useState<Record<string, boolean>>({});
   const [nowMs, setNowMs] = useState<number>(() => Date.now());
-  const [activeInputPopup, setActiveInputPopup] = useState<InputPopupId | null>(null);
-  const composerPopupSourceIdRef = useRef(`runner-chat:${Math.random().toString(36).slice(2)}`);
-  const [selectedWorkspaceFileIds, setSelectedWorkspaceFileIds] = useState<string[]>([]);
-  const [showFileBrowserModal, setShowFileBrowserModal] = useState(false);
-  const [showFileBrowserApiKeyPrompt, setShowFileBrowserApiKeyPrompt] = useState(false);
-  const [fileBrowserSource, setFileBrowserSource] = useState<RunnerFileBrowserSource>("workspace");
-  const [fileBrowserSearchQuery, setFileBrowserSearchQuery] = useState("");
-  const [fileBrowserPreviewId, setFileBrowserPreviewId] = useState<string | null>(null);
-  const [expandedFileBrowserFolderIds, setExpandedFileBrowserFolderIds] = useState<string[]>([]);
-  const [fileBrowserPreviewContent, setFileBrowserPreviewContent] = useState<string | null>(null);
-  const [fileBrowserPreviewKind, setFileBrowserPreviewKind] = useState<"image" | "video" | "text" | null>(null);
-  const [isFileBrowserPreviewLoading, setIsFileBrowserPreviewLoading] = useState(false);
-  const [isFileBrowserAttaching, setIsFileBrowserAttaching] = useState(false);
-  const [fileBrowserHistory, setFileBrowserHistory] = useState<Array<{ source: RunnerFileBrowserSource; folderId: string | null }>>([]);
-  const [fileBrowserHistoryIndex, setFileBrowserHistoryIndex] = useState(-1);
+  const {
+    open: showFileBrowserModal,
+    apiKeyPromptOpen: showFileBrowserApiKeyPrompt,
+    searchQuery: fileBrowserSearchQuery,
+    setSearchQuery: setFileBrowserSearchQuery,
+    previewId: fileBrowserPreviewId,
+    setPreviewId: setFileBrowserPreviewId,
+    expandedFolderIds: expandedFileBrowserFolderIds,
+    setExpandedFolderIds: setExpandedFileBrowserFolderIds,
+    history: fileBrowserHistory,
+    historyIndex: fileBrowserHistoryIndex,
+    currentEntry: currentFileBrowserEntry,
+    selectedWorkspaceFileIds,
+    selectedGoogleDriveFileIds,
+    selectedOneDriveFileIds,
+    selectedGithubFileIds,
+    requestOpen: requestFileBrowserOpen,
+    close: closeFileBrowserNavigation,
+    closeApiKeyPrompt: closeFileBrowserApiKeyPrompt,
+    switchSource: resetFileBrowserSourceNavigation,
+    navigateToFolder: navigateFileBrowserToFolder,
+    goBack: goFileBrowserBack,
+    goForward: goFileBrowserForward,
+    replaceHistory: replaceFileBrowserHistory,
+    mapHistory: mapFileBrowserHistory,
+    toggleSelection: toggleFileBrowserSelection,
+    setSelectedWorkspaceFileIds,
+    setSelectedGoogleDriveFileIds,
+    setSelectedOneDriveFileIds,
+    setSelectedGithubFileIds,
+  } = useRunnerFileBrowserNavigation();
+  const currentFileBrowserSource = currentFileBrowserEntry.source;
+  const currentFileBrowserFolderId = currentFileBrowserEntry.folderId;
+  const fileBrowserSourceState = useRunnerFileBrowserSourceState();
+  const {
+    workspace: {
+      items: remoteWorkspaceItems,
+      loadedFolderIds: loadedWorkspaceFolderIds,
+      loadingFolderIds: loadingWorkspaceFolderIds,
+      folderErrorsById: workspaceFolderErrorsById,
+      loading: isWorkspaceBrowserLoading,
+      error: workspaceBrowserError,
+      setError: setWorkspaceBrowserError,
+    },
+    googleDrive: {
+      items: remoteGoogleDriveItems,
+      setItems: setRemoteGoogleDriveItems,
+      loadedFolderIds: loadedGoogleDriveFolderIds,
+      setLoadedFolderIds: setLoadedGoogleDriveFolderIds,
+      loadingFolderIds: loadingGoogleDriveFolderIds,
+      loading: isGoogleDriveBrowserLoading,
+      error: googleDriveBrowserError,
+      setError: setGoogleDriveBrowserError,
+      pickerLoading: isGoogleDrivePickerLoading,
+      setPickerLoading: setIsGoogleDrivePickerLoading,
+    },
+    oneDrive: {
+      items: remoteOneDriveItems,
+      loadedFolderIds: loadedOneDriveFolderIds,
+      loadingFolderIds: loadingOneDriveFolderIds,
+      loading: isOneDriveBrowserLoading,
+      error: oneDriveBrowserError,
+    },
+    github: {
+      items: remoteGithubItems,
+      setItems: setRemoteGithubItems,
+      loadedFolderIds: loadedGithubFolderIds,
+      setLoadedFolderIds: setLoadedGithubFolderIds,
+      loadingFolderIds: loadingGithubFolderIds,
+      setLoadingFolderIds: setLoadingGithubFolderIds,
+      loading: isGithubBrowserLoading,
+      error: githubBrowserError,
+      setError: setGithubBrowserError,
+    },
+    notion: {
+      databases: remoteNotionDatabases,
+      loaded: notionDatabasesLoaded,
+      loading: isNotionBrowserLoading,
+      error: notionBrowserError,
+    },
+    resetSource: resetFileBrowserSourceData,
+    resetAfterClose: resetFileBrowserSourceDataAfterClose,
+  } = fileBrowserSourceState;
   const lastExternalFileBrowserRequestTokenRef = useRef("");
-  const [remoteWorkspaceItems, setRemoteWorkspaceItems] = useState<RunnerChatFileNode[]>([]);
-  const [loadedWorkspaceFolderIds, setLoadedWorkspaceFolderIds] = useState<string[]>([]);
-  const [loadingWorkspaceFolderIds, setLoadingWorkspaceFolderIds] = useState<string[]>([]);
-  const [workspaceFolderErrorsById, setWorkspaceFolderErrorsById] = useState<Record<string, string>>({});
-  const [remoteGoogleDriveItems, setRemoteGoogleDriveItems] = useState<RunnerChatFileNode[]>([]);
-  const [remoteOneDriveItems, setRemoteOneDriveItems] = useState<RunnerChatFileNode[]>([]);
-  const [remoteGithubItems, setRemoteGithubItems] = useState<RunnerChatFileNode[]>([]);
-  const [remoteNotionDatabases, setRemoteNotionDatabases] = useState<RunnerChatNotionDatabase[]>([]);
-  const [notionDatabasesLoaded, setNotionDatabasesLoaded] = useState(false);
-  const [loadedGoogleDriveFolderIds, setLoadedGoogleDriveFolderIds] = useState<string[]>([]);
-  const [loadedOneDriveFolderIds, setLoadedOneDriveFolderIds] = useState<string[]>([]);
-  const [loadedGithubFolderIds, setLoadedGithubFolderIds] = useState<string[]>([]);
-  const [loadingGoogleDriveFolderIds, setLoadingGoogleDriveFolderIds] = useState<string[]>([]);
-  const [loadingOneDriveFolderIds, setLoadingOneDriveFolderIds] = useState<string[]>([]);
-  const [loadingGithubFolderIds, setLoadingGithubFolderIds] = useState<string[]>([]);
-  const [isGoogleDriveBrowserLoading, setIsGoogleDriveBrowserLoading] = useState(false);
-  const [isOneDriveBrowserLoading, setIsOneDriveBrowserLoading] = useState(false);
-  const [isGithubBrowserLoading, setIsGithubBrowserLoading] = useState(false);
-  const [isNotionBrowserLoading, setIsNotionBrowserLoading] = useState(false);
-  const [isGoogleDrivePickerLoading, setIsGoogleDrivePickerLoading] = useState(false);
-  const [googleDriveBrowserError, setGoogleDriveBrowserError] = useState<string | null>(null);
-  const [oneDriveBrowserError, setOneDriveBrowserError] = useState<string | null>(null);
-  const [githubBrowserError, setGithubBrowserError] = useState<string | null>(null);
-  const [notionBrowserError, setNotionBrowserError] = useState<string | null>(null);
-  const [threadContext, setThreadContext] = useState<RunnerChatThreadContext | null>(null);
-  const [isThreadContextLoading, setIsThreadContextLoading] = useState(false);
-  const [threadContextDetails, setThreadContextDetails] = useState<RunnerChatThreadContextDetails | null>(null);
-  const [threadContextDetailsError, setThreadContextDetailsError] = useState<string | null>(null);
-  const [threadContextNativeError, setThreadContextNativeError] = useState<string | null>(null);
-  const [isThreadContextDetailsLoading, setIsThreadContextDetailsLoading] = useState(false);
-  const [threadContextActionLoading, setThreadContextActionLoading] = useState<RunnerChatThreadContextAction | null>(null);
-  const [threadContextAvailableActions, setThreadContextAvailableActions] = useState<RunnerChatThreadContextAvailableActions>(DEFAULT_THREAD_CONTEXT_ACTIONS);
-  const [isWorkspaceBrowserLoading, setIsWorkspaceBrowserLoading] = useState(false);
-  const [workspaceBrowserError, setWorkspaceBrowserError] = useState<string | null>(null);
-  const [isDraggingOver, setIsDraggingOver] = useState(false);
-  const [isScreenFileDragActive, setIsScreenFileDragActive] = useState(false);
-  const [scheduleType, setScheduleType] = useState<"one-time" | "recurring">("one-time");
-  const [scheduledAtValue, setScheduledAtValue] = useState(() => formatDateTimeLocalValue(new Date(Date.now() + 60 * 60 * 1000)));
-  const [selectedSchedulePresetId, setSelectedSchedulePresetId] = useState<string>(() => DEFAULT_SCHEDULE_PRESETS[0]?.id || "");
   const [skillsTab, setSkillsTab] = useState<"system" | "custom">("system");
-  const [scheduledTask, setScheduledTask] = useState<{
-    scheduledTime: Date;
-    scheduleType: "one-time" | "recurring";
-    cronExpression?: string;
-  } | null>(null);
-  const [selectedAgentId, setSelectedAgentId] = useState<string>(() => {
-    if (agentId) return agentId;
-    return getRunnerPreferredDefaultAgentOption(agents)?.id || "";
-  });
-  const [agentPopupMode, setAgentPopupMode] = useState<RunnerAgentSelectorMode>(() =>
-    getRunnerAgentSelectorMode(agents.find((agent) => agent.id === agentId) || getRunnerPreferredDefaultAgentOption(agents))
-  );
-  const [selectedReasoningEffort, setSelectedReasoningEffort] = useState<RunnerReasoningEffortId>(() =>
-    normalizeRunnerReasoningEffort(controlledReasoningEffort)
-  );
-  const hasInitializedOpenAgentPopupModeRef = useRef(false);
   const [activeThreadEnvironmentId, setActiveThreadEnvironmentId] = useState<string | null>(null);
   const [activeThreadEnvironmentName, setActiveThreadEnvironmentName] = useState<string | null>(null);
-  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(() => {
-    if (environmentId) return environmentId;
-    return environments.find((environment) => environment.isDefault)?.id || environments[0]?.id || "";
-  });
-  const [workspaceSelectorMode, setWorkspaceSelectorMode] = useState<RunnerWorkspaceSelectorMode>(() => {
-    return loadPersistedWorkspaceSelection(buildWorkspaceSelectionStorageKey(appId, backendUrl))?.mode || "computers";
-  });
-  const [selectedProjectId, setSelectedProjectId] = useState<string>(() => {
-    const persisted = loadPersistedWorkspaceSelection(buildWorkspaceSelectionStorageKey(appId, backendUrl));
-    return persisted?.mode === "projects" ? persisted.projectId : "";
-  });
-  const [initialAgentTopId, setInitialAgentTopId] = useState<string | null>(null);
-  const [initialEnvironmentTopId, setInitialEnvironmentTopId] = useState<string | null>(null);
-  const [enabledSkillIds, setEnabledSkillIds] = useState<string[]>(() => {
-    const controlled = normalizeEnabledSkillIdList(controlledEnabledSkillIds);
-    if (controlled !== null) {
-      return controlled;
-    }
-    const storageKey = buildEnabledSkillsStorageKey(appId);
-    const persisted = loadPersistedEnabledSkillIds(storageKey);
-    if (persisted !== null) {
-      return persisted;
-    }
-    return defaultEnabledSkillIds(normalizeComputerAgentSkills(skills));
-  });
-  const [selectedGithubRepositoryId, setSelectedGithubRepositoryId] = useState<string>(() => computerAgents?.github?.selectedRepositoryId || "");
-  const [selectedGithubContextId, setSelectedGithubContextId] = useState<string>(() => computerAgents?.github?.selectedContextId || "");
-  const [selectedNotionDatabaseId, setSelectedNotionDatabaseId] = useState<string>(() => computerAgents?.notion?.selectedDatabaseId || "");
-  const [customSkills, setCustomSkills] = useState<RunnerChatSkill[]>([]);
-  const [isLoadingCustomSkills, setIsLoadingCustomSkills] = useState(false);
-  const [customSkillsLoaded, setCustomSkillsLoaded] = useState(false);
-  const [googleDriveFolderId, setGoogleDriveFolderId] = useState<string | null>(null);
-  const [oneDriveFolderId, setOneDriveFolderId] = useState<string | null>(null);
-  const [selectedGoogleDriveFileIds, setSelectedGoogleDriveFileIds] = useState<string[]>([]);
-  const [selectedOneDriveFileIds, setSelectedOneDriveFileIds] = useState<string[]>([]);
-  const [selectedGithubFileIds, setSelectedGithubFileIds] = useState<string[]>([]);
-  const [githubBranchesByRepoFullName, setGithubBranchesByRepoFullName] = useState<Record<string, RunnerChatOption[]>>({});
-  const [githubSelectedBranchByRepoFullName, setGithubSelectedBranchByRepoFullName] = useState<Record<string, string>>({});
-  const [githubBranchLoadingRepoFullNames, setGithubBranchLoadingRepoFullNames] = useState<string[]>([]);
-  const [stagedThreadContextCommand, setStagedThreadContextCommand] = useState<RunnerChatThreadContextAction | null>(null);
-  const [stagedResourceCreationCommand, setStagedResourceCreationCommand] = useState<StagedResourceCreationCommand | null>(null);
-  const [stagedAgentCreationCommand, setStagedAgentCreationCommand] = useState<StagedAgentCreationCommand | null>(null);
-  const [stagedSkillCreationCommand, setStagedSkillCreationCommand] = useState<StagedSkillCreationCommand | null>(null);
-  const [stagedSlideCreationCommand, setStagedSlideCreationCommand] = useState<StagedSlideCreationCommand | null>(null);
-  const [stagedResearchCreationCommand, setStagedResearchCreationCommand] = useState<StagedResearchCreationCommand | null>(null);
-  const [stagedScrapeCreationCommand, setStagedScrapeCreationCommand] = useState<StagedScrapeCreationCommand | null>(null);
-  const [stagedParseCreationCommand, setStagedParseCreationCommand] = useState<StagedParseCreationCommand | null>(null);
-  const [stagedAdCreationCommand, setStagedAdCreationCommand] = useState<StagedAdCreationCommand | null>(null);
   const [adCreationSettings, setAdCreationSettings] = useState<RunnerAdCreationSettings>(RUNNER_AD_CREATION_DEFAULT_SETTINGS);
-  const [stagedBacklogSubtaskCommand, setStagedBacklogSubtaskCommand] = useState<StagedBacklogSubtaskCommand | null>(null);
-  const [stagedBacklogMissionControlCommand, setStagedBacklogMissionControlCommand] = useState<StagedBacklogMissionControlCommand | null>(null);
-  const [renderedMainPopup, setRenderedMainPopup] = useState<MainPopupRenderId | null>(null);
-  const [mainPopupPhase, setMainPopupPhase] = useState<PopupAnimationPhase>("idle");
-  const [renderedSidePopup, setRenderedSidePopup] = useState<SidePopupRenderId | null>(null);
-  const [sidePopupPhase, setSidePopupPhase] = useState<PopupAnimationPhase>("idle");
-  const [sidePopupExitDirection, setSidePopupExitDirection] = useState<SidePopupExitDirection>("left");
   const [quotedSelectionPopup, setQuotedSelectionPopup] = useState<RunnerQuotedSelectionPopupState | null>(null);
+  const {
+    rootRef,
+    isScreenDragActive: isScreenFileDragActive,
+    isDropzoneDragging: isDraggingOver,
+    resetDragState: resetFileDragState,
+    handleRootDragEnter: handleRootFileDragEnter,
+    handleRootDragOver: handleRootFileDragOver,
+    handleRootDragLeave: handleRootFileDragLeave,
+    handleRootDrop: handleRootFileDrop,
+    handleDropzoneDragOver,
+    handleDropzoneDragLeave,
+    handleDropzoneDrop,
+  } = useRunnerFileDropController({
+    onFilesDropped: handleDroppedLocalFiles,
+  });
+  const {
+    activeInputPopup,
+    setActiveInputPopup,
+    renderedMainPopup,
+    mainPopupPhase,
+    renderedSidePopup,
+    sidePopupPhase,
+    sidePopupExitDirection,
+    closeAllInputPopups,
+    toggleMainMenu,
+    openPlusPopup,
+    togglePopup,
+  } = useRunnerComposerPopupController({
+    onClose: () => {
+      setSelectedWorkspaceFileIds([]);
+      resetFileDragState();
+      clearQuotedSelectionPopup();
+    },
+  });
+  const {
+    agentPopupMode,
+    initialAgentTopId,
+    selectedAgentId,
+    selectedReasoningEffort,
+    setAgentPopupMode,
+    setSelectedAgentId,
+    setSelectedReasoningEffort,
+  } = useRunnerAgentSelectionController({
+    activePopup: activeInputPopup,
+    agentId,
+    agents,
+    controlledReasoningEffort,
+  });
+  const {
+    acceptLoadedSkills: acceptLoadedCustomSkills,
+    customSkills,
+    loading: isLoadingCustomSkills,
+  } = useRunnerCustomSkillsController({
+    active: activeInputPopup === "skills",
+    fetchCustomSkills,
+  });
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const logsRef = useRef<HTMLDivElement | null>(null);
@@ -1057,20 +909,10 @@ export function RunnerChat({
   const environmentPopupRef = useRef<HTMLDivElement | null>(null);
   const organizationSelectorButtonRef = useRef<HTMLButtonElement | null>(null);
   const organizationPopupRef = useRef<HTMLDivElement | null>(null);
-  const rootRef = useRef<HTMLDivElement | null>(null);
-  const forkEnvironmentPopupRef = useRef<HTMLDivElement | null>(null);
   const runSummaryMoreMenuRef = useRef<HTMLSpanElement | null>(null);
   const emailDeliveryAttachmentsPopoverRef = useRef<HTMLSpanElement | null>(null);
   const currentInputRef = useRef(initialTask);
-  const fileBrowserPreviewObjectUrlRef = useRef<string | null>(null);
-  const documentPreviewResizeStateRef = useRef<{ startX: number; startWidth: number } | null>(null);
-  const documentPreviewActionMenuRef = useRef<HTMLSpanElement | null>(null);
-  const mainPopupAnimationTimerRef = useRef<number | null>(null);
-  const sidePopupAnimationTimerRef = useRef<number | null>(null);
   const isDrainingQueuedRunsRef = useRef(false);
-  const attachmentsRef = useRef<LocalAttachment[]>([]);
-  const attachmentUploadPromisesRef = useRef<Record<string, Promise<RunnerAttachment> | undefined>>({});
-  const githubPreparationPromisesRef = useRef<Record<string, Promise<void> | undefined>>({});
   const turnsRef = useRef<RunnerTurn[]>([]);
   const threadHydrationCacheRef = useRef<RunnerThreadHydrationPayload | null>(null);
   const notifiedTaskListLogKeysRef = useRef<Set<string>>(new Set());
@@ -1078,23 +920,37 @@ export function RunnerChat({
   const locallyOwnedExecutionThreadIdRef = useRef<string | null>(null);
   const lastEnvironmentStartRequestKeyRef = useRef<string | null>(null);
   const quotedSelectionPopupRef = useRef<HTMLDivElement | null>(null);
-  const composerQuotedSelectionAnimationTimerRef = useRef<number | null>(null);
-  const appliedBacklogSubtaskCommandTokenRef = useRef<string | number | null>(null);
-  const appliedBacklogMissionControlCommandTokenRef = useRef<string | number | null>(null);
-  const appliedResourceCreationCommandTokenRef = useRef<string | number | null>(null);
-  const appliedAgentCreationCommandTokenRef = useRef<string | number | null>(null);
-  const appliedSkillCreationCommandTokenRef = useRef<string | number | null>(null);
   const handledExternalRunRequestTokenRef = useRef<string | number | null>(null);
-  const handledInitialDocumentPreviewTokenRef = useRef<string | number | null>(null);
-  const workspacePreferenceAppliedRef = useRef(false);
-  const lastAppliedControlledProjectIdRef = useRef<string | null>(null);
-  const stopRequestedThreadIdRef = useRef<string | null>(null);
-  const [isStoppingRun, setIsStoppingRun] = useState(false);
-  const screenFileDragActiveRef = useRef(false);
 
   const { status, logs, execute, cancel, clear, result } = useRunnerExecution({ clearLogsOnExecute: false });
 
   const normalizedBackendUrl = useMemo(() => sanitizeBackendUrl(backendUrl), [backendUrl]);
+  const {
+    attachment: previewedDocumentAttachment,
+    imageSelectionState: previewImageSelectionState,
+    setImageSelectionState: setPreviewImageSelectionState,
+    maximized: isDocumentPreviewMaximized,
+    actionMenuOpen: documentPreviewActionMenuOpen,
+    setActionMenuOpen: setDocumentPreviewActionMenuOpen,
+    drawerWidth: documentPreviewDrawerWidth,
+    actionMenuRef: documentPreviewActionMenuRef,
+    close: closeDocumentAttachmentPreview,
+    toggleAttachment: toggleDocumentAttachmentPreview,
+    toggleMaximized: toggleDocumentPreviewMaximized,
+    startResize: startDocumentPreviewResize,
+    getOpenUrl: getDocumentPreviewOpenUrl,
+    copyValue: copyDocumentPreviewValue,
+  } = useRunnerDocumentPreviewController({
+    backendUrl: normalizedBackendUrl,
+    initialAttachment: initialDocumentPreviewAttachment,
+    initialAttachmentToken: initialDocumentPreviewToken,
+    onBeforeOpen: () => {
+      closeDeepResearchDetailDrawer();
+      closeSubagentDetailDrawer();
+      closeComputerUseDetailDrawer();
+    },
+    onOpenChange: onDocumentPreviewOpenChange,
+  });
   const {
     isListening,
     recordingElapsedSeconds,
@@ -1111,6 +967,83 @@ export function RunnerChat({
     requestHeaders,
     speechToTextUrl,
   });
+  const applyStagedComposerDraft = useCallback(
+    (prompt: string) => {
+      setInput(prompt);
+      currentInputRef.current = prompt;
+      resetSpeechDraft(prompt);
+    },
+    [resetSpeechDraft],
+  );
+  const readCurrentComposerDraft = useCallback(
+    () => currentInputRef.current,
+    [],
+  );
+  const {
+    stagedThreadContextCommand,
+    stagedResourceCreationCommand,
+    stagedAgentCreationCommand,
+    stagedSkillCreationCommand,
+    stagedSlideCreationCommand,
+    stagedResearchCreationCommand,
+    stagedScrapeCreationCommand,
+    stagedParseCreationCommand,
+    stagedAdCreationCommand,
+    stagedBacklogSubtaskCommand,
+    stagedBacklogMissionControlCommand,
+    clearAllStagedCommands,
+    clearStagedCommand,
+    dismissActiveCommand: dismissActiveStagedCommand,
+    refreshStagedAdCreationCommand,
+    setComposerDraft,
+    tryAutoStageInput,
+    stageThreadContextCommand,
+    stageBacklogSubtaskCommand,
+    stageBacklogMissionControlCommand,
+    stageResourceCreationCommand,
+    stageAgentCreationCommand,
+    stageSkillCreationCommand,
+    stageSlideCreationCommand,
+    stageResearchCreationCommand,
+    stageScrapeCreationCommand,
+    stageParseCreationCommand,
+    stageAdCreationCommand,
+  } = useRunnerStagedComposerCommands({
+    adCreationSettings,
+    getCurrentDraft: readCurrentComposerDraft,
+    onDraftChange: applyStagedComposerDraft,
+  });
+  const prepareExternallyStagedComposerCommand = useCallback(() => {
+    closeAllInputPopups();
+    window.requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+    });
+  }, [closeAllInputPopups]);
+  useRunnerExternalComposerCommandStaging({
+    backlogSubtask: backlogSubtaskCommand,
+    backlogMissionControl: backlogMissionControlCommand,
+    resourceCreation: resourceCreationCommand,
+    agentCreation: agentCreationCommand,
+    skillCreation: skillCreationCommand,
+    enableBacklogSubtask: enableBacklogSubtaskCommand,
+    enableBacklogMissionControl: enableBacklogMissionControlCommand,
+    enableResourceCreation: enableResourceCreationCommand,
+    enableAgentCreation: enableAgentCreationCommand,
+    enableSkillCreation: enableSkillCreationCommand,
+    stagedResourceCreationType:
+      stagedResourceCreationCommand?.action || null,
+    stagedAgentCreationType: stagedAgentCreationCommand?.action || null,
+    stagedSkillCreationType: stagedSkillCreationCommand?.action || null,
+    onResourceCreationChange: onResourceCreationCommandChange,
+    onAgentCreationChange: onAgentCreationCommandChange,
+    onSkillCreationChange: onSkillCreationCommandChange,
+    onStage: prepareExternallyStagedComposerCommand,
+    stageBacklogSubtask: stageBacklogSubtaskCommand,
+    stageBacklogMissionControl: stageBacklogMissionControlCommand,
+    stageResourceCreation: stageResourceCreationCommand,
+    stageAgentCreation: stageAgentCreationCommand,
+    stageSkillCreation: stageSkillCreationCommand,
+  });
   const normalizedSkills = useMemo(() => normalizeComputerAgentSkills(skills), [skills]);
   const displayedSkills = useMemo(() => [...normalizedSkills, ...customSkills], [customSkills, normalizedSkills]);
   const controlledEnabledSkillIdsList = useMemo(
@@ -1118,6 +1051,12 @@ export function RunnerChat({
     [controlledEnabledSkillIds]
   );
   const enabledSkillsStorageKey = useMemo(() => buildEnabledSkillsStorageKey(appId), [appId]);
+  const { enabledSkillIds, toggleSkill } = useRunnerEnabledSkillsController({
+    controlledEnabledSkillIds: controlledEnabledSkillIdsList,
+    normalizedSkills,
+    onChange: onSkillsChange,
+    storageKey: enabledSkillsStorageKey,
+  });
   const workspaceSelectionStorageKey = useMemo(
     () => buildWorkspaceSelectionStorageKey(appId, normalizedBackendUrl),
     [appId, normalizedBackendUrl]
@@ -1131,7 +1070,23 @@ export function RunnerChat({
   const workspaceConfig = computerAgents?.workspace;
   const scheduleConfig = computerAgents?.schedule;
   const projectsConfig = computerAgents?.projects;
-  const schedulePresets = scheduleConfig?.presets?.length ? scheduleConfig.presets : DEFAULT_SCHEDULE_PRESETS;
+  const {
+    clearScheduledTask,
+    scheduleEnabled,
+    schedulePresets,
+    scheduledAtValue,
+    scheduledTask,
+    scheduleType,
+    selectedSchedulePresetId,
+    setScheduledAtValue,
+    setScheduleType,
+    setSelectedSchedulePresetId,
+    submitSchedule: handleScheduleSubmit,
+  } = useRunnerScheduleController({
+    config: scheduleConfig,
+    onInvalidSchedule: setInlineError,
+    onSubmitted: closeAllInputPopups,
+  });
   const githubRepositories = githubConfig?.repositories || [];
   const githubContexts = githubConfig?.contexts || [];
   const notionDatabases = notionConfig?.fetchDatabases ? remoteNotionDatabases : notionConfig?.databases || [];
@@ -1139,8 +1094,102 @@ export function RunnerChat({
   const oneDriveItems = oneDriveConfig?.fetchItems ? remoteOneDriveItems : oneDriveConfig?.items || [];
   const githubItems = githubConfig?.fetchItems ? remoteGithubItems : [];
   const notionItems = notionDatabasesToFileItems(notionDatabases);
+  const {
+    googleDriveFolderId,
+    oneDriveFolderId,
+    selectedGithubContextId,
+    selectedGithubRepositoryId,
+    selectedNotionDatabaseId,
+    selectGithubContext,
+    selectGithubRepository,
+    selectNotionDatabase,
+    setGoogleDriveFolderId,
+    setOneDriveFolderId,
+    setSelectedNotionDatabaseId,
+  } = useRunnerIntegrationSelectionController({
+    githubContexts,
+    githubRepositories,
+    notionDatabases,
+    selectedGithubContextId: githubConfig?.selectedContextId,
+    selectedGithubRepositoryId: githubConfig?.selectedRepositoryId,
+    selectedNotionDatabaseId: notionConfig?.selectedDatabaseId,
+    onGithubContextChange: githubConfig?.onContextChange,
+    onGithubRepositoryChange: githubConfig?.onRepositoryChange,
+    onNotionDatabaseChange: notionConfig?.onDatabaseChange,
+  });
   const currentThreadId = threadId ?? localThreadId;
   const hasCurrentThread = Boolean(currentThreadId);
+  const {
+    actionLoading: threadContextActionLoading,
+    availableActions: threadContextAvailableActions,
+    beginAction: beginThreadContextAction,
+    clearDetailsError: clearThreadContextDetailsError,
+    context: threadContext,
+    details: threadContextDetails,
+    detailsError: threadContextDetailsError,
+    detailsLoading: isThreadContextDetailsLoading,
+    estimateLoading: isThreadContextLoading,
+    finishAction: finishThreadContextAction,
+    markContextCleared,
+    nativeError: threadContextNativeError,
+    refreshDetails: refreshThreadContextDetails,
+    refreshDetailsInBackground:
+      refreshThreadContextDetailsInBackground,
+    resetContext: resetThreadContext,
+  } = useRunnerThreadContextController({
+    apiKey,
+    backendUrl: normalizedBackendUrl,
+    detailsRequested: renderedMainPopup === "context",
+    executionRunning: status === "running",
+    requestHeaders,
+    threadId: currentThreadId,
+  });
+  const clearPendingQueuedMessagesForStop = useCallback(() => {
+    setPendingQueuedMessages([]);
+  }, []);
+  const {
+    clearStopRequest,
+    consumeIntentionalStopAbort,
+    handleStopActiveRun,
+    isStoppingRun,
+    normalizeIntentionalStopError,
+  } = useRunnerRunStopController({
+    apiKey,
+    backendUrl: normalizedBackendUrl,
+    cancelLocalExecution: cancel,
+    clearQueuedMessages: clearPendingQueuedMessagesForStop,
+    localExecutionRunning: status === "running",
+    onContextRefresh: refreshThreadContextDetailsInBackground,
+    onRunCancel,
+    onRunError,
+    requestHeaders,
+    setError: setInlineError,
+    setPreparingRun: setIsPreparingRun,
+    setTurns,
+    threadId: currentThreadId,
+  });
+  const {
+    feedback: threadFeedback,
+    submitRating: submitThreadFeedback,
+    reportTarget: reportIssueTurn,
+    reportType: reportIssueType,
+    reportMessage: reportIssueMessage,
+    reportError: reportIssueError,
+    reportSubmitting: isReportIssueSubmitting,
+    openReport: openReportIssueModal,
+    closeReport: closeReportIssueModal,
+    setReportType: setReportIssueType,
+    setReportMessage: setReportIssueMessage,
+    submitReport: submitReportIssue,
+  } = useRunnerThreadFeedbackController({
+    backendUrl: normalizedBackendUrl,
+    apiKey,
+    threadId: currentThreadId,
+    requestHeaders,
+    sanitizeSummary: stripSystemTags,
+    onUnavailable: setInlineError,
+    onReportOpen: () => setRunSummaryMoreTurnId(null),
+  });
   const legacyTurnProjectionCacheRef = useRef(new Map<string, {
     projection: RunnerThreadProjection;
     logCount: number;
@@ -1286,22 +1335,20 @@ export function RunnerChat({
     ) || null;
   const hasRunningTurn = Boolean(activeRunningTurn);
   const hydratedThreadIsRunning = isRunningThreadLifecycleStatus(hydratedThreadStatus);
-  const activeDeepResearchThreadSession = useMemo(() => {
-    const activeSessions = deepResearchSessions.filter((session) => isDeepResearchSessionActive(session));
-    if (activeSessions.length === 0) {
-      return null;
-    }
-    return activeSessions
-      .slice()
-      .sort((left, right) => {
-        const leftMs = parseIsoTimestampMs(left.startedAt) ?? parseIsoTimestampMs(left.createdAt) ?? 0;
-        const rightMs = parseIsoTimestampMs(right.startedAt) ?? parseIsoTimestampMs(right.createdAt) ?? 0;
-        return rightMs - leftMs;
-      })[0] || null;
-  }, [deepResearchSessions]);
-  const hasActiveDeepResearchSession = Boolean(activeDeepResearchThreadSession);
-  const shouldRefreshDeepResearchSessions = currentThreadHasDeepResearchActivity || Boolean(selectedDeepResearchDetail);
-  const shouldPollDeepResearchSessions = currentThreadHasActiveDeepResearchLogs || hasActiveDeepResearchSession;
+  const {
+    activeSession: activeDeepResearchThreadSession,
+    hasActiveSession: hasActiveDeepResearchSession,
+    sessions: deepResearchSessions,
+  } = useRunnerDeepResearchSessionsController({
+    apiKey,
+    backendUrl: normalizedBackendUrl,
+    poll: currentThreadHasActiveDeepResearchLogs,
+    refresh:
+      currentThreadHasDeepResearchActivity ||
+      Boolean(selectedDeepResearchDetail),
+    requestHeaders,
+    threadId: currentThreadId,
+  });
   const hasHydratedReattachActivity = useMemo(
     () => hasActiveDeepResearchSession || turns.some((turn) => isActiveTurnStatus(turn.status) || hasActiveDeepResearchLogGroup(turn.logs)),
     [hasActiveDeepResearchSession, turns]
@@ -1493,11 +1540,12 @@ export function RunnerChat({
   const adCreationComputeTokensPerImage = getRunnerAdCreationQualityComputeTokensPerImage(adCreationSettings.quality);
   const adCreationTotalComputeTokens = adCreationComputeTokensPerImage * adCreationSettings.variants;
   function updateAdCreationSettings(patch: Partial<RunnerAdCreationSettings>) {
-    setAdCreationSettings((current) => {
-      const next = normalizeRunnerAdCreationSettings({ ...current, ...patch });
-      setStagedAdCreationCommand((command) => command ? buildStagedRunnerAdCreationCommand(next) : command);
-      return next;
+    const next = normalizeRunnerAdCreationSettings({
+      ...adCreationSettings,
+      ...patch,
     });
+    setAdCreationSettings(next);
+    refreshStagedAdCreationCommand(next);
   }
   const hasApiKey = apiKey.trim().length > 0;
   const authenticatedAttachmentFetchHeaders = useMemo(
@@ -1666,45 +1714,6 @@ export function RunnerChat({
     return [history, tail];
   }, [canonicalThread.projection.timeline, legacyCompatibilityEntries]);
   const hasCanonicalSurfaceContent = canonicalThread.projection.timeline.length > 0 || legacyCompatibilityEntries.length > 0;
-  useEffect(() => {
-    let cancelled = false;
-    const normalizedThreadId = String(currentThreadId || "").trim();
-    if (!normalizedThreadId || !normalizedBackendUrl || !hasApiKey) {
-      setThreadFeedbackState({
-        userRating: null,
-        upCount: 0,
-        downCount: 0,
-        reportCount: 0,
-        isSubmitting: false,
-      });
-      return;
-    }
-
-    void fetchThreadFeedback({
-      backendUrl: normalizedBackendUrl,
-      apiKey: apiKey.trim(),
-      threadId: normalizedThreadId,
-      requestHeaders,
-    })
-      .then((feedback) => {
-        if (cancelled) {
-          return;
-        }
-        setThreadFeedbackState({ ...feedback, isSubmitting: false });
-      })
-      .catch(() => {
-        if (cancelled) {
-          return;
-        }
-        setThreadFeedbackState((previous) => ({ ...previous, isSubmitting: false }));
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [apiKey, currentThreadId, hasApiKey, normalizedBackendUrl, requestHeaders]);
-  const summaryPreviewEnvironmentId = scopedActiveThreadEnvironmentId || selectedEnvironmentId || environmentId || null;
-  const canPreviewSummaryWorkspacePaths = Boolean(summaryPreviewEnvironmentId);
   const workspaceItems = hasApiKey ? remoteWorkspaceItems : workspaceConfig?.items || [];
   const availableEnvironments = useMemo(
     () =>
@@ -1739,19 +1748,30 @@ export function RunnerChat({
     }
     return Array.from(merged.values());
   }, [projectsConfig?.items]);
-  const selectedProject = useMemo(
-    () => availableProjects.find((project) => project.id === selectedProjectId) || null,
-    [availableProjects, selectedProjectId]
-  );
-  const selectedProjectEnvironmentId = getRunnerProjectEnvironmentId(selectedProject);
-  const effectiveWorkspaceSelectorMode: RunnerWorkspaceSelectorMode =
-    workspaceSelectorMode === "projects" && selectedProject && selectedProjectEnvironmentId
-      ? "projects"
-      : "computers";
-  const effectiveProjectEnvironmentId =
-    effectiveWorkspaceSelectorMode === "projects" ? selectedProjectEnvironmentId : "";
-  const targetMainPopup = getMainPopupRenderId(activeInputPopup);
-  const targetSidePopup = getSidePopupRenderId(activeInputPopup);
+  const {
+    selectedEnvironmentId,
+    setSelectedEnvironmentId,
+    selectedProjectId,
+    setSelectedProjectId,
+    workspaceSelectorMode,
+    setWorkspaceSelectorMode,
+    selectedProject,
+    selectedProjectEnvironmentId,
+    effectiveWorkspaceSelectorMode,
+    effectiveProjectEnvironmentId,
+    initialEnvironmentTopId,
+  } = useRunnerWorkspaceSelectionController({
+    activeThreadEnvironmentId: scopedActiveThreadEnvironmentId,
+    availableEnvironments,
+    availableProjects,
+    controlledProjectId: projectsConfig?.selectedProjectId,
+    environmentId,
+    storageKey: workspaceSelectionStorageKey,
+    useComputerAgentsMode,
+  });
+  const summaryPreviewEnvironmentId =
+    scopedActiveThreadEnvironmentId || selectedEnvironmentId || environmentId || null;
+  const canPreviewSummaryWorkspacePaths = Boolean(summaryPreviewEnvironmentId);
   const effectiveAgentId = useComputerAgentsMode ? selectedAgentId || agentId : agentId;
   const explicitProjectId = typeof projectId === "string" && projectId.trim() ? projectId.trim() : null;
   const effectiveProjectId = explicitProjectId || (
@@ -1777,6 +1797,110 @@ export function RunnerChat({
       ? selectedProject.name || "Project"
       : displayedEnvironmentLabel
     : "Default";
+  const sourceThreadEnvironmentId = hasCurrentThread
+    ? scopedActiveThreadEnvironmentId || selectedEnvironment?.id || environmentId || null
+    : null;
+  const sourceThreadEnvironmentName = hasCurrentThread
+    ? scopedActiveThreadEnvironmentName || selectedEnvironment?.name || null
+    : null;
+  const {
+    buildSuggestedForkEnvironmentName,
+    cancelPendingForkConfiguration: cancelForkConfiguration,
+    forkDialogError,
+    forkEnvironmentPopupRef,
+    forkExistingEnvironmentFileCopyMode,
+    forkingTurnId,
+    forkNewEnvironmentFileCopyMode,
+    forkNewEnvironmentName,
+    forkTarget,
+    forkTargetEnvironmentId,
+    openMessageForkConfiguration,
+    openThreadForkConfiguration,
+    orderedForkTargetEnvironments,
+    pendingForkConfiguration,
+    resetForkConfiguration,
+    selectedForkExistingEnvironment,
+    setForkDialogError,
+    setForkExistingEnvironmentFileCopyMode,
+    setForkingTurnId,
+    setForkNewEnvironmentFileCopyMode,
+    setForkNewEnvironmentName,
+    setForkTarget,
+    setForkTargetEnvironmentId,
+    setShowForkEnvironmentPopup,
+    shouldShowForkExistingEnvironmentCopyOptions,
+    showForkEnvironmentPopup,
+  } = useRunnerForkConfigurationController({
+    availableEnvironments,
+    defaultEnvironmentId: environmentId,
+    displayedEnvironmentLabel,
+    selectedEnvironmentId,
+    selectedEnvironmentName: selectedEnvironment?.name,
+    sourceEnvironmentId: sourceThreadEnvironmentId,
+    sourceEnvironmentName: sourceThreadEnvironmentName,
+  });
+  const patchTurnAttachment = useCallback(
+    (
+      attachmentId: string,
+      patch: Partial<RunnerTurnAttachment>
+    ) => {
+      setTurns((prev) =>
+        prev.map((turn) => {
+          if (!turn.attachments?.some((attachment) => attachment.id === attachmentId)) {
+            return turn;
+          }
+          return {
+            ...turn,
+            attachments: turn.attachments.map((attachment) =>
+              attachment.id === attachmentId
+                ? {
+                    ...attachment,
+                    ...patch,
+                  }
+                : attachment
+            ),
+          };
+        })
+      );
+    },
+    []
+  );
+  const attachmentUploadEnvironmentId = currentThreadId
+    ? activeThreadEnvironmentId || selectedEnvironment?.id || environmentId || null
+    : effectiveEnvironmentId || selectedEnvironment?.id || environmentId || null;
+  const {
+    addAttachments,
+    appendFiles,
+    attachments,
+    beginAttachmentUpload,
+    clearComposerAttachments,
+    prepareGithubRepoForThreadRun,
+    pruneWorkspaceAttachmentsForEnvironment,
+    removeAttachment,
+    resolveAttachmentPayload,
+    resolveAttachmentUploadEnvironmentId,
+  } = useRunnerAttachmentController({
+    apiKey,
+    backendUrl: normalizedBackendUrl,
+    mapFileToAttachment,
+    maxAttachments,
+    onTurnAttachmentPatch: patchTurnAttachment,
+    requestHeaders,
+    selectedAgentId,
+    uploadEnvironmentId: attachmentUploadEnvironmentId,
+    uploadFiles,
+  });
+  const {
+    appendPendingThreadContextActionNotice,
+    appendSyntheticActionTurn,
+    appendThreadContextActionNotice,
+    updateThreadContextActionNotice,
+  } = useRunnerTurnNoticeController({
+    agentName: selectedAgent?.name || displayedAgentLabel,
+    environmentName: selectedEnvironment?.name || displayedEnvironmentLabel,
+    setExpandedTurns,
+    setTurns,
+  });
   const {
     start: startVoiceModeSession,
     state: voiceModeState,
@@ -1857,7 +1981,6 @@ export function RunnerChat({
   const effectiveReasoningEffort = useComputerAgentsMode
     ? selectedReasoningEffort
     : normalizeRunnerReasoningEffort(controlledReasoningEffort);
-  const selectedReasoningEffortOption = getRunnerReasoningEffortOption(effectiveReasoningEffort);
   const isPassiveWarmEnvironmentReady = !useComputerAgentsMode || Boolean(effectiveEnvironmentId);
   const isPassiveWarmAgentReady = !useComputerAgentsMode || Boolean(effectiveAgentId);
   const textareaAllowsPromptAfterStagedCommand = threadContextActionAllowsPrompt(stagedThreadContextCommand);
@@ -1902,131 +2025,6 @@ export function RunnerChat({
     return () => window.cancelAnimationFrame(focusFrame);
   }, [disabled, privateMode]);
 
-  function isStopRequestedThread(threadIdToMatch?: string | null): boolean {
-    const requestedThreadId = String(stopRequestedThreadIdRef.current || "").trim();
-    const normalizedThreadId = String(threadIdToMatch || "").trim();
-    return Boolean(requestedThreadId && normalizedThreadId && requestedThreadId === normalizedThreadId);
-  }
-
-  function isIntentionalStopError(error: Error, threadIdToMatch?: string | null): boolean {
-    if (!isStopRequestedThread(threadIdToMatch)) {
-      return false;
-    }
-    if (error.name === "AbortError") {
-      return true;
-    }
-    const message = String(error?.message || "").trim();
-    if (!message) {
-      return false;
-    }
-    return (
-      /runner stream failed \((?:499|500|502|503|504)\)/i.test(message)
-      || /<title>\s*502 Server Error\s*<\/title>/i.test(message)
-      || /temporary error and could not complete your request/i.test(message)
-      || /the server encountered a temporary error/i.test(message)
-      || /failed to fetch/i.test(message)
-    );
-  }
-
-  function normalizeIntentionalStopError(error: Error, threadIdToMatch?: string | null): Error {
-    if (!isIntentionalStopError(error, threadIdToMatch)) {
-      return error;
-    }
-    if (error.name === "AbortError") {
-      return error;
-    }
-    const abortError = new Error("Execution cancelled");
-    abortError.name = "AbortError";
-    return abortError;
-  }
-
-  function consumeIntentionalStopAbort(error: Error, threadIdToMatch?: string | null): boolean {
-    if (!isIntentionalStopError(error, threadIdToMatch)) {
-      return false;
-    }
-    stopRequestedThreadIdRef.current = null;
-    return true;
-  }
-
-  function markRunningTurnsCancelled() {
-    const cancelledAtMs = Date.now();
-    setTurns((previousTurns) =>
-      previousTurns.map((turn) =>
-        (isRunningTurnStatus(turn.status) || turn.status === "queued")
-          ? {
-              ...turn,
-              status: "cancelled",
-              completedAtMs: cancelledAtMs,
-              durationSeconds:
-                typeof turn.durationSeconds === "number" && Number.isFinite(turn.durationSeconds)
-                  ? Math.max(0, Math.round(turn.durationSeconds))
-                  : Math.max(0, Math.floor((cancelledAtMs - turn.startedAtMs) / 1000)),
-            }
-          : turn
-      )
-    );
-  }
-
-  async function handleStopActiveRun() {
-    if (isStoppingRun) {
-      return;
-    }
-
-    const threadIdToCancel = String(currentThreadId || "").trim();
-    const hasLocalExecution = isRunning;
-
-    if (!threadIdToCancel && !hasLocalExecution) {
-      return;
-    }
-
-    setInlineError(null);
-    setIsPreparingRun(false);
-    setPendingQueuedMessages([]);
-    setIsStoppingRun(true);
-
-    if (threadIdToCancel) {
-      stopRequestedThreadIdRef.current = threadIdToCancel;
-    }
-
-    try {
-      if (threadIdToCancel && normalizedBackendUrl && hasApiKey) {
-        await cancelThreadExecution({
-          backendUrl: normalizedBackendUrl,
-          apiKey: apiKey.trim(),
-          threadId: threadIdToCancel,
-          requestHeaders,
-        });
-      }
-
-      markRunningTurnsCancelled();
-      cancel();
-
-      if (!hasLocalExecution) {
-        stopRequestedThreadIdRef.current = null;
-      }
-
-      if (threadIdToCancel) {
-        refreshThreadContextDetailsInBackground(threadIdToCancel);
-        try {
-          onRunCancel?.(threadIdToCancel);
-        } catch (callbackError) {
-          reportRunnerLifecycleCallbackError("onRunCancel", callbackError);
-        }
-      }
-    } catch (error) {
-      stopRequestedThreadIdRef.current = null;
-      const normalizedError = error instanceof Error ? error : new Error(String(error));
-      setInlineError(normalizedError.message || "Failed to stop agent.");
-      try {
-        onRunError?.(normalizedError, threadIdToCancel || undefined);
-      } catch (callbackError) {
-        reportRunnerLifecycleCallbackError("onRunError", callbackError);
-      }
-    } finally {
-      setIsStoppingRun(false);
-    }
-  }
-
   function applyHydratedThreadEnvironment(payload: RunnerThreadHydrationPayload) {
     const nextEnvironmentId = payload.threadEnvironmentId ?? null;
     const nextEnvironmentName = payload.threadEnvironmentName ?? payload.environmentName ?? null;
@@ -2037,442 +2035,58 @@ export function RunnerChat({
     }
   }
 
-  function buildSuggestedForkEnvironmentName() {
-    const baseName = sourceThreadEnvironmentName || selectedEnvironment?.name || displayedEnvironmentLabel || "Environment";
-    return `${baseName} Fork`;
-  }
-
-  function resetForkConfiguration() {
-    setPendingForkConfiguration(null);
-    setForkTarget("existing_environment");
-    setForkTargetEnvironmentId(sourceThreadEnvironmentId || selectedEnvironmentId || environmentId || "");
-    setForkNewEnvironmentName(buildSuggestedForkEnvironmentName());
-    setForkNewEnvironmentFileCopyMode("all");
-    setForkExistingEnvironmentFileCopyMode("none");
-    setShowForkEnvironmentPopup(false);
-    setForkDialogError(null);
-  }
-
-  async function fetchThreadContextEstimate(nextThreadId: string): Promise<RunnerChatThreadContext | null> {
-    return fetchRunnerThreadContext({
-      backendUrl: normalizedBackendUrl,
-      apiKey,
-      requestHeaders,
-      threadId: nextThreadId,
-    });
-  }
-
-  async function fetchThreadContextDetails(nextThreadId: string): Promise<{
-    context: RunnerChatThreadContextDetails | null;
-    availableActions: RunnerChatThreadContextAvailableActions;
-    nativeError: string | null;
-  }> {
-    return fetchRunnerThreadContextDetails({
-      backendUrl: normalizedBackendUrl,
-      apiKey,
-      requestHeaders,
-      threadId: nextThreadId,
-    });
-  }
-
-  function appendSyntheticActionTurn(
-    promptText: string,
-    responseText: string,
-    detailLabel: string,
-    options?: {
-      presentation?: RunnerTurn["presentation"];
-      messageMetadata?: Record<string, unknown> | null;
-    }
-  ) {
-    const turnId = generateId("turn");
-    const now = Date.now();
-    const timestamp = new Date(now).toISOString();
-    setTurns((prev) => [
-      ...prev,
-      {
-        id: turnId,
-        prompt: promptText,
-        messageMetadata: options?.messageMetadata || null,
-        logs: [
-          {
-            time: timestamp,
-            message: detailLabel,
-            type: "info",
-            eventType: "setup",
-          },
-          {
-            time: timestamp,
-            message: responseText,
-            type: "success",
-            eventType: "agent_message",
-          },
-        ],
-        startedAtMs: now,
-        completedAtMs: now,
-        durationSeconds: 0,
-        status: "completed",
-        animateOnRender: true,
-        isInitialTurn: prev.length === 0,
-        agentName: selectedAgent?.name || displayedAgentLabel,
-        environmentName: selectedEnvironment?.name || displayedEnvironmentLabel,
-        presentation: options?.presentation || "default",
-      },
-    ]);
-    setExpandedTurns((prev) => ({ ...prev, [turnId]: true }));
-  }
-
   async function tryHandleThreadCommunicatorMessage(content: string): Promise<boolean> {
-    const normalizedContent = content.trim();
-    const resolvedThreadId = String(currentThreadId || "").trim();
-    if (!normalizedContent || !resolvedThreadId || !normalizedBackendUrl || !hasApiKey) return false;
-
-    const deterministicControl = normalizedContent.match(
-      /^(stop|pause|cancel|resume|park)(?:\s+(?:(?:this|the current|the|current)\s+)?(?:run|task|worker|job|deployment|deploy))?(?:\s+now)?[.!]?$/i,
-    )?.[1]?.toLowerCase() || null;
-    if (deterministicControl) {
-      if (deterministicControl === "stop" || deterministicControl === "cancel") {
-        if (!hasRoutableActiveRun) {
-          setInlineError("There is no active run to stop.");
-          return true;
-        }
-        await handleStopActiveRun();
-        return true;
-      }
-      if (!activeCanonicalRun) {
-        setInlineError(`The current runtime cannot ${deterministicControl} at a safe checkpoint yet. The command was not sent as a worker task.`);
-        return true;
-      }
-      try {
-        const command = await canonicalThread.controlRun(activeCanonicalRun.id, {
-          action: deterministicControl as "pause" | "resume" | "park",
-          reason: "Explicit deterministic control from the thread composer.",
-          idempotencyKey: `runner-chat-control:${resolvedThreadId}:${activeCanonicalRun.id}:${deterministicControl}:${Date.now()}`,
-        });
-        if (command.effectApplied === false) {
-          setInlineError(command.limitation || "The control request was recorded and is waiting for the run coordinator.");
-        }
-      } catch (error) {
-        setInlineError(error instanceof Error ? error.message : String(error));
-      }
-      return true;
-    }
-
-    const fallbackLooksLikeStatusQuestion = /(^|\s)@communicator\b/i.test(normalizedContent) || (
-      /\b(status|progress|summary|update|happening|doing|working on|where are we|how(?:'s| is) it going|still running|what changed|why did)\b/i.test(normalizedContent)
-      && (normalizedContent.includes("?") || /^(what|where|why|how|is|are|can you tell|give me)/i.test(normalizedContent))
-    ) || (
-      normalizedContent.includes("?")
-      && /\b(tests?|files?|changes?|decisions?|assumptions?|errors?|build|branch|deploy(?:ment)?|worker|run)\b/i.test(normalizedContent)
-      && /^(did|does|has|have|which|what|when|where|why|how|is|are|can|could|would)/i.test(normalizedContent)
-    );
-    const fallbackLooksLikeWorkerInstruction = /^(?:please\s+|can you\s+|could you\s+|would you\s+)?(?:add|analy[sz]e|build|change|configure|continue|copy|create|debug|deploy|design|document|edit|execute|find|fix|implement|improve|inspect|install|integrate|investigate|make|migrate|move|optimi[sz]e|publish|refactor|remove|rename|review|revert|retry|run|search|set\s+up|ship|test|update|upgrade|use|write)\b/i.test(normalizedContent)
-      || /^(?:do not|don't|instead|also)\b/i.test(normalizedContent);
-
-    try {
-      const headers = buildRunnerVoiceHeaders(requestHeaders, apiKey);
-      let shouldUseCommunicator = fallbackLooksLikeStatusQuestion
-        || (hasRoutableActiveRun && !fallbackLooksLikeWorkerInstruction);
-      let targetRunId = activeCanonicalRun?.id || null;
-      let controlAction: string | null = null;
-      try {
-        const classificationResponse = await fetch(
-          `${normalizedBackendUrl}/threads/${encodeURIComponent(resolvedThreadId)}/activity/classify`,
+    return tryRouteRunnerCommunicatorMessage({
+      activeRunId: activeCanonicalRun?.id || null,
+      apiKey,
+      backendUrl: normalizedBackendUrl,
+      content,
+      controlRun: canonicalThread.controlRun,
+      hasRoutableActiveRun,
+      onAnswer: (answer) => {
+        appendSyntheticActionTurn(
+          content.trim(),
+          answer.content,
+          "Communicator answered",
           {
-            method: "POST",
-            headers,
-            body: JSON.stringify({
-              content: normalizedContent,
-            }),
+            presentation: "btw",
+            messageMetadata: {
+              source: "thread_v2_communicator",
+              routingReceiptLabel: "Answered by Communicator",
+              routingReceiptStatus: answer.receiptStatus,
+              routingReceiptId: answer.receiptId,
+            },
           },
         );
-        if (classificationResponse.ok) {
-          const classification = await classificationResponse.json() as Record<string, unknown>;
-          const decision = classification.decision && typeof classification.decision === "object"
-            ? classification.decision as Record<string, unknown>
-            : {};
-          const rawRoute = String(decision.route || "").trim().toLowerCase();
-          shouldUseCommunicator = classification.suggestedTransport === "activity_message" && rawRoute === "communicator";
-          const explicitlyAddressedCommunicator = /(^|\s)@communicator\b/i.test(normalizedContent);
-          const targetRunActive = classification.targetRunActive === true;
-          // The shipped responder is grounded in thread state, not a general
-          // conversational model. On an idle thread, preserve normal worker
-          // execution unless the user clearly asks about the thread or names
-          // the communicator. Ambiguous-to-communicator remains safe while a
-          // worker is active.
-          if (shouldUseCommunicator && !targetRunActive && !hasRoutableActiveRun && !fallbackLooksLikeStatusQuestion && !explicitlyAddressedCommunicator) {
-            return false;
-          }
-          targetRunId = typeof classification.targetRunId === "string" ? classification.targetRunId : targetRunId;
-          controlAction = typeof decision.controlAction === "string" ? decision.controlAction : null;
-          if (rawRoute === "control") {
-            if (controlAction === "stop" || controlAction === "cancel") {
-              await handleStopActiveRun();
-              return true;
-            }
-            if (targetRunId && ["pause", "resume", "park"].includes(controlAction || "")) {
-              const command = await canonicalThread.controlRun(targetRunId, {
-                action: controlAction as "pause" | "resume" | "park",
-                reason: "Explicit control message from the thread composer.",
-                idempotencyKey: `runner-chat-control:${resolvedThreadId}:${targetRunId}:${controlAction}:${Date.now()}`,
-              });
-              if (command.effectApplied === false) {
-                setInlineError(command.limitation || "The control request was recorded and is waiting for the run coordinator.");
-              }
-              return true;
-            }
-            setInlineError(controlAction
-              ? `There is no controllable run to ${controlAction}. The command was not sent as a worker task.`
-              : "The message was classified as run control, but no supported control action was found. It was not sent as a worker task.");
-            return true;
-          }
-          if (!shouldUseCommunicator) return false;
-        }
-      } catch {
-        // Older backends do not expose the non-persisting classifier. The
-        // conservative local status-question fallback preserves compatibility.
-      }
-      if (!shouldUseCommunicator) return false;
-
-      const clientMessageId = generateId("activity-message");
-      let routed: RunnerThreadRoutedMessageResult;
-      try {
-        routed = await canonicalThread.postMessage({
-          clientMessageId,
-          content: normalizedContent,
-          intendedRoute: "communicator",
-          deliveryMode: "fyi",
-          metadata: { source: "runner_chat_communicator_preflight" },
-        });
-      } catch (error) {
-        const normalizedError = error instanceof Error ? error : new Error(String(error));
-        setInlineError(`${normalizedError.message || "Could not confirm the communicator response."} The message was not rerouted to the worker.`);
-        setInput(normalizedContent);
-        currentInputRef.current = normalizedContent;
+      },
+      onError: (message) => setInlineError(message),
+      onRestoreComposer: (restoredContent) => {
+        setInput(restoredContent);
+        currentInputRef.current = restoredContent;
         focusComposerSoon({ preventScroll: true });
-        return true;
-      }
-      const responseText = routed.communicator?.message.content.trim() || "";
-      if (!responseText) {
-        setInlineError("The communicator accepted the message but did not return a response. It was not rerouted to the worker.");
-        setInput(normalizedContent);
-        currentInputRef.current = normalizedContent;
-        focusComposerSoon({ preventScroll: true });
-        return true;
-      }
-      if (!shouldUseCanonicalThreadSurface) {
-        appendSyntheticActionTurn(normalizedContent, responseText, "Communicator answered", {
-          presentation: "btw",
-          messageMetadata: {
-            source: "thread_v2_communicator",
-            routingReceiptLabel: "Answered by Communicator",
-            routingReceiptStatus: String(routed.routingReceipt?.status || "answered"),
-            routingReceiptId: String(routed.routingReceipt?.id || ""),
-          },
-        });
-      }
-      return true;
-    } catch {
-      // The legacy queue remains the safe fallback while Thread v2 rolls out.
-      return false;
-    }
+      },
+      onStop: handleStopActiveRun,
+      postMessage: canonicalThread.postMessage,
+      requestHeaders,
+      threadId: currentThreadId,
+      usesCanonicalThreadSurface: shouldUseCanonicalThreadSurface,
+    });
   }
 
   async function tryHandleActiveCanonicalWorkerInstruction(content: string): Promise<boolean> {
-    const normalizedContent = content.trim();
-    const run = activeCanonicalRun;
-    if (
-      !normalizedContent
-      || !run
-      || !canonicalThreadEnabled
-      || !canonicalProjectionMatchesThread
-    ) {
-      return false;
-    }
-
-    const clientMessageId = generateId("worker-instruction");
-    try {
-      const instruction = await persistRunnerActiveRunInstruction({
-        clientMessageId,
-        content: normalizedContent,
-        postMessage: canonicalThread.postMessage,
-        runId: run.id,
-      });
-      const notice = getRunnerActiveRunInstructionNotice(instruction);
-      if (notice) setInlineError(notice);
-      return true;
-    } catch (error) {
-      const normalizedError = error instanceof Error ? error : new Error(String(error));
-      setInlineError(
-        `${normalizedError.message || "Worker delivery could not be confirmed."} `
-        + "The message remains in the composer and was not placed in the page-local queue.",
-      );
-      setInput(normalizedContent);
-      currentInputRef.current = normalizedContent;
-      focusComposerSoon({ preventScroll: true });
-      return true;
-    }
-  }
-
-
-  function appendThreadContextActionNotice(action: RunnerChatThreadContextAction, message: string) {
-    const turnId = generateId("turn");
-    const now = Date.now();
-    const timestamp = new Date(now).toISOString();
-    setTurns((prev) => [
-      ...prev,
-      {
-        id: turnId,
-        prompt: "",
-        logs: [
-          {
-            time: timestamp,
-            message,
-            type: "info",
-            eventType: "action_summary",
-            metadata: {
-              actionType: action,
-            },
-          },
-        ],
-        startedAtMs: now,
-        completedAtMs: now,
-        durationSeconds: 0,
-        status: "completed",
-        animateOnRender: true,
-        isInitialTurn: prev.length === 0,
-        agentName: selectedAgent?.name || displayedAgentLabel,
-        environmentName: selectedEnvironment?.name || displayedEnvironmentLabel,
-        presentation: "context-action-notice",
+    return tryRouteRunnerActiveRunInstruction({
+      content,
+      enabled: canonicalThreadEnabled,
+      onNotice: (message) => setInlineError(message),
+      onRestoreComposer: (restoredContent) => {
+        setInput(restoredContent);
+        currentInputRef.current = restoredContent;
+        focusComposerSoon({ preventScroll: true });
       },
-    ]);
-    return turnId;
-  }
-
-  function appendPendingThreadContextActionNotice(
-    action: RunnerChatThreadContextAction,
-    message: string,
-    options?: { prompt?: string }
-  ) {
-    const turnId = generateId("turn");
-    const now = Date.now();
-    const timestamp = new Date(now).toISOString();
-    setTurns((prev) => [
-      ...prev,
-      {
-        id: turnId,
-        prompt: options?.prompt || "",
-        logs: [
-          {
-            time: timestamp,
-            message,
-            type: "info",
-            eventType: "action_summary",
-            metadata: {
-              actionType: action,
-              isPending: true,
-            },
-          },
-        ],
-        startedAtMs: now,
-        status: "running",
-        animateOnRender: true,
-        isInitialTurn: prev.length === 0,
-        agentName: selectedAgent?.name || displayedAgentLabel,
-        environmentName: selectedEnvironment?.name || displayedEnvironmentLabel,
-        presentation: "context-action-notice",
-      },
-    ]);
-    return turnId;
-  }
-
-  function updateThreadContextActionNotice(
-    turnId: string,
-    message: string,
-    options?: { pending?: boolean; failed?: boolean }
-  ) {
-    const now = Date.now();
-    const timestamp = new Date(now).toISOString();
-    setTurns((prev) =>
-      prev.map((turn) => {
-        if (turn.id !== turnId) {
-          return turn;
-        }
-        const nextLogs = turn.logs.map((log, index) =>
-          index === 0 && log.eventType === "action_summary"
-            ? {
-                ...log,
-                time: timestamp,
-                message,
-                type: (options?.failed ? "error" : "info") as RunnerLog["type"],
-                metadata: {
-                  ...log.metadata,
-                  isPending: options?.pending ?? false,
-                  failed: options?.failed ?? false,
-                },
-              }
-            : log
-        );
-        return {
-          ...turn,
-          logs: nextLogs,
-          status: options?.failed ? "failed" : options?.pending ? "running" : "completed",
-          completedAtMs: options?.pending ? undefined : now,
-          durationSeconds: options?.pending ? undefined : getTurnDurationSeconds(turn),
-        };
-      })
-    );
-  }
-
-  async function refreshThreadContextDetails(nextThreadId?: string) {
-    const resolvedThreadId = nextThreadId || currentThreadId;
-    if (!resolvedThreadId || !hasApiKey || !normalizedBackendUrl) {
-      setThreadContextDetails(null);
-      setThreadContextDetailsError(null);
-      setThreadContextNativeError(null);
-      setThreadContextAvailableActions(DEFAULT_THREAD_CONTEXT_ACTIONS);
-      return;
-    }
-
-    setIsThreadContextDetailsLoading(true);
-    setThreadContextDetailsError(null);
-    try {
-      const details = await fetchThreadContextDetails(resolvedThreadId);
-      setThreadContextDetails(details.context);
-      setThreadContext(details.context);
-      setThreadContextAvailableActions(details.availableActions);
-      setThreadContextNativeError(details.nativeError);
-    } catch (error) {
-      const normalizedError = error instanceof Error ? error : new Error(String(error));
-      setThreadContextDetails(null);
-      setThreadContextDetailsError(normalizedError.message || "Failed to load thread context details.");
-      setThreadContextNativeError(null);
-      setThreadContextAvailableActions(DEFAULT_THREAD_CONTEXT_ACTIONS);
-    } finally {
-      setIsThreadContextDetailsLoading(false);
-    }
-  }
-
-  function refreshThreadContextDetailsInBackground(nextThreadId?: string) {
-    void refreshThreadContextDetails(nextThreadId).catch(() => undefined);
-  }
-
-  async function refreshDeepResearchSessions(nextThreadId?: string): Promise<void> {
-    const resolvedThreadId = String(nextThreadId || currentThreadId || "").trim();
-    if (!resolvedThreadId || !hasApiKey || !normalizedBackendUrl) {
-      setDeepResearchSessions([]);
-      return;
-    }
-    try {
-      const sessions = await fetchThreadResearchSessions({
-        backendUrl: normalizedBackendUrl,
-        apiKey: apiKey.trim(),
-        threadId: resolvedThreadId,
-        requestHeaders,
-      });
-      setDeepResearchSessions(sessions);
-    } catch {
-      // Keep the last known sessions during transient polling failures.
-    }
+      postMessage: canonicalThread.postMessage,
+      projectionMatchesThread: canonicalProjectionMatchesThread,
+      runId: activeCanonicalRun?.id || null,
+    });
   }
 
   function handleContextIndicatorClick() {
@@ -2488,17 +2102,7 @@ export function RunnerChat({
   function clearComposerDraft(options?: { preserveStagedCommand?: boolean; preserveQuotedSelection?: boolean }) {
     setInput("");
     if (!options?.preserveStagedCommand) {
-      setStagedThreadContextCommand(null);
-      setStagedResourceCreationCommand(null);
-      setStagedAgentCreationCommand(null);
-      setStagedSkillCreationCommand(null);
-      setStagedSlideCreationCommand(null);
-      setStagedResearchCreationCommand(null);
-      setStagedScrapeCreationCommand(null);
-      setStagedParseCreationCommand(null);
-      setStagedAdCreationCommand(null);
-      setStagedBacklogSubtaskCommand(null);
-      setStagedBacklogMissionControlCommand(null);
+      clearAllStagedCommands();
     }
     if (!options?.preserveQuotedSelection) {
       setComposerQuotedSelection(null);
@@ -2509,17 +2113,6 @@ export function RunnerChat({
 
   function clearQuotedSelectionPopup() {
     setQuotedSelectionPopup(null);
-  }
-
-  function clearComposerQuotedSelection() {
-    setComposerQuotedSelection(null);
-  }
-
-  function closeDocumentAttachmentPreview() {
-    setPreviewedDocumentAttachment(null);
-    setPreviewImageSelectionState(null);
-    setIsDocumentPreviewMaximized(false);
-    setDocumentPreviewActionMenuOpen(false);
   }
 
   function closeDeepResearchDetailDrawer() {
@@ -2676,341 +2269,6 @@ export function RunnerChat({
       const message = error instanceof Error ? error.message : "Failed to open computer.";
       renderDesktopWindowMessage(message);
     }
-  }
-
-  function startDocumentPreviewResize(event: ReactPointerEvent<HTMLButtonElement>) {
-    if (typeof window === "undefined") {
-      return;
-    }
-    const drawerWidth = event.currentTarget.parentElement?.getBoundingClientRect().width;
-    if (!drawerWidth) {
-      return;
-    }
-    documentPreviewResizeStateRef.current = {
-      startX: event.clientX,
-      startWidth: drawerWidth,
-    };
-    event.preventDefault();
-  }
-
-  function toggleDocumentAttachmentPreview(attachment: RunnerTurnAttachment) {
-    if (!isAttachmentDocumentPreviewable(attachment)) {
-      return;
-    }
-    closeDeepResearchDetailDrawer();
-    closeSubagentDetailDrawer();
-    closeComputerUseDetailDrawer();
-    setDocumentPreviewActionMenuOpen(false);
-    setPreviewedDocumentAttachment((current) => {
-      if (current?.id === attachment.id) {
-        setIsDocumentPreviewMaximized(false);
-        return null;
-      }
-      setIsDocumentPreviewMaximized(false);
-      return attachment;
-    });
-  }
-
-  function toggleDocumentPreviewMaximized() {
-    setDocumentPreviewActionMenuOpen(false);
-    setIsDocumentPreviewMaximized((current) => !current);
-  }
-
-  function getDocumentPreviewOpenUrl(attachment: RunnerTurnAttachment | null): string {
-    if (!attachment) {
-      return "";
-    }
-    const baseFileUrl = attachment.previewUrl || attachment.url || "";
-    const htmlPreviewUrl =
-      typeof attachment.htmlPreviewUrl === "string" && attachment.htmlPreviewUrl.trim()
-        ? attachment.htmlPreviewUrl
-        : isRunnerPreviewHtmlFile(attachment.filename, attachment.mimeType)
-          ? buildRunnerPreviewHtmlPreviewUrlFromDownloadUrl(baseFileUrl, attachment.filename, attachment.mimeType)
-          : "";
-    return (
-      resolveRunnerPreviewAssetUrl(htmlPreviewUrl || baseFileUrl, normalizedBackendUrl, attachment.id) ||
-      resolveRunnerPreviewAssetUrl(baseFileUrl, normalizedBackendUrl, attachment.id) ||
-      ""
-    );
-  }
-
-  function copyDocumentPreviewValue(value: string) {
-    if (!value.trim() || typeof navigator === "undefined") {
-      return;
-    }
-    void navigator.clipboard?.writeText(value);
-    setDocumentPreviewActionMenuOpen(false);
-  }
-
-  function revokeAttachmentPreview(attachment: Pick<LocalAttachment, "previewUrl">) {
-    if (attachment.previewUrl) {
-      URL.revokeObjectURL(attachment.previewUrl);
-    }
-  }
-
-  function pruneWorkspaceAttachmentsForEnvironment(nextEnvironmentId: string) {
-    setAttachments((prev) => {
-      const removed: LocalAttachment[] = [];
-      const kept = prev.filter((attachment) => {
-        const shouldRemove =
-          attachment.source === "workspace" &&
-          Boolean(attachment.sourceEnvironmentId) &&
-          attachment.sourceEnvironmentId !== nextEnvironmentId;
-        if (shouldRemove) {
-          removed.push(attachment);
-        }
-        return !shouldRemove;
-      });
-      for (const attachment of removed) {
-        revokeAttachmentPreview(attachment);
-      }
-      return removed.length > 0 ? kept : prev;
-    });
-  }
-
-  function clearComposerAttachments(entries?: LocalAttachment[], options?: { revokePreviews?: boolean }) {
-    const attachmentsToClear = entries || attachments;
-    if (options?.revokePreviews !== false) {
-      for (const attachment of attachmentsToClear) {
-        revokeAttachmentPreview(attachment);
-      }
-    }
-    setAttachments([]);
-  }
-
-  function setComposerDraft(prompt: string) {
-    setStagedThreadContextCommand(null);
-    setStagedResourceCreationCommand(null);
-    setStagedAgentCreationCommand(null);
-    setStagedSkillCreationCommand(null);
-    setStagedSlideCreationCommand(null);
-    setStagedResearchCreationCommand(null);
-    setStagedScrapeCreationCommand(null);
-    setStagedParseCreationCommand(null);
-    setStagedAdCreationCommand(null);
-    setInput(prompt);
-    currentInputRef.current = prompt;
-    resetSpeechDraft(prompt);
-  }
-
-  function stageThreadContextCommand(action: RunnerChatThreadContextAction, prompt = "") {
-    setStagedResourceCreationCommand(null);
-    setStagedAgentCreationCommand(null);
-    setStagedSkillCreationCommand(null);
-    setStagedSlideCreationCommand(null);
-    setStagedResearchCreationCommand(null);
-    setStagedScrapeCreationCommand(null);
-    setStagedParseCreationCommand(null);
-    setStagedAdCreationCommand(null);
-    setStagedBacklogSubtaskCommand(null);
-    setStagedBacklogMissionControlCommand(null);
-    setStagedThreadContextCommand(action);
-    setInput(prompt);
-    currentInputRef.current = prompt;
-    resetSpeechDraft(prompt);
-  }
-
-  function stageBacklogSubtaskCommand(ticketNumber: string, prompt?: string) {
-    const normalizedTicketNumber = normalizeRunnerBacklogTicketNumber(ticketNumber);
-    if (!normalizedTicketNumber) {
-      return;
-    }
-    const nextPrompt = prompt === undefined ? currentInputRef.current : prompt;
-    setStagedThreadContextCommand(null);
-    setStagedResourceCreationCommand(null);
-    setStagedAgentCreationCommand(null);
-    setStagedSkillCreationCommand(null);
-    setStagedSlideCreationCommand(null);
-    setStagedResearchCreationCommand(null);
-    setStagedScrapeCreationCommand(null);
-    setStagedParseCreationCommand(null);
-    setStagedAdCreationCommand(null);
-    setStagedBacklogMissionControlCommand(null);
-    setStagedBacklogSubtaskCommand({
-      action: "subtask",
-      ticketNumber: normalizedTicketNumber,
-      label: buildRunnerBacklogSubtaskLabel(normalizedTicketNumber),
-    });
-    setInput(nextPrompt);
-    currentInputRef.current = nextPrompt;
-    resetSpeechDraft(nextPrompt);
-  }
-
-  function stageBacklogMissionControlCommand(prompt = "") {
-    setStagedThreadContextCommand(null);
-    setStagedResourceCreationCommand(null);
-    setStagedAgentCreationCommand(null);
-    setStagedSkillCreationCommand(null);
-    setStagedSlideCreationCommand(null);
-    setStagedResearchCreationCommand(null);
-    setStagedScrapeCreationCommand(null);
-    setStagedParseCreationCommand(null);
-    setStagedAdCreationCommand(null);
-    setStagedBacklogSubtaskCommand(null);
-    setStagedBacklogMissionControlCommand({
-      action: "mission_control",
-      label: buildRunnerMissionControlLabel(),
-    });
-    setInput(prompt);
-    currentInputRef.current = prompt;
-    resetSpeechDraft(prompt);
-  }
-
-  function stageResourceCreationCommand(action: RunnerResourceCreationCommandType, prompt = "") {
-    setStagedThreadContextCommand(null);
-    setStagedAgentCreationCommand(null);
-    setStagedSkillCreationCommand(null);
-    setStagedSlideCreationCommand(null);
-    setStagedResearchCreationCommand(null);
-    setStagedScrapeCreationCommand(null);
-    setStagedParseCreationCommand(null);
-    setStagedAdCreationCommand(null);
-    setStagedBacklogSubtaskCommand(null);
-    setStagedBacklogMissionControlCommand(null);
-    setStagedResourceCreationCommand({
-      action,
-      label: buildRunnerResourceCreationLabel(action),
-    });
-    setInput(prompt);
-    currentInputRef.current = prompt;
-    resetSpeechDraft(prompt);
-  }
-
-  function stageAgentCreationCommand(action: RunnerAgentCreationCommandType, prompt = "") {
-    setStagedThreadContextCommand(null);
-    setStagedResourceCreationCommand(null);
-    setStagedSkillCreationCommand(null);
-    setStagedSlideCreationCommand(null);
-    setStagedResearchCreationCommand(null);
-    setStagedScrapeCreationCommand(null);
-    setStagedParseCreationCommand(null);
-    setStagedAdCreationCommand(null);
-    setStagedBacklogSubtaskCommand(null);
-    setStagedBacklogMissionControlCommand(null);
-    setStagedAgentCreationCommand({
-      action,
-      label: buildRunnerAgentCreationLabel(action),
-    });
-    setInput(prompt);
-    currentInputRef.current = prompt;
-    resetSpeechDraft(prompt);
-  }
-
-  function stageSkillCreationCommand(action: RunnerSkillCreationCommandType, prompt = "") {
-    setStagedThreadContextCommand(null);
-    setStagedResourceCreationCommand(null);
-    setStagedAgentCreationCommand(null);
-    setStagedSlideCreationCommand(null);
-    setStagedResearchCreationCommand(null);
-    setStagedScrapeCreationCommand(null);
-    setStagedParseCreationCommand(null);
-    setStagedAdCreationCommand(null);
-    setStagedBacklogSubtaskCommand(null);
-    setStagedBacklogMissionControlCommand(null);
-    setStagedSkillCreationCommand({
-      action,
-      label: buildRunnerSkillCreationLabel(action),
-    });
-    setInput(prompt);
-    currentInputRef.current = prompt;
-    resetSpeechDraft(prompt);
-  }
-
-  function stageSlideCreationCommand(prompt = "") {
-    setStagedThreadContextCommand(null);
-    setStagedResourceCreationCommand(null);
-    setStagedAgentCreationCommand(null);
-    setStagedSkillCreationCommand(null);
-    setStagedResearchCreationCommand(null);
-    setStagedScrapeCreationCommand(null);
-    setStagedParseCreationCommand(null);
-    setStagedAdCreationCommand(null);
-    setStagedBacklogSubtaskCommand(null);
-    setStagedBacklogMissionControlCommand(null);
-    setStagedSlideCreationCommand({
-      action: "slides",
-      label: buildRunnerSlideCreationLabel(),
-    });
-    setInput(prompt);
-    currentInputRef.current = prompt;
-    resetSpeechDraft(prompt);
-  }
-
-  function stageResearchCreationCommand(prompt = "") {
-    setStagedThreadContextCommand(null);
-    setStagedResourceCreationCommand(null);
-    setStagedAgentCreationCommand(null);
-    setStagedSkillCreationCommand(null);
-    setStagedSlideCreationCommand(null);
-    setStagedAdCreationCommand(null);
-    setStagedScrapeCreationCommand(null);
-    setStagedParseCreationCommand(null);
-    setStagedBacklogSubtaskCommand(null);
-    setStagedBacklogMissionControlCommand(null);
-    setStagedResearchCreationCommand({
-      action: "research",
-      label: buildRunnerResearchCreationLabel(),
-    });
-    setInput(prompt);
-    currentInputRef.current = prompt;
-    resetSpeechDraft(prompt);
-  }
-
-  function stageScrapeCreationCommand(prompt = "") {
-    setStagedThreadContextCommand(null);
-    setStagedResourceCreationCommand(null);
-    setStagedAgentCreationCommand(null);
-    setStagedSkillCreationCommand(null);
-    setStagedSlideCreationCommand(null);
-    setStagedResearchCreationCommand(null);
-    setStagedAdCreationCommand(null);
-    setStagedParseCreationCommand(null);
-    setStagedBacklogSubtaskCommand(null);
-    setStagedBacklogMissionControlCommand(null);
-    setStagedScrapeCreationCommand({
-      action: "scrape",
-      label: buildRunnerScrapeCreationLabel(),
-    });
-    setInput(prompt);
-    currentInputRef.current = prompt;
-    resetSpeechDraft(prompt);
-  }
-
-  function stageParseCreationCommand(prompt = "") {
-    setStagedThreadContextCommand(null);
-    setStagedResourceCreationCommand(null);
-    setStagedAgentCreationCommand(null);
-    setStagedSkillCreationCommand(null);
-    setStagedSlideCreationCommand(null);
-    setStagedResearchCreationCommand(null);
-    setStagedScrapeCreationCommand(null);
-    setStagedAdCreationCommand(null);
-    setStagedBacklogSubtaskCommand(null);
-    setStagedBacklogMissionControlCommand(null);
-    setStagedParseCreationCommand({
-      action: "parse",
-      label: buildRunnerParseCreationLabel(),
-    });
-    setInput(prompt);
-    currentInputRef.current = prompt;
-    resetSpeechDraft(prompt);
-  }
-
-  function stageAdCreationCommand(prompt = "") {
-    setStagedThreadContextCommand(null);
-    setStagedResourceCreationCommand(null);
-    setStagedAgentCreationCommand(null);
-    setStagedSkillCreationCommand(null);
-    setStagedSlideCreationCommand(null);
-    setStagedResearchCreationCommand(null);
-    setStagedScrapeCreationCommand(null);
-    setStagedParseCreationCommand(null);
-    setStagedBacklogSubtaskCommand(null);
-    setStagedBacklogMissionControlCommand(null);
-    setStagedAdCreationCommand(buildStagedRunnerAdCreationCommand(adCreationSettings));
-    setInput(prompt);
-    currentInputRef.current = prompt;
-    resetSpeechDraft(prompt);
   }
 
   function handleQuotedSelectionMouseUp(event: MouseEvent<HTMLDivElement>) {
@@ -3206,97 +2464,6 @@ export function RunnerChat({
     return collectTurnChangedFiles(turn.logs).length > 0;
   }
 
-  async function resolveEditableTurnBoundary(turnId: string): Promise<{ messageId: string; truncateAtMessageIndex: number }> {
-    const targetTurn = turnsRef.current.find((turn) => turn.id === turnId);
-    if (!targetTurn) {
-      throw new Error("Message not found.");
-    }
-
-    const fallbackMessageId =
-      typeof targetTurn.sourceMessageId === "string" && targetTurn.sourceMessageId.trim().startsWith("msg_")
-        ? targetTurn.sourceMessageId.trim()
-        : turnId.startsWith("msg_")
-          ? turnId
-          : "";
-
-    if (!currentThreadId || !hasApiKey) {
-      if (fallbackMessageId) {
-        return {
-          messageId: fallbackMessageId,
-          truncateAtMessageIndex: 0,
-        };
-      }
-      throw new Error("Message not found.");
-    }
-
-    const messages = await fetchAllThreadMessages({
-      backendUrl: normalizedBackendUrl,
-      apiKey: apiKey.trim(),
-      threadId: currentThreadId,
-      requestHeaders,
-    });
-
-    const canonicalUserMessages = messages.filter(
-      (message) =>
-        message.role === "user" &&
-        typeof message.id === "string" &&
-        message.id.trim().startsWith("msg_") &&
-        typeof message.content === "string" &&
-        !isBtwTurnPrompt(message.content) &&
-        !isThreadContextCommandPrompt(message.content)
-    );
-
-    if (fallbackMessageId && canonicalUserMessages.some((message) => message.id === fallbackMessageId)) {
-      const matchedIndex = messages.findIndex((message) => message.id === fallbackMessageId);
-      return {
-        messageId: fallbackMessageId,
-        truncateAtMessageIndex: matchedIndex === -1 ? 0 : matchedIndex,
-      };
-    }
-
-    const editableConversationTurns = turnsRef.current.filter(
-      (turn) =>
-        turn.presentation !== "btw" &&
-        turn.presentation !== "context-action-notice" &&
-        turn.prompt.trim().length > 0
-    );
-    const editableTurnIndex = editableConversationTurns.findIndex((turn) => turn.id === turnId);
-    if (editableTurnIndex !== -1 && editableTurnIndex < canonicalUserMessages.length) {
-      const matchedMessageId = canonicalUserMessages[editableTurnIndex]!.id!;
-      const matchedIndex = messages.findIndex((message) => message.id === matchedMessageId);
-      return {
-        messageId: matchedMessageId,
-        truncateAtMessageIndex: matchedIndex === -1 ? 0 : matchedIndex,
-      };
-    }
-
-    const promptMatch = canonicalUserMessages.find((message) => message.content.trim() === targetTurn.prompt.trim());
-    if (promptMatch?.id) {
-      const matchedIndex = messages.findIndex((message) => message.id === promptMatch.id);
-      return {
-        messageId: promptMatch.id,
-        truncateAtMessageIndex: matchedIndex === -1 ? 0 : matchedIndex,
-      };
-    }
-
-    if (canonicalUserMessages.length === 1 && canonicalUserMessages[0]?.id) {
-      const matchedIndex = messages.findIndex((message) => message.id === canonicalUserMessages[0]!.id);
-      return {
-        messageId: canonicalUserMessages[0].id!,
-        truncateAtMessageIndex: matchedIndex === -1 ? 0 : matchedIndex,
-      };
-    }
-
-    if (fallbackMessageId) {
-      return {
-        messageId: fallbackMessageId,
-        truncateAtMessageIndex: 0,
-      };
-    }
-
-    throw new Error("Message not found.");
-  }
-
   async function submitEditedTurn(turnId: string, nextPrompt: string, persistFileChanges?: boolean) {
     const normalizedPrompt = nextPrompt.trim();
     if (!normalizedPrompt) {
@@ -3313,7 +2480,14 @@ export function RunnerChat({
 
     let editBoundary: { messageId: string; truncateAtMessageIndex: number };
     try {
-      editBoundary = await resolveEditableTurnBoundary(turnId);
+      editBoundary = await resolveRunnerEditableTurnBoundary({
+        apiKey,
+        backendUrl: normalizedBackendUrl,
+        requestHeaders,
+        threadId: currentThreadId,
+        turnId,
+        turns: turnsRef.current,
+      });
     } catch (error) {
       const normalizedError = error instanceof Error ? error : new Error(String(error));
       setInlineError(normalizedError.message || "Message not found.");
@@ -3456,20 +2630,7 @@ export function RunnerChat({
     setPendingEditConfirmation(null);
     closeAllInputPopups();
 
-    setPendingForkConfiguration({
-      source: "message",
-      sourceThreadId: currentThreadId,
-      stagedPrompt: turn.prompt,
-      quotedSelection: turn.quotedSelection || null,
-      turn,
-    });
-    setForkTarget("existing_environment");
-    setForkTargetEnvironmentId(sourceThreadEnvironmentId || selectedEnvironmentId || environmentId || "");
-    setForkNewEnvironmentName(buildSuggestedForkEnvironmentName());
-    setForkNewEnvironmentFileCopyMode("all");
-    setForkExistingEnvironmentFileCopyMode("none");
-    setShowForkEnvironmentPopup(false);
-    setForkDialogError(null);
+    openMessageForkConfiguration(currentThreadId, turn);
   }
 
   async function copyRunSummaryText(summaryText: string) {
@@ -3506,108 +2667,6 @@ export function RunnerChat({
       return;
     }
     void submitEditedTurn(turn.id, normalizedPrompt);
-  }
-
-  function submitThreadFeedback(rating: RunnerThreadFeedbackRating) {
-    const normalizedThreadId = String(currentThreadId || "").trim();
-    if (!normalizedThreadId || !normalizedBackendUrl || !hasApiKey) {
-      return;
-    }
-    setThreadFeedbackState((previous) => ({
-      ...previous,
-      userRating: rating,
-      upCount:
-        previous.userRating === rating
-          ? previous.upCount
-          : rating === "up"
-            ? previous.upCount + 1
-            : Math.max(0, previous.upCount - (previous.userRating === "up" ? 1 : 0)),
-      downCount:
-        previous.userRating === rating
-          ? previous.downCount
-          : rating === "down"
-            ? previous.downCount + 1
-            : Math.max(0, previous.downCount - (previous.userRating === "down" ? 1 : 0)),
-      isSubmitting: true,
-    }));
-    void setThreadFeedback({
-      backendUrl: normalizedBackendUrl,
-      apiKey: apiKey.trim(),
-      threadId: normalizedThreadId,
-      rating,
-      requestHeaders,
-    })
-      .then((feedback) => {
-        setThreadFeedbackState({ ...feedback, isSubmitting: false });
-      })
-      .catch(() => {
-        setThreadFeedbackState((previous) => ({ ...previous, isSubmitting: false }));
-      });
-  }
-
-  function openReportIssueModal(turn: RunnerTurn, summaryText: string) {
-    if (!currentThreadId || !normalizedBackendUrl || !hasApiKey) {
-      setInlineError("Reporting an issue requires a saved thread.");
-      return;
-    }
-    setRunSummaryMoreTurnId(null);
-    setReportIssueTurn({ turnId: turn.id, summaryText });
-    setReportIssueType("bug");
-    setReportIssueMessage("");
-    setReportIssueError("");
-    setIsReportIssueSubmitting(false);
-  }
-
-  function closeReportIssueModal() {
-    if (isReportIssueSubmitting) {
-      return;
-    }
-    setReportIssueTurn(null);
-    setReportIssueMessage("");
-    setReportIssueError("");
-  }
-
-  async function submitReportIssue() {
-    const normalizedThreadId = String(currentThreadId || "").trim();
-    const message = reportIssueMessage.trim();
-    if (!reportIssueTurn || !normalizedThreadId || !normalizedBackendUrl || !hasApiKey) {
-      setReportIssueError("Reporting an issue requires a saved thread.");
-      return;
-    }
-    if (!message) {
-      setReportIssueError("Describe the issue before sending.");
-      return;
-    }
-
-    setIsReportIssueSubmitting(true);
-    setReportIssueError("");
-    try {
-      await reportThreadFeedbackIssue({
-        backendUrl: normalizedBackendUrl,
-        apiKey: apiKey.trim(),
-        threadId: normalizedThreadId,
-        reportType: reportIssueType,
-        message,
-        requestHeaders,
-        metadata: {
-          turnId: reportIssueTurn.turnId,
-          summary: stripSystemTags(reportIssueTurn.summaryText).trim().slice(0, 4000),
-          url: typeof window !== "undefined" ? window.location.href : "",
-          userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "",
-        },
-      });
-      setThreadFeedbackState((previous) => ({
-        ...previous,
-        reportCount: previous.reportCount + 1,
-      }));
-      setReportIssueTurn(null);
-      setReportIssueMessage("");
-    } catch (error) {
-      const normalizedError = error instanceof Error ? error : new Error(String(error));
-      setReportIssueError(normalizedError.message || "Failed to report issue.");
-    } finally {
-      setIsReportIssueSubmitting(false);
-    }
   }
 
   function openPlansBudgetFromComputeTokenLog() {
@@ -3872,7 +2931,7 @@ export function RunnerChat({
                   type="button"
                   className="tb-run-summary-more-menu-item"
                   role="menuitem"
-                  onClick={() => openReportIssueModal(turn, summaryText)}
+                  onClick={() => openReportIssueModal(turn.id, summaryText)}
                 >
                   Report issue
                 </button>
@@ -3980,29 +3039,21 @@ export function RunnerChat({
     setPendingEditConfirmation(null);
     closeAllInputPopups();
 
-    setPendingForkConfiguration({
-      source: "thread",
+    openThreadForkConfiguration({
+      attachments: options?.includeCurrentAttachments === false ? [] : attachments.slice(),
+      initialExistingEnvironmentFileCopyMode:
+        options?.initialExistingEnvironmentFileCopyMode,
+      preselectedTargetEnvironmentId: options?.preselectedTargetEnvironmentId,
+      quotedSelection: composerQuotedSelection,
+      restoreSelectedEnvironmentId: options?.restoreSelectedEnvironmentId,
       sourceThreadId: currentThreadId,
       stagedPrompt: prompt,
-      attachments: options?.includeCurrentAttachments === false ? [] : attachments.slice(),
-      quotedSelection: composerQuotedSelection,
-      restoreSelectedEnvironmentId: options?.restoreSelectedEnvironmentId ?? null,
     });
-    setForkTarget("existing_environment");
-    setForkTargetEnvironmentId(
-      options?.preselectedTargetEnvironmentId || sourceThreadEnvironmentId || selectedEnvironmentId || environmentId || ""
-    );
-    setForkNewEnvironmentName(buildSuggestedForkEnvironmentName());
-    setForkNewEnvironmentFileCopyMode("all");
-    setForkExistingEnvironmentFileCopyMode(options?.initialExistingEnvironmentFileCopyMode || "none");
-    setShowForkEnvironmentPopup(false);
-    setForkDialogError(null);
   }
 
   function cancelPendingForkConfiguration() {
-    const restoreSelectedEnvironmentId = pendingForkConfiguration?.restoreSelectedEnvironmentId;
-    resetForkConfiguration();
-    if (typeof restoreSelectedEnvironmentId === "string") {
+    const restoreSelectedEnvironmentId = cancelForkConfiguration();
+    if (restoreSelectedEnvironmentId !== null) {
       setSelectedEnvironmentId(restoreSelectedEnvironmentId);
     }
   }
@@ -4027,11 +3078,7 @@ export function RunnerChat({
     setEditingTurnDraft("");
     setPendingEditConfirmation(null);
     clearComposerAttachments(params.autoRunAttachments);
-    setThreadContext(null);
-    setThreadContextDetails(null);
-    setThreadContextDetailsError(null);
-    setThreadContextNativeError(null);
-    setThreadContextAvailableActions(DEFAULT_THREAD_CONTEXT_ACTIONS);
+    resetThreadContext();
     setActiveThreadEnvironmentId(params.nextEnvironmentId || null);
     setActiveThreadEnvironmentName(params.nextEnvironmentName || null);
     if (params.nextEnvironmentId) {
@@ -4167,7 +3214,16 @@ export function RunnerChat({
       await stopSpeechToText().catch(() => undefined);
       const truncateAtMessageIndex =
         pendingFork.source === "message" && pendingFork.turn
-          ? (await resolveEditableTurnBoundary(pendingFork.turn.id)).truncateAtMessageIndex
+          ? (
+              await resolveRunnerEditableTurnBoundary({
+                apiKey,
+                backendUrl: normalizedBackendUrl,
+                requestHeaders,
+                threadId: currentThreadId,
+                turnId: pendingFork.turn.id,
+                turns: turnsRef.current,
+              })
+            ).truncateAtMessageIndex
           : undefined;
       forkResult = await forkThreadRequest({
         backendUrl: normalizedBackendUrl,
@@ -4360,14 +3416,7 @@ export function RunnerChat({
     normalizedBackendUrl,
     normalizeIntentionalStopError,
     notifyTaskListChange,
-    onCustomSkillsLoaded: (loadedSkills, succeeded) => {
-      if (succeeded && loadedSkills) {
-        setCustomSkills(loadedSkills);
-        setCustomSkillsLoaded(true);
-        return;
-      }
-      setCustomSkillsLoaded(false);
-    },
+    onCustomSkillsLoaded: acceptLoadedCustomSkills,
     onExternalRunRequestCreate,
     onMetronomeWorkflowRun,
     onRunFinish,
@@ -4391,28 +3440,6 @@ export function RunnerChat({
     title,
     updateTurn,
   });
-
-  useEffect(() => {
-    screenFileDragActiveRef.current = isScreenFileDragActive;
-  }, [isScreenFileDragActive]);
-
-  useEffect(() => {
-    if (!isScreenFileDragActive) {
-      return;
-    }
-    const clearScreenFileDrag = () => {
-      screenFileDragActiveRef.current = false;
-      setIsScreenFileDragActive(false);
-    };
-    window.addEventListener("drop", clearScreenFileDrag);
-    window.addEventListener("dragend", clearScreenFileDrag);
-    window.addEventListener("blur", clearScreenFileDrag);
-    return () => {
-      window.removeEventListener("drop", clearScreenFileDrag);
-      window.removeEventListener("dragend", clearScreenFileDrag);
-      window.removeEventListener("blur", clearScreenFileDrag);
-    };
-  }, [isScreenFileDragActive]);
 
   useRunnerExternalRunRequest({
     currentThreadId,
@@ -4471,80 +3498,35 @@ export function RunnerChat({
     action: RunnerChatThreadContextAction,
     options?: { prompt?: string; commandText?: string }
   ) {
-    const resolvedThreadId = currentThreadId;
-    if (!normalizedBackendUrl) {
-      throw new Error("backendUrl is required.");
-    }
-    if (!apiKey) {
-      throw new Error("apiKey is required.");
-    }
-    if (!resolvedThreadId) {
-      throw new Error("Start a conversation first before using this context action.");
-    }
-
-    setThreadContextActionLoading(action);
-    setThreadContextDetailsError(null);
-    let pendingNoticeTurnId: string | null = null;
-
-    try {
-      if (action === "compact") {
-        pendingNoticeTurnId = appendPendingThreadContextActionNotice("compact", "Compacting context", {
-          prompt: options?.commandText || formatThreadContextCommandText("compact", options?.prompt),
+    return executeRunnerThreadContextAction({
+      action,
+      apiKey,
+      appendBtwTurn: (commandText, responseText) => {
+        appendSyntheticActionTurn(commandText, responseText, "Asked side question", {
+          presentation: "btw",
         });
-      }
-
-      const actionPayload = await requestRunnerThreadContextAction({
-        backendUrl: normalizedBackendUrl,
-        apiKey,
-        requestHeaders,
-        threadId: resolvedThreadId,
-        action,
-        prompt: options?.prompt,
-      });
-      const commandText = options?.commandText || `/${action}`;
-      const responseText = actionPayload.responseText || actionPayload.message || `Completed /${action}.`;
-
-      if (action === "fork") {
-        const nextThreadId = actionPayload.thread?.id;
-        if (!nextThreadId) {
-          throw new Error("Fork completed without returning a new thread.");
-        }
+      },
+      appendNotice: appendThreadContextActionNotice,
+      appendPendingNotice: appendPendingThreadContextActionNotice,
+      backendUrl: normalizedBackendUrl,
+      beginAction: beginThreadContextAction,
+      commandText: options?.commandText,
+      finishAction: finishThreadContextAction,
+      markContextCleared,
+      onThreadForked: (nextThreadId) => {
         setLocalThreadId(nextThreadId);
         try {
           onThreadIdChange?.(nextThreadId);
         } catch (error) {
           reportRunnerLifecycleCallbackError("onThreadIdChange", error);
         }
-        appendThreadContextActionNotice("fork", "Forked into a new conversation");
-        refreshThreadContextDetailsInBackground(nextThreadId);
-        return;
-      }
-
-      if (action === "clear") {
-        setThreadContext(null);
-        setThreadContextDetails(null);
-        appendThreadContextActionNotice("clear", "Context was cleared");
-      } else if (action === "compact") {
-        if (pendingNoticeTurnId) {
-          updateThreadContextActionNotice(pendingNoticeTurnId, "Context was compacted");
-        } else {
-          appendThreadContextActionNotice("compact", "Context was compacted");
-        }
-      } else if (action === "btw") {
-        appendSyntheticActionTurn(commandText, responseText, "Asked side question", {
-          presentation: "btw",
-        });
-      }
-
-      refreshThreadContextDetailsInBackground(resolvedThreadId);
-    } catch (error) {
-      if (action === "compact" && pendingNoticeTurnId) {
-        updateThreadContextActionNotice(pendingNoticeTurnId, "Failed to compact context", { failed: true });
-      }
-      throw error;
-    } finally {
-      setThreadContextActionLoading(null);
-    }
+      },
+      prompt: options?.prompt,
+      refreshDetails: refreshThreadContextDetailsInBackground,
+      requestHeaders,
+      threadId: currentThreadId,
+      updateNotice: updateThreadContextActionNotice,
+    });
   }
 
   useEffect(() => {
@@ -4554,155 +3536,6 @@ export function RunnerChat({
   useEffect(() => {
     turnsRef.current = turns;
   }, [turns]);
-
-  useEffect(() => {
-    if (typeof document === "undefined") {
-      return;
-    }
-    const activeClassName = "tb-runner-document-preview-active";
-    const maximizedClassName = "tb-runner-document-preview-maximized";
-    document.body.classList.toggle(activeClassName, Boolean(previewedDocumentAttachment));
-    document.body.classList.toggle(maximizedClassName, Boolean(previewedDocumentAttachment && isDocumentPreviewMaximized));
-    return () => {
-      document.body.classList.remove(activeClassName);
-      document.body.classList.remove(maximizedClassName);
-    };
-  }, [isDocumentPreviewMaximized, previewedDocumentAttachment]);
-
-  useEffect(() => {
-    setDocumentPreviewDrawerWidth(null);
-    documentPreviewResizeStateRef.current = null;
-    setDocumentPreviewActionMenuOpen(false);
-    setPreviewImageSelectionState(null);
-  }, [previewedDocumentAttachment?.id]);
-
-  useEffect(() => {
-    if (!initialDocumentPreviewAttachment) {
-      return;
-    }
-
-    const attachmentRecord = typeof initialDocumentPreviewAttachment === "object"
-      ? initialDocumentPreviewAttachment as Record<string, unknown>
-      : {};
-    const requestToken =
-      initialDocumentPreviewToken ??
-      String(
-        attachmentRecord.id ||
-        attachmentRecord.workspacePath ||
-        attachmentRecord.filename ||
-        ""
-      ).trim();
-
-    if (requestToken === null || requestToken === "" || handledInitialDocumentPreviewTokenRef.current === requestToken) {
-      return;
-    }
-
-    const normalizedAttachment = normalizeTurnAttachment(initialDocumentPreviewAttachment, normalizedBackendUrl);
-    if (!normalizedAttachment || !isAttachmentDocumentPreviewable(normalizedAttachment)) {
-      return;
-    }
-
-    handledInitialDocumentPreviewTokenRef.current = requestToken;
-    closeDeepResearchDetailDrawer();
-    closeSubagentDetailDrawer();
-    closeComputerUseDetailDrawer();
-    setDocumentPreviewActionMenuOpen(false);
-    setIsDocumentPreviewMaximized(false);
-    setPreviewedDocumentAttachment(normalizedAttachment);
-  }, [initialDocumentPreviewAttachment, initialDocumentPreviewToken, normalizedBackendUrl]);
-
-  useEffect(() => {
-    if (!documentPreviewActionMenuOpen || typeof document === "undefined") {
-      return;
-    }
-
-    function handleDocumentPreviewActionMenuPointerDown(event: PointerEvent) {
-      const target = event.target;
-      if (target instanceof Node && documentPreviewActionMenuRef.current?.contains(target)) {
-        return;
-      }
-      setDocumentPreviewActionMenuOpen(false);
-    }
-
-    document.addEventListener("pointerdown", handleDocumentPreviewActionMenuPointerDown);
-    return () => document.removeEventListener("pointerdown", handleDocumentPreviewActionMenuPointerDown);
-  }, [documentPreviewActionMenuOpen]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    function handlePointerMove(event: PointerEvent) {
-      const resizeState = documentPreviewResizeStateRef.current;
-      if (!resizeState) {
-        return;
-      }
-      const minWidth = 360;
-      const maxWidth = Math.max(minWidth, Math.min(960, window.innerWidth - 220));
-      const nextWidth = Math.max(minWidth, Math.min(maxWidth, resizeState.startWidth + (resizeState.startX - event.clientX)));
-      setDocumentPreviewDrawerWidth(nextWidth);
-    }
-
-    function stopResize() {
-      documentPreviewResizeStateRef.current = null;
-    }
-
-    window.addEventListener("pointermove", handlePointerMove);
-    window.addEventListener("pointerup", stopResize);
-    window.addEventListener("pointercancel", stopResize);
-    return () => {
-      window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("pointerup", stopResize);
-      window.removeEventListener("pointercancel", stopResize);
-    };
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (mainPopupAnimationTimerRef.current !== null) {
-        window.clearTimeout(mainPopupAnimationTimerRef.current);
-      }
-      if (sidePopupAnimationTimerRef.current !== null) {
-        window.clearTimeout(sidePopupAnimationTimerRef.current);
-      }
-      if (composerQuotedSelectionAnimationTimerRef.current !== null) {
-        window.clearTimeout(composerQuotedSelectionAnimationTimerRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (composerQuotedSelectionAnimationTimerRef.current !== null) {
-      window.clearTimeout(composerQuotedSelectionAnimationTimerRef.current);
-      composerQuotedSelectionAnimationTimerRef.current = null;
-    }
-
-    if (composerQuotedSelection) {
-      setRenderedComposerQuotedSelection(composerQuotedSelection);
-      const animationFrameId = window.requestAnimationFrame(() => {
-        setIsComposerQuotedSelectionVisible(true);
-      });
-      return () => window.cancelAnimationFrame(animationFrameId);
-    }
-
-    setIsComposerQuotedSelectionVisible(false);
-    if (!renderedComposerQuotedSelection) {
-      return;
-    }
-
-    composerQuotedSelectionAnimationTimerRef.current = window.setTimeout(() => {
-      setRenderedComposerQuotedSelection(null);
-      composerQuotedSelectionAnimationTimerRef.current = null;
-    }, COMPOSER_QUOTED_SELECTION_ANIMATION_MS);
-
-    return () => {
-      if (composerQuotedSelectionAnimationTimerRef.current !== null) {
-        window.clearTimeout(composerQuotedSelectionAnimationTimerRef.current);
-        composerQuotedSelectionAnimationTimerRef.current = null;
-      }
-    };
-  }, [composerQuotedSelection, renderedComposerQuotedSelection]);
 
   useEffect(() => {
     if (threadId) {
@@ -4716,7 +3549,7 @@ export function RunnerChat({
       setEditingTurnDraft("");
       setComposerQuotedSelection(null);
       setQuotedSelectionPopup(null);
-      setPreviewedDocumentAttachment(null);
+      closeDocumentAttachmentPreview();
       resetForkConfiguration();
     }
   }, [localThreadId, threadId]);
@@ -4762,15 +3595,9 @@ export function RunnerChat({
 
 
   useEffect(() => {
-    setThreadContextDetails(null);
-    setThreadContextDetailsError(null);
-    setThreadContextNativeError(null);
-    setThreadContextAvailableActions(DEFAULT_THREAD_CONTEXT_ACTIONS);
-    setDeepResearchSessions([]);
     setHydratedThreadStatus(null);
     setPendingQueuedMessages([]);
-    stopRequestedThreadIdRef.current = null;
-    setIsStoppingRun(false);
+    clearStopRequest();
     setEditingTurnId(null);
     setEditingTurnDraft("");
     setForkingTurnId(null);
@@ -4779,85 +3606,7 @@ export function RunnerChat({
     if (locallyOwnedExecutionThreadIdRef.current !== currentThreadId) {
       locallyOwnedExecutionThreadIdRef.current = null;
     }
-  }, [currentThreadId]);
-
-  useEffect(() => {
-    let cancelled = false;
-    let pollTimer: number | null = null;
-    const resolvedThreadId = String(currentThreadId || "").trim();
-
-    if (!resolvedThreadId || !hasApiKey || !normalizedBackendUrl || !shouldRefreshDeepResearchSessions) {
-      setDeepResearchSessions((currentSessions) => (currentSessions.length > 0 ? [] : currentSessions));
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    const poll = async () => {
-      try {
-        await refreshDeepResearchSessions(resolvedThreadId);
-      } catch {
-        // Keep existing session state on transient fetch failures.
-      } finally {
-        if (!cancelled && shouldPollDeepResearchSessions) {
-          pollTimer = window.setTimeout(poll, 3000);
-        }
-      }
-    };
-
-    void poll();
-
-    return () => {
-      cancelled = true;
-      if (pollTimer !== null) {
-        window.clearTimeout(pollTimer);
-      }
-    };
-  }, [
-    apiKey,
-    currentThreadId,
-    hasApiKey,
-    normalizedBackendUrl,
-    requestHeaders,
-    shouldPollDeepResearchSessions,
-    shouldRefreshDeepResearchSessions,
-  ]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    if (!currentThreadId || !hasApiKey || isRunning) {
-      if (!currentThreadId) {
-        setThreadContext(null);
-      }
-      setIsThreadContextLoading(false);
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    setIsThreadContextLoading(true);
-    void fetchThreadContextEstimate(currentThreadId)
-      .then((context) => {
-        if (!cancelled) {
-          setThreadContext(context);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setThreadContext(null);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setIsThreadContextLoading(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [apiKey, currentThreadId, hasApiKey, isRunning, normalizedBackendUrl, requestHeaders]);
+  }, [clearStopRequest, currentThreadId]);
 
   useEffect(() => {
     const hasPendingExternalRunForThread =
@@ -4912,95 +3661,6 @@ export function RunnerChat({
   ]);
 
   useEffect(() => {
-    if (renderedMainPopup !== "context") {
-      return;
-    }
-    if (threadContextDetails?.threadId === currentThreadId && !threadContextDetailsError) {
-      return;
-    }
-    void refreshThreadContextDetails();
-  }, [
-    apiKey,
-    currentThreadId,
-    hasApiKey,
-    normalizedBackendUrl,
-    renderedMainPopup,
-    requestHeaders,
-    threadContextDetails?.threadId,
-    threadContextDetailsError,
-  ]);
-
-  useEffect(() => {
-    if (mainPopupAnimationTimerRef.current !== null) {
-      window.clearTimeout(mainPopupAnimationTimerRef.current);
-      mainPopupAnimationTimerRef.current = null;
-    }
-
-    if (targetMainPopup === null) {
-      if (renderedMainPopup !== null) {
-        setMainPopupPhase("exit");
-        mainPopupAnimationTimerRef.current = window.setTimeout(() => {
-          setRenderedMainPopup(null);
-          setMainPopupPhase("idle");
-          mainPopupAnimationTimerRef.current = null;
-        }, POPUP_ANIMATION_DURATION_MS);
-      }
-      return;
-    }
-
-    setRenderedMainPopup(targetMainPopup);
-    setMainPopupPhase("enter");
-    mainPopupAnimationTimerRef.current = window.setTimeout(() => {
-      setMainPopupPhase("idle");
-      mainPopupAnimationTimerRef.current = null;
-    }, POPUP_ANIMATION_DURATION_MS);
-  }, [renderedMainPopup, targetMainPopup]);
-
-  useEffect(() => {
-    if (sidePopupAnimationTimerRef.current !== null) {
-      window.clearTimeout(sidePopupAnimationTimerRef.current);
-      sidePopupAnimationTimerRef.current = null;
-    }
-
-    if (targetSidePopup === null) {
-      if (renderedSidePopup !== null) {
-        setSidePopupPhase("exit");
-        sidePopupAnimationTimerRef.current = window.setTimeout(() => {
-          setRenderedSidePopup(null);
-          setSidePopupPhase("idle");
-          setSidePopupExitDirection("left");
-          sidePopupAnimationTimerRef.current = null;
-        }, POPUP_ANIMATION_DURATION_MS);
-      }
-      return;
-    }
-
-    setSidePopupExitDirection("left");
-    setRenderedSidePopup(targetSidePopup);
-    setSidePopupPhase("enter");
-    sidePopupAnimationTimerRef.current = window.setTimeout(() => {
-      setSidePopupPhase("idle");
-      sidePopupAnimationTimerRef.current = null;
-    }, POPUP_ANIMATION_DURATION_MS);
-  }, [renderedSidePopup, targetSidePopup]);
-
-  useEffect(() => {
-    if (!showForkEnvironmentPopup) {
-      return;
-    }
-
-    const handlePointerDown = (event: Event) => {
-      const target = event.target as Node | null;
-      if (forkEnvironmentPopupRef.current && target && !forkEnvironmentPopupRef.current.contains(target)) {
-        setShowForkEnvironmentPopup(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handlePointerDown);
-    return () => document.removeEventListener("mousedown", handlePointerDown);
-  }, [showForkEnvironmentPopup]);
-
-  useEffect(() => {
     if (!runSummaryMoreTurnId) {
       return;
     }
@@ -5031,312 +3691,6 @@ export function RunnerChat({
     document.addEventListener("mousedown", handlePointerDown);
     return () => document.removeEventListener("mousedown", handlePointerDown);
   }, [emailDeliveryAttachmentsTurnId]);
-
-  useEffect(() => {
-    if (!agents.length) return;
-    setSelectedAgentId((current) => {
-      if (agentId && agents.some((agent) => agent.id === agentId)) {
-        return agentId;
-      }
-      if (current && agents.some((agent) => agent.id === current)) {
-        return current;
-      }
-      return getRunnerPreferredDefaultAgentOption(agents)?.id || "";
-    });
-  }, [agentId, agents]);
-
-  useEffect(() => {
-    if (controlledReasoningEffort === undefined) {
-      return;
-    }
-    setSelectedReasoningEffort(normalizeRunnerReasoningEffort(controlledReasoningEffort));
-  }, [controlledReasoningEffort]);
-
-  useEffect(() => {
-    if (!agents.length) {
-      setInitialAgentTopId(null);
-      return;
-    }
-    if (initialAgentTopId && agents.some((agent) => agent.id === initialAgentTopId)) {
-      return;
-    }
-    if (agentId && agents.some((agent) => agent.id === agentId)) {
-      setInitialAgentTopId(agentId);
-      return;
-    }
-    if (selectedAgentId && agents.some((agent) => agent.id === selectedAgentId)) {
-      setInitialAgentTopId(selectedAgentId);
-      return;
-    }
-    setInitialAgentTopId(getRunnerPreferredDefaultAgentOption(agents)?.id || null);
-  }, [agentId, agents, initialAgentTopId, selectedAgentId]);
-
-  useEffect(() => {
-    if (activeInputPopup !== "agent" && activeInputPopup !== "agent-reasoning") {
-      hasInitializedOpenAgentPopupModeRef.current = false;
-      return;
-    }
-    if (hasInitializedOpenAgentPopupModeRef.current) {
-      return;
-    }
-    hasInitializedOpenAgentPopupModeRef.current = true;
-    const nextSelectedAgent =
-      agents.find((agent) => agent.id === selectedAgentId) ||
-      (agentId ? agents.find((agent) => agent.id === agentId) : null) ||
-      getRunnerPreferredDefaultAgentOption(agents) ||
-      null;
-    setAgentPopupMode(getRunnerAgentSelectorMode(nextSelectedAgent));
-  }, [activeInputPopup, agentId, agents, selectedAgentId]);
-
-  useEffect(() => {
-    if (!availableEnvironments.length) return;
-    setSelectedEnvironmentId((current) => {
-      if (
-        scopedActiveThreadEnvironmentId &&
-        availableEnvironments.some((environment) => environment.id === scopedActiveThreadEnvironmentId)
-      ) {
-        return scopedActiveThreadEnvironmentId;
-      }
-      if (
-        effectiveWorkspaceSelectorMode === "projects" &&
-        selectedProjectEnvironmentId &&
-        availableEnvironments.some((environment) => environment.id === selectedProjectEnvironmentId)
-      ) {
-        return selectedProjectEnvironmentId;
-      }
-      if (current && availableEnvironments.some((environment) => environment.id === current)) {
-        return current;
-      }
-      if (environmentId && availableEnvironments.some((environment) => environment.id === environmentId)) {
-        return environmentId;
-      }
-      return availableEnvironments.find((environment) => environment.isDefault)?.id || availableEnvironments[0]?.id || "";
-    });
-  }, [availableEnvironments, effectiveWorkspaceSelectorMode, environmentId, scopedActiveThreadEnvironmentId, selectedProjectEnvironmentId]);
-
-  useEffect(() => {
-    if (!useComputerAgentsMode) {
-      return;
-    }
-
-    const configuredProjectId = String(projectsConfig?.selectedProjectId || "").trim();
-    if (!configuredProjectId) {
-      lastAppliedControlledProjectIdRef.current = configuredProjectId;
-      return;
-    }
-    if (lastAppliedControlledProjectIdRef.current === configuredProjectId) {
-      return;
-    }
-
-    const persistedWorkspaceSelection = !workspacePreferenceAppliedRef.current
-      ? loadPersistedWorkspaceSelection(workspaceSelectionStorageKey)
-      : null;
-    const hasActiveProjectWorkspaceSelection =
-      (workspaceSelectorMode === "projects" && Boolean(selectedProjectId)) ||
-      (persistedWorkspaceSelection?.mode === "projects" && Boolean(persistedWorkspaceSelection.projectId));
-    if (!hasActiveProjectWorkspaceSelection) {
-      lastAppliedControlledProjectIdRef.current = configuredProjectId;
-      return;
-    }
-
-    const configuredProject = availableProjects.find((project) => project.id === configuredProjectId) || null;
-    if (!configuredProject) {
-      return;
-    }
-
-    const configuredEnvironmentId = getRunnerProjectEnvironmentId(configuredProject);
-    if (!configuredEnvironmentId) {
-      return;
-    }
-
-    lastAppliedControlledProjectIdRef.current = configuredProjectId;
-    workspacePreferenceAppliedRef.current = true;
-    setWorkspaceSelectorMode("projects");
-    setSelectedProjectId(configuredProjectId);
-    setSelectedEnvironmentId(configuredEnvironmentId);
-    persistWorkspaceSelection(workspaceSelectionStorageKey, {
-      mode: "projects",
-      projectId: configuredProjectId,
-      environmentId: configuredEnvironmentId,
-    });
-  }, [availableProjects, projectsConfig?.selectedProjectId, selectedProjectId, useComputerAgentsMode, workspaceSelectionStorageKey, workspaceSelectorMode]);
-
-  useEffect(() => {
-    if (!useComputerAgentsMode || workspacePreferenceAppliedRef.current) {
-      return;
-    }
-
-    const persisted = loadPersistedWorkspaceSelection(workspaceSelectionStorageKey);
-    if (!persisted) {
-      workspacePreferenceAppliedRef.current = true;
-      return;
-    }
-
-    if (persisted.mode === "projects" && persisted.projectId) {
-      if (availableProjects.length === 0) {
-        return;
-      }
-      const persistedProject = availableProjects.find((project) => project.id === persisted.projectId) || null;
-      if (persistedProject) {
-        const persistedEnvironmentId = getRunnerProjectEnvironmentId(persistedProject);
-        if (persistedEnvironmentId) {
-          setWorkspaceSelectorMode("projects");
-          setSelectedProjectId(persisted.projectId);
-          setSelectedEnvironmentId(persistedEnvironmentId);
-        }
-      }
-      workspacePreferenceAppliedRef.current = true;
-      return;
-    }
-
-    if (persisted.mode === "computers" && persisted.environmentId) {
-      if (availableEnvironments.length === 0) {
-        return;
-      }
-      if (availableEnvironments.some((environment) => environment.id === persisted.environmentId)) {
-        setWorkspaceSelectorMode("computers");
-        setSelectedProjectId("");
-        setSelectedEnvironmentId(persisted.environmentId);
-      }
-    }
-    workspacePreferenceAppliedRef.current = true;
-  }, [availableEnvironments, availableProjects, useComputerAgentsMode, workspaceSelectionStorageKey]);
-
-  useEffect(() => {
-    if (!selectedProjectId || availableProjects.length === 0) {
-      return;
-    }
-    if (availableProjects.some((project) => project.id === selectedProjectId)) {
-      return;
-    }
-    setSelectedProjectId("");
-    setWorkspaceSelectorMode("computers");
-  }, [availableProjects, selectedProjectId]);
-
-  useEffect(() => {
-    if (!availableEnvironments.length) {
-      setInitialEnvironmentTopId(null);
-      return;
-    }
-    if (initialEnvironmentTopId && availableEnvironments.some((environment) => environment.id === initialEnvironmentTopId)) {
-      return;
-    }
-    if (
-      scopedActiveThreadEnvironmentId &&
-      availableEnvironments.some((environment) => environment.id === scopedActiveThreadEnvironmentId)
-    ) {
-      setInitialEnvironmentTopId(scopedActiveThreadEnvironmentId);
-      return;
-    }
-    if (environmentId && availableEnvironments.some((environment) => environment.id === environmentId)) {
-      setInitialEnvironmentTopId(environmentId);
-      return;
-    }
-    if (selectedEnvironmentId && availableEnvironments.some((environment) => environment.id === selectedEnvironmentId)) {
-      setInitialEnvironmentTopId(selectedEnvironmentId);
-      return;
-    }
-    setInitialEnvironmentTopId(availableEnvironments.find((environment) => environment.isDefault)?.id || availableEnvironments[0]?.id || null);
-  }, [availableEnvironments, environmentId, initialEnvironmentTopId, scopedActiveThreadEnvironmentId, selectedEnvironmentId]);
-
-  useEffect(() => {
-    if (controlledEnabledSkillIdsList !== null) {
-      return;
-    }
-    const persisted = loadPersistedEnabledSkillIds(enabledSkillsStorageKey);
-    const nextEnabledSkillIds = persisted !== null ? persisted : defaultEnabledSkillIds(normalizedSkills);
-    setEnabledSkillIds((current) => (areStringArraysEqual(current, nextEnabledSkillIds) ? current : nextEnabledSkillIds));
-  }, [controlledEnabledSkillIdsList, enabledSkillsStorageKey, normalizedSkills]);
-
-  useEffect(() => {
-    if (controlledEnabledSkillIdsList === null) {
-      return;
-    }
-    setEnabledSkillIds((current) => (areStringArraysEqual(current, controlledEnabledSkillIdsList) ? current : controlledEnabledSkillIdsList));
-  }, [controlledEnabledSkillIdsList]);
-
-  useEffect(() => {
-    persistEnabledSkillIds(enabledSkillsStorageKey, enabledSkillIds);
-  }, [enabledSkillIds, enabledSkillsStorageKey]);
-
-  useEffect(() => {
-    if (activeInputPopup !== "skills" || !fetchCustomSkills || customSkillsLoaded || isLoadingCustomSkills) {
-      return;
-    }
-
-    let cancelled = false;
-    setIsLoadingCustomSkills(true);
-
-    void fetchCustomSkills()
-      .then((loadedSkills) => {
-        if (cancelled) return;
-        const filtered = (loadedSkills || []).filter((skill) => skill.isCustom);
-        setCustomSkills(filtered);
-        setCustomSkillsLoaded(true);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setCustomSkills([]);
-        setCustomSkillsLoaded(true);
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setIsLoadingCustomSkills(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [activeInputPopup, customSkillsLoaded, fetchCustomSkills]);
-
-  useEffect(() => {
-    setCustomSkills([]);
-    setCustomSkillsLoaded(false);
-  }, [fetchCustomSkills]);
-
-  useEffect(() => {
-    setSelectedGithubRepositoryId((current) => {
-      if (githubConfig?.selectedRepositoryId && githubRepositories.some((repository) => repository.id === githubConfig.selectedRepositoryId)) {
-        return githubConfig.selectedRepositoryId;
-      }
-      if (current && githubRepositories.some((repository) => repository.id === current)) {
-        return current;
-      }
-      return githubRepositories[0]?.id || "";
-    });
-  }, [githubConfig?.selectedRepositoryId, githubRepositories]);
-
-  useEffect(() => {
-    setSelectedGithubContextId((current) => {
-      if (githubConfig?.selectedContextId && githubContexts.some((context) => context.id === githubConfig.selectedContextId)) {
-        return githubConfig.selectedContextId;
-      }
-      if (current && githubContexts.some((context) => context.id === current)) {
-        return current;
-      }
-      return githubContexts[0]?.id || "";
-    });
-  }, [githubConfig?.selectedContextId, githubContexts]);
-
-  useEffect(() => {
-    setSelectedNotionDatabaseId((current) => {
-      if (notionConfig?.selectedDatabaseId && notionDatabases.some((database) => database.id === notionConfig.selectedDatabaseId)) {
-        return notionConfig.selectedDatabaseId;
-      }
-      if (current && notionDatabases.some((database) => database.id === current)) {
-        return current;
-      }
-      return "";
-    });
-  }, [notionConfig?.selectedDatabaseId, notionDatabases]);
-
-  useEffect(() => {
-    setSelectedSchedulePresetId((current) => {
-      if (current && schedulePresets.some((preset) => preset.id === current)) return current;
-      return schedulePresets[0]?.id || "";
-    });
-  }, [schedulePresets]);
 
   useLayoutEffect(() => {
     threadHydrationCacheRef.current = null;
@@ -5395,10 +3749,6 @@ export function RunnerChat({
   }, [editingTurnDraft, editingTurnId]);
 
   useEffect(() => {
-    attachmentsRef.current = attachments;
-  }, [attachments]);
-
-  useEffect(() => {
     currentInputRef.current = input;
   }, [input]);
 
@@ -5408,101 +3758,6 @@ export function RunnerChat({
     }
     focusComposerSoon({ preventScroll: hasCustomEmptyStateActive });
   }, [autoFocusComposer, hasCustomEmptyStateActive]);
-
-  useEffect(() => {
-    if (!enableBacklogSubtaskCommand || !backlogSubtaskCommand?.ticketNumber) {
-      return;
-    }
-    if (appliedBacklogSubtaskCommandTokenRef.current === backlogSubtaskCommand.token) {
-      return;
-    }
-    appliedBacklogSubtaskCommandTokenRef.current = backlogSubtaskCommand.token;
-    closeAllInputPopups();
-    stageBacklogSubtaskCommand(backlogSubtaskCommand.ticketNumber);
-    window.requestAnimationFrame(() => {
-      textareaRef.current?.focus();
-    });
-  }, [backlogSubtaskCommand, enableBacklogSubtaskCommand]);
-
-  useEffect(() => {
-    if (!enableBacklogMissionControlCommand || !backlogMissionControlCommand) {
-      return;
-    }
-    if (appliedBacklogMissionControlCommandTokenRef.current === backlogMissionControlCommand.token) {
-      return;
-    }
-    appliedBacklogMissionControlCommandTokenRef.current = backlogMissionControlCommand.token;
-    closeAllInputPopups();
-    stageBacklogMissionControlCommand();
-    window.requestAnimationFrame(() => {
-      textareaRef.current?.focus();
-    });
-  }, [backlogMissionControlCommand, enableBacklogMissionControlCommand]);
-
-  useEffect(() => {
-    if (!enableResourceCreationCommand || !resourceCreationCommand) {
-      return;
-    }
-    if (appliedResourceCreationCommandTokenRef.current === resourceCreationCommand.token) {
-      return;
-    }
-    appliedResourceCreationCommandTokenRef.current = resourceCreationCommand.token;
-    closeAllInputPopups();
-    stageResourceCreationCommand(resourceCreationCommand.type);
-    window.requestAnimationFrame(() => {
-      textareaRef.current?.focus();
-    });
-  }, [enableResourceCreationCommand, resourceCreationCommand]);
-
-  useEffect(() => {
-    onResourceCreationCommandChange?.(stagedResourceCreationCommand?.action || null);
-  }, [onResourceCreationCommandChange, stagedResourceCreationCommand]);
-
-  useEffect(() => {
-    if (!enableAgentCreationCommand || !agentCreationCommand) {
-      return;
-    }
-    if (appliedAgentCreationCommandTokenRef.current === agentCreationCommand.token) {
-      return;
-    }
-    appliedAgentCreationCommandTokenRef.current = agentCreationCommand.token;
-    closeAllInputPopups();
-    stageAgentCreationCommand(agentCreationCommand.type);
-    window.requestAnimationFrame(() => {
-      textareaRef.current?.focus();
-    });
-  }, [agentCreationCommand, enableAgentCreationCommand]);
-
-  useEffect(() => {
-    onAgentCreationCommandChange?.(stagedAgentCreationCommand?.action || null);
-  }, [onAgentCreationCommandChange, stagedAgentCreationCommand]);
-
-  useEffect(() => {
-    if (!enableSkillCreationCommand || !skillCreationCommand) {
-      return;
-    }
-    if (appliedSkillCreationCommandTokenRef.current === skillCreationCommand.token) {
-      return;
-    }
-    appliedSkillCreationCommandTokenRef.current = skillCreationCommand.token;
-    closeAllInputPopups();
-    stageSkillCreationCommand(skillCreationCommand.type);
-    window.requestAnimationFrame(() => {
-      textareaRef.current?.focus();
-    });
-  }, [enableSkillCreationCommand, skillCreationCommand]);
-
-  useEffect(() => {
-    onSkillCreationCommandChange?.(stagedSkillCreationCommand?.action || null);
-  }, [onSkillCreationCommandChange, stagedSkillCreationCommand]);
-
-  useEffect(() => {
-    return () => {
-      for (const attachment of attachmentsRef.current) {
-        revokeAttachmentPreview(attachment);
-      }
-    };
-  }, []);
 
   useEffect(() => {
     if (!isRunning) return;
@@ -5569,268 +3824,6 @@ export function RunnerChat({
     };
   }
 
-  function resolveAttachmentUploadEnvironmentId(): string | null {
-    if (currentThreadId) {
-      return activeThreadEnvironmentId || selectedEnvironment?.id || environmentId || null;
-    }
-    return effectiveEnvironmentId || selectedEnvironment?.id || environmentId || null;
-  }
-
-  function updateTurnAttachmentState(
-    attachmentId: string,
-    patch: Partial<RunnerTurnAttachment>
-  ) {
-    setTurns((prev) =>
-      prev.map((turn) => {
-        if (!turn.attachments?.some((attachment) => attachment.id === attachmentId)) {
-          return turn;
-        }
-        return {
-          ...turn,
-          attachments: turn.attachments.map((attachment) =>
-            attachment.id === attachmentId
-              ? {
-                  ...attachment,
-                  ...patch,
-                }
-              : attachment
-          ),
-        };
-      })
-    );
-  }
-
-  function applyAttachmentStatePatch(
-    attachmentId: string,
-    patch: Partial<LocalAttachment> & Partial<RunnerTurnAttachment>
-  ) {
-    setAttachments((prev) =>
-      prev.map((entry) =>
-        entry.id === attachmentId
-          ? {
-              ...entry,
-              ...patch,
-            }
-          : entry
-      )
-    );
-    updateTurnAttachmentState(attachmentId, patch);
-  }
-
-  async function ensureGithubSelectionPrepared(
-    attachment: LocalAttachment,
-    targetEnvironmentId: string
-  ): Promise<RunnerAttachment> {
-    if (!attachment.resolvedAttachment) {
-      throw new Error("Missing GitHub attachment metadata.");
-    }
-
-    const repoFullName = String(attachment.githubRepoFullName || "").trim();
-    const branch = String(attachment.githubRef || "").trim() || "main";
-    if (!repoFullName) {
-      throw new Error("Missing GitHub repository metadata.");
-    }
-
-    if (!normalizedBackendUrl || !apiKey.trim()) {
-      return attachment.resolvedAttachment;
-    }
-
-    const preparationKey = `${targetEnvironmentId}\u0000${repoFullName}\u0000${branch}`;
-    let preparationPromise = githubPreparationPromisesRef.current[preparationKey];
-    if (!preparationPromise) {
-      preparationPromise = (async () => {
-        await startEnvironment({
-          backendUrl: normalizedBackendUrl,
-          apiKey: apiKey.trim(),
-          requestHeaders,
-          environmentId: targetEnvironmentId,
-          ...(selectedAgentId ? { agentId: selectedAgentId } : {}),
-          force: true,
-        });
-        await prepareGithubRepositorySelection({
-          backendUrl: normalizedBackendUrl,
-          apiKey: apiKey.trim(),
-          requestHeaders,
-          environmentId: targetEnvironmentId,
-          repoFullName,
-          branch,
-        });
-      })().finally(() => {
-        delete githubPreparationPromisesRef.current[preparationKey];
-      });
-      githubPreparationPromisesRef.current[preparationKey] = preparationPromise;
-    }
-
-    await preparationPromise;
-    return attachment.resolvedAttachment;
-  }
-
-  async function prepareGithubRepoForThreadRun(
-    repoSelection: {
-      repoFullName: string;
-      branch: string;
-    },
-    targetEnvironmentId: string
-  ): Promise<void> {
-    const repoFullName = String(repoSelection?.repoFullName || "").trim();
-    const branch = String(repoSelection?.branch || "").trim() || "main";
-    if (!repoFullName || !targetEnvironmentId || !normalizedBackendUrl || !apiKey.trim()) {
-      return;
-    }
-
-    const preparationKey = `${targetEnvironmentId}\u0000${repoFullName}\u0000${branch}`;
-    let preparationPromise = githubPreparationPromisesRef.current[preparationKey];
-    if (!preparationPromise) {
-      preparationPromise = prepareGithubRepositorySelection({
-        backendUrl: normalizedBackendUrl,
-        apiKey: apiKey.trim(),
-        requestHeaders,
-        environmentId: targetEnvironmentId,
-        repoFullName,
-        branch,
-      }).finally(() => {
-        delete githubPreparationPromisesRef.current[preparationKey];
-      });
-      githubPreparationPromisesRef.current[preparationKey] = preparationPromise;
-    }
-
-    await preparationPromise;
-  }
-
-  async function resolveSingleAttachment(
-    attachment: LocalAttachment,
-    environmentIdOverride?: string | null
-  ): Promise<RunnerAttachment> {
-    if (attachment.integrationSource === "github") {
-      const targetEnvironmentId =
-        environmentIdOverride === undefined
-          ? resolveAttachmentUploadEnvironmentId()
-          : environmentIdOverride;
-      if (!targetEnvironmentId) {
-        throw new Error("Select an environment before attaching GitHub repositories.");
-      }
-      return ensureGithubSelectionPrepared(attachment, targetEnvironmentId);
-    }
-
-    if (attachment.resolvedAttachment) {
-      return attachment.resolvedAttachment;
-    }
-
-    if (uploadFiles) {
-      const uploaded = await uploadFiles([attachment.file]);
-      const uploadedAttachment = uploaded[0];
-      if (!uploadedAttachment) {
-        throw new Error(`Failed to upload ${attachment.file.name}.`);
-      }
-      return uploadedAttachment;
-    }
-
-    if (mapFileToAttachment) {
-      return mapFileToAttachment(attachment.file);
-    }
-
-    if (normalizedBackendUrl && apiKey.trim()) {
-      return uploadAttachment({
-        backendUrl: normalizedBackendUrl,
-        apiKey: apiKey.trim(),
-        requestHeaders,
-        file: attachment.file,
-        ...(environmentIdOverride ? { environmentId: environmentIdOverride } : {}),
-      });
-    }
-
-    return defaultAttachmentFromFile(attachment.file);
-  }
-
-  function beginAttachmentUpload(
-    attachment: LocalAttachment,
-    options?: { environmentIdOverride?: string | null }
-  ): Promise<RunnerAttachment> | undefined {
-    if (attachment.resolvedAttachment && attachment.integrationSource !== "github") {
-      return Promise.resolve(attachment.resolvedAttachment);
-    }
-
-    if (attachment.integrationSource === "github" && attachment.resolvedAttachment && attachment.uploadStatus === "uploaded") {
-      return Promise.resolve(attachment.resolvedAttachment);
-    }
-
-    const existingPromise = attachmentUploadPromisesRef.current[attachment.id];
-    if (existingPromise) {
-      return existingPromise;
-    }
-
-    const uploadPromise = resolveSingleAttachment(
-      attachment,
-      options?.environmentIdOverride === undefined ? resolveAttachmentUploadEnvironmentId() : options.environmentIdOverride
-    )
-      .then((resolvedAttachment) => {
-        attachment.resolvedAttachment = resolvedAttachment;
-        attachment.uploadStatus = "uploaded";
-        attachment.uploadError = null;
-        applyAttachmentStatePatch(attachment.id, {
-          resolvedAttachment,
-          uploadStatus: "uploaded",
-          uploadError: null,
-        });
-        return resolvedAttachment;
-      })
-      .catch((error) => {
-        const normalizedError = error instanceof Error ? error : new Error(String(error));
-        attachment.uploadStatus = "failed";
-        attachment.uploadError = normalizedError.message || `Failed to upload ${attachment.file.name}.`;
-        applyAttachmentStatePatch(attachment.id, {
-          uploadStatus: "failed",
-          uploadError: normalizedError.message || `Failed to upload ${attachment.file.name}.`,
-        });
-        throw normalizedError;
-      })
-      .finally(() => {
-        delete attachmentUploadPromisesRef.current[attachment.id];
-      });
-
-    attachmentUploadPromisesRef.current[attachment.id] = uploadPromise;
-    attachment.uploadStatus = "uploading";
-    attachment.uploadError = null;
-    applyAttachmentStatePatch(attachment.id, {
-      uploadStatus: "uploading",
-      uploadError: null,
-    });
-
-    return uploadPromise;
-  }
-
-  function appendFiles(files: File[]) {
-    if (!files.length) return;
-
-    const remainingCapacity = Math.max(maxAttachments - attachmentsRef.current.length, 0);
-    const incoming = files.slice(0, remainingCapacity).map((file) => ({
-      id: generateId("local"),
-      file,
-      type: attachmentTypeForFile(file.type, file.name),
-      previewUrl: file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined,
-      source: "local" as const,
-      uploadStatus:
-        uploadFiles || mapFileToAttachment || (normalizedBackendUrl && apiKey.trim())
-          ? ("uploading" as const)
-          : ("idle" as const),
-      uploadError: null,
-    }));
-    if (!incoming.length) {
-      return;
-    }
-
-    setAttachments((prev) => [...prev, ...incoming]);
-
-    for (const attachment of incoming) {
-      if (attachment.uploadStatus === "uploading") {
-        const uploadPromise = beginAttachmentUpload(attachment);
-        if (uploadPromise) {
-          void uploadPromise.catch(() => undefined);
-        }
-      }
-    }
-  }
-
   function handleDroppedLocalFiles(files: File[]): boolean {
     const validFiles = Array.from(files || []).filter((file) => file instanceof File);
     if (!validFiles.length) {
@@ -5853,318 +3846,12 @@ export function RunnerChat({
     event.target.value = "";
   }
 
-  function removeAttachment(id: string) {
-    setAttachments((prev) => {
-      const target = prev.find((item) => item.id === id);
-      if (target) {
-        revokeAttachmentPreview(target);
-      }
-      delete attachmentUploadPromisesRef.current[id];
-      return prev.filter((item) => item.id !== id);
-    });
-  }
-
-  function closeAllInputPopups(mode: "default" | "outside" = "default") {
-    const hasStackedPlusPopupsOpen =
-      renderedSidePopup !== null &&
-      (renderedMainPopup === "main" || isPlusPopupId(activeInputPopup));
-
-    if (mode === "outside" && hasStackedPlusPopupsOpen) {
-      setSidePopupExitDirection("down");
-    }
-    setActiveInputPopup(null);
-    setSelectedWorkspaceFileIds([]);
-    setIsDraggingOver(false);
-    setIsScreenFileDragActive(false);
-    clearQuotedSelectionPopup();
-  }
-
-  useEffect(() => {
-    if (!activeInputPopup) return;
-    emitRunnerComposerPopupOpen(composerPopupSourceIdRef.current);
-  }, [activeInputPopup]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return undefined;
-
-    const handleComposerPopupOpen = (event: Event) => {
-      const sourceId = getRunnerComposerPopupEventSource(event);
-      if (!sourceId || sourceId === composerPopupSourceIdRef.current) {
-        return;
-      }
-      closeAllInputPopups();
-    };
-
-    window.addEventListener(RUNNER_COMPOSER_POPUP_OPEN_EVENT, handleComposerPopupOpen);
-    return () => window.removeEventListener(RUNNER_COMPOSER_POPUP_OPEN_EVENT, handleComposerPopupOpen);
-  }, [activeInputPopup, renderedMainPopup, renderedSidePopup]);
-
-  function isExternalFileDrag(event: { dataTransfer?: DataTransfer | null }): boolean {
-    const types = event.dataTransfer?.types;
-    if (!types) {
-      return false;
-    }
-    return Array.from(types).includes("Files");
-  }
-
-  function handleRootFileDragEnter(event: ReactDragEvent<HTMLDivElement>) {
-    if (!isExternalFileDrag(event)) {
-      return;
-    }
-    event.preventDefault();
-    if (!screenFileDragActiveRef.current) {
-      screenFileDragActiveRef.current = true;
-      setIsScreenFileDragActive(true);
-    }
-  }
-
-  function handleRootFileDragOver(event: ReactDragEvent<HTMLDivElement>) {
-    if (!isExternalFileDrag(event)) {
-      return;
-    }
-    event.preventDefault();
-    if (event.dataTransfer) {
-      event.dataTransfer.dropEffect = "copy";
-    }
-    if (!screenFileDragActiveRef.current) {
-      screenFileDragActiveRef.current = true;
-      setIsScreenFileDragActive(true);
-    }
-  }
-
-  function handleRootFileDragLeave(event: ReactDragEvent<HTMLDivElement>) {
-    if (!isExternalFileDrag(event)) {
-      return;
-    }
-    const rootElement = rootRef.current;
-    if (!rootElement) {
-      screenFileDragActiveRef.current = false;
-      setIsScreenFileDragActive(false);
-      return;
-    }
-    const bounds = rootElement.getBoundingClientRect();
-    const hasLeftRoot =
-      event.clientX < bounds.left
-      || event.clientX > bounds.right
-      || event.clientY < bounds.top
-      || event.clientY > bounds.bottom;
-    if (hasLeftRoot) {
-      screenFileDragActiveRef.current = false;
-      setIsScreenFileDragActive(false);
-    }
-  }
-
-  function handleRootFileDrop(event: ReactDragEvent<HTMLDivElement>) {
-    if (!isExternalFileDrag(event)) {
-      return;
-    }
-    event.preventDefault();
-    screenFileDragActiveRef.current = false;
-    setIsScreenFileDragActive(false);
-    handleDroppedLocalFiles(Array.from(event.dataTransfer.files || []));
-  }
-
-  async function createWorkspaceAttachment(item: RunnerChatFileNode, sourceEnvironmentId: string): Promise<LocalAttachment> {
-    const workspacePath = normalizeRunnerPreviewWorkspacePath(item.path || item.id);
-    if (!workspacePath) {
-      throw new Error(`Failed to prepare ${item.name} for attachment.`);
-    }
-
-    const filename = String(item.name || workspacePath.split("/").filter(Boolean).pop() || "file").trim() || "file";
-    const previewAttachment = buildRunnerPreviewAttachmentFromPath(workspacePath, {
-      backendUrl: normalizedBackendUrl,
-      environmentId: sourceEnvironmentId,
-      idPrefix: "workspace",
-    });
-    const mimeType = String(item.mimeType || previewAttachment.mimeType || "application/octet-stream").trim() || "application/octet-stream";
-    const type = attachmentTypeForFile(mimeType, filename);
-    const resolvedAttachment: RunnerAttachment = {
-      ...previewAttachment,
-      id: previewAttachment.id,
-      filename,
-      mimeType,
-      size: typeof item.size === "number" && Number.isFinite(item.size) ? item.size : 0,
-      type,
-      uploadedAt: String(item.modifiedTime || item.createdTime || new Date().toISOString()),
-      workspacePath,
-      sourcePath: workspacePath,
-      sourceEnvironmentId,
-    };
-    const file = new File([""], filename, { type: mimeType });
-
-    return {
-      id: generateId("workspace"),
-      file,
-      type,
-      previewUrl: type === "image" ? previewAttachment.previewUrl || previewAttachment.url : undefined,
-      source: "workspace",
-      sourceEnvironmentId,
-      resolvedAttachment,
-      uploadStatus: "uploaded",
-      uploadError: null,
-    };
-  }
-
-  async function createImplicitAttachment(item: RunnerChatImplicitAttachment): Promise<LocalAttachment> {
-    const sourceUrl = String(item.url || "").trim();
-    const filename = String(item.filename || "").trim() || "attachment";
-    if (!sourceUrl) {
-      throw new Error(`Failed to prepare ${filename}: missing attachment URL.`);
-    }
-
-    const response = await fetch(sourceUrl);
-    if (!response.ok) {
-      throw new Error(`Failed to load ${filename} (${response.status}).`);
-    }
-
-    const blob = await response.blob();
-    const mimeType = String(item.mimeType || blob.type || "application/octet-stream").trim() || "application/octet-stream";
-    const file = new File([blob], filename, { type: mimeType });
-    const type =
-      item.type === "image" || item.type === "document"
-        ? item.type
-        : attachmentTypeForFile(mimeType, filename);
-
-    return {
-      id: generateId("implicit"),
-      file,
-      type,
-      previewUrl: type === "image" ? sourceUrl : undefined,
-      source: "local",
-      hiddenFromTurnDisplay: Boolean(item.hiddenFromTurnDisplay),
-      runnerAttachmentRole: item.runnerAttachmentRole,
-      uploadStatus: "idle",
-      uploadError: null,
-    };
-  }
-
-  async function createImplicitRunAttachments(): Promise<LocalAttachment[]> {
-    const normalizedImplicitAttachments = implicitAttachments
-      .filter((attachment) => attachment && String(attachment.url || "").trim())
-      .map((attachment) => ({
-        ...attachment,
-        filename: String(attachment.filename || "").trim() || "attachment",
-      }));
-
-    if (!normalizedImplicitAttachments.length) {
-      return [];
-    }
-
-    const preparedAttachments = await Promise.all(
-      normalizedImplicitAttachments.map((attachment) => createImplicitAttachment(attachment))
-    );
-    return preparedAttachments;
-  }
-
-  async function createIntegrationAttachment(
-    item: RunnerChatFileNode,
-    source: "google-drive" | "one-drive" | "github",
-    targetEnvironmentId: string,
-    fetchFileContent: (file: RunnerChatFileNode) => Promise<RunnerChatFetchedFileContent>
-  ): Promise<LocalAttachment> {
-    const payload = await fetchFileContent(item);
-    const filename = String(payload?.name || item.name || "file").trim() || "file";
-    const mimeType = String(payload?.mimeType || item.mimeType || "application/octet-stream").trim() || "application/octet-stream";
-    const type = attachmentTypeForFile(mimeType, filename);
-    const encodedData =
-      payload?.encoding === "text"
-        ? await blobToBase64(new Blob([typeof payload?.content === "string" ? payload.content : ""], { type: mimeType }))
-        : normalizeBase64Content(typeof payload?.content === "string" ? payload.content : "");
-    const resolvedAttachment = await uploadAttachmentContent({
-      backendUrl: normalizedBackendUrl,
-      apiKey: apiKey.trim(),
-      requestHeaders,
-      filename,
-      mimeType,
-      data: encodedData,
-      environmentId: targetEnvironmentId,
-    });
-    const file = new File([""], filename, { type: mimeType });
-    const resolvedImagePreviewUrl =
-      payload?.encoding === "text"
-        ? undefined
-        : encodedData
-          ? `data:${mimeType};base64,${encodedData}`
-          : item.previewUrl;
-    const previewUrl = type === "image" ? resolvedImagePreviewUrl : undefined;
-
-    return {
-      id: generateId("integration"),
-      file,
-      type,
-      previewUrl,
-      source: "integration",
-      sourceEnvironmentId: targetEnvironmentId,
-      integrationSource: source,
-      githubRepoFullName: source === "github" ? item.repoFullName : undefined,
-      githubRef: source === "github" ? item.ref || null : undefined,
-      resolvedAttachment,
-      uploadStatus: "uploaded",
-      uploadError: null,
-    };
-  }
-
-  function createGithubIntegrationSelectionAttachment(
-    item: RunnerChatFileNode,
-    targetEnvironmentId: string,
-    options?: { pendingPreparation?: boolean }
-  ): LocalAttachment {
-    const repoFullName = String(item.repoFullName || "").trim();
-    if (!repoFullName) {
-      throw new Error("Missing GitHub repository metadata.");
-    }
-
-    const repoName = getGithubRepoName(repoFullName);
-    const selectedBranch = getGithubSelectedBranchForRepo(repoFullName, item.ref);
-    const normalizedItemPath = String(item.path || "").trim().replace(/^\/+/, "");
-    const selectionType: "repo" | "file" = item.isFolder && !normalizedItemPath ? "repo" : "file";
-    const displayName =
-      selectionType === "repo"
-        ? repoName
-        : `${repoName}/${(normalizedItemPath.split("/").filter(Boolean).pop() || item.name || "file").trim()}`;
-    const workspacePath = `/workspace/GitHub/${repoName}${normalizedItemPath ? `/${normalizedItemPath}` : ""}`;
-    const selectionMimeType = "application/x-github-selection";
-    const file = new File([""], displayName, { type: selectionMimeType });
-    const resolvedAttachment: RunnerAttachment = {
-      id: generateId("integration"),
-      filename: displayName,
-      mimeType: selectionMimeType,
-      size: 0,
-      type: "document",
-      uploadedAt: new Date().toISOString(),
-      url: "",
-      gcsPath: "",
-      workspacePath,
-      integrationSource: "github",
-      githubRepoFullName: repoFullName,
-      githubRef: selectedBranch,
-      githubItemPath: normalizedItemPath || undefined,
-      githubSelectionType: selectionType,
-    };
-
-    return {
-      id: generateId("integration"),
-      file,
-      type: "document",
-      source: "integration",
-      sourceEnvironmentId: targetEnvironmentId,
-      integrationSource: "github",
-      githubRepoFullName: repoFullName,
-      githubRef: selectedBranch,
-      githubItemPath: normalizedItemPath || undefined,
-      githubSelectionType: selectionType,
-      resolvedAttachment,
-      uploadStatus: options?.pendingPreparation ? "uploading" : "uploaded",
-      uploadError: null,
-    };
-  }
-
   function handleAttachFilesMenuClick() {
     setActiveInputPopup("attach-files");
   }
 
   function closeAttachFilesPopup() {
-    setIsDraggingOver(false);
+    resetFileDragState();
     setActiveInputPopup("main");
   }
 
@@ -6180,53 +3867,16 @@ export function RunnerChat({
     setActiveInputPopup("main");
   }
 
-  function clearScheduledTask() {
-    setScheduledTask(null);
-  }
-
   function handleUploadNewFilesClick() {
     fileInputRef.current?.click();
   }
 
   function openFileBrowserModal(initialSource: RunnerFileBrowserSource) {
-    if (!hasApiKey) {
-      setShowFileBrowserApiKeyPrompt(true);
+    if (!requestFileBrowserOpen(initialSource, hasApiKey)) {
       return;
     }
     setActiveInputPopup(null);
-    setFileBrowserSource(initialSource);
-    setFileBrowserSearchQuery("");
-    setFileBrowserPreviewId(null);
-    setExpandedFileBrowserFolderIds([]);
-    if (initialSource === "workspace") {
-      setRemoteWorkspaceItems([]);
-      setLoadedWorkspaceFolderIds([]);
-      setLoadingWorkspaceFolderIds([]);
-      setWorkspaceFolderErrorsById({});
-      setWorkspaceBrowserError(null);
-    } else if (initialSource === "google-drive") {
-      setRemoteGoogleDriveItems([]);
-      setLoadedGoogleDriveFolderIds([]);
-      setLoadingGoogleDriveFolderIds([]);
-      setGoogleDriveBrowserError(null);
-    } else if (initialSource === "one-drive") {
-      setRemoteOneDriveItems([]);
-      setLoadedOneDriveFolderIds([]);
-      setLoadingOneDriveFolderIds([]);
-      setOneDriveBrowserError(null);
-    } else if (initialSource === "github") {
-      setRemoteGithubItems([]);
-      setLoadedGithubFolderIds([]);
-      setLoadingGithubFolderIds([]);
-      setGithubBrowserError(null);
-    } else if (initialSource === "notion") {
-      setRemoteNotionDatabases([]);
-      setNotionDatabasesLoaded(false);
-      setNotionBrowserError(null);
-    }
-    setFileBrowserHistory([{ source: initialSource, folderId: null }]);
-    setFileBrowserHistoryIndex(0);
-    setShowFileBrowserModal(true);
+    resetFileBrowserSourceData(initialSource);
   }
 
   useEffect(() => {
@@ -6239,244 +3889,9 @@ export function RunnerChat({
   }, [externalFileBrowserRequest]);
 
   function closeFileBrowserModal() {
-    setShowFileBrowserModal(false);
-    setFileBrowserSearchQuery("");
-    setFileBrowserPreviewId(null);
-    setExpandedFileBrowserFolderIds([]);
-    setIsFileBrowserAttaching(false);
-    setFileBrowserHistory([]);
-    setFileBrowserHistoryIndex(-1);
-    setRemoteWorkspaceItems([]);
-    setLoadedWorkspaceFolderIds([]);
-    setLoadingWorkspaceFolderIds([]);
-    setWorkspaceFolderErrorsById({});
-    setWorkspaceBrowserError(null);
-    setGoogleDriveBrowserError(null);
-    setOneDriveBrowserError(null);
-    setGithubBrowserError(null);
-    setIsGoogleDrivePickerLoading(false);
-  }
-
-  function closeFileBrowserApiKeyPrompt() {
-    setShowFileBrowserApiKeyPrompt(false);
-  }
-
-  async function loadWorkspaceFolder(folderId: string | null, options?: { inline?: boolean }) {
-    const normalizedFolderId = normalizeRunnerWorkspaceFolderPath(folderId) || "root";
-    const requestedFolderPath = normalizedFolderId === "root" ? "" : normalizedFolderId;
-    const requestUrl = buildEnvironmentFileListUrl(normalizedBackendUrl, activeWorkspaceEnvironmentId || "", requestedFolderPath, 1);
-    if (!requestUrl) {
-      setRemoteWorkspaceItems([]);
-      setWorkspaceBrowserError("Select an environment to browse workspace files.");
-      setIsWorkspaceBrowserLoading(false);
-      return;
-    }
-
-    if (options?.inline) {
-      setLoadingWorkspaceFolderIds((current) => (current.includes(normalizedFolderId) ? current : [...current, normalizedFolderId]));
-    } else {
-      setIsWorkspaceBrowserLoading(true);
-      setWorkspaceBrowserError(null);
-    }
-    setWorkspaceFolderErrorsById((current) => ({
-      ...current,
-      [normalizedFolderId]: "",
-    }));
-
-    try {
-      const headers = buildRunnerHeaders(requestHeaders, apiKey.trim());
-      const response = await fetch(requestUrl, {
-        method: "GET",
-        headers,
-      });
-      const text = await response.text();
-      let parsed: any = {};
-      try {
-        parsed = text ? JSON.parse(text) : {};
-      } catch {
-        parsed = { message: text };
-      }
-
-      if (!response.ok) {
-        throw new Error(parsed?.message || parsed?.error || `Failed to load workspace files (${response.status})`);
-      }
-
-      const nextItems = normalizeEnvironmentWorkspaceItems(parsed);
-      setRemoteWorkspaceItems((current) => mergeDriveFolderItems(current, normalizedFolderId, nextItems));
-      setLoadedWorkspaceFolderIds((current) => (current.includes(normalizedFolderId) ? current : [...current, normalizedFolderId]));
-      setWorkspaceFolderErrorsById((current) => ({
-        ...current,
-        [normalizedFolderId]: "",
-      }));
-      if (!options?.inline) {
-        setWorkspaceBrowserError(null);
-      }
-    } catch (error) {
-      const normalizedError = error instanceof Error ? error : new Error(String(error));
-      const message = normalizedError.message || "Failed to load workspace files.";
-      setWorkspaceFolderErrorsById((current) => ({
-        ...current,
-        [normalizedFolderId]: message,
-      }));
-      if (normalizedFolderId === "root" || !options?.inline) {
-        setRemoteWorkspaceItems([]);
-        setWorkspaceBrowserError(message);
-      }
-    } finally {
-      if (options?.inline) {
-        setLoadingWorkspaceFolderIds((current) => current.filter((id) => id !== normalizedFolderId));
-      } else {
-        setIsWorkspaceBrowserLoading(false);
-      }
-    }
-  }
-
-  async function loadGoogleDriveFolder(folderId: string, options?: { inline?: boolean }) {
-    if (!googleDriveConfig?.fetchItems) {
-      return;
-    }
-
-    const normalizedFolderId = folderId || "root";
-    if (options?.inline) {
-      setLoadingGoogleDriveFolderIds((current) => (current.includes(normalizedFolderId) ? current : [...current, normalizedFolderId]));
-    } else {
-      setIsGoogleDriveBrowserLoading(true);
-      setGoogleDriveBrowserError(null);
-    }
-
-    try {
-      const items = await googleDriveConfig.fetchItems(normalizedFolderId);
-      setRemoteGoogleDriveItems((current) => mergeDriveFolderItems(current, normalizedFolderId, items));
-      setLoadedGoogleDriveFolderIds((current) => (current.includes(normalizedFolderId) ? current : [...current, normalizedFolderId]));
-      setGoogleDriveBrowserError(null);
-    } catch (error) {
-      const normalizedError = error instanceof Error ? error : new Error(String(error));
-      setGoogleDriveBrowserError(normalizedError.message || "Failed to load Google Drive files.");
-    } finally {
-      if (options?.inline) {
-        setLoadingGoogleDriveFolderIds((current) => current.filter((id) => id !== normalizedFolderId));
-      } else {
-        setIsGoogleDriveBrowserLoading(false);
-      }
-    }
-  }
-
-  async function loadOneDriveFolder(folderId: string, options?: { inline?: boolean }) {
-    if (!oneDriveConfig?.fetchItems) {
-      return;
-    }
-
-    const normalizedFolderId = folderId || "root";
-    if (options?.inline) {
-      setLoadingOneDriveFolderIds((current) => (current.includes(normalizedFolderId) ? current : [...current, normalizedFolderId]));
-    } else {
-      setIsOneDriveBrowserLoading(true);
-      setOneDriveBrowserError(null);
-    }
-
-    try {
-      const items = await oneDriveConfig.fetchItems(normalizedFolderId);
-      setRemoteOneDriveItems((current) => mergeDriveFolderItems(current, normalizedFolderId, items));
-      setLoadedOneDriveFolderIds((current) => (current.includes(normalizedFolderId) ? current : [...current, normalizedFolderId]));
-      setOneDriveBrowserError(null);
-    } catch (error) {
-      const normalizedError = error instanceof Error ? error : new Error(String(error));
-      setOneDriveBrowserError(normalizedError.message || "Failed to load OneDrive files.");
-    } finally {
-      if (options?.inline) {
-        setLoadingOneDriveFolderIds((current) => current.filter((id) => id !== normalizedFolderId));
-      } else {
-        setIsOneDriveBrowserLoading(false);
-      }
-    }
-  }
-
-  async function loadGithubFolder(folderId: string, options?: { inline?: boolean }) {
-    if (!githubConfig?.fetchItems) {
-      return;
-    }
-
-    const normalizedFolderId = folderId || "root";
-    if (options?.inline) {
-      setLoadingGithubFolderIds((current) => (current.includes(normalizedFolderId) ? current : [...current, normalizedFolderId]));
-    } else {
-      setIsGithubBrowserLoading(true);
-      setGithubBrowserError(null);
-    }
-
-    try {
-      const items = await githubConfig.fetchItems(normalizedFolderId);
-      const normalizedItems =
-        normalizedFolderId === "root"
-          ? items.map((item) => buildGithubEffectiveRootItem(item))
-          : items;
-      setRemoteGithubItems((current) => mergeDriveFolderItems(current, normalizedFolderId, normalizedItems));
-      setLoadedGithubFolderIds((current) => (current.includes(normalizedFolderId) ? current : [...current, normalizedFolderId]));
-      setGithubBrowserError(null);
-    } catch (error) {
-      const normalizedError = error instanceof Error ? error : new Error(String(error));
-      setGithubBrowserError(normalizedError.message || "Failed to load GitHub files.");
-    } finally {
-      if (options?.inline) {
-        setLoadingGithubFolderIds((current) => current.filter((id) => id !== normalizedFolderId));
-      } else {
-        setIsGithubBrowserLoading(false);
-      }
-    }
-  }
-
-  async function ensureGithubBranchesLoaded(repoFullName: string, fallbackRef?: string | null) {
-    const normalizedRepoFullName = String(repoFullName || "").trim();
-    if (!normalizedRepoFullName) {
-      return;
-    }
-
-    const initialBranch = getGithubSelectedBranchForRepo(normalizedRepoFullName, fallbackRef);
-    if (initialBranch) {
-      setGithubSelectedBranchByRepoFullName((current) =>
-        current[normalizedRepoFullName]
-          ? current
-          : {
-              ...current,
-              [normalizedRepoFullName]: initialBranch,
-            }
-      );
-    }
-
-    if (
-      githubBranchesByRepoFullName[normalizedRepoFullName]?.length
-      || githubBranchLoadingRepoFullNames.includes(normalizedRepoFullName)
-      || !githubConfig?.fetchBranches
-    ) {
-      return;
-    }
-
-    setGithubBranchLoadingRepoFullNames((current) =>
-      current.includes(normalizedRepoFullName) ? current : [...current, normalizedRepoFullName]
-    );
-
-    try {
-      const branches = await githubConfig.fetchBranches(normalizedRepoFullName);
-      setGithubBranchesByRepoFullName((current) => ({
-        ...current,
-        [normalizedRepoFullName]: branches,
-      }));
-      if (branches.length > 0) {
-        setGithubSelectedBranchByRepoFullName((current) =>
-          current[normalizedRepoFullName]
-            ? current
-            : {
-                ...current,
-                [normalizedRepoFullName]: String(branches[0]?.name || initialBranch || "main").trim() || "main",
-              }
-        );
-      }
-    } catch (error) {
-      const normalizedError = error instanceof Error ? error : new Error(String(error));
-      setGithubBrowserError(normalizedError.message || "Failed to load GitHub branches.");
-    } finally {
-      setGithubBranchLoadingRepoFullNames((current) => current.filter((name) => name !== normalizedRepoFullName));
-    }
+    closeFileBrowserNavigation();
+    resetFileBrowserAttaching();
+    resetFileBrowserSourceDataAfterClose();
   }
 
   function handleGithubRepoBranchChange(item: RunnerChatFileNode, nextBranch: string) {
@@ -6542,8 +3957,7 @@ export function RunnerChat({
       }
       return null;
     });
-    setFileBrowserHistory((current) =>
-      current.map((entry) => {
+    mapFileBrowserHistory((entry) => {
         if (entry.source !== "github" || !entry.folderId) {
           return entry;
         }
@@ -6561,8 +3975,7 @@ export function RunnerChat({
           ...entry,
           folderId: createGithubBrowserNodeId(repoFullName, parsedFolder.path, normalizedBranch),
         };
-      })
-    );
+      });
 
     if (currentFileBrowserSource === "github" && currentFileBrowserFolderId) {
       const parsedFolder = parseGithubBrowserFolderId(currentFileBrowserFolderId);
@@ -6585,8 +3998,7 @@ export function RunnerChat({
       await googleDriveConfig.onManageAccess();
       setRemoteGoogleDriveItems([]);
       setLoadedGoogleDriveFolderIds([]);
-      setFileBrowserHistory([{ source: "google-drive", folderId: null }]);
-      setFileBrowserHistoryIndex(0);
+      replaceFileBrowserHistory({ source: "google-drive", folderId: null });
       await loadGoogleDriveFolder("root");
     } catch (error) {
       const normalizedError = error instanceof Error ? error : new Error(String(error));
@@ -6599,30 +4011,6 @@ export function RunnerChat({
   async function handleMicrophoneClick() {
     if (disabled || isPreparingRun) return;
     await toggleSpeechToText();
-  }
-
-  function toggleMainMenu() {
-    setActiveInputPopup((current) => (isPlusPopupId(current) ? null : "main"));
-  }
-
-  function openPlusPopup(popup: Exclude<InputPopupId, "context" | "agent" | "agent-reasoning" | "environment">) {
-    setActiveInputPopup(popup);
-  }
-
-  function togglePopup(popup: InputPopupId) {
-    setActiveInputPopup((current) => (current === popup ? null : popup));
-  }
-
-  function toggleSkill(skillId: string) {
-    const normalizedSkillId = normalizeRunnerSkillId(skillId);
-    if (!normalizedSkillId) {
-      return;
-    }
-    setEnabledSkillIds((current) => {
-      const next = current.includes(normalizedSkillId) ? current.filter((id) => id !== normalizedSkillId) : [...current, normalizedSkillId];
-      onSkillsChange?.(next);
-      return next;
-    });
   }
 
   function selectAgent(nextAgentId: string) {
@@ -6717,25 +4105,6 @@ export function RunnerChat({
     setActiveInputPopup(null);
   }
 
-  function selectGithubRepository(nextRepositoryId: string) {
-    setSelectedGithubRepositoryId(nextRepositoryId);
-    githubConfig?.onRepositoryChange?.(nextRepositoryId);
-  }
-
-  function selectGithubContext(nextContextId: string) {
-    setSelectedGithubContextId(nextContextId);
-    githubConfig?.onContextChange?.(nextContextId);
-  }
-
-  function selectNotionDatabase(nextDatabaseId: string) {
-    setSelectedNotionDatabaseId(nextDatabaseId);
-    notionConfig?.onDatabaseChange?.(nextDatabaseId);
-  }
-
-  function toggleFileSelection(selection: string[], nextId: string): string[] {
-    return selection.includes(nextId) ? selection.filter((id) => id !== nextId) : [...selection, nextId];
-  }
-
   function handleWorkspaceFileBrowserEnvironmentSelect(nextEnvironmentId: string) {
     setSelectedWorkspaceFileIds([]);
     pruneWorkspaceAttachmentsForEnvironment(nextEnvironmentId);
@@ -6744,210 +4113,15 @@ export function RunnerChat({
     switchFileBrowserSource("workspace");
   }
 
-  async function attachWorkspaceFiles(): Promise<boolean> {
-    const selectedItems = workspaceItems.filter((item) => selectedWorkspaceFileIds.includes(item.id) && !item.isFolder);
-    if (!selectedItems.length) {
-      return false;
-    }
-
-    if (!activeWorkspaceEnvironmentId) {
-      setWorkspaceBrowserError("Select an environment to browse workspace files.");
-      return false;
-    }
-
-    const remainingCapacity = Math.max(maxAttachments - attachments.length, 0);
-    const itemsToAttach = selectedItems.slice(0, remainingCapacity);
-    if (!itemsToAttach.length) {
-      return false;
-    }
-
-    setInlineError(null);
-    setIsFileBrowserAttaching(true);
-
-    try {
-      const createdAttachments = await Promise.all(
-        itemsToAttach.map((item) => createWorkspaceAttachment(item, activeWorkspaceEnvironmentId))
-      );
-      setAttachments((prev) => [...prev, ...createdAttachments]);
-      workspaceConfig?.onAttach?.(itemsToAttach.map((item) => item.id));
-      setSelectedWorkspaceFileIds([]);
-      closeAllInputPopups();
-      return true;
-    } catch (error) {
-      const normalizedError = error instanceof Error ? error : new Error(String(error));
-      setInlineError(normalizedError.message || "Failed to attach workspace files.");
-      return false;
-    } finally {
-      setIsFileBrowserAttaching(false);
-    }
-  }
-
-  async function attachIntegrationFiles(source: "google-drive" | "one-drive" | "github"): Promise<boolean> {
-    const config =
-      source === "google-drive"
-        ? googleDriveConfig
-        : source === "one-drive"
-          ? oneDriveConfig
-          : githubConfig;
-    const items =
-      source === "google-drive"
-        ? googleDriveItems
-        : source === "one-drive"
-          ? oneDriveItems
-          : githubItems;
-    const selectedIds =
-      source === "google-drive"
-        ? selectedGoogleDriveFileIds
-        : source === "one-drive"
-          ? selectedOneDriveFileIds
-          : selectedGithubFileIds;
-    const selectedItems = items.filter((item) => selectedIds.includes(item.id) && (source === "github" || !item.isFolder));
-    if (!selectedItems.length) {
-      return false;
-    }
-
-    const targetEnvironmentId = resolveAttachmentUploadEnvironmentId();
-    if (!targetEnvironmentId) {
-      setInlineError("Select an environment before attaching files.");
-      return false;
-    }
-    const fetchFileContent = config?.fetchFileContent;
-    if (source !== "github" && !fetchFileContent) {
-      setInlineError("This integration does not support file downloads.");
-      return false;
-    }
-
-    if (source === "github") {
-      const selectedRepoFullNames = Array.from(
-        new Set(
-          selectedItems
-            .map((item) => String(item.repoFullName || "").trim())
-            .filter(Boolean)
-        )
-      );
-      if (selectedRepoFullNames.length > 1) {
-        setInlineError("Attach files from a single GitHub repository per message.");
-        return false;
-      }
-    }
-
-    const remainingCapacity = Math.max(maxAttachments - attachments.length, 0);
-    const itemsToAttach = selectedItems.slice(0, remainingCapacity);
-    if (!itemsToAttach.length) {
-      return false;
-    }
-
-    setInlineError(null);
-    setIsFileBrowserAttaching(true);
-
-    try {
-      const createdAttachments =
-        source === "github"
-          ? itemsToAttach.map((item) =>
-              createGithubIntegrationSelectionAttachment(item, targetEnvironmentId, {
-                pendingPreparation: Boolean(normalizedBackendUrl && apiKey.trim()),
-              })
-            )
-          : await Promise.all(
-              itemsToAttach.map((item) =>
-                createIntegrationAttachment(item, source, targetEnvironmentId, fetchFileContent!)
-              )
-            );
-      setAttachments((prev) => [...prev, ...createdAttachments]);
-      if (source === "github") {
-        for (const attachment of createdAttachments) {
-          const uploadPromise = beginAttachmentUpload(attachment, { environmentIdOverride: targetEnvironmentId });
-          if (uploadPromise) {
-            void uploadPromise.catch((error) => {
-              const normalizedError = error instanceof Error ? error : new Error(String(error));
-              setInlineError(normalizedError.message || "Failed to prepare GitHub repository.");
-            });
-          }
-        }
-      }
-      config?.onAttach?.(itemsToAttach.map((item) => item.id));
-      if (source === "google-drive") {
-        setSelectedGoogleDriveFileIds([]);
-      } else if (source === "one-drive") {
-        setSelectedOneDriveFileIds([]);
-      } else {
-        setSelectedGithubFileIds([]);
-      }
-      closeAllInputPopups();
-      return true;
-    } catch (error) {
-      const normalizedError = error instanceof Error ? error : new Error(String(error));
-      setInlineError(normalizedError.message || "Failed to attach files.");
-      return false;
-    } finally {
-      setIsFileBrowserAttaching(false);
-    }
-  }
-
   function switchFileBrowserSource(nextSource: RunnerFileBrowserSource) {
-    setFileBrowserSource(nextSource);
-    setFileBrowserPreviewId(null);
-    setFileBrowserSearchQuery("");
-    setExpandedFileBrowserFolderIds([]);
-    if (nextSource === "workspace") {
-      setRemoteWorkspaceItems([]);
-      setLoadedWorkspaceFolderIds([]);
-      setLoadingWorkspaceFolderIds([]);
-      setWorkspaceFolderErrorsById({});
-      setWorkspaceBrowserError(null);
-    } else if (nextSource === "google-drive") {
-      setRemoteGoogleDriveItems([]);
-      setLoadedGoogleDriveFolderIds([]);
-      setLoadingGoogleDriveFolderIds([]);
-      setGoogleDriveBrowserError(null);
-    } else if (nextSource === "one-drive") {
-      setRemoteOneDriveItems([]);
-      setLoadedOneDriveFolderIds([]);
-      setLoadingOneDriveFolderIds([]);
-      setOneDriveBrowserError(null);
-    } else if (nextSource === "github") {
-      setRemoteGithubItems([]);
-      setLoadedGithubFolderIds([]);
-      setLoadingGithubFolderIds([]);
-      setGithubBrowserError(null);
-    } else if (nextSource === "notion") {
-      setRemoteNotionDatabases([]);
-      setNotionDatabasesLoaded(false);
-      setNotionBrowserError(null);
-    }
-    setFileBrowserHistory([{ source: nextSource, folderId: null }]);
-    setFileBrowserHistoryIndex(0);
-  }
-
-  function navigateFileBrowserToFolder(folderId: string | null) {
-    if (fileBrowserSearchQuery.trim()) {
-      setFileBrowserSearchQuery("");
-    }
-    const nextEntry = { source: currentFileBrowserSource, folderId };
-    setFileBrowserHistory((current) => [...current.slice(0, fileBrowserHistoryIndex + 1), nextEntry]);
-    setFileBrowserHistoryIndex((current) => current + 1);
-    setFileBrowserPreviewId(null);
-    setExpandedFileBrowserFolderIds([]);
+    resetFileBrowserSourceNavigation(nextSource);
+    resetFileBrowserSourceData(nextSource);
   }
 
   function navigateFileBrowserToBreadcrumb(index: number) {
     const nextEntry = fileBrowserPath[index];
     if (!nextEntry) return;
     navigateFileBrowserToFolder(nextEntry.id);
-  }
-
-  function goFileBrowserBack() {
-    if (fileBrowserHistoryIndex <= 0) return;
-    setFileBrowserHistoryIndex((current) => current - 1);
-    setFileBrowserPreviewId(null);
-    setExpandedFileBrowserFolderIds([]);
-  }
-
-  function goFileBrowserForward() {
-    if (fileBrowserHistoryIndex >= fileBrowserHistory.length - 1) return;
-    setFileBrowserHistoryIndex((current) => current + 1);
-    setFileBrowserPreviewId(null);
-    setExpandedFileBrowserFolderIds([]);
   }
 
   async function toggleFileBrowserFolderExpansion(folderId: string, event: MouseEvent<HTMLButtonElement>) {
@@ -6977,15 +4151,7 @@ export function RunnerChat({
       return;
     }
 
-    if (fileBrowserSearchQuery.trim()) {
-      setFileBrowserSearchQuery("");
-    }
-    setFileBrowserPreviewId(null);
-    setExpandedFileBrowserFolderIds([]);
-
-    const nextEntry = { source: currentFileBrowserSource, folderId: normalizedFolderId };
-    setFileBrowserHistory((current) => [...current.slice(0, fileBrowserHistoryIndex + 1), nextEntry]);
-    setFileBrowserHistoryIndex((current) => current + 1);
+    navigateFileBrowserToFolder(normalizedFolderId);
 
     if (currentFileBrowserSource === "workspace" && !loadedWorkspaceFolderIds.includes(normalizedFolderId)) {
       await loadWorkspaceFolder(normalizedFolderId);
@@ -7012,16 +4178,16 @@ export function RunnerChat({
     }
 
     if (currentFileBrowserSource === "google-drive") {
-      setSelectedGoogleDriveFileIds((current) => toggleFileSelection(current, item.id));
+      toggleFileBrowserSelection("google-drive", item.id);
       return;
     }
 
     if (currentFileBrowserSource === "one-drive") {
-      setSelectedOneDriveFileIds((current) => toggleFileSelection(current, item.id));
+      toggleFileBrowserSelection("one-drive", item.id);
       return;
     }
     if (currentFileBrowserSource === "github") {
-      setSelectedGithubFileIds((current) => toggleFileSelection(current, item.id));
+      toggleFileBrowserSelection("github", item.id);
       return;
     }
     if (currentFileBrowserSource === "notion") {
@@ -7029,7 +4195,7 @@ export function RunnerChat({
       return;
     }
 
-    setSelectedWorkspaceFileIds((current) => toggleFileSelection(current, item.id));
+    toggleFileBrowserSelection("workspace", item.id);
   }
 
   async function handleFileBrowserAttach() {
@@ -7062,23 +4228,6 @@ export function RunnerChat({
     if (await attachWorkspaceFiles()) {
       closeFileBrowserModal();
     }
-  }
-
-  function handleScheduleSubmit() {
-    const scheduledTime = new Date(scheduledAtValue);
-    if (Number.isNaN(scheduledTime.getTime())) {
-      setInlineError("Pick a valid date and time for the schedule.");
-      return;
-    }
-    const selectedPreset = schedulePresets.find((preset) => preset.id === selectedSchedulePresetId);
-    const nextSchedule = {
-      scheduledTime,
-      scheduleType,
-      cronExpression: scheduleType === "recurring" ? selectedPreset?.cron : undefined,
-    } as const;
-    setScheduledTask(nextSchedule);
-    scheduleConfig?.onQuickSchedule?.(nextSchedule);
-    closeAllInputPopups();
   }
 
   async function handleThreadContextCommand(command: ParsedThreadContextCommand, options?: { commandText?: string }) {
@@ -7114,7 +4263,7 @@ export function RunnerChat({
 
   async function handleContextPopupActionClick(action: RunnerChatThreadContextAction) {
     setInlineError(null);
-    setThreadContextDetailsError(null);
+    clearThreadContextDetailsError();
     closeAllInputPopups();
     if (action === "clear") {
       void stopSpeechToText().catch((error) => {
@@ -7135,38 +4284,6 @@ export function RunnerChat({
       const normalizedError = error instanceof Error ? error : new Error(String(error));
       setInlineError(normalizedError.message || "Failed to stop speech-to-text.");
     });
-  }
-
-  async function resolveAttachmentPayload(
-    files: LocalAttachment[],
-    environmentIdOverride?: string | null
-  ): Promise<RunnerAttachment[] | undefined> {
-    if (!files.length) return undefined;
-
-    await Promise.all(
-      files
-        .map((entry) => attachmentUploadPromisesRef.current[entry.id])
-        .filter((uploadPromise): uploadPromise is Promise<RunnerAttachment> => Boolean(uploadPromise))
-        .map((uploadPromise) => uploadPromise.catch(() => undefined))
-    );
-
-    const resolvedAttachments = files
-      .map((entry) => entry.resolvedAttachment)
-      .filter((attachment): attachment is RunnerAttachment => Boolean(attachment));
-    const unresolvedFiles = files.filter((entry) => !entry.resolvedAttachment);
-
-    if (!unresolvedFiles.length) {
-      return resolvedAttachments.length ? resolvedAttachments : undefined;
-    }
-    const uploadEnvironmentId =
-      environmentIdOverride === undefined
-        ? resolveAttachmentUploadEnvironmentId()
-        : environmentIdOverride;
-    const uploaded = await Promise.all(
-      unresolvedFiles.map((entry) => beginAttachmentUpload(entry, { environmentIdOverride: uploadEnvironmentId }) || resolveSingleAttachment(entry, uploadEnvironmentId))
-    );
-    const combined = [...resolvedAttachments, ...uploaded];
-    return combined.length ? combined : undefined;
   }
 
   async function runTask() {
@@ -7228,7 +4345,8 @@ export function RunnerChat({
         return;
       }
 
-      const implicitAttachmentEntries = await createImplicitRunAttachments();
+      const implicitAttachmentEntries =
+        await createRunnerImplicitAttachments(implicitAttachments);
       attachmentEntries = implicitAttachmentEntries.length > 0
         ? [...implicitAttachmentEntries, ...composerAttachmentEntries]
         : composerAttachmentEntries;
@@ -7501,72 +4619,14 @@ export function RunnerChat({
 
   function applyComposerInputValue(nextValue: string, selectionStart: number) {
     setInputSelectionStart(selectionStart);
-    if (!stagedThreadContextCommand && !stagedResourceCreationCommand && !stagedAgentCreationCommand && !stagedSkillCreationCommand && !stagedSlideCreationCommand && !stagedResearchCreationCommand && !stagedScrapeCreationCommand && !stagedParseCreationCommand && !stagedAdCreationCommand && !stagedBacklogCommand) {
-      const autoStageCommand = parseAutoStageThreadContextCommand(nextValue);
-      if (autoStageCommand) {
-        stageThreadContextCommand(autoStageCommand.action, autoStageCommand.prompt);
-        return;
-      }
-      const autoStageSlideCreationCommand = parseAutoStageSlideCreationCommand(nextValue);
-      if (autoStageSlideCreationCommand) {
-        stageSlideCreationCommand(autoStageSlideCreationCommand.prompt);
-        return;
-      }
-      const autoStageAdCreationCommand = parseAutoStageAdCreationCommand(nextValue);
-      if (autoStageAdCreationCommand) {
-        stageAdCreationCommand(autoStageAdCreationCommand.prompt);
-        return;
-      }
-      const autoStageResearchCreationCommand = parseAutoStageResearchCreationCommand(nextValue);
-      if (autoStageResearchCreationCommand) {
-        stageResearchCreationCommand(autoStageResearchCreationCommand.prompt);
-        return;
-      }
-      const autoStageScrapeCreationCommand = parseAutoStageScrapeCreationCommand(nextValue);
-      if (autoStageScrapeCreationCommand) {
-        stageScrapeCreationCommand(autoStageScrapeCreationCommand.prompt);
-        return;
-      }
-      const autoStageParseCreationCommand = parseAutoStageParseCreationCommand(nextValue);
-      if (autoStageParseCreationCommand) {
-        stageParseCreationCommand(autoStageParseCreationCommand.prompt);
-        return;
-      }
-      if (enableResourceCreationCommand) {
-        const autoStageResourceCreationCommand = parseAutoStageResourceCreationCommand(nextValue);
-        if (autoStageResourceCreationCommand) {
-          stageResourceCreationCommand(autoStageResourceCreationCommand.action, autoStageResourceCreationCommand.prompt);
-          return;
-        }
-      }
-      if (enableAgentCreationCommand) {
-        const autoStageAgentCreationCommand = parseAutoStageAgentCreationCommand(nextValue);
-        if (autoStageAgentCreationCommand) {
-          stageAgentCreationCommand(autoStageAgentCreationCommand.action, autoStageAgentCreationCommand.prompt);
-          return;
-        }
-      }
-      if (enableSkillCreationCommand) {
-        const autoStageSkillCreationCommand = parseAutoStageSkillCreationCommand(nextValue);
-        if (autoStageSkillCreationCommand) {
-          stageSkillCreationCommand(autoStageSkillCreationCommand.action, autoStageSkillCreationCommand.prompt);
-          return;
-        }
-      }
-      if (enableBacklogSubtaskCommand) {
-        const autoStageBacklogSubtaskCommand = parseAutoStageBacklogSubtaskCommand(nextValue);
-        if (autoStageBacklogSubtaskCommand) {
-          stageBacklogSubtaskCommand(autoStageBacklogSubtaskCommand.ticketNumber, autoStageBacklogSubtaskCommand.prompt);
-          return;
-        }
-      }
-      if (enableBacklogMissionControlCommand) {
-        const autoStageBacklogMissionControlCommand = parseAutoStageBacklogMissionControlCommand(nextValue);
-        if (autoStageBacklogMissionControlCommand) {
-          stageBacklogMissionControlCommand(autoStageBacklogMissionControlCommand.prompt);
-          return;
-        }
-      }
+    if (tryAutoStageInput(nextValue, {
+      agentCreation: enableAgentCreationCommand,
+      backlogMissionControl: enableBacklogMissionControlCommand,
+      backlogSubtask: enableBacklogSubtaskCommand,
+      resourceCreation: enableResourceCreationCommand,
+      skillCreation: enableSkillCreationCommand,
+    })) {
+      return;
     }
     setInput(nextValue);
 
@@ -7618,59 +4678,12 @@ export function RunnerChat({
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
-    if (event.key === "Backspace" && stagedThreadContextCommand && input.length === 0) {
+    if (
+      event.key === "Backspace"
+      && input.length === 0
+      && dismissActiveStagedCommand()
+    ) {
       event.preventDefault();
-      setStagedThreadContextCommand(null);
-      return;
-    }
-    if (event.key === "Backspace" && stagedResourceCreationCommand && input.length === 0) {
-      event.preventDefault();
-      setStagedResourceCreationCommand(null);
-      return;
-    }
-    if (event.key === "Backspace" && stagedAgentCreationCommand && input.length === 0) {
-      event.preventDefault();
-      setStagedAgentCreationCommand(null);
-      return;
-    }
-    if (event.key === "Backspace" && stagedSkillCreationCommand && input.length === 0) {
-      event.preventDefault();
-      setStagedSkillCreationCommand(null);
-      return;
-    }
-    if (event.key === "Backspace" && stagedSlideCreationCommand && input.length === 0) {
-      event.preventDefault();
-      setStagedSlideCreationCommand(null);
-      return;
-    }
-    if (event.key === "Backspace" && stagedResearchCreationCommand && input.length === 0) {
-      event.preventDefault();
-      setStagedResearchCreationCommand(null);
-      return;
-    }
-    if (event.key === "Backspace" && stagedScrapeCreationCommand && input.length === 0) {
-      event.preventDefault();
-      setStagedScrapeCreationCommand(null);
-      return;
-    }
-    if (event.key === "Backspace" && stagedParseCreationCommand && input.length === 0) {
-      event.preventDefault();
-      setStagedParseCreationCommand(null);
-      return;
-    }
-    if (event.key === "Backspace" && stagedAdCreationCommand && input.length === 0) {
-      event.preventDefault();
-      setStagedAdCreationCommand(null);
-      return;
-    }
-    if (event.key === "Backspace" && stagedBacklogSubtaskCommand && input.length === 0) {
-      event.preventDefault();
-      setStagedBacklogSubtaskCommand(null);
-      return;
-    }
-    if (event.key === "Backspace" && stagedBacklogMissionControlCommand && input.length === 0) {
-      event.preventDefault();
-      setStagedBacklogMissionControlCommand(null);
       return;
     }
     if (event.key !== "Enter") {
@@ -7707,342 +4720,114 @@ export function RunnerChat({
     });
   }
 
-  function renderNestedTimelineItems(turn: RunnerTurn, items: RunnerTimelineItem[], options?: { renderBrowserSkillAsGeneric?: boolean }) {
-    return items.map((nestedItem, nestedIndex) => {
-      const content = renderTimelineItem(turn, nestedItem, nestedIndex, {
-        renderComputerUseMcpAsGeneric: true,
-        renderBrowserSkillAsGeneric: options?.renderBrowserSkillAsGeneric,
-      });
-      if (!content) return null;
-      return (
-        <div key={timelineItemKey(turn.id, nestedIndex, nestedItem)} className="agent-step-item">
-          <div className="agent-step-content">{content}</div>
-        </div>
-      );
-    });
-  }
-
   const originalThreadActionLogIndex = useMemo(
     () => buildRunnerOriginalActionLogIndex(turns),
     [turns],
   );
 
   async function handlePermissionDecision(log: RunnerLog, decision: "allow" | "deny") {
-    const requestId = String(log.metadata?.permissionRequestId || "").trim();
-    if (!currentThreadId || !requestId || !normalizedBackendUrl || !apiKey.trim()) {
-      throw new Error("This permission request is missing the thread or request identity required to submit a decision.");
-    }
-    const headers = buildRunnerHeaders(requestHeaders, apiKey.trim());
-    headers.set("Content-Type", "application/json");
-    const response = await fetch(
-      `${normalizedBackendUrl}/threads/${encodeURIComponent(currentThreadId)}/permission-requests/${encodeURIComponent(requestId)}/decision`,
-      {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ decision }),
-      }
-    );
-    if (!response.ok) {
-      const bodyText = await response.text().catch(() => "");
-      throw new Error(bodyText || `Failed to ${decision === "allow" ? "approve" : "deny"} permission request (${response.status})`);
-    }
-    const decisionResult = await response.json().catch(() => null) as {
-      active?: boolean;
-      canonicalMirrored?: boolean;
-      message?: string;
-    } | null;
-    if (decisionResult?.canonicalMirrored === false) {
-      setInlineError("The permission ruling was applied, but the live Thread view could not confirm its durable update. Refresh to reconcile the run state.");
-    }
-    if (decisionResult?.active === false && decisionResult.message) {
-      setInlineError(decisionResult.message);
-    }
-    const nextTurnStatus: RunnerTurnStatus = decisionResult?.active === false
-      ? "cancelled"
-      : "running";
-    const completedAtMs = decisionResult?.active === false ? Date.now() : undefined;
-    setTurns((previousTurns) =>
-      previousTurns.map((turn) => ({
-        ...turn,
-        status: turn.status === "permission_asked" ? nextTurnStatus : turn.status,
-        completedAtMs: turn.status === "permission_asked" && completedAtMs ? completedAtMs : turn.completedAtMs,
-        logs: turn.logs.map((entry) => {
-          if (entry.metadata?.permissionRequestId !== requestId) {
-            return entry;
-          }
-          return {
-            ...entry,
-            type: decision === "allow" ? "success" : "warning",
-            metadata: {
-              ...entry.metadata,
-              status: decision === "allow" ? "approved" : "denied",
-              decision: decision === "allow" ? "approved" : "denied",
-            },
-          };
-        }),
-      }))
-    );
+    const outcome = await submitRunnerPermissionDecision({
+      apiKey,
+      backendUrl: normalizedBackendUrl,
+      decision,
+      log,
+      requestHeaders,
+      threadId: currentThreadId,
+    });
+    if (outcome.notice) setInlineError(outcome.notice);
+    setTurns((previousTurns) => applyRunnerPermissionDecision(previousTurns, outcome));
     try {
-      onThreadStatusChange?.(currentThreadId, nextTurnStatus);
+      onThreadStatusChange?.(currentThreadId || "", outcome.nextTurnStatus);
     } catch (error) {
       reportRunnerLifecycleCallbackError("onThreadStatusChange", error);
     }
   }
 
-  function renderCanonicalThreadAction(action: RunnerThreadAction) {
-    const original = resolveRunnerOriginalActionLog(
-      action,
-      originalThreadActionLogIndex,
-    );
-    if (original) {
-      const timelineState = getTurnTimelineState(original.turn);
-      const originalTimelineItemIndex = timelineState.displayedTimelineItems.findIndex((item) => {
-        if (item.kind === "log") return item.log === original.log;
-        if (item.kind === "browser_group") return item.logs.includes(original.log);
-        if (item.kind === "deep_research_group") return item.runningCommandLog === original.log || item.logs.includes(original.log);
-        if (item.kind === "computer_use_group") return item.group.logs.includes(original.log) || item.group.sessionLogs.includes(original.log);
-        return item.invocationLog === original.log || item.completionLog === original.log || item.logs.includes(original.log);
-      });
-      if (originalTimelineItemIndex >= 0) {
-        const originalTimelineItem = timelineState.displayedTimelineItems[originalTimelineItemIndex];
-        const isGroupedAnchor = originalTimelineItem.kind === "log"
-          || (originalTimelineItem.kind === "browser_group" && originalTimelineItem.logs[0] === original.log)
-          || (originalTimelineItem.kind === "deep_research_group" && (originalTimelineItem.logs[0] || originalTimelineItem.runningCommandLog) === original.log)
-          || (originalTimelineItem.kind === "computer_use_group" && originalTimelineItem.group.startLog === original.log)
-          || (originalTimelineItem.kind === "subagent_group" && originalTimelineItem.invocationLog === original.log);
-        if (!isGroupedAnchor) return null;
-        return renderTimelineItem(original.turn, originalTimelineItem, originalTimelineItemIndex);
-      }
-    }
+  const timelineRenderContext: RunnerTimelineRenderContext = {
+    activeTaskPreviewId,
+    agents,
+    availableEnvironments,
+    availableProjects,
+    backendUrl: normalizedBackendUrl,
+    deepResearchSessions,
+    displayedAgentLabel,
+    displayedEnvironmentLabel,
+    environmentId:
+      scopedActiveThreadEnvironmentId
+      || selectedEnvironment?.id
+      || environmentId
+      || null,
+    environmentName:
+      scopedActiveThreadEnvironmentName
+      || selectedEnvironment?.name
+      || displayedEnvironmentLabel
+      || "Environment",
+    isBrowserDetailOpen: (turnId, groupId) =>
+      selectedComputerUseDetail?.turnId === turnId
+      && selectedComputerUseDetail?.kind === "browser"
+      && selectedComputerUseDetail?.groupId === groupId,
+    isComputerUseDetailOpen: (turnId, groupId) =>
+      selectedComputerUseDetail?.turnId === turnId
+      && selectedComputerUseDetail?.groupId === groupId,
+    isDeepResearchDetailOpen: (turnId) =>
+      selectedDeepResearchDetail?.turnId === turnId,
+    isSubagentDetailOpen: (turnId, invocationId) =>
+      selectedSubagentDetail?.turnId === turnId
+      && selectedSubagentDetail?.invocationId === invocationId,
+    onAgentTurnClick,
+    onOpenBrowserDetails: openBrowserDetailDrawer,
+    onOpenComputerUseDetails: openComputerUseDetailDrawer,
+    onOpenDeepResearchDetails: openDeepResearchDetailDrawer,
+    onOpenEnvironmentDesktop: (nextEnvironmentId, nextEnvironmentName) => {
+      void openEnvironmentDesktopWindow(
+        nextEnvironmentId,
+        nextEnvironmentName,
+      );
+    },
+    onOpenSubagentDetails: openSubagentDetailDrawer,
+    onOpenTaskList,
+    onPermissionDecision: handlePermissionDecision,
+    onPreviewDocument: (attachment) => {
+      toggleDocumentAttachmentPreview(attachment);
+    },
+    onResourcePreviewClick,
+    onTaskPreviewClick,
+    onWorkspacePathClick: (turn, path) => {
+      handleSummaryWorkspacePathClick(turn, path, "working_log");
+    },
+    requestHeaders: buildRunnerHeaders(requestHeaders, apiKey.trim()),
+  };
 
-    const log = original?.log || adaptRunnerThreadActionToRunnerLog(action);
-    const runnerEnvironmentId = scopedActiveThreadEnvironmentId || selectedEnvironment?.id || environmentId || null;
-    const runnerHeaders = buildRunnerHeaders(requestHeaders, apiKey.trim());
-    return (
-      <RunnerWorkLogEntry
-        log={log}
-        backendUrl={normalizedBackendUrl}
-        environmentId={runnerEnvironmentId}
-        requestHeaders={runnerHeaders}
-        activeTaskPreviewId={activeTaskPreviewId}
-        availableAgents={agents}
-        availableEnvironments={availableEnvironments}
-        availableProjects={availableProjects}
-        onPreviewDocument={(attachment) => toggleDocumentAttachmentPreview(attachment)}
-        onWorkspacePathClick={(path) => {
-          const normalizedPath = String(path || "").trim();
-          if (!normalizedPath) return;
-          toggleDocumentAttachmentPreview({
-            ...buildRunnerPreviewAttachmentFromPath(normalizedPath, {
-              backendUrl: normalizedBackendUrl,
-              environmentId: runnerEnvironmentId,
-              idPrefix: "thread-action-path",
-            }),
-            workspacePath: normalizedPath,
-          });
-        }}
-        onPermissionDecision={handlePermissionDecision}
-        onTaskPreviewClick={onTaskPreviewClick}
-        onAgentPreviewClick={(agent) => {
-          if (typeof onAgentTurnClick !== "function") return;
-          onAgentTurnClick({
-            turnId: action.runId,
-            agentId: agent.agentId || undefined,
-            agentName: agent.agentName || undefined,
-          });
-        }}
-        onEnvironmentPreviewClick={(environment) => {
-          const normalizedEnvironmentId = String(environment.environmentId || "").trim();
-          if (!normalizedEnvironmentId) return;
-          onResourcePreviewClick?.({
-            id: normalizedEnvironmentId,
-            name: String(environment.environmentName || "Environment").trim() || "Environment",
-            resourceType: "environment",
-            description: null,
-            model: null,
-            category: null,
-            projectId: null,
-            projectName: null,
-            isDefault: false,
-            status: null,
-          });
-        }}
-        onProjectPreviewClick={(project) => {
-          const normalizedProjectId = String(project.projectId || "").trim();
-          if (!normalizedProjectId) return;
-          onResourcePreviewClick?.({
-            id: normalizedProjectId,
-            name: String(project.projectName || "Project").trim() || "Project",
-            resourceType: "project",
-            description: null,
-            model: null,
-            category: null,
-            projectId: normalizedProjectId,
-            projectName: String(project.projectName || "").trim() || null,
-            isDefault: false,
-            status: null,
-          });
-        }}
-        onOpenTaskList={onOpenTaskList}
-      />
-    );
+  function renderNestedTimelineItems(
+    turn: RunnerTurn,
+    items: RunnerTimelineItem[],
+    options?: { renderBrowserSkillAsGeneric?: boolean },
+  ) {
+    return renderRunnerNestedTimelineItems({
+      context: timelineRenderContext,
+      items,
+      options,
+      turn,
+    });
+  }
+
+  function renderCanonicalThreadAction(action: RunnerThreadAction) {
+    return renderRunnerCanonicalThreadAction({
+      action,
+      context: timelineRenderContext,
+      getTurnTimelineState,
+      originalLogIndex: originalThreadActionLogIndex,
+    });
   }
 
   function renderTimelineItem(turn: RunnerTurn, item: RunnerTimelineItem, index: number, options?: { renderComputerUseMcpAsGeneric?: boolean; renderBrowserSkillAsGeneric?: boolean }) {
-    const runnerEnvironmentId = scopedActiveThreadEnvironmentId || selectedEnvironment?.id || environmentId || null;
-    const runnerHeaders = buildRunnerHeaders(requestHeaders, apiKey.trim());
-
-    if (item.kind === "browser_group") {
-      const latestLog = item.logs[item.logs.length - 1];
-      const browserGroupId = getBrowserTimelineGroupId(item.logs);
-      return (
-        <BrowserSkillLogBox
-          log={latestLog}
-          logs={item.logs}
-          timeLabel={latestLog ? toDurationLabel(latestLog, turn.startedAtMs) : undefined}
-          backendUrl={normalizedBackendUrl}
-          environmentId={runnerEnvironmentId}
-          requestHeaders={runnerHeaders}
-          isDetailOpen={
-            selectedComputerUseDetail?.turnId === turn.id &&
-            selectedComputerUseDetail?.kind === "browser" &&
-            selectedComputerUseDetail?.groupId === browserGroupId
-          }
-          onOpenDetails={() => openBrowserDetailDrawer(turn.id, browserGroupId)}
-        />
-      );
-    }
-
-    if (item.kind === "computer_use_group") {
-      const latestLog = item.group.logs[item.group.logs.length - 1] || item.group.endLog;
-      const computerUseEnvironmentName =
-        turn.environmentName || scopedActiveThreadEnvironmentName || selectedEnvironment?.name || displayedEnvironmentLabel || "Environment";
-      return (
-        <BrowserSkillLogBox
-          log={latestLog}
-          logs={item.group.logs}
-          timeLabel={latestLog ? toDurationLabel(latestLog, turn.startedAtMs) : undefined}
-          backendUrl={normalizedBackendUrl}
-          environmentId={runnerEnvironmentId}
-          requestHeaders={runnerHeaders}
-          environmentName={computerUseEnvironmentName}
-          isDetailOpen={
-            selectedComputerUseDetail?.turnId === turn.id &&
-            selectedComputerUseDetail?.groupId === item.group.id
-          }
-          onOpenEnvironmentDesktop={() => {
-            void openEnvironmentDesktopWindow(runnerEnvironmentId, computerUseEnvironmentName);
-          }}
-          onOpenDetails={() => openComputerUseDetailDrawer(turn.id, item.group.id)}
-        />
-      );
-    }
-
-    if (item.kind === "deep_research_group") {
-      const firstLog = item.logs[0] || item.runningCommandLog;
-      const deepResearchSession = resolveDeepResearchSessionForGroup({
-        logs: item.logs,
-        runningCommandLog: item.runningCommandLog,
-        turn,
-        sessions: deepResearchSessions,
-      });
-      return (
-        <DeepResearchLogBox
-          log={item.runningCommandLog}
-          logs={item.logs}
-          runningCommandLog={item.runningCommandLog}
-          session={deepResearchSession}
-          timeLabel={firstLog ? toDurationLabel(firstLog, turn.startedAtMs) : undefined}
-          fallbackTopic={extractDeepResearchTopicFromGroup(item.logs, item.runningCommandLog) || turn.prompt || null}
-          isDetailOpen={selectedDeepResearchDetail?.turnId === turn.id}
-          onOpenDetails={() => openDeepResearchDetailDrawer(turn.id)}
-        />
-      );
-    }
-
-    if (item.kind === "subagent_group") {
-      const presentation = buildSubagentGroupPresentation(turn, item, {
-        displayedAgentLabel,
-        displayedEnvironmentLabel,
-      });
-
-      return (
-        <SubagentLogBox
-          title={presentation.title}
-          prompt={presentation.prompt}
-          timeLabel={presentation.timeLabel}
-          running={presentation.running}
-          summaryMessage={presentation.previewMessage}
-          isDetailOpen={
-            selectedSubagentDetail?.turnId === turn.id &&
-            selectedSubagentDetail?.invocationId === presentation.invocationId
-          }
-          onOpenDetails={() => openSubagentDetailDrawer(turn.id, presentation.invocationId)}
-        />
-      );
-    }
-
-    if (!shouldDisplayTimelineLog(item.log)) return null;
-    return (
-      <RunnerWorkLogEntry
-        log={item.log}
-        timeLabel={toDurationLabel(item.log, turn.startedAtMs)}
-        backendUrl={normalizedBackendUrl}
-        environmentId={runnerEnvironmentId}
-        requestHeaders={runnerHeaders}
-        renderComputerUseMcpAsGeneric={options?.renderComputerUseMcpAsGeneric}
-        renderBrowserSkillAsGeneric={options?.renderBrowserSkillAsGeneric}
-        activeTaskPreviewId={activeTaskPreviewId}
-        availableAgents={agents}
-        availableEnvironments={availableEnvironments}
-        availableProjects={availableProjects}
-        onPreviewDocument={(attachment) => toggleDocumentAttachmentPreview(attachment)}
-        onTaskPreviewClick={onTaskPreviewClick}
-        onOpenTaskList={onOpenTaskList}
-        onAgentPreviewClick={(agent) => {
-          if (typeof onAgentTurnClick !== "function") return;
-          onAgentTurnClick({
-            turnId: turn.id,
-            agentId: agent.agentId || undefined,
-            agentName: agent.agentName || undefined,
-          });
-        }}
-        onEnvironmentPreviewClick={(environment) => {
-          const normalizedEnvironmentId = String(environment.environmentId || "").trim();
-          if (!normalizedEnvironmentId) return;
-          onResourcePreviewClick?.({
-            id: normalizedEnvironmentId,
-            name: String(environment.environmentName || "Environment").trim() || "Environment",
-            resourceType: "environment",
-            description: null,
-            model: null,
-            category: null,
-            projectId: null,
-            projectName: null,
-            isDefault: false,
-            status: null,
-          });
-        }}
-        onProjectPreviewClick={(project) => {
-          const normalizedProjectId = String(project.projectId || "").trim();
-          if (!normalizedProjectId) return;
-          onResourcePreviewClick?.({
-            id: normalizedProjectId,
-            name: String(project.projectName || "Project").trim() || "Project",
-            resourceType: "project",
-            description: null,
-            model: null,
-            category: null,
-            projectId: normalizedProjectId,
-            projectName: String(project.projectName || "").trim() || null,
-            isDefault: false,
-            status: null,
-          });
-        }}
-        onPermissionDecision={handlePermissionDecision}
-        onWorkspacePathClick={(path) => handleSummaryWorkspacePathClick(turn, path, "working_log")}
-      />
-    );
+    return renderRunnerTimelineItem({
+      context: timelineRenderContext,
+      index,
+      item,
+      options,
+      turn,
+    });
   }
 
   function renderSkillIcon(skill: RunnerChatSkill, className: string) {
@@ -8381,29 +5166,6 @@ export function RunnerChat({
       : fallbackMode;
     setAgentPopupMode(resolvedMode);
   }, [activeInputPopup, agentPopupMode, availableAgentPopupModes, orderedAgents, selectedAgentId]);
-  const sourceThreadEnvironmentId = hasCurrentThread
-    ? scopedActiveThreadEnvironmentId || selectedEnvironment?.id || environmentId || null
-    : null;
-  const sourceThreadEnvironmentName = hasCurrentThread
-    ? scopedActiveThreadEnvironmentName || selectedEnvironment?.name || null
-    : null;
-  const selectedForkExistingEnvironment =
-    availableEnvironments.find((environment) => environment.id === forkTargetEnvironmentId) ||
-    (sourceThreadEnvironmentId && sourceThreadEnvironmentId === forkTargetEnvironmentId
-      ? {
-          id: sourceThreadEnvironmentId,
-          name: sourceThreadEnvironmentName || "Current Environment",
-        }
-      : null);
-  const orderedForkTargetEnvironments = useMemo(
-    () => orderOptionsWithPinnedTop(availableEnvironments, forkTargetEnvironmentId || sourceThreadEnvironmentId),
-    [availableEnvironments, forkTargetEnvironmentId, sourceThreadEnvironmentId]
-  );
-  const shouldShowForkExistingEnvironmentCopyOptions =
-    forkTarget === "existing_environment" &&
-    Boolean(forkTargetEnvironmentId) &&
-    Boolean(sourceThreadEnvironmentId) &&
-    forkTargetEnvironmentId !== sourceThreadEnvironmentId;
   const githubConnected = githubConfig?.connected ?? false;
   const notionConnected = notionConfig?.connected ?? false;
   const googleDriveConnected = googleDriveConfig?.connected ?? false;
@@ -8432,54 +5194,94 @@ export function RunnerChat({
       ? normalizedOrganizations
       : [{ id: "__personal_workspace__", name: "Personal Workspace" }];
   }, [composerOrganizations]);
-  const selectedComposerOrganizationId = String(composerOrganizationId || "").trim();
-  const selectedComposerOrganization = composerOrganizationOptions.find((organization) => organization.id === selectedComposerOrganizationId)
-    || composerOrganizationOptions.find((organization) => organization.isDefault)
-    || composerOrganizationOptions[0]
-    || null;
-  const composerOrganizationLabel = selectedComposerOrganization?.name || "Organization";
   const canChangeComposerOrganization =
     composerOrganizationOptions.length > 1 &&
     typeof onComposerOrganizationChange === "function";
-  const scheduleEnabled = (scheduleConfig?.enabled ?? false) || scheduledTask !== null;
   const githubContextLabel = githubConfig?.contextLabel || "Branch";
   const defaultGithubBranchFromContext = useMemo(() => {
     const selectedContext = githubContexts.find((context) => context.id === selectedGithubContextId);
     return String(selectedContext?.name || selectedGithubContextId || "").trim();
   }, [githubContexts, selectedGithubContextId]);
-
-  function getGithubSelectedBranchForRepo(repoFullName: string, fallbackRef?: string | null): string {
-    const normalizedRepoFullName = String(repoFullName || "").trim();
-    if (!normalizedRepoFullName) {
-      return String(fallbackRef || defaultGithubBranchFromContext || "main").trim() || "main";
-    }
-    return String(
-      githubSelectedBranchByRepoFullName[normalizedRepoFullName]
-      || fallbackRef
-      || defaultGithubBranchFromContext
-      || "main"
-    ).trim() || "main";
-  }
-
-  function buildGithubEffectiveRootItem(item: RunnerChatFileNode): RunnerChatFileNode {
-    if (!item.repoFullName || item.parentId) {
-      return item;
-    }
-    const selectedBranch = getGithubSelectedBranchForRepo(item.repoFullName, item.ref);
-    return {
-      ...item,
-      id: createGithubBrowserRepoFolderId(item.repoFullName, selectedBranch),
-      ref: selectedBranch,
-    };
-  }
+  const {
+    branchesByRepoFullName: githubBranchesByRepoFullName,
+    buildEffectiveRootItem: buildGithubEffectiveRootItem,
+    ensureBranchesLoaded: ensureGithubBranchesLoaded,
+    loadingRepoFullNames: githubBranchLoadingRepoFullNames,
+    resolveSelectedBranch: getGithubSelectedBranchForRepo,
+    setSelectedBranchByRepoFullName:
+      setGithubSelectedBranchByRepoFullName,
+  } = useRunnerGithubBranchSelection({
+    defaultBranch: defaultGithubBranchFromContext,
+    fetchBranches: githubConfig?.fetchBranches,
+    onError: setGithubBrowserError,
+  });
+  const {
+    attachIntegrationFiles,
+    attachWorkspaceFiles,
+    isAttaching: isFileBrowserAttaching,
+    resetAttaching: resetFileBrowserAttaching,
+  } = useRunnerFileBrowserAttachmentController({
+    activeWorkspaceEnvironmentId,
+    addAttachments,
+    apiKey,
+    attachmentCount: attachments.length,
+    backendUrl: normalizedBackendUrl,
+    beginAttachmentUpload,
+    closeInputPopups: closeAllInputPopups,
+    getGithubSelectedBranch: getGithubSelectedBranchForRepo,
+    githubConfig,
+    githubItems,
+    googleDriveConfig,
+    googleDriveItems,
+    maxAttachments,
+    oneDriveConfig,
+    oneDriveItems,
+    onError: setInlineError,
+    onWorkspaceError: setWorkspaceBrowserError,
+    requestHeaders,
+    resolveUploadEnvironmentId:
+      resolveAttachmentUploadEnvironmentId,
+    selectedGithubFileIds,
+    selectedGoogleDriveFileIds,
+    selectedOneDriveFileIds,
+    selectedWorkspaceFileIds,
+    setSelectedGithubFileIds,
+    setSelectedGoogleDriveFileIds,
+    setSelectedOneDriveFileIds,
+    setSelectedWorkspaceFileIds,
+    workspaceConfig,
+    workspaceItems,
+  });
+  const {
+    loadWorkspaceFolder,
+    loadGoogleDriveFolder,
+    loadOneDriveFolder,
+    loadGithubFolder,
+  } = useRunnerFileBrowserSourceLoaders({
+    apiKey,
+    backendUrl: normalizedBackendUrl,
+    currentFolderId: currentFileBrowserFolderId,
+    currentSource: currentFileBrowserSource,
+    fetchGithubItems: githubConfig?.fetchItems,
+    fetchGoogleDriveItems: googleDriveConfig?.fetchItems,
+    fetchNotionDatabases: notionConfig?.fetchDatabases,
+    fetchOneDriveItems: oneDriveConfig?.fetchItems,
+    githubConnected,
+    googleDriveConnected,
+    hasApiKey,
+    mapGithubRootItem: buildGithubEffectiveRootItem,
+    notionConnected,
+    oneDriveConnected,
+    open: showFileBrowserModal,
+    requestHeaders,
+    sourceState: fileBrowserSourceState,
+    workspaceEnvironmentId: activeWorkspaceEnvironmentId,
+  });
   const workspaceRootLabel = workspaceConfig?.rootLabel || "Workspace";
   const googleDriveRootLabel = googleDriveConfig?.rootLabel || "My Drive";
   const oneDriveRootLabel = oneDriveConfig?.rootLabel || "OneDrive";
   const githubRootLabel = "Repositories";
   const notionRootLabel = "Notion";
-  const currentFileBrowserEntry = fileBrowserHistory[fileBrowserHistoryIndex] || { source: fileBrowserSource, folderId: null };
-  const currentFileBrowserSource = currentFileBrowserEntry.source;
-  const currentFileBrowserFolderId = currentFileBrowserEntry.folderId;
   const googleDrivePath = childFolderPath(googleDriveItems, googleDriveRootLabel, googleDriveFolderId);
   const oneDrivePath = childFolderPath(oneDriveItems, oneDriveRootLabel, oneDriveFolderId);
   const visibleGoogleDriveItems = fileItemsForParent(googleDriveItems, googleDriveFolderId);
@@ -8529,6 +5331,27 @@ export function RunnerChat({
       ? `${selectedFileBrowserIds.length} ${selectedFileBrowserIds.length === 1 ? "item" : "items"}`
       : `${selectedFileBrowserIds.length} ${selectedFileBrowserIds.length === 1 ? "file" : "files"}`;
   const previewFileBrowserItem = fileBrowserItems.find((item) => item.id === fileBrowserPreviewId) || null;
+  const fileBrowserConnectorFetchFileContent =
+    currentFileBrowserSource === "google-drive"
+      ? googleDriveConfig?.fetchFileContent
+      : currentFileBrowserSource === "one-drive"
+        ? oneDriveConfig?.fetchFileContent
+        : currentFileBrowserSource === "github"
+          ? githubConfig?.fetchFileContent
+          : undefined;
+  const {
+    content: fileBrowserPreviewContent,
+    kind: fileBrowserPreviewKind,
+    loading: isFileBrowserPreviewLoading,
+  } = useRunnerFileBrowserPreview({
+    apiKey,
+    backendUrl: normalizedBackendUrl,
+    environmentId: activeWorkspaceEnvironmentId,
+    fetchConnectorContent: fileBrowserConnectorFetchFileContent,
+    item: previewFileBrowserItem,
+    requestHeaders,
+    source: currentFileBrowserSource,
+  });
   const showGoogleDriveAuthScreen = currentFileBrowserSource === "google-drive" && !googleDriveConnected;
   const showGithubAuthScreen = currentFileBrowserSource === "github" && !githubConnected;
   const showNotionAuthScreen = currentFileBrowserSource === "notion" && !notionConnected;
@@ -8781,57 +5604,6 @@ export function RunnerChat({
         ? "up-out"
         : "left-out"
       : false;
-  const contextIndicatorSource = threadContextDetails || threadContext;
-  const contextIndicatorMetrics = deriveThreadContextDisplayMetrics(contextIndicatorSource);
-  const contextUsageRatio = Math.max(0, Math.min(1, contextIndicatorMetrics.usedRatio));
-  const contextIndicatorTitle = buildContextIndicatorTitle(contextIndicatorSource, Boolean(currentThreadId), isThreadContextLoading);
-  const contextDetails = threadContextDetails || threadContext;
-  const fallbackThreadContextDetails: RunnerChatThreadContextDetails = {
-    threadId: currentThreadId || "",
-    sessionId: null,
-    model: currentThreadId ? "Waiting for context data" : "No active thread",
-    maxTokens: 0,
-    usedTokens: 0,
-    remainingTokens: 0,
-    remainingRatio: 0,
-    source: "empty",
-    exact: false,
-    categories: EMPTY_THREAD_CONTEXT_CATEGORIES,
-  };
-  const displayContextDetails = contextDetails || fallbackThreadContextDetails;
-  const displayContextMetrics = deriveThreadContextDisplayMetrics(displayContextDetails);
-  const contextCategoryOrder: RunnerChatThreadContextCategoryKey[] = ["system_prompt", "skills", "messages", "autocompact_buffer", "free_space", "other"];
-  const contextCategories = threadContextDetails?.categories || EMPTY_THREAD_CONTEXT_CATEGORIES;
-  const orderedContextCategories = [...contextCategories].sort(
-    (left, right) => contextCategoryOrder.indexOf(left.key) - contextCategoryOrder.indexOf(right.key)
-  );
-  const visibleContextCategories = orderedContextCategories.filter((category) => category.tokens > 0 || category.key === "free_space");
-  const hasDisplayContextUsage = Boolean(contextDetails) && displayContextDetails.maxTokens > 0;
-  const nativeContextUsedPercent = Math.round((displayContextMetrics.usedTokens / Math.max(displayContextDetails.maxTokens, 1)) * 100);
-  const hasReceivedFirstAssistantAnswer =
-    Boolean(threadContextDetails?.sessionId || threadContext?.sessionId) ||
-    turns.some((turn) => turn.logs.some((log) => log.eventType === "agent_message" || log.eventType === "llm_response"));
-  const hasBackendThreadContextActionAvailability =
-    threadContextAvailableActions.compact || threadContextAvailableActions.clear || threadContextAvailableActions.fork;
-  const canStageThreadContextManagementActions =
-    hasReceivedFirstAssistantAnswer || hasBackendThreadContextActionAvailability;
-  const canUseBtwThreadContextAction = Boolean(currentThreadId) && currentThreadHasMessages;
-  const effectiveThreadContextAvailableActions: RunnerChatThreadContextAvailableActions = {
-    compact: canStageThreadContextManagementActions,
-    clear: canStageThreadContextManagementActions,
-    btw: canUseBtwThreadContextAction,
-    fork: canStageThreadContextManagementActions,
-  };
-  const agentPopupEmptyLabel =
-    agentPopupMode === "teams"
-      ? "No teams available."
-      : agentPopupMode === "humans"
-        ? "No humans available."
-        : "No agents available.";
-  const workspacePopupEmptyLabel =
-    workspaceSelectorMode === "projects"
-      ? "No projects available."
-      : "No computers available.";
 	  const speechToTextTitle = !hasApiKey
 	    ? "Enter an API key to enable speech-to-text"
 	    : supportsSpeechToText
@@ -8839,354 +5611,35 @@ export function RunnerChat({
 	        ? "Stop speech to text"
 	        : "Start speech to text"
 	      : "Speech-to-text is not supported in this browser";
-  const selectedAgentVoiceMode = normalizeRunnerChatVoiceMode(selectedAgent?.voiceMode);
-  const selectedAgentWebVoiceEnabled = useComputerAgentsMode && isRunnerChatWebVoiceMode(selectedAgentVoiceMode);
-  const isVoiceModeActive = voiceModeState.status === "connected";
-  const isVoiceModeBusy = voiceModeState.status === "starting" || voiceModeState.status === "closing";
-  const shouldShowVoiceModeButton = useComputerAgentsMode && (selectedAgentWebVoiceEnabled || isVoiceModeActive || isVoiceModeBusy || voiceModeState.status === "error");
-  const voiceModeButtonTitle = isVoiceModeActive
-    ? "End voice mode"
-    : selectedAgentWebVoiceEnabled
-      ? "Start voice mode"
-      : "Enable Web voice mode on this agent first";
-
-  function renderVoiceModeControl(isFull = false) {
-    if (!shouldShowVoiceModeButton) {
-      return null;
-    }
-    const isDisabled = Boolean(disabled || (isVoiceModeBusy && !isVoiceModeActive) || (!isVoiceModeActive && !selectedAgentWebVoiceEnabled));
-    return (
-      <button
-        type="button"
-        className={`task-voice-button ${isFull ? "task-voice-button-full" : ""} ${isVoiceModeActive ? "active" : ""}`.trim()}
-        onClick={() => {
-          if (isVoiceModeActive) {
-            void stopVoiceModeSession();
-          } else {
-            void startVoiceModeSession();
-          }
-        }}
-        disabled={isDisabled}
-        aria-label={isVoiceModeActive ? "End voice mode" : "Start voice mode"}
-        title={voiceModeButtonTitle}
-      >
-        {isVoiceModeBusy ? (
-          <LucideLoaderCircle className="task-voice-icon task-voice-icon-spinner" strokeWidth={1.9} />
-        ) : (
-          <LucideAudioLines className="task-voice-icon" strokeWidth={1.9} />
-        )}
-      </button>
-    );
-  }
-
-  function renderVoiceModeStatusBar() {
-    if (!useComputerAgentsMode || voiceModeState.status === "idle") {
-      return null;
-    }
-    const voiceModeLabel =
-      voiceModeState.status === "starting"
-        ? "Starting voice mode"
-        : voiceModeState.status === "closing"
-          ? "Ending voice mode"
-          : voiceModeState.status === "error"
-            ? "Voice mode error"
-            : "Voice mode active";
-    const transcript = voiceModeState.lastAssistantTranscript || voiceModeState.lastUserTranscript || "";
-    return (
-      <div className={`tb-voice-session-strip ${voiceModeState.status === "error" ? "is-error" : ""}`.trim()}>
-        <LucideAudioLines className="tb-voice-session-strip-icon" strokeWidth={1.8} />
-        <div className="tb-voice-session-strip-copy">
-          <span className="tb-voice-session-strip-title">{voiceModeLabel}</span>
-          <span className="tb-voice-session-strip-meta">
-            {voiceModeState.error || transcript || voiceModeState.agentName || "Live voice session"}
-          </span>
-        </div>
-        {isVoiceModeActive || voiceModeState.status === "error" ? (
-          <button
-            type="button"
-            className="tb-voice-session-strip-action"
-            onClick={() => void stopVoiceModeSession()}
-          >
-            End
-          </button>
-        ) : null}
-      </div>
-    );
-  }
-
-	  function renderComposerOrganizationSelector() {
-    return (
-      <div className="tb-composer-organization-anchor">
-        <button
-          ref={organizationSelectorButtonRef}
-          type="button"
-          className={`tb-composer-organization-selector ${showOrganizationPopup ? "active" : ""}`.trim()}
-          onClick={() => {
-            if (canChangeComposerOrganization) {
-              togglePopup("organization");
-            }
-          }}
-          disabled={!canChangeComposerOrganization}
-          aria-label={`Organization: ${composerOrganizationLabel}`}
-          aria-expanded={showOrganizationPopup}
-        >
-          <LucideBuilding2 className="tb-composer-organization-icon" strokeWidth={1.45} />
-          <span className="tb-composer-organization-label">{composerOrganizationLabel}</span>
-          {canChangeComposerOrganization ? <IconChevronDown className="tb-composer-organization-chevron" /> : null}
-        </button>
-
-        {renderComposerPopupPortal(
-          showOrganizationPopup ? (
-            <PlatformPopupSurface ref={organizationPopupRef} className="tb-popup-menu-inline tb-popup-menu-inline-agent tb-popup-menu-inline-organization" animation={mainPopupAnimation}>
-              <div className="tb-popup-menu-inline-body tb-popup-menu-inline-body-organization">
-                {composerOrganizationOptions.map((organization) => {
-                  const isSelected = selectedComposerOrganization?.id === organization.id;
-                  return (
-                    <button
-                      key={organization.id}
-                      type="button"
-                      className={`tb-popup-row tb-popup-row-select tb-popup-row-agent tb-popup-row-organization ${isSelected ? "selected" : ""}`.trim()}
-                      onClick={() => selectComposerOrganization(organization.id)}
-                    >
-                      <LucideBuilding2 className="tb-popup-icon" strokeWidth={1.6} />
-                      <span className="tb-popup-label">{organization.name}</span>
-                      <span className="tb-popup-check-slot">
-                        {isSelected ? <IconCheck className="tb-popup-check" /> : null}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </PlatformPopupSurface>
-          ) : null,
-          organizationPopupStyle
-        )}
-      </div>
-    );
-  }
-
-  function renderAgentSelectorControl() {
-    if (hideAgentSelector || agents.length === 0) {
-      return null;
-    }
-
-    return (
-      <div className="tb-selector-anchor">
-        <button
-          ref={agentSelectorButtonRef}
-          type="button"
-          className={`tb-inline-selector tb-inline-selector-agent ${showAgentPopup ? "active" : ""}`.trim()}
-          onClick={() => togglePopup("agent")}
-        >
-          <span>{displayedAgentLabel}</span>
-          <span className="tb-composer-agent-button-effort">{selectedReasoningEffortOption.label}</span>
-          <IconChevronDown className="tb-inline-selector-chevron" />
-        </button>
-
-        {renderComposerPopupPortal(
-          showAgentPopup ? (
-          <PlatformPopupSurface ref={agentPopupRef} className="tb-popup-menu-inline tb-popup-menu-inline-agent" animation={mainPopupAnimation} animateHeight>
-            {!hasApiKey ? (
-              <div className="tb-popup-note">
-                <div className="tb-popup-note-title">API key required</div>
-                <div className="tb-popup-note-body">Enter an API key in the playground sidebar to select an agent.</div>
-              </div>
-            ) : (
-              <>
-                <div className="tb-popup-panel-section tb-popup-panel-section-attach-header">
-                  <PlatformSwitch
-                    className="tb-popup-selector-switch"
-                    ariaLabel="Agent type"
-                    value={agentPopupMode}
-                    options={availableAgentPopupModes.map((mode) => ({
-                      value: mode,
-                      label: mode === "teams" ? "Squads" : mode === "humans" ? "Humans" : "Agents",
-                    }))}
-                    onValueChange={(nextMode) => setAgentPopupMode(nextMode as RunnerAgentSelectorMode)}
-                  />
-                </div>
-                <div className="tb-popup-menu-inline-body tb-popup-menu-inline-body-agent">
-                  {filteredOrderedAgents.length > 0 ? (
-                    filteredOrderedAgents.map((agent) => {
-                      const isTeamAgent = getRunnerAgentSelectorMode(agent) === "teams";
-                      return (
-                        <button
-                          key={agent.id}
-                          type="button"
-                          className={`tb-popup-row tb-popup-row-select tb-popup-row-agent ${selectedAgentId === agent.id ? "selected" : ""}`}
-                          onClick={() => selectAgent(agent.id)}
-                        >
-                          {isTeamAgent ? <IconLayers className="tb-popup-icon" /> : renderRunnerAgentOptionIcon(agent)}
-                          <span className="tb-popup-label">{agent.name}</span>
-                          <span className="tb-popup-check-slot">
-                            {selectedAgentId === agent.id ? <IconCheck className="tb-popup-check" /> : null}
-                          </span>
-                        </button>
-                      );
-                    })
-                  ) : (
-                    <div className="tb-popup-menu-inline-empty">
-                      <div className="tb-popup-empty-state">{agentPopupEmptyLabel}</div>
-                    </div>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  className={`tb-popup-row tb-popup-row-core-action tb-agent-reasoning-effort-entry ${showAgentReasoningPopup ? "selected" : ""}`.trim()}
-                  onClick={() => setActiveInputPopup("agent-reasoning")}
-                >
-                  <LucideBrain className="tb-popup-icon" strokeWidth={1.75} />
-                  <span className="tb-popup-label">Reasoning effort</span>
-                  <span className="tb-popup-value">{selectedReasoningEffortOption.label}</span>
-                  <IconChevronRight className="tb-popup-chevron" />
-                </button>
-              </>
-            )}
-          </PlatformPopupSurface>
-          ) : null,
-          agentPopupStyle
-        )}
-
-        {renderComposerPopupPortal(
-          showAgentReasoningPopup ? (
-          <PlatformPopupSurface ref={agentReasoningPopupRef} className="tb-popup-menu-side tb-popup-menu-agent-reasoning" animation={sidePopupAnimation}>
-            <div className="tb-popup-attach-topbar">
-              <button type="button" className="tb-popup-attach-topbar-button tb-popup-attach-topbar-button-close" onClick={closeAgentReasoningPopup} aria-label="Close reasoning effort popup">
-                <LucideX className="tb-popup-attach-topbar-icon" strokeWidth={1.75} />
-              </button>
-              <div className="tb-popup-attach-topbar-title">Reasoning effort</div>
-              <button type="button" className="tb-popup-attach-topbar-button tb-popup-attach-topbar-button-confirm" onClick={() => closeAllInputPopups()} aria-label="Done">
-                <LucideCheck className="tb-popup-attach-topbar-icon" strokeWidth={2} />
-              </button>
-            </div>
-            <div className="tb-agent-reasoning-effort-panel tb-agent-reasoning-effort-panel-side" onClick={(event) => event.stopPropagation()}>
-              <PlatformSwitch
-                className="tb-agent-reasoning-effort-tabs"
-                ariaLabel="Reasoning effort"
-                value={selectedReasoningEffortOption.id}
-                options={RUNNER_REASONING_EFFORT_OPTIONS.map((option) => ({
-                  value: option.id,
-                  label: option.label,
-                  title: option.description,
-                }))}
-                onValueChange={(nextEffort) => selectReasoningEffort(nextEffort as RunnerReasoningEffortId)}
-              />
-            </div>
-          </PlatformPopupSurface>
-          ) : null,
-          agentReasoningPopupStyle
-        )}
-      </div>
-    );
-  }
-
-  function renderEnvironmentSelectorControl() {
-    if (hideEnvironmentSelector) {
-      return null;
-    }
-
-    return (
-      <div className="tb-selector-anchor">
-        <button
-          ref={environmentSelectorButtonRef}
-          type="button"
-          className={`tb-inline-selector ${showEnvironmentPopup ? "active" : ""}`.trim()}
-          onClick={() => togglePopup("environment")}
-        >
-          <span>{displayedWorkspaceLabel}</span>
-          <IconChevronDown className="tb-inline-selector-chevron" />
-        </button>
-
-        {renderComposerPopupPortal(
-          showEnvironmentPopup ? (
-          <PlatformPopupSurface ref={environmentPopupRef} className="tb-popup-menu-inline tb-popup-menu-inline-right tb-popup-menu-inline-workspace" animation={mainPopupAnimation}>
-            {!hasApiKey ? (
-              <div className="tb-popup-note">
-                <div className="tb-popup-note-title">API key required</div>
-                <div className="tb-popup-note-body">Enter an API key in the playground sidebar to select a workspace.</div>
-              </div>
-            ) : (
-              <>
-                <div className="tb-popup-panel-section tb-popup-panel-section-attach-header">
-                  <PlatformSwitch
-                    className="tb-popup-selector-switch"
-                    ariaLabel="Workspace type"
-                    value={workspaceSelectorMode}
-                    options={[
-                      { value: "computers", label: "Computers" },
-                      { value: "projects", label: "Projects" },
-                    ]}
-                    onValueChange={(nextMode) => {
-                      if (nextMode === "computers" || nextMode === "projects") {
-                        setWorkspaceSelectorMode(nextMode);
-                      }
-                    }}
-                  />
-                </div>
-                <div className="tb-popup-menu-inline-body tb-popup-menu-inline-body-agent tb-popup-menu-inline-body-workspace">
-                  {workspaceSelectorMode === "projects" ? (
-                    orderedProjects.length > 0 ? (
-                      orderedProjects.map((project) => {
-                        const projectEnvironmentId = getRunnerProjectEnvironmentId(project);
-                        const isSelectedProject =
-                          effectiveWorkspaceSelectorMode === "projects" && selectedProjectId === project.id;
-                        return (
-                          <button
-                            key={project.id}
-                            type="button"
-                            className={`tb-popup-row tb-popup-row-select tb-popup-row-agent tb-popup-row-workspace ${isSelectedProject ? "selected" : ""}`}
-                            onClick={() => selectProject(project.id)}
-                            disabled={!projectEnvironmentId}
-                            title={!projectEnvironmentId ? "This project has no linked computer." : project.name}
-                          >
-                            <LucideRocket className="tb-popup-icon" strokeWidth={1.75} />
-                            <span className="tb-popup-label">{project.name}</span>
-                            <span className="tb-popup-check-slot">
-                              {isSelectedProject ? <IconCheck className="tb-popup-check" /> : null}
-                            </span>
-                          </button>
-                        );
-                      })
-                    ) : (
-                      <div className="tb-popup-menu-inline-empty">
-                        <div className="tb-popup-empty-state">{workspacePopupEmptyLabel}</div>
-                      </div>
-                    )
-                  ) : orderedEnvironments.length > 0 ? (
-                    orderedEnvironments.map((environment) => {
-                      const isSelectedEnvironment =
-                        effectiveWorkspaceSelectorMode === "computers" && selectedEnvironmentId === environment.id;
-                      return (
-                        <button
-                          key={environment.id}
-                          type="button"
-                          className={`tb-popup-row tb-popup-row-select tb-popup-row-agent tb-popup-row-workspace ${isSelectedEnvironment ? "selected" : ""}`}
-                          onClick={() => selectEnvironment(environment.id)}
-                        >
-                          <LucideMonitor className="tb-popup-icon" strokeWidth={1.75} />
-                          <span className="tb-popup-label">{environment.name}</span>
-                          <span className="tb-popup-check-slot">
-                            {isSelectedEnvironment ? <IconCheck className="tb-popup-check" /> : null}
-                          </span>
-                        </button>
-                      );
-                    })
-                  ) : (
-                    <div className="tb-popup-menu-inline-empty">
-                      <div className="tb-popup-empty-state">{workspacePopupEmptyLabel}</div>
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-          </PlatformPopupSurface>
-          ) : null,
-          environmentPopupStyle
-        )}
-      </div>
-    );
-  }
-
+  const contextIndicatorControl = (
+    <RunnerThreadContextControl
+      actionAvailability={threadContextAvailableActions}
+      actionLoading={threadContextActionLoading}
+      animation={mainPopupAnimation}
+      buttonRef={contextIndicatorButtonRef}
+      context={threadContext}
+      currentThreadId={currentThreadId}
+      details={threadContextDetails}
+      detailsError={threadContextDetailsError}
+      detailsLoading={isThreadContextDetailsLoading}
+      hasApiKey={hasApiKey}
+      hasAssistantAnswer={turns.some((turn) =>
+        turn.logs.some(
+          (log) =>
+            log.eventType === "agent_message"
+            || log.eventType === "llm_response",
+        ),
+      )}
+      hasMessages={currentThreadHasMessages}
+      indicatorLoading={isThreadContextLoading}
+      onAction={(action) => void handleContextPopupActionClick(action)}
+      onIndicatorClick={handleContextIndicatorClick}
+      onRefresh={() => void refreshThreadContextDetails()}
+      open={showContextPopup}
+      popupRef={contextPopupRef}
+      popupStyle={contextPopupStyle}
+    />
+  );
   useEffect(() => {
     if (selectedSubagentDetail && !selectedSubagentDetailPresentation) {
       setSelectedSubagentDetail(null);
@@ -9228,16 +5681,6 @@ export function RunnerChat({
   }, [onSubagentDetailOpenChange]);
 
   useEffect(() => {
-    onDocumentPreviewOpenChange?.(Boolean(previewedDocumentAttachment));
-  }, [onDocumentPreviewOpenChange, previewedDocumentAttachment]);
-
-  useEffect(() => {
-    return () => {
-      onDocumentPreviewOpenChange?.(false);
-    };
-  }, [onDocumentPreviewOpenChange]);
-
-  useEffect(() => {
     onDeepResearchDetailOpenChange?.(Boolean(effectiveSelectedDeepResearchDetailPresentation));
   }, [effectiveSelectedDeepResearchDetailPresentation, onDeepResearchDetailOpenChange]);
 
@@ -9246,610 +5689,6 @@ export function RunnerChat({
       onDeepResearchDetailOpenChange?.(false);
     };
   }, [onDeepResearchDetailOpenChange]);
-
-
-  function renderThreadContextPopup() {
-    if (!hasApiKey) {
-      return (
-        <PlatformPopupSurface className="tb-popup-menu-context" animation={mainPopupAnimation}>
-          <div className="tb-popup-menu-title tb-popup-menu-title-context">Thread Context</div>
-          <div className="tb-popup-note">
-            <div className="tb-popup-note-title">API key required</div>
-            <div className="tb-popup-note-body">Enter an API key in the playground sidebar to inspect and manage thread context.</div>
-          </div>
-        </PlatformPopupSurface>
-      );
-    }
-
-    return (
-      <PlatformPopupSurface className="tb-popup-menu-context" animation={mainPopupAnimation}>
-        <div className="tb-popup-menu-title tb-popup-menu-title-context">
-          <span>Thread Context</span>
-          {hasDisplayContextUsage ? (
-            <span className="tb-context-panel-tokens">
-              {formatCompactTokenCount(displayContextMetrics.usedTokens)}/{formatCompactTokenCount(displayContextDetails.maxTokens)} tokens ({nativeContextUsedPercent}%)
-            </span>
-          ) : null}
-        </div>
-        {isThreadContextDetailsLoading ? (
-          <div className="tb-popup-loading-row">
-            <span className="tb-popup-loading-spinner" />
-            <span className="tb-popup-loading-label">Loading native thread context…</span>
-          </div>
-        ) : threadContextDetailsError ? (
-          <div className="tb-popup-note">
-            <div className="tb-popup-note-title">Context unavailable</div>
-            <div className="tb-popup-note-body">{threadContextDetailsError}</div>
-            <PlatformSecondaryButton size="large" type="button" className="tb-popup-action tb-popup-action-secondary tb-context-panel-retry" onClick={() => void refreshThreadContextDetails()}>
-              Retry
-            </PlatformSecondaryButton>
-          </div>
-        ) : (
-          <div className="tb-context-panel">
-            <div className="tb-context-panel-bar" aria-hidden="true">
-              {visibleContextCategories
-                .filter((category) => getContextCategoryDisplayTokens(category, displayContextMetrics) > 0)
-                .map((category) => (
-                  <span
-                    key={category.key}
-                    className={`tb-context-panel-bar-segment tb-context-panel-bar-segment-${category.kind === "buffer" ? "used" : category.kind}`}
-                    style={
-                      {
-                        "--tb-context-segment-size": String(
-                          displayContextDetails.maxTokens > 0
-                            ? getContextCategoryDisplayTokens(category, displayContextMetrics) / displayContextDetails.maxTokens
-                            : 0
-                        ),
-                        "--tb-context-segment-color": threadContextCategoryColor(category),
-                      } as CSSProperties
-                    }
-                  />
-                ))}
-            </div>
-
-            <div className="tb-context-panel-list">
-              {visibleContextCategories.map((category) => (
-                <div key={category.key} className="tb-context-panel-row">
-                  <span className="tb-context-panel-row-main">
-                    <span className="tb-context-panel-row-swatch" style={{ background: threadContextCategoryColor(category) }} />
-                  <span className="tb-context-panel-row-label">{category.label}</span>
-                </span>
-                <span className="tb-context-panel-row-value">
-                  {!hasDisplayContextUsage && category.key === "free_space"
-                    ? "100%"
-                    : `${formatCompactTokenCount(getContextCategoryDisplayTokens(category, displayContextMetrics))} tokens`}
-                </span>
-              </div>
-            ))}
-            </div>
-
-            <div className="tb-context-panel-actions">
-              <button
-                type="button"
-                className="tb-context-panel-action"
-                disabled={!effectiveThreadContextAvailableActions.compact || threadContextActionLoading !== null}
-                onClick={() => void handleContextPopupActionClick("compact")}
-              >
-                <span className="tb-context-panel-action-single">
-                  <LucideMinimize2 className="tb-context-panel-action-icon" strokeWidth={1.75} />
-                  <span>/compact</span>
-                </span>
-              </button>
-
-              <button
-                type="button"
-                className="tb-context-panel-action"
-                disabled={!effectiveThreadContextAvailableActions.clear || threadContextActionLoading !== null}
-                onClick={() => void handleContextPopupActionClick("clear")}
-              >
-                <span className="tb-context-panel-action-single">
-                  <LucideEraser className="tb-context-panel-action-icon" strokeWidth={1.75} />
-                  <span>/clear</span>
-                </span>
-              </button>
-
-              <button
-                type="button"
-                className="tb-context-panel-action"
-                disabled={!effectiveThreadContextAvailableActions.btw || threadContextActionLoading !== null}
-                onClick={() => void handleContextPopupActionClick("btw")}
-              >
-                <span className="tb-context-panel-action-single">
-                  <LucideMessageCircle className="tb-context-panel-action-icon" strokeWidth={1.75} />
-                  <span>/btw</span>
-                </span>
-              </button>
-
-              <button
-                type="button"
-                className="tb-context-panel-action"
-                disabled={!effectiveThreadContextAvailableActions.fork || threadContextActionLoading !== null}
-                onClick={() => void handleContextPopupActionClick("fork")}
-              >
-                <span className="tb-context-panel-action-single">
-                  <LucideGitBranch className="tb-context-panel-action-icon" strokeWidth={1.75} />
-                  <span>/fork</span>
-                </span>
-              </button>
-            </div>
-          </div>
-        )}
-      </PlatformPopupSurface>
-    );
-  }
-
-  function renderContextIndicatorControl() {
-    return (
-      <div className="tb-selector-anchor tb-context-indicator-anchor">
-        <button
-          ref={contextIndicatorButtonRef}
-          type="button"
-          className={`tb-context-indicator-button ${showContextPopup ? "active" : ""} ${isThreadContextLoading ? "loading" : ""}`.trim()}
-          onClick={handleContextIndicatorClick}
-          aria-label="Conversation context remaining"
-          title={contextIndicatorTitle}
-        >
-          <span className="tb-context-indicator-ring" style={{ "--tb-context-progress": String(contextUsageRatio) } as CSSProperties} />
-        </button>
-
-        {renderComposerPopupPortal(
-          showContextPopup ? (
-            <div ref={contextPopupRef} className="tb-composer-popup-measure">
-              {renderThreadContextPopup()}
-            </div>
-          ) : null,
-          contextPopupStyle
-        )}
-      </div>
-    );
-  }
-
-  function renderFileBrowserItem(item: RunnerChatFileNode, depth = 0) {
-    const isGithubRepoRootRow =
-      currentFileBrowserSource === "github"
-      && item.isFolder
-      && depth === 0
-      && !item.parentId
-      && Boolean(item.repoFullName);
-    const effectiveItem = isGithubRepoRootRow ? buildGithubEffectiveRootItem(item) : item;
-    const effectiveItemId = effectiveItem.id;
-    const isSelected = selectedFileBrowserIds.includes(effectiveItemId);
-    const isPreviewActive = previewFileBrowserItem?.id === effectiveItemId;
-    const isExpanded = expandedFileBrowserFolderIds.includes(effectiveItemId);
-    const isFolderLoading =
-      currentFileBrowserSource === "workspace"
-        ? loadingWorkspaceFolderIds.includes(effectiveItemId)
-        : currentFileBrowserSource === "google-drive"
-          ? loadingGoogleDriveFolderIds.includes(effectiveItemId)
-          : currentFileBrowserSource === "one-drive"
-            ? loadingOneDriveFolderIds.includes(effectiveItemId)
-            : currentFileBrowserSource === "github"
-              ? loadingGithubFolderIds.includes(effectiveItemId)
-              : false;
-    const workspaceFolderError =
-      currentFileBrowserSource === "workspace"
-        ? workspaceFolderErrorsById[effectiveItemId] || ""
-        : "";
-    const nestedItems = fileBrowserSearchQuery.trim() ? [] : fileItemsForParent(fileBrowserItems, effectiveItemId);
-    const showGithubFolderCheckbox = currentFileBrowserSource === "github" && item.isFolder;
-    const githubRepoFullName = String(effectiveItem.repoFullName || "").trim();
-    const githubBranchOptions = githubRepoFullName
-      ? githubBranchesByRepoFullName[githubRepoFullName] || []
-      : [];
-    const githubSelectedBranch = githubRepoFullName
-      ? getGithubSelectedBranchForRepo(githubRepoFullName, effectiveItem.ref)
-      : "";
-    const isGithubBranchLoading = githubRepoFullName
-      ? githubBranchLoadingRepoFullNames.includes(githubRepoFullName)
-      : false;
-    const githubBranchSelectOptions =
-      githubSelectedBranch && !githubBranchOptions.some((option) => option.id === githubSelectedBranch || option.name === githubSelectedBranch)
-        ? [{ id: githubSelectedBranch, name: githubSelectedBranch }, ...githubBranchOptions]
-        : githubBranchOptions;
-
-    return (
-      <div key={effectiveItemId}>
-        <div
-          className={`tb-file-browser-item ${isPreviewActive ? "preview" : ""} ${isSelected ? "selected" : ""}`}
-          onClick={() => handleFileBrowserItemClick(effectiveItem)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              handleFileBrowserItemClick(effectiveItem);
-            }
-          }}
-          role="button"
-          tabIndex={0}
-          style={{ paddingLeft: `${12 + depth * 20}px` }}
-        >
-          {item.isFolder ? (
-            <button type="button" className="tb-file-browser-item-leading" onClick={(event) => toggleFileBrowserFolderExpansion(effectiveItemId, event)}>
-              {isFolderLoading ? <IconLoader2 className="tb-file-browser-folder-chevron tb-file-browser-folder-chevron-spin" /> : isExpanded ? <IconChevronDown className="tb-file-browser-folder-chevron" /> : <IconChevronRight className="tb-file-browser-folder-chevron" />}
-            </button>
-          ) : (
-            <div
-              className={`tb-file-browser-check ${isSelected ? "selected" : ""}`}
-              onClick={(event) => {
-                event.stopPropagation();
-                handleFileBrowserItemClick(effectiveItem);
-              }}
-            >
-              {isSelected ? <IconCheck className="tb-file-browser-check-icon" /> : null}
-            </div>
-          )}
-          {showGithubFolderCheckbox ? (
-            <div
-              className={`tb-file-browser-check ${isSelected ? "selected" : ""}`}
-              onClick={(event) => {
-                event.stopPropagation();
-                setSelectedGithubFileIds((current) => toggleFileSelection(current, effectiveItemId));
-              }}
-            >
-              {isSelected ? <IconCheck className="tb-file-browser-check-icon" /> : null}
-            </div>
-          ) : null}
-          {renderBrowserFileIcon(effectiveItem, "tb-file-browser-item-icon")}
-          <span className="tb-file-browser-item-name">{effectiveItem.name}</span>
-          {isGithubRepoRootRow ? (
-            <div className="tb-file-browser-item-branch-slot">
-              <select
-                className="tb-file-browser-item-branch-select"
-                value={githubSelectedBranch}
-                disabled={isGithubBranchLoading}
-                onFocus={() => {
-                  void ensureGithubBranchesLoaded(githubRepoFullName, effectiveItem.ref);
-                }}
-                onClick={(event) => event.stopPropagation()}
-                onMouseDown={(event) => event.stopPropagation()}
-                onChange={(event) => {
-                  event.stopPropagation();
-                  handleGithubRepoBranchChange(effectiveItem, event.target.value);
-                }}
-              >
-                {githubBranchSelectOptions.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          ) : (
-            <>
-              <span className="tb-file-browser-item-meta">{formatBrowserFileDate(effectiveItem.modifiedTime)}</span>
-              <span className="tb-file-browser-item-size">{effectiveItem.isFolder ? "" : formatBrowserFileSize(effectiveItem.size)}</span>
-            </>
-          )}
-        </div>
-
-        {item.isFolder && isExpanded ? (
-          <div className="tb-file-browser-item-children">
-            {nestedItems.length > 0 ? nestedItems.map((nestedItem) => renderFileBrowserItem(nestedItem, depth + 1)) : null}
-            {workspaceFolderError && nestedItems.length === 0 ? (
-              <div className="tb-file-browser-empty">{workspaceFolderError}</div>
-            ) : null}
-          </div>
-        ) : null}
-      </div>
-    );
-  }
-
-  useEffect(() => {
-    return () => {
-      if (fileBrowserPreviewObjectUrlRef.current) {
-        URL.revokeObjectURL(fileBrowserPreviewObjectUrlRef.current);
-        fileBrowserPreviewObjectUrlRef.current = null;
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!showFileBrowserModal || currentFileBrowserSource !== "workspace") {
-      return;
-    }
-
-    if (!hasApiKey) {
-      setRemoteWorkspaceItems([]);
-      setLoadedWorkspaceFolderIds([]);
-      setLoadingWorkspaceFolderIds([]);
-      setWorkspaceFolderErrorsById({});
-      setWorkspaceBrowserError(null);
-      setIsWorkspaceBrowserLoading(false);
-      return;
-    }
-
-    if (!activeWorkspaceEnvironmentId) {
-      setRemoteWorkspaceItems([]);
-      setLoadedWorkspaceFolderIds([]);
-      setLoadingWorkspaceFolderIds([]);
-      setWorkspaceFolderErrorsById({});
-      setWorkspaceBrowserError("Select an environment to browse workspace files.");
-      setIsWorkspaceBrowserLoading(false);
-      return;
-    }
-
-    const folderId = currentFileBrowserFolderId || "root";
-    if (loadedWorkspaceFolderIds.includes(folderId) || loadingWorkspaceFolderIds.includes(folderId)) {
-      return;
-    }
-
-    void loadWorkspaceFolder(folderId);
-  }, [
-    apiKey,
-    currentFileBrowserFolderId,
-    currentFileBrowserSource,
-    hasApiKey,
-    loadedWorkspaceFolderIds,
-    loadingWorkspaceFolderIds,
-    normalizedBackendUrl,
-    activeWorkspaceEnvironmentId,
-    showFileBrowserModal,
-  ]);
-
-  useEffect(() => {
-    if (!showFileBrowserModal || currentFileBrowserSource !== "google-drive" || !googleDriveConnected || !googleDriveConfig?.fetchItems) {
-      return;
-    }
-
-    const folderId = currentFileBrowserFolderId || "root";
-    if (loadedGoogleDriveFolderIds.includes(folderId) || loadingGoogleDriveFolderIds.includes(folderId)) {
-      return;
-    }
-
-    void loadGoogleDriveFolder(folderId);
-  }, [
-    currentFileBrowserFolderId,
-    currentFileBrowserSource,
-    googleDriveConfig,
-    googleDriveConnected,
-    loadedGoogleDriveFolderIds,
-    loadingGoogleDriveFolderIds,
-    showFileBrowserModal,
-  ]);
-
-  useEffect(() => {
-    if (!showFileBrowserModal || currentFileBrowserSource !== "one-drive" || !oneDriveConnected || !oneDriveConfig?.fetchItems) {
-      return;
-    }
-
-    const folderId = currentFileBrowserFolderId || "root";
-    if (loadedOneDriveFolderIds.includes(folderId) || loadingOneDriveFolderIds.includes(folderId)) {
-      return;
-    }
-
-    void loadOneDriveFolder(folderId);
-  }, [
-    currentFileBrowserFolderId,
-    currentFileBrowserSource,
-    loadedOneDriveFolderIds,
-    loadingOneDriveFolderIds,
-    oneDriveConfig,
-    oneDriveConnected,
-    showFileBrowserModal,
-  ]);
-
-  useEffect(() => {
-    if (!showFileBrowserModal || currentFileBrowserSource !== "github" || !githubConnected || !githubConfig?.fetchItems) {
-      return;
-    }
-
-    const folderId = currentFileBrowserFolderId || "root";
-    if (loadedGithubFolderIds.includes(folderId) || loadingGithubFolderIds.includes(folderId)) {
-      return;
-    }
-
-    void loadGithubFolder(folderId);
-  }, [
-    currentFileBrowserFolderId,
-    currentFileBrowserSource,
-    githubConfig,
-    githubConnected,
-    loadedGithubFolderIds,
-    loadingGithubFolderIds,
-    showFileBrowserModal,
-  ]);
-
-  useEffect(() => {
-    if (!showFileBrowserModal || currentFileBrowserSource !== "notion" || !notionConnected || !notionConfig?.fetchDatabases || notionDatabasesLoaded) {
-      return;
-    }
-
-    let cancelled = false;
-    setIsNotionBrowserLoading(true);
-    setNotionBrowserError(null);
-
-    void notionConfig.fetchDatabases()
-      .then((databases) => {
-        if (cancelled) return;
-        setRemoteNotionDatabases(databases || []);
-        setNotionDatabasesLoaded(true);
-        setNotionBrowserError(null);
-      })
-      .catch((error) => {
-        if (cancelled) return;
-        const normalizedError = error instanceof Error ? error : new Error(String(error));
-        setRemoteNotionDatabases([]);
-        setNotionDatabasesLoaded(false);
-        setNotionBrowserError(normalizedError.message || "Failed to load Notion databases.");
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setIsNotionBrowserLoading(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    currentFileBrowserSource,
-    notionConfig?.fetchDatabases,
-    notionConnected,
-    notionDatabasesLoaded,
-    showFileBrowserModal,
-  ]);
-
-  useEffect(() => {
-    if (fileBrowserPreviewObjectUrlRef.current) {
-      URL.revokeObjectURL(fileBrowserPreviewObjectUrlRef.current);
-      fileBrowserPreviewObjectUrlRef.current = null;
-    }
-
-    if (!previewFileBrowserItem || previewFileBrowserItem.isFolder || !isBrowserFilePreviewable(previewFileBrowserItem)) {
-      setFileBrowserPreviewContent(null);
-      setFileBrowserPreviewKind(null);
-      setIsFileBrowserPreviewLoading(false);
-      return;
-    }
-
-    const fileType = getBrowserFileType(previewFileBrowserItem.mimeType, previewFileBrowserItem.name);
-
-    const connectorFetchFileContent =
-      currentFileBrowserSource === "google-drive"
-        ? googleDriveConfig?.fetchFileContent
-        : currentFileBrowserSource === "one-drive"
-          ? oneDriveConfig?.fetchFileContent
-          : currentFileBrowserSource === "github"
-            ? githubConfig?.fetchFileContent
-            : undefined;
-
-    if (currentFileBrowserSource !== "workspace" && currentFileBrowserSource !== "notion" && connectorFetchFileContent) {
-
-      let cancelled = false;
-      setIsFileBrowserPreviewLoading(true);
-      setFileBrowserPreviewContent(null);
-      setFileBrowserPreviewKind(null);
-
-      void connectorFetchFileContent(previewFileBrowserItem)
-        .then((payload) => {
-          if (cancelled) return;
-          if (!payload?.content) {
-            if ((fileType === "image" || fileType === "video") && previewFileBrowserItem.previewUrl) {
-              setFileBrowserPreviewKind(fileType);
-              setFileBrowserPreviewContent(previewFileBrowserItem.previewUrl);
-            } else {
-              setFileBrowserPreviewContent(null);
-              setFileBrowserPreviewKind(null);
-            }
-            return;
-          }
-
-          if (fileType === "image") {
-            const mimeType = payload.mimeType || previewFileBrowserItem.mimeType || "image/png";
-            setFileBrowserPreviewKind("image");
-            setFileBrowserPreviewContent(`data:${mimeType};base64,${normalizeBase64Content(payload.content)}`);
-            return;
-          }
-
-          if (fileType === "video" && payload.encoding === "base64") {
-            const mimeType = payload.mimeType || previewFileBrowserItem.mimeType || "video/mp4";
-            setFileBrowserPreviewKind("video");
-            setFileBrowserPreviewContent(`data:${mimeType};base64,${normalizeBase64Content(payload.content)}`);
-            return;
-          }
-
-          if (payload.encoding === "base64") {
-            const decoded = decodeBase64TextContent(payload.content);
-            setFileBrowserPreviewKind("text");
-            setFileBrowserPreviewContent(decoded.slice(0, 5000));
-            return;
-          }
-
-          setFileBrowserPreviewKind("text");
-          setFileBrowserPreviewContent(payload.content.slice(0, 5000));
-        })
-        .catch(() => {
-          if (cancelled) return;
-          if ((fileType === "image" || fileType === "video") && previewFileBrowserItem.previewUrl) {
-            setFileBrowserPreviewKind(fileType);
-            setFileBrowserPreviewContent(previewFileBrowserItem.previewUrl);
-          } else {
-            setFileBrowserPreviewContent(null);
-            setFileBrowserPreviewKind(null);
-          }
-        })
-        .finally(() => {
-          if (!cancelled) {
-            setIsFileBrowserPreviewLoading(false);
-          }
-        });
-
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    if (currentFileBrowserSource !== "workspace") {
-      if ((fileType === "image" || fileType === "video") && previewFileBrowserItem.previewUrl) {
-        setFileBrowserPreviewKind(fileType);
-        setFileBrowserPreviewContent(previewFileBrowserItem.previewUrl);
-      } else {
-        setFileBrowserPreviewKind(null);
-        setFileBrowserPreviewContent(null);
-      }
-      setIsFileBrowserPreviewLoading(false);
-      return;
-    }
-
-    const previewUrl = buildEnvironmentFileDownloadUrl(normalizedBackendUrl, activeWorkspaceEnvironmentId, previewFileBrowserItem.path);
-    if (!previewUrl) {
-      setFileBrowserPreviewContent(null);
-      setFileBrowserPreviewKind(null);
-      setIsFileBrowserPreviewLoading(false);
-      return;
-    }
-
-    const controller = new AbortController();
-    const headers = buildRunnerHeaders(requestHeaders, apiKey.trim());
-    setIsFileBrowserPreviewLoading(true);
-    setFileBrowserPreviewContent(null);
-    setFileBrowserPreviewKind(null);
-
-    fetch(previewUrl, {
-      method: "GET",
-      headers,
-      signal: controller.signal,
-    })
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error(`Failed to load preview (${response.status})`);
-        }
-
-        if (fileType === "image" || fileType === "video") {
-          const blob = await response.blob();
-          const objectUrl = URL.createObjectURL(blob);
-          fileBrowserPreviewObjectUrlRef.current = objectUrl;
-          setFileBrowserPreviewKind(fileType);
-          setFileBrowserPreviewContent(objectUrl);
-          return;
-        }
-
-        const text = await response.text();
-        setFileBrowserPreviewKind("text");
-        setFileBrowserPreviewContent(text.slice(0, 5000));
-      })
-      .catch(() => {
-        if (controller.signal.aborted) return;
-        setFileBrowserPreviewContent(null);
-        setFileBrowserPreviewKind(null);
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) {
-          setIsFileBrowserPreviewLoading(false);
-        }
-      });
-
-    return () => controller.abort();
-  }, [
-    activeWorkspaceEnvironmentId,
-    apiKey,
-    currentFileBrowserSource,
-    googleDriveConfig,
-    githubConfig,
-    normalizedBackendUrl,
-    oneDriveConfig,
-    previewFileBrowserItem,
-    requestHeaders,
-  ]);
 
   useEffect(() => {
     if (!hasInputPopupOpen) return;
@@ -10251,60 +6090,13 @@ export function RunnerChat({
               ) : null;
               const metronomeWorkflowPromptContent = shouldRenderMetronomeWorkflowPrompt && metronomeWorkflowPromptLog ? (
                 <div className="tb-metronome-turn-workflow-prompt">
-                  <RunnerWorkLogEntry
-                    log={metronomeWorkflowPromptLog}
-                    backendUrl={normalizedBackendUrl}
-                    environmentId={scopedActiveThreadEnvironmentId || selectedEnvironment?.id || environmentId || null}
-                    requestHeaders={requestHeaders}
+                  <RunnerTimelineWorkLogEntry
                     activeTaskPreviewId={threadTaskPreview?.taskId || null}
-                    availableAgents={agents}
-                    availableEnvironments={availableEnvironments}
-                    availableProjects={availableProjects}
-                    onPreviewDocument={(attachment) => toggleDocumentAttachmentPreview(attachment)}
+                    context={timelineRenderContext}
+                    log={metronomeWorkflowPromptLog}
+                    requestHeadersOverride={requestHeaders ?? null}
                     onWorkspacePathClick={(path) => handleSummaryWorkspacePathClick(turn, path, "working_log")}
-                    onPermissionDecision={handlePermissionDecision}
-                    onTaskPreviewClick={onTaskPreviewClick}
-                    onAgentPreviewClick={(agent) => {
-                      if (typeof onAgentTurnClick !== "function") return;
-                      onAgentTurnClick({
-                        turnId: turn.id,
-                        agentId: agent.agentId || undefined,
-                        agentName: agent.agentName || undefined,
-                      });
-                    }}
-                    onEnvironmentPreviewClick={(environment) => {
-                      const normalizedEnvironmentId = String(environment.environmentId || "").trim();
-                      if (!normalizedEnvironmentId) return;
-                      onResourcePreviewClick?.({
-                        id: normalizedEnvironmentId,
-                        name: String(environment.environmentName || "Environment").trim() || "Environment",
-                        resourceType: "environment",
-                        description: null,
-                        model: null,
-                        category: null,
-                        projectId: null,
-                        projectName: null,
-                        isDefault: false,
-                        status: null,
-                      });
-                    }}
-                    onProjectPreviewClick={(project) => {
-                      const normalizedProjectId = String(project.projectId || "").trim();
-                      if (!normalizedProjectId) return;
-                      onResourcePreviewClick?.({
-                        id: normalizedProjectId,
-                        name: String(project.projectName || "Project").trim() || "Project",
-                        resourceType: "project",
-                        description: null,
-                        model: null,
-                        category: null,
-                        projectId: normalizedProjectId,
-                        projectName: String(project.projectName || "").trim() || null,
-                        isDefault: false,
-                        status: null,
-                      });
-                    }}
-                    onOpenTaskList={onOpenTaskList}
+                    turnId={turn.id}
                   />
                 </div>
               ) : null;
@@ -10846,7 +6638,7 @@ export function RunnerChat({
                     <button
                       type="button"
                       className="tb-ad-creation-close-button"
-                      onClick={() => setStagedAdCreationCommand(null)}
+                      onClick={() => clearStagedCommand("adCreation")}
                       aria-label="Close Create Ad settings"
                     >
                       <LucideX className="tb-ad-creation-close-icon" strokeWidth={1.75} />
@@ -11314,7 +7106,7 @@ export function RunnerChat({
                                           setGoogleDriveFolderId(item.id);
                                           return;
                                         }
-                                        setSelectedGoogleDriveFileIds((current) => toggleFileSelection(current, item.id));
+                                        toggleFileBrowserSelection("google-drive", item.id);
                                       }}
                                     >
                                       {item.isFolder ? <IconFolderOpen className="tb-popup-icon tb-popup-file-type" /> : <span className={`tb-popup-file-checkbox ${selectedGoogleDriveFileIds.includes(item.id) ? "selected" : ""}`}>{selectedGoogleDriveFileIds.includes(item.id) ? <IconCheck className="tb-popup-file-check" /> : null}</span>}
@@ -11388,7 +7180,7 @@ export function RunnerChat({
                                           setOneDriveFolderId(item.id);
                                           return;
                                         }
-                                        setSelectedOneDriveFileIds((current) => toggleFileSelection(current, item.id));
+                                        toggleFileBrowserSelection("one-drive", item.id);
                                       }}
                                     >
                                       {item.isFolder ? <IconFolderOpen className="tb-popup-icon tb-popup-file-type" /> : <span className={`tb-popup-file-checkbox ${selectedOneDriveFileIds.includes(item.id) ? "selected" : ""}`}>{selectedOneDriveFileIds.includes(item.id) ? <IconCheck className="tb-popup-file-check" /> : null}</span>}
@@ -11456,7 +7248,7 @@ export function RunnerChat({
                                   type="datetime-local"
                                   className="tb-popup-select tb-popup-select-schedule"
                                   value={scheduledAtValue}
-                                  min={formatDateTimeLocalValue(new Date())}
+                                  min={formatRunnerDateTimeLocalValue(new Date())}
                                   onChange={(event) => setScheduledAtValue(event.target.value)}
                                 />
                               </div>
@@ -11515,16 +7307,9 @@ export function RunnerChat({
                               type="button"
                               className={`tb-popup-dropzone ${isDraggingOver ? "dragging" : ""}`}
                               onClick={handleUploadNewFilesClick}
-                              onDragOver={(event) => {
-                                event.preventDefault();
-                                setIsDraggingOver(true);
-                              }}
-                              onDragLeave={() => setIsDraggingOver(false)}
-                              onDrop={(event) => {
-                                event.preventDefault();
-                                setIsDraggingOver(false);
-                                handleDroppedLocalFiles(Array.from(event.dataTransfer.files || []));
-                              }}
+                              onDragOver={handleDropzoneDragOver}
+                              onDragLeave={handleDropzoneDragLeave}
+                              onDrop={handleDropzoneDrop}
                             >
                               <LucideUpload className="tb-popup-dropzone-icon" strokeWidth={1.75} />
                               <span className="tb-popup-dropzone-title">{isDraggingOver ? "Drop files here" : "Drag & drop files here"}</span>
@@ -11539,18 +7324,44 @@ export function RunnerChat({
                     {composerLeadingControl ? (
                       <div className="tb-composer-leading-control">{composerLeadingControl}</div>
                     ) : null}
-                    {renderContextIndicatorControl()}
+                    {contextIndicatorControl}
 
                     {composerBeforeAgentControl ? (
                       <div className="tb-composer-leading-control">{composerBeforeAgentControl}</div>
                     ) : null}
 
-                    {renderAgentSelectorControl()}
+                    <RunnerAgentSelectorControl
+                      animation={mainPopupAnimation}
+                      availableModes={availableAgentPopupModes}
+                      buttonRef={agentSelectorButtonRef}
+                      displayedAgentLabel={displayedAgentLabel}
+                      hasApiKey={hasApiKey}
+                      hidden={hideAgentSelector}
+                      mode={agentPopupMode}
+                      onCloseReasoning={closeAgentReasoningPopup}
+                      onDoneReasoning={() => closeAllInputPopups()}
+                      onModeChange={setAgentPopupMode}
+                      onOpenReasoning={() => setActiveInputPopup("agent-reasoning")}
+                      onSelectAgent={selectAgent}
+                      onSelectReasoningEffort={selectReasoningEffort}
+                      onToggle={() => togglePopup("agent")}
+                      open={showAgentPopup}
+                      options={filteredOrderedAgents}
+                      popupRef={agentPopupRef}
+                      popupStyle={agentPopupStyle}
+                      reasoningEffort={effectiveReasoningEffort}
+                      reasoningOpen={showAgentReasoningPopup}
+                      reasoningPopupAnimation={sidePopupAnimation}
+                      reasoningPopupRef={agentReasoningPopupRef}
+                      reasoningPopupStyle={agentReasoningPopupStyle}
+                      selectedAgentId={selectedAgentId}
+                      totalAgentCount={agents.length}
+                    />
 
                     {scheduledTask ? (
                       <div className="tb-schedule-chip">
                         <LucideCalendar className="tb-schedule-chip-icon" strokeWidth={1.75} />
-                        <span className="tb-schedule-chip-label">{formatScheduleChipLabel(scheduledTask)}</span>
+                        <span className="tb-schedule-chip-label">{formatRunnerScheduleChipLabel(scheduledTask)}</span>
                         <button type="button" className="tb-schedule-chip-clear" onClick={clearScheduledTask} aria-label="Clear schedule">
                           <LucideX className="tb-schedule-chip-clear-icon" strokeWidth={1.75} />
                         </button>
@@ -11559,8 +7370,35 @@ export function RunnerChat({
 
 	                    <div className="task-input-spacer" />
 
-	                    {renderEnvironmentSelectorControl()}
-                    {renderVoiceModeControl(true)}
+	                    <RunnerWorkspaceSelectorControl
+                      animation={mainPopupAnimation}
+                      buttonRef={environmentSelectorButtonRef}
+                      displayedWorkspaceLabel={displayedWorkspaceLabel}
+                      effectiveMode={effectiveWorkspaceSelectorMode}
+                      environments={orderedEnvironments}
+                      hasApiKey={hasApiKey}
+                      hidden={hideEnvironmentSelector}
+                      mode={workspaceSelectorMode}
+                      onModeChange={setWorkspaceSelectorMode}
+                      onSelectEnvironment={selectEnvironment}
+                      onSelectProject={selectProject}
+                      onToggle={() => togglePopup("environment")}
+                      open={showEnvironmentPopup}
+                      popupRef={environmentPopupRef}
+                      popupStyle={environmentPopupStyle}
+                      projects={orderedProjects}
+                      selectedEnvironmentId={selectedEnvironmentId}
+                      selectedProjectId={selectedProjectId}
+                    />
+                    <RunnerVoiceModeControl
+                      agentVoiceMode={selectedAgent?.voiceMode}
+                      disabled={disabled}
+                      enabled={useComputerAgentsMode}
+                      isFull
+                      onStart={() => void startVoiceModeSession()}
+                      onStop={() => void stopVoiceModeSession()}
+                      state={voiceModeState}
+                    />
 
 	                    {showRunPreparationIndicator ? (
                       <button type="button" className="task-run-button task-run-button-full" disabled>
@@ -11616,9 +7454,16 @@ export function RunnerChat({
                     >
                       <IconPlus className="task-attachment-icon" />
                     </button>
-	                    {renderContextIndicatorControl()}
+	                    {contextIndicatorControl}
 	                    <div className="task-input-spacer" />
-                    {renderVoiceModeControl(false)}
+                    <RunnerVoiceModeControl
+                      agentVoiceMode={selectedAgent?.voiceMode}
+                      disabled={disabled}
+                      enabled={useComputerAgentsMode}
+                      onStart={() => void startVoiceModeSession()}
+                      onStop={() => void stopVoiceModeSession()}
+                      state={voiceModeState}
+                    />
 	                    {showRunPreparationIndicator ? (
                       <button type="button" className="task-run-button" disabled>
                         <span className="runner-spinner" />
@@ -11658,7 +7503,11 @@ export function RunnerChat({
                         </button>
                       </>
 	                )}
-                {renderVoiceModeStatusBar()}
+                <RunnerVoiceModeStatusBar
+                  enabled={useComputerAgentsMode}
+                  onStop={() => void stopVoiceModeSession()}
+                  state={voiceModeState}
+                />
 	              </div>
                 )}
               </div>
@@ -11677,7 +7526,18 @@ export function RunnerChat({
                     </button>
                   </div>
                   <div className="tb-composer-connectors-right">
-                    {renderComposerOrganizationSelector()}
+                    <RunnerComposerOrganizationSelector
+                      animation={mainPopupAnimation}
+                      buttonRef={organizationSelectorButtonRef}
+                      canChange={canChangeComposerOrganization}
+                      onSelect={selectComposerOrganization}
+                      onToggle={() => togglePopup("organization")}
+                      open={showOrganizationPopup}
+                      options={composerOrganizationOptions}
+                      organizationId={composerOrganizationId}
+                      popupRef={organizationPopupRef}
+                      popupStyle={organizationPopupStyle}
+                    />
                   </div>
                 </div>
               ) : null}
@@ -11701,15 +7561,11 @@ export function RunnerChat({
         message={reportIssueMessage}
         error={reportIssueError}
         submitting={isReportIssueSubmitting}
-        onTypeChange={(nextType) => {
-          setReportIssueType(nextType);
-          setReportIssueError("");
+        onTypeChange={setReportIssueType}
+        onMessageChange={setReportIssueMessage}
+        onSubmit={() => {
+          void submitReportIssue();
         }}
-        onMessageChange={(message) => {
-          setReportIssueMessage(message);
-          setReportIssueError("");
-        }}
-        onSubmit={submitReportIssue}
         onClose={closeReportIssueModal}
       />
 
@@ -11829,15 +7685,48 @@ export function RunnerChat({
                 : currentFileBrowserSource === "one-drive"
                   ? oneDriveBrowserError
                   : githubBrowserError
-        }
-        showGoogleDrivePickerPrompt={showGoogleDrivePickerPrompt}
-        items={filteredFileBrowserItems}
-        renderItem={renderFileBrowserItem}
+	        }
+	        showGoogleDrivePickerPrompt={showGoogleDrivePickerPrompt}
+	        items={filteredFileBrowserItems}
+	        renderItem={(item) => (
+            <RunnerFileBrowserItem
+              key={buildGithubEffectiveRootItem(item).id}
+              allItems={fileBrowserItems}
+              branchLoadingRepoFullNames={githubBranchLoadingRepoFullNames}
+              branchesByRepoFullName={githubBranchesByRepoFullName}
+              buildEffectiveGithubRootItem={buildGithubEffectiveRootItem}
+              expandedFolderIds={expandedFileBrowserFolderIds}
+              githubLoadingFolderIds={loadingGithubFolderIds}
+              googleDriveLoadingFolderIds={loadingGoogleDriveFolderIds}
+              item={item}
+              onBranchChange={handleGithubRepoBranchChange}
+              onEnsureBranchesLoaded={(repoFullName, fallbackRef) => {
+                void ensureGithubBranchesLoaded(repoFullName, fallbackRef);
+              }}
+              onItemClick={handleFileBrowserItemClick}
+              onToggleFolder={toggleFileBrowserFolderExpansion}
+              onToggleGithubSelection={(itemId) => {
+                toggleFileBrowserSelection("github", itemId);
+              }}
+              oneDriveLoadingFolderIds={loadingOneDriveFolderIds}
+              previewItemId={previewFileBrowserItem?.id || null}
+              resolveSelectedGithubBranch={getGithubSelectedBranchForRepo}
+              searchQuery={fileBrowserSearchQuery}
+              selectedItemIds={selectedFileBrowserIds}
+              source={currentFileBrowserSource}
+              workspaceFolderErrorsById={workspaceFolderErrorsById}
+              workspaceLoadingFolderIds={loadingWorkspaceFolderIds}
+            />
+          )}
         previewItem={previewFileBrowserItem}
         previewContent={fileBrowserPreviewContent}
         previewKind={fileBrowserPreviewKind}
         isPreviewLoading={isFileBrowserPreviewLoading}
-        renderPreviewIcon={(item) => renderBrowserFileIcon(item, "tb-file-browser-preview-glyph")}
+	        renderPreviewIcon={(item) =>
+            renderRunnerBrowserFileIcon(
+              item,
+              "tb-file-browser-preview-glyph",
+            )}
         selectedItemCount={selectedFileBrowserIds.length}
         selectedItemLabel={selectedFileBrowserLabel}
         isAttaching={isFileBrowserAttaching}

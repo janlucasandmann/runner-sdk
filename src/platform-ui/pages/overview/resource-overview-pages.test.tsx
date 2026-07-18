@@ -18,7 +18,6 @@ const analytics: ResourceOverviewAnalyticsModel = {
   ],
   labels: [],
   series: [],
-  emptyState: "No activity yet.",
 };
 const CONTROLS_PORTAL_ID = "resource-overview-test-controls";
 
@@ -163,7 +162,8 @@ describe("resource overview pages", () => {
       expect(screen.queryByText("No activity yet.")).toBeNull();
     } else {
       expect(screen.getByRole("radiogroup", { name: "Analytics time frame" }).getAttribute("data-platform-switch")).toBe("true");
-      expect(screen.getByText("No activity yet.")).not.toBeNull();
+      expect(screen.getByText("No data available yet")).not.toBeNull();
+      expect(screen.getByText("Analytics will appear here once activity has been recorded.")).not.toBeNull();
     }
     expect(container.querySelector(".platform-data-table.is-fill-layout.is-minimalistic-ui")).not.toBeNull();
     expect(screen.getByRole("navigation", { name: /pagination/ })).not.toBeNull();
@@ -231,6 +231,13 @@ describe("resource overview pages", () => {
     expect(screen.getByText("Connected").getAttribute("data-platform-label-variant")).toBe("green");
     expect(screen.getByText("Not Connected").getAttribute("data-platform-label-variant")).toBe("gray");
     expect(screen.queryByRole("button", { name: "New Custom Tag" })).toBeNull();
+    expect(container.querySelector("[data-platform-page-hero='true']")).not.toBeNull();
+    expect(screen.getByRole("heading", { name: "Tags", level: 1 })).not.toBeNull();
+    expect(
+      container.querySelectorAll(
+        ".platform-ui-card.is-feature[data-platform-ui-card-variant='feature']",
+      ),
+    ).toHaveLength(2);
     expect(screen.getByText("Connect Email, Telegram, and Discord to start agent tasks and receive results directly in those channels.")).not.toBeNull();
     expect(screen.getByRole("link", { name: "Quickstart" }).getAttribute("href")).toBe("/developers/quickstart");
     expect(screen.getByRole("link", { name: "Documentation" }).getAttribute("href")).toBe("/developers/run-and-scale/webhooks");

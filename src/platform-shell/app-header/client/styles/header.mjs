@@ -190,6 +190,13 @@ export const APP_HEADER_CSS = `      .playground-top-nav-search-divider {
         color: rgba(255, 255, 255, 0.94);
       }
 
+      .playground-top-nav-path-item-group {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+
       .playground-top-nav-path-label {
         min-width: 0;
         font-size: 14px;

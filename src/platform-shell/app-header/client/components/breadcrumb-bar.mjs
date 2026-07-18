@@ -31,6 +31,14 @@ const APP_HEADER_BREADCRUMB_BAR_TEMPLATE = `        function renderAppHeaderBrea
                     className: "playground-top-nav-path-item" + (isCurrent ? " is-current" : ""),
                     title: label,
                   }, itemContent);
+              const itemWithTrailing = item.trailing
+                ? React.createElement("span", {
+                    className: "playground-top-nav-path-item-group" + (isCurrent ? " is-current" : ""),
+                  },
+                    itemNode,
+                    item.trailing
+                  )
+                : itemNode;
               return React.createElement(React.Fragment, { key },
                 index > 0
                   ? React.createElement(ChevronRight, {
@@ -41,7 +49,7 @@ const APP_HEADER_BREADCRUMB_BAR_TEMPLATE = `        function renderAppHeaderBrea
                       "aria-hidden": "true",
                     })
                   : null,
-                itemNode
+                itemWithTrailing
               );
             })
           );

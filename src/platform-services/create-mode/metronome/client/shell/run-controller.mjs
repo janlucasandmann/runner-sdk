@@ -3,6 +3,7 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
           const normalizedProjectId = String(options?.projectId || "").trim();
           const normalizedWorkflowId = String(options?.workflowId || "").trim();
           const normalizedRunId = String(options?.runId || "").trim();
+          const shouldCreateWorkflow = Boolean(options?.createWorkflow);
           const requestedMode = options?.mode === "run-detail"
             ? "run-detail"
             : options?.mode === "runs"
@@ -16,11 +17,12 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
           setSidebarWorkspaceMode("work");
           setMetronomeRunTraceSelection(null);
           setMetronomeProjectFilterId(normalizedProjectId);
-          setMetronomeOpenWorkflowRequest(normalizedWorkflowId
+          setMetronomeOpenWorkflowRequest(normalizedWorkflowId || shouldCreateWorkflow
             ? {
                 workflowId: normalizedWorkflowId,
                 runId: normalizedRunId,
                 mode: requestedMode,
+                action: shouldCreateWorkflow ? "create" : "",
                 token: Date.now(),
               }
             : null);

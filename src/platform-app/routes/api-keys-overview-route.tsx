@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
+  ApiKeyCreateDialog,
+  ApiKeyRevealDialog,
   createApiKeysOverviewAnalytics,
   normalizeApiKeysOverviewAnalyticsPayload,
   normalizeApiKeyOverviewRows,
+  useApiKeyManagement,
   useApiKeyRepository,
   type ApiKeysOverviewAnalyticsPeriod,
 } from "../../platform-services/develop-mode/api-keys/client/index.js";
@@ -15,14 +18,13 @@ import type {
 } from "../../platform-ui/pages/overview/index.js";
 import { DevelopApiKeysOverviewPage } from "../routing/platform-lazy-pages.js";
 
-export interface ApiKeysOverviewRouteProps {
-  onOpenLegacy: (action: string, resourceId?: string) => void;
-}
-
-function readErrorMessage(error: unknown): string {
+function readErrorMessage(
+  error: unknown,
+  fallback = "Failed to load API keys.",
+): string {
   return error instanceof Error && error.message
     ? error.message
-    : "Failed to load API keys.";
+    : fallback;
 }
 
 function normalizePeriod(
@@ -31,9 +33,7 @@ function normalizePeriod(
   return value === "day" || value === "week" ? value : "month";
 }
 
-export function ApiKeysOverviewRoute({
-  onOpenLegacy,
-}: ApiKeysOverviewRouteProps) {
+export function ApiKeysOverviewRoute() {
   const repository = useApiKeyRepository();
   const [period, setPeriod] = useState<ResourceOverviewPeriod>("month");
   const [records, setRecords] = useState<readonly unknown[]>([]);
@@ -89,6 +89,11 @@ export function ApiKeysOverviewRoute({
     loading,
     error: analyticsError,
   }), [analyticsError, analyticsPayload, loading, period, rows]);
+  const management = useApiKeyManagement({
+    repository,
+    onChanged: load,
+    onRefreshError: setError,
+  });
 
   const handleDelete = useCallback(async (
     selectedRows: readonly DevelopApiKeyOverviewRow[],
@@ -110,6 +115,7 @@ export function ApiKeysOverviewRoute({
     try {
       for (const row of deletableRows) {
         await repository.revoke(row.id);
+        management.forgetKey(row.id);
       }
       await load();
     } catch (revokeError) {
@@ -117,20 +123,51 @@ export function ApiKeysOverviewRoute({
     } finally {
       setMutatingKeyId("");
     }
-  }, [load, repository]);
+  }, [load, management, repository]);
 
   return (
-    <DevelopApiKeysOverviewPage
-      rows={rows}
-      period={period}
-      onPeriodChange={setPeriod}
-      analytics={analytics}
-      loading={loading}
-      error={error}
-      revokingKeyId={mutatingKeyId}
-      onCreate={() => onOpenLegacy("create")}
-      onReveal={(row) => onOpenLegacy("reveal", row.id)}
-      onDelete={handleDelete}
-    />
+    <>
+      <DevelopApiKeysOverviewPage
+        rows={rows}
+        period={period}
+        onPeriodChange={setPeriod}
+        analytics={analytics}
+        loading={loading}
+        error={error}
+        revokingKeyId={mutatingKeyId}
+        createdNotice={management.created
+          ? {
+              keyValue: management.created.key,
+              copied: management.created.copied,
+              onCopy: () => {
+                void management.copyCreated().catch((copyError) => {
+                  setError(readErrorMessage(
+                    copyError,
+                    "Failed to copy API key.",
+                  ));
+                });
+              },
+              onDismiss: management.dismissCreated,
+            }
+          : null}
+        onCreate={management.openCreate}
+        onReveal={(row) => management.openReveal(row)}
+        onDelete={handleDelete}
+      />
+      <ApiKeyCreateDialog
+        open={management.createOpen}
+        submitting={management.creating}
+        error={management.createError}
+        onClose={management.closeCreate}
+        onSubmit={management.submitCreate}
+      />
+      <ApiKeyRevealDialog
+        state={management.reveal}
+        onClose={management.closeReveal}
+        onCopy={() => management.copyRevealed().catch((copyError) => {
+          setError(readErrorMessage(copyError, "Failed to copy API key."));
+        })}
+      />
+    </>
   );
 }

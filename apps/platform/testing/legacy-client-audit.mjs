@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import ts from "typescript";
 
-import { createLegacyPlatformApplication } from "../client/legacy/create-legacy-platform-application.mjs";
-import { extractPlatformDocumentSources } from "../server/platform-assets.mjs";
+import {
+  createLegacyPlatformApplicationSources,
+} from "../client/legacy/create-legacy-platform-application.mjs";
 
 function getNodeName(node) {
   if (node.name && ts.isIdentifier(node.name)) {
@@ -26,12 +27,14 @@ function getNodeName(node) {
   return "<anonymous>";
 }
 
-const documentHtml = createLegacyPlatformApplication({
+const {
+  styleSource,
+  moduleSource,
+} = createLegacyPlatformApplicationSources({
   aiosOrigin: "http://localhost:3001",
   defaultUpstreamOrigin: "https://api.computer-agents.com/v1",
   platformOrigin: "http://localhost:4177",
 });
-const { cssSource, moduleSource } = extractPlatformDocumentSources(documentHtml);
 const sourceFile = ts.createSourceFile(
   "platform-legacy-client.js",
   moduleSource,
@@ -98,8 +101,8 @@ const largestFunctions = functions
 const auditReport = {
   moduleBytes: Buffer.byteLength(moduleSource),
   moduleLines: moduleSource.split("\n").length,
-  cssBytes: Buffer.byteLength(cssSource),
-  cssLines: cssSource.split("\n").length,
+  cssBytes: Buffer.byteLength(styleSource),
+  cssLines: styleSource.split("\n").length,
   importCount: imports.length,
   functionCount: functions.length,
   largestFunctions,

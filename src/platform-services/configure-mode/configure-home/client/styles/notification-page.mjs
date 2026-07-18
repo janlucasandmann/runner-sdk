@@ -76,5 +76,4 @@ export const CONFIGURE_HOME_NOTIFICATION_PAGE_CSS = `      .configure-home-notif
         color: rgba(255, 255, 255, 0.5);
         font-weight: 400;
       }
-
 `;

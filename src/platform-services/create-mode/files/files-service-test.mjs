@@ -23,6 +23,8 @@ assert.match(FILES_PAGE_RUNTIME_SCRIPT, /function renderFilesBrowserContent/);
 assert.match(FILES_PAGE_RUNTIME_SCRIPT, /React\.createElement\(PlatformSwitch/);
 assert.match(FILES_PAGE_RUNTIME_SCRIPT, /React\.createElement\(PlatformSearch/);
 assert.match(FILES_PAGE_RUNTIME_SCRIPT, /React\.createElement\(PlatformButtonSelector/);
+assert.match(FILES_PAGE_RUNTIME_SCRIPT, /requestedAction === "create-file"/);
+assert.match(FILES_PAGE_RUNTIME_SCRIPT, /lastHandledFilesNavigationActionTokenRef/);
 assert.match(FILES_STYLE_FRAGMENTS.foundation, /\.playground-files-page/);
 assert.match(FILES_STYLE_FRAGMENTS.foundation, /\.playground-files-browser[\s\S]*margin: 0;[\s\S]*border: 0;[\s\S]*border-radius: 0;/);
 assert.match(FILES_STYLE_FRAGMENTS.preview, /\.playground-files-image-mask-overlay/);

@@ -2304,7 +2304,6 @@
                 },
               ],
               loading: agentsHomeThreadsLoading,
-              emptyState: "No agent usage yet.",
             };
             const agentUsageChartSection = React.createElement(PlatformAnalyticsSection, {
                 variant: "framed",

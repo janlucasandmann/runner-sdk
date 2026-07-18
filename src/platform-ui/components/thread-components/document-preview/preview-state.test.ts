@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type {
-  RunnerPreviewAttachment,
-  RunnerPreviewDirectoryEntry,
-} from "../../../../react/runner-document-preview.js";
+import type { RunnerPreviewAttachment, RunnerPreviewDirectoryEntry } from "./preview-contracts.js";
 import {
   formatRunnerPreviewFileSize,
   getRunnerPreviewAttachmentEnvironmentId,

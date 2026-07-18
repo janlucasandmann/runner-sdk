@@ -17,7 +17,9 @@ import { createPlatformGateway } from "./gateway/create-platform-gateway.mjs";
 import { createPlatformConfig } from "./platform-config.mjs";
 import { createPlatformServices } from "./platform-services.mjs";
 import { createAdminPageRenderers } from "./admin/pages.mjs";
-import { createLegacyPlatformApplication } from "../client/legacy/create-legacy-platform-application.mjs";
+import {
+  createLegacyPlatformApplicationSources,
+} from "../client/legacy/create-legacy-platform-application.mjs";
 
 const {
   aiosOrigin,
@@ -61,17 +63,17 @@ const {
   aiosOrigin,
   feedbackSummaryAllowedEmail,
 });
-const inlinePlatformDocumentHtml = createLegacyPlatformApplication({
+const platformApplicationSources = createLegacyPlatformApplicationSources({
   aiosOrigin,
   defaultUpstreamOrigin,
   platformOrigin,
 });
 const platformDocumentAssets = platformViteOrigin
-  ? await createPlatformDevelopmentAssets(inlinePlatformDocumentHtml, {
+  ? await createPlatformDevelopmentAssets(platformApplicationSources, {
       packageRoot,
       viteOrigin: platformViteOrigin,
     })
-  : createPlatformDocumentAssets(inlinePlatformDocumentHtml);
+  : createPlatformDocumentAssets(platformApplicationSources);
 const platformDocumentHtml = platformDocumentAssets.documentHtml;
 
 const platformGateway = createPlatformGateway({

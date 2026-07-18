@@ -1,22 +1,19 @@
 export const IMAGINE_APP_TOP_NAVIGATION_SCRIPT = String.raw`
         function renderImagineModeSwitch() {
-          return React.createElement("div", { className: "content-mode-switch playground-thread-mode-switch playground-imagine-top-nav-switch", role: "tablist", "aria-label": "Imagine views" },
-            [
-              { id: "explore", label: "Explore" },
-              { id: "my-templates", label: "My Templates" },
-              { id: "favourites", label: "Favourites" },
-            ].map((tab) => {
-              const isActiveImagineTab = imagineActiveView === tab.id || (tab.id === "my-templates" && imagineActiveView === "create-template");
-              return React.createElement("button", {
-                key: tab.id,
-                type: "button",
-                role: "tab",
-                className: "content-mode-button" + (isActiveImagineTab ? " is-active" : ""),
-                "aria-selected": isActiveImagineTab ? "true" : "false",
-                onClick: () => setImagineActiveView(tab.id),
-              }, tab.label);
-            })
-          );
+          const selectedImagineView = imagineActiveView === "create-template"
+            ? "my-templates"
+            : imagineActiveView;
+          return React.createElement(PlatformSwitch, {
+            className: "playground-imagine-top-nav-switch",
+            value: selectedImagineView,
+            options: [
+              { value: "explore", label: "All Templates" },
+              { value: "my-templates", label: "My Templates" },
+              { value: "favourites", label: "Favourites" },
+            ],
+            onValueChange: setImagineActiveView,
+            ariaLabel: "Imagine views",
+          });
         }
 
         function renderImagineMediaModeSelector() {
@@ -70,50 +67,62 @@ export const IMAGINE_APP_TOP_NAVIGATION_SCRIPT = String.raw`
 
         function renderImagineTopNavControls() {
           const filterOptions = [
-            { id: "all", label: "All templates", description: "Show every template" },
-            { id: "campaign", label: "Campaigns", description: "Ads, launches, and social visuals" },
-            { id: "product", label: "Product", description: "Product ads, apps, dashboards, and data visuals" },
-            { id: "editorial", label: "Editorial", description: "Stories, blogs, and fashion campaigns" },
-            { id: "concept", label: "Concepts", description: "Explainers, concept art, and worlds" },
+            { id: "all", label: "All templates" },
+            { id: "campaign", label: "Campaigns" },
+            { id: "product", label: "Product" },
+            { id: "editorial", label: "Editorial" },
+            { id: "concept", label: "Concepts" },
           ];
           return React.createElement("div", { className: "playground-imagine-top-nav-controls" },
-            React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-imagine-filter-shell" },
-              React.createElement("button", {
-                type: "button",
-                className: "playground-files-control-button is-backlog-filter" + (imagineToolbarPopover === "filter" || imagineFilterMode !== "all" ? " is-active" : ""),
-                onClick: () => setImagineToolbarPopover((current) => current === "filter" ? "" : "filter"),
+            React.createElement(PlatformPopup, {
+                open: imagineToolbarPopover === "filter",
+                portal: true,
+                placement: "bottom-end",
+                animation: "down-in",
+                rootClassName: "playground-imagine-filter-shell",
+                surfaceClassName: "playground-imagine-category-menu",
+                surfaceProps: {
+                  role: "menu",
+                  "aria-label": "Template categories",
+                  width: 240,
+                },
+                trigger: React.createElement(PlatformSecondaryButton, {
+                  size: "small",
+                  type: "button",
+                  active: imagineToolbarPopover === "filter" || imagineFilterMode !== "all",
+                  onClick: () => setImagineToolbarPopover((current) => current === "filter" ? "" : "filter"),
+                  "aria-haspopup": "menu",
+                  "aria-expanded": imagineToolbarPopover === "filter",
+                },
+                  React.createElement(Layers, { width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", null, "Categories")
+                ),
               },
-                React.createElement(Layers, { width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("span", null, "Categories")
-              ),
-              imagineToolbarPopover === "filter"
-                ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                    filterOptions.map((option) =>
-                      React.createElement("button", {
-                          key: option.id,
-                          type: "button",
-                          className: "tb-popup-row tb-popup-row-select" + (imagineFilterMode === option.id ? " selected" : ""),
-                          onClick: () => {
-                            setImagineFilterMode(option.id);
-                            setImagineToolbarPopover("");
-                          },
-                        },
-                        React.createElement("span", { className: "tb-popup-check-slot" },
-                          imagineFilterMode === option.id
-                            ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                            : null
-                        ),
-                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                          React.createElement("span", null, option.label)
-                        )
-                      )
-                    )
-                  )
-                : null
+              filterOptions.map((option) => {
+                const isSelected = imagineFilterMode === option.id;
+                return React.createElement("button", {
+                    key: option.id,
+                    type: "button",
+                    role: "menuitemradio",
+                    "aria-checked": isSelected,
+                    className: "tb-popup-row tb-popup-row-select" + (isSelected ? " is-selected" : ""),
+                    onClick: () => {
+                      setImagineFilterMode(option.id);
+                      setImagineToolbarPopover("");
+                    },
+                  },
+                  React.createElement("span", { className: "tb-popup-check-slot", "aria-hidden": "true" },
+                    isSelected
+                      ? React.createElement(Check, { className: "tb-popup-check", width: 13, height: 13, strokeWidth: 1.8 })
+                      : null
+                  ),
+                  React.createElement("span", { className: "tb-popup-label" }, option.label)
+                );
+              })
             ),
-            React.createElement("button", {
+            React.createElement(PlatformPrimaryButton, {
+              size: "small",
               type: "button",
-              className: "playground-files-control-button is-backlog-sort",
               onClick: () => {
                 setImagineToolbarPopover("");
                 setImagineActiveView("create-template");

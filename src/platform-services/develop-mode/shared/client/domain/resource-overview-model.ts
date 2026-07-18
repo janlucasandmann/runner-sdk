@@ -181,7 +181,6 @@ export function createDevelopResourceOverviewAnalyticsModel(
     ariaLabel: `${definition.singular} activity over time`,
     loading: options.loading,
     error: options.error || undefined,
-    emptyState: `No ${definition.singular.toLowerCase()} activity yet.`,
     metrics: [
       { id: `${definition.kind}-resources`, label: definition.plural, value: formatCompactNumber(resourceCount), color: KPI_COLORS[0] },
       ...primaryKpis,

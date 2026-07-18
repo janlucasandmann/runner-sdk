@@ -423,3 +423,115 @@
         font-size: 12px;
         line-height: 1.5;
       }
+
+      .platform-api-key-management-modal__body {
+        display: grid;
+        gap: 18px;
+      }
+
+      .platform-api-key-management-field {
+        min-width: 0;
+        display: grid;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 12px;
+      }
+
+      .platform-api-key-management-field em {
+        color: rgba(255, 255, 255, 0.4);
+        font-style: normal;
+      }
+
+      .platform-api-key-management-field input,
+      .platform-api-key-management-field textarea {
+        width: 100%;
+        min-width: 0;
+        padding: 10px 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        outline: none;
+        background: rgba(255, 255, 255, 0.04);
+        color: #fff;
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
+      .platform-api-key-management-field textarea {
+        min-height: 88px;
+        resize: vertical;
+      }
+
+      .platform-api-key-management-field input:focus,
+      .platform-api-key-management-field textarea:focus {
+        border-color: rgba(77, 163, 255, 0.5);
+      }
+
+      .platform-api-key-management-scopes {
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 10px;
+        border: 0;
+      }
+
+      .platform-api-key-management-scopes legend {
+        margin-bottom: 8px;
+        padding: 0;
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 12px;
+      }
+
+      .platform-api-key-management-scopes .playground-settings-scope-option {
+        gap: 4px;
+        padding: 12px;
+        border-radius: 10px;
+      }
+
+      .platform-api-key-management-scopes strong {
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .platform-api-key-management-scopes span {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 11px;
+        line-height: 1.45;
+      }
+
+      .platform-api-key-management-modal__error,
+      .platform-api-key-management-modal__notice {
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .platform-api-key-management-modal__error {
+        color: rgba(248, 113, 113, 0.95);
+      }
+
+      .platform-api-key-management-modal__notice {
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .platform-api-key-management-modal__loading {
+        min-height: 76px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 12px;
+      }
+
+      .platform-api-key-management-modal__spinner {
+        flex: 0 0 auto;
+        animation: platform-api-key-management-spin 800ms linear infinite;
+      }
+
+      @keyframes platform-api-key-management-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }

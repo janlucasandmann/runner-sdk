@@ -2,10 +2,7 @@
 
 import { cleanup, fireEvent, render, renderHook, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type {
-  RunnerPreviewAttachment,
-  RunnerPreviewDirectoryEntry,
-} from "../../../../react/runner-document-preview.js";
+import type { RunnerPreviewAttachment, RunnerPreviewDirectoryEntry } from "./preview-contracts.js";
 import { RunnerDirectoryPreview, useRunnerDirectoryPreview } from "./directory-preview.js";
 
 function createAttachment(

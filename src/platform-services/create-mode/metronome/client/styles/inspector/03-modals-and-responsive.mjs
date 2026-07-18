@@ -370,7 +370,7 @@ export const METRONOME_INSPECTOR_CSS_03_FRAGMENT = String.raw`        justify-co
       .playground-tasks-project-modal-label {
         color: rgba(255, 255, 255, 0.56);
         font-size: 12px;
-        font-weight: 500;
+        font-weight: 400;
         line-height: 1.3;
       }
 
@@ -378,9 +378,9 @@ export const METRONOME_INSPECTOR_CSS_03_FRAGMENT = String.raw`        justify-co
       .playground-environments-select {
         width: 100%;
         min-height: 40px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.04);
+        border: 0;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.1);
         color: rgba(255, 255, 255, 0.94);
         font: inherit;
         font-size: 12px;
@@ -390,7 +390,7 @@ export const METRONOME_INSPECTOR_CSS_03_FRAGMENT = String.raw`        justify-co
 
       .playground-environments-input:focus,
       .playground-environments-select:focus {
-        border-color: rgba(102, 166, 255, 0.46);
+        outline: none;
       }
 
       .playground-database-browser-modal-select-shell {

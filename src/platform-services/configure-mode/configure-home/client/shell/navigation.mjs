@@ -5,7 +5,7 @@ export const CONFIGURE_HOME_NAVIGATION_SCRIPT = `        function openConfigureH
           }
           setAccountMenuOpen(false);
           setProfileEditorOpen(false);
-          setConfigureHomeTab("overview");
+          setConfigureHomeTab(options.tab === "notifications" ? "notifications" : "overview");
           if (!options.preserveSidebarMode) {
             setSidebarWorkspaceMode("configure");
           }

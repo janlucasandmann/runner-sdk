@@ -725,32 +725,21 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
         align-items: center;
       }
 
-      .playground-projects-library-search {
-        width: min(240px, 34vw);
-      }
-
-      .playground-projects-library-nav-row {
-        justify-content: space-between !important;
-        min-height: 30px;
-        padding-bottom: 12px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      .playground-projects-library-tabs.content-mode-switch {
-        height: 30px;
-      }
-
-      .playground-projects-library-tabs .playground-files-library-tab {
+      .playground-projects-library-heading {
         min-width: 0;
-        padding-left: 16px;
-        padding-right: 16px;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
       }
 
-      .playground-projects-library-controls .playground-tasks-toolbar-popup-menu {
-        right: 0;
-        left: auto;
+      .playground-projects-library-search {
+        width: 300px;
+      }
+
+      .playground-projects-library-controls .playground-projects-library-filter-menu {
+        right: auto;
+        left: 0;
         top: calc(100% + 8px);
-        width: 260px;
       }
 
       .playground-projects-overview-surface.is-empty-hero .playground-projects-overview-inner {

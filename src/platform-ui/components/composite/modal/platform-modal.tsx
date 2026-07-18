@@ -23,6 +23,7 @@ import {
   PlatformSearch,
   type PlatformSearchProps,
 } from "../../ui/search/platform-search.js";
+import { useModalResizeTransition } from "./use-modal-resize-transition.js";
 
 export type PlatformModalVariant = "small" | "medium" | "large";
 export type PlatformModalSize = PlatformModalVariant | "compact" | "wide" | "full";
@@ -43,6 +44,8 @@ export interface PlatformModalSurfaceProps extends HTMLAttributes<HTMLElement> {
   maxWidth?: CSSProperties["maxWidth"];
   maxHeight?: CSSProperties["maxHeight"];
   scrollable?: boolean;
+  animateResize?: boolean;
+  resizeAnimationDurationMs?: number;
 }
 
 export interface PlatformModalBackdropProps extends HTMLAttributes<HTMLDivElement> {
@@ -75,6 +78,8 @@ export interface PlatformModalProps {
   maxWidth?: CSSProperties["maxWidth"];
   maxHeight?: CSSProperties["maxHeight"];
   scrollable?: boolean;
+  animateResize?: boolean;
+  resizeAnimationDurationMs?: number;
   visible?: boolean;
   closing?: boolean;
   animationDurationMs?: number;
@@ -95,7 +100,7 @@ export interface PlatformModalProps {
   backdropRef?: Ref<HTMLDivElement>;
   bodyProps?: Omit<HTMLAttributes<HTMLDivElement>, "children" | "className">;
   footerProps?: Omit<HTMLAttributes<HTMLDivElement>, "children" | "className">;
-  surfaceProps?: Omit<PlatformModalSurfaceProps, "as" | "children" | "className" | "size" | "structured" | "visible" | "closing">;
+  surfaceProps?: Omit<PlatformModalSurfaceProps, "animateResize" | "as" | "children" | "className" | "resizeAnimationDurationMs" | "size" | "structured" | "visible" | "closing">;
   backdropProps?: Omit<PlatformModalBackdropProps, "children" | "className" | "visible" | "closing">;
   role?: "dialog" | "alertdialog";
   ariaLabel?: string;
@@ -242,16 +247,28 @@ export const PlatformModalSurface = forwardRef<HTMLElement, PlatformModalSurface
     maxWidth,
     maxHeight,
     scrollable = false,
+    animateResize = true,
+    resizeAnimationDurationMs = 140,
     className = "",
     children,
     style,
     ...props
-  }, ref) {
+  }, forwardedRef) {
     const resolvedClosing = closing ?? className.split(/\s+/).includes("is-closing");
     const resolvedVisible = visible ?? !resolvedClosing;
+    const localSurfaceRef = useRef<HTMLElement | null>(null);
+    const setSurfaceRef = useCallback((element: HTMLElement | null) => {
+      localSurfaceRef.current = element;
+      assignRef(forwardedRef, element);
+    }, [forwardedRef]);
+    useModalResizeTransition(localSurfaceRef, {
+      active: resolvedVisible && !resolvedClosing,
+      enabled: animateResize,
+      durationMs: resizeAnimationDurationMs,
+    });
     return createElement(as, {
       ...props,
-      ref,
+      ref: setSurfaceRef,
       className: joinClassNames(
         "platform-modal-surface",
         "playground-platform-modal",
@@ -263,6 +280,7 @@ export const PlatformModalSurface = forwardRef<HTMLElement, PlatformModalSurface
         className
       ),
       "data-platform-modal-state": resolvedClosing ? "closing" : resolvedVisible ? "visible" : "opening",
+      "data-platform-modal-resize": animateResize ? "animated" : undefined,
       style: {
         ...style,
         width: width ?? style?.width,
@@ -298,6 +316,8 @@ export function PlatformModal({
   maxWidth,
   maxHeight,
   scrollable = false,
+  animateResize = true,
+  resizeAnimationDurationMs = 140,
   visible: controlledVisible,
   closing = false,
   animationDurationMs = 60,
@@ -470,6 +490,8 @@ export function PlatformModal({
         maxWidth={maxWidth}
         maxHeight={maxHeight}
         scrollable={scrollable}
+        animateResize={animateResize}
+        resizeAnimationDurationMs={resizeAnimationDurationMs}
         className={className}
         role={role}
         aria-modal="true"

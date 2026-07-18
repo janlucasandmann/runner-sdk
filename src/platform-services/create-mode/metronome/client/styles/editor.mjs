@@ -3,7 +3,7 @@ export const METRONOME_EDITOR_CSS = String.raw`
         position: relative;
         height: 100%;
         min-height: 0;
-        background: #050505;
+        background: #000;
         color: rgba(255, 255, 255, 0.94);
         overflow: hidden;
       }
@@ -104,7 +104,7 @@ export const METRONOME_EDITOR_CSS = String.raw`
         display: flex;
         flex-direction: column;
         gap: 10px;
-        background: #050505;
+        background: #000;
         color: rgba(255, 255, 255, 0.94);
       }
 

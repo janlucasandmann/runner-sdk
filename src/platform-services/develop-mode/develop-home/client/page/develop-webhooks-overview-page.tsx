@@ -72,7 +72,6 @@ export function DevelopWebhooksOverviewPage({
     ariaLabel: "Webhook activity",
     labels: [],
     series: [],
-    emptyState: "Webhook activity appears after external events are received.",
     metrics: [
       { id: "total", label: "Webhooks", value: String(rows.length), color: "#7effff" },
       { id: "active", label: "Active", value: String(rows.filter((row) => row.enabled).length), color: "#8fc4ff" },

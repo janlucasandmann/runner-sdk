@@ -31,6 +31,13 @@ describe("platform route registry", () => {
   it("matches canonical paths both inside and outside the hosted client base", () => {
     expect(matchPlatformPathname("/configure/computers")?.id).toBe("computers");
     expect(matchPlatformPathname("/platform-client/develop/databases/")?.id).toBe("databases");
+    expect(matchPlatformPathname("/configure/notifications")?.id).toBe("notifications");
     expect(getPlatformRoute("develop-home").path).toBe("/develop");
+  });
+
+  it("places Notifications directly after Configure Home", () => {
+    expect(
+      getPlatformRoutesForMode("configure").slice(0, 2).map((route) => route.id),
+    ).toEqual(["configure-home", "notifications"]);
   });
 });

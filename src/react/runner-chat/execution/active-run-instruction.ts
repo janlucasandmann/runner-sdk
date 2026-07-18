@@ -3,11 +3,9 @@ import type {
   RunnerThreadRoutedMessageResult,
   RunnerThreadRoutingReceipt,
 } from "../../../thread/types.js";
+import { generateRunnerClientId } from "../id-utils.js";
 
-export type RunnerActiveRunInstructionStatus =
-  | "queued"
-  | "delivered"
-  | "delivery_unavailable";
+export type RunnerActiveRunInstructionStatus = "queued" | "delivered" | "delivery_unavailable";
 
 export interface RunnerActiveRunInstructionResult {
   status: RunnerActiveRunInstructionStatus;
@@ -25,8 +23,23 @@ export interface PersistRunnerActiveRunInstructionOptions {
   source?: string;
 }
 
+export interface TryRouteRunnerActiveRunInstructionOptions {
+  content: string;
+  createClientMessageId?: () => string;
+  enabled: boolean;
+  onNotice: (message: string) => void;
+  onRestoreComposer: (content: string) => void;
+  postMessage: (
+    message: RunnerThreadRoutedMessageInput,
+  ) => Promise<RunnerThreadRoutedMessageResult>;
+  projectionMatchesThread: boolean;
+  runId?: string | null;
+}
+
 function normalized(value: unknown): string {
-  return String(value || "").trim().toLowerCase();
+  return String(value || "")
+    .trim()
+    .toLowerCase();
 }
 
 /**
@@ -47,7 +60,8 @@ export async function persistRunnerActiveRunInstruction({
   const normalizedMessageId = clientMessageId.trim();
   if (!normalizedContent) throw new Error("A worker instruction cannot be empty.");
   if (!normalizedRunId) throw new Error("An active run is required to route this instruction.");
-  if (!normalizedMessageId) throw new Error("A stable message identity is required to route this instruction.");
+  if (!normalizedMessageId)
+    throw new Error("A stable message identity is required to route this instruction.");
 
   const result = await postMessage({
     id: normalizedMessageId,
@@ -82,12 +96,12 @@ export async function persistRunnerActiveRunInstruction({
   }
 
   const receiptStatus = normalized(receipt.status);
-  const status: RunnerActiveRunInstructionStatus = receiptStatus === "delivered"
-    && result.delivered !== false
-    ? "delivered"
-    : receiptStatus === "failed"
-      ? "delivery_unavailable"
-      : "queued";
+  const status: RunnerActiveRunInstructionStatus =
+    receiptStatus === "delivered" && result.delivered !== false
+      ? "delivered"
+      : receiptStatus === "failed"
+        ? "delivery_unavailable"
+        : "queued";
 
   return { status, result, receipt };
 }
@@ -97,15 +111,59 @@ export function getRunnerActiveRunInstructionNotice(
 ): string | null {
   if (instruction.status === "delivered") return null;
   if (instruction.status === "delivery_unavailable") {
-    return instruction.result.limitation
-      || "The message was saved, but worker delivery is currently unavailable.";
+    return (
+      instruction.result.limitation ||
+      "The message was saved, but worker delivery is currently unavailable."
+    );
   }
-  if (
-    instruction.result.coordinatorRequired
-    || instruction.result.effectApplied === false
-  ) {
-    return instruction.result.limitation
-      || "The instruction is durably queued for the worker's next checkpoint.";
+  if (instruction.result.coordinatorRequired || instruction.result.effectApplied === false) {
+    return (
+      instruction.result.limitation ||
+      "The instruction is durably queued for the worker's next checkpoint."
+    );
   }
   return null;
+}
+
+/**
+ * Routes a composer message to the active canonical worker and owns the
+ * delivery-failure contract. A handled failure restores the composer instead
+ * of allowing the same message to fall through to a second execution path.
+ */
+export async function tryRouteRunnerActiveRunInstruction({
+  content,
+  createClientMessageId = () => generateRunnerClientId("worker-instruction"),
+  enabled,
+  onNotice,
+  onRestoreComposer,
+  postMessage,
+  projectionMatchesThread,
+  runId,
+}: TryRouteRunnerActiveRunInstructionOptions): Promise<boolean> {
+  const normalizedContent = content.trim();
+  const normalizedRunId = String(runId || "").trim();
+  if (!normalizedContent || !normalizedRunId || !enabled || !projectionMatchesThread) {
+    return false;
+  }
+
+  try {
+    const instruction = await persistRunnerActiveRunInstruction({
+      clientMessageId: createClientMessageId(),
+      content: normalizedContent,
+      postMessage,
+      runId: normalizedRunId,
+    });
+    const notice = getRunnerActiveRunInstructionNotice(instruction);
+    if (notice) onNotice(notice);
+    return true;
+  } catch (error) {
+    const normalizedError = error instanceof Error ? error : new Error(String(error));
+    onNotice(
+      `${
+        normalizedError.message || "Worker delivery could not be confirmed."
+      } The message remains in the composer and was not placed in the page-local queue.`,
+    );
+    onRestoreComposer(normalizedContent);
+    return true;
+  }
 }

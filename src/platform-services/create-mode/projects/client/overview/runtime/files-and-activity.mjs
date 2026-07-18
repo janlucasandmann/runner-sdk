@@ -1342,107 +1342,63 @@ export const PROJECT_OVERVIEW_FILES_ACTIVITY_FRAGMENT = String.raw`
             );
           }
 
-          function renderProjectOverviewThreadsToolbar() {
-            return React.createElement("div", { className: "playground-agents-overview-sticky-table-header playground-project-overview-threads-sticky-table-header" },
-              React.createElement("div", { className: "playground-plugins-search-row playground-agents-overview-search-row playground-project-overview-threads-toolbar", ref: projectOverviewThreadsToolbarRef },
-                React.createElement("div", { className: "playground-plugins-search-shell" },
-                  React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("input", {
-                    type: "search",
-                    value: projectOverviewThreadSearchQuery,
-                    onChange: (event) => setProjectOverviewThreadSearchQuery(event.target.value),
-                    className: "playground-plugins-search",
-                    placeholder: "Search threads",
-                    "aria-label": "Search project threads",
-                  })
-                ),
-                React.createElement("div", { className: "playground-plugins-toolbar-controls" },
-                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-control-button is-bare is-backlog-sort" + (projectOverviewThreadToolbarPopover === "sort" || projectOverviewThreadSortMode !== "recent-desc" ? " is-active" : ""),
-                      onClick: () => setProjectOverviewThreadToolbarPopover((current) => current === "sort" ? "" : "sort"),
-                      title: activeProjectOverviewThreadSortOption.label,
-                    },
-                      React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Sort")
-                    ),
-                    projectOverviewThreadToolbarPopover === "sort"
-                      ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                          projectOverviewThreadSortOptions.map((option) =>
-                            renderProjectOverviewTaskToolbarOption({
-                              option,
-                              active: projectOverviewThreadSortMode === option.id,
-                              onClick: () => {
-                                setProjectOverviewThreadSortMode(option.id);
-                                setProjectOverviewThreadToolbarPopover("");
-                              },
-                            })
-                          )
-                        )
-                      : null
-                  ),
-                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-control-button is-bare is-backlog-filter" + (projectOverviewThreadToolbarPopover === "filter" || projectOverviewThreadFilterMode !== "all" ? " is-active" : ""),
-                      onClick: () => setProjectOverviewThreadToolbarPopover((current) => current === "filter" ? "" : "filter"),
-                      title: activeProjectOverviewThreadFilterOption.label,
-                    },
-                      React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Filter")
-                    ),
-                    projectOverviewThreadToolbarPopover === "filter"
-                      ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                          projectOverviewThreadFilterOptions.map((option) =>
-                            renderProjectOverviewTaskToolbarOption({
-                              option,
-                              active: projectOverviewThreadFilterMode === option.id,
-                              onClick: () => {
-                                setProjectOverviewThreadFilterMode(option.id);
-                                setProjectOverviewThreadToolbarPopover("");
-                              },
-                            })
-                          )
-                        )
-                    : null
-                  )
-                ),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-files-control-button playground-project-overview-toolbar-action",
-                  onClick: () => typeof setProjectOverviewVisibleThreadCount === "function" && setProjectOverviewVisibleThreadCount((current) => current + 10),
-                  disabled: !hasMoreProjectThreads,
-                  style: !hasMoreProjectThreads ? { opacity: 0.5 } : undefined,
-                },
-                  React.createElement(List, { width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("span", null, "Show more")
-                )
-              )
-            );
-          }
-
           function renderProjectOverviewThreadsSection() {
             return React.createElement("section", { className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-overview-list-section playground-agents-overview-table-section" },
-              renderOverviewSectionHeader("Threads", null),
-              projectOverviewFilteredThreads.length > 0
-                ? renderPlaygroundThreadOverviewTable({
-                    threads: visibleProjectThreads,
-                    rowOptions: {
-                      ...projectOverviewThreadTableRowOptions,
-                      useAgentsOverviewTable: true,
-                      selectable: true,
-                      toolbarContent: renderProjectOverviewThreadsToolbar(),
-                      selectedIds: selectedProjectOverviewThreadIds,
-                      allVisibleSelected: allVisibleProjectThreadsSelected,
-                      partialSelection: hasPartialVisibleProjectThreadSelection,
-                      onToggleSelection: toggleProjectOverviewThreadSelection,
-                      onToggleVisibleSelection: toggleVisibleProjectOverviewThreadSelection,
+              renderPlaygroundThreadOverviewTable({
+                threads: visibleProjectThreads,
+                tableOptions: {
+                  key: "project-overview-threads-" + String(selectedProject?.id || ""),
+                  ariaLabel: "Project threads",
+                  variant: "default",
+                  toolbar: {
+                    title: "Threads",
+                    search: {
+                      value: projectOverviewThreadSearchQuery,
+                      onChange: setProjectOverviewThreadSearchQuery,
+                      placeholder: "Search threads",
+                      ariaLabel: "Search project threads",
+                      manual: true,
                     },
-                  })
-                : React.createElement("div", { className: "playground-tasks-secondary-copy" },
-                    hasProjectOverviewThreadListFilters ? "No matching project threads." : "No project threads yet."
-                  )
+                    filters: [
+                      {
+                        id: "sort",
+                        label: "Sort",
+                        value: projectOverviewThreadSortMode,
+                        options: projectOverviewThreadSortOptions,
+                        onChange: setProjectOverviewThreadSortMode,
+                      },
+                      {
+                        id: "status",
+                        label: "Status",
+                        value: projectOverviewThreadFilterMode,
+                        options: projectOverviewThreadFilterOptions,
+                        onChange: setProjectOverviewThreadFilterMode,
+                      },
+                    ],
+                    trailing: React.createElement(PlatformSecondaryButton, {
+                      type: "button",
+                      className: "playground-project-overview-toolbar-action",
+                      onClick: () => typeof setProjectOverviewVisibleThreadCount === "function" && setProjectOverviewVisibleThreadCount((current) => current + 10),
+                      disabled: !hasMoreProjectThreads,
+                    },
+                      React.createElement(List, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Show more")
+                    ),
+                  },
+                  emptyState: hasProjectOverviewThreadListFilters ? "No matching project threads." : "No project threads yet.",
+                  noResultsState: "No matching project threads.",
+                },
+                rowOptions: {
+                  ...projectOverviewThreadTableRowOptions,
+                  useAgentsOverviewTable: true,
+                  selectable: true,
+                  selectedIds: selectedProjectOverviewThreadIds,
+                  allVisibleSelected: allVisibleProjectThreadsSelected,
+                  partialSelection: hasPartialVisibleProjectThreadSelection,
+                  onToggleSelection: toggleProjectOverviewThreadSelection,
+                  onToggleVisibleSelection: toggleVisibleProjectOverviewThreadSelection,
+                },
+              })
             );
           }
 

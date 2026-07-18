@@ -1,4 +1,4 @@
-import { stripRunnerSystemTags } from "../../../../react/runner-markdown.js";
+import { stripRunnerSystemTags } from "../shared/runner-markdown.js";
 
 const RUNNER_LANGUAGE_BY_EXTENSION: Record<string, string> = {
   ts: "typescript",

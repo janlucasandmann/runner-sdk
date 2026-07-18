@@ -1,9 +1,11 @@
 import { Info } from "lucide-react";
 import type { ReactNode } from "react";
+import type { PlatformDataTableColumn } from "../../components/composite/data-table/index.js";
 import {
-  PlatformDataTable,
-  type PlatformDataTableColumn,
-} from "../../components/composite/data-table/index.js";
+  PlatformSettingsDataTable,
+  PlatformSettingsSection,
+  PlatformSettingsSectionList,
+} from "../../components/composite/settings-section/index.js";
 import { PlatformSelector } from "../../components/ui/selector/index.js";
 import {
   PLATFORM_PERMISSION_ACTION_DEFINITIONS,
@@ -240,19 +242,13 @@ function PermissionRingTable({
   }
 
   return (
-    <PlatformDataTable
+    <PlatformSettingsDataTable
       rows={rows}
       columns={columns}
       getRowId={(row) => row.action.id}
       getRowAriaLabel={(row) => `${row.action.label} permission`}
       ariaLabel={`${ring.label} permissions`}
       className="platform-permissions-page__ring-table"
-      surface="plain"
-      layout="content"
-      variant="minimalistic-ui"
-      sticky={false}
-      rowMinHeight={56}
-      pagination={false}
       emptyState={
         <span className="platform-permissions-page__ring-empty">
           No actions assigned to this ring.
@@ -345,15 +341,17 @@ export function PlatformPermissionsPage({
       ) : null}
 
       <div className="platform-permissions-page__details playground-permissions-panel-details">
-        <div className="platform-permissions-page__ring-list playground-agents-permissions-list is-details-only">
+        <PlatformSettingsSectionList className="platform-permissions-page__ring-list playground-agents-permissions-list is-details-only">
           {ringDefinitions.map((ring) => {
             const ringActions = visibleActions.filter((action) =>
               getPlatformPermissionActionRingId(permissionSet, action, ringDefinitions) === ring.id
             );
             return (
-              <section
+              <PlatformSettingsSection
                 key={ring.id}
                 className="platform-permissions-page__ring playground-agents-permission-ring-card is-details-only"
+                bodyPresentation="flush"
+                aria-label={`${ring.label} settings`}
               >
                 <PermissionRingTable
                   ring={ring}
@@ -367,10 +365,10 @@ export function PlatformPermissionsPage({
                   onActionRingChange={onActionRingChange}
                   onActionAccessChange={onActionAccessChange}
                 />
-              </section>
+              </PlatformSettingsSection>
             );
           })}
-        </div>
+        </PlatformSettingsSectionList>
       </div>
     </section>
   );

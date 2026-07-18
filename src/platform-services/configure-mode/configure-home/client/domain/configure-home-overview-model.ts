@@ -1,7 +1,7 @@
 import type {
   ConfigureHomeNotificationRow,
   ConfigureHomeNotificationSort,
-} from "../page/configure-home-overview-page.js";
+} from "../page/notifications-overview-page.js";
 
 type UnknownRecord = Record<string, unknown>;
 

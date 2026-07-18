@@ -767,37 +767,6 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
             || (String(missionControlDocumentDraft || selectedProjectMissionControl.document || "").trim()
               ? "Mission Control has generated a strategy snapshot for the current project state."
               : "Run Mission Control to generate the first strategy statement and backlog recommendations for this project.");
-          const hasStrategyDocument = Boolean(String(missionControlDocumentDraft || selectedProjectMissionControl.document || "").trim());
-          const canUndoMissionControlDocument = Array.isArray(missionControlDocumentHistory?.past) && missionControlDocumentHistory.past.length > 0;
-          const canRedoMissionControlDocument = Array.isArray(missionControlDocumentHistory?.future) && missionControlDocumentHistory.future.length > 0;
-          const renderMissionControlDocumentToolbarButton = (action) =>
-            React.createElement("button", {
-              key: action.id,
-              type: "button",
-              className: "playground-tasks-detail-format-button",
-              title: action.label,
-              "aria-label": action.label,
-              disabled: Boolean(action.disabled),
-              onMouseDown: (event) => event.preventDefault(),
-              onClick: action.onClick,
-            }, React.createElement(action.icon, {
-              width: 14,
-              height: 14,
-              strokeWidth: action.strokeWidth || 1.8,
-            }));
-          const missionControlDocumentTextFormatActions = [
-            { id: "bold", label: "Bold", icon: Bold, strokeWidth: 2.7 },
-            { id: "italic", label: "Italic", icon: Italic },
-            { id: "underline", label: "Underline", icon: Underline },
-          ];
-          const missionControlDocumentListFormatActions = [
-            { id: "list", label: "List", icon: List },
-            { id: "ordered-list", label: "Ordered list", icon: ListOrdered },
-          ];
-          const missionControlDocumentInsertFormatActions = [
-            { id: "code", label: "Code", icon: CodeXml },
-            { id: "link", label: "Link", icon: Link2 },
-          ];
           const normalizedProjectOverviewHomeTab = projectOverviewHomeTab === "rules" ? "strategy" : projectOverviewHomeTab;
           const projectOverviewSettingsMetadata = projectOverviewDraft?.metadata && typeof projectOverviewDraft.metadata === "object" && !Array.isArray(projectOverviewDraft.metadata)
             ? projectOverviewDraft.metadata
@@ -943,63 +912,48 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
               projectOverviewSidebarAutoCollapsedForPermissionRef.current = false;
             }
           }
-	          function renderProjectOverviewHomeTabs() {
-	            const tabs = [
-		              { id: "general", label: "General" },
-		              { id: "resources", label: "Resources" },
-			              { id: "strategy", label: "Strategy" },
-			              canViewProjectSettings ? { id: "permissions", label: "Settings" } : null,
-			            ].filter(Boolean);
-            return React.createElement("div", { className: "playground-agents-overview-tabs playground-project-overview-tabs" },
-              React.createElement("div", { className: "playground-project-overview-chart-tabs" },
-                tabs.map((tab) =>
-                  React.createElement("button", {
-                    key: tab.id,
-                    type: "button",
-                    className: "playground-project-overview-chart-tab" + (activeProjectOverviewHomeTab === tab.id ? " is-active" : ""),
-                    onClick: () => {
-                      if (typeof setProjectOverviewHomeTab === "function") {
-                        setProjectOverviewHomeTab(tab.id);
-                      }
-                      if (typeof setProjectOverviewTaskToolbarPopover === "function") {
-                        setProjectOverviewTaskToolbarPopover("");
-                      }
-                      if (typeof setProjectOverviewThreadToolbarPopover === "function") {
-                        setProjectOverviewThreadToolbarPopover("");
-                      }
-                      if (typeof setProjectOverviewFileToolbarPopover === "function") {
-                        setProjectOverviewFileToolbarPopover("");
-                      }
-                      if (typeof setProjectOverviewResourceToolbarPopover === "function") {
-                        setProjectOverviewResourceToolbarPopover("");
-                      }
-                      if (typeof setProjectOverviewFilesSubview === "function") {
-                        setProjectOverviewFilesSubview("overview");
-                      }
-                      closeProjectOverviewPermissionDetail();
-                      if (tab.id === "permissions" && typeof requestProjectOverviewWorkspaceTeams === "function") {
-                        requestProjectOverviewWorkspaceTeams();
-                      }
-                      if (tab.id === "strategy") {
-                        if (typeof setMissionControlSetupOpen === "function") {
-                          setMissionControlSetupOpen(false);
-                        }
-                        if (typeof setSelectedTaskId === "function") {
-                          setSelectedTaskId("");
-                        }
-                        if (typeof setDraftTask === "function") {
-                          setDraftTask(null);
-                        }
-                        if (typeof setMissionControlStrategyOpen === "function") {
-                          setMissionControlStrategyOpen(false);
-                        }
-                      }
-                    },
-                    "aria-pressed": activeProjectOverviewHomeTab === tab.id ? "true" : "false",
-                  }, tab.label)
-                )
-              )
-            );
+          function handleProjectOverviewHomeTabChange(nextTabId) {
+            const normalizedTabId = nextTabId === "resources"
+              || nextTabId === "strategy"
+              || (canViewProjectSettings && nextTabId === "permissions")
+                ? nextTabId
+                : "general";
+            if (typeof setProjectOverviewHomeTab === "function") {
+              setProjectOverviewHomeTab(normalizedTabId);
+            }
+            if (typeof setProjectOverviewTaskToolbarPopover === "function") {
+              setProjectOverviewTaskToolbarPopover("");
+            }
+            if (typeof setProjectOverviewThreadToolbarPopover === "function") {
+              setProjectOverviewThreadToolbarPopover("");
+            }
+            if (typeof setProjectOverviewFileToolbarPopover === "function") {
+              setProjectOverviewFileToolbarPopover("");
+            }
+            if (typeof setProjectOverviewResourceToolbarPopover === "function") {
+              setProjectOverviewResourceToolbarPopover("");
+            }
+            if (typeof setProjectOverviewFilesSubview === "function") {
+              setProjectOverviewFilesSubview("overview");
+            }
+            closeProjectOverviewPermissionDetail();
+            if (normalizedTabId === "permissions" && typeof requestProjectOverviewWorkspaceTeams === "function") {
+              requestProjectOverviewWorkspaceTeams();
+            }
+            if (normalizedTabId === "strategy") {
+              if (typeof setMissionControlSetupOpen === "function") {
+                setMissionControlSetupOpen(false);
+              }
+              if (typeof setSelectedTaskId === "function") {
+                setSelectedTaskId("");
+              }
+              if (typeof setDraftTask === "function") {
+                setDraftTask(null);
+              }
+              if (typeof setMissionControlStrategyOpen === "function") {
+                setMissionControlStrategyOpen(false);
+              }
+            }
           }
 
           const projectOverviewTimescaleConfig = (() => {

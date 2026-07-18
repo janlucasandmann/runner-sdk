@@ -158,10 +158,6 @@
           const [tasksPageNavigationRequest, setTasksPageNavigationRequest] = useState(null);
           const [filesPageNavigationRequest, setFilesPageNavigationRequest] = useState(null);
           const [filesPageTopNav, setFilesPageTopNav] = useState(null);
-          const [threadSearchFileInventoryByEnvironmentId, setThreadSearchFileInventoryByEnvironmentId] = useState({});
-          const [threadSearchFileInventoryLoadingByEnvironmentId, setThreadSearchFileInventoryLoadingByEnvironmentId] = useState({});
-          const threadSearchFileInventoryByEnvironmentIdRef = useRef({});
-          const threadSearchFileInventoryLoadingIdsRef = useRef(new Set());
   ${IMAGINE_APP_SCRIPT_FRAGMENTS.state}
           const [welcomeWidgetsState, setWelcomeWidgetsState] = useState(() => (
             isDemoMode
@@ -277,9 +273,6 @@
           useEffect(() => {
             realEnvironmentsRef.current = realEnvironments;
           }, [realEnvironments]);
-          useEffect(() => {
-            threadSearchFileInventoryByEnvironmentIdRef.current = threadSearchFileInventoryByEnvironmentId;
-          }, [threadSearchFileInventoryByEnvironmentId]);
           const [settingsDiscordStatus, setSettingsDiscordStatus] = useState(null);
           const [settingsDiscordLoading, setSettingsDiscordLoading] = useState(false);
           const [settingsDiscordError, setSettingsDiscordError] = useState("");
@@ -379,6 +372,7 @@
           });
           const [tasksProjectBackRequestToken, setTasksProjectBackRequestToken] = useState(0);
           const [tasksProjectViewRequest, setTasksProjectViewRequest] = useState(null);
+          const [tasksProjectsHomeScope, setTasksProjectsHomeScope] = useState("all");
           const [tasksProjectSettingsRequestToken, setTasksProjectSettingsRequestToken] = useState(0);
           const [tasksProjectIssueRequest, setTasksProjectIssueRequest] = useState(null);
           const [topNavIssueComposerOpen, setTopNavIssueComposerOpen] = useState(false);
@@ -560,57 +554,7 @@
             void loadBackendGuardrailSets({ force: false });
             return undefined;
           }, [proxyBackendBase, requestHeadersSignature, shouldLoadGuardrailSets]);
-  ${TEAMS_APP_SCRIPT_FRAGMENTS.resourceLifecycle}        const loadThreadSearchFileInventory = useCallback(async (targetEnvironmentId) => {
-            const normalizedEnvironmentId = String(targetEnvironmentId || "").trim();
-            if (!normalizedEnvironmentId) {
-              return [];
-            }
-            const cachedInventory = threadSearchFileInventoryByEnvironmentIdRef.current[normalizedEnvironmentId];
-            if (Array.isArray(cachedInventory)) {
-              return cachedInventory;
-            }
-            if (threadSearchFileInventoryLoadingIdsRef.current.has(normalizedEnvironmentId)) {
-              return [];
-            }
-  
-            threadSearchFileInventoryLoadingIdsRef.current.add(normalizedEnvironmentId);
-            setThreadSearchFileInventoryLoadingByEnvironmentId((current) => ({
-              ...current,
-              [normalizedEnvironmentId]: true,
-            }));
-  
-            try {
-              const response = await fetch(
-                buildPlaygroundEnvironmentFilesListUrl(proxyBackendBase, normalizedEnvironmentId, "", -1),
-                {
-                  method: "GET",
-                  headers: authRequestHeaders,
-                }
-              );
-              const data = await response.json().catch(() => ({}));
-              if (!response.ok) {
-                throw new Error(data?.message || data?.error || "Failed to search files.");
-              }
-              const normalizedInventory = normalizePlaygroundEnvironmentInventory(data?.files || data?.items || data);
-              setThreadSearchFileInventoryByEnvironmentId((current) => ({
-                ...current,
-                [normalizedEnvironmentId]: normalizedInventory,
-              }));
-              return normalizedInventory;
-            } catch {
-              setThreadSearchFileInventoryByEnvironmentId((current) => ({
-                ...current,
-                [normalizedEnvironmentId]: [],
-              }));
-              return [];
-            } finally {
-              threadSearchFileInventoryLoadingIdsRef.current.delete(normalizedEnvironmentId);
-              setThreadSearchFileInventoryLoadingByEnvironmentId((current) => ({
-                ...current,
-                [normalizedEnvironmentId]: false,
-              }));
-            }
-          }, [authRequestHeaders, proxyBackendBase]);
+  ${TEAMS_APP_SCRIPT_FRAGMENTS.resourceLifecycle}
           const hasRealAccess = !isDemoMode && hasSessionAuth;
           const hasShellAccess = hasRealAccess || hasDemoAccess;
           const databaseListIdentity = hasSessionAuth

@@ -13,14 +13,6 @@ const forbiddenPlatformUiRoots = [
   path.join(sourceRoot, "platform-services"),
   path.join(sourceRoot, "platform-shell"),
 ];
-const temporaryRunnerImportOwners = new Set([
-  "src/platform-ui/components/composite/analytics/platform-analytics-chart.tsx",
-  "src/platform-ui/components/composite/data-table/platform-data-table.tsx",
-]);
-const temporaryRunnerImportDirectories = [
-  "src/platform-ui/components/thread-components/document-preview/",
-  "src/platform-ui/components/thread-components/log-boxes/",
-];
 
 async function collectSourceFiles(directory) {
   const files = [];
@@ -50,16 +42,6 @@ function resolveImport(sourceFile, specifier) {
   return path.resolve(path.dirname(sourceFile), specifier);
 }
 
-function allowsTemporaryRunnerImport(relativeSource, resolvedImport) {
-  if (temporaryRunnerImportDirectories.some((directory) => relativeSource.startsWith(directory))) {
-    return true;
-  }
-  return (
-    temporaryRunnerImportOwners.has(relativeSource) &&
-    resolvedImport === path.join(runnerRoot, "dot-loader.js")
-  );
-}
-
 const importPattern = /(?:from\s+|import\s*\(\s*)["']([^"']+)["']/g;
 const violations = [];
 
@@ -75,10 +57,7 @@ for (const sourceFile of await collectSourceFiles(platformUiRoot)) {
       violations.push(`${relativeSource} imports owning domain ${match[1]}`);
     }
 
-    if (
-      isInside(resolvedImport, runnerRoot) &&
-      !allowsTemporaryRunnerImport(relativeSource, resolvedImport)
-    ) {
+    if (isInside(resolvedImport, runnerRoot)) {
       violations.push(`${relativeSource} imports Runner compatibility module ${match[1]}`);
     }
   }
@@ -91,6 +70,6 @@ assert.deepEqual(
 );
 
 console.log(
-  "Platform UI import boundaries passed with two documented DotLoader " +
-    "exceptions and temporary thread-component compatibility seams.",
+  "Platform UI import boundaries passed with no owning-domain or Runner " +
+    "compatibility imports.",
 );

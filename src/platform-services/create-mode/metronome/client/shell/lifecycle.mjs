@@ -5,6 +5,7 @@ export const METRONOME_APP_LIFECYCLE_SCRIPT = `
           }
           setMetronomeTopNavState(null);
           setMetronomeTopNavMenuOpen(false);
+          setMetronomeBreadcrumbVersionMenuOpen(false);
           setIsMetronomeNodeDetailOpen(false);
           metronomeTopNavActionsRef.current = {
             edit: null,
@@ -16,6 +17,9 @@ export const METRONOME_APP_LIFECYCLE_SCRIPT = `
             run: null,
             goOverview: null,
             setMode: null,
+            selectVersion: null,
+            createVersion: null,
+            openVersionHistory: null,
           };
         }, [activePage]);
 
@@ -38,6 +42,30 @@ export const METRONOME_APP_LIFECYCLE_SCRIPT = `
             document.removeEventListener("mousedown", handleMetronomeTopNavMenuPointerDown);
           };
         }, [metronomeTopNavMenuOpen]);
+
+        useEffect(() => {
+          if (!metronomeBreadcrumbVersionMenuOpen) {
+            return;
+          }
+          const handleMetronomeBreadcrumbVersionMenuPointerDown = (event) => {
+            const target = event.target;
+            if (
+              metronomeBreadcrumbVersionMenuRef.current
+              && target
+              && !metronomeBreadcrumbVersionMenuRef.current.contains(target)
+            ) {
+              setMetronomeBreadcrumbVersionMenuOpen(false);
+            }
+          };
+          document.addEventListener("mousedown", handleMetronomeBreadcrumbVersionMenuPointerDown);
+          return () => {
+            document.removeEventListener("mousedown", handleMetronomeBreadcrumbVersionMenuPointerDown);
+          };
+        }, [metronomeBreadcrumbVersionMenuOpen]);
+
+        useEffect(() => {
+          setMetronomeBreadcrumbVersionMenuOpen(false);
+        }, [metronomeTopNavState?.workflowId]);
 
         useEffect(() => {
           if (!isMetronomeNodeDetailOpen || !sidebarOpen) {

@@ -18,6 +18,9 @@ Use `npm run dev` for the watched platform host and Vite Fast Refresh. Copy
   belongs in `src/platform-ui/components/thread-components`.
 - Treat `src/react` as the Runner composition and compatibility layer. New
   leaf components must not import an oversized composition root.
+- Never import `src/react` or an owning product domain from `src/platform-ui`.
+  Keep shared implementations in platform UI and expose compatibility
+  re-exports from Runner when an old private entry point must survive.
 - Treat `apps/platform/client/legacy` as quarantined migration code. Do not add
   new product behavior there when a typed owner exists.
 - Keep browser and server ownership separated by HTTP/WebSocket contracts.

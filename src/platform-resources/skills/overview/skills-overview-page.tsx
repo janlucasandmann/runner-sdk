@@ -54,7 +54,6 @@ function createSkillsFallbackAnalytics(rows: readonly SkillOverviewRow[]): Resou
     ],
     labels: [],
     series: [],
-    emptyState: "Skill usage appears here after skills are invoked by agents.",
   };
 }
 

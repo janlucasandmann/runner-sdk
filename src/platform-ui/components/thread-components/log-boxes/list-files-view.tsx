@@ -1,5 +1,5 @@
 import { FolderOpen } from "lucide-react";
-import type { RunnerPreviewAttachment } from "../../../../react/runner-document-preview.js";
+import type { RunnerPreviewAttachment } from "../document-preview/preview-contracts.js";
 import type { RunnerLog } from "../../../../types.js";
 import { CompactActionLogLine } from "./compact-action-log-line.js";
 import {

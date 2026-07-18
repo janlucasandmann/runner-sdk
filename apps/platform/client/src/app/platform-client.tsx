@@ -1,26 +1,23 @@
-import {
-  ArrowUpRight,
-  Blocks,
-  Code2,
-  Hammer,
-  Settings2,
-} from "lucide-react";
+import { ArrowUpRight, Blocks, Code2, Hammer, Settings2 } from "lucide-react";
 import type { MouseEvent } from "react";
 import {
+  createPlatformCompatibilityUrl,
   getPlatformClientRoutePath,
   getPlatformRoutesForMode,
   navigatePlatformClient,
   PLATFORM_MODES,
   PlatformApplicationBoundary,
-  PlatformRouteOutlet,
   type PlatformMode,
   type PlatformRouteDefinition,
+  PlatformRouteOutlet,
   type PlatformRuntimeConfig,
   usePlatformBrowserRoute,
 } from "../../../../../src/platform-app/index.js";
 
 export interface PlatformClientProps {
   runtime?: Partial<PlatformRuntimeConfig>;
+  compatibilityUrl?: string;
+  /** @deprecated Use compatibilityUrl. */
   platformHostUrl?: string;
 }
 
@@ -30,42 +27,36 @@ const MODE_ICONS = {
   develop: Code2,
 } as const;
 
-function openLegacyPlatform(
-  platformHostUrl: string,
+function openCompatibilityPlatform(
+  compatibilityUrl: string,
   route: PlatformRouteDefinition,
   action = "",
   resourceId = "",
 ) {
-  const target = new URL(platformHostUrl, window.location.origin);
-  target.searchParams.set("typedRoute", route.id);
-  if (action) target.searchParams.set("typedAction", action);
-  if (resourceId) target.searchParams.set("typedResourceId", resourceId);
-  window.location.assign(target.toString());
+  window.location.assign(
+    createPlatformCompatibilityUrl({
+      compatibilityUrl,
+      route,
+      action,
+      resourceId,
+    }),
+  );
 }
 
 function PlatformRouteContent({
   route,
-  platformHostUrl,
+  compatibilityUrl,
 }: {
   route: PlatformRouteDefinition;
-  platformHostUrl: string;
+  compatibilityUrl: string;
 }) {
   const onOpenLegacy = (action = "", resourceId?: string) => {
-    openLegacyPlatform(platformHostUrl, route, action, resourceId);
+    openCompatibilityPlatform(compatibilityUrl, route, action, resourceId);
   };
-  return (
-    <PlatformRouteOutlet
-      route={route}
-      onOpenLegacy={onOpenLegacy}
-    />
-  );
+  return <PlatformRouteOutlet route={route} onOpenLegacy={onOpenLegacy} />;
 }
 
-function PlatformClientShell({
-  platformHostUrl,
-}: {
-  platformHostUrl: string;
-}) {
+function PlatformClientShell({ compatibilityUrl }: { compatibilityUrl: string }) {
   const route = usePlatformBrowserRoute();
   const routes = getPlatformRoutesForMode(route.mode);
 
@@ -74,12 +65,12 @@ function PlatformClientShell({
     nextRoute: PlatformRouteDefinition,
   ) => {
     if (
-      event.defaultPrevented
-      || event.button !== 0
-      || event.metaKey
-      || event.ctrlKey
-      || event.shiftKey
-      || event.altKey
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
     ) {
       return;
     }
@@ -99,10 +90,7 @@ function PlatformClientShell({
           <Blocks size={17} aria-hidden="true" />
           <span>Computer Agents</span>
         </div>
-        <fieldset
-          className="platform-client-mode-selector"
-          aria-label="Platform mode"
-        >
+        <fieldset className="platform-client-mode-selector" aria-label="Platform mode">
           {PLATFORM_MODES.map((mode) => {
             const Icon = MODE_ICONS[mode];
             return (
@@ -139,16 +127,13 @@ function PlatformClientShell({
             <span>{route.mode}</span>
             <h1>{route.label}</h1>
           </div>
-          <a href={platformHostUrl}>
-            Current platform
+          <a href={compatibilityUrl}>
+            Compatibility surface
             <ArrowUpRight size={14} aria-hidden="true" />
           </a>
         </header>
         <main className="platform-client-content">
-          <PlatformRouteContent
-            route={route}
-            platformHostUrl={platformHostUrl}
-          />
+          <PlatformRouteContent route={route} compatibilityUrl={compatibilityUrl} />
         </main>
       </section>
     </div>
@@ -164,11 +149,14 @@ function PlatformClientShell({
  */
 export function PlatformClient({
   runtime,
-  platformHostUrl = "http://127.0.0.1:4177",
+  compatibilityUrl,
+  platformHostUrl,
 }: PlatformClientProps) {
+  const resolvedCompatibilityUrl =
+    compatibilityUrl || platformHostUrl || "http://127.0.0.1:4177/compat";
   return (
     <PlatformApplicationBoundary runtime={runtime}>
-      <PlatformClientShell platformHostUrl={platformHostUrl} />
+      <PlatformClientShell compatibilityUrl={resolvedCompatibilityUrl} />
     </PlatformApplicationBoundary>
   );
 }

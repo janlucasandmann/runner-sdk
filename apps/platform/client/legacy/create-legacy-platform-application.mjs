@@ -142,18 +142,18 @@ import {
 import {
   PLAYGROUND_BILLING_CATALOG_SCRIPT,
 } from "../../shared/billing/playground-billing-catalog.mjs";
-import { createLegacyPlatformDocument } from "./create-legacy-platform-document.mjs";
+import { createLegacyPlatformSources } from "./create-legacy-platform-sources.mjs";
 
 /**
  * Assembles the quarantined fragment-based browser application. New routes
  * belong in the typed Vite client, not in this compatibility composition.
  */
-export function createLegacyPlatformApplication({
+export function createLegacyPlatformApplicationBindings({
   aiosOrigin,
   defaultUpstreamOrigin,
   platformOrigin,
 }) {
-  function stringifyForInlineScript(value) {
+  function stringifyForBrowserSource(value) {
     return JSON.stringify(value)
       .replace(/</g, "\\u003C")
       .replace(/\u2028/g, "\\u2028")
@@ -205,7 +205,7 @@ export function createLegacyPlatformApplication({
   });
 
   const MARKETPLACE_DOMAIN_SCRIPT_FRAGMENTS = createMarketplaceDomainScriptFragments({
-    serialize: stringifyForInlineScript,
+    serialize: stringifyForBrowserSource,
   });
   const AGENTS_PAGE_SCRIPT = createAgentsPageScript({
     defaultUpstreamOrigin,
@@ -214,7 +214,7 @@ export function createLegacyPlatformApplication({
     models: MODELS_AGENT_SCRIPT_FRAGMENTS,
   });
 
-  return createLegacyPlatformDocument({
+  return Object.freeze({
     AGENTS_PAGE_SCRIPT,
     API_KEYS_APP_SCRIPT_FRAGMENTS,
     API_KEYS_DOMAIN_SCRIPT_FRAGMENTS,
@@ -310,4 +310,10 @@ export function createLegacyPlatformApplication({
     defaultUpstreamOrigin,
     platformOrigin,
   });
+}
+
+export function createLegacyPlatformApplicationSources(config) {
+  return createLegacyPlatformSources(
+    createLegacyPlatformApplicationBindings(config),
+  );
 }

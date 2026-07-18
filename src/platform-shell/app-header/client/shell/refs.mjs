@@ -1,3 +1,11 @@
-export const APP_HEADER_REFS_SCRIPT = `        const threadSearchInputRef = useRef(null);
-        const accountMenuAnimationTimerRef = useRef(null);
+export const APP_HEADER_REFS_SCRIPT = `        const accountMenuAnimationTimerRef = useRef(null);
+        const threadSearchFileInventoryByEnvironmentIdRef = useRef({});
+        const threadSearchFileInventoryScopeKeyRef = useRef("");
+        const threadSearchFileInventoryLoadingIdsRef = useRef(new Set());
+        const threadSearchResourceLoadKeysRef = useRef({});
+        const threadSearchResourceLoadedAtByModeRef = useRef({});
+        const threadSearchResourceLatestRequestKeyRef = useRef({});
+        const threadSearchResourceLoadingRequestKeysRef = useRef(new Set());
+        const threadSearchThreadAbortControllerRef = useRef(null);
+        const threadSearchThreadResultsCacheRef = useRef(new Map());
 `;

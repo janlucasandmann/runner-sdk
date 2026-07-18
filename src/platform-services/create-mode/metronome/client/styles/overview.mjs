@@ -4,13 +4,14 @@ export const METRONOME_OVERVIEW_CSS = String.raw`
         height: 100%;
         min-height: 0;
         border-radius: inherit;
-        background: #050505;
+        background: #000;
         color: rgba(255, 255, 255, 0.94);
         overflow: hidden;
       }
 
       .playground-metronome-page.is-overview {
-        overflow-y: auto;
+        overflow: hidden;
+        background: #000;
       }
 
       .playground-metronome-page.is-editor {
@@ -1039,55 +1040,6 @@ export const METRONOME_OVERVIEW_CSS = String.raw`
         flex: 0 0 auto;
       }
 
-      .playground-metronome-detail-header-publish-button.playground-agents-detail-publish-split-control {
-        background: linear-gradient(to top, #082673, #1D59BE);
-      }
-
-      .playground-metronome-detail-header-publish-button.playground-agents-detail-publish-split-control:hover,
-      .playground-metronome-detail-header-publish-button.playground-agents-detail-publish-split-control:focus-within,
-      .playground-metronome-detail-header-publish-button.playground-agents-detail-publish-split-control.is-active {
-        background: linear-gradient(to top, #082673, #1D59BE);
-      }
-
-      .playground-agents-detail-publish-split-control.is-disabled {
-        opacity: 0.5;
-      }
-
-      .playground-metronome-detail-publish-split-shell .playground-metronome-detail-publish-menu {
-        top: calc(100% + 8px);
-        right: 0;
-        left: auto;
-        width: 268px;
-        min-width: 268px;
-        max-height: min(260px, calc(100vh - 160px));
-        transform-origin: top right;
-      }
-
-      .playground-metronome-detail-version-selector-shell {
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        flex: 0 1 auto;
-        width: max-content;
-        max-width: min(320px, 42vw);
-        min-width: 0;
-      }
-
-      .playground-metronome-detail-version-selector-shell .playground-metronome-detail-version-selector-menu {
-        right: auto !important;
-        left: 0 !important;
-        width: 284px;
-        min-width: 284px;
-        max-height: min(340px, calc(100vh - 190px));
-        overflow: hidden;
-        transform-origin: top left;
-      }
-
-      .playground-metronome-detail-version-selector-main.playground-agents-detail-publish-main {
-        min-width: 0;
-        max-width: min(260px, 42vw);
-      }
-
       .playground-metronome-detail-version-selector-list {
         max-height: min(278px, calc(100vh - 248px));
         overflow-y: auto;
@@ -1098,6 +1050,48 @@ export const METRONOME_OVERVIEW_CSS = String.raw`
         margin-top: 4px;
         padding-top: 6px;
         border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-metronome-breadcrumb-version-selector {
+        display: inline-flex;
+        align-items: center;
+        z-index: 121;
+      }
+
+      .playground-metronome-breadcrumb-version-trigger {
+        width: 22px;
+        height: 22px;
+        padding: 0;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.58);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-metronome-breadcrumb-version-trigger:hover,
+      .playground-metronome-breadcrumb-version-trigger:focus-visible,
+      .playground-metronome-breadcrumb-version-trigger.is-active {
+        outline: none;
+        background: rgba(255, 255, 255, 0.075);
+        color: rgba(255, 255, 255, 0.94);
+      }
+
+      .playground-metronome-breadcrumb-version-trigger:disabled {
+        cursor: default;
+        opacity: 0.45;
+      }
+
+      .playground-metronome-breadcrumb-version-menu {
+        top: calc(100% + 8px);
+        left: 0;
+        right: auto;
+        overflow: hidden;
+        transform-origin: top left;
       }
 
       .playground-metronome-publish-menu {

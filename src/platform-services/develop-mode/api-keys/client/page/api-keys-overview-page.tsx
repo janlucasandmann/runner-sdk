@@ -53,14 +53,6 @@ const API_KEYS_TABLE_EMPTY_STATE = (
   />
 );
 
-const API_KEYS_ANALYTICS_EMPTY_STATE = (
-  <PlatformEmptyState
-    icon={KeyRound}
-    title="No API activity yet"
-    description="Authenticated API requests will appear here once your keys are used."
-  />
-);
-
 function getApiKeyPermissionLabelVariant(permissionLabel: string): PlatformLabelVariant {
   switch (permissionLabel.trim().toLowerCase()) {
     case "full access":
@@ -135,10 +127,6 @@ export function DevelopApiKeysOverviewPage({
     if (kindFilter === "scoped") return !row.isStandard;
     return true;
   }), [kindFilter, rows]);
-  const analyticsWithEmptyState = useMemo<ResourceOverviewAnalyticsModel>(() => ({
-    ...analytics,
-    emptyState: API_KEYS_ANALYTICS_EMPTY_STATE,
-  }), [analytics]);
   const columns = useMemo<PlatformDataTableColumn<DevelopApiKeyOverviewRow>[]>(() => [
     {
       id: "name",
@@ -255,7 +243,7 @@ export function DevelopApiKeysOverviewPage({
       onPeriodChange={onPeriodChange}
       heroContent={(
         <>
-          <PlatformAnalyticsSection analytics={analyticsWithEmptyState} chartType="line" />
+          <PlatformAnalyticsSection analytics={analytics} chartType="line" />
           {createdNotice ? <ApiKeyCreatedNotice notice={createdNotice} /> : null}
         </>
       )}

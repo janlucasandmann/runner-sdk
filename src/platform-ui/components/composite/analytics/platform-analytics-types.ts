@@ -33,7 +33,6 @@ export interface PlatformAnalyticsModel {
   ariaLabel?: string;
   loading?: boolean;
   error?: ReactNode;
-  emptyState?: ReactNode;
 }
 
 export interface PlatformAnalyticsChartProps {

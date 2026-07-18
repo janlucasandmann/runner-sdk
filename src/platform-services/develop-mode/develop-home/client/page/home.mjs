@@ -162,7 +162,6 @@ export const DEVELOP_HOME_PAGE_SCRIPT_TEMPLATE = `        function formatDevelop
             ariaLabel: "Develop resource activity over time",
             loading: developServerOperationalMetricsLoading,
             error: developServerOperationalMetricsError || undefined,
-            emptyState: "No resource activity yet.",
             labels: metricLabels,
             metrics: [
               { id: "resources", label: "Resources", value: formatDevelopOverviewValue(totalResourceCount), color: "#7effff" },

@@ -1139,34 +1139,6 @@
             });
           }
   
-          function updateEnvironmentTagLabels(nextLabels) {
-            const normalizedLabels = [];
-            const seen = new Set();
-            (Array.isArray(nextLabels) ? nextLabels : []).forEach((label) => {
-              const normalized = normalizeEnvironmentTagLabel(label);
-              if (!normalized) return;
-              const key = normalized.toLowerCase();
-              if (seen.has(key)) return;
-              seen.add(key);
-              normalizedLabels.push(normalized);
-            });
-            updateDraftEnvironment((current) => {
-              if (!current) {
-                return current;
-              }
-              const metadata = {
-                ...getEnvironmentMetadataRecord(current),
-                tags: normalizedLabels,
-                labels: normalizedLabels,
-              };
-              return {
-                ...current,
-                tags: normalizedLabels,
-                metadata,
-              };
-            });
-          }
-  
           function closeEnvironmentRenameDialog() {
             setEnvironmentRenameState(null);
             setEnvironmentRenameValue("");
@@ -2457,41 +2429,6 @@
               })
               .catch(() => {
               });
-          }
-  
-          function renderEditorSection(sectionId, title, description, content, headerActions, collapsible = true) {
-            const isExpanded = collapsible ? expandedSections.has(sectionId) : true;
-            return React.createElement("section", { className: "playground-environments-section" + (sectionId === "runtimes" ? " is-runtimes" : "") + (sectionId === "database-browser" ? " is-database-browser" : ""), key: sectionId },
-              React.createElement(collapsible ? "button" : "div", collapsible ? {
-                type: "button",
-                className: "playground-environments-section-header",
-                onClick: () => toggleSection(sectionId),
-              } : {
-                className: "playground-environments-section-header is-static",
-              },
-                React.createElement("div", { className: "playground-environments-section-heading" },
-                  React.createElement("div", { className: "playground-environments-section-title" }, title),
-                  description
-                    ? React.createElement("div", { className: "playground-environments-section-copy" }, description)
-                    : null
-                ),
-                React.createElement("div", { className: "playground-environments-section-header-right" },
-                  headerActions
-                    ? React.createElement("div", {
-                        onClick: collapsible ? (event) => event.stopPropagation() : undefined,
-                      }, headerActions)
-                    : null,
-                  collapsible && isExpanded
-                    ? React.createElement(ChevronDown, { className: "playground-environments-section-toggle", strokeWidth: 1.8 })
-                    : collapsible
-                      ? React.createElement(ChevronRight, { className: "playground-environments-section-toggle", strokeWidth: 1.8 })
-                      : null
-                )
-              ),
-              isExpanded
-                ? React.createElement("div", { className: "playground-environments-section-body" }, content)
-                : null
-            );
           }
   
           function renderPackageGroup(type, label, placeholder) {

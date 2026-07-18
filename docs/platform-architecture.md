@@ -56,6 +56,20 @@ Legacy browser fragments under `src/platform-services` are transitional domain
 assets, not a license to rebuild a central document renderer. They should be
 replaced service by service.
 
+Route migration is tracked by presentation, query, detail, and command
+ownership rather than by component presence. The typed client is available
+under `/platform-client/...`, and the compatibility application has the
+explicit fallback entry `/compat`. Root-cutover criteria and the deletion
+sequence are recorded in
+[`ADR 0005`](architecture/decisions/0005-route-capability-migration.md).
+
+The compatibility host uses an explicit HTML/style/module source contract. The
+HTML shell is a static template; production hashes and compresses the style and
+module sources directly, while development rewrites them for Vite. The server
+does not generate a document containing inline source and then parse that
+source back out. This decision is recorded in
+[`ADR 0004`](architecture/decisions/0004-explicit-platform-source-assets.md).
+
 ## Domain ownership
 
 Platform services mirror the product modes:
@@ -113,18 +127,43 @@ Its extracted modules have explicit roles:
 - `use-thinking-status.ts`, `use-log-auto-scroll.ts`, and
   `use-thread-history-rail.ts`: independently tested viewport and live-status
   controllers;
+- `use-composer-popup-controller.ts`: popup lifecycle, animation cleanup, and
+  cross-composer exclusivity;
+- `use-composer-quoted-selection.ts`: composer quote state and enter/exit
+  lifecycle;
+- `use-document-preview-controller.ts`: preview selection, external-open
+  synchronization, resizing, global presentation state, and lifecycle
+  callbacks;
+- `use-file-browser-navigation.ts`: source switching, navigation history,
+  selection isolation, preview targeting, and modal lifecycle;
+- `use-file-browser-preview.ts`: connector/workspace preview loading,
+  stale-response cancellation, and object-URL cleanup;
+- `use-thread-feedback-controller.ts`: feedback hydration, optimistic ratings,
+  stale-response protection, and grounded issue-report commands;
 - `attachment-preview-chip.tsx`: attachment rendering and preview activation;
 - `file-browser-dialog.tsx`: file-browser presentation;
 - `workflow-dialogs.tsx`: report, fork, and edit-confirmation presentation;
 - `execution/active-run-instruction.ts`: durable checkpoint delivery for
-  instructions sent to an active worker.
+  instructions sent to an active worker;
+- `communicator-router.ts`: deterministic control precedence and grounded
+  communicator-versus-worker delivery;
+- `editable-turn-boundary.ts`: canonical message identity for edit and fork
+  truncation;
+- `permission-decision.ts`: authenticated permission rulings and canonical
+  turn reconciliation;
+- `thread-context-action.ts`: lifecycle-safe context command transactions;
+- `use-turn-notice-controller.ts`: synthetic communicator, voice, and context
+  notice state.
 
 `src/react/runner-log-boxes.tsx` is a compatibility facade. The renderer
 dispatch point and specialized renderers live under
 `src/platform-ui/components/thread-components/log-boxes/` and share types
-through leaf contracts such as `log-entry-types.ts`. Shared renderers may
-depend on small Runner contracts while the migration is in progress, but must
-not import `RunnerChat` or another composition root.
+through leaf contracts such as `log-entry-types.ts`. Preview contracts,
+Markdown/media presentation, and the mounted thread style runtime are also
+owned by thread components. Platform UI must not import the Runner
+compatibility layer; former Runner entry points re-export platform-owned
+implementations instead. This dependency rule is recorded in
+[`ADR 0003`](architecture/decisions/0003-platform-ui-dependency-direction.md).
 
 ## Development and HMR
 
@@ -156,8 +195,13 @@ development command once and leave it running while editing.
 - bounded RunnerChat, log-renderer, and canonical-thread modules;
 - required extracted seams;
 - no reverse imports from RunnerChat leaf modules into the composition root;
+- no platform UI imports from owning domains or Runner compatibility modules;
+- bounded compatibility facades for platform-owned thread implementations;
+- ordered, bounded thread feature styles backed by the shared HMR manifest;
 - lint-clean RunnerChat leaf modules as part of the mandatory static gate;
 - production HTML and compressed asset budgets;
+- assembled compatibility JavaScript and CSS line budgets that only move
+  downward as native route capabilities replace browser fragments;
 - permanent removal of retired demo-server paths.
 
 Run it directly with:

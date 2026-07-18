@@ -60,7 +60,6 @@
               title: "Database usage",
               ariaLabel: "Database reads and writes over time",
               loading: isDatabaseAnalyticsLoading && !activeDatabaseAnalytics,
-              emptyState: "No database operation data yet.",
               metrics: [
                 {
                   id: "collections",

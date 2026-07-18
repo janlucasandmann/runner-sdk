@@ -105,7 +105,10 @@ describe("PlatformPermissionsPage", () => {
     expect(container.querySelector("[data-platform-permissions-page='true']")).not.toBeNull();
     expect(screen.getByText("Read workspace")).not.toBeNull();
     expect(screen.queryByText("Invite members")).toBeNull();
+    expect(container.querySelectorAll("[data-platform-settings-section-list='true']")).toHaveLength(1);
+    expect(container.querySelectorAll("[data-platform-settings-section='true']")).toHaveLength(2);
     expect(container.querySelectorAll(".platform-permissions-page__ring-table")).toHaveLength(2);
+    expect(container.querySelectorAll(".platform-settings-data-table")).toHaveLength(2);
     expect(container.querySelectorAll(".platform-data-table.is-minimalistic-ui")).toHaveLength(2);
     expect(container.querySelector(".platform-data-table__toolbar")).toBeNull();
     expect(container.querySelector(".platform-data-table__footer")).toBeNull();

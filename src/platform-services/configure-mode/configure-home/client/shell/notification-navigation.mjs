@@ -3,6 +3,11 @@ export const CONFIGURE_HOME_NOTIFICATION_NAVIGATION_SCRIPT = `        function o
           setNotificationsOpen(false);
           setProfileEditorOpen(false);
           setSidebarWorkspaceMode("configure");
+          setConfigureHomeTab("notifications");
+          setResourcesHeaderState({
+            mode: "overview",
+            title: "",
+          });
           setActivePage("configure");
         }
 `;

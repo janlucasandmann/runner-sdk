@@ -16,4 +16,8 @@ The structured surface itself has no padding. The body owns 24px padding, while 
 
 Opening is synchronous with the render that sets `open=true`; callers must not stage a separate `visible` frame. The browser handles the 60ms transition through `@starting-style`, beginning at 75% scale, so ordinary React rerenders cannot restart the animation. The same duration controls retained rendering during close.
 
+Intrinsic width and height changes animate by default with a 140ms resize transition. The shared surface interrupts and retargets an in-progress resize instead of jumping, observes non-React layout changes, and disables the effect when reduced motion is requested. Set `animateResize={false}` for a modal whose dimensions must change immediately, or override `resizeAnimationDurationMs` when a specialized workflow needs different timing.
+
 The canonical surface is intentionally solid and minimal: `#1a1a1a` background, a `1px` white/7.5 border, 15px radius, no decorative pseudo-border, and visually hidden scrollbars while preserving scrolling. The backdrop applies the shared 10px blur while visible and closing.
+
+`PlatformConfirmationModal` is the reusable confirmation composite for irreversible or consequential actions. It places initial focus on Cancel, blocks dismissal while its async confirmation is pending, and renders rejected mutation errors inside the dialog. Use `tone="destructive"` for deletion while keeping the initiating toolbar icon visually neutral.

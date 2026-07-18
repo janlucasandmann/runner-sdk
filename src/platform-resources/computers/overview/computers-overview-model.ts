@@ -257,7 +257,6 @@ export function createComputersOverviewAnalytics(
     ariaLabel: "Computer cost over time",
     loading: options.loading,
     error: options.error || null,
-    emptyState: "Computer usage appears here once computers start running.",
     metrics: [
       { id: "computers", label: "Computers", value: String(options.rows.length), color: "#8fc4ff" },
       { id: "running", label: "Running", value: String(runningComputers), color: "#7effff" },

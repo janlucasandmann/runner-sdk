@@ -6,7 +6,7 @@
       "!**/dist",
       "!**/node_modules",
       "!**/.platform-dev",
-      "!src/react/runner-chat-css.ts"
+      "!src/platform-ui/components/thread-components/styles/thread-component-css.ts"
     ]
   },
   "formatter": {

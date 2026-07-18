@@ -40,6 +40,14 @@ export const ComputerDetailPage = lazyNamed(
   () => import("../../platform-resources/computers/detail/computer-detail-page.js"),
   "ComputerDetailPage",
 );
+export const ProjectDetailPage = lazyNamed(
+  () => import("../../platform-services/create-mode/projects/client/detail/project-detail-page.js"),
+  "ProjectDetailPage",
+);
+export const MetronomesOverviewPage = lazyNamed(
+  () => import("../../platform-services/create-mode/metronome/client/overview/metronomes-overview-page.js"),
+  "MetronomesOverviewPage",
+);
 export const PluginsOverviewPage = lazyNamed(
   () => import("../../platform-resources/plugins/overview/plugins-overview-page.js"),
   "PluginsOverviewPage",
@@ -55,6 +63,10 @@ export const TagsOverviewPage = lazyNamed(
 export const ConfigureHomeOverviewPage = lazyNamed(
   () => import("../../platform-services/configure-mode/configure-home/client/page/configure-home-overview-page.js"),
   "ConfigureHomeOverviewPage",
+);
+export const NotificationsOverviewPage = lazyNamed(
+  () => import("../../platform-services/configure-mode/configure-home/client/page/notifications-overview-page.js"),
+  "NotificationsOverviewPage",
 );
 export const ModelsOverviewPage = lazyNamed(
   () => import("../../platform-services/configure-mode/models/client/page/models-overview-page.js"),

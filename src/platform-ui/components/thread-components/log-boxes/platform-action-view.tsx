@@ -20,7 +20,7 @@ import type { RunnerLog } from "../../../../types.js";
 import { extractQuotedArgument, formatShellCommandForDisplay } from "./command-parsing.js";
 import { CompactActionLogLine } from "./compact-action-log-line.js";
 import { parseStructuredCommandExecutionOutput } from "./structured-command-output.js";
-import { stripRunnerSystemTags } from "../../../../react/runner-markdown.js";
+import { stripRunnerSystemTags } from "../shared/runner-markdown.js";
 import type { RunnerWorkLogEntryProps } from "./log-entry-types.js";
 
 const RUNNER_TRANSPARENT_LOGO_URL = "https://computer-agents.com/img/logos/runnertransparent.png";

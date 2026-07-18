@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 
-import { stripRunnerSystemTags } from "../../../../react/runner-markdown.js";
+import { stripRunnerSystemTags } from "../shared/runner-markdown.js";
 
 const RUNNER_DETAIL_DRAWER_AUTO_SCROLL_THRESHOLD_PX = 24;
 const RUNNER_WORKSPACE_PATH_MATCHER = /\/workspace\/\S+/g;

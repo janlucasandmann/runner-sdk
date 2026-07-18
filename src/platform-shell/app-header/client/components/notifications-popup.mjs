@@ -158,15 +158,23 @@ export const APP_HEADER_NOTIFICATIONS_POPUP_SCRIPT = `        function renderPro
 	            return null;
 	          }
 
-          return React.createElement(PlatformPopupDismissLayer, {
-            className: "notification-menu-scrim",
-            onClick: () => setNotificationsOpen(false),
-          },
-            React.createElement(PlatformPopupSurface, {
-              className: "notification-menu",
-              role: "dialog",
-              "aria-label": "Notifications",
-              onClick: (event) => event.stopPropagation(),
+          return React.createElement(React.Fragment, null,
+            React.createElement(PlatformPopupDismissLayer, {
+              className: "notification-menu-scrim",
+              onClick: () => setNotificationsOpen(false),
+            }),
+            React.createElement(PlatformPopup, {
+              open: true,
+              variant: "minimal",
+              rootClassName: "notification-menu-root",
+              surfaceClassName: "notification-menu",
+              animation: "down-in",
+              surfaceProps: {
+                mode: "fixed",
+                role: "dialog",
+                "aria-label": "Notifications",
+                onClick: (event) => event.stopPropagation(),
+              },
             },
               React.createElement("div", { className: "notification-menu-header" },
                 React.createElement("h2", { className: "notification-menu-title" }, "Notifications")
@@ -174,22 +182,28 @@ export const APP_HEADER_NOTIFICATIONS_POPUP_SCRIPT = `        function renderPro
               React.createElement("div", { className: "notification-menu-body" },
                 notificationItems.length > 0
                   ? notificationItems.map(renderNotificationItem)
-                  : React.createElement("div", { className: "notification-menu-empty" }, "No notifications")
+                  : React.createElement(PlatformEmptyState, {
+                      className: "notification-menu-empty-state",
+                      icon: Bell,
+                      title: "No notifications",
+                    })
               ),
               React.createElement("div", { className: "notification-menu-footer" },
-                React.createElement("button", {
+                React.createElement(PlatformSecondaryButton, {
                   type: "button",
-                  className: "notification-menu-mark-read notification-menu-view-all",
+                  size: "medium",
+                  className: "notification-menu-footer-button",
                   onClick: openNotificationsPage,
                 }, "View all"),
-                React.createElement("button", {
+                React.createElement(PlatformPrimaryButton, {
                   type: "button",
-                  className: "notification-menu-mark-read",
+                  size: "medium",
+                  className: "notification-menu-footer-button",
                   onClick: handleMarkAllNotificationsRead,
                   disabled: notificationItems.length === 0,
                 }, "Mark all as read")
               )
             )
-	          );
+          );
 	        }
 `;

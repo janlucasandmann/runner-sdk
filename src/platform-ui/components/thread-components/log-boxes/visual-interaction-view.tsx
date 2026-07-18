@@ -14,11 +14,11 @@ import {
   X,
 } from "lucide-react";
 import type { RunnerLog } from "../../../../types.js";
-import { buildRunnerPreviewDownloadUrl } from "../../../../react/runner-document-preview.js";
-import { RunnerImagePreviewSurface } from "../../../../react/runner-image-preview-surface.js";
-import { LazyMediaPreviewMount } from "../../../../react/runner-lazy-media-preview.js";
-import { LogHeader, LogPanel } from "../../../../react/runner-log-card.js";
-import { RunnerMarkdown, stripRunnerSystemTags } from "../../../../react/runner-markdown.js";
+import { buildRunnerPreviewDownloadUrl } from "../document-preview/preview-contracts.js";
+import { RunnerImagePreviewSurface } from "../document-preview/image-preview-surface.js";
+import { LazyMediaPreviewMount } from "../shared/lazy-media-preview.js";
+import { LogHeader, LogPanel } from "./log-card.js";
+import { RunnerMarkdown, stripRunnerSystemTags } from "../shared/runner-markdown.js";
 import { CompactActionLogLine } from "./compact-action-log-line.js";
 import {
   extractWorkspaceImagePathFromOutput,
@@ -919,4 +919,3 @@ export function SubagentDetailDrawer({
     </aside>
   );
 }
-

@@ -300,11 +300,6 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
           { id: "recent-desc", label: "Recently Updated" },
           { id: "title-asc", label: "Name (A-Z)" },
         ];
-        const projectsHomeSortOptions = [
-          { id: "updated-desc", label: "Recently Updated", description: "Show the latest touched projects first" },
-          { id: "name-asc", label: "Name (A-Z)", description: "Sort projects alphabetically" },
-          { id: "tasks-desc", label: "Most Open Tasks", description: "Surface projects with the most remaining work" },
-        ];
         const projectsHomeFilterOptions = [
           { id: "all", label: "All project types", description: "Show every project type." },
           { id: "active", label: "Active", description: "Show projects that still have open work." },
@@ -328,7 +323,6 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
         const activeReleaseSortOption = releaseSortOptions.find((option) => option.id === releaseSortMode) || releaseSortOptions[0];
         const activeReleaseBacklogFilterOption = backlogFilterOptions.find((option) => option.id === releaseBacklogFilterMode) || backlogFilterOptions[0];
         const activeReleaseBacklogSortOption = backlogSortOptions.find((option) => option.id === releaseBacklogSortMode) || backlogSortOptions[0];
-        const activeProjectsHomeSortOption = projectsHomeSortOptions.find((option) => option.id === projectsHomeSortMode) || projectsHomeSortOptions[0];
         const activeProjectsHomeFilterOption = projectsHomeFilterOptions.find((option) => option.id === projectsHomeFilterMode) || projectsHomeFilterOptions[0];
         const sortedReleaseOptions = useMemo(() => releases.slice().sort(compareTaskReleaseOrder), [releases, releaseSortMode]);
 

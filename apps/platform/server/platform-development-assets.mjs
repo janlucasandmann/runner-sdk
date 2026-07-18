@@ -1,4 +1,3 @@
-import { extractPlatformDocumentSources } from "./platform-assets.mjs";
 import {
   resolveLegacyBrowserSourcePath,
   toViteFileUrl,
@@ -6,13 +5,10 @@ import {
 import {
   resolveDevelopmentStyleSourcePaths,
 } from "../shared/development-style-resolution.mjs";
-
-function replaceRequiredSource(documentHtml, matcher, replacement, label) {
-  if (!matcher.test(documentHtml)) {
-    throw new Error(`Platform document is missing its ${label}.`);
-  }
-  return documentHtml.replace(matcher, replacement);
-}
+import {
+  normalizePlatformSources,
+  renderPlatformDocument,
+} from "../shared/platform-source-contract.mjs";
 
 function rewriteDevelopmentStylesheets(documentHtml, packageRoot, viteOrigin) {
   return documentHtml.replace(/<link\b[^>]*>/gi, (linkTag) => {
@@ -54,7 +50,7 @@ function createDevelopmentRuntimeScripts(viteOrigin) {
  * therefore receive Fast Refresh even before the legacy shell is fully retired.
  */
 export async function createPlatformDevelopmentAssets(
-  inlineDocumentHtml,
+  sources,
   {
     packageRoot,
     viteOrigin,
@@ -64,7 +60,11 @@ export async function createPlatformDevelopmentAssets(
   if (!normalizedViteOrigin) {
     throw new Error("Platform development assets require a Vite origin.");
   }
-  const { documentHtml: source, cssSource, moduleSource } = extractPlatformDocumentSources(inlineDocumentHtml);
+  const {
+    documentTemplate,
+    styleSource,
+    moduleSource,
+  } = normalizePlatformSources(sources);
   const rewrittenModuleSource = moduleSource.replace(
     /(["'])(\/dist\/[^"']+)\1/g,
     (match, quote, specifier) => {
@@ -79,24 +79,19 @@ export async function createPlatformDevelopmentAssets(
   const assetsByPath = new Map([
     [cssUrl, {
       contentType: "text/css; charset=utf-8",
-      body: Buffer.from(cssSource),
+      body: Buffer.from(styleSource),
     }],
     [moduleUrl, {
       contentType: "text/javascript; charset=utf-8",
       body: Buffer.from(rewrittenModuleSource),
     }],
   ]);
-  let documentHtml = replaceRequiredSource(
-    source,
-    /<style>[\s\S]*?<\/style>/,
-    `<link rel="stylesheet" href="${cssUrl}" />`,
-    "inline style block",
-  );
-  documentHtml = replaceRequiredSource(
-    documentHtml,
-    /<script type="module">[\s\S]*?<\/script>/,
-    `<script type="module" src="${moduleUrl}"></script>`,
-    "inline module script",
+  let documentHtml = renderPlatformDocument(
+    documentTemplate,
+    {
+      styleTag: `<link rel="stylesheet" href="${cssUrl}" />`,
+      moduleTag: `<script type="module" src="${moduleUrl}"></script>`,
+    },
   );
   documentHtml = rewriteDevelopmentStylesheets(
     documentHtml,
@@ -113,9 +108,12 @@ export async function createPlatformDevelopmentAssets(
     cssPath: cssUrl,
     modulePath: moduleUrl,
     metrics: Object.freeze({
-      inlineDocumentBytes: Buffer.byteLength(source),
+      sourceBytes:
+        Buffer.byteLength(documentTemplate)
+        + Buffer.byteLength(styleSource)
+        + Buffer.byteLength(moduleSource),
       documentBytes: Buffer.byteLength(documentHtml),
-      cssBytes: Buffer.byteLength(cssSource),
+      cssBytes: Buffer.byteLength(styleSource),
       moduleBytes: Buffer.byteLength(rewrittenModuleSource),
       cssBrotliBytes: 0,
       moduleBrotliBytes: 0,

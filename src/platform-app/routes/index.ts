@@ -5,5 +5,7 @@ export * from "./configure-home-route.js";
 export * from "./develop-resource-overview-route.js";
 export * from "./develop-home-route.js";
 export * from "./models-overview-route.js";
+export * from "./notifications-overview-route.js";
 export * from "./platform-route-outlet.js";
 export * from "./skills-overview-route.js";
+export * from "./voice-agents-overview-route.js";

@@ -1,6 +1,7 @@
 import Chart from "chart.js/auto";
 import { useEffect, useMemo, useRef } from "react";
-import { DotLoader } from "../../../../react/dot-loader.js";
+import { DotLoader } from "../../ui/dot-loader/index.js";
+import { PlatformAnalyticsEmptyState } from "./platform-analytics-empty-state.js";
 import type {
   PlatformAnalyticsAxis,
   PlatformAnalyticsChartProps,
@@ -206,7 +207,13 @@ export function PlatformAnalyticsChart({ analytics, chartType }: PlatformAnalyti
     );
   }
   if (analytics.error) return <div className="platform-analytics-chart__state is-error" role="alert">{analytics.error}</div>;
-  if (!hasData) return <div className="platform-analytics-chart__state is-empty">{analytics.emptyState || "No usage data yet."}</div>;
+  if (!hasData) {
+    return (
+      <div className="platform-analytics-chart__state is-empty">
+        <PlatformAnalyticsEmptyState />
+      </div>
+    );
+  }
 
   return (
     <div className="platform-analytics-chart__frame">

@@ -18,11 +18,17 @@ import { requiresAuthenticatedAttachmentPreview } from "./image-selection.js";
 import { isRunnerEmailContextAttachment } from "./turn-attachments.js";
 
 const RUNNER_EMAIL_ATTACHMENT_FILE_ICON_URL = new URL(
-  "../assets/email-attachment.webp",
+  "../../platform-ui/components/thread-components/assets/email-attachment.webp",
   import.meta.url,
 ).toString();
-const RUNNER_TEXT_FILE_ICON_URL = new URL("../assets/txtfile.png", import.meta.url).toString();
-const RUNNER_IMAGE_FILE_ICON_URL = new URL("../assets/imgicon.webp", import.meta.url).toString();
+const RUNNER_TEXT_FILE_ICON_URL = new URL(
+  "../../platform-ui/components/thread-components/assets/txtfile.png",
+  import.meta.url,
+).toString();
+const RUNNER_IMAGE_FILE_ICON_URL = new URL(
+  "../../platform-ui/components/thread-components/assets/imgicon.webp",
+  import.meta.url,
+).toString();
 
 interface RunnerAttachmentPreviewChipProps {
   activePreviewAttachmentId?: string | null;

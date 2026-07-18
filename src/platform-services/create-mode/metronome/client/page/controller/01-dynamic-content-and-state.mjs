@@ -343,7 +343,6 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
             setIsMetronomeRunSidebarOpen(false);
             setIsMetronomeRunSidebarMenuOpen(false);
             setIsMetronomePublishActionsMenuOpen(false);
-            setIsMetronomeVersionSelectorMenuOpen(false);
             setIsMetronomePublishMenuOpen(true);
             setMetronomeVersionChangesState({
               leftSourceId: explicitLeftSourceId || fallbackLeftSourceId,
@@ -583,18 +582,6 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
             }
             onEdgesChange(changes);
           }, [onEdgesChange, pushGraphHistory, isSemanticEdgeChange]);
-          const kpis = useMemo(() => {
-            const activeCount = visibleWorkflowRows.filter((workflow) => !isMetronomeWorkflowBuiltIn(workflow) && workflow.status === "active").length;
-            const runsToday = visibleWorkflowRows.reduce((sum, workflow) => sum + (Number(workflow.runsToday) || 0), 0);
-            const approvals = visibleWorkflowRows.reduce((sum, workflow) => sum + (Number(workflow.waitingApprovals) || 0), 0);
-            return [
-              { label: "Workflows", value: visibleWorkflowRows.length },
-              { label: "Active", value: activeCount },
-              { label: "Triggered today", value: runsToday },
-              { label: "Waiting approvals", value: approvals },
-              { label: "Failed runs", value: 0 },
-            ];
-          }, [visibleWorkflowRows]);
 
           const saveWorkflowGraph = useCallback(() => {
             if (!activeWorkflowId || !activeWorkflow || isActiveWorkflowBuiltIn) return;
@@ -622,45 +609,37 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
           }, [activeWorkflow, activeWorkflowId, nodes, edges, isActiveWorkflowBuiltIn, isMetronomeApiAvailable, replaceMetronomeWorkflowInEditableState]);
 
           const openCreateWorkflowModal = useCallback(() => {
-            setWorkflowNameDraft("Project operating rhythm");
+            setWorkflowNameDraft("");
             setWorkflowWallpaperDraftId(getMetronomeWorkflowWallpaperId("", getMetronomeWorkflowWallpaperOptions()[0]?.id || ""));
             setWorkflowNameModal({ mode: "create", workflowId: "" });
           }, []);
 
-          const createWorkflowFromTemplate = useCallback(async (template) => {
-            const sourceTemplate = template && typeof template === "object" ? template : null;
-            if (!sourceTemplate) {
-              openCreateWorkflowModal();
+          useEffect(() => {
+            if (openWorkflowRequest?.action !== "create") {
               return;
             }
-            const workflow = createDefaultMetronomeWorkflow(sourceTemplate.title || "Metronome workflow", {
-              projectId: normalizedMetronomeProjectFilterId,
-              projectName: selectedMetronomeProjectFilter?.name || "",
-              graphFactory: typeof sourceTemplate.graphFactory === "function" ? sourceTemplate.graphFactory : createDefaultMetronomeGraph,
-              templateId: sourceTemplate.id || "",
-              templateName: sourceTemplate.title || "",
-              creator: currentMetronomeUserCreator,
-            });
-            if (isMetronomeApiAvailable) {
-              try {
-                const savedWorkflow = await createMetronomeWorkflowApi(workflow);
-                setWorkflows((current) => replaceMetronomeWorkflow(current, savedWorkflow));
-                setActiveWorkflowId(savedWorkflow.id);
-                return;
-              } catch (error) {
-                console.warn("[Metronome] Failed to create workflow from template", error);
-                setIsMetronomeApiAvailable(false);
-              }
+            const requestToken = String(openWorkflowRequest?.token || "").trim();
+            if (
+              requestToken
+              && lastHandledCreateWorkflowRequestTokenRef.current === requestToken
+            ) {
+              return;
             }
-            setWorkflows((current) => [workflow, ...current]);
-            setActiveWorkflowId(workflow.id);
-          }, [isMetronomeApiAvailable, normalizedMetronomeProjectFilterId, selectedMetronomeProjectFilter, openCreateWorkflowModal, currentMetronomeUserCreator]);
+            lastHandledCreateWorkflowRequestTokenRef.current = requestToken;
+            openCreateWorkflowModal();
+            if (typeof onOpenWorkflowRequestHandled === "function") {
+              onOpenWorkflowRequestHandled(openWorkflowRequest?.token);
+            }
+          }, [
+            onOpenWorkflowRequestHandled,
+            openCreateWorkflowModal,
+            openWorkflowRequest,
+          ]);
 
           const openMetronomeWorkflow = useCallback((workflow) => {
             const workflowId = String(workflow?.id || "").trim();
             if (!workflowId) return;
             const isTeamSharedWorkflow = isMetronomeWorkflowTeamShared(workflow);
-            setOpenMetronomeOverviewMenuWorkflowId("");
             if (
               isTeamSharedWorkflow
               && (!hasMetronomeWorkflowGraphNodes(workflow) || !hasMetronomeWorkflowGraphEdges(workflow))
@@ -725,28 +704,18 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
               || isMetronomeWorkflowBuiltIn(workflow)
               || isMetronomeWorkflowTeamShared(workflow) && !canEditMetronomeTeamSharedWorkflow(workflow)
             ) return;
-            setOpenMetronomeOverviewMenuWorkflowId("");
             setWorkflowNameDraft(workflow.name || "Untitled Metronome");
             setWorkflowWallpaperDraftId(getMetronomeWorkflowWallpaperId(workflow));
             setWorkflowNameModal({ mode: "edit", workflowId: workflow.id });
           }, []);
 
           const finishCloseWorkflowNameModal = useCallback(() => {
-            if (workflowNameModalCloseTimerRef.current) {
-              window.clearTimeout(workflowNameModalCloseTimerRef.current);
-              workflowNameModalCloseTimerRef.current = null;
-            }
-            if (workflowNameModalFrameRef.current) {
-              window.cancelAnimationFrame(workflowNameModalFrameRef.current);
-              workflowNameModalFrameRef.current = null;
-            }
             if (workflowWallpaperTransitionTimerRef.current) {
               window.clearTimeout(workflowWallpaperTransitionTimerRef.current);
               workflowWallpaperTransitionTimerRef.current = null;
             }
             workflowWallpaperPreloadTokenRef.current += 1;
             setWorkflowNameModal(null);
-            setWorkflowNameModalVisible(false);
             setWorkflowNameModalClosing(false);
             setWorkflowNameDraft("");
             setWorkflowWallpaperDraftId("");
@@ -767,44 +736,16 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
               workflowWallpaperTransitionTimerRef.current = null;
             }
             setWorkflowWallpaperTransition(null);
-            setWorkflowNameModalVisible(false);
             setWorkflowNameModalClosing(true);
-            if (workflowNameModalCloseTimerRef.current) {
-              window.clearTimeout(workflowNameModalCloseTimerRef.current);
-            }
-            workflowNameModalCloseTimerRef.current = window.setTimeout(() => {
-              workflowNameModalCloseTimerRef.current = null;
-              finishCloseWorkflowNameModal();
-            }, 75);
           }, [finishCloseWorkflowNameModal, workflowNameModal, workflowNameModalClosing]);
 
           useEffect(() => {
-            if (!workflowNameModal) {
-              setWorkflowNameModalVisible(false);
-              setWorkflowNameModalClosing(false);
-              return undefined;
-            }
-            if (workflowNameModalCloseTimerRef.current) {
-              window.clearTimeout(workflowNameModalCloseTimerRef.current);
-              workflowNameModalCloseTimerRef.current = null;
-            }
-            if (workflowNameModalFrameRef.current) {
-              window.cancelAnimationFrame(workflowNameModalFrameRef.current);
-              workflowNameModalFrameRef.current = null;
-            }
-            setWorkflowNameModalVisible(false);
-            setWorkflowNameModalClosing(false);
-            workflowNameModalFrameRef.current = window.requestAnimationFrame(() => {
-              workflowNameModalFrameRef.current = window.requestAnimationFrame(() => {
-                workflowNameModalFrameRef.current = null;
-                setWorkflowNameModalVisible(true);
-              });
-            });
-            return undefined;
-          }, [Boolean(workflowNameModal)]);
-
-          useEffect(() => {
-            if (!workflowNameModal || typeof window === "undefined" || typeof window.Image !== "function") {
+            if (
+              !workflowNameModal
+              || workflowNameModal.mode === "create"
+              || typeof window === "undefined"
+              || typeof window.Image !== "function"
+            ) {
               return;
             }
             getMetronomeWorkflowWallpaperOptions().forEach((wallpaper) => {
@@ -814,17 +755,9 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
               image.decoding = "async";
               image.src = url;
             });
-          }, [Boolean(workflowNameModal)]);
+          }, [workflowNameModal?.mode]);
 
           useEffect(() => () => {
-            if (workflowNameModalCloseTimerRef.current) {
-              window.clearTimeout(workflowNameModalCloseTimerRef.current);
-              workflowNameModalCloseTimerRef.current = null;
-            }
-            if (workflowNameModalFrameRef.current) {
-              window.cancelAnimationFrame(workflowNameModalFrameRef.current);
-              workflowNameModalFrameRef.current = null;
-            }
             if (workflowVersionModalCloseTimerRef.current) {
               window.clearTimeout(workflowVersionModalCloseTimerRef.current);
               workflowVersionModalCloseTimerRef.current = null;
@@ -945,6 +878,7 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
               const workflow = createDefaultMetronomeWorkflow(nextName, {
                 projectId: normalizedMetronomeProjectFilterId,
                 projectName: selectedMetronomeProjectFilter?.name || "",
+                graphFactory: createTriggerOnlyMetronomeGraph,
                 creator: currentMetronomeUserCreator,
                 metadata: {
                   ...(nextWallpaperId ? { wallpaperId: nextWallpaperId, workflowWallpaperId: nextWallpaperId } : {}),

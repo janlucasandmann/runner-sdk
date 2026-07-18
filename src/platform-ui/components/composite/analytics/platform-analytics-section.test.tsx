@@ -19,7 +19,6 @@ describe("PlatformAnalyticsSection", () => {
           ],
           labels: [],
           series: [],
-          emptyState: "No usage yet.",
         }}
       />,
     );
@@ -28,7 +27,9 @@ describe("PlatformAnalyticsSection", () => {
     expect(screen.getByLabelText("Usage analytics")).not.toBeNull();
     expect(screen.getByText("Runs")).not.toBeNull();
     expect(screen.getByText("24,000")).not.toBeNull();
-    expect(screen.getByText("No usage yet.")).not.toBeNull();
+    expect(screen.getByText("No data available yet")).not.toBeNull();
+    expect(screen.getByText("Analytics will appear here once activity has been recorded.")).not.toBeNull();
+    expect(container.querySelector(".platform-analytics-empty-state svg")).not.toBeNull();
     expect(screen.queryByRole("heading", { name: "Usage" })).toBeNull();
   });
 
@@ -53,7 +54,6 @@ describe("PlatformAnalyticsSection", () => {
           metrics: [{ id: "runs", label: "Total Runs", value: "24", color: "#7effff" }],
           labels: [],
           series: [],
-          emptyState: "No agent usage yet.",
         }}
       />,
     );
@@ -64,7 +64,9 @@ describe("PlatformAnalyticsSection", () => {
     expect(screen.getByRole("heading", { name: "Analytics", level: 2 })).not.toBeNull();
     expect(screen.getByRole("radiogroup", { name: "Performance range" })).not.toBeNull();
     expect(screen.getByText("Total Runs")).not.toBeNull();
-    expect(screen.getByText("No agent usage yet.")).not.toBeNull();
+    expect(screen.getByText("No data available yet")).not.toBeNull();
+    expect(screen.getByText("Analytics will appear here once activity has been recorded.")).not.toBeNull();
+    expect(container.querySelector(".platform-analytics-empty-state svg")).not.toBeNull();
     expect(container.querySelector(".platform-analytics__header-actions")).not.toBeNull();
     expect(container.querySelector(".platform-analytics-chart__state")).not.toBeNull();
 

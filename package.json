@@ -20,6 +20,13 @@
     "./react/styles.css": {
       "default": "./dist/react/runner-chat.css"
     },
+    "./platform-shell/app-header/global-search-modal": {
+      "types": "./dist/platform-shell/app-header/global-search-modal/index.d.ts",
+      "default": "./dist/platform-shell/app-header/global-search-modal/index.js"
+    },
+    "./platform-shell/app-header/global-search-modal/styles.css": {
+      "default": "./dist/platform-shell/app-header/global-search-modal/global-search-modal.css"
+    },
     "./platform-ui/components": {
       "types": "./dist/platform-ui/components/index.d.ts",
       "default": "./dist/platform-ui/components/index.js"
@@ -34,6 +41,13 @@
     },
     "./platform-ui/components/ui/button/styles.css": {
       "default": "./dist/platform-ui/components/ui/button/button.css"
+    },
+    "./platform-ui/components/ui/icon-button": {
+      "types": "./dist/platform-ui/components/ui/icon-button/index.d.ts",
+      "default": "./dist/platform-ui/components/ui/icon-button/index.js"
+    },
+    "./platform-ui/components/ui/icon-button/styles.css": {
+      "default": "./dist/platform-ui/components/ui/icon-button/icon-button.css"
     },
     "./platform-ui/components/ui/label": {
       "types": "./dist/platform-ui/components/ui/label/index.d.ts",
@@ -109,6 +123,13 @@
     "./platform-ui/components/composite/empty-state/styles.css": {
       "default": "./dist/platform-ui/components/composite/empty-state/empty-state.css"
     },
+    "./platform-ui/components/composite/loading-state": {
+      "types": "./dist/platform-ui/components/composite/loading-state/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/loading-state/index.js"
+    },
+    "./platform-ui/components/composite/loading-state/styles.css": {
+      "default": "./dist/platform-ui/components/composite/loading-state/loading-state.css"
+    },
     "./platform-ui/components/composite/instructions-editor": {
       "types": "./dist/platform-ui/components/composite/instructions-editor/index.d.ts",
       "default": "./dist/platform-ui/components/composite/instructions-editor/index.js"
@@ -123,12 +144,33 @@
     "./platform-ui/components/composite/modal/styles.css": {
       "default": "./dist/platform-ui/components/composite/modal/modal.css"
     },
+    "./platform-ui/components/composite/page-hero": {
+      "types": "./dist/platform-ui/components/composite/page-hero/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/page-hero/index.js"
+    },
+    "./platform-ui/components/composite/page-hero/styles.css": {
+      "default": "./dist/platform-ui/components/composite/page-hero/page-hero.css"
+    },
     "./platform-ui/components/composite/popup": {
       "types": "./dist/platform-ui/components/composite/popup/index.d.ts",
       "default": "./dist/platform-ui/components/composite/popup/index.js"
     },
     "./platform-ui/components/composite/popup/styles.css": {
       "default": "./dist/platform-ui/components/composite/popup/popup.css"
+    },
+    "./platform-ui/components/composite/settings-section": {
+      "types": "./dist/platform-ui/components/composite/settings-section/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/settings-section/index.js"
+    },
+    "./platform-ui/components/composite/settings-section/styles.css": {
+      "default": "./dist/platform-ui/components/composite/settings-section/settings-section.css"
+    },
+    "./platform-ui/components/composite/ui-card": {
+      "types": "./dist/platform-ui/components/composite/ui-card/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/ui-card/index.js"
+    },
+    "./platform-ui/components/composite/ui-card/styles.css": {
+      "default": "./dist/platform-ui/components/composite/ui-card/ui-card.css"
     },
     "./platform-ui/components/composite/widgets": {
       "types": "./dist/platform-ui/components/composite/widgets/index.d.ts",
@@ -231,6 +273,13 @@
     "./platform-ui/pages/details/styles.css": {
       "default": "./dist/platform-ui/pages/details/resource-detail.css"
     },
+    "./platform-ui/pages/home": {
+      "types": "./dist/platform-ui/pages/home/index.d.ts",
+      "default": "./dist/platform-ui/pages/home/index.js"
+    },
+    "./platform-ui/pages/home/styles.css": {
+      "default": "./dist/platform-ui/pages/home/platform-home.css"
+    },
     "./platform-ui/pages/permissions": {
       "types": "./dist/platform-ui/pages/permissions/index.d.ts",
       "default": "./dist/platform-ui/pages/permissions/index.js"
@@ -289,9 +338,9 @@
     "test:contracts": "node ./scripts/quality/run-node-contract-tests.mjs",
     "build": "npm run clean && npm run platform-component-invariants && npm run platform-table-invariants && npm run platform-overlay-invariants && npm run platform-button-invariants && npm run platform-widget-invariants && npm run platform-resource-invariants && npm run platform:legacy-syntax-test && node ./scripts/runner-chat-assets.mjs prepare && tsc -p tsconfig.build.json && node ./scripts/runner-chat-assets.mjs copy",
     "clean": "rm -rf dist",
-    "history-smoke": "npm run build && node ./examples/history-api-test.mjs",
+    "history-smoke": "npm run build && node ./tests/history-api.test.mjs",
     "calendar-service-test": "node ./src/platform-services/create-mode/calendar/calendar-service-test.mjs",
-    "configure-home-service-test": "node ./src/platform-services/configure-mode/configure-home/configure-home-service-test.mjs && vitest run src/platform-services/configure-mode/configure-home/client/page/configure-home-overview-page.test.tsx",
+    "configure-home-service-test": "node ./src/platform-services/configure-mode/configure-home/configure-home-service-test.mjs && vitest run src/platform-services/configure-mode/configure-home/client/page",
     "develop-home-service-test": "node ./src/platform-services/develop-mode/develop-home/develop-home-service-test.mjs && vitest run src/platform-services/develop-mode/develop-home/client/page",
     "api-keys-service-test": "node ./src/platform-services/develop-mode/api-keys/api-keys-service-test.mjs",
     "evaluations-service-test": "node ./src/platform-services/configure-mode/evaluations/evaluations-service-test.mjs",
@@ -300,7 +349,7 @@
     "guardrails-service-test": "node ./src/platform-services/configure-mode/guardrails/guardrails-service-test.mjs",
     "imagine-service-test": "node ./src/platform-services/create-mode/imagine/imagine-service-test.mjs",
     "inference-service-test": "node ./src/platform-services/configure-mode/inference/inference-service-test.mjs",
-    "metronome-runtime-test": "node ./examples/metronome-dynamic-content-runtime-test.mjs",
+    "metronome-runtime-test": "node ./tests/metronome-dynamic-content-runtime.test.mjs",
     "metronome-service-test": "node ./src/platform-services/create-mode/metronome/metronome-service-test.mjs",
     "marketplace-service-test": "node ./src/platform-services/configure-mode/marketplace/marketplace-service-test.mjs",
     "models-service-test": "node ./src/platform-services/configure-mode/models/models-service-test.mjs",
@@ -311,15 +360,16 @@
     "navigation-guard-service-test": "node ./src/platform-shell/navigation-guard/navigation-guard-service-test.mjs && vitest run src/platform-ui/components/composite/modal/platform-unsaved-changes-modal.test.tsx",
     "projects-service-test": "node ./src/platform-services/create-mode/projects/projects-service-test.mjs",
     "teams-service-test": "node ./src/platform-services/configure-mode/teams/teams-service-test.mjs",
-    "thread-domain-test": "npm run build && node ./examples/thread-domain-test.mjs",
-    "thread-ui-test": "npm run build && vitest run src/react/runner-chat/execution/active-run-instruction.test.ts src/react/runner-chat/legacy-timeline.test.ts && node ./examples/thread-ui-test.mjs",
+    "thread-domain-test": "npm run build && node ./tests/thread-domain.test.mjs",
+    "thread-ui-test": "npm run build && vitest run src/react/runner-chat/execution/active-run-instruction.test.ts src/react/runner-chat/legacy-timeline.test.ts && node ./tests/thread-ui.test.mjs",
     "thread-proxy-test": "node ./apps/platform/server/routes/thread-proxy-contract.test.mjs",
     "thread-preview": "npm run build && node ./examples/thread-ui-preview.mjs",
-    "realtime-metronome-test": "npm run build && node ./examples/realtime-metronome-adapters-test.mjs",
+    "realtime-metronome-test": "npm run build && node ./tests/realtime-metronome-adapters.test.mjs",
     "platform-table-invariants": "node ./scripts/platform-table-invariants.mjs",
     "platform-component-invariants": "node ./scripts/platform-component-invariants.mjs",
     "platform-table-test": "npm run platform-table-invariants && vitest run src/platform-ui/components/composite/data-table",
     "platform-button-test": "vitest run src/platform-ui/components/ui/button",
+    "platform-icon-button-test": "vitest run src/platform-ui/components/ui/icon-button",
     "platform-search-test": "vitest run src/platform-ui/components/ui/search",
     "platform-selector-test": "vitest run src/platform-ui/components/ui/selector",
     "platform-button-invariants": "node ./scripts/platform-button-invariants.mjs",
@@ -332,8 +382,8 @@
     "platform-widget-test": "npm run platform-widget-invariants && vitest run src/platform-ui/components/composite/widgets",
     "develop-mode-service-test": "node ./src/platform-services/develop-mode/develop-mode-service-test.mjs",
     "platform-resource-overview-test": "npm run platform-resource-invariants && npm run develop-mode-service-test && vitest run src/platform-ui/pages/overview src/platform-services/develop-mode",
-    "platform-resource-detail-test": "npm run platform-component-invariants && npm run platform-resource-invariants && vitest run src/platform-ui/pages/details src/platform-ui/pages/permissions src/platform-ui/components/composite/detail-tab-bar src/platform-ui/components/composite/detail-sidebar src/platform-ui/components/composite/instructions-editor src/platform-resources/agents/detail src/platform-resources/computers/detail",
-    "smoke": "npm run build && node ./examples/smoke-test.mjs",
+    "platform-resource-detail-test": "npm run platform-component-invariants && npm run platform-resource-invariants && vitest run src/platform-ui/pages/details src/platform-ui/pages/permissions src/platform-ui/components/composite/detail-tab-bar src/platform-ui/components/composite/detail-sidebar src/platform-ui/components/composite/instructions-editor src/platform-ui/components/composite/settings-section src/platform-resources/agents/detail src/platform-resources/computers/detail src/platform-services/create-mode/projects/client/detail",
+    "smoke": "npm run build && node ./tests/smoke.test.mjs",
     "platform:client:build": "npm run platform:client:typecheck && vite build --config ./apps/platform/vite.config.mjs",
     "platform:client:typecheck": "tsc -p ./apps/platform/client/tsconfig.json --noEmit",
     "platform:asset-test": "node ./apps/platform/server/platform-assets.test.mjs",

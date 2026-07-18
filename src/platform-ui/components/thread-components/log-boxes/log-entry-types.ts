@@ -1,8 +1,8 @@
 import type { RunnerLog } from "../../../../types.js";
-import type { ComputerAgentsListAvailableAgent } from "../../../../react/runner-agents-list-log-box.js";
-import type { ComputerAgentsListAvailableEnvironment } from "../../../../react/runner-environments-list-log-box.js";
-import type { RunnerPreviewAttachment } from "../../../../react/runner-document-preview.js";
-import type { TaskManagementListAvailableProject } from "../../../../react/runner-projects-list-log-box.js";
+import type { ComputerAgentsListAvailableAgent } from "./agents-list-log-box.js";
+import type { ComputerAgentsListAvailableEnvironment } from "./environments-list-log-box.js";
+import type { RunnerPreviewAttachment } from "../document-preview/preview-contracts.js";
+import type { TaskManagementListAvailableProject } from "./projects-list-log-box.js";
 
 export interface RunnerTaskPreviewClickPayload {
   taskId: string;

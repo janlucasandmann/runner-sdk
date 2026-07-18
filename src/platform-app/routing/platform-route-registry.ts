@@ -20,6 +20,7 @@ export type PlatformRouteId =
   | "skills"
   | "tags"
   | "configure-home"
+  | "notifications"
   | "models"
   | "marketplace"
   | "guardrails"
@@ -65,13 +66,14 @@ const ROUTES = [
   { id: "metronome", mode: "create", label: "Metronome", legacy: { page: "metronome" } },
   { id: "files", mode: "create", label: "Files", legacy: { page: "files" } },
   { id: "imagine", mode: "create", label: "Imagine", legacy: { page: "imagine" } },
+  { id: "configure-home", mode: "configure", label: "Home", legacy: { page: "configure-home" } },
+  { id: "notifications", mode: "configure", label: "Notifications", legacy: { page: "configure-notifications" } },
   { id: "agents", mode: "configure", label: "Agents", legacy: { page: "resources", resourceView: "agents" } },
   { id: "computers", mode: "configure", label: "Computers", legacy: { page: "resources", resourceView: "computers" } },
   { id: "servers", mode: "configure", label: "Servers", legacy: { page: "resources", resourceView: "servers" } },
   { id: "plugins", mode: "configure", label: "Plugins", legacy: { page: "tools", toolsView: "plugins" } },
   { id: "skills", mode: "configure", label: "Skills", legacy: { page: "tools", toolsView: "skills" } },
   { id: "tags", mode: "configure", label: "Tags", legacy: { page: "tools", toolsView: "tags" } },
-  { id: "configure-home", mode: "configure", label: "Home", legacy: { page: "configure-home" } },
   { id: "models", mode: "configure", label: "Models", legacy: { page: "models" } },
   { id: "marketplace", mode: "configure", label: "Marketplace", legacy: { page: "marketplace" } },
   { id: "guardrails", mode: "configure", label: "Guardrails", legacy: { page: "guardrails" } },

@@ -3,6 +3,7 @@
 Small, domain-agnostic primitives live in this directory. A UI component should have a narrow API, remain useful without platform-specific data, and compose naturally into larger interfaces.
 
 - `button`: primary and secondary action hierarchy and sizing.
+- `icon-button`: accessible icon-only controls with shared sizing and interaction states.
 - `label`: compact categorical labels with shared color variants.
 - `search`: controlled search input with the shared icon, states, and control height.
 - `selector`: single-value and button-triggered popup selectors with consistent portaled surfaces and keyboard behavior.

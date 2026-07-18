@@ -5,9 +5,9 @@ import type {
   RunnerMediaGenerationPromptPreviewData,
   RunnerWebSearchPreviewData,
   RunnerWebSearchPreviewSource,
-} from "../../../../react/runner-document-preview.js";
-import { RunnerImagePreviewSurface } from "../../../../react/runner-image-preview-surface.js";
-import { RunnerMarkdown } from "../../../../react/runner-markdown.js";
+} from "./preview-contracts.js";
+import { RunnerImagePreviewSurface } from "./image-preview-surface.js";
+import { RunnerMarkdown } from "../shared/runner-markdown.js";
 
 function getWebSearchPreviewSourceDomain(source: RunnerWebSearchPreviewSource): string {
   if (source.domain) {

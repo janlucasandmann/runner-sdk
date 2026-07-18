@@ -1,4 +1,6 @@
 import { ArrowRight, ArrowUpRight, BookOpen, MessagesSquare } from "lucide-react";
+import { PlatformPageHero } from "../../../platform-ui/components/composite/page-hero/index.js";
+import { PlatformUiCard } from "../../../platform-ui/components/composite/ui-card/index.js";
 import type { ConnectionOverviewRow } from "../../shared/connections/connection-overview-page.js";
 
 interface TagsOverviewGuideProps {
@@ -17,9 +19,16 @@ const CHANNEL_EXAMPLES = [
 
 function ExternalGuideLink({ href, children }: { href: string; children: string }) {
   return (
-    <a className="tags-overview-guide__link" href={href} target="_blank" rel="noreferrer">
-      <span>{children}</span>
-      <ArrowUpRight width={14} height={14} strokeWidth={1.8} aria-hidden="true" />
+    <a
+      className="platform-ui-card__feature-link"
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+    >
+      <span className="platform-ui-card__feature-link-label">{children}</span>
+      <span className="platform-ui-card__feature-link-end">
+        <ArrowUpRight width={14} height={14} strokeWidth={1.8} aria-hidden="true" />
+      </span>
     </a>
   );
 }
@@ -35,45 +44,65 @@ export function TagsOverviewGuide({
 
   return (
     <section className="tags-overview-guide" aria-label="Get started with Tags">
-      <header className="tags-overview-guide__intro">
-        <h1 className="tags-overview-guide__heading">Tags</h1>
-        <p className="tags-overview-guide__intro-description">
-          Connect Email, Telegram, and Discord to start agent tasks and receive results directly in those channels.
-        </p>
-      </header>
+      <PlatformPageHero
+        className="tags-overview-guide__hero"
+        title="Tags"
+        description="Connect Email, Telegram, and Discord to start agent tasks and receive results directly in those channels."
+      />
       <div className="tags-overview-guide__cards">
-        <article className="tags-overview-guide__card">
-          <BookOpen className="tags-overview-guide__icon is-learn" width={28} height={28} strokeWidth={1.6} aria-hidden="true" />
-          <h2 className="tags-overview-guide__title">Start with Tags</h2>
-          <p className="tags-overview-guide__description">
+        <PlatformUiCard as="article" variant="feature">
+          <span className="platform-ui-card__feature-icon is-cyan" aria-hidden="true">
+            <BookOpen width={34} height={34} strokeWidth={1.6} />
+          </span>
+          <h2 className="platform-ui-card__feature-title">Start with Tags</h2>
+          <p className="platform-ui-card__feature-description">
             Connect communication channels so people can start agent work and receive results without leaving the tools they already use.
           </p>
-          <nav className="tags-overview-guide__links" aria-label="Tags learning resources">
+          <nav
+            className="platform-ui-card__feature-links"
+            aria-label="Tags learning resources"
+          >
             <ExternalGuideLink href={quickstartUrl}>Quickstart</ExternalGuideLink>
             <ExternalGuideLink href={documentationUrl}>Documentation</ExternalGuideLink>
             <ExternalGuideLink href={tutorialUrl}>Event-driven tutorial</ExternalGuideLink>
           </nav>
-        </article>
+        </PlatformUiCard>
 
-        <article className="tags-overview-guide__card">
-          <MessagesSquare className="tags-overview-guide__icon is-examples" width={28} height={28} strokeWidth={1.6} aria-hidden="true" />
-          <h2 className="tags-overview-guide__title">Channel examples</h2>
-          <p className="tags-overview-guide__description">
+        <PlatformUiCard as="article" variant="feature">
+          <span className="platform-ui-card__feature-icon is-blue" aria-hidden="true">
+            <MessagesSquare width={34} height={34} strokeWidth={1.6} />
+          </span>
+          <h2 className="platform-ui-card__feature-title">Channel examples</h2>
+          <p className="platform-ui-card__feature-description">
             Inspect setup, capabilities, and access controls for each supported channel before connecting it.
           </p>
-          <div className="tags-overview-guide__links">
+          <div className="platform-ui-card__feature-links">
             {CHANNEL_EXAMPLES.map((example) => {
               const row = rowsById.get(example.id);
               if (!row) return null;
               return (
-                <button key={example.id} type="button" className="tags-overview-guide__link" onClick={() => onOpen(row)}>
-                  <span>{example.label}</span>
-                  <ArrowRight width={14} height={14} strokeWidth={1.8} aria-hidden="true" />
+                <button
+                  key={example.id}
+                  type="button"
+                  className="platform-ui-card__feature-link"
+                  onClick={() => onOpen(row)}
+                >
+                  <span className="platform-ui-card__feature-link-label">
+                    {example.label}
+                  </span>
+                  <span className="platform-ui-card__feature-link-end">
+                    <ArrowRight
+                      width={14}
+                      height={14}
+                      strokeWidth={1.8}
+                      aria-hidden="true"
+                    />
+                  </span>
                 </button>
               );
             })}
           </div>
-        </article>
+        </PlatformUiCard>
       </div>
     </section>
   );

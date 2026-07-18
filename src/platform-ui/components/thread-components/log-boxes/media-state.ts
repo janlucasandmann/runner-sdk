@@ -1,5 +1,5 @@
 import type { RunnerLog } from "../../../../types.js";
-import { stripRunnerSystemTags } from "../../../../react/runner-markdown.js";
+import { stripRunnerSystemTags } from "../shared/runner-markdown.js";
 import {
   isRunnerLogImageFilePath,
   isRunnerLogVideoFilePath,

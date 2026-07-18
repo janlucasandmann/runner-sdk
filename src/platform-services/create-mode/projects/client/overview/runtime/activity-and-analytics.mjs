@@ -577,393 +577,6 @@ export const PROJECT_OVERVIEW_ACTIVITY_ANALYTICS_FRAGMENT = String.raw`
             return buckets;
           }
 
-          function PlaygroundProjectOverviewProgressUsageChart({ dailyCtBuckets, maxDailyCt, maxProgressValue, series }) {
-            const canvasRef = useRef(null);
-            const chartRef = useRef(null);
-            const chartSignature = JSON.stringify({
-              buckets: dailyCtBuckets.map((bucket) => ({
-                key: bucket?.key || "",
-                label: bucket?.label || "",
-                totalCT: Math.max(0, Number(bucket?.totalCT || 0)),
-              })),
-              maxDailyCt,
-              maxProgressValue,
-              series: series.map((entry) => ({
-                id: entry.id,
-                values: Array.isArray(entry.values) ? entry.values : [],
-              })),
-            });
-
-            useEffect(() => () => {
-              if (chartRef.current) {
-                chartRef.current.destroy();
-                chartRef.current = null;
-              }
-            }, []);
-
-            useEffect(() => {
-              const canvas = canvasRef.current;
-              if (!canvas || typeof Chart !== "function") {
-                return undefined;
-              }
-
-              const labels = dailyCtBuckets.map((bucket) => String(bucket?.label || ""));
-              const dailyCtValues = dailyCtBuckets.map((bucket) => Math.max(0, Number(bucket?.totalCT || 0)));
-              const longRangeTickIndexes = (() => {
-                if (labels.length < 90) {
-                  return null;
-                }
-                const targetCount = labels.length >= 365 ? 7 : 6;
-                const indexes = new Set();
-                for (let tickIndex = 0; tickIndex < targetCount; tickIndex += 1) {
-                  indexes.add(Math.round(((labels.length - 1) * tickIndex) / Math.max(1, targetCount - 1)));
-                }
-                return indexes;
-              })();
-              const seriesById = series.reduce((map, entry) => {
-                map[entry.id] = Array.isArray(entry.values) ? entry.values : [];
-                return map;
-              }, {});
-              function makeVerticalGradient(context, stops, fallback) {
-                const chart = context?.chart;
-                const chartArea = chart?.chartArea;
-                const ctx = chart?.ctx;
-                if (!ctx || !chartArea) {
-                  return fallback;
-                }
-                const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-                stops.forEach(([offset, color]) => gradient.addColorStop(offset, color));
-                return gradient;
-              }
-              const hoverGuidePlugin = {
-                id: "projectOverviewProgressHoverGuide",
-                afterDatasetsDraw: (chartInstance) => {
-                  const activeElements = chartInstance?.tooltip?.getActiveElements?.() || [];
-                  if (!activeElements.length) {
-                    return;
-                  }
-                  const activeIndex = activeElements[0]?.index;
-                  const activeElement = activeElements[0]?.element;
-                  const chartArea = chartInstance.chartArea;
-                  const ctx = chartInstance.ctx;
-                  if (!ctx || !chartArea || typeof activeIndex !== "number" || !activeElement) {
-                    return;
-                  }
-                  const x = activeElement.x;
-                  const label = String(chartInstance?.data?.labels?.[activeIndex] || "");
-                  if (!label) {
-                    return;
-                  }
-                  ctx.save();
-                  ctx.setLineDash([4, 4]);
-                  ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
-                  ctx.lineWidth = 1;
-                  ctx.beginPath();
-                  ctx.moveTo(x, chartArea.top + 8);
-                  ctx.lineTo(x, chartArea.bottom);
-                  ctx.stroke();
-                  ctx.setLineDash([]);
-                  ctx.font = "500 12px Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif";
-                  const metrics = ctx.measureText(label);
-                  const paddingX = 8;
-                  const labelWidth = metrics.width + paddingX * 2;
-                  const labelHeight = 24;
-                  const labelX = Math.min(Math.max(x - labelWidth / 2, chartArea.left), chartArea.right - labelWidth);
-                  const labelY = chartArea.top - 2;
-                  const radius = 6;
-                  ctx.fillStyle = "rgba(46, 46, 52, 0.96)";
-                  ctx.beginPath();
-                  ctx.moveTo(labelX + radius, labelY);
-                  ctx.lineTo(labelX + labelWidth - radius, labelY);
-                  ctx.quadraticCurveTo(labelX + labelWidth, labelY, labelX + labelWidth, labelY + radius);
-                  ctx.lineTo(labelX + labelWidth, labelY + labelHeight - radius);
-                  ctx.quadraticCurveTo(labelX + labelWidth, labelY + labelHeight, labelX + labelWidth - radius, labelY + labelHeight);
-                  ctx.lineTo(labelX + radius, labelY + labelHeight);
-                  ctx.quadraticCurveTo(labelX, labelY + labelHeight, labelX, labelY + labelHeight - radius);
-                  ctx.lineTo(labelX, labelY + radius);
-                  ctx.quadraticCurveTo(labelX, labelY, labelX + radius, labelY);
-                  ctx.closePath();
-                  ctx.fill();
-                  ctx.fillStyle = "rgba(255, 255, 255, 0.82)";
-                  ctx.textBaseline = "middle";
-                  ctx.fillText(label, labelX + paddingX, labelY + labelHeight / 2 + 0.5);
-                  ctx.restore();
-                },
-              };
-              const edgeToEdgeChartAreaPlugin = {
-                id: "projectOverviewProgressEdgeToEdgeChartArea",
-                beforeDatasetsDraw: (chartInstance) => {
-                  const ctx = chartInstance?.ctx;
-                  const chartArea = chartInstance?.chartArea;
-                  const progressScale = chartInstance?.scales?.progress;
-                  if (!ctx || !chartArea || !progressScale) {
-                    return;
-                  }
-                  const min = Number(progressScale.min || 0);
-                  const max = Number(progressScale.max || 0);
-                  if (!Number.isFinite(min) || !Number.isFinite(max) || max <= min) {
-                    return;
-                  }
-                  ctx.save();
-                  ctx.setLineDash([5, 8]);
-                  ctx.strokeStyle = "rgba(255, 255, 255, 0.055)";
-                  ctx.lineWidth = 1;
-                  for (let index = 1; index < 4; index += 1) {
-                    const value = min + ((max - min) * index) / 4;
-                    const y = progressScale.getPixelForValue(value);
-                    if (!Number.isFinite(y)) {
-                      continue;
-                    }
-                    ctx.beginPath();
-                    ctx.moveTo(chartArea.left, y);
-                    ctx.lineTo(chartArea.right, y);
-                    ctx.stroke();
-                  }
-                  ctx.restore();
-                },
-              };
-              const chartData = {
-                labels,
-                datasets: [
-                  {
-                    id: "dailyCT",
-                    type: "bar",
-                    label: "Cost",
-                    data: dailyCtValues,
-                    yAxisID: "ct",
-                    backgroundColor: (context) => makeVerticalGradient(context, [
-                      [0, "rgba(102, 166, 255, 0.82)"],
-                      [1, "rgba(91, 103, 230, 0.64)"],
-                    ], "rgba(95, 112, 230, 0.72)"),
-                    borderColor: "rgba(95, 112, 230, 0.75)",
-                    borderWidth: 0,
-                    borderRadius: 2,
-                    barPercentage: 0.72,
-                    categoryPercentage: 0.86,
-                    maxBarThickness: 10,
-                    order: 4,
-                  },
-                  {
-                    id: "scope",
-                    type: "line",
-                    label: "Scope",
-                    data: seriesById.scope || [],
-                    yAxisID: "progress",
-                    borderColor: "rgba(160, 160, 166, 0.62)",
-                    backgroundColor: "rgba(160, 160, 166, 0.16)",
-                    borderWidth: 1.25,
-                    fill: false,
-                    pointBackgroundColor: "rgba(190, 190, 196, 0.86)",
-                    pointBorderColor: "#050505",
-                    pointBorderWidth: 2,
-                    pointRadius: (context) => context.dataIndex === (seriesById.scope || []).length - 1 ? 5 : 0,
-                    pointHoverRadius: 5,
-                    tension: 0.28,
-                    order: 1,
-                  },
-                  {
-                    id: "started",
-                    type: "line",
-                    label: "Started",
-                    data: seriesById.started || [],
-                    yAxisID: "progress",
-                    borderColor: "#7EFFFF",
-                    backgroundColor: (context) => makeVerticalGradient(context, [
-                      [0, "rgba(126, 255, 255, 0.2)"],
-                      [0.62, "rgba(126, 255, 255, 0.08)"],
-                      [1, "rgba(126, 255, 255, 0)"],
-                    ], "rgba(126, 255, 255, 0.08)"),
-                    borderWidth: 1.5,
-                    fill: false,
-                    pointBackgroundColor: "#7EFFFF",
-                    pointBorderColor: "#050505",
-                    pointBorderWidth: 2,
-                    pointRadius: (context) => context.dataIndex === (seriesById.started || []).length - 1 ? 5 : 0,
-                    pointHoverRadius: 5,
-                    tension: 0.28,
-                    order: 2,
-                  },
-                  {
-                    id: "completed",
-                    type: "line",
-                    label: "Completed",
-                    data: seriesById.completed || [],
-                    yAxisID: "progress",
-                    borderColor: "#4da3ff",
-                    backgroundColor: (context) => makeVerticalGradient(context, [
-                      [0, "rgba(77, 163, 255, 0.32)"],
-                      [0.55, "rgba(77, 163, 255, 0.16)"],
-                      [1, "rgba(77, 163, 255, 0)"],
-                    ], "rgba(77, 163, 255, 0.14)"),
-                    borderWidth: 1.5,
-                    fill: "origin",
-                    pointBackgroundColor: "#4da3ff",
-                    pointBorderColor: "#050505",
-                    pointBorderWidth: 2,
-                    pointRadius: (context) => context.dataIndex === (seriesById.completed || []).length - 1 ? 5 : 0,
-                    pointHoverRadius: 5,
-                    tension: 0.28,
-                    order: 3,
-                  },
-                ],
-              };
-              const chartOptions = {
-                animation: false,
-                responsive: true,
-                maintainAspectRatio: false,
-                normalized: true,
-                interaction: {
-                  intersect: false,
-                  mode: "index",
-                },
-                layout: {
-                  padding: {
-                    top: 12,
-                    right: 4,
-                    bottom: 0,
-                    left: 0,
-                  },
-                },
-                plugins: {
-                  legend: { display: false },
-                  tooltip: {
-                    enabled: true,
-                    backgroundColor: "rgba(8, 8, 8, 0.96)",
-                    borderColor: "rgba(255, 255, 255, 0.14)",
-                    borderWidth: 1,
-                    cornerRadius: 8,
-                    displayColors: true,
-                    titleColor: "rgba(255, 255, 255, 0.94)",
-                    bodyColor: "rgba(255, 255, 255, 0.78)",
-                    padding: 10,
-                    callbacks: {
-                      label: (context) => {
-                        const datasetId = context.dataset?.id || "";
-                        const value = Math.max(0, Number(context.parsed?.y || 0));
-                        if (datasetId === "dailyCT") {
-                          return "Cost: " + formatProjectOverviewCt(value);
-                        }
-                        return String(context.dataset?.label || "Progress") + ": " + formatProjectOverviewInteger(value);
-                      },
-                    },
-                  },
-                },
-                scales: {
-                  x: {
-                    type: "category",
-                    bounds: "data",
-                    offset: false,
-                    grid: { display: false, offset: false, drawBorder: false },
-                    border: { display: false },
-                    ticks: {
-                      align: "inner",
-                      autoSkip: false,
-                      color: "rgba(255, 255, 255, 0.38)",
-                      font: {
-                        size: 11,
-                        weight: "400",
-                        family: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
-                      },
-                      maxRotation: 0,
-                      minRotation: 0,
-                      padding: 10,
-                      callback: (_value, index) => {
-                        const bucket = dailyCtBuckets[index];
-                        const key = String(bucket?.key || "");
-                        const date = key ? new Date(key + "T00:00:00") : null;
-                        if (longRangeTickIndexes) {
-                          return longRangeTickIndexes.has(index)
-                            ? (date && !Number.isNaN(date.getTime())
-                              ? date.toLocaleDateString("en-US", { month: "short" })
-                              : (labels[index] || ""))
-                            : "";
-                        }
-                        if (labels.length === 30) {
-                          return index === 0 || index === labels.length - 1
-                            ? (labels[index] || "")
-                            : "";
-                        }
-                        if (labels.length <= 7) {
-                          return labels[index] || "";
-                        }
-                        if (date && !Number.isNaN(date.getTime()) && date.getDate() <= 2) {
-                          return date.toLocaleDateString("en-US", { month: "short" });
-                        }
-                        if (index === 0 || index === labels.length - 1) {
-                          return date && !Number.isNaN(date.getTime())
-                            ? date.toLocaleDateString("en-US", { month: "short" })
-                            : (labels[index] || "");
-                        }
-                        return "";
-                      },
-                    },
-                  },
-                  progress: {
-                    display: false,
-                    type: "linear",
-                    position: "left",
-                    min: 0,
-                    max: Math.max(1, Math.ceil(maxProgressValue * 1.18)),
-                    ticks: {
-                      display: false,
-                      maxTicksLimit: 4,
-                    },
-                    grid: {
-                      display: false,
-                      drawTicks: false,
-                    },
-                    border: { display: false },
-                  },
-                  ct: {
-                    display: true,
-                    type: "linear",
-                    position: "left",
-                    min: 0,
-                    max: Math.max(1, Math.ceil(maxDailyCt * 1.22)),
-                    ticks: {
-                      display: true,
-                      maxTicksLimit: 4,
-                      color: "rgba(255, 255, 255, 0.34)",
-                      padding: 8,
-                      font: {
-                        size: 11,
-                        weight: "400",
-                        family: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
-                      },
-                      callback: (value) => formatProjectOverviewCt(value),
-                    },
-                    grid: { display: false, drawTicks: false },
-                    border: { display: false },
-                  },
-                },
-              };
-
-              if (chartRef.current) {
-                chartRef.current.data = chartData;
-                chartRef.current.options = chartOptions;
-                chartRef.current.update("none");
-                return undefined;
-              }
-
-              chartRef.current = new Chart(canvas, {
-                type: "bar",
-                data: chartData,
-                options: chartOptions,
-                plugins: [edgeToEdgeChartAreaPlugin, hoverGuidePlugin],
-              });
-              return undefined;
-            }, [chartSignature]);
-
-            return React.createElement("div", { className: "playground-project-overview-progress-combo-chart-frame" },
-              React.createElement("canvas", {
-                ref: canvasRef,
-                className: "playground-project-overview-progress-combo-canvas",
-                role: "img",
-                "aria-label": "Project progress and daily cost",
-              })
-            );
-          }
-
           function renderProjectOverviewProgressUsageChartSection() {
             const progressStats = getProjectOverviewProgressStats();
             const performanceRangeOptions = [
@@ -976,97 +589,75 @@ export const PROJECT_OVERVIEW_ACTIVITY_ANALYTICS_FRAGMENT = String.raw`
               ? projectOverviewPerformanceRange
               : "1m";
             const activePerformanceRange = performanceRangeOptions.find((option) => option.id === activePerformanceRangeId)
-              || performanceRangeOptions[2];
+              || performanceRangeOptions[1];
             const dailyCtBuckets = buildProjectOverviewDailyCtBuckets(activePerformanceRange.bucketCount);
-            const series = buildProjectOverviewProgressSeriesForBuckets(dailyCtBuckets);
-            const maxSeriesValue = Math.max(
-              0,
-              ...series.flatMap((entry) => Array.isArray(entry.values) ? entry.values : [])
-                .map((value) => Math.max(0, Number(value || 0)))
-            );
-            const maxProgressValue = Math.max(
-              1,
-              progressStats.scopeCount,
-              progressStats.startedCount,
-              progressStats.completedCount,
-              maxSeriesValue
-            );
-            const maxDailyCt = Math.max(1, ...dailyCtBuckets.map((bucket) => Math.max(0, Number(bucket?.totalCT || 0))));
+            const progressSeries = buildProjectOverviewProgressSeriesForBuckets(dailyCtBuckets);
             const totalDailyCt = dailyCtBuckets.reduce((sum, bucket) => sum + Math.max(0, Number(bucket?.totalCT || 0)), 0);
-            const performanceKpis = progressStats.rows
-              .map((row) => ({
+            const metricColors = {
+              scope: "rgba(255, 255, 255, 0.72)",
+              started: "#7effff",
+              completed: "#4da3ff",
+              cost: "#8fc4ff",
+            };
+            const analytics = {
+              title: "Recent performance",
+              ariaLabel: "Project progress and cost analytics",
+              metrics: progressStats.rows.map((row) => ({
                 id: row.id,
                 label: row.label,
                 value: formatProjectOverviewInteger(row.value),
-              }))
-              .concat({
+                color: metricColors[row.id] || "rgba(255, 255, 255, 0.72)",
+              })).concat({
                 id: "cost",
                 label: "Cost",
                 value: formatProjectOverviewCt(totalDailyCt),
-              });
-            const handlePerformanceRangeSelect = (nextRangeId) => {
-              if (typeof setProjectOverviewPerformanceRange === "function") {
-                setProjectOverviewPerformanceRange(nextRangeId);
-              }
+                color: metricColors.cost,
+              }),
+              labels: dailyCtBuckets.map((bucket) => String(bucket?.label || "")),
+              series: [
+                {
+                  id: "cost",
+                  label: "Cost",
+                  values: dailyCtBuckets.map((bucket) => Math.max(0, Number(bucket?.totalCT || 0))),
+                  color: metricColors.cost,
+                  type: "bar",
+                  axis: "secondary",
+                  valueKind: "tokens",
+                },
+                ...progressSeries.map((entry) => ({
+                  id: entry.id,
+                  label: entry.id === "scope" ? "Scope" : entry.id === "started" ? "Started" : "Completed",
+                  values: entry.values,
+                  color: metricColors[entry.id] || "rgba(255, 255, 255, 0.72)",
+                  type: "line",
+                  axis: "primary",
+                  valueKind: "count",
+                  fill: entry.id === "completed",
+                })),
+              ],
+              loading: projectOverviewCostSummaryState?.status === "loading"
+                && projectThreads.length === 0
+                && progressStats.scopeCount === 0,
             };
-            const handlePerformanceChartDownload = () => {
-              if (typeof document === "undefined") {
-                return;
-              }
-              const canvas = document.querySelector(".playground-project-overview-progress-combo-canvas");
-              if (!canvas || typeof canvas.toDataURL !== "function") {
-                return;
-              }
-              const link = document.createElement("a");
-              link.href = canvas.toDataURL("image/png");
-              link.download = "project-recent-performance.png";
-              link.click();
-            };
-
-            return React.createElement("section", { className: "playground-project-overview-progress-combo-card" },
-              React.createElement("div", { className: "playground-project-overview-progress-combo-topbar" },
-                React.createElement("h2", { className: "playground-project-overview-progress-combo-title" }, "Recent performance"),
-                React.createElement("div", { className: "playground-project-overview-progress-combo-actions" },
-                  React.createElement("div", { className: "playground-project-overview-progress-combo-ranges", role: "group", "aria-label": "Performance range" },
-                    performanceRangeOptions.map((option) =>
-                      React.createElement("button", {
-                        key: option.id,
-                        type: "button",
-                        className: "playground-project-overview-progress-combo-range" + (activePerformanceRange.id === option.id ? " is-active" : ""),
-                        onClick: () => handlePerformanceRangeSelect(option.id),
-                        "aria-pressed": activePerformanceRange.id === option.id ? "true" : "false",
-                      }, option.label)
-                    )
-                  ),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-project-overview-progress-combo-download",
-                    onClick: handlePerformanceChartDownload,
-                    title: "Download chart",
-                    "aria-label": "Download recent performance chart",
-                  }, React.createElement(Download, { width: 15, height: 15, strokeWidth: 1.8 }))
-                )
-              ),
-              React.createElement("div", { className: "playground-project-overview-progress-combo-metrics" },
-                performanceKpis.map((item) =>
-                  React.createElement("div", { key: item.id, className: "playground-project-overview-progress-combo-metric" },
-                    React.createElement("div", { className: "playground-project-overview-progress-combo-metric-label" },
-                      React.createElement("span", { className: "playground-project-overview-progress-combo-metric-dot is-" + item.id, "aria-hidden": "true" }),
-                      React.createElement("span", null, item.label)
-                    ),
-                    React.createElement("div", { className: "playground-project-overview-progress-combo-metric-value" }, item.value)
-                  )
-                )
-              ),
-              React.createElement("div", { className: "playground-project-overview-progress-combo-chart" },
-                React.createElement(PlaygroundProjectOverviewProgressUsageChart, {
-                  dailyCtBuckets,
-                  maxDailyCt,
-                  maxProgressValue,
-                  series,
-                })
-              )
-            );
+            return React.createElement(PlatformAnalyticsSection, {
+              variant: "framed",
+              className: "playground-project-detail-analytics",
+              analytics,
+              title: "Recent performance",
+              timeframe: {
+                value: activePerformanceRange.id,
+                options: performanceRangeOptions.map((option) => ({
+                  value: option.id,
+                  label: option.label,
+                })),
+                onValueChange: (nextRangeId) => {
+                  if (typeof setProjectOverviewPerformanceRange === "function") {
+                    setProjectOverviewPerformanceRange(nextRangeId);
+                  }
+                },
+                ariaLabel: "Project analytics time frame",
+              },
+            });
           }
 
           function renderProjectOverviewWidgetHeader(title, Icon, action) {

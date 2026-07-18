@@ -30,6 +30,10 @@ Node contract discovery includes `*.test.mjs` and `*-service-test.mjs` beneath
 `apps` and `src`. The architecture suite is intentionally separate because it
 inspects production build output.
 
+Build-dependent integration and smoke tests live under `tests/`. Consumer
+examples and the manually launched thread UI preview remain under `examples/`;
+test executables must not be mixed back into the example directory.
+
 ## Compatibility fixtures
 
 Several legacy browser-source tests compare a reviewed SHA-256 fixture with the

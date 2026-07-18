@@ -2,11 +2,16 @@
 @import "../../../../../src/platform-ui/components/composite/data-table/data-table.css";
 @import "../../../../../src/platform-ui/components/composite/detail-tab-bar/detail-tab-bar.css";
 @import "../../../../../src/platform-ui/components/composite/empty-state/empty-state.css";
+@import "../../../../../src/platform-ui/components/composite/loading-state/loading-state.css";
 @import "../../../../../src/platform-ui/components/composite/modal/modal.css";
 @import "../../../../../src/platform-ui/components/composite/popup/popup.css";
+@import "../../../../../src/platform-ui/components/composite/settings-section/settings-section.css";
+@import "../../../../../src/platform-ui/components/composite/ui-card/ui-card.css";
 @import "../../../../../src/platform-ui/components/ui/button/button.css";
+@import "../../../../../src/platform-ui/components/ui/icon-button/icon-button.css";
 @import "../../../../../src/platform-ui/components/ui/label/label.css";
 @import "../../../../../src/platform-ui/components/ui/search/search.css";
+@import "../../../../../src/platform-ui/pages/home/platform-home.css";
 @import "../../../../../src/platform-ui/pages/overview/resource-overview.css";
 @import "../../../../../src/platform-services/configure-mode/configure-home/client/styles/configure-home.css";
 @import "../../../../../src/platform-services/configure-mode/models/client/styles/models.css";
@@ -20,7 +25,9 @@
   font-synthesis: none;
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 html,
 body,
@@ -178,12 +185,15 @@ select {
   text-decoration: none;
 }
 
-.platform-client-header a:hover { color: #fff; }
+.platform-client-header a:hover {
+  color: #fff;
+}
 
 .platform-client-content {
   min-width: 0;
   min-height: 0;
   flex: 1 1 0;
+  background: #000;
   overflow: hidden;
 }
 
@@ -226,10 +236,17 @@ select {
 }
 
 @media (max-width: 820px) {
-  .platform-client-shell { grid-template-columns: 64px minmax(0, 1fr); }
+  .platform-client-shell {
+    grid-template-columns: 64px minmax(0, 1fr);
+  }
   .platform-client-brand span,
-  .platform-client-navigation a { font-size: 0; }
-  .platform-client-brand { justify-content: center; padding: 0; }
+  .platform-client-navigation a {
+    font-size: 0;
+  }
+  .platform-client-brand {
+    justify-content: center;
+    padding: 0;
+  }
   .platform-client-navigation a {
     justify-content: center;
     padding: 0;

@@ -3,8 +3,8 @@ import {
   type RunnerDocumentPreviewKind,
   type RunnerPreviewAttachment,
   type RunnerPreviewDirectoryEntry,
-} from "../../../../react/runner-document-preview.js";
-import { getRunnerSpreadsheetFormat } from "../../../../react/runner-spreadsheet-utils.js";
+} from "./preview-contracts.js";
+import { getRunnerSpreadsheetFormat } from "./spreadsheet-utils.js";
 
 export interface AttachmentDocumentPreviewState {
   status: "idle" | "loading" | "ready" | "error";

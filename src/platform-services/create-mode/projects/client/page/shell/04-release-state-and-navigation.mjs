@@ -783,27 +783,8 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
             return haystack.includes(normalizedSearchQuery);
           });
 
-          if (projectsHomeSortMode === "updated-desc") {
-            return matchedProjects;
-          }
-
-          return matchedProjects.slice().sort((left, right) => {
-            if (projectsHomeSortMode === "name-asc") {
-              return String(left.name || "").localeCompare(String(right.name || ""));
-            }
-            if (projectsHomeSortMode === "tasks-desc") {
-              const openTaskDelta = Number(right.summary?.openTasksCount || 0) - Number(left.summary?.openTasksCount || 0);
-              if (openTaskDelta !== 0) {
-                return openTaskDelta;
-              }
-            }
-            const updatedOrder = String(right.updatedAt || right.createdAt || "").localeCompare(String(left.updatedAt || left.createdAt || ""));
-            if (updatedOrder !== 0) {
-              return updatedOrder;
-            }
-            return String(left.name || "").localeCompare(String(right.name || ""));
-          });
-        }, [currentProjectViewerTokens, normalizedSearchQuery, projects, projectsHomeFilterMode, projectsHomeScope, projectsHomeSortMode]);
+          return matchedProjects;
+        }, [currentProjectViewerTokens, normalizedSearchQuery, projects, projectsHomeFilterMode, projectsHomeScope]);
 
         const sortedTasks = useMemo(() => {
           return [...tasks]

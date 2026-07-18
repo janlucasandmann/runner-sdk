@@ -63,6 +63,12 @@ for (const resource of requiredResources) {
 for (const file of [
   "src/platform-ui/pages/details/index.ts",
   "src/platform-ui/pages/details/resource-detail-page.tsx",
+  "src/platform-ui/pages/home/index.ts",
+  "src/platform-ui/pages/home/README.md",
+  "src/platform-ui/pages/home/platform-home-page.test.tsx",
+  "src/platform-ui/pages/home/platform-home-page.tsx",
+  "src/platform-ui/pages/home/platform-home-types.ts",
+  "src/platform-ui/pages/home/platform-home.css",
   "src/platform-ui/pages/permissions/index.ts",
   "src/platform-ui/pages/permissions/README.md",
   "src/platform-ui/pages/permissions/permission-catalog.ts",
@@ -299,20 +305,95 @@ if (!computerDetailControllerSource.includes("React.createElement(PlatformAnalyt
 if (!computerDetailControllerSource.includes("React.createElement(PlatformInstructionsEditor")) {
   failures.push("computer descriptions must use PlatformInstructionsEditor");
 }
+if (!computerDetailControllerSource.includes("React.createElement(PlatformSettingsSectionList")) {
+  failures.push("computer advanced settings must use PlatformSettingsSectionList");
+}
+if (!computerDetailControllerSource.includes("React.createElement(PlatformSettingsSection")) {
+  failures.push("computer advanced settings must use PlatformSettingsSection");
+}
+if (!computerDetailControllerSource.includes("React.createElement(PlatformSelector")) {
+  failures.push("computer runtime versions must use PlatformSelector");
+}
+if (!computerDetailControllerSource.includes("React.createElement(PlatformButtonSelector")) {
+  failures.push("computer version selection must use PlatformButtonSelector");
+}
+if (!computerDetailControllerSource.includes("React.createElement(AgentPublishControl")) {
+  failures.push("computer publishing must reuse the shared agent publish control");
+}
+if (!computerDetailControllerSource.includes("environmentDetailTopNavActions")) {
+  failures.push("computer publishing must render through the shared app-header action portal");
+}
+if (computerDetailControllerSource.includes("\"Dockerfile Extension\"")) {
+  failures.push("computer advanced settings must not render the retired Dockerfile Extension section");
+}
 for (const retiredComputerDetailRenderer of [
   "renderEnvironmentDetailTimescaleControl",
   "renderEnvironmentDetailActivityChart",
   "environmentDescriptionFormatActions",
+  "renderEnvironmentPublishSplitButton",
+  "renderEnvironmentVersionCountLabel",
+  "renderEnvironmentTagsControl",
 ]) {
   if (computerDetailControllerSource.includes(retiredComputerDetailRenderer)) {
     failures.push(`computer detail still owns retired shared UI: ${retiredComputerDetailRenderer}`);
   }
 }
 
+const projectDetailPageSource = await fs.readFile(
+  path.join(packageRoot, "src", "platform-services", "create-mode", "projects", "client", "detail", "project-detail-page.tsx"),
+  "utf8",
+);
+if (!projectDetailPageSource.includes("ResourceDetailPage")) {
+  failures.push("ProjectDetailPage must compose the shared ResourceDetailPage");
+}
+const projectOverviewControllerSource = await fs.readFile(
+  path.join(packageRoot, "src", "platform-services", "create-mode", "projects", "client", "overview", "runtime", "sidebar-and-composition.mjs"),
+  "utf8",
+);
+const projectAnalyticsControllerSource = await fs.readFile(
+  path.join(packageRoot, "src", "platform-services", "create-mode", "projects", "client", "overview", "runtime", "activity-and-analytics.mjs"),
+  "utf8",
+);
+const projectThreadsControllerSource = await fs.readFile(
+  path.join(packageRoot, "src", "platform-services", "create-mode", "projects", "client", "overview", "runtime", "files-and-activity.mjs"),
+  "utf8",
+);
+if (!projectOverviewControllerSource.includes("React.createElement(ProjectDetailPage")) {
+  failures.push("the project overview controller must consume the modular ProjectDetailPage");
+}
+if (!projectOverviewControllerSource.includes("React.createElement(PlatformInstructionsEditor")) {
+  failures.push("project strategy notes must use PlatformInstructionsEditor");
+}
+if (!projectAnalyticsControllerSource.includes("React.createElement(PlatformAnalyticsSection")) {
+  failures.push("project detail analytics must use PlatformAnalyticsSection");
+}
+if (projectAnalyticsControllerSource.includes("PlaygroundProjectOverviewProgressUsageChart")) {
+  failures.push("project detail analytics must not retain its retired local Chart.js renderer");
+}
+if (!projectThreadsControllerSource.includes("tableOptions: {")) {
+  failures.push("project detail threads must use the centralized PlatformDataTable toolbar");
+}
+const projectAppHeaderSource = await fs.readFile(
+  path.join(packageRoot, "apps", "platform", "client", "legacy", "domains", "shell", "controller", "composition-and-modals.template.js"),
+  "utf8",
+);
+const projectNavStart = projectAppHeaderSource.indexOf("function renderTasksPageNav()");
+const projectNavEnd = projectNavStart >= 0
+  ? projectAppHeaderSource.indexOf("function ", projectNavStart + 32)
+  : -1;
+const projectNavSource = projectNavStart >= 0
+  ? projectAppHeaderSource.slice(projectNavStart, projectNavEnd > projectNavStart ? projectNavEnd : undefined)
+  : "";
+if (!projectNavSource.includes("React.createElement(PlatformSwitch")) {
+  failures.push("the project app header must use PlatformSwitch for overview, backlog, and board");
+}
+
 const packageJson = JSON.parse(await fs.readFile(path.join(packageRoot, "package.json"), "utf8"));
 const canonicalExport = packageJson.exports?.["./platform-resources"];
 const compatibilityExport = packageJson.exports?.["./platform-ui/resources"];
 const developModeExport = packageJson.exports?.["./platform-services/develop-mode"];
+const homePageExport = packageJson.exports?.["./platform-ui/pages/home"];
+const homePageStylesExport = packageJson.exports?.["./platform-ui/pages/home/styles.css"];
 const permissionsPageExport = packageJson.exports?.["./platform-ui/pages/permissions"];
 const permissionsPageStylesExport = packageJson.exports?.["./platform-ui/pages/permissions/styles.css"];
 const expectedModulePath = "./dist/platform-resources/index.js";
@@ -324,6 +405,12 @@ if (compatibilityExport?.default !== expectedModulePath) {
 }
 if (developModeExport?.default !== "./dist/platform-services/develop-mode/index.js") {
   failures.push("package export ./platform-services/develop-mode must target the develop-mode service output");
+}
+if (homePageExport?.default !== "./dist/platform-ui/pages/home/index.js") {
+  failures.push("package export ./platform-ui/pages/home must target the canonical Home page output");
+}
+if (homePageStylesExport?.default !== "./dist/platform-ui/pages/home/platform-home.css") {
+  failures.push("package export ./platform-ui/pages/home/styles.css must target the canonical Home stylesheet");
 }
 if (permissionsPageExport?.default !== "./dist/platform-ui/pages/permissions/index.js") {
   failures.push("package export ./platform-ui/pages/permissions must target the canonical permissions page output");

@@ -13,12 +13,8 @@ import {
 import { readPlatformCompositionSource } from "../../../../apps/platform/testing/platform-composition-source.mjs";
 
 assert.deepEqual(Object.keys(CONFIGURE_HOME_STYLE_FRAGMENTS), [
-  "foundation",
-  "overviewCards",
   "notificationPage",
 ]);
-assert.match(CONFIGURE_HOME_STYLE_FRAGMENTS.foundation, /\.playground-configure-overview-controls-slot/);
-assert.match(CONFIGURE_HOME_STYLE_FRAGMENTS.overviewCards, /\.configure-home-overview__teaser/);
 assert.match(CONFIGURE_HOME_STYLE_FRAGMENTS.notificationPage, /\.configure-home-notification__identity/);
 assert.equal(Object.values(CONFIGURE_HOME_STYLE_FRAGMENTS).join(""), CONFIGURE_HOME_PAGE_CSS);
 assert.equal(
@@ -58,11 +54,26 @@ assert.doesNotMatch(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.notificationsState, /not
 assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.state, /configureHomeTab/);
 assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.notificationStorageKey, /notificationReadStorageKey/);
 assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.notificationNavigation, /function openNotificationsPage/);
+assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.notificationNavigation, /setConfigureHomeTab\("notifications"\)/);
 assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.navigation, /function openConfigureHome/);
+assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.historyCapture, /mode: configureHomeTab === "notifications"/);
 assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.historyRestore, /entry\.page === "configure"/);
-assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.selectedTitle, /activePage === "configure"/);
+assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.historyRestore, /entry\.mode === "notifications"/);
+assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.selectedTitle, /configureHomeTab === "notifications"/);
 assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, /function renderConfigureHomeNav/);
+assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, /function renderConfigureHomeCreateSelector/);
+assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, /React\.createElement\(PlatformButtonSelector/);
+assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, /buttonVariant: "primary"/);
+assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, /popupVariant: "minimal"/);
+assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, /label: "New"/);
+for (const label of ["Agent", "Computer", "Skill", "Team", "Organization"]) {
+  assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, new RegExp(`label: "${label}"`));
+}
+assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, /openResourcesView\("computers", \{ create: true/);
+assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, /openToolsView\("skills", \{ create: true/);
 assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.sidebarEntry, /id: "configure-home"/);
+assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.sidebarEntry, /id: "configure-notifications"/);
+assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.sidebarEntry, /Icon: Bell/);
 assert.doesNotThrow(() => new Function(`
   function configureHomeShellHost() {
     ${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.notificationsState}
@@ -70,6 +81,10 @@ assert.doesNotThrow(() => new Function(`
     ${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.notificationStorageKey}
     ${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.notificationNavigation}
     ${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.navigation}
+    const captureHistory = () => {
+      ${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.historyCapture}
+      return { page: "" };
+    };
     const restoreHistory = (entry) => {
       ${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.historyRestore}
     };
@@ -79,7 +94,7 @@ assert.doesNotThrow(() => new Function(`
     };
     ${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation}
     const sidebarEntries = [${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.sidebarEntry}];
-    return { restoreHistory, getTitle, sidebarEntries };
+    return { captureHistory, restoreHistory, getTitle, sidebarEntries };
   }
 `));
 
@@ -88,10 +103,18 @@ const pageFragments = createConfigureHomePageScriptFragments({ pricingUrl });
 assert.deepEqual(Object.keys(pageFragments), [
   "notificationsSection",
   "home",
+  "notifications",
 ]);
 assert.match(pageFragments.notificationsSection, /function getConfigureHomeNotificationActions/);
 assert.match(pageFragments.home, /function renderConfigureHomePage/);
 assert.match(pageFragments.home, /ConfigureHomeOverviewPage/);
+assert.match(pageFragments.home, /onOpenNotifications: openNotificationsPage/);
+assert.match(pageFragments.home, /onOpenEvaluations: openEvaluationsOverviewPage/);
+assert.match(pageFragments.home, /onOpenGuardrails: openGuardrailsOverviewPage/);
+assert.doesNotMatch(pageFragments.home, /NotificationsOverviewPage/);
+assert.doesNotMatch(pageFragments.home, /visibleNotificationPageItems/);
+assert.match(pageFragments.notifications, /function renderConfigureNotificationsPage/);
+assert.match(pageFragments.notifications, /NotificationsOverviewPage/);
 assert.doesNotMatch(pageFragments.home, /PlatformDataTable/);
 assert.match(pageFragments.home, new RegExp(JSON.stringify(pricingUrl).replace(/[.*+?^\${}()|[\]\\]/g, "\\$&")));
 assert.doesNotThrow(() => new Function(Object.values(pageFragments).join("")));
@@ -105,10 +128,10 @@ assert.match(
   /import \{[^}]*ConfigureHomeOverviewPage[^}]*\} from "\/dist\/platform-app\/routing\/platform-lazy-pages\.js"/,
 );
 assert.match(platformEntrySource, /configureHomeService\.handleRequest\(req, res, url\)/);
-assert.match(platformEntrySource, /\$\{CONFIGURE_HOME_STYLE_FRAGMENTS\.foundation\}/);
 assert.match(platformEntrySource, /\$\{CONFIGURE_HOME_DOMAIN_SCRIPT_FRAGMENTS\.storage\}/);
 assert.match(platformEntrySource, /\$\{CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS\.notificationProjection\}/);
 assert.match(platformEntrySource, /\$\{CONFIGURE_HOME_PAGE_SCRIPT_FRAGMENTS\.home\}/);
+assert.match(platformEntrySource, /\$\{CONFIGURE_HOME_PAGE_SCRIPT_FRAGMENTS\.notifications\}/);
 assert.match(platformEntrySource, /configurePrimaryEntries: CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS\.sidebarEntry/);
 assert.doesNotMatch(platformEntrySource, /^\s*\.configure-home-overview__teaser \{/m);
 assert.doesNotMatch(platformEntrySource, /function readStoredNotificationIds\(/);

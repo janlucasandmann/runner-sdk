@@ -4,6 +4,14 @@ This directory owns the thread-facing attachment preview experience. The
 public entry point is `index.ts`; the former
 `src/react/runner-document-preview-drawer.tsx` path is a compatibility facade
 and must not regain implementation logic.
+`document-preview.css` owns the drawer and specialized preview cascade and is
+composed through `scripts/runner-chat-style-sources.mjs`.
+Preview contracts, image editing/preview surfaces, file diffs, presentations,
+and spreadsheets are owned here as well. Their former `src/react` entry points
+are compatibility facades only.
+Shared thread file/icon assets live in the adjacent `assets/` directory; the
+production asset copier retains the private `dist/react/assets` output path for
+compatibility.
 
 ## Responsibility map
 

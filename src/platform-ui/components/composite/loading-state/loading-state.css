@@ -1,0 +1,31 @@
+.platform-loading-state {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.platform-loading-state.is-centered {
+  width: 100%;
+  min-height: 120px;
+  flex: 1 1 auto;
+  align-self: stretch;
+  justify-content: center;
+}
+
+.platform-loading-state__loader {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.platform-loading-state__message {
+  min-width: 0;
+  color: inherit;
+}

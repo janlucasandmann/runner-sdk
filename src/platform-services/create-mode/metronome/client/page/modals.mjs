@@ -61,7 +61,7 @@ export const METRONOME_PAGE_MODALS_SCRIPT = String.raw`
           const renderWorkflowNameModal = () => {
             if (!workflowNameModal) return null;
             const isCreate = workflowNameModal.mode === "create";
-            const wallpaperOptions = getMetronomeWorkflowWallpaperOptions();
+            const wallpaperOptions = isCreate ? [] : getMetronomeWorkflowWallpaperOptions();
             const currentWallpaperId = getMetronomeWorkflowWallpaperId(workflowWallpaperDraftId, wallpaperOptions[0]?.id || "");
             const currentWallpaper = getMetronomeWorkflowWallpaperConfig(currentWallpaperId);
             const getWorkflowWallpaperPreviewUrl = (wallpaper) => String(wallpaper?.url || "").trim();
@@ -99,54 +99,57 @@ export const METRONOME_PAGE_MODALS_SCRIPT = String.raw`
             const isWorkflowWallpaperPreviewTransitioning = workflowWallpaperTransition
               && typeof workflowWallpaperTransition.fromPreview === "string"
               && typeof workflowWallpaperTransition.toPreview === "string";
-            return React.createElement(PlatformModalBackdrop, {
-              className: "playground-tasks-project-modal-backdrop playground-metronome-name-modal-backdrop playground-metronome-workflow-modal-backdrop"
-                + (workflowNameModalVisible ? " is-visible" : "")
-                + (workflowNameModalClosing ? " is-closing" : ""),
-              role: "dialog",
-              "aria-modal": "true",
-              onClick: closeWorkflowNameModal,
-            },
-              React.createElement(PlatformModalSurface, {
-                as: "form",
-                className: "playground-tasks-project-modal playground-tasks-project-composer-modal playground-metronome-name-modal playground-metronome-workflow-modal"
-                  + (workflowNameModalVisible ? " is-visible" : "")
-                  + (workflowNameModalClosing ? " is-closing" : ""),
-                onClick: (event) => event.stopPropagation(),
+            return React.createElement(PlatformModal, {
+              open: !workflowNameModalClosing,
+              animationDurationMs: typeof PLAYGROUND_PLATFORM_MODAL_ANIMATION_MS === "number"
+                ? PLAYGROUND_PLATFORM_MODAL_ANIMATION_MS
+                : 60,
+              onClose: () => closeWorkflowNameModal(),
+              onExited: finishCloseWorkflowNameModal,
+              as: "form",
+              size: isCreate ? "small" : "medium",
+              className: "playground-metronome-workflow-name-modal"
+                + (isCreate ? " is-create" : " is-edit"),
+              title: isCreate ? "Create Metronome Workflow" : "Edit Metronome",
+              closeButtonLabel: isCreate ? "Close create Metronome modal" : "Close edit Metronome modal",
+              initialFocusRef: workflowNameInputRef,
+              bodyClassName: "playground-metronome-workflow-name-modal__body",
+              footerClassName: "playground-metronome-workflow-name-modal__footer",
+              surfaceProps: {
                 onSubmit: (event) => {
                   event.preventDefault();
                   void commitWorkflowNameModal();
                 },
               },
-                React.createElement("div", { className: "playground-metronome-workflow-modal-scroll" },
-                React.createElement("div", { className: "playground-tasks-project-modal-top playground-metronome-workflow-modal-top" },
-                  React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
-                    React.createElement("span", {
-                      className: "playground-tasks-project-modal-icon-trigger playground-metronome-workflow-modal-icon",
-                      "aria-hidden": "true",
-                    }, React.createElement(Metronome, { width: 20, height: 20, strokeWidth: 1.9 })),
-                    React.createElement("input", {
-                      className: "playground-tasks-project-modal-name-input playground-metronome-workflow-modal-name-input",
-                      value: workflowNameDraft,
-                      placeholder: "Metronome name",
-                      autoFocus: true,
-                      onChange: (event) => setWorkflowNameDraft(event.target.value),
-                      onKeyDown: (event) => {
-                        if (event.key === "Escape") {
-                          event.preventDefault();
-                          closeWorkflowNameModal();
-                        }
-                      },
-                    }),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-settings-icon-button playground-tasks-project-modal-close",
-                      onClick: closeWorkflowNameModal,
-                      title: "Close",
-                      "aria-label": "Close",
-                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-                  )
-                ),
+              footer: React.createElement(React.Fragment, null,
+                React.createElement(PlatformSecondaryButton, {
+                  size: "medium",
+                  type: "button",
+                  onClick: () => closeWorkflowNameModal(),
+                }, "Cancel"),
+                React.createElement(PlatformPrimaryButton, {
+                  size: "medium",
+                  type: "submit",
+                  disabled: !String(workflowNameDraft || "").trim(),
+                }, isCreate ? "Create" : "Save")
+              ),
+            },
+              React.createElement("label", {
+                className: "playground-tasks-project-modal-field playground-metronome-workflow-name-modal__field",
+              },
+                React.createElement("span", {
+                  className: "playground-tasks-project-modal-label",
+                }, "Name"),
+                React.createElement("input", {
+                  ref: workflowNameInputRef,
+                  className: "playground-environments-input playground-metronome-workflow-name-modal__input",
+                  value: workflowNameDraft,
+                  placeholder: "Metronome name",
+                  autoComplete: "off",
+                  required: true,
+                  onChange: (event) => setWorkflowNameDraft(event.target.value),
+                })
+              ),
                 wallpaperOptions.length
                   ? React.createElement("div", { className: "playground-tasks-project-wallpaper-field playground-metronome-workflow-wallpaper-field" },
                       React.createElement("div", { className: "playground-tasks-project-initial-setup-label" }, "Background"),
@@ -195,22 +198,7 @@ export const METRONOME_PAGE_MODALS_SCRIPT = String.raw`
                         )
                       )
                     )
-                  : null,
-                React.createElement("div", { className: "playground-tasks-project-modal-actions playground-metronome-name-modal-actions" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-environments-action-button",
-                    onClick: closeWorkflowNameModal,
-                  }, "Cancel"),
-                  React.createElement(PlatformPrimaryButton, {
-                    size: "medium",
-                    type: "submit",
-                    className: "playground-environments-action-button is-primary",
-                    disabled: !String(workflowNameDraft || "").trim(),
-                  }, isCreate ? "Create" : "Save")
-                )
-                )
-              )
+                  : null
             );
           };
 

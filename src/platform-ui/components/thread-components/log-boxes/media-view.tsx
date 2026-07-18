@@ -3,20 +3,20 @@ import type { ReactNode } from "react";
 import { Images, ScanEye, Video } from "lucide-react";
 
 import type { RunnerLog } from "../../../../types.js";
-import { DotLoader } from "../../../../react/dot-loader.js";
-import { RunnerImagePreviewSurface } from "../../../../react/runner-image-preview-surface.js";
+import { DotLoader } from "../../ui/dot-loader/index.js";
+import { RunnerImagePreviewSurface } from "../document-preview/image-preview-surface.js";
 import {
   LazyMediaPreviewMount,
   RunnerLazyMediaPreviewLoader,
-} from "../../../../react/runner-lazy-media-preview.js";
-import { LogHeader, LogPanel } from "../../../../react/runner-log-card.js";
+} from "../shared/lazy-media-preview.js";
+import { LogHeader, LogPanel } from "./log-card.js";
 import {
   buildRunnerPreviewAttachmentFromPath,
   buildRunnerPreviewDownloadUrl,
   type RunnerImageUnderstandingPreviewItem,
   type RunnerMediaGenerationPromptPreviewData,
   type RunnerPreviewAttachment,
-} from "../../../../react/runner-document-preview.js";
+} from "../document-preview/preview-contracts.js";
 import {
   getFileName,
   isRunnerLogImageFilePath,

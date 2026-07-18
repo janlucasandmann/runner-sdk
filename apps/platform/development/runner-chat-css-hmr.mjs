@@ -17,11 +17,17 @@ function isRunnerChatGeneratedCssImport(id, importer) {
   if (!importer) return false;
   const normalizedId = String(id || "").split("?")[0].replaceAll("\\", "/");
   const normalizedImporter = String(importer).split("?")[0].replaceAll("\\", "/");
-  return normalizedImporter.endsWith("/src/react/runner-chat-styles.ts")
+  return normalizedImporter.endsWith(
+    "/src/platform-ui/components/thread-components/styles/thread-component-styles.ts",
+  )
     && (
-      normalizedId === "./runner-chat-css.js"
-      || normalizedId.endsWith("/src/react/runner-chat-css.js")
-      || normalizedId.endsWith("/src/react/runner-chat-css.ts")
+      normalizedId === "./thread-component-css.js"
+      || normalizedId.endsWith(
+        "/src/platform-ui/components/thread-components/styles/thread-component-css.js",
+      )
+      || normalizedId.endsWith(
+        "/src/platform-ui/components/thread-components/styles/thread-component-css.ts",
+      )
     );
 }
 

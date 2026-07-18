@@ -54,6 +54,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         onRequireAuth,
         onRequestSidebarCollapse,
         useUnifiedProjectNav = false,
+        projectsHomeScope = "all",
         onTasksHeaderChange,
         onCalendarTopNavStateChange,
         calendarTopNavActionsRef,
@@ -160,10 +161,32 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         const [projectBlueprintPickerOpen, setProjectBlueprintPickerOpen] = useState(false);
         const [projectSidebarPopover, setProjectSidebarPopover] = useState("");
         const [projectCardMenuProjectId, setProjectCardMenuProjectId] = useState("");
-        const [projectsHomeSortMode, setProjectsHomeSortMode] = useState("updated-desc");
-        const [projectsHomeScope, setProjectsHomeScope] = useState("all");
         const [projectsHomeFilterMode, setProjectsHomeFilterMode] = useState("all");
         const [projectsHomeToolbarPopover, setProjectsHomeToolbarPopover] = useState("");
+        const projectsHomeFilterPopupRef = useRef(null);
+        useEffect(() => {
+          if (projectsHomeToolbarPopover !== "filter") {
+            return undefined;
+          }
+          const handleProjectsHomeFilterPointerDown = (event) => {
+            const target = event.target instanceof Node ? event.target : null;
+            if (target && projectsHomeFilterPopupRef.current?.contains(target)) {
+              return;
+            }
+            setProjectsHomeToolbarPopover("");
+          };
+          const handleProjectsHomeFilterKeyDown = (event) => {
+            if (event.key === "Escape") {
+              setProjectsHomeToolbarPopover("");
+            }
+          };
+          document.addEventListener("pointerdown", handleProjectsHomeFilterPointerDown);
+          window.addEventListener("keydown", handleProjectsHomeFilterKeyDown);
+          return () => {
+            document.removeEventListener("pointerdown", handleProjectsHomeFilterPointerDown);
+            window.removeEventListener("keydown", handleProjectsHomeFilterKeyDown);
+          };
+        }, [projectsHomeToolbarPopover]);
         const [projectDraft, setProjectDraft] = useState(buildPlaygroundDefaultProjectDraft());
         const [projectWallpaperTransition, setProjectWallpaperTransition] = useState(null);
         const projectWallpaperTransitionTimerRef = useRef(null);

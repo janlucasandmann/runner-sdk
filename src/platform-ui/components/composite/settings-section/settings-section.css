@@ -1,0 +1,132 @@
+.platform-settings-section-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+.platform-settings-section {
+  position: relative;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.platform-settings-section__header {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: #000;
+}
+
+.platform-settings-section__heading,
+.platform-settings-section__actions {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.platform-settings-section__heading {
+  gap: 8px;
+}
+
+.platform-settings-section__heading-copy {
+  min-width: 0;
+}
+
+.platform-settings-section__icon {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 24px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.platform-settings-section__icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.platform-settings-section__title {
+  min-width: 0;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.25;
+}
+
+.platform-settings-section__description {
+  margin-top: 3px;
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.platform-settings-section__actions {
+  justify-content: flex-end;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.platform-settings-section__body {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 12px 6px;
+  background: #000;
+}
+
+.platform-settings-section__body.is-flush {
+  padding: 0;
+}
+
+.platform-settings-data-table {
+  --platform-data-table-body-background: transparent;
+  --platform-data-table-row-background: #000;
+  --platform-data-table-surface: transparent;
+  --platform-data-table-sticky-background: #000;
+  gap: 0;
+  width: 100%;
+}
+
+.platform-settings-data-table .platform-data-table__surface,
+.platform-settings-data-table .platform-data-table__scroll {
+  background: transparent;
+  overflow: visible;
+}
+
+.platform-settings-data-table.platform-data-table.is-minimalistic-ui .platform-data-table__scroll {
+  width: 100%;
+  margin-right: 0;
+  margin-left: 0;
+  border-radius: 0;
+}
+
+.platform-settings-data-table .platform-data-table__header,
+.platform-settings-data-table .platform-data-table__row {
+  gap: 16px;
+  padding-right: 6px;
+  padding-left: 6px;
+}
+
+.platform-settings-data-table .platform-data-table__header-cell,
+.platform-settings-data-table .platform-data-table__cell {
+  overflow: visible;
+  white-space: normal;
+}
+
+.platform-settings-data-table .platform-data-table__row {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}

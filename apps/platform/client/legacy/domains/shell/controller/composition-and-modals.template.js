@@ -1731,6 +1731,11 @@
               : tasksHeaderState.view === "backlog"
                 ? "backlog"
                 : "overview";
+            const activeProjectsHomeScope = tasksProjectsHomeScope === "created"
+              ? "created"
+              : tasksProjectsHomeScope === "shared"
+                ? "shared"
+                : "all";
   
             return renderAppHeader({
               className: "playground-tasks-unified-navbar",
@@ -1746,22 +1751,32 @@
                   ]
                 : [{ label: "Create" }, { label: "Projects" }],
               center: isProjectDetailView
-                ? React.createElement("div", { className: "content-mode-switch playground-tasks-nav playground-tasks-project-nav-switch" },
-                    PLAYGROUND_PROJECT_VIEW_OPTIONS
+                ? React.createElement(PlatformSwitch, {
+                    className: "playground-tasks-nav playground-tasks-project-nav-switch",
+                    value: activeProjectView,
+                    options: PLAYGROUND_PROJECT_VIEW_OPTIONS
                       .filter((item) => item.id === "overview" || item.id === "backlog" || item.id === "board")
-                      .map((item) =>
-                        React.createElement("button", {
-                          key: item.id,
-                          type: "button",
-                          className: "content-mode-button" + (activeProjectView === item.id ? " is-active" : ""),
-                          onClick: () => setTasksProjectViewRequest({
-                            view: item.id,
-                            token: Date.now().toString(36) + Math.random().toString(36).slice(2),
-                          }),
-                        }, item.label)
-                      )
-                  )
-                : null,
+                      .map((item) => ({
+                        value: item.id,
+                        label: item.label,
+                      })),
+                    onValueChange: (nextView) => setTasksProjectViewRequest({
+                      view: nextView,
+                      token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                    }),
+                    ariaLabel: "Project view",
+                  })
+                : React.createElement(PlatformSwitch, {
+                    className: "playground-projects-home-scope-switch",
+                    value: activeProjectsHomeScope,
+                    options: [
+                      { value: "all", label: "All projects" },
+                      { value: "created", label: "Created by me" },
+                      { value: "shared", label: "Shared with me" },
+                    ],
+                    onValueChange: setTasksProjectsHomeScope,
+                    ariaLabel: "Project scope",
+                  }),
               extraActions: isProjectDetailView
                 ? React.createElement(PlatformPrimaryButton, {
                     type: "button",
@@ -1777,16 +1792,18 @@
                     React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
                     React.createElement("span", null, "New Issue")
                   )
-                : React.createElement("button", {
+                : React.createElement(PlatformPrimaryButton, {
                     type: "button",
-                    className: "playground-content-menu-button",
                     "aria-label": "New project",
                     title: "New project",
                     onClick: () => setTasksPageNavigationRequest({
                       token: Date.now().toString(36) + Math.random().toString(36).slice(2),
                       projectComposerAction: "create",
                     }),
-                  }, React.createElement(Plus, { className: "playground-content-menu-icon", strokeWidth: 1.8 })),
+                  },
+                    React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                    React.createElement("span", null, "Project")
+                  ),
             });
           }
   
@@ -1819,12 +1836,16 @@
   ${CALENDAR_SHELL_SCRIPT_FRAGMENTS.topNavigation}
           function renderGenericPageNav() {
             const isMetronomeEditor = activePage === "metronome" && metronomeTopNavState?.mode === "editor";
+            const isMetronomeOverview = activePage === "metronome" && !isMetronomeEditor;
             const metronomePathItems = isMetronomeEditor
               ? [
-                  { label: "Create" },
-                  { label: "Metronome", onClick: () => metronomeTopNavActionsRef.current?.goOverview?.() },
-                  { label: metronomeTopNavState?.title || "Untitled Metronome" },
-                ]
+	                  { label: "Create" },
+	                  { label: "Metronome", onClick: () => metronomeTopNavActionsRef.current?.goOverview?.() },
+	                  {
+	                    label: metronomeTopNavState?.title || "Untitled Metronome",
+	                    trailing: renderMetronomeBreadcrumbVersionSelector(),
+	                  },
+	                ]
               : [{ label: "Create" }, { label: "Metronome" }];
             return renderAppHeader({
               pathItems: activePage === "calendar"
@@ -1840,14 +1861,19 @@
                 : isMetronomeEditor
                   ? renderMetronomeModeSwitch()
                   : null,
-              includeSearchDivider: activePage === "calendar" || isMetronomeEditor,
+              includeSearchDivider: activePage === "calendar" || isMetronomeEditor || isMetronomeOverview,
               extraActions: activePage === "imagine"
                 ? renderImagineTopNavControls()
                 : activePage === "calendar"
                   ? renderCalendarTopNavActions()
                 : isMetronomeEditor
                   ? renderMetronomeTopNavActions()
-                  : null,
+                  : isMetronomeOverview
+                    ? React.createElement("div", {
+                        id: "playground-metronome-overview-controls",
+                        className: "playground-resource-overview-controls-slot",
+                      })
+                    : null,
             });
           }
   
@@ -2145,7 +2171,7 @@
                 : renderAuthGate();
           }
   
-  ${MODELS_APP_SCRIPT_FRAGMENTS.pageView}${GUARDRAILS_PAGE_RUNTIME_SCRIPT}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.pageView}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.pageView}${CONFIGURE_HOME_PAGE_SCRIPT_FRAGMENTS.home}
+  ${MODELS_APP_SCRIPT_FRAGMENTS.pageView}${GUARDRAILS_PAGE_RUNTIME_SCRIPT}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.pageView}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.pageView}${CONFIGURE_HOME_PAGE_SCRIPT_FRAGMENTS.home}${CONFIGURE_HOME_PAGE_SCRIPT_FRAGMENTS.notifications}
   ${API_KEYS_PAGE_SCRIPT_FRAGMENTS.management}
   ${DEVELOP_HOME_PAGE_SCRIPT}
   ${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.statusIndicators}
@@ -2674,7 +2700,9 @@
   	                            : renderAuthGate()
   	                      : activePage === "configure"
   	                        ? hasRealAccess
-  	                          ? renderConfigureHomePage()
+                              ? configureHomeTab === "notifications"
+                                ? renderConfigureNotificationsPage()
+                                : renderConfigureHomePage()
   	                          : hasDemoAccess
   	                            ? renderDemoFeaturePage("resources")
   	                            : renderAuthGate()
@@ -2977,6 +3005,7 @@
                                 topNavActionsRef: metronomeTopNavActionsRef,
                                 onNodeDetailOpenChange: setIsMetronomeNodeDetailOpen,
                                 inspectorPortalId: "playground-metronome-node-drawer-root",
+                                overviewControlsPortalId: "playground-metronome-overview-controls",
                                 agents: metronomeAgentsForComposer.map((agent) => (
                                   buildPlaygroundRunnerAgentOption(agent, resolvedComposerAgentId && agent.id === resolvedComposerAgentId ? { isDefault: true } : {})
                                 )),
@@ -3199,6 +3228,7 @@
                               },
                               standaloneMode: activePage === "calendar" ? "calendar" : "",
                               useUnifiedProjectNav: activePage === "tasks",
+                              projectsHomeScope: tasksProjectsHomeScope,
                               onTasksHeaderChange: setTasksHeaderState,
                               onCalendarTopNavStateChange: setCalendarTopNavState,
                               calendarTopNavActionsRef,

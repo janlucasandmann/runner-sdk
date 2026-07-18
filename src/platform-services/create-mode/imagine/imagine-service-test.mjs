@@ -38,11 +38,20 @@ assert.match(IMAGINE_TEMPLATE_PAGE_CSS, /\.playground-imagine-template-settings-
 assert.match(IMAGINE_APP_SCRIPT_FRAGMENTS.state, /imagineActiveView/);
 assert.match(IMAGINE_APP_SCRIPT_FRAGMENTS.navigation, /function openImaginePage/);
 assert.match(IMAGINE_APP_SCRIPT_FRAGMENTS.topNavigation, /function renderImagineTopNavControls/);
+assert.match(IMAGINE_APP_SCRIPT_FRAGMENTS.topNavigation, /React\.createElement\(PlatformSwitch/);
+assert.match(IMAGINE_APP_SCRIPT_FRAGMENTS.topNavigation, /value: "explore", label: "All Templates"/);
+assert.match(IMAGINE_APP_SCRIPT_FRAGMENTS.topNavigation, /React\.createElement\(PlatformSecondaryButton/);
+assert.match(IMAGINE_APP_SCRIPT_FRAGMENTS.topNavigation, /React\.createElement\(PlatformPrimaryButton/);
+assert.match(IMAGINE_APP_SCRIPT_FRAGMENTS.topNavigation, /React\.createElement\(PlatformPopup/);
+assert.match(IMAGINE_APP_SCRIPT_FRAGMENTS.topNavigation, /rootClassName: "playground-imagine-filter-shell"/);
+assert.doesNotMatch(IMAGINE_APP_SCRIPT_FRAGMENTS.topNavigation, /className: "content-mode-switch/);
+assert.doesNotMatch(IMAGINE_APP_SCRIPT_FRAGMENTS.topNavigation, /className: "playground-files-control-button is-backlog/);
 assert.match(IMAGINE_APP_SCRIPT_FRAGMENTS.teamTemplateReader, /function readTeamPageCustomImagineTemplates/);
 assert.match(IMAGINE_APP_SCRIPT_FRAGMENTS.teamResourceNavigation, /function openTeamResourceImagineTemplateRow/);
 assert.match(IMAGINE_APP_SCRIPT_FRAGMENTS.sidebarEntry, /id: "imagine"/);
 assert.match(IMAGINE_SHELL_STYLE_FRAGMENTS.toolbar, /\.playground-imagine-media-mode-selector/);
 
+assert.doesNotThrow(() => new Function(IMAGINE_APP_SCRIPT_FRAGMENTS.topNavigation));
 assert.doesNotThrow(() => new Function(IMAGINE_PAGE_SCRIPT));
 assert.doesNotThrow(() => new Function(IMAGINE_TEMPLATE_PAGE_SCRIPT));
 

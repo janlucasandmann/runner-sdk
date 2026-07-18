@@ -15,8 +15,17 @@ export const RUNNER_CHAT_STYLE_SOURCE_PATHS = Object.freeze([
   "src/platform-ui/components/ui/switch/switch.css",
   "src/platform-ui/components/composite/modal/modal.css",
   "src/react/runner-chat.css",
+  "src/platform-ui/components/thread-components/log-boxes/activity-core.css",
+  "src/platform-ui/components/thread-components/log-boxes/activity-resources.css",
+  "src/platform-ui/components/thread-components/log-boxes/activity-specialists.css",
+  "src/platform-ui/components/thread-components/log-boxes/activity-output.css",
+  "src/react/runner-chat/styles/message-and-attachments.css",
+  "src/platform-ui/components/thread-components/document-preview/document-preview.css",
+  "src/react/runner-chat/styles/composer.css",
+  "src/react/runner-chat/styles/dialogs-and-file-browser.css",
   "src/react/thread/runner-thread.css",
   "src/platform-ui/components/ui/button/button.css",
+  "src/platform-ui/components/ui/icon-button/icon-button.css",
   "src/platform-ui/components/ui/label/label.css",
 ]);
 

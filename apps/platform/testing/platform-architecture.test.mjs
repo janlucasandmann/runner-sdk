@@ -3,8 +3,13 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { createLegacyPlatformApplication } from "../client/legacy/create-legacy-platform-application.mjs";
+import {
+  createLegacyPlatformApplicationSources,
+} from "../client/legacy/create-legacy-platform-application.mjs";
 import { createPlatformDocumentAssets } from "../server/platform-assets.mjs";
+import {
+  RUNNER_CHAT_STYLE_SOURCE_PATHS,
+} from "../../../scripts/runner-chat-style-sources.mjs";
 
 const platformRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -14,14 +19,14 @@ const packageRoot = path.resolve(platformRoot, "../..");
 const serverEntryPath = path.join(platformRoot, "server", "index.mjs");
 const serverEntrySource = await fs.readFile(serverEntryPath, "utf8");
 const serverEntryLines = serverEntrySource.split("\n").length;
-const legacyDocumentPath = path.join(
+const legacySourcesPath = path.join(
   platformRoot,
   "client",
   "legacy",
-  "create-legacy-platform-document.mjs",
+  "create-legacy-platform-sources.mjs",
 );
-const legacyDocumentSource = await fs.readFile(legacyDocumentPath, "utf8");
-const legacyDocumentLines = legacyDocumentSource.split("\n").length;
+const legacySourcesSource = await fs.readFile(legacySourcesPath, "utf8");
+const legacySourcesLines = legacySourcesSource.split("\n").length;
 const computeControllerRoot = path.join(
   platformRoot,
   "client",
@@ -55,6 +60,8 @@ async function collectSourceFiles(directory, extensions = new Set([".ts", ".tsx"
       entry.isFile()
       && extensions.has(path.extname(entry.name))
       && !entry.name.includes(".test.")
+      && !entry.name.includes(".spec.")
+      && !entry.name.endsWith("-test.mjs")
     ) {
       files.push(entryPath);
     }
@@ -74,17 +81,14 @@ assert.ok(
   `Platform composition root exceeded 500 lines (${serverEntryLines}).`,
 );
 assert.ok(
-  legacyDocumentLines <= 55_000,
-  `Legacy document renderer exceeded 55,000 lines (${legacyDocumentLines}).`,
+  legacySourcesLines <= 150,
+  `Legacy source composition exceeded 150 lines (${legacySourcesLines}).`,
 );
-assert.doesNotMatch(legacyDocumentSource, /function PlaygroundEnvironmentsPage/);
-assert.doesNotMatch(legacyDocumentSource, /function PlaygroundAgentsPage/);
-assert.doesNotMatch(legacyDocumentSource, /function PlaygroundSkillsPage/);
-assert.doesNotMatch(legacyDocumentSource, /function LegacyPlatformApp/);
+assert.doesNotMatch(legacySourcesSource, /<!doctype html>|<style>|<script\b/i);
 assert.doesNotMatch(serverEntrySource, /<!doctype html>/i);
 assert.doesNotMatch(serverEntrySource, /async function proxyUpstream/);
 assert.doesNotMatch(serverEntrySource, /url\.pathname\.match/);
-assert.match(serverEntrySource, /createLegacyPlatformApplication/);
+assert.match(serverEntrySource, /createLegacyPlatformApplicationSources/);
 assert.match(serverEntrySource, /createPlatformGateway/);
 assert.match(serverEntrySource, /createPlatformRequestHandler/);
 
@@ -173,7 +177,61 @@ for (const serverModulePath of serverModulePaths) {
   );
 }
 
-const runnerChatBudget = await readSourceBudget("src/react/runner-chat.tsx", 12_000);
+let boundedOwnedSourceCount = 0;
+for (const relativeRoot of [
+  "src/platform-resources",
+  "src/platform-services",
+  "src/platform-shell",
+  "src/platform-ui",
+]) {
+  for (const modulePath of await collectSourceFiles(
+    path.join(packageRoot, relativeRoot),
+    new Set([".css", ".js", ".mjs", ".ts", ".tsx"]),
+  )) {
+    const relativePath = path.relative(packageRoot, modulePath);
+    if (
+      relativePath
+      === "src/platform-ui/components/thread-components/styles/thread-component-css.ts"
+    ) {
+      continue;
+    }
+    await readSourceBudget(relativePath, 3_000);
+    boundedOwnedSourceCount += 1;
+  }
+}
+await readSourceBudget("src/client.ts", 3_300);
+
+const runnerChatBudget = await readSourceBudget("src/react/runner-chat.tsx", 7_800);
+const runnerChatFeatureStylePaths = [
+  "src/react/runner-chat.css",
+  "src/platform-ui/components/thread-components/log-boxes/activity-core.css",
+  "src/platform-ui/components/thread-components/log-boxes/activity-resources.css",
+  "src/platform-ui/components/thread-components/log-boxes/activity-specialists.css",
+  "src/platform-ui/components/thread-components/log-boxes/activity-output.css",
+  "src/react/runner-chat/styles/message-and-attachments.css",
+  "src/platform-ui/components/thread-components/document-preview/document-preview.css",
+  "src/react/runner-chat/styles/composer.css",
+  "src/react/runner-chat/styles/dialogs-and-file-browser.css",
+];
+const runnerChatFeatureStyleStart = RUNNER_CHAT_STYLE_SOURCE_PATHS.indexOf(
+  runnerChatFeatureStylePaths[0],
+);
+assert.notEqual(
+  runnerChatFeatureStyleStart,
+  -1,
+  "The RunnerChat feature cascade must include its shell stylesheet.",
+);
+assert.deepEqual(
+  RUNNER_CHAT_STYLE_SOURCE_PATHS.slice(
+    runnerChatFeatureStyleStart,
+    runnerChatFeatureStyleStart + runnerChatFeatureStylePaths.length,
+  ),
+  runnerChatFeatureStylePaths,
+  "RunnerChat feature styles must retain their explicit cascade order.",
+);
+for (const relativePath of runnerChatFeatureStylePaths) {
+  await readSourceBudget(relativePath, 3_000);
+}
 const runnerLogBoxesBudget = await readSourceBudget(
   "src/platform-ui/components/thread-components/log-boxes/runner-log-boxes.tsx",
   2_800,
@@ -190,6 +248,44 @@ const documentPreviewDrawerCompatibilityBudget = await readSourceBudget(
   "src/react/runner-document-preview-drawer.tsx",
   12,
 );
+for (const relativePath of [
+  "src/react/dot-loader.tsx",
+  "src/react/runner-agents-list-log-box.tsx",
+  "src/react/runner-chat-animations.ts",
+  "src/react/runner-chat-css.ts",
+  "src/react/runner-chat-styles.ts",
+  "src/react/runner-document-preview.ts",
+  "src/react/runner-environments-list-log-box.tsx",
+  "src/react/runner-file-diff-surface.tsx",
+  "src/react/runner-git-commit-log-box.tsx",
+  "src/react/runner-git-diff-log-box.tsx",
+  "src/react/runner-git-log-utils.ts",
+  "src/react/runner-git-status-log-box.tsx",
+  "src/react/runner-image-edit-overlays.tsx",
+  "src/react/runner-image-preview-surface.tsx",
+  "src/react/runner-lazy-media-preview.tsx",
+  "src/react/runner-log-card.tsx",
+  "src/react/runner-markdown.tsx",
+  "src/react/runner-presentation-preview.tsx",
+  "src/react/runner-presentation-utils.ts",
+  "src/react/runner-projects-list-log-box.tsx",
+  "src/react/runner-resources-list-log-box.tsx",
+  "src/react/runner-spreadsheet-preview.tsx",
+  "src/react/runner-spreadsheet-utils.ts",
+  "src/react/runner-threads-list-log-box.tsx",
+]) {
+  const compatibilityFacade = await readSourceBudget(relativePath, 8);
+  assert.match(
+    compatibilityFacade.source,
+    /platform-ui\/components\//,
+    `${relativePath} must delegate to its platform-owned implementation.`,
+  );
+  assert.doesNotMatch(
+    compatibilityFacade.source,
+    /\bfunction\b|\bclass\b/,
+    `${relativePath} must not regain implementation details.`,
+  );
+}
 assert.match(
   runnerLogBoxesCompatibilityBudget.source,
   /platform-ui\/components\/thread-components\/log-boxes/,
@@ -212,19 +308,49 @@ assert.doesNotMatch(
 );
 for (const relativePath of [
   "src/react/runner-chat/attachment-preview-chip.tsx",
+  "src/react/runner-chat/attachment-factories.ts",
   "src/react/runner-chat/canonical-action-log-index.ts",
   "src/react/runner-chat/canonical-thread-surface.tsx",
+  "src/react/runner-chat/composer-selector-controls.tsx",
+  "src/react/runner-chat/communicator-router.ts",
+  "src/react/runner-chat/editable-turn-boundary.ts",
+  "src/react/runner-chat/execution/active-run-instruction.ts",
   "src/react/runner-chat/file-browser-dialog.tsx",
+  "src/react/runner-chat/file-browser-item.tsx",
   "src/react/runner-chat/file-browser-source.ts",
   "src/react/runner-chat/legacy-timeline.ts",
   "src/react/runner-chat/legacy-timeline-presentation.ts",
+  "src/react/runner-chat/permission-decision.ts",
   "src/react/runner-chat/public-types.ts",
   "src/react/runner-chat/thread-history.ts",
+  "src/react/runner-chat/thread-context-action.ts",
+  "src/react/runner-chat/thread-context-control.tsx",
+  "src/react/runner-chat/timeline-renderer.tsx",
   "src/react/runner-chat/turn-status-presentation.ts",
   "src/react/runner-chat/turn-timeline-state.ts",
   "src/react/runner-chat/use-log-auto-scroll.ts",
+  "src/react/runner-chat/use-agent-selection-controller.ts",
+  "src/react/runner-chat/use-custom-skills-controller.ts",
+  "src/react/runner-chat/use-deep-research-sessions-controller.ts",
+  "src/react/runner-chat/use-integration-selection-controller.ts",
+  "src/react/runner-chat/use-run-stop-controller.ts",
+  "src/react/runner-chat/use-schedule-controller.ts",
+  "src/react/runner-chat/use-file-browser-source-loaders.ts",
+  "src/react/runner-chat/use-file-browser-source-state.ts",
+  "src/react/runner-chat/use-file-browser-attachment-controller.ts",
+  "src/react/runner-chat/use-file-drop-controller.ts",
+  "src/react/runner-chat/use-attachment-controller.ts",
+  "src/react/runner-chat/use-fork-configuration-controller.ts",
+  "src/react/runner-chat/use-github-branch-selection.ts",
+  "src/react/runner-chat/use-enabled-skills-controller.ts",
+  "src/react/runner-chat/use-external-composer-command-staging.ts",
   "src/react/runner-chat/use-thinking-status.ts",
+  "src/react/runner-chat/use-staged-composer-commands.ts",
+  "src/react/runner-chat/use-thread-context-controller.ts",
   "src/react/runner-chat/use-thread-history-rail.ts",
+  "src/react/runner-chat/use-turn-notice-controller.ts",
+  "src/react/runner-chat/use-workspace-selection-controller.ts",
+  "src/react/runner-chat/voice-mode-presentation.tsx",
   "src/react/runner-chat/workflow-dialogs.tsx",
   "src/platform-ui/components/thread-components/log-boxes/log-entry-types.ts",
   "src/platform-ui/components/thread-components/log-boxes/list-files-state.ts",
@@ -249,13 +375,49 @@ for (const relativePath of [
 }
 for (const extractedRunnerChatModule of [
   "attachment-preview-chip",
+  "attachment-factories",
   "canonical-action-log-index",
+  "composer-selector-controls",
+  "communicator-router",
+  "editable-turn-boundary",
+  "execution/active-run-instruction",
+  "file-browser-item",
+  "permission-decision",
   "public-types",
+  "thread-context-action",
+  "thread-context-control",
+  "timeline-renderer",
   "turn-status-presentation",
   "turn-timeline-state",
+  "use-composer-popup-controller",
+  "use-composer-quoted-selection",
+  "use-document-preview-controller",
+  "use-file-browser-navigation",
+  "use-file-browser-preview",
+  "use-file-browser-source-loaders",
+  "use-file-browser-source-state",
+  "use-file-browser-attachment-controller",
+  "use-file-drop-controller",
+  "use-attachment-controller",
+  "use-fork-configuration-controller",
+  "use-github-branch-selection",
+  "use-enabled-skills-controller",
+  "use-external-composer-command-staging",
+  "use-agent-selection-controller",
+  "use-custom-skills-controller",
+  "use-deep-research-sessions-controller",
+  "use-integration-selection-controller",
+  "use-run-stop-controller",
+  "use-schedule-controller",
   "use-log-auto-scroll",
   "use-thinking-status",
+  "use-thread-feedback-controller",
   "use-thread-history-rail",
+  "use-staged-composer-commands",
+  "use-thread-context-controller",
+  "use-turn-notice-controller",
+  "use-workspace-selection-controller",
+  "voice-mode-presentation",
 ]) {
   assert.match(
     runnerChatBudget.source,
@@ -395,6 +557,30 @@ for (const modulePath of await collectSourceFiles(path.join(
   if (path.basename(modulePath) === "runner-log-boxes.tsx") continue;
   await readSourceBudget(path.relative(packageRoot, modulePath), 3_000);
 }
+for (const modulePath of await collectSourceFiles(path.join(
+  packageRoot,
+  "src",
+  "platform-ui",
+  "components",
+  "thread-components",
+  "document-preview",
+))) {
+  await readSourceBudget(path.relative(packageRoot, modulePath), 1_800);
+}
+for (const modulePath of await collectSourceFiles(path.join(
+  packageRoot,
+  "src",
+  "platform-ui",
+  "components",
+  "thread-components",
+  "shared",
+))) {
+  await readSourceBudget(path.relative(packageRoot, modulePath), 800);
+}
+await readSourceBudget(
+  "src/platform-ui/components/ui/dot-loader/platform-dot-loader.tsx",
+  100,
+);
 for (const modulePath of await collectSourceFiles(path.join(packageRoot, "src", "react", "thread"))) {
   await readSourceBudget(path.relative(packageRoot, modulePath), 600);
 }
@@ -404,7 +590,17 @@ for (const retiredPath of [
   "examples/served.html",
   "examples/served_inline_check.js",
   "examples/inline_check.js",
+  "examples/history-api-test.mjs",
+  "examples/metronome-dynamic-content-runtime-test.mjs",
+  "examples/realtime-metronome-adapters-test.mjs",
+  "examples/smoke-test.mjs",
+  "examples/thread-domain-test.mjs",
+  "examples/thread-ui-test.mjs",
+  "apps/platform/client/legacy/create-legacy-platform-document.mjs",
   "src/react/runner-log-boxes",
+  "src/react/assets",
+  "apps/platform/client/legacy/domains/onboarding/onboarding.js",
+  "apps/platform/client/legacy/domains/skills/skills-page.js",
   "apps/platform/client/legacy/domains/compute-resources/compute-resources-page.js",
   "apps/platform/client/legacy/domains/agents/agents-page.template.js",
   "apps/platform/client/legacy/domains/shell/platform-shell.template.js",
@@ -423,12 +619,14 @@ const vitestConfigSource = await fs.readFile(
 assert.match(vitestConfigSource, /\*\*\/dist\/\*\*/);
 assert.match(vitestConfigSource, /\*\*\/\*\.test\.mjs/);
 
-const documentHtml = createLegacyPlatformApplication({
+const platformSources = createLegacyPlatformApplicationSources({
   aiosOrigin: "http://localhost:3001",
   defaultUpstreamOrigin: "https://api.computer-agents.com/v1",
   platformOrigin: "http://localhost:4177",
 });
-const assets = createPlatformDocumentAssets(documentHtml);
+const assets = createPlatformDocumentAssets(platformSources);
+const compatibilityStyleLines = platformSources.styleSource.split("\n").length;
+const compatibilityModuleLines = platformSources.moduleSource.split("\n").length;
 
 assert.ok(
   assets.metrics.documentBytes <= 10_000,
@@ -442,12 +640,23 @@ assert.ok(
   assets.metrics.moduleBrotliBytes <= 1_500_000,
   `Brotli compatibility runtime exceeded 1.5 MB (${assets.metrics.moduleBrotliBytes}).`,
 );
+assert.ok(
+  compatibilityStyleLines <= 76_000,
+  `Compatibility stylesheet exceeded 76,000 assembled lines (${compatibilityStyleLines}).`,
+);
+assert.ok(
+  compatibilityModuleLines <= 210_000,
+  `Compatibility browser program exceeded 210,000 assembled lines (${compatibilityModuleLines}).`,
+);
 
 console.log(
   `Platform architecture budgets passed (${serverEntryLines} entry lines, `
   + `${runnerChatBudget.lines} RunnerChat lines, `
   + `${runnerLogBoxesBudget.lines} log-renderer lines, `
   + `${documentPreviewDrawerBudget.lines} document-preview lines, `
+  + `${boundedOwnedSourceCount} bounded owned sources, `
+  + `${compatibilityModuleLines} compatibility JS lines, `
+  + `${compatibilityStyleLines} compatibility CSS lines, `
   + `${assets.metrics.documentBytes}B HTML, `
   + `${assets.metrics.cssBrotliBytes}B CSS br, `
   + `${assets.metrics.moduleBrotliBytes}B JS br).`,

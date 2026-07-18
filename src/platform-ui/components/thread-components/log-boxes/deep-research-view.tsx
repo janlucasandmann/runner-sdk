@@ -12,8 +12,8 @@ import type { RunnerDeepResearchSession, RunnerLog } from "../../../../types.js"
 import {
   getRunnerChatEnterAnimationStyle,
   RUNNER_CHAT_ENTER_ANIMATION_DURATION_MS,
-} from "../../../../react/runner-chat-animations.js";
-import { RunnerMarkdown } from "../../../../react/runner-markdown.js";
+} from "../shared/enter-animation.js";
+import { RunnerMarkdown } from "../shared/runner-markdown.js";
 import { CompactActionLogLine } from "./compact-action-log-line.js";
 import {
   extractResearchTopic,

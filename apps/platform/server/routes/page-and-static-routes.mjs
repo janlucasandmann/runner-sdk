@@ -30,6 +30,8 @@ export function createPageAndStaticRoutes(bindings) {
             && (url.pathname === "/"
                 || url.pathname === "/demo"
                 || url.pathname === "/demo/"
+                || url.pathname === "/compat"
+                || url.pathname === "/compat/"
                 || url.pathname === "/login"
                 || url.pathname === "/signup"
                 || url.pathname === "/logout")) {

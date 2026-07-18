@@ -56,6 +56,37 @@ function getCompositionRoots() {
   ];
 }
 
+function createNormalizedCompatibilityBindingIndex(filePath, source) {
+  if (
+    path.basename(filePath) !== "template-bindings.mjs"
+    || path.basename(path.dirname(filePath)) !== "templates"
+  ) {
+    return "";
+  }
+
+  const returnStartMarker = "  return Object.freeze([\n";
+  const returnEndMarker = "\n  ]);";
+  const returnStart = source.indexOf(returnStartMarker);
+  const returnEnd = source.indexOf(
+    returnEndMarker,
+    returnStart + returnStartMarker.length,
+  );
+  if (returnStart < 0 || returnEnd < 0) {
+    throw new Error("Platform compatibility binding manifest is malformed.");
+  }
+
+  const bindingExpressions = source
+    .slice(returnStart + returnStartMarker.length, returnEnd)
+    .split("\n")
+    .map((line) => line.trim().replace(/,$/, ""))
+    .filter(Boolean);
+  return [
+    "",
+    "/* normalized compatibility bindings for source-level contracts */",
+    ...bindingExpressions.map((expression) => `\${${expression}}`),
+  ].join("\n");
+}
+
 /**
  * Temporary source-level compatibility contract for the fragment-based shell.
  *
@@ -69,7 +100,10 @@ export async function readPlatformCompositionSource() {
   ).flat().sort(sortCompositionPaths);
   const sources = await Promise.all(paths.map(async (filePath) => {
     const source = await fsPromises.readFile(filePath, "utf8");
-    return `\n/* ${path.relative(platformRoot, filePath)} */\n${source}`;
+    return [
+      `\n/* ${path.relative(platformRoot, filePath)} */\n${source}`,
+      createNormalizedCompatibilityBindingIndex(filePath, source),
+    ].join("\n");
   }));
   return sources.join("\n");
 }
@@ -78,8 +112,12 @@ export function readPlatformCompositionSourceSync() {
   return getCompositionRoots()
     .flatMap(collectCompositionPathsSync)
     .sort(sortCompositionPaths)
-    .map((filePath) => (
-      `\n/* ${path.relative(platformRoot, filePath)} */\n${fs.readFileSync(filePath, "utf8")}`
-    ))
+    .map((filePath) => {
+      const source = fs.readFileSync(filePath, "utf8");
+      return [
+        `\n/* ${path.relative(platformRoot, filePath)} */\n${source}`,
+        createNormalizedCompatibilityBindingIndex(filePath, source),
+      ].join("\n");
+    })
     .join("\n");
 }

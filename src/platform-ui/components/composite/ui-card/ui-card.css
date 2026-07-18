@@ -1,0 +1,138 @@
+.platform-ui-card {
+  box-sizing: border-box;
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 15px;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.platform-ui-card.is-feature {
+  min-height: 286px;
+  padding: 28px 30px 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.platform-ui-card__feature-icon {
+  width: 42px;
+  height: 42px;
+  margin-bottom: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.platform-ui-card__feature-icon.is-blue {
+  color: #4da3ff;
+}
+
+.platform-ui-card__feature-icon.is-cyan {
+  color: #7effff;
+}
+
+.platform-ui-card__feature-icon.is-green {
+  color: #85df7b;
+}
+
+.platform-ui-card__feature-icon.is-violet {
+  color: #b899ff;
+}
+
+.platform-ui-card__feature-title {
+  margin: 0;
+  color: #fff;
+  font-size: 18px;
+  line-height: 1.3;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.platform-ui-card__feature-description {
+  max-width: 390px;
+  min-height: 42px;
+  margin: 8px 0 20px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.platform-ui-card__feature-links {
+  width: 100%;
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.platform-ui-card__feature-link {
+  box-sizing: border-box;
+  width: calc(100% + 24px);
+  min-height: 36px;
+  margin-left: -12px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  appearance: none;
+  border: 0;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.78);
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.3;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    color 140ms ease,
+    background-color 140ms ease;
+}
+
+.platform-ui-card__feature-link:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.platform-ui-card__feature-link:focus-visible {
+  outline: 1px solid rgba(77, 163, 255, 0.78);
+  outline-offset: 3px;
+}
+
+.platform-ui-card__feature-link-label {
+  min-width: 0;
+  overflow: hidden;
+  color: #fff;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-ui-card__feature-link-end {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #4da3ff;
+}
+
+.platform-ui-card__feature-link-meta {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.platform-ui-card__feature-link-end > svg {
+  color: #fff;
+}
+
+@media (max-width: 700px) {
+  .platform-ui-card.is-feature {
+    min-height: 260px;
+    padding: 24px;
+  }
+}

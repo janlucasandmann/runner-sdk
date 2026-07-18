@@ -11,7 +11,7 @@ import {
   type RunnerDocumentPreviewKind,
   type RunnerPreviewAttachment,
   type RunnerPreviewDirectoryEntry,
-} from "../../../../react/runner-document-preview.js";
+} from "./preview-contracts.js";
 import {
   type AttachmentDirectoryPreviewState,
   formatRunnerPreviewFileDate,
@@ -20,18 +20,9 @@ import {
   toAbsoluteRunnerWorkspacePath,
 } from "./preview-state.js";
 
-const RUNNER_FOLDER_ICON_URL = new URL(
-  "../../../../react/assets/folder.png",
-  import.meta.url,
-).toString();
-const RUNNER_IMAGE_FILE_ICON_URL = new URL(
-  "../../../../react/assets/imgicon.webp",
-  import.meta.url,
-).toString();
-const RUNNER_TEXT_FILE_ICON_URL = new URL(
-  "../../../../react/assets/txtfile.png",
-  import.meta.url,
-).toString();
+const RUNNER_FOLDER_ICON_URL = new URL("../assets/folder.png", import.meta.url).toString();
+const RUNNER_IMAGE_FILE_ICON_URL = new URL("../assets/imgicon.webp", import.meta.url).toString();
+const RUNNER_TEXT_FILE_ICON_URL = new URL("../assets/txtfile.png", import.meta.url).toString();
 
 interface RunnerDirectoryPreviewProps {
   activeDirectoryAbsolutePath: string;

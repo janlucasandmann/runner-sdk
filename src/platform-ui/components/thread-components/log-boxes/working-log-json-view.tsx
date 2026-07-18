@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Braces } from "lucide-react";
 
-import { RunnerMarkdown } from "../../../../react/runner-markdown.js";
+import { RunnerMarkdown } from "../shared/runner-markdown.js";
 import { RunnerCodeViewer } from "./code-viewer.js";
 import {
   formatRunnerWorkingLogJsonPreview,

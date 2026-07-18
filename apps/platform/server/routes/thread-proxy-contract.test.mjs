@@ -4,6 +4,7 @@ import { readPlatformCompositionSource } from "../../testing/platform-compositio
 const threadId = "thread_a%2Fb";
 const expectedThreadId = "thread_a%2Fb";
 const cases = [
+    ["POST", "/api/real/threads/search", "json", "/threads/search"],
     ["GET", `/${["api", "real", "threads", threadId, "timeline"].join("/")}`, "json", `/threads/${expectedThreadId}/timeline`],
     ["GET", `/api/real/threads/${threadId}/events`, "event-stream-or-json", `/threads/${expectedThreadId}/events`],
     ["GET", `/api/real/threads/${threadId}/runs`, "json", `/threads/${expectedThreadId}/runs`],

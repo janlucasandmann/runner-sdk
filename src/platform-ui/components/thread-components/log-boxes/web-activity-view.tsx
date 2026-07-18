@@ -5,8 +5,8 @@ import {
   buildRunnerPreviewAttachmentFromPath,
   type RunnerPreviewAttachment,
   type RunnerWebSearchPreviewData,
-} from "../../../../react/runner-document-preview.js";
-import { stripRunnerSystemTags } from "../../../../react/runner-markdown.js";
+} from "../document-preview/preview-contracts.js";
+import { stripRunnerSystemTags } from "../shared/runner-markdown.js";
 import { CompactActionLogLine } from "./compact-action-log-line.js";
 import { buildCompactLogPreviewId } from "./preview-id.js";
 import { parseStructuredCommandExecutionOutput } from "./structured-command-output.js";

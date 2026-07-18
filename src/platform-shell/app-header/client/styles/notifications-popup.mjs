@@ -21,6 +21,11 @@ export const APP_HEADER_NOTIFICATIONS_POPUP_CSS = `      .notification-menu {
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       }
 
+      .notification-menu-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.075);
+        background: rgba(255, 255, 255, 0.05);
+      }
+
       .notification-menu-title {
         margin: 0;
         color: rgba(255, 255, 255, 0.96);
@@ -84,8 +89,7 @@ export const APP_HEADER_NOTIFICATIONS_POPUP_CSS = `      .notification-menu {
       }
 
       .notification-menu-text,
-      .notification-menu-meta,
-      .notification-menu-empty {
+      .notification-menu-meta {
         font-size: 12px;
         font-weight: 400;
         line-height: 1.45;
@@ -149,25 +153,13 @@ export const APP_HEADER_NOTIFICATIONS_POPUP_CSS = `      .notification-menu {
         text-decoration: underline;
       }
 
-      .notification-menu-empty {
-        padding: 18px 10px;
-        text-align: center;
+      .notification-menu-empty-state {
+        min-height: 180px;
+        padding: 24px;
       }
 
-      .notification-menu-mark-read {
-        width: 100%;
-        min-height: 34px;
-        border: 0;
-        border-radius: 10px;
-        background: rgba(255, 255, 255, 0.1);
-        color: rgba(255, 255, 255, 0.92);
-        font-size: 12px;
-        font-weight: 400;
-        cursor: pointer;
-      }
-
-      .notification-menu-footer .notification-menu-mark-read {
-        width: auto;
+      .notification-menu-footer .notification-menu-footer-button {
+        min-width: 0;
         flex: 1 1 0;
       }
 
@@ -175,15 +167,6 @@ export const APP_HEADER_NOTIFICATIONS_POPUP_CSS = `      .notification-menu {
       .notification-menu * {
         font-size: 12px;
         font-weight: 400;
-      }
-
-      .notification-menu-mark-read:hover:not(:disabled) {
-        background: rgba(255, 255, 255, 0.14);
-      }
-
-      .notification-menu-mark-read:disabled {
-        opacity: 0.45;
-        cursor: default;
       }
 
 `;

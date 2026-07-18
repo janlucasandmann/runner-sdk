@@ -1,5 +1,9 @@
 import { createHash } from "node:crypto";
 import { brotliCompressSync, constants as zlibConstants, gzipSync } from "node:zlib";
+import {
+  normalizePlatformSources,
+  renderPlatformDocument,
+} from "../shared/platform-source-contract.mjs";
 
 const IMMUTABLE_CACHE_CONTROL = "public, max-age=31536000, immutable";
 
@@ -59,66 +63,34 @@ function createAsset(pathname, contentType, source) {
   });
 }
 
-function replaceRequiredSource(documentHtml, matcher, replacement, label) {
-  if (!matcher.test(documentHtml)) {
-    throw new Error(`Platform document is missing its ${label}.`);
-  }
-  return documentHtml.replace(matcher, replacement);
-}
-
-export function extractPlatformDocumentSources(inlineDocumentHtml) {
-  const source = String(inlineDocumentHtml || "");
-  const styleMatch = source.match(/<style>([\s\S]*?)<\/style>/);
-  const moduleMatch = source.match(/<script type="module">([\s\S]*?)<\/script>/);
-  if (!styleMatch) {
-    throw new Error("Platform document does not contain an inline style block.");
-  }
-  if (!moduleMatch) {
-    throw new Error("Platform document does not contain an inline module script.");
-  }
-  return Object.freeze({
-    documentHtml: source,
-    cssSource: styleMatch[1],
-    moduleSource: moduleMatch[1],
-  });
-}
-
 /**
- * Converts the legacy inline platform document into a thin HTML shell plus
- * immutable, content-addressed CSS and JavaScript assets.
- *
- * This compatibility seam intentionally preserves the browser program byte for
- * byte while the client is migrated to ordinary typed modules.
+ * Publishes an explicit platform shell, stylesheet, and browser module as
+ * immutable content-addressed assets.
  */
 export function createPlatformDocumentAssets(
-  inlineDocumentHtml,
+  sources,
   { assetBasePath = "/platform/assets" } = {},
 ) {
   const {
-    documentHtml: source,
-    cssSource,
+    documentTemplate,
+    styleSource,
     moduleSource,
-  } = extractPlatformDocumentSources(inlineDocumentHtml);
-  const cssHash = hashContent(cssSource);
+  } = normalizePlatformSources(sources);
+  const cssHash = hashContent(styleSource);
   const moduleHash = hashContent(moduleSource);
   const normalizedBasePath = `/${String(assetBasePath || "platform/assets")
     .replace(/^\/+|\/+$/g, "")}`;
   const cssPath = `${normalizedBasePath}/platform.${cssHash}.css`;
   const modulePath = `${normalizedBasePath}/platform.${moduleHash}.js`;
-  const cssAsset = createAsset(cssPath, "text/css; charset=utf-8", cssSource);
+  const cssAsset = createAsset(cssPath, "text/css; charset=utf-8", styleSource);
   const moduleAsset = createAsset(modulePath, "text/javascript; charset=utf-8", moduleSource);
 
-  let documentHtml = replaceRequiredSource(
-    source,
-    /<style>[\s\S]*?<\/style>/,
-    `<link rel="stylesheet" href="${cssPath}" />`,
-    "inline style block",
-  );
-  documentHtml = replaceRequiredSource(
-    documentHtml,
-    /<script type="module">[\s\S]*?<\/script>/,
-    `<script type="module" src="${modulePath}"></script>`,
-    "inline module script",
+  const documentHtml = renderPlatformDocument(
+    documentTemplate,
+    {
+      styleTag: `<link rel="stylesheet" href="${cssPath}" />`,
+      moduleTag: `<script type="module" src="${modulePath}"></script>`,
+    },
   );
 
   const assetsByPath = new Map([
@@ -131,7 +103,10 @@ export function createPlatformDocumentAssets(
     cssPath,
     modulePath,
     metrics: Object.freeze({
-      inlineDocumentBytes: Buffer.byteLength(source),
+      sourceBytes:
+        Buffer.byteLength(documentTemplate)
+        + Buffer.byteLength(styleSource)
+        + Buffer.byteLength(moduleSource),
       documentBytes: Buffer.byteLength(documentHtml),
       cssBytes: cssAsset.variants.identity.byteLength,
       moduleBytes: moduleAsset.variants.identity.byteLength,

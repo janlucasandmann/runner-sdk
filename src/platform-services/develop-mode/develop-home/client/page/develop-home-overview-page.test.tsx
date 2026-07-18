@@ -19,7 +19,6 @@ const analytics: ResourceOverviewAnalyticsModel = {
   ],
   labels: [],
   series: [],
-  emptyState: "No activity yet.",
 };
 
 describe("Develop overview pages", () => {

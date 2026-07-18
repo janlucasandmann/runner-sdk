@@ -7,6 +7,7 @@ export const FILES_PAGE_SHELL_SCRIPT = `
         const uploadInputRef = useRef(null);
         const searchPopupInputRef = useRef(null);
         const createdFileEditorPathRef = useRef("");
+        const lastHandledFilesNavigationActionTokenRef = useRef("");
         const renameInputRef = useRef(null);
         const filesShellRef = useRef(null);
         const activeResizeStateRef = useRef(null);
@@ -344,6 +345,7 @@ export const FILES_PAGE_SHELL_SCRIPT = `
           const requestedProjectLabel = String(navigationRequest?.projectName || navigationRequest?.projectLabel || "").trim();
           const requestedEnvironmentId = String(navigationRequest?.environmentId || "").trim();
           const requestedContentMode = navigationRequest?.contentMode === "changes" ? "changes" : "files";
+          const requestedAction = String(navigationRequest?.action || "").trim();
           const requestedPath = normalizeHistoryPath(navigationRequest?.path || "");
           const requestedIsFolder = Boolean(navigationRequest?.isFolder);
           const targetEnvironmentId = requestedEnvironmentId || selectedEnvironmentId;
@@ -402,8 +404,26 @@ export const FILES_PAGE_SHELL_SCRIPT = `
               }
               pushPath(targetFolderPath, targetSelectionPaths);
               setIsPreviewOpen(targetSelectionPaths.length > 0);
+              if (
+                requestedAction === "create-file"
+                && requestToken
+                && lastHandledFilesNavigationActionTokenRef.current !== requestToken
+              ) {
+                lastHandledFilesNavigationActionTokenRef.current = requestToken;
+                if (typeof onNavigationRequestHandled === "function") {
+                  onNavigationRequestHandled(requestToken);
+                }
+                window.setTimeout(() => {
+                  void handleCreateFile(targetFolderPath, targetEnvironmentId);
+                }, 0);
+              }
             } finally {
-              if (!cancelled && requestToken && typeof onNavigationRequestHandled === "function") {
+              if (
+                !cancelled
+                && requestToken
+                && requestedAction !== "create-file"
+                && typeof onNavigationRequestHandled === "function"
+              ) {
                 onNavigationRequestHandled(requestToken);
               }
             }

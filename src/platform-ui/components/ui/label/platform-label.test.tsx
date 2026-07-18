@@ -26,6 +26,14 @@ describe("PlatformLabel", () => {
     expect(ref.current?.title).toBe("Desktop profile");
   });
 
+  it("supports the red error variant", () => {
+    render(<PlatformLabel variant="red">Failed</PlatformLabel>);
+
+    const label = screen.getByText("Failed");
+    expect(label.classList.contains("is-red")).toBe(true);
+    expect(label.dataset.platformLabelVariant).toBe("red");
+  });
+
   it("supports a leading icon and the shared project priority bars glyph", () => {
     render(
       <PlatformLabel

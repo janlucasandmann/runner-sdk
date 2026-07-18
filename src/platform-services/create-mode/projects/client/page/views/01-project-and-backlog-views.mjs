@@ -1484,13 +1484,39 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
 	            );
 	          }
 
-	          const modalElement = React.createElement(React.Fragment, null,
-		            React.createElement(PlatformModalBackdrop, {
-		                className: "playground-tasks-project-modal-backdrop"
-                      + (isInitialProjectSetupModal ? " playground-tasks-project-initial-setup-backdrop" : "")
-                      + (isInitialProjectSetupModal && projectInitialSetupModalVisible ? " is-visible" : "")
-                      + (isInitialProjectSetupModal && projectInitialSetupModalClosing ? " is-closing" : ""),
-		                onClick: () => closeProjectComposer(),
-		              },
-	              projectComposerForm
+	          if (isInitialProjectSetupModal) {
+	            return React.createElement(PlatformModal, {
+	                open: projectComposerOpen && !projectInitialSetupModalClosing,
+	                visible: projectInitialSetupModalVisible,
+	                closing: projectInitialSetupModalClosing,
+	                title: "New Project",
+	                as: "form",
+	                size: "medium",
+	                showHeader: false,
+	                showFooter: false,
+	                className: "playground-tasks-project-modal playground-tasks-project-composer-modal playground-tasks-project-initial-setup-modal",
+	                backdropClassName: "playground-tasks-project-modal-backdrop playground-tasks-project-initial-setup-backdrop",
+	                bodyClassName: "playground-tasks-project-initial-setup-modal-body-slot",
+	                bodyProps: {
+	                  style: {
+	                    padding: 0,
+	                    overflow: "visible",
+	                  },
+	                },
+	                animationDurationMs: projectInitialSetupModalAnimationMs,
+	                onClose: () => closeProjectComposer(),
+	                surfaceProps: {
+	                  onKeyDown: handleComposerSubmitShortcut,
+	                  onSubmit: (event) => void handleCreateProject(event),
+	                },
+	              },
+	              projectComposerForm.props.children
+	            );
+	          }
+
+	          return React.createElement(PlatformModalBackdrop, {
+	              className: "playground-tasks-project-modal-backdrop",
+	              onClick: () => closeProjectComposer(),
+	            },
+	            projectComposerForm
 `;

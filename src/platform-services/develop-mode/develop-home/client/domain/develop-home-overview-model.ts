@@ -578,7 +578,6 @@ export function createDevelopHomeOverviewModel({
       ariaLabel: "Develop resource activity over time",
       loading,
       error: error || undefined,
-      emptyState: "No resource activity yet.",
       labels: aggregate.labels,
       metrics: [
         {

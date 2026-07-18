@@ -98,8 +98,9 @@ export const FILES_PAGE_FILESYSTEM_ACTIONS_SCRIPT = `
           }
         }
 
-        async function handleCreateFile(basePath = currentPath) {
-          if (!selectedEnvironmentId || isCreatingFile) return;
+        async function handleCreateFile(basePath = currentPath, environmentIdOverride = selectedEnvironmentId) {
+          const targetEnvironmentId = String(environmentIdOverride || selectedEnvironmentId || "").trim();
+          if (!targetEnvironmentId || isCreatingFile) return;
           setToolbarPopover("");
           const rawName = window.prompt("File name", "untitled.txt");
           const fileName = String(rawName || "").trim().replace(/[\\/]+/g, "-");
@@ -117,7 +118,7 @@ export const FILES_PAGE_FILESYSTEM_ACTIONS_SCRIPT = `
             formData.append("path", normalizedBasePath);
 
             const response = await fetch(
-              backendUrl + "/environments/" + encodeURIComponent(selectedEnvironmentId) + "/files/upload",
+              backendUrl + "/environments/" + encodeURIComponent(targetEnvironmentId) + "/files/upload",
               {
                 method: "POST",
                 headers: requestHeaders,
@@ -131,7 +132,7 @@ export const FILES_PAGE_FILESYSTEM_ACTIONS_SCRIPT = `
             if (normalizedBasePath) {
               setExpandedFolders((current) => new Set(current).add(normalizedBasePath));
             }
-            await refreshEnvironmentFolders(selectedEnvironmentId, [normalizedBasePath]);
+            await refreshEnvironmentFolders(targetEnvironmentId, [normalizedBasePath]);
             createdFileEditorPathRef.current = targetPath;
             setAutoFocusPreviewPath(targetPath);
             pushPath(normalizedBasePath, [targetPath]);

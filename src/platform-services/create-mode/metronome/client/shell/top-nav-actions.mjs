@@ -1,4 +1,113 @@
 export const METRONOME_APP_TOP_NAV_ACTIONS_SCRIPT = `
+        function renderMetronomeBreadcrumbVersionSelector() {
+          const state = metronomeTopNavState && metronomeTopNavState.mode === "editor"
+            ? metronomeTopNavState
+            : null;
+          if (!state || state.readOnly || !state.showVersions) {
+            return null;
+          }
+          const versions = Array.isArray(state.versions) ? state.versions : [];
+          const isBusy = Boolean(state.versionsBusy);
+          return React.createElement(PlatformPopup, {
+            open: metronomeBreadcrumbVersionMenuOpen,
+            variant: "minimal",
+            rootRef: metronomeBreadcrumbVersionMenuRef,
+            rootClassName: "playground-metronome-breadcrumb-version-selector",
+            surfaceClassName: "playground-agents-detail-publish-menu playground-agents-detail-version-selector-menu playground-metronome-detail-version-selector-menu playground-metronome-breadcrumb-version-menu",
+            surfaceProps: {
+              role: "menu",
+              "aria-label": "Choose Metronome version",
+              width: 284,
+              maxHeight: "min(340px, calc(100vh - 96px))",
+            },
+            animation: "down-in",
+            trigger: React.createElement("button", {
+              type: "button",
+              className: "playground-metronome-breadcrumb-version-trigger" + (metronomeBreadcrumbVersionMenuOpen ? " is-active" : ""),
+              disabled: isBusy,
+              "aria-label": "Choose Metronome version",
+              "aria-haspopup": "menu",
+              "aria-expanded": metronomeBreadcrumbVersionMenuOpen ? "true" : "false",
+              onClick: () => {
+                setMetronomeTopNavMenuOpen(false);
+                setMetronomeBreadcrumbVersionMenuOpen((current) => !current);
+              },
+            },
+              React.createElement(ChevronDown, { width: 13, height: 13, strokeWidth: 1.8, "aria-hidden": "true" })
+            ),
+          },
+            React.createElement(React.Fragment, null,
+              React.createElement("div", {
+                className: "playground-agents-detail-version-selector-list playground-metronome-detail-version-selector-list",
+                role: "group",
+                "aria-label": "Metronome versions",
+              },
+                versions.length
+                  ? versions.map((version) => React.createElement("button", {
+                      key: version.id,
+                      type: "button",
+                      className: "tb-popup-row playground-agents-detail-version-selector-option" + (version.selected ? " is-selected" : ""),
+                      role: "menuitemradio",
+                      "aria-checked": version.selected ? "true" : "false",
+                      disabled: isBusy || version.selected,
+                      onClick: () => {
+                        if (isBusy || version.selected) return;
+                        setMetronomeBreadcrumbVersionMenuOpen(false);
+                        metronomeTopNavActionsRef.current?.selectVersion?.(version.id);
+                      },
+                    },
+                    React.createElement("span", { className: "playground-agents-detail-version-selector-option-check" },
+                      version.selected
+                        ? React.createElement(Check, { width: 13, height: 13, strokeWidth: 2.2 })
+                        : null
+                    ),
+                    React.createElement("span", { className: "playground-agents-detail-version-selector-option-copy" },
+                      React.createElement("span", { className: "playground-agents-detail-version-selector-option-title" }, version.title),
+                      React.createElement("span", { className: "playground-agents-detail-version-selector-option-meta" }, version.meta)
+                    )
+                  ))
+                  : React.createElement("div", { className: "playground-agents-detail-version-selector-empty" },
+                      state.versionsLoading
+                        ? "Loading versions..."
+                        : state.versionsError || "No versions yet."
+                    )
+              ),
+              React.createElement("div", {
+                className: "playground-agents-detail-version-selector-footer playground-metronome-detail-version-selector-footer",
+              },
+                React.createElement("button", {
+                  type: "button",
+                  className: "tb-popup-row playground-agents-detail-version-selector-new-button",
+                  role: "menuitem",
+                  disabled: isBusy,
+                  onClick: () => {
+                    if (isBusy) return;
+                    setMetronomeBreadcrumbVersionMenuOpen(false);
+                    metronomeTopNavActionsRef.current?.createVersion?.();
+                  },
+                },
+                  React.createElement(GitBranchPlus, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.1 }),
+                  React.createElement("span", null, "New Version")
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  className: "tb-popup-row playground-agents-detail-version-selector-new-button",
+                  role: "menuitem",
+                  disabled: isBusy || state.versionsLoading || !versions.length,
+                  onClick: () => {
+                    if (isBusy || state.versionsLoading || !versions.length) return;
+                    setMetronomeBreadcrumbVersionMenuOpen(false);
+                    metronomeTopNavActionsRef.current?.openVersionHistory?.();
+                  },
+                },
+                  React.createElement(History, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.1 }),
+                  React.createElement("span", null, "Version history")
+                )
+              )
+            )
+          );
+        }
+
         function renderMetronomeTopNavActions() {
           const state = metronomeTopNavState && metronomeTopNavState.mode === "editor"
             ? metronomeTopNavState
@@ -24,9 +133,10 @@ export const METRONOME_APP_TOP_NAV_ACTIONS_SCRIPT = `
           return React.createElement(React.Fragment, null,
             isReadOnly
               ? null
-              : React.createElement("button", {
+              : React.createElement(PlatformSecondaryButton, {
                   type: "button",
-                  className: "playground-top-nav-private-chat-button",
+                  size: "small",
+                  className: "playground-metronome-top-nav-run-button",
                   onClick: () => metronomeTopNavActionsRef.current?.run?.(),
                 },
                   React.createElement(Play, { strokeWidth: 1.8 }),

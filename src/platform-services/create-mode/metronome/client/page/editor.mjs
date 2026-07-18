@@ -70,157 +70,6 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
             ];
           };
 
-          const renderMetronomeVersionSelector = () => {
-            if (!activeWorkflow || isActiveWorkflowBuiltIn) return null;
-            const isBusy = metronomePublishState.status === "loading";
-            const activeDeploymentId = String(activeWorkflowDeployment?.id || activeWorkflow?.activeDeploymentId || "").trim();
-            const selectedDeploymentId = String(
-              activeWorkflow?.metadata?.restoredFromDeploymentId
-              || activeWorkflow?.metadata?.restored_from_deployment_id
-              || activeDeploymentId
-              || ""
-            ).trim();
-            const selectedDeployment = selectedDeploymentId
-              ? activeWorkflowDeployments.find((deployment) => deployment.id === selectedDeploymentId) || null
-              : null;
-            const currentTitle = selectedDeployment
-              ? String(selectedDeployment.label || ("Version " + (selectedDeployment.version || ""))).trim() || "Version"
-              : "No versions";
-            const getDeploymentMeta = (deployment) => {
-              if (!deployment) return "";
-              const deploymentId = String(deployment.id || "").trim();
-              const status = deploymentId && deploymentId === activeDeploymentId
-                ? "Published"
-                : (String(deployment.status || "").toLowerCase() === "active" ? "Published" : "Saved");
-              const timestamp = String(deployment.publishedAt || deployment.updatedAt || deployment.createdAt || "").trim();
-              const formattedTimestamp = timestamp ? formatMetronomeDeploymentTimestamp(timestamp) : "";
-              return status + (formattedTimestamp ? " · " + formattedTimestamp : "");
-            };
-            const toggleSelectorMenu = (event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              if (isBusy) return;
-              setIsMetronomePublishActionsMenuOpen(false);
-              setIsMetronomePublishSettingsMenuOpen(false);
-              setIsMetronomeVersionsHeaderMenuOpen(false);
-              setIsMetronomeVersionSelectorMenuOpen((current) => !current);
-            };
-            return renderPlaygroundPlatformPopup({
-              open: isMetronomeVersionSelectorMenuOpen,
-              shellRef: metronomeVersionSelectorMenuRef,
-              shellClassName: "playground-agents-detail-publish-split-shell playground-agents-detail-version-selector-shell playground-metronome-detail-version-selector-shell",
-              menuClassName: "playground-agents-detail-publish-menu playground-agents-detail-version-selector-menu playground-metronome-detail-version-selector-menu",
-              trigger: React.createElement("div", {
-                  className: "playground-metronome-create-button playground-metronome-publish-button playground-agents-detail-header-publish-button playground-agents-detail-publish-split-control playground-agents-detail-version-selector-control playground-metronome-detail-version-selector-control"
-                    + (isMetronomeVersionSelectorMenuOpen ? " is-active" : "")
-                    + (isBusy ? " is-disabled" : ""),
-                },
-                React.createElement("button", {
-                    type: "button",
-                    className: "playground-agents-detail-publish-main playground-agents-detail-version-selector-main playground-metronome-detail-version-selector-main",
-                    title: currentTitle,
-                    "aria-label": "Choose Metronome version",
-                    "aria-haspopup": "menu",
-                    "aria-expanded": isMetronomeVersionSelectorMenuOpen ? "true" : "false",
-                    disabled: isBusy,
-                    onClick: toggleSelectorMenu,
-                  },
-                  React.createElement(GitBranchPlus, { className: "playground-agents-detail-version-selector-icon", width: 13, height: 13, strokeWidth: 1.8 }),
-                  React.createElement("span", { className: "playground-agents-detail-version-selector-label" }, currentTitle)
-                ),
-                React.createElement("span", { className: "playground-agents-detail-publish-divider", "aria-hidden": "true" }),
-                React.createElement("button", {
-                    type: "button",
-                    className: "playground-agents-detail-publish-chevron",
-                    title: "Choose Metronome version",
-                    "aria-label": "Choose Metronome version",
-                    "aria-haspopup": "menu",
-                    "aria-expanded": isMetronomeVersionSelectorMenuOpen ? "true" : "false",
-                    disabled: isBusy,
-                    onClick: toggleSelectorMenu,
-                  },
-                  React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
-                )
-              ),
-              menuProps: {
-                role: "menu",
-                onClick: (event) => event.stopPropagation(),
-              },
-              children: React.createElement(React.Fragment, null,
-                React.createElement("div", { className: "playground-agents-detail-version-selector-list playground-metronome-detail-version-selector-list", role: "group", "aria-label": "Metronome versions" },
-                  activeWorkflowDeployments.length
-                    ? activeWorkflowDeployments.map((deployment, index) => {
-                        const deploymentId = String(deployment?.id || "").trim() || "version-" + index;
-                        const isSelected = deploymentId === selectedDeploymentId;
-                        const title = String(deployment.label || ("Version " + (deployment.version || ""))).trim() || "Version";
-                        return React.createElement("button", {
-                            key: deploymentId,
-                            type: "button",
-                            className: "tb-popup-row playground-agents-detail-version-selector-option" + (isSelected ? " is-selected" : ""),
-                            role: "menuitemradio",
-                            "aria-checked": isSelected ? "true" : "false",
-                            disabled: isBusy || isSelected,
-                            onClick: () => {
-                              if (isBusy || isSelected) return;
-                              setIsMetronomeVersionSelectorMenuOpen(false);
-                              void restoreActiveWorkflowVersion(deploymentId);
-                            },
-                          },
-                          React.createElement("span", { className: "playground-agents-detail-version-selector-option-check" },
-                            isSelected
-                              ? React.createElement(Check, { width: 13, height: 13, strokeWidth: 2.2 })
-                              : null
-                          ),
-                          React.createElement("span", { className: "playground-agents-detail-version-selector-option-copy" },
-                            React.createElement("span", { className: "playground-agents-detail-version-selector-option-title" }, title),
-                            React.createElement("span", { className: "playground-agents-detail-version-selector-option-meta" }, getDeploymentMeta(deployment))
-                          )
-                        );
-                      })
-                    : React.createElement("div", { className: "playground-agents-detail-version-selector-empty" },
-                        isLoadingMetronomeVersions
-                          ? "Loading versions..."
-                          : metronomeVersionsError || "No versions yet."
-                      )
-                ),
-                React.createElement("div", { className: "playground-agents-detail-version-selector-footer playground-metronome-detail-version-selector-footer" },
-                  React.createElement("button", {
-                      type: "button",
-                      className: "tb-popup-row playground-agents-detail-version-selector-new-button",
-                      role: "menuitem",
-                      disabled: isBusy,
-                      onClick: () => {
-                        if (isBusy) return;
-                        setIsMetronomeVersionSelectorMenuOpen(false);
-                        openCreateWorkflowVersionModal();
-                      },
-                    },
-                    React.createElement(GitBranchPlus, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.1 }),
-                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                      React.createElement("span", null, "New Version")
-                    )
-                  ),
-                  React.createElement("button", {
-                      type: "button",
-                      className: "tb-popup-row playground-agents-detail-version-selector-new-button",
-                      role: "menuitem",
-                      disabled: isBusy || isLoadingMetronomeVersions || !activeWorkflowDeployments.length,
-                      onClick: () => {
-                        if (isBusy || isLoadingMetronomeVersions || !activeWorkflowDeployments.length) return;
-                        setIsMetronomeVersionSelectorMenuOpen(false);
-                        openMetronomeVersionChangesPage();
-                      },
-                    },
-                    React.createElement(History, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.1 }),
-                    React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                      React.createElement("span", null, "Version history")
-                    )
-                  )
-                )
-              )
-            });
-          };
-
           const renderMetronomePublishControl = () => {
             if (!activeWorkflow) return null;
             if (isActiveWorkflowBuiltIn) {
@@ -237,60 +86,42 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
             const hasMetronomePublishChanges = hasActiveMetronomeVersionChanges();
             const isMetronomePublishControlDisabled = Boolean(isBusy || !hasMetronomePublishChanges);
             const versionPopupActions = getMetronomeVersionPopupActions({ isBusy });
-            return renderPlaygroundPlatformPopup({
+            return React.createElement(PlatformButtonSelector, {
+              mode: "split-action",
+              buttonVariant: "primary",
+              buttonSize: "small",
               open: isMetronomePublishActionsMenuOpen,
-              shellRef: metronomePublishMenuRef,
-              shellClassName: "playground-agents-detail-publish-split-shell playground-metronome-detail-publish-split-shell",
-              menuClassName: "playground-agents-detail-publish-menu playground-metronome-detail-publish-menu",
-              trigger: React.createElement("div", {
-                  className: "playground-metronome-create-button playground-metronome-publish-button playground-agents-detail-header-publish-button playground-agents-detail-publish-split-control playground-metronome-detail-header-publish-button"
-                    + (isMetronomePublishMenuOpen ? " is-active" : "")
-                    + (isMetronomePublishControlDisabled ? " is-disabled" : ""),
-                },
-                React.createElement("button", {
-                    type: "button",
-                    className: "playground-agents-detail-publish-main",
-                    title: "Save and publish Metronome changes",
-                    "aria-label": "Save and publish Metronome changes",
-                    disabled: isMetronomePublishControlDisabled,
-                    onClick: () => {
-                      setSelectedNodeId("");
-                      setIsMetronomeRunSidebarOpen(false);
-                      setIsMetronomeRunSidebarMenuOpen(false);
-                      setIsMetronomePublishActionsMenuOpen(false);
-                      setIsMetronomeVersionSelectorMenuOpen(false);
-                      setIsMetronomePublishSettingsMenuOpen(false);
-                      setIsMetronomeVersionsHeaderMenuOpen(false);
-                      void publishActiveWorkflowVersion();
-                    },
-                  },
-                  React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("span", null, "Save & Publish")
-                ),
-                React.createElement("span", { className: "playground-agents-detail-publish-divider", "aria-hidden": "true" }),
-                React.createElement("button", {
-                    type: "button",
-                    className: "playground-agents-detail-publish-chevron",
-                    title: "Version save options",
-                    "aria-label": "Version save options",
-                    "aria-haspopup": "menu",
-                    "aria-expanded": isMetronomePublishActionsMenuOpen ? "true" : "false",
-                    disabled: isMetronomePublishControlDisabled,
-                    onClick: (event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      setIsMetronomeVersionSelectorMenuOpen(false);
-                      setIsMetronomePublishActionsMenuOpen((current) => !current);
-                    },
-                  },
-                  React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
-                )
-              ),
-              menuProps: {
-                role: "menu",
-                onClick: (event) => event.stopPropagation(),
+              onOpenChange: (nextOpen) => {
+                if (nextOpen) {
+                  setIsMetronomePublishSettingsMenuOpen(false);
+                  setIsMetronomeVersionsHeaderMenuOpen(false);
+                }
+                setIsMetronomePublishActionsMenuOpen(nextOpen);
               },
-              children: React.createElement(React.Fragment, null,
+              onAction: () => {
+                setSelectedNodeId("");
+                setIsMetronomeRunSidebarOpen(false);
+                setIsMetronomeRunSidebarMenuOpen(false);
+                setIsMetronomePublishActionsMenuOpen(false);
+                setIsMetronomePublishSettingsMenuOpen(false);
+                setIsMetronomeVersionsHeaderMenuOpen(false);
+                return publishActiveWorkflowVersion();
+              },
+              label: "Save & Publish",
+              leading: React.createElement(Rocket, { strokeWidth: 1.8 }),
+              actionAriaLabel: "Save and publish Metronome changes",
+              popupAriaLabel: "Version save options",
+              actionDisabled: isMetronomePublishControlDisabled,
+              popupDisabled: isMetronomePublishControlDisabled,
+              active: isMetronomePublishActionsMenuOpen,
+              popupAlignment: "right",
+              popupRole: "menu",
+              popupWidth: 268,
+              popupMaxHeight: "min(260px, calc(100vh - 160px))",
+              className: "playground-metronome-detail-publish-selector",
+              popupClassName: "playground-agents-detail-publish-menu playground-metronome-detail-publish-menu",
+            },
+              React.createElement(React.Fragment, null,
                 versionPopupActions.map((action) => React.createElement("button", {
                     key: action.id || action.label,
                     type: "button",
@@ -314,11 +145,10 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
                     : null
                 ))
               )
-            });
+            );
           };
 
           const renderMetronomeHeaderControls = () => React.createElement("div", { className: "playground-metronome-detail-header-controls" },
-            renderMetronomeVersionSelector(),
             renderMetronomePublishControl()
           );
 
@@ -590,11 +420,17 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
             );
           };
 
-          const renderMetronomeRunStatusLabel = (run) => {
-            const status = String(run?.status || "completed").toLowerCase();
-            return React.createElement("span", {
-              className: "playground-metronome-run-status" + (status === "completed" ? " is-completed" : ""),
-            }, status || "completed");
+          const renderMetronomeRunStatusLabel = (statusId) => {
+            const status = String(statusId || "completed").trim().toLowerCase() || "completed";
+            const variant = status === "completed"
+              ? "green"
+              : status === "running"
+                ? "blue"
+                : status === "failed"
+                  ? "red"
+                  : "gray";
+            const label = status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, " ");
+            return React.createElement(PlatformLabel, { variant }, label);
           };
 
           const formatMetronomeRunTimestamp = (value) => {
@@ -1430,13 +1266,14 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
             const metronomeRunColumns = [
               {
                 id: "run",
-                header: "Run",
-                accessor: getMetronomeRunPrompt,
+                header: "Run ID",
+                accessor: (run) => String(run?.id || ""),
                 sortable: true,
                 width: "minmax(260px, 1.6fr)",
-                cell: ({ row: run }) => React.createElement("div", { className: "playground-metronome-table-main" },
-                  React.createElement("div", { className: "playground-metronome-table-title" }, getMetronomeRunPrompt(run)),
-                  React.createElement("div", { className: "playground-metronome-table-subtitle" }, run.id || "Draft run")
+                cell: ({ row: run }) => React.createElement(
+                  "span",
+                  { className: "playground-metronome-table-title" },
+                  run.id || "Draft run",
                 ),
               },
               {
@@ -1476,7 +1313,7 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
                 accessor: getRunStatusId,
                 sortable: true,
                 width: "minmax(105px, 0.58fr)",
-                cell: ({ row: run }) => renderMetronomeRunStatusLabel(run),
+                cell: ({ row: run }) => renderMetronomeRunStatusLabel(getRunStatusId(run)),
               },
             ];
             const metronomeRunsPlatformTable = React.createElement(PlatformDataTable, {
@@ -1485,6 +1322,10 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
               getRowId: (run) => String(run?.id || ""),
               ariaLabel: "Metronome runs",
               className: "playground-metronome-runs-platform-data-table",
+              surface: "plain",
+              variant: "minimalistic-ui",
+              sticky: false,
+              pagination: {},
               sorting: {
                 value: { id: metronomeRunSort, direction: metronomeRunSortDirection },
                 onChange: (next) => {
@@ -1504,6 +1345,7 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
                 ariaLabel: (run) => "Select run " + String(run?.id || ""),
               },
               toolbar: {
+                title: "Runs",
                 search: {
                   value: metronomeRunSearchQuery,
                   onChange: setMetronomeRunSearchQuery,
@@ -1540,14 +1382,6 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
               noResultsState: "No matching runs.",
             });
             return React.createElement("div", { className: "playground-metronome-runs-view" },
-              React.createElement("div", { className: "playground-metronome-runs-header" },
-                React.createElement("div", null,
-                  React.createElement("h2", { className: "playground-metronome-runs-title" }, "Runs")
-                ),
-                React.createElement("div", { className: "playground-metronome-runs-actions" },
-                  renderMetronomeHeaderControls()
-                )
-              ),
               React.createElement("div", { className: "playground-metronome-runs-layout" },
                 React.createElement("section", {
                     className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-overview-list-section playground-team-grid-table-section playground-metronome-runs-table-section",

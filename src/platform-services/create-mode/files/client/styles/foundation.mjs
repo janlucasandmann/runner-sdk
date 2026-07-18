@@ -764,7 +764,7 @@ export const FILES_FOUNDATION_CSS = `
       }
 
       .playground-files-library-search.platform-search {
-        width: min(360px, 40vw);
+        width: 300px;
       }
 
       .playground-files-library-search-popover {

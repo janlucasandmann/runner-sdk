@@ -9,8 +9,12 @@ Components that assemble multiple controls, behaviors, or presentation regions i
 - `detail-tab-bar`: accessible, keyboard-navigable resource-detail tabs.
 - `empty-state`: shared icon, title, and supporting-copy composition for empty data surfaces.
 - `instructions-editor`: shared Markdown instructions editing, history, formatting, and preview rendering.
+- `loading-state`: shared animated dot loader and concise status-copy composition.
 - `modal`: dialog composition, focus management, sizing, and dismissal.
+- `page-hero`: the shared page title, description, and optional action row.
 - `popup`: popup surfaces, dismissal layers, positioning, and transitions.
+- `settings-section`: reusable settings section lists, headers, content surfaces, and table defaults.
+- `ui-card`: the shared neutral card surface for composed platform content.
 - `widgets`: the shared home widget shell and its project, calendar, and usage variants.
 
 Import composites through `platform-ui/components/composite`, or through a specific canonical subpath such as `platform-ui/components/composite/data-table`.

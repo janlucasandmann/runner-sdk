@@ -82,7 +82,7 @@ export const METRONOME_TEMPLATES_02_FRAGMENT = String.raw`	                : kin
           };
         }
 
-        function createDefaultMetronomeGraph(options = {}) {
+        function createTriggerOnlyMetronomeGraph(options = {}) {
           const trigger = createMetronomeNode("trigger", { x: 90, y: 260 }, {
             id: "trigger_start",
             subtype: "thread_event",
@@ -94,6 +94,14 @@ export const METRONOME_TEMPLATES_02_FRAGMENT = String.raw`	                : kin
               promptExtension: "Capture the request, preserve the user's intent, and pass the full context into the workflow.",
             },
           });
+          return {
+            nodes: [trigger],
+            edges: [],
+          };
+        }
+
+        function createDefaultMetronomeGraph(options = {}) {
+          const { nodes: [trigger] } = createTriggerOnlyMetronomeGraph(options);
           const intakeThread = createMetronomeNode("action", { x: 390, y: 260 }, {
             id: "thread_triage_request",
             subtype: "start_thread",

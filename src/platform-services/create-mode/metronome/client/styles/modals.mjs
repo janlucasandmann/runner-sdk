@@ -57,102 +57,14 @@ export const METRONOME_MODALS_CSS = String.raw`
         gap: 10px;
       }
 
-      .playground-tasks-project-modal-backdrop.playground-metronome-workflow-modal-backdrop,
-      .playground-metronome-workflow-modal-backdrop.playground-metronome-name-modal-backdrop {
-        z-index: 99980;
-        align-items: center;
-        justify-content: center;
-        padding: 24px;
-        background: rgba(0, 0, 0, 0) !important;
-        backdrop-filter: blur(20px) !important;
-        -webkit-backdrop-filter: blur(20px) !important;
-        transition: background-color 60ms ease-out !important;
+      .playground-metronome-workflow-name-modal__body {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
       }
 
-      .playground-tasks-project-modal-backdrop.playground-metronome-workflow-modal-backdrop.is-visible,
-      .playground-metronome-workflow-modal-backdrop.playground-metronome-name-modal-backdrop.is-visible {
-        background: rgba(0, 0, 0, 0.5) !important;
-      }
-
-      .playground-metronome-workflow-modal.playground-metronome-name-modal {
-        --tb-runner-input-border: linear-gradient(
-          -10deg,
-          rgba(200, 200, 200, 0.25),
-          rgba(255, 255, 255, 0.1),
-          rgba(255, 255, 255, 0.15),
-          rgba(255, 255, 255, 0.375)
-        );
-        position: relative;
-        width: min(520px, calc(100vw - 32px));
-        max-width: min(520px, calc(100vw - 32px));
-        max-height: min(720px, calc(100vh - 48px));
-        overflow: visible;
-        border: 0 !important;
-        border-radius: 25px;
-        padding: 16px;
-        background: rgba(30, 30, 30, 0.5) !important;
-        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.48) !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-        transform-origin: center;
-        opacity: 0.5;
-        transform: scale(0.75);
-        transition: opacity 60ms ease-out, transform 60ms cubic-bezier(0.16, 1, 0.3, 1) !important;
-        will-change: opacity, transform;
-      }
-
-      .playground-metronome-workflow-modal.playground-metronome-name-modal.is-visible {
-        opacity: 1;
-        transform: scale(1);
-      }
-
-      .playground-tasks-project-composer-modal.playground-metronome-workflow-modal::before,
-      .playground-metronome-workflow-modal.playground-metronome-name-modal::before {
-        content: "" !important;
-        pointer-events: none;
-        position: absolute;
-        inset: 0;
-        z-index: 5;
-        display: block !important;
-        border-radius: inherit;
-        padding: 1px;
-        background: var(--tb-task-input-border, var(--tb-runner-input-border));
-        mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-        mask-clip: content-box, border-box;
-        mask-composite: exclude;
-        mask-origin: content-box, border-box;
-        mask-repeat: repeat, repeat;
-        mask-size: auto, auto;
-      }
-
-      .playground-tasks-project-composer-modal.playground-metronome-workflow-modal::after,
-      .playground-metronome-workflow-modal.playground-metronome-name-modal::after {
-        content: none !important;
-        display: none !important;
-      }
-
-      .playground-metronome-workflow-modal-scroll {
-        position: relative;
-        z-index: 6;
-        max-height: calc(min(720px, calc(100vh - 48px)) - 32px);
-        overflow: auto;
-      }
-
-      .playground-metronome-workflow-modal .playground-tasks-project-modal-top {
-        align-items: center;
-        gap: 16px;
-        margin-bottom: 14px;
-        padding-bottom: 12px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      .playground-metronome-workflow-modal-icon {
-        flex: 0 0 auto;
-        cursor: default;
-      }
-
-      .playground-metronome-workflow-modal-name-input {
-        min-width: 0;
+      .playground-metronome-workflow-name-modal__input {
+        box-sizing: border-box;
       }
 
       .playground-metronome-workflow-wallpaper-field {

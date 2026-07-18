@@ -1,4 +1,4 @@
-import { stripRunnerSystemTags } from "../../../../react/runner-markdown.js";
+import { stripRunnerSystemTags } from "../shared/runner-markdown.js";
 
 export type RunnerWorkingLogJsonValue = Record<string, unknown> | unknown[];
 

@@ -88,7 +88,6 @@
           const serverVersionBaselineRef = useRef({ key: "", signature: "" });
           const serverVersionDraftTouchedRef = useRef(false);
           const serverDetailsCollapsedBeforeVersionsRef = useRef(null);
-          const environmentDockerfileTextareaRef = useRef(null);
           const serverComposerDescriptionTextareaRef = useRef(null);
           const environmentGuiImageRef = useRef(null);
           const environmentGuiClickTimerRef = useRef(null);
@@ -96,9 +95,6 @@
           const environmentRuntimePopoverRef = useRef(null);
           const environmentComposerRuntimePopoverRef = useRef(null);
           const environmentActionsPopoverRef = useRef(null);
-          const environmentPublishMenuRef = useRef(null);
-          const environmentVersionSelectorMenuRef = useRef(null);
-          const environmentTagsMenuRef = useRef(null);
           const environmentVersionDescriptionTextareaRef = useRef(null);
           const environmentVersionModalCloseTimerRef = useRef(null);
           const environmentVersionModalFrameRef = useRef(null);
@@ -384,8 +380,6 @@
           const [environmentActionsPopoverOpen, setEnvironmentActionsPopoverOpen] = useState(false);
           const [environmentPublishMenuOpen, setEnvironmentPublishMenuOpen] = useState(false);
           const [environmentVersionSelectorMenuOpen, setEnvironmentVersionSelectorMenuOpen] = useState(false);
-          const [environmentTagsMenuOpen, setEnvironmentTagsMenuOpen] = useState(false);
-          const [environmentTagInputValue, setEnvironmentTagInputValue] = useState("");
           const [environmentVersionsHeaderMenuOpen, setEnvironmentVersionsHeaderMenuOpen] = useState(false);
           const [environmentVersionsSidebarOpen, setEnvironmentVersionsSidebarOpen] = useState(false);
           const [environmentVersionsDrawerContainer, setEnvironmentVersionsDrawerContainer] = useState(null);
@@ -652,7 +646,6 @@
             error: "",
           });
           const [availableRuntimes, setAvailableRuntimes] = useState(PLAYGROUND_DEFAULT_AVAILABLE_RUNTIMES);
-          const [expandedSections, setExpandedSections] = useState(() => new Set(["general", "overview", "runtimes", "packages-system", "packages-python", "packages-node", "variables"]));
           const [modifiedSecrets, setModifiedSecrets] = useState({});
           const [modifiedMcpTokens, setModifiedMcpTokens] = useState({});
           const [packageComposerState, setPackageComposerState] = useState({
@@ -1226,31 +1219,6 @@
               : {};
           }
   
-          function normalizeEnvironmentTagLabel(value) {
-            return String(value || "").trim().replace(/s+/g, " ");
-          }
-  
-          function getEnvironmentTagLabels(environmentRecord) {
-            const metadata = getEnvironmentMetadataRecord(environmentRecord);
-            const source = Array.isArray(metadata.tags)
-              ? metadata.tags
-              : Array.isArray(metadata.labels)
-                ? metadata.labels
-                : Array.isArray(environmentRecord?.tags)
-                  ? environmentRecord.tags
-                  : [];
-            const seen = new Set();
-            return source
-              .map((tag) => normalizeEnvironmentTagLabel(tag))
-              .filter((tag) => {
-                if (!tag) return false;
-                const key = tag.toLowerCase();
-                if (seen.has(key)) return false;
-                seen.add(key);
-                return true;
-              });
-          }
-  
           function getEnvironmentSharedTeamIds(environmentRecord) {
             const metadata = getEnvironmentMetadataRecord(environmentRecord);
             const source = Array.isArray(metadata.sharedTeamIds)
@@ -1664,8 +1632,6 @@
             setEnvironmentActionsPopoverOpen(false);
             setEnvironmentPublishMenuOpen(false);
             setEnvironmentVersionSelectorMenuOpen(false);
-            setEnvironmentTagsMenuOpen(false);
-            setEnvironmentTagInputValue("");
             setEnvironmentVersionsHeaderMenuOpen(false);
             setEnvironmentVersionsSidebarOpen(false);
             environmentDetailsCollapsedBeforeVersionsRef.current = null;
@@ -1677,7 +1643,6 @@
               message: "",
               error: "",
             });
-            setIsEnvironmentDescriptionEditing(false);
             setPackageComposerState({
               type: "",
               value: "",
@@ -2464,18 +2429,6 @@
   
           function toggleToolbarPopover(nextValue) {
             setToolbarPopover((current) => current === nextValue ? "" : nextValue);
-          }
-  
-          function toggleSection(sectionId) {
-            setExpandedSections((current) => {
-              const next = new Set(current);
-              if (next.has(sectionId)) {
-                next.delete(sectionId);
-              } else {
-                next.add(sectionId);
-              }
-              return next;
-            });
           }
   
           const loadEnvironmentDetails = useCallback(async (environmentId, options = {}) => {
@@ -5813,60 +5766,6 @@
           }, [versionsDrawerPortalId]);
   
           useEffect(() => {
-            if (!environmentVersionSelectorMenuOpen) {
-              return undefined;
-            }
-  
-            function handleEnvironmentVersionSelectorPointerDown(event) {
-              const target = event?.target instanceof Node ? event.target : null;
-              if (!target || !environmentVersionSelectorMenuRef.current || environmentVersionSelectorMenuRef.current.contains(target)) {
-                return;
-              }
-              setEnvironmentVersionSelectorMenuOpen(false);
-            }
-  
-            function handleEnvironmentVersionSelectorEscape(event) {
-              if (event.key === "Escape") {
-                setEnvironmentVersionSelectorMenuOpen(false);
-              }
-            }
-  
-            document.addEventListener("mousedown", handleEnvironmentVersionSelectorPointerDown);
-            window.addEventListener("keydown", handleEnvironmentVersionSelectorEscape);
-            return () => {
-              document.removeEventListener("mousedown", handleEnvironmentVersionSelectorPointerDown);
-              window.removeEventListener("keydown", handleEnvironmentVersionSelectorEscape);
-            };
-          }, [environmentVersionSelectorMenuOpen]);
-  
-          useEffect(() => {
-            if (!environmentTagsMenuOpen) {
-              return undefined;
-            }
-  
-            function handleEnvironmentTagsMenuPointerDown(event) {
-              const target = event?.target instanceof Node ? event.target : null;
-              if (!target || !environmentTagsMenuRef.current || environmentTagsMenuRef.current.contains(target)) {
-                return;
-              }
-              setEnvironmentTagsMenuOpen(false);
-            }
-  
-            function handleEnvironmentTagsMenuEscape(event) {
-              if (event.key === "Escape") {
-                setEnvironmentTagsMenuOpen(false);
-              }
-            }
-  
-            document.addEventListener("mousedown", handleEnvironmentTagsMenuPointerDown);
-            window.addEventListener("keydown", handleEnvironmentTagsMenuEscape);
-            return () => {
-              document.removeEventListener("mousedown", handleEnvironmentTagsMenuPointerDown);
-              window.removeEventListener("keydown", handleEnvironmentTagsMenuEscape);
-            };
-          }, [environmentTagsMenuOpen]);
-  
-          useEffect(() => {
             if (typeof onVersionsSidebarOpenChange !== "function") {
               return undefined;
             }
@@ -6208,31 +6107,6 @@
               window.removeEventListener("keydown", handleEnvironmentActionsPopoverEscape);
             };
           }, [environmentActionsPopoverOpen]);
-  
-          useEffect(() => {
-            if (!environmentPublishMenuOpen) return undefined;
-  
-            function handleEnvironmentPublishMenuPointerDown(event) {
-              const target = event?.target instanceof Node ? event.target : null;
-              if (!target || !environmentPublishMenuRef.current || environmentPublishMenuRef.current.contains(target)) {
-                return;
-              }
-              setEnvironmentPublishMenuOpen(false);
-            }
-  
-            function handleEnvironmentPublishMenuEscape(event) {
-              if (event.key === "Escape") {
-                setEnvironmentPublishMenuOpen(false);
-              }
-            }
-  
-            document.addEventListener("mousedown", handleEnvironmentPublishMenuPointerDown);
-            window.addEventListener("keydown", handleEnvironmentPublishMenuEscape);
-            return () => {
-              document.removeEventListener("mousedown", handleEnvironmentPublishMenuPointerDown);
-              window.removeEventListener("keydown", handleEnvironmentPublishMenuEscape);
-            };
-          }, [environmentPublishMenuOpen]);
   
           useEffect(() => {
             if (!serverPublishMenuOpen) return undefined;
@@ -6722,10 +6596,6 @@
           ]);
   
           useLayoutEffect(() => {
-            resizeEnvironmentDescriptionTextarea(environmentDockerfileTextareaRef.current);
-          }, [draftEnvironment?.dockerfileExtensions, draftEnvironment?.id]);
-  
-          useLayoutEffect(() => {
             if (!serverComposerOpen) {
               return;
             }
@@ -6735,51 +6605,6 @@
           useLayoutEffect(() => {
             resizeEnvironmentDescriptionTextarea(databaseDescriptionTextareaRef.current);
           }, [draftDatabase?.description, draftDatabase?.id]);
-  
-          useEffect(() => {
-            const detailMain = environmentDetailMainRef.current;
-            if (!detailMain) return undefined;
-  
-            let frameId = 0;
-            const timeoutIds = [];
-            const scheduleResize = () => {
-              if (frameId) {
-                window.cancelAnimationFrame(frameId);
-              }
-              frameId = window.requestAnimationFrame(() => {
-                resizeEnvironmentDescriptionTextarea(environmentDockerfileTextareaRef.current);
-              });
-            };
-  
-            scheduleResize();
-            [120, 240, 360].forEach((delay) => {
-              timeoutIds.push(window.setTimeout(scheduleResize, delay));
-            });
-  
-            if (typeof ResizeObserver === "undefined") {
-              window.addEventListener("resize", scheduleResize);
-              return () => {
-                if (frameId) {
-                  window.cancelAnimationFrame(frameId);
-                }
-                timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
-                window.removeEventListener("resize", scheduleResize);
-              };
-            }
-  
-            const observer = new ResizeObserver(() => {
-              scheduleResize();
-            });
-            observer.observe(detailMain);
-  
-            return () => {
-              if (frameId) {
-                window.cancelAnimationFrame(frameId);
-              }
-              timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
-              observer.disconnect();
-            };
-          }, [draftEnvironment?.id]);
   
           useEffect(() => {
             const textarea = serverDescriptionTextareaRef.current;

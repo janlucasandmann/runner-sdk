@@ -46,7 +46,7 @@ import {
   togglePlatformDataTableVisibleSelection,
 } from "./data-table-state.js";
 import { useAnimatedHeight } from "./use-animated-height.js";
-import { DotLoader } from "../../../../react/dot-loader.js";
+import { DotLoader } from "../../ui/dot-loader/index.js";
 import { PlatformPrimaryButton } from "../../ui/button/platform-button.js";
 import { PlatformSearch } from "../../ui/search/platform-search.js";
 import { PlatformPopupSurface } from "../popup/platform-popup.js";

@@ -1,8 +1,4 @@
-export const PROJECTS_VIEWS_02_FRAGMENT = `	            )
-	          );
-          return isInitialProjectSetupModal && typeof document !== "undefined" && document.body
-            ? createPortal(modalElement, document.body)
-            : modalElement;
+export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
         }
 
         function renderReleaseComposerDialog() {
@@ -492,119 +488,65 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	            )
         }
 
         function renderProjectsHomeHeader() {
-          const scopeOptions = [
-            { id: "all", label: "All projects" },
-            { id: "created", label: "Created by me" },
-            { id: "shared", label: "Shared with me" },
-          ];
           return React.createElement("div", { className: "playground-files-library-header playground-projects-library-header" },
             React.createElement("div", { className: "playground-files-library-title-row playground-projects-library-title-row" },
-              React.createElement("h1", { className: "playground-files-library-title playground-projects-library-title" }, "Projects"),
-              React.createElement("div", { className: "playground-files-library-actions playground-projects-library-actions" },
-                React.createElement("div", { className: "playground-files-library-search-anchor playground-projects-library-search-anchor" },
-                  React.createElement("label", { className: "playground-files-library-search playground-projects-library-search" },
-                    React.createElement(Search, { className: "playground-files-library-search-icon", strokeWidth: 1.8 }),
-                    React.createElement("input", {
-                      type: "search",
-                      value: searchQuery,
-                      onChange: (event) => setSearchQuery(event.target.value),
-                      className: "playground-files-library-search-input",
-                      placeholder: "Search projects",
-                      "aria-label": "Search projects",
-                    })
-                  )
-                ),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-files-library-new-button playground-projects-library-new-button",
-                  onClick: () => openProjectComposer(),
-                }, "New")
-              )
-            ),
-            React.createElement("div", { className: "playground-files-library-nav-row playground-projects-library-nav-row" },
-              React.createElement("div", { className: "playground-files-library-tabs content-mode-switch playground-projects-library-tabs" },
-                scopeOptions.map((option) =>
-                  React.createElement("button", {
-                    key: option.id,
+              React.createElement("div", { className: "playground-projects-library-heading" },
+                React.createElement("h1", { className: "playground-files-library-title playground-projects-library-title" }, "All Projects"),
+                React.createElement(PlatformPopup, {
+                  open: projectsHomeToolbarPopover === "filter",
+                  rootRef: projectsHomeFilterPopupRef,
+                  rootClassName: "playground-projects-library-controls",
+                  surfaceClassName: "platform-data-table__floating-menu playground-projects-library-filter-menu",
+                  surfaceProps: {
+                    role: "menu",
+                    "aria-label": "Filter projects",
+                  },
+                  animation: "down-in",
+                  variant: "minimal",
+                  trigger: React.createElement("button", {
                     type: "button",
-                    className: "playground-files-library-tab" + (projectsHomeScope === option.id ? " is-active" : ""),
-                    onClick: () => setProjectsHomeScope(option.id),
-                    "aria-pressed": projectsHomeScope === option.id ? "true" : "false",
-                  }, option.label)
-                )
-              ),
-              React.createElement("div", { className: "playground-files-library-controls playground-projects-library-controls" },
-                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-library-icon-button" + (projectsHomeToolbarPopover === "sort" || projectsHomeSortMode !== "updated-desc" ? " is-active" : ""),
-                    title: "Sort projects",
-                    "aria-label": "Sort projects",
-                    "aria-expanded": projectsHomeToolbarPopover === "sort" ? "true" : "false",
-                    onClick: () => setProjectsHomeToolbarPopover((current) => current === "sort" ? "" : "sort"),
-                  }, React.createElement(ArrowUpDown, { strokeWidth: 1.8 })),
-                  projectsHomeToolbarPopover === "sort"
-                    ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                        projectsHomeSortOptions.map((option) =>
-                          React.createElement("button", {
-                            key: option.id,
-                            type: "button",
-                            className: "tb-popup-row tb-popup-row-select" + (projectsHomeSortMode === option.id ? " selected" : ""),
-                            onClick: () => {
-                              setProjectsHomeSortMode(option.id);
-                              setProjectsHomeToolbarPopover("");
-                            },
-                          },
-                            React.createElement("span", { className: "tb-popup-check-slot" },
-                              projectsHomeSortMode === option.id
-                                ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                : null
-                            ),
-                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, option.label),
-                              option.description ? React.createElement("span", null, option.description) : null
-                            )
-                          )
-                        )
-                      )
-                    : null
-                ),
-                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-library-icon-button" + (projectsHomeToolbarPopover === "filter" || projectsHomeFilterMode !== "all" ? " is-active" : ""),
+                    className: "platform-data-table__toolbar-button is-icon-only" + (projectsHomeToolbarPopover === "filter" ? " is-open" : ""),
                     title: "Filter projects",
                     "aria-label": "Filter projects",
+                    "aria-haspopup": "menu",
                     "aria-expanded": projectsHomeToolbarPopover === "filter" ? "true" : "false",
                     onClick: () => setProjectsHomeToolbarPopover((current) => current === "filter" ? "" : "filter"),
-                  }, React.createElement(SlidersHorizontal, { strokeWidth: 1.8 })),
-                  projectsHomeToolbarPopover === "filter"
-                    ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                        projectsHomeFilterOptions.map((option) =>
-                          React.createElement("button", {
-                            key: option.id,
-                            type: "button",
-                            className: "tb-popup-row tb-popup-row-select" + (projectsHomeFilterMode === option.id ? " selected" : ""),
-                            onClick: () => {
-                              setProjectsHomeFilterMode(option.id);
-                              setProjectsHomeToolbarPopover("");
-                            },
-                          },
-                            React.createElement("span", { className: "tb-popup-check-slot" },
-                              projectsHomeFilterMode === option.id
-                                ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                : null
-                            ),
-                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, option.label),
-                              option.description ? React.createElement("span", null, option.description) : null
-                            )
-                          )
-                        )
+                  }, React.createElement(ListFilter, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" })),
+                },
+                  projectsHomeFilterOptions.map((option) =>
+                    React.createElement("button", {
+                      key: option.id,
+                      type: "button",
+                      role: "menuitemradio",
+                      "aria-checked": projectsHomeFilterMode === option.id ? "true" : "false",
+                      className: "platform-data-table__menu-item",
+                      onClick: () => {
+                        setProjectsHomeFilterMode(option.id);
+                        setProjectsHomeToolbarPopover("");
+                      },
+                    },
+                      React.createElement("span", { className: "platform-data-table__menu-icon" },
+                        projectsHomeFilterMode === option.id
+                          ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" })
+                          : null
+                      ),
+                      React.createElement("span", { className: "platform-data-table__menu-copy" },
+                        React.createElement("span", { className: "platform-data-table__menu-label" }, option.label),
+                        option.description
+                          ? React.createElement("span", { className: "platform-data-table__menu-description" }, option.description)
+                          : null
                       )
-                    : null
+                    )
+                  )
                 )
-              )
+              ),
+              React.createElement(PlatformSearch, {
+                className: "playground-projects-library-search",
+                value: searchQuery,
+                onChange: (event) => setSearchQuery(event.target.value),
+                placeholder: "Search projects",
+                "aria-label": "Search projects",
+              })
             )
           );
         }
@@ -619,10 +561,11 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	            )
 
         function renderProjectLanding() {
           if (projectLoadState.status === "loading" && projects.length === 0) {
-            return React.createElement("div", { className: "playground-tasks-loading-state" },
-              React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
-              React.createElement("div", { className: "playground-tasks-loading-copy" }, "Loading projects…")
-            );
+            return React.createElement(PlatformLoadingState, {
+              className: "playground-projects-loading-state",
+              message: "Loading projects...",
+              centered: true,
+            });
           }
 
           if (projectLoadState.status === "error" && projects.length === 0) {

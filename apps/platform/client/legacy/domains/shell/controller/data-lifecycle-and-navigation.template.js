@@ -3056,6 +3056,7 @@
   
           function openResourcesView(nextView, options = {}) {
             const normalizedView = nextView === "servers" ? "servers" : nextView === "computers" ? "computers" : "agents";
+            const shouldCreateComputer = normalizedView === "computers" && options.create === true;
             const normalizedServerKind = normalizedView === "servers"
               ? normalizeDevelopServerPageKind(options.serverKind)
               : "";
@@ -3084,7 +3085,9 @@
               setResourcesBackRequestToken((current) => current + 1);
             }
             if (normalizedView === "computers") {
-              setEnvironmentsNavigationTargetId("");
+              setEnvironmentsNavigationTargetId(
+                shouldCreateComputer ? PLAYGROUND_ENVIRONMENT_DRAFT_ID : "",
+              );
               setEnvironmentsOpenToken((current) => current + 1);
             }
           }
@@ -3100,11 +3103,22 @@
             setAccountMenuOpen(false);
             setProfileEditorOpen(false);
             setToolsView(normalizedView);
-            if (normalizedView === "skills" && options.skillId) {
-              setToolsSkillsOpenRequest({
-                skillId: String(options.skillId || "").trim(),
-                token: Date.now().toString(36) + Math.random().toString(36).slice(2),
-              });
+            if (normalizedView === "skills") {
+              if (options.create === true) {
+                setToolsSkillsOpenRequest({
+                  action: "create",
+                  skillId: "",
+                  token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                });
+              } else if (options.skillId) {
+                setToolsSkillsOpenRequest({
+                  action: "open",
+                  skillId: String(options.skillId || "").trim(),
+                  token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                });
+              } else {
+                setToolsSkillsOpenRequest(null);
+              }
             }
             if (options.forceOverview) {
               if (normalizedView === "plugins" || normalizedView === "tags") {

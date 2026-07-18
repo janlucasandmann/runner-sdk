@@ -33,7 +33,6 @@ export function createApiKeysOverviewAnalytics({
     ariaLabel: "API requests and token consumption over time",
     loading,
     error: error || undefined,
-    emptyState: "API activity appears here after authenticated API requests.",
     metrics: [
       {
         id: "requests",

@@ -171,9 +171,9 @@
 }
 
 .platform-data-table__search {
-  flex: 0 1 min(340px, 38vw);
-  width: min(340px, 38vw);
-  min-width: 160px;
+  flex: 0 0 300px;
+  width: 300px;
+  min-width: 300px;
 }
 
 .platform-data-table__toolbar-button,
@@ -754,6 +754,7 @@
 .platform-data-table__menu-separator {
   position: relative;
   z-index: 2;
+  flex: 0 0 auto;
 }
 
 .platform-data-table__menu-item {
@@ -765,7 +766,7 @@
   margin: 0 4px;
   padding: 7px 11px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 4px;
   background: transparent;
   color: rgba(255, 255, 255, 0.84);
   font: inherit;

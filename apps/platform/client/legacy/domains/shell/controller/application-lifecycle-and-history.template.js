@@ -332,36 +332,6 @@
           }, [applyTaskRunState, realThreads, syncCompletedTaskRun, taskRunStates]);
   
           useEffect(() => {
-            const normalizedSearchQuery = String(threadSearchQuery || "").trim();
-            if (
-              !threadSearchOpen ||
-              normalizedSearchQuery.length < 2 ||
-              !hasRealAccess ||
-              isThreadsLoading ||
-              realThreads.length >= SEARCH_THREAD_EXPANDED_FETCH_LIMIT ||
-              (!realThreadsHasMore && realThreads.length > 0)
-            ) {
-              return;
-            }
-  
-            void refreshThreads(SEARCH_THREAD_EXPANDED_FETCH_LIMIT);
-          }, [hasRealAccess, isThreadsLoading, realThreads.length, realThreadsHasMore, refreshThreads, threadSearchOpen, threadSearchQuery]);
-  
-          useEffect(() => {
-            const normalizedSearchQuery = String(threadSearchQuery || "").trim();
-            if (threadSearchOpen && normalizedSearchQuery.length >= 2) {
-              return;
-            }
-            const retainedSidebarLimit = Math.max(
-              SEARCH_THREAD_FETCH_LIMIT,
-              Number.isFinite(threadDisplayCountRef.current) ? threadDisplayCountRef.current : 10
-            );
-            if ((Number(threadFetchLimitRef.current) || SEARCH_THREAD_FETCH_LIMIT) > retainedSidebarLimit) {
-              threadFetchLimitRef.current = retainedSidebarLimit;
-            }
-          }, [threadSearchOpen, threadSearchQuery]);
-  
-          useEffect(() => {
             threadDisplayCountRef.current = 10;
             threadFetchLimitRef.current = SEARCH_THREAD_FETCH_LIMIT;
             setThreadDisplayCount(10);
@@ -1224,7 +1194,7 @@
               };
             }
   
-  ${MODELS_APP_SCRIPT_FRAGMENTS.historyCapture}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.historyCapture}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.historyCapture}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.historyCapture}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.historyCapture}${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.historyCapture}
+  ${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.historyCapture}${MODELS_APP_SCRIPT_FRAGMENTS.historyCapture}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.historyCapture}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.historyCapture}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.historyCapture}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.historyCapture}${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.historyCapture}
   ${INFERENCE_APP_SCRIPT_FRAGMENTS.historyCapture}
             return {
               page: activePage || "thread",
@@ -1234,6 +1204,7 @@
             activeResourcesServerKind,
             activeResourcesView,
             contentMode,
+            configureHomeTab,
             currentThreadId,
             environmentId,
             evaluationsPageMode,
@@ -1295,10 +1266,11 @@
             setProfileEditorOpen(false);
             setThreadSearchOpen(false);
             setThreadActionMenuState(null);
-            setThreadNavMenuOpen(false);
-            setThreadTaskListMenuOpen(false);
-            setMetronomeTopNavMenuOpen(false);
-            setImagineToolbarPopover("");
+	            setThreadNavMenuOpen(false);
+	            setThreadTaskListMenuOpen(false);
+	            setMetronomeTopNavMenuOpen(false);
+	            setMetronomeBreadcrumbVersionMenuOpen(false);
+	            setImagineToolbarPopover("");
             setPluginsNavPopover("");
   
             if (entry.page === "thread") {
@@ -1420,7 +1392,7 @@
                   token: createPlaygroundPlatformNavigationToken(),
                   environmentId: entry.environmentId || "",
                   path: entry.path || "",
-                  isFolder: true,
+                  isFolder: entry.isFolder !== "false",
                   contentMode: entry.contentMode === "changes" ? "changes" : "files",
                 });
               }

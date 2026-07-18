@@ -50,7 +50,6 @@ export function createAgentsOverviewAnalytics({
     ariaLabel: "Agent cost and token usage over time",
     loading,
     error: error || undefined,
-    emptyState: "Agent usage appears here once agents start running.",
     metrics: [
       { id: "agents", label: "Agents", value: String(Math.round(positiveNumber(agentCount))), color: "#8fc4ff" },
       { id: "squads", label: "Squads", value: String(Math.round(positiveNumber(squadCount))), color: "#6750ff" },

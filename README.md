@@ -65,6 +65,9 @@ apps/platform/
   testing/             Architecture and composition test helpers
   dev.mjs              Local Vite + watched backend orchestrator
 
+tests/                 Executable integration and smoke tests
+examples/              Consumer examples and the thread UI preview
+
 src/
   platform-services/   Create, Configure, and Develop domain services
   platform-resources/  Shared resource domains
@@ -73,8 +76,9 @@ src/
   react/               Runner composition and compatibility facades
 ```
 
-The compatibility browser document is intentionally isolated under
-`apps/platform/client/legacy`. New application UI must be implemented as typed
+The compatibility browser sources are intentionally isolated under
+`apps/platform/client/legacy` and are served through an explicit static
+HTML/style/module contract. New application UI must be implemented as typed
 React modules under `apps/platform/client/src` or the owning domain in `src`.
 The complete ownership map and migration rules are documented in
 [`docs/platform-architecture.md`](docs/platform-architecture.md).

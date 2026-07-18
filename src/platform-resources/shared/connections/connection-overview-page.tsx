@@ -56,7 +56,6 @@ function createFallbackAnalytics(kind: "tags" | "plugins", rows: readonly Connec
     ],
     labels: [],
     series: [],
-    emptyState: `${label.slice(0, -1)} usage appears here after connected services are used.`,
   };
 }
 

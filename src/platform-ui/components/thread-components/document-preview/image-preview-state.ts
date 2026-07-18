@@ -3,7 +3,7 @@ import type {
   RunnerImageCropTarget,
   RunnerImageNaturalSize,
   RunnerImagePoint,
-} from "../../../../react/runner-image-edit-overlays.js";
+} from "./image-edit-overlays.js";
 
 export interface RunnerImageCropDragState {
   mode: RunnerImageCropTarget;

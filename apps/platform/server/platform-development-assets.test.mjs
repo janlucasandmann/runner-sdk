@@ -9,23 +9,27 @@ const packageRoot = path.resolve(
   "../../..",
 );
 const viteOrigin = "http://127.0.0.1:5173";
-const inlineDocument = `<!doctype html>
+const platformSources = {
+  documentTemplate: `<!doctype html>
 <html>
   <head>
-    <style>body { color: white; }</style>
+    <link data-platform-compatibility-style />
     <link rel="stylesheet" href="/dist/platform-ui/components/composite/data-table/data-table.css" />
     <link rel="stylesheet" href="/dist/platform-ui/pages/styles.css" />
   </head>
   <body>
     <div id="app"></div>
-    <script type="module">
-      import { RunnerClient } from "/dist/index.js";
-      window.RunnerClient = RunnerClient;
-    </script>
+    <script type="module" data-platform-compatibility-module></script>
   </body>
-</html>`;
+</html>`,
+  styleSource: "body { color: white; }",
+  moduleSource: `
+    import { RunnerClient } from "/dist/index.js";
+    window.RunnerClient = RunnerClient;
+  `,
+};
 
-const assets = await createPlatformDevelopmentAssets(inlineDocument, {
+const assets = await createPlatformDevelopmentAssets(platformSources, {
   packageRoot,
   viteOrigin,
 });
@@ -44,12 +48,17 @@ assert.ok(
     < assets.documentHtml.indexOf("/platform/dev/platform-legacy.js"),
   "React Refresh preamble must run before the platform module.",
 );
-assert.doesNotMatch(assets.documentHtml, /<style>/);
+assert.doesNotMatch(assets.documentHtml, /data-platform-compatibility-style/);
+assert.doesNotMatch(assets.documentHtml, /data-platform-compatibility-module/);
 assert.doesNotMatch(assets.documentHtml, /window\.RunnerClient/);
 assert.doesNotMatch(assets.documentHtml, /\/dist\/platform-ui\/[^"]+\.css/);
 assert.match(
   assets.documentHtml,
   /\/@fs\/.*\/src\/platform-ui\/components\/composite\/data-table\/data-table\.css/,
+);
+assert.match(
+  assets.documentHtml,
+  /\/@fs\/.*\/src\/platform-ui\/components\/composite\/page-hero\/page-hero\.css/,
 );
 assert.match(
   assets.documentHtml,

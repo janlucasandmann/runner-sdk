@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { Fragment } from "react";
-import { RunnerMarkdown } from "../../../../react/runner-markdown.js";
+import { RunnerMarkdown } from "../shared/runner-markdown.js";
 import type { RunnerLog } from "../../../../types.js";
 import { CompactActionLogLine } from "./compact-action-log-line.js";
 import {

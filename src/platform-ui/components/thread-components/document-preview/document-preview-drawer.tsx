@@ -17,7 +17,7 @@ import {
   RotateCw as LucideRotateCw,
   X as LucideX,
 } from "lucide-react";
-import { mountRunnerChatStyles } from "../../../../react/runner-chat-styles.js";
+import { mountRunnerChatStyles } from "../styles/index.js";
 import {
   buildRunnerPreviewHeaders,
   buildRunnerPreviewHtmlDocument,
@@ -26,9 +26,9 @@ import {
   normalizeRunnerPreviewWorkspacePath,
   resolveRunnerPreviewAssetUrl,
   type RunnerPreviewAttachment,
-} from "../../../../react/runner-document-preview.js";
-import { RunnerImagePreviewSurface } from "../../../../react/runner-image-preview-surface.js";
-import { RunnerFileDiffSurface } from "../../../../react/runner-file-diff-surface.js";
+} from "./preview-contracts.js";
+import { RunnerImagePreviewSurface } from "./image-preview-surface.js";
+import { RunnerFileDiffSurface } from "./file-diff-surface.js";
 import {
   RunnerImageCropOverlay,
   RunnerImageSelectionMaskOverlay,
@@ -37,15 +37,15 @@ import {
   type RunnerImageMaskStroke,
   type RunnerImageNaturalSize,
   type RunnerImagePoint,
-} from "../../../../react/runner-image-edit-overlays.js";
+} from "./image-edit-overlays.js";
 import { RunnerCodeViewer } from "../log-boxes/index.js";
-import { RunnerMarkdown } from "../../../../react/runner-markdown.js";
-import { RunnerPresentationPreview } from "../../../../react/runner-presentation-preview.js";
+import { RunnerMarkdown } from "../shared/runner-markdown.js";
+import { RunnerPresentationPreview } from "./presentation-preview.js";
 import {
   RunnerSpreadsheetPreview,
   type RunnerSpreadsheetPreviewControls,
   type RunnerSpreadsheetSaveOptions,
-} from "../../../../react/runner-spreadsheet-preview.js";
+} from "./spreadsheet-preview.js";
 import {
   RunnerDirectoryPreview,
   useRunnerDirectoryPreview,
@@ -74,8 +74,8 @@ import {
   RunnerWebSearchSidebarPreview,
 } from "./specialized-preview-view.js";
 
-const RUNNER_FOLDER_ICON_URL = new URL("../../../../react/assets/folder.png", import.meta.url).toString();
-const RUNNER_TEXT_FILE_ICON_URL = new URL("../../../../react/assets/txtfile.png", import.meta.url).toString();
+const RUNNER_FOLDER_ICON_URL = new URL("../assets/folder.png", import.meta.url).toString();
+const RUNNER_TEXT_FILE_ICON_URL = new URL("../assets/txtfile.png", import.meta.url).toString();
 
 export interface RunnerDocumentPreviewDrawerProps {
   attachment: RunnerPreviewAttachment;

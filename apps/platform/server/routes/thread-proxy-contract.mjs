@@ -20,6 +20,9 @@ export function matchThreadProxyRoute(rawMethod, pathname) {
         return null;
     const suffix = String(pathname).slice(THREAD_V2_PREFIX.length);
     const segments = suffix.split("/").filter(Boolean);
+    if (method === "POST" && segments.length === 1 && segments[0] === "search") {
+        return route("json", "/threads/search", method);
+    }
     const threadId = canonicalSegment(segments[0] || "");
     if (!threadId)
         return null;

@@ -56,26 +56,26 @@ import {
   getRunnerDocumentPreviewKind,
   type RunnerPreviewAttachment,
   type RunnerWebSearchPreviewData,
-} from "../../../../react/runner-document-preview.js";
-import { RunnerFileDiffSurface } from "../../../../react/runner-file-diff-surface.js";
-import { RunnerImagePreviewSurface } from "../../../../react/runner-image-preview-surface.js";
-import { parseComputerAgentsListCommandOutput, parseComputerAgentsListLogDetails, type ComputerAgentsListAgent, type ComputerAgentsListAvailableAgent } from "../../../../react/runner-agents-list-log-box.js";
-import { parseComputerAgentsEnvironmentsListLogDetails } from "../../../../react/runner-environments-list-log-box.js";
-import { parseTaskManagementProjectsListLogDetails } from "../../../../react/runner-projects-list-log-box.js";
-import { parseAppPlatformResourcesListLogDetails } from "../../../../react/runner-resources-list-log-box.js";
+} from "../document-preview/preview-contracts.js";
+import { RunnerFileDiffSurface } from "../document-preview/file-diff-surface.js";
+import { RunnerImagePreviewSurface } from "../document-preview/image-preview-surface.js";
+import { parseComputerAgentsListCommandOutput, parseComputerAgentsListLogDetails, type ComputerAgentsListAgent, type ComputerAgentsListAvailableAgent } from "./agents-list-log-box.js";
+import { parseComputerAgentsEnvironmentsListLogDetails } from "./environments-list-log-box.js";
+import { parseTaskManagementProjectsListLogDetails } from "./projects-list-log-box.js";
+import { parseAppPlatformResourcesListLogDetails } from "./resources-list-log-box.js";
 import {
   parseComputerAgentsThreadGetCommandOutput,
   parseComputerAgentsThreadGetLogDetails,
   parseComputerAgentsThreadsListCommandOutput,
   parseComputerAgentsThreadsListLogDetails,
-} from "../../../../react/runner-threads-list-log-box.js";
-import { parseGitCommitLogDetails } from "../../../../react/runner-git-commit-log-box.js";
-import { parseGitDiffLogDetails } from "../../../../react/runner-git-diff-log-box.js";
-import { parseGitStatusLogDetails } from "../../../../react/runner-git-status-log-box.js";
-import { LogHeader, LogPanel } from "../../../../react/runner-log-card.js";
-import { RunnerMarkdown, stripRunnerSystemTags } from "../../../../react/runner-markdown.js";
-import { DotLoader } from "../../../../react/dot-loader.js";
-import { LazyMediaPreviewMount } from "../../../../react/runner-lazy-media-preview.js";
+} from "./threads-list-log-box.js";
+import { parseGitCommitLogDetails } from "./git-commit-log-box.js";
+import { parseGitDiffLogDetails } from "./git-diff-log-box.js";
+import { parseGitStatusLogDetails } from "./git-status-log-box.js";
+import { LogHeader, LogPanel } from "./log-card.js";
+import { RunnerMarkdown, stripRunnerSystemTags } from "../shared/runner-markdown.js";
+import { DotLoader } from "../../ui/dot-loader/index.js";
+import { LazyMediaPreviewMount } from "../shared/lazy-media-preview.js";
 import {
   findRunnerWorkingLogJsonSegments,
 } from "./working-log-json.js";

@@ -1,0 +1,64 @@
+.platform-icon-button {
+  --platform-icon-button-size: 28px;
+  --platform-icon-button-icon-size: 14px;
+  position: relative;
+  box-sizing: border-box;
+  width: var(--platform-icon-button-size);
+  height: var(--platform-icon-button-size);
+  min-width: var(--platform-icon-button-size);
+  min-height: var(--platform-icon-button-size);
+  display: inline-flex;
+  flex: 0 0 var(--platform-icon-button-size);
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 5px !important;
+  outline: none;
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    opacity 120ms ease;
+}
+
+.platform-icon-button > svg {
+  width: var(--platform-icon-button-icon-size);
+  height: var(--platform-icon-button-icon-size);
+  flex: 0 0 var(--platform-icon-button-icon-size);
+}
+
+.platform-icon-button:hover:not(:disabled),
+.platform-icon-button:focus-visible,
+.platform-icon-button.is-active {
+  background: rgba(255, 255, 255, 0.075) !important;
+  color: #fff !important;
+}
+
+.platform-icon-button:focus-visible {
+  box-shadow: 0 0 0 2px #000, 0 0 0 3px rgba(77, 163, 255, 0.72);
+}
+
+.platform-icon-button:disabled,
+.platform-icon-button[aria-disabled="true"] {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.platform-icon-button.is-size-compact {
+  --platform-icon-button-size: 24px;
+  --platform-icon-button-icon-size: 13px;
+}
+
+.platform-icon-button.is-size-medium {
+  --platform-icon-button-size: 32px;
+  --platform-icon-button-icon-size: 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .platform-icon-button {
+    transition-duration: 1ms;
+  }
+}

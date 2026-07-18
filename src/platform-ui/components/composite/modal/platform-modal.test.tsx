@@ -44,6 +44,10 @@ describe("PlatformModal", () => {
     expect(css).toMatch(/\.platform-modal-surface\.is-size-large[\s\S]*width:\s*min\(880px,/);
     expect(css).toMatch(/\.platform-modal-header__title[\s\S]*font-size:\s*14px;/);
     expect(css).toMatch(/\.platform-modal-header__title[\s\S]*color:\s*#fff;/);
+    expect(css).toMatch(/\.platform-modal-header__title[\s\S]*font-weight:\s*400;/);
+    expect(css).toMatch(
+      /\.platform-modal-surface\.is-size-small \.platform-modal-body\s*\{[\s\S]*padding-top:\s*0;/,
+    );
     expect(css).toMatch(/\.platform-modal-header\s*\{[\s\S]*padding:\s*12px 24px;/);
     expect(css).toMatch(/\.platform-modal-header\s*\{[\s\S]*border-bottom:\s*1px solid rgba\(255,\s*255,\s*255,\s*0\.1\);/);
     expect(css).toMatch(/\.platform-modal-body\s*\{[\s\S]*padding:\s*24px;/);
@@ -269,6 +273,88 @@ describe("PlatformModal", () => {
 
     expect(container.querySelector(".platform-modal-backdrop.custom-backdrop")).toBeTruthy();
     expect(container.querySelector(".platform-modal-surface.custom-modal.is-size-compact")).toBeTruthy();
+  });
+
+  it("animates intrinsic surface size changes without animating the initial mount", () => {
+    const offsetWidthDescriptor = Object.getOwnPropertyDescriptor(
+      HTMLElement.prototype,
+      "offsetWidth",
+    );
+    const offsetHeightDescriptor = Object.getOwnPropertyDescriptor(
+      HTMLElement.prototype,
+      "offsetHeight",
+    );
+    const animateDescriptor = Object.getOwnPropertyDescriptor(
+      HTMLElement.prototype,
+      "animate",
+    );
+    let surfaceWidth = 400;
+    let surfaceHeight = 220;
+    const animation = {
+      cancel: vi.fn(),
+      oncancel: null,
+      onfinish: null,
+    } as unknown as Animation;
+    const animate = vi.fn(() => animation);
+
+    Object.defineProperty(HTMLElement.prototype, "offsetWidth", {
+      configurable: true,
+      get: () => surfaceWidth,
+    });
+    Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
+      configurable: true,
+      get: () => surfaceHeight,
+    });
+    Object.defineProperty(HTMLElement.prototype, "animate", {
+      configurable: true,
+      value: animate,
+    });
+
+    try {
+      const { container, rerender } = render(
+        <PlatformModalSurface>Compact content</PlatformModalSurface>,
+      );
+      expect(animate).not.toHaveBeenCalled();
+      expect(
+        container.querySelector(".platform-modal-surface")
+          ?.getAttribute("data-platform-modal-resize"),
+      ).toBe("animated");
+
+      surfaceWidth = 560;
+      surfaceHeight = 340;
+      rerender(
+        <PlatformModalSurface>Expanded content</PlatformModalSurface>,
+      );
+
+      expect(animate).toHaveBeenCalledOnce();
+      expect(animate).toHaveBeenCalledWith(
+        [
+          { width: "400px", height: "220px" },
+          { width: "560px", height: "340px" },
+        ],
+        {
+          duration: 140,
+          easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+          fill: "none",
+        },
+      );
+    } finally {
+      if (offsetWidthDescriptor) {
+        Object.defineProperty(HTMLElement.prototype, "offsetWidth", offsetWidthDescriptor);
+      } else {
+        Reflect.deleteProperty(HTMLElement.prototype, "offsetWidth");
+      }
+      if (offsetHeightDescriptor) {
+        Object.defineProperty(HTMLElement.prototype, "offsetHeight", offsetHeightDescriptor);
+      } else {
+        Reflect.deleteProperty(HTMLElement.prototype, "offsetHeight");
+      }
+      if (animateDescriptor) {
+        Object.defineProperty(HTMLElement.prototype, "animate", animateDescriptor);
+      } else {
+        Reflect.deleteProperty(HTMLElement.prototype, "animate");
+      }
+    }
   });
 
   it("locks document scrolling while mounted and restores it on unmount", () => {

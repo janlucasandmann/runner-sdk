@@ -3,6 +3,7 @@ export const METRONOME_APP_STATE_SCRIPT = `
         const [metronomeOpenWorkflowRequest, setMetronomeOpenWorkflowRequest] = useState(null);
         const [metronomeTopNavState, setMetronomeTopNavState] = useState(null);
         const [metronomeTopNavMenuOpen, setMetronomeTopNavMenuOpen] = useState(false);
+        const [metronomeBreadcrumbVersionMenuOpen, setMetronomeBreadcrumbVersionMenuOpen] = useState(false);
         const [isMetronomeNodeDetailOpen, setIsMetronomeNodeDetailOpen] = useState(false);
         const [collapsedMetronomeRunGroups, setCollapsedMetronomeRunGroups] = useState({});
         const [metronomeRunTraceSelection, setMetronomeRunTraceSelection] = useState(null);
@@ -33,6 +34,7 @@ export const METRONOME_APP_STATE_SCRIPT = `
         });
         const absorbedMetronomeTriggerThreadIdsRef = useRef({});
         const metronomeTopNavMenuRef = useRef(null);
+        const metronomeBreadcrumbVersionMenuRef = useRef(null);
         const wasMetronomeVisualEditorOpenRef = useRef(false);
         const metronomeTopNavActionsRef = useRef({
           edit: null,
@@ -44,6 +46,9 @@ export const METRONOME_APP_STATE_SCRIPT = `
           run: null,
           goOverview: null,
           setMode: null,
+          selectVersion: null,
+          createVersion: null,
+          openVersionHistory: null,
         });
         const shouldLoadMetronomeRunJsonEditor = useMemo(() => (
           Object.values(metronomeRunJsonViewModeByKey || {}).some((mode) => mode === "json")

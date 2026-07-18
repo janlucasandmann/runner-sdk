@@ -8,4 +8,9 @@ Use `variant="framed"` for detail-page analytics cards that need a title, a righ
 
 Both variants always render `PlatformAnalyticsChart`. Framing is strictly presentational, so chart styling and behavior stay synchronized across overview and detail pages.
 
+Empty charts always render the shared `PlatformAnalyticsEmptyState`, which uses the
+`ChartColumnIncreasing` icon and canonical, resource-neutral copy. Analytics producers
+only provide data, loading, and error state; they do not define page-specific empty
+states.
+
 Import the component and its model types from `platform-ui/components/composite/analytics`, and load `platform-ui/components/composite/analytics/styles.css` once in the host application.

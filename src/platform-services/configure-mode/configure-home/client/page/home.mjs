@@ -29,30 +29,13 @@ const CONFIGURE_HOME_PAGE_TEMPLATE = `        function renderConfigureHomePage()
               onClick: () => openToolsView("skills"),
             },
           ];
-          const configureNotificationRows = visibleNotificationPageItems.map((item) => {
-            const timestamp = Date.parse(item.createdAt || "");
-            return {
-              ...item,
-              createdAtTimestamp: Number.isFinite(timestamp) ? timestamp : 0,
-              createdAtLabel: item.createdAt ? formatThreadSearchTimestamp(item.createdAt) : "—",
-            };
-          });
           return React.createElement(ConfigureHomeOverviewPage, {
             cards: configureOverviewCards,
-            notifications: configureNotificationRows,
-            totalNotificationCount: allNotificationPageItems.length,
-            searchValue: notificationsPageSearchQuery,
-            onSearchChange: setNotificationsPageSearchQuery,
-            filterValue: notificationsPageFilter,
-            onFilterChange: setNotificationsPageFilter,
-            sortValue: notificationsPageSort,
-            onSortChange: setNotificationsPageSort,
+            onOpenNotifications: openNotificationsPage,
+            onOpenEvaluations: openEvaluationsOverviewPage,
+            onOpenGuardrails: openGuardrailsOverviewPage,
             onOpenPricing: () => window.open(__CONFIGURE_HOME_PRICING_URL__, "_blank", "noopener,noreferrer"),
             onOpenDocumentation: openDocsPage,
-            onOpenNotification: handleOpenNotificationPageItem,
-            canOpenNotification: canOpenConfigureHomeNotification,
-            getNotificationActions: getConfigureHomeNotificationActions,
-            controlsPortalId: "playground-configure-overview-controls",
           });
         }
 `;

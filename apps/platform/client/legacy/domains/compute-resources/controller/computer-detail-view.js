@@ -116,7 +116,6 @@
               ],
               loading: isEnvironmentAnalyticsLoading && !activeEnvironmentAnalytics,
               error: shouldShowEnvironmentAnalytics && environmentAnalyticsError ? environmentAnalyticsError : undefined,
-              emptyState: "Computer usage appears here once agents run work inside this computer.",
             };
             const environmentAnalyticsSection = React.createElement(PlatformAnalyticsSection, {
               variant: "framed",
@@ -346,7 +345,6 @@
                   const runtimeOptions = currentValue && !versions.includes(currentValue)
                     ? [currentValue, ...versions]
                     : versions;
-                  const isPopoverOpen = environmentRuntimePopover === runtime.key;
                   return React.createElement("div", {
                     className: "playground-tasks-connector-row playground-environments-runtime-row",
                     key: runtime.key,
@@ -357,56 +355,20 @@
                       )
                     ),
                     React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                      React.createElement("div", {
-                          className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell" + (isPopoverOpen ? " is-open" : ""),
-                          ref: isPopoverOpen ? environmentRuntimePopoverRef : null,
-                        },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-environments-runtime-value-button" + (currentValue ? "" : " is-empty"),
-                          onClick: () => setEnvironmentRuntimePopover((current) => current === runtime.key ? "" : runtime.key),
-                        },
-                          React.createElement("span", { className: "playground-environments-runtime-value-label" }, currentValue || "Disabled"),
-                          React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
-                        ),
-                        isPopoverOpen
-                          ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                              React.createElement("button", {
-                                  type: "button",
-                                  className: "tb-popup-row tb-popup-row-select" + (!currentValue ? " selected" : ""),
-                                  onClick: () => {
-                                    updateRuntime(runtime.key, "");
-                                    setEnvironmentRuntimePopover("");
-                                  },
-                                },
-                                  React.createElement("span", { className: "tb-popup-check-slot" },
-                                    !currentValue
-                                      ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                      : null
-                                  ),
-                                  React.createElement("span", null, "Disabled")
-                                ),
-                              runtimeOptions.map((version) =>
-                                React.createElement("button", {
-                                    key: version,
-                                    type: "button",
-                                    className: "tb-popup-row tb-popup-row-select" + (currentValue === version ? " selected" : ""),
-                                    onClick: () => {
-                                      updateRuntime(runtime.key, version);
-                                      setEnvironmentRuntimePopover("");
-                                    },
-                                  },
-                                    React.createElement("span", { className: "tb-popup-check-slot" },
-                                      currentValue === version
-                                        ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                        : null
-                                    ),
-                                    React.createElement("span", null, version)
-                                  )
-                              )
-                            )
-                          : null
-                      )
+                      React.createElement(PlatformSelector, {
+                        value: currentValue,
+                        options: [
+                          { value: "", label: "Disabled" },
+                          ...runtimeOptions.map((version) => ({ value: version, label: version })),
+                        ],
+                        onValueChange: (version) => updateRuntime(runtime.key, version),
+                        ariaLabel: runtime.label + " runtime version",
+                        alignment: "end",
+                        popupAlignment: "right",
+                        fullWidth: true,
+                        className: "platform-permissions-page__selector playground-agents-permission-select-shell playground-computer-runtime-selector",
+                        popupClassName: "platform-permissions-page__selector-popup playground-computer-runtime-selector-popup",
+                      })
                     )
                   );
                 })
@@ -626,23 +588,6 @@
                 : React.createElement("div", { className: "playground-environments-empty-copy" }, "No setup scripts configured.")
             );
   
-            const dockerfileSection = React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description playground-environments-dockerfile-extension-section" },
-              React.createElement("div", { className: "playground-tasks-detail-description-editor is-editing" },
-                React.createElement("textarea", {
-                  ref: environmentDockerfileTextareaRef,
-                  className: "playground-tasks-detail-description-input is-editing playground-environments-dockerfile-extension-input",
-                  rows: 1,
-                  placeholder: "RUN apt-get update && apt-get install -y custom-tool",
-                  value: draftEnvironment.dockerfileExtensions || "",
-                  onChange: (event) => {
-                    updateEnvironmentField("dockerfileExtensions", event.target.value);
-                    resizeEnvironmentDescriptionTextarea(event.currentTarget);
-                  },
-                  onBlur: commitDraftEnvironmentIfDirty,
-                })
-              )
-            );
-  
             const environmentResourceDetailBackButton = embeddedInResources
               ? React.createElement("button", {
                   type: "button",
@@ -684,7 +629,6 @@
             const activeEnvironmentDetailVersion = getDraftEnvironmentActiveVersion();
             const selectedEnvironmentDetailVersionId = String(selectedEnvironmentDetailVersion?.id || "").trim();
             const activeEnvironmentDetailVersionId = String(activeEnvironmentDetailVersion?.id || "").trim();
-            const environmentTagLabels = getEnvironmentTagLabels(draftEnvironment);
             const getEnvironmentDetailVersionTitle = (version) => {
               if (!version) return "No versions";
               return String(version.label || ("Version " + (version.version || ""))).trim() || "Version";
@@ -699,329 +643,138 @@
               const formattedTimestamp = timestamp ? formatPlaygroundFileDate(timestamp) : "";
               return status + (formattedTimestamp ? " · " + formattedTimestamp : "");
             };
-            const renderEnvironmentVersionCountLabel = () => {
-              const versionCountLabel = String(environmentDetailVersions.length) + " " + (environmentDetailVersions.length === 1 ? "Version" : "Versions");
-              return React.createElement("div", {
-                  className: "playground-agents-version-count-label playground-computer-version-count-label",
-                  title: versionCountLabel,
-                  "aria-label": versionCountLabel,
-                },
-                React.createElement(GitBranch, { className: "playground-agents-version-count-icon", strokeWidth: 1.8 }),
-                React.createElement("span", null, versionCountLabel)
-              );
-            };
             const renderEnvironmentVersionSelector = () => {
               const hasVersions = environmentDetailVersions.length > 0;
               const currentTitle = getEnvironmentDetailVersionTitle(selectedEnvironmentDetailVersion);
               const selectorDisabled = isEnvironmentVersionControlBusy;
               const canCreateVersionFromSelector = Boolean(canShowEnvironmentDetailHeaderPublish && !isEnvironmentVersionControlBusy);
-              const toggleSelectorMenu = (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                if (selectorDisabled) {
-                  return;
-                }
-                setEnvironmentPublishMenuOpen(false);
-                setEnvironmentVersionsHeaderMenuOpen(false);
-                setEnvironmentTagsMenuOpen(false);
-                setEnvironmentVersionSelectorMenuOpen((current) => !current);
-              };
-              return React.createElement("div", { className: "playground-agents-detail-version-selector-row playground-computer-detail-version-selector-row" },
-                renderPlaygroundPlatformPopup({
+              return React.createElement(PlatformButtonSelector, {
+                  mode: "popup",
+                  buttonVariant: "secondary",
+                  buttonSize: "small",
                   open: environmentVersionSelectorMenuOpen,
-                  shellRef: environmentVersionSelectorMenuRef,
-                  shellClassName: "playground-agents-detail-publish-split-shell playground-agents-detail-version-selector-shell playground-computer-detail-version-selector-shell",
-                  menuClassName: "playground-agents-detail-publish-menu playground-agents-detail-version-selector-menu playground-computer-detail-version-selector-menu",
-                  trigger: React.createElement("div", {
-                      className: "playground-metronome-create-button playground-metronome-publish-button playground-agents-detail-header-publish-button playground-computer-detail-header-publish-button playground-agents-detail-publish-split-control playground-agents-detail-version-selector-control"
-                        + (environmentVersionSelectorMenuOpen ? " is-active" : "")
-                        + (selectorDisabled ? " is-disabled" : ""),
-                    },
-                    React.createElement("button", {
-                        type: "button",
-                        className: "playground-agents-detail-publish-main playground-agents-detail-version-selector-main",
-                        title: currentTitle,
-                        "aria-label": "Choose computer version",
-                        "aria-haspopup": "menu",
-                        "aria-expanded": environmentVersionSelectorMenuOpen ? "true" : "false",
-                        disabled: selectorDisabled,
-                        onClick: toggleSelectorMenu,
-                      },
-                      React.createElement(GitBranch, { className: "playground-agents-detail-version-selector-icon", strokeWidth: 1.8 }),
-                      React.createElement("span", { className: "playground-agents-detail-version-selector-label" }, currentTitle)
-                    ),
-                    React.createElement("span", { className: "playground-agents-detail-publish-divider", "aria-hidden": "true" }),
-                    React.createElement("button", {
-                        type: "button",
-                        className: "playground-agents-detail-publish-chevron",
-                        title: "Choose computer version",
-                        "aria-label": "Choose computer version",
-                        "aria-haspopup": "menu",
-                        "aria-expanded": environmentVersionSelectorMenuOpen ? "true" : "false",
-                        disabled: selectorDisabled,
-                        onClick: toggleSelectorMenu,
-                      },
-                      React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
-                    )
-                  ),
-                  menuProps: {
-                    role: "menu",
-                    onClick: (event) => event.stopPropagation(),
+                  onOpenChange: (nextOpen) => {
+                    if (nextOpen) {
+                      setEnvironmentPublishMenuOpen(false);
+                      setEnvironmentVersionsHeaderMenuOpen(false);
+                    }
+                    setEnvironmentVersionSelectorMenuOpen(nextOpen);
                   },
-                  children: React.createElement(React.Fragment, null,
-                    React.createElement("div", { className: "playground-agents-detail-version-selector-list", role: "group", "aria-label": "Computer versions" },
-                      hasVersions
-                        ? environmentDetailVersions.map((version, index) => {
-                            const versionId = String(version?.id || "").trim() || "version-" + index;
-                            const isSelected = versionId === selectedEnvironmentDetailVersionId;
-                            return React.createElement("button", {
-                                key: versionId,
-                                type: "button",
-                                className: "tb-popup-row playground-agents-detail-version-selector-option" + (isSelected ? " is-selected" : ""),
-                                role: "menuitemradio",
-                                "aria-checked": isSelected ? "true" : "false",
-                                disabled: isEnvironmentVersionControlBusy || isSelected,
-                                onClick: () => {
-                                  if (isEnvironmentVersionControlBusy || isSelected) {
-                                    return;
-                                  }
-                                  setEnvironmentVersionSelectorMenuOpen(false);
-                                  void restoreEnvironmentVersion(versionId);
-                                },
+                  label: currentTitle,
+                  leading: React.createElement(GitBranch, { className: "playground-agents-detail-version-selector-icon", strokeWidth: 1.8 }),
+                  popupAriaLabel: "Choose computer version",
+                  disabled: selectorDisabled,
+                  active: environmentVersionSelectorMenuOpen,
+                  popupAlignment: "right",
+                  popupRole: "menu",
+                  popupWidth: 284,
+                  popupMaxHeight: "min(340px, calc(100vh - 190px))",
+                  className: "playground-agents-detail-version-selector-shell playground-computer-detail-version-selector-shell",
+                  buttonClassName: "playground-agents-detail-version-selector-button",
+                  popupClassName: "playground-agents-detail-publish-menu playground-agents-detail-version-selector-menu playground-computer-detail-version-selector-menu",
+                },
+                React.createElement(React.Fragment, null,
+                  React.createElement("div", { className: "playground-agents-detail-version-selector-list", role: "group", "aria-label": "Computer versions" },
+                    hasVersions
+                      ? environmentDetailVersions.map((version, index) => {
+                          const versionId = String(version?.id || "").trim() || "version-" + index;
+                          const isSelected = versionId === selectedEnvironmentDetailVersionId;
+                          return React.createElement("button", {
+                              key: versionId,
+                              type: "button",
+                              className: "tb-popup-row playground-agents-detail-version-selector-option" + (isSelected ? " is-selected" : ""),
+                              role: "menuitemradio",
+                              "aria-checked": isSelected ? "true" : "false",
+                              disabled: isEnvironmentVersionControlBusy || isSelected,
+                              onClick: () => {
+                                if (isEnvironmentVersionControlBusy || isSelected) {
+                                  return;
+                                }
+                                setEnvironmentVersionSelectorMenuOpen(false);
+                                void restoreEnvironmentVersion(versionId);
                               },
-                              React.createElement("span", { className: "playground-agents-detail-version-selector-option-check" },
-                                isSelected
-                                  ? React.createElement(Check, { width: 13, height: 13, strokeWidth: 2.2 })
-                                  : null
-                              ),
-                              React.createElement("span", { className: "playground-agents-detail-version-selector-option-copy" },
-                                React.createElement("span", { className: "playground-agents-detail-version-selector-option-title" }, getEnvironmentDetailVersionTitle(version)),
-                                React.createElement("span", { className: "playground-agents-detail-version-selector-option-meta" }, getEnvironmentDetailVersionMeta(version))
-                              )
-                            );
-                          })
-                        : React.createElement("div", { className: "playground-agents-detail-version-selector-empty" }, "No versions yet.")
+                            },
+                            React.createElement("span", { className: "playground-agents-detail-version-selector-option-check" },
+                              isSelected
+                                ? React.createElement(Check, { width: 13, height: 13, strokeWidth: 2.2 })
+                                : null
+                            ),
+                            React.createElement("span", { className: "playground-agents-detail-version-selector-option-copy" },
+                              React.createElement("span", { className: "playground-agents-detail-version-selector-option-title" }, getEnvironmentDetailVersionTitle(version)),
+                              React.createElement("span", { className: "playground-agents-detail-version-selector-option-meta" }, getEnvironmentDetailVersionMeta(version))
+                            )
+                          );
+                        })
+                      : React.createElement("div", { className: "playground-agents-detail-version-selector-empty" }, "No versions yet.")
+                  ),
+                  React.createElement("div", { className: "playground-agents-detail-version-selector-footer" },
+                    React.createElement("button", {
+                        type: "button",
+                        className: "tb-popup-row playground-agents-detail-version-selector-new-button",
+                        role: "menuitem",
+                        disabled: !canCreateVersionFromSelector,
+                        onClick: () => {
+                          if (!canCreateVersionFromSelector) {
+                            return;
+                          }
+                          setEnvironmentVersionSelectorMenuOpen(false);
+                          openCreateEnvironmentVersionModal({ force: true });
+                        },
+                      },
+                      React.createElement(GitBranchPlus, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.1 }),
+                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                        React.createElement("span", null, "New Version")
+                      )
                     ),
-                    React.createElement("div", { className: "playground-agents-detail-version-selector-footer" },
-                      React.createElement("button", {
-                          type: "button",
-                          className: "tb-popup-row playground-agents-detail-version-selector-new-button",
-                          role: "menuitem",
-                          disabled: !canCreateVersionFromSelector,
-                          onClick: () => {
-                            if (!canCreateVersionFromSelector) {
-                              return;
-                            }
-                            setEnvironmentVersionSelectorMenuOpen(false);
-                            openCreateEnvironmentVersionModal({ force: true });
-                          },
+                    React.createElement("button", {
+                        type: "button",
+                        className: "tb-popup-row playground-agents-detail-version-selector-new-button",
+                        role: "menuitem",
+                        disabled: !canShowEnvironmentDetailHeaderPublish || isEnvironmentVersionControlBusy,
+                        onClick: () => {
+                          if (!canShowEnvironmentDetailHeaderPublish || isEnvironmentVersionControlBusy) {
+                            return;
+                          }
+                          setEnvironmentVersionSelectorMenuOpen(false);
+                          setEnvironmentPublishMenuOpen(false);
+                          setEnvironmentVersionsHeaderMenuOpen(false);
+                          openEnvironmentVersionChangesPage();
                         },
-                        React.createElement(GitBranchPlus, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.1 }),
-                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                          React.createElement("span", null, "New Version")
-                        )
-                      ),
-                      React.createElement("button", {
-                          type: "button",
-                          className: "tb-popup-row playground-agents-detail-version-selector-new-button",
-                          role: "menuitem",
-                          disabled: !canShowEnvironmentDetailHeaderPublish || isEnvironmentVersionControlBusy,
-                          onClick: () => {
-                            if (!canShowEnvironmentDetailHeaderPublish || isEnvironmentVersionControlBusy) {
-                              return;
-                            }
-                            setEnvironmentVersionSelectorMenuOpen(false);
-                            setEnvironmentPublishMenuOpen(false);
-                            setEnvironmentTagsMenuOpen(false);
-                            setEnvironmentVersionsHeaderMenuOpen(false);
-                            openEnvironmentVersionChangesPage();
-                          },
-                        },
-                        React.createElement(History, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.1 }),
-                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                          React.createElement("span", null, "Version history")
-                        )
+                      },
+                      React.createElement(History, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.1 }),
+                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                        React.createElement("span", null, "Version history")
                       )
                     )
                   )
-                }),
-                renderEnvironmentVersionCountLabel(),
-                renderEnvironmentTagsControl()
+                )
               );
             };
-            const handleEnvironmentTagSubmit = (event) => {
-              event.preventDefault();
-              const nextLabel = normalizeEnvironmentTagLabel(environmentTagInputValue);
-              if (!nextLabel) {
-                return;
-              }
-              const existingKey = nextLabel.toLowerCase();
-              if (environmentTagLabels.some((label) => label.toLowerCase() === existingKey)) {
-                setEnvironmentTagInputValue("");
-                return;
-              }
-              updateEnvironmentTagLabels([...environmentTagLabels, nextLabel]);
-              setEnvironmentTagInputValue("");
-            };
-            const removeEnvironmentTagLabel = (labelToRemove) => {
-              const removeKey = normalizeEnvironmentTagLabel(labelToRemove).toLowerCase();
-              if (!removeKey) {
-                return;
-              }
-              updateEnvironmentTagLabels(environmentTagLabels.filter((label) => label.toLowerCase() !== removeKey));
-            };
-            function renderEnvironmentTagsControl() {
-              return renderPlaygroundPlatformPopup({
-                open: environmentTagsMenuOpen,
-                shellRef: environmentTagsMenuRef,
-                shellClassName: "playground-agents-tags-control-shell playground-computer-tags-control-shell playground-tasks-toolbar-popup-shell",
-                menuClassName: "playground-agents-tags-menu playground-computer-tags-menu",
-                trigger: React.createElement("button", {
-                    type: "button",
-                    className: "playground-agents-tags-control-button" + (environmentTagsMenuOpen ? " is-active" : ""),
-                    "aria-label": "Edit computer tags",
-                    "aria-haspopup": "menu",
-                    "aria-expanded": environmentTagsMenuOpen ? "true" : "false",
-                    onClick: (event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      setEnvironmentPublishMenuOpen(false);
-                      setEnvironmentVersionSelectorMenuOpen(false);
-                      setEnvironmentVersionsHeaderMenuOpen(false);
-                      setEnvironmentTagsMenuOpen((current) => !current);
-                    },
-                  },
-                  React.createElement(Tag, { className: "playground-agents-tags-control-icon", strokeWidth: 1.8 }),
-                  React.createElement("span", null, "Tags"),
-                  React.createElement("span", { className: "playground-agents-tags-count" }, String(environmentTagLabels.length))
-                ),
-                menuProps: {
-                  role: "menu",
-                  onClick: (event) => event.stopPropagation(),
-                },
-                children: React.createElement("div", { className: "playground-agents-tags-menu-content" },
-                  React.createElement("form", {
-                      className: "playground-agents-tags-form",
-                      onSubmit: handleEnvironmentTagSubmit,
-                    },
-                    React.createElement("input", {
-                      type: "text",
-                      className: "playground-agents-tags-input",
-                      value: environmentTagInputValue,
-                      placeholder: "Add label",
-                      "aria-label": "Add computer tag",
-                      onChange: (event) => setEnvironmentTagInputValue(event.target.value),
-                      onKeyDown: (event) => event.stopPropagation(),
-                    }),
-                    React.createElement("button", {
-                      type: "submit",
-                      className: "playground-agents-tags-add-button",
-                      disabled: !normalizeEnvironmentTagLabel(environmentTagInputValue),
-                      "aria-label": "Add tag",
-                    }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }))
-                  ),
-                  environmentTagLabels.length > 0
-                    ? React.createElement("div", { className: "playground-agents-tags-list" },
-                        environmentTagLabels.map((label) =>
-                          React.createElement("span", { key: label, className: "playground-agents-tags-chip" },
-                            React.createElement("span", { className: "playground-agents-tags-chip-label" }, label),
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-agents-tags-chip-remove",
-                              "aria-label": "Remove " + label,
-                              onClick: () => removeEnvironmentTagLabel(label),
-                            }, React.createElement(X, { width: 12, height: 12, strokeWidth: 2 }))
-                          )
-                        )
-                      )
-                    : React.createElement("div", { className: "playground-agents-tags-empty" }, "No tags yet.")
-                )
-              });
-            }
-            const renderEnvironmentPublishSplitButton = () => renderPlaygroundPlatformPopup({
+            const renderEnvironmentPublishAction = () => React.createElement(AgentPublishControl, {
               open: environmentPublishMenuOpen,
-              shellRef: environmentPublishMenuRef,
-              shellClassName: "playground-agents-detail-publish-split-shell playground-computer-detail-publish-split-shell",
-              menuClassName: "playground-agents-detail-publish-menu playground-computer-detail-publish-menu",
-              trigger: React.createElement("div", {
-                  className: "playground-metronome-create-button playground-metronome-publish-button playground-agents-detail-header-publish-button playground-computer-detail-header-publish-button playground-agents-detail-publish-split-control"
-                    + (environmentVersionsSidebarOpen ? " is-active" : "")
-                    + (isEnvironmentPublishControlDisabled ? " is-disabled" : ""),
-                },
-                React.createElement("button", {
-                    type: "button",
-                    className: "playground-agents-detail-publish-main",
-                    title: "Save and publish computer changes",
-                    "aria-label": "Save and publish computer changes",
-                    disabled: isEnvironmentPublishControlDisabled,
-                    onClick: () => {
-                      setEnvironmentPublishMenuOpen(false);
-                      setEnvironmentVersionSelectorMenuOpen(false);
-                      setEnvironmentTagsMenuOpen(false);
-                      setEnvironmentVersionsHeaderMenuOpen(false);
-                      void saveAndPublishCurrentEnvironmentVersion();
-                    },
-                  },
-                  React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("span", null, "Save & Publish")
-                ),
-                React.createElement("span", { className: "playground-agents-detail-publish-divider", "aria-hidden": "true" }),
-                React.createElement("button", {
-                    type: "button",
-                    className: "playground-agents-detail-publish-chevron",
-                    title: "Version save options",
-                    "aria-label": "Version save options",
-                    "aria-haspopup": "menu",
-                    "aria-expanded": environmentPublishMenuOpen ? "true" : "false",
-                    disabled: isEnvironmentPublishControlDisabled,
-                    onClick: (event) => {
-                      event.stopPropagation();
-                      setEnvironmentVersionSelectorMenuOpen(false);
-                      setEnvironmentTagsMenuOpen(false);
-                      setEnvironmentPublishMenuOpen((current) => !current);
-                    },
-                  },
-                  React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
-                )
-              ),
-              menuProps: {
-                role: "menu",
-                onClick: (event) => event.stopPropagation(),
+              actions: environmentVersionPopupActions.map((action) => ({
+                id: action.id || action.label,
+                label: action.label,
+                icon: getPlaygroundSafeIconComponent(action.Icon, Circle),
+                shortcut: action.shortcut,
+                disabled: action.disabled,
+                onClick: action.onClick,
+              })),
+              active: environmentVersionsSidebarOpen,
+              disabled: isEnvironmentPublishControlDisabled,
+              menuDisabled: areEnvironmentPublishMenuActionsDisabled || !draftEnvironment,
+              onOpenChange: (nextOpen) => {
+                setEnvironmentVersionSelectorMenuOpen(false);
+                setEnvironmentVersionsHeaderMenuOpen(false);
+                setEnvironmentPublishMenuOpen(nextOpen);
               },
-              children: React.createElement(React.Fragment, null,
-                environmentVersionPopupActions.map((action) => React.createElement("button", {
-                    key: action.label,
-                    type: "button",
-                    className: "tb-popup-row",
-                    role: "menuitem",
-                    disabled: areEnvironmentPublishMenuActionsDisabled || !draftEnvironment || action.disabled,
-                    onClick: () => {
-                      setEnvironmentPublishMenuOpen(false);
-                      void action.onClick();
-                    },
-                  },
-                  React.createElement(getPlaygroundSafeIconComponent(action.Icon, Circle), { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
-                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                    React.createElement("span", null, action.label)
-                  ),
-                  action.shortcut
-                    ? React.createElement("span", {
-                        className: "playground-agents-detail-publish-menu-shortcut",
-                        "aria-hidden": "true",
-                      }, action.shortcut)
-                    : null
-                ))
-              )
+              onPublish: saveAndPublishCurrentEnvironmentVersion,
+              publishAriaLabel: "Save and publish computer changes",
+              menuAriaLabel: "Computer version save options",
+              className: "playground-computer-detail-publish-control",
             });
             const environmentDetailTabBarActions = renderEnvironmentVersionSelector();
-            const environmentDetailSidebarToggle = React.createElement("div", {
-                className: "playground-agents-detail-sidebar-controls playground-agents-detail-top-controls-actions playground-computer-detail-sidebar-controls playground-computer-detail-top-controls-actions",
-              },
-              canShowEnvironmentDetailHeaderPublish
-                ? renderEnvironmentPublishSplitButton()
-                : null,
-              renderEnvironmentSidebarToggleButton()
-            );
+            const environmentDetailSidebarToggle = renderEnvironmentSidebarToggleButton();
             const environmentProfileSection = React.createElement("div", { className: "playground-agents-profile-section playground-computer-detail-profile-section" },
               React.createElement("div", { className: "playground-agents-profile-copy" },
                 React.createElement("div", { className: "playground-agents-profile-name-wrap" },
@@ -1299,71 +1052,84 @@
               },
               React.createElement(Plus, { width: 15, height: 15, strokeWidth: 1.9 })
             );
-            const environmentDetailAdvancedSection = React.createElement("div", { className: "playground-computer-detail-advanced-tab" },
-              renderEditorSection("runtimes", "Runtime Versions", "", runtimeVersionsBox, null, false),
-              renderEditorSection(
+            const renderEnvironmentAdvancedSettingsSection = (
+              sectionId,
+              title,
+              Icon,
+              content,
+              actions = null
+            ) => React.createElement(PlatformSettingsSection, {
+                key: sectionId,
+                title,
+                icon: React.createElement(Icon, {
+                  width: 14,
+                  height: 14,
+                  strokeWidth: 1.8,
+                }),
+                actions,
+                className: "playground-computer-detail-advanced-section",
+                "data-computer-settings-section": sectionId,
+              },
+              content
+            );
+            const environmentDetailAdvancedSection = React.createElement(PlatformSettingsSectionList, {
+                className: "playground-computer-detail-advanced-tab",
+                "aria-label": "Advanced computer settings",
+              },
+              renderEnvironmentAdvancedSettingsSection(
+                "runtimes",
+                "Runtime Versions",
+                Cpu,
+                runtimeVersionsBox
+              ),
+              renderEnvironmentAdvancedSettingsSection(
                 "packages-system",
                 "System Packages",
-                "",
+                Package,
                 renderPackageGroup("system", "System", "ffmpeg, curl, imagemagick..."),
-                renderEnvironmentAddIconButton("Add Package", () => openPackageComposer("system")),
-                false
+                renderEnvironmentAddIconButton("Add Package", () => openPackageComposer("system"))
               ),
-              renderEditorSection(
+              renderEnvironmentAdvancedSettingsSection(
                 "packages-python",
                 "Python Packages",
-                "",
+                Package,
                 renderPackageGroup("python", "Python", "numpy, pandas, flask..."),
-                renderEnvironmentAddIconButton("Add Package", () => openPackageComposer("python")),
-                false
+                renderEnvironmentAddIconButton("Add Package", () => openPackageComposer("python"))
               ),
-              renderEditorSection(
+              renderEnvironmentAdvancedSettingsSection(
                 "packages-node",
                 "Node.js Packages",
-                "",
+                Package,
                 renderPackageGroup("node", "Node.js", "express, typescript, axios..."),
-                renderEnvironmentAddIconButton("Add Package", () => openPackageComposer("node")),
-                false
+                renderEnvironmentAddIconButton("Add Package", () => openPackageComposer("node"))
               ),
-              renderEditorSection(
+              renderEnvironmentAdvancedSettingsSection(
                 "variables",
                 "Environment Variables",
-                "",
+                Braces,
                 environmentVariablesSection,
-                renderEnvironmentAddIconButton("Add Variable", addEnvironmentVariable),
-                false
+                renderEnvironmentAddIconButton("Add Variable", addEnvironmentVariable)
               ),
-              renderEditorSection(
+              renderEnvironmentAdvancedSettingsSection(
                 "secrets",
                 "Secrets",
-                "",
+                KeyRound,
                 secretsSection,
-                renderEnvironmentAddIconButton("Add Secret", addSecret),
-                false
+                renderEnvironmentAddIconButton("Add Secret", addSecret)
               ),
-              renderEditorSection(
+              renderEnvironmentAdvancedSettingsSection(
                 "mcp",
                 "MCP Servers",
-                "",
+                Cable,
                 mcpSection,
-                renderEnvironmentAddIconButton("Add Server", addMcpServer),
-                false
+                renderEnvironmentAddIconButton("Add Server", addMcpServer)
               ),
-              renderEditorSection(
+              renderEnvironmentAdvancedSettingsSection(
                 "scripts",
                 "Setup Scripts",
-                "",
+                Terminal,
                 setupScriptsSection,
-                renderEnvironmentAddIconButton("Add Script", addSetupScript),
-                false
-              ),
-              renderEditorSection(
-                "dockerfile",
-                "Dockerfile Extension",
-                "",
-                dockerfileSection,
-                null,
-                false
+                renderEnvironmentAddIconButton("Add Script", addSetupScript)
               )
             );
             const environmentDetailActiveSection = normalizedEnvironmentDetailTab === "advanced"
@@ -1527,7 +1293,7 @@
                   React.createElement("span", { className: "playground-version-changes-select-arrow", "aria-hidden": "true" }, "→"),
                   renderCompareSelect(rightSource.id, "right")
                 ),
-                actions: renderEnvironmentPublishSplitButton(),
+                actions: renderEnvironmentPublishAction(),
                 files: diffFiles,
                 backIcon: ArrowLeft,
                 backText: "Back",
@@ -1891,8 +1657,18 @@
               },
               environmentDetailActiveSection
             );
+            const environmentDetailTopNavActions = topNavActionsContainer
+              && canShowEnvironmentDetailHeaderPublish
+              && !environmentVersionsSidebarOpen
+              && !environmentVersionChangesState
+              ? createPortal(
+                  renderEnvironmentPublishAction(),
+                  topNavActionsContainer
+                )
+              : null;
   
             return React.createElement(React.Fragment, null,
+              environmentDetailTopNavActions,
               React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main playground-computer-detail-main", ref: environmentDetailMainRef },
               React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
                 React.createElement("div", { className: "playground-agents-detail-content playground-computer-detail-content is-agent-overview-general" },

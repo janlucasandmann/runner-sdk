@@ -53,7 +53,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects domain runtime",
     source: PROJECTS_DOMAIN_RUNTIME_SCRIPT,
-    expectedSha256: "cc142c2d47678c8fc5ea665f80cb69fc2ecafceb4d899c6370c074cb045ad423",
+    expectedSha256: "a5e3b3cd6171e52b552e9d67f10344da90ac03d92487578b251a26351384fa1a",
     fragmentGroups: [{
       baseUrl: projectsClientUrl,
       paths: PROJECTS_DOMAIN_RUNTIME_FRAGMENT_PATHS,
@@ -63,7 +63,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects overview runtime",
     source: PROJECT_OVERVIEW_SCRIPT,
-    expectedSha256: "07e6050edf4c0385d4f1c8ca80a574724aff2b51ee72427c69f2c8c2cc6dba5a",
+    expectedSha256: "bcc1e5f5e29f38e59fd79b600e52873e04c14ad0585ad723d49b74dcb328ae7d",
     fragmentGroups: [{
       baseUrl: projectsOverviewUrl,
       paths: PROJECT_OVERVIEW_SCRIPT_FRAGMENT_PATHS,
@@ -103,7 +103,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects shell runtime",
     source: PROJECTS_PAGE_SHELL_SCRIPT,
-    expectedSha256: "39f04c7f3df004a810ed1770400f03c3db860d9ab3b356c61cceb8db4481e917",
+    expectedSha256: "36b127d400caef9b8b5b2e83adf4c6a12dcddf309a77b221232d4a8a81cc1ce9",
     fragmentGroups: [{
       baseUrl: projectsPageUrl,
       paths: PROJECTS_PAGE_SHELL_FRAGMENT_PATHS,
@@ -113,7 +113,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects views runtime",
     source: PROJECTS_PAGE_VIEWS_SCRIPT,
-    expectedSha256: "0d730264ce1d6581b0ca0565100163ab561847041c9dbebf1fdf0af626b74c9f",
+    expectedSha256: "15ba3247b140b1feddf6b7e8626ab8bc3d5caec3f8dde7802baf38e0a2c7a5be",
     fragmentGroups: [{
       baseUrl: projectsPageUrl,
       paths: PROJECTS_PAGE_VIEWS_FRAGMENT_PATHS,
@@ -123,7 +123,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects core styles",
     source: PROJECTS_CORE_CSS,
-    expectedSha256: "cee8e9ea367ebbd84a1368fd132929a0ed026740e1faf9302ba8c5a6283c5ccd",
+    expectedSha256: "5813bf8e174a3a3f25958f68c351069a630ba14ea405b4252213a49457651b7e",
     fragmentGroups: [{
       baseUrl: projectsStylesUrl,
       paths: PROJECTS_CORE_CSS_FRAGMENT_PATHS,
@@ -138,6 +138,16 @@ assert.match(PROJECTS_INTEGRATIONS_RUNTIME_SCRIPT, /buildPlaygroundProjectLinked
 assert.match(PROJECTS_INTEGRATIONS_RUNTIME_SCRIPT, /createPlaygroundProjectTeamRolePermissionSet/);
 assert.match(PROJECTS_PAGE_RUNTIME_SCRIPT, /function PlaygroundTasksPage/);
 assert.match(PROJECTS_PAGE_RUNTIME_SCRIPT, /function renderProjectOverviewView/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(PlatformLoadingState/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /message: "Loading projects\.\.\."/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(PlatformSearch/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(PlatformPopup/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(ListFilter/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /variant: "minimal"/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(PlatformModal, \{/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /title: "New Project"/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /"All Projects"/);
+assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /title: "Sort projects"/);
 assert.match(PROJECTS_STYLES, /playground-project-overview/);
 assert.match(PROJECTS_STYLE_FRAGMENTS.core, /playground-tasks-page/);
 assert.match(PROJECTS_STYLE_FRAGMENTS.connectorBrowser, /playground-tasks-connector-browser-portal/);

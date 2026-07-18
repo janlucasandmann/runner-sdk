@@ -479,7 +479,6 @@
                 onClick: () => {
                   setEnvironmentPublishMenuOpen(false);
                   setEnvironmentVersionSelectorMenuOpen(false);
-                  setEnvironmentTagsMenuOpen(false);
                   setEnvironmentVersionsHeaderMenuOpen(false);
                   openEnvironmentVersionChangesPage();
                 },
@@ -576,7 +575,6 @@
             setEnvironmentActionsPopoverOpen(false);
             setEnvironmentPublishMenuOpen(false);
             setEnvironmentVersionSelectorMenuOpen(false);
-            setEnvironmentTagsMenuOpen(false);
             setEnvironmentVersionsHeaderMenuOpen(false);
             setOpenEnvironmentVersionMenuId("");
             setEnvironmentVersionState((current) => current.status === "loading" ? current : {
@@ -591,7 +589,6 @@
             setEnvironmentVersionsSidebarOpen(false);
             setEnvironmentPublishMenuOpen(false);
             setEnvironmentVersionSelectorMenuOpen(false);
-            setEnvironmentTagsMenuOpen(false);
             setEnvironmentVersionsHeaderMenuOpen(false);
             finishCloseEnvironmentVersionModal();
             setEnvironmentVersionChangesState(null);
@@ -626,7 +623,6 @@
             cancelEnvironmentVersionModalAnimation();
             setEnvironmentPublishMenuOpen(false);
             setEnvironmentVersionSelectorMenuOpen(false);
-            setEnvironmentTagsMenuOpen(false);
             setEnvironmentVersionsHeaderMenuOpen(false);
             setOpenEnvironmentVersionMenuId("");
             setEnvironmentVersionState((current) => current.status === "loading" ? current : {
@@ -800,7 +796,6 @@
             }
             setEnvironmentPublishMenuOpen(false);
             setEnvironmentVersionSelectorMenuOpen(false);
-            setEnvironmentTagsMenuOpen(false);
             setEnvironmentVersionsHeaderMenuOpen(false);
             await commitVersionedEnvironmentRecord(publishResult.resource, {
               operation: "save-publish",

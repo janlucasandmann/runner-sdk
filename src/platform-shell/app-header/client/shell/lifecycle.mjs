@@ -36,32 +36,6 @@ export const APP_HEADER_LIFECYCLE_SCRIPT = `        useEffect(() => {
         }, []);
 
         useEffect(() => {
-          if (!threadSearchOpen) {
-            return;
-          }
-
-          const focusFrame = window.requestAnimationFrame(() => {
-            if (threadSearchInputRef.current) {
-              threadSearchInputRef.current.focus();
-              threadSearchInputRef.current.select();
-            }
-          });
-
-          function handleKeyDown(event) {
-            if (event.key === "Escape") {
-              event.preventDefault();
-              closeThreadSearch();
-            }
-          }
-
-          window.addEventListener("keydown", handleKeyDown);
-          return () => {
-            window.cancelAnimationFrame(focusFrame);
-            window.removeEventListener("keydown", handleKeyDown);
-          };
-        }, [threadSearchOpen]);
-
-        useEffect(() => {
           function handleKeyDown(event) {
             if (!(event.metaKey || event.ctrlKey) || String(event.key || "").toLowerCase() !== "k") {
               return;
@@ -74,4 +48,29 @@ export const APP_HEADER_LIFECYCLE_SCRIPT = `        useEffect(() => {
           window.addEventListener("keydown", handleKeyDown);
           return () => window.removeEventListener("keydown", handleKeyDown);
         }, []);
+
+        useEffect(() => {
+          const navigationTarget = consumeThreadSearchResultNavigationTarget();
+          if (!navigationTarget) {
+            return;
+          }
+          applyPlatformNavigationEntry(navigationTarget);
+        }, []);
+
+        useEffect(() => {
+          if (threadSearchOpen) {
+            return;
+          }
+          const failedModes = Object.entries(threadSearchResourceErrorByMode)
+            .filter(([, error]) => Boolean(String(error || "").trim()))
+            .map(([mode]) => mode);
+          if (failedModes.length === 0) {
+            return;
+          }
+          failedModes.forEach((mode) => {
+            delete threadSearchResourceLoadKeysRef.current[mode];
+            delete threadSearchResourceLoadedAtByModeRef.current[mode];
+          });
+          setThreadSearchResourceErrorByMode({});
+        }, [threadSearchOpen, threadSearchResourceErrorByMode]);
 `;

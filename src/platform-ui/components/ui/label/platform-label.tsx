@@ -4,7 +4,7 @@ import {
   type ReactNode,
 } from "react";
 
-export type PlatformLabelVariant = "gray" | "green" | "blue" | "yellow";
+export type PlatformLabelVariant = "gray" | "green" | "blue" | "yellow" | "red";
 export type PlatformPriorityBarsCount = 0 | 1 | 2 | 3;
 
 export interface PlatformLabelProps extends HTMLAttributes<HTMLSpanElement> {

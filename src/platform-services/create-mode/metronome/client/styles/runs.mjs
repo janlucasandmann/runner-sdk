@@ -11,7 +11,7 @@ export const METRONOME_RUNS_CSS = String.raw`
         flex-direction: column;
         gap: 18px;
         overflow: hidden;
-        background: #050505;
+        background: #000;
         color: rgba(255, 255, 255, 0.94);
       }
 
@@ -104,37 +104,6 @@ export const METRONOME_RUNS_CSS = String.raw`
         font-size: 13px;
       }
 
-      .playground-metronome-runs-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 18px;
-      }
-
-      .playground-metronome-runs-actions {
-        display: inline-flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 10px;
-        flex: 0 0 auto;
-      }
-
-      .playground-metronome-runs-title {
-        margin: 0;
-        font-size: 16px;
-        line-height: 1.2;
-        font-weight: 500;
-        letter-spacing: 0;
-      }
-
-      .playground-metronome-runs-copy {
-        margin-top: 5px;
-        max-width: 620px;
-        color: rgba(255, 255, 255, 0.56);
-        font-size: 12px;
-        line-height: 1.45;
-      }
-
       .playground-metronome-runs-layout {
         flex: 0 0 auto;
         min-height: 0;
@@ -158,7 +127,11 @@ export const METRONOME_RUNS_CSS = String.raw`
         height: auto;
         width: 100%;
         align-self: stretch;
-        background: #121212;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
       }
 
       .playground-metronome-runs-table-section .playground-project-overview-threads-table,
@@ -369,22 +342,6 @@ export const METRONOME_RUNS_CSS = String.raw`
         color: rgba(255, 255, 255, 0.48);
         font-size: 11px;
         line-height: 1.2;
-      }
-
-      .playground-metronome-run-status {
-        flex: 0 0 auto;
-        border-radius: 999px;
-        padding: 5px 8px;
-        background: rgba(255, 255, 255, 0.08);
-        color: rgba(255, 255, 255, 0.72);
-        font-size: 11px;
-        font-weight: 400;
-        text-transform: capitalize;
-      }
-
-      .playground-metronome-run-status.is-completed {
-        background: rgba(110, 231, 183, 0.1);
-        color: rgba(167, 243, 208, 0.95);
       }
 
       .playground-metronome-run-sidebar-menu-trigger::before {

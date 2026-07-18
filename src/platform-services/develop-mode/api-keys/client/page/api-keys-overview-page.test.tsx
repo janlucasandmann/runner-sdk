@@ -190,10 +190,11 @@ describe("DevelopApiKeysOverviewPage", () => {
     });
 
     expect(container.querySelectorAll(".platform-empty-state")).toHaveLength(2);
-    expect(container.querySelectorAll(".lucide-key-round")).toHaveLength(2);
+    expect(container.querySelectorAll(".lucide-key-round")).toHaveLength(1);
+    expect(container.querySelectorAll(".lucide-chart-column-increasing")).toHaveLength(1);
     expect(screen.getByText("No API keys yet")).not.toBeNull();
     expect(screen.getByText("Create an API key to authenticate SDK and API requests.")).not.toBeNull();
-    expect(screen.getByText("No API activity yet")).not.toBeNull();
-    expect(screen.getByText("Authenticated API requests will appear here once your keys are used.")).not.toBeNull();
+    expect(screen.getByText("No data available yet")).not.toBeNull();
+    expect(screen.getByText("Analytics will appear here once activity has been recorded.")).not.toBeNull();
   });
 });
