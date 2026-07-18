@@ -1,6 +1,6 @@
 /** Ordered thread compatibility routes. */
 export function createThreadRoutes(bindings) {
-    const { inferProxyContentTypeFromPath, matchThreadProxyRoute, proxyCreateThread, proxyThreadMessages, proxyThreadMessagesGet, proxyThreadPermissionDecision, proxyThreadStepHtmlPreview, proxyThreadTraceClustersGet, proxyUpstreamBinaryGet, proxyUpstreamGet, proxyUpstreamJsonRequest, proxyUpstreamStreamRequest, wantsThreadEventStream, } = bindings;
+    const { inferProxyContentTypeFromPath, matchThreadProxyRoute, proxyCreateThread, proxyThreadMessages, proxyThreadMessagesGet, proxyThreadPermissionDecision, proxyThreadSearch, proxyThreadStepHtmlPreview, proxyThreadTraceClustersGet, proxyUpstreamBinaryGet, proxyUpstreamGet, proxyUpstreamJsonRequest, proxyUpstreamStreamRequest, wantsThreadEventStream, } = bindings;
     return function handleThreadRoutes(req, res, url) {
         // New proxy shape (matches RunnerChat backend contract)
         if (req.method === "GET" && url.pathname === "/api/real/threads") {
@@ -9,6 +9,10 @@ export function createThreadRoutes(bindings) {
         }
         if (req.method === "POST" && url.pathname === "/api/real/threads") {
             void proxyCreateThread(req, res);
+            return true;
+        }
+        if (req.method === "POST" && url.pathname === "/api/real/threads/search") {
+            void proxyThreadSearch(req, res);
             return true;
         }
         const threadV2ProxyRoute = matchThreadProxyRoute(req.method, url.pathname);

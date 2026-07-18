@@ -759,6 +759,16 @@
           overflow: hidden;
           transition: margin-right 280ms cubic-bezier(0.16, 1, 0.3, 1);
         }
+
+        .playground-content-body > .playground-content-route-loading {
+          position: absolute;
+          inset: 0;
+          z-index: 1;
+          box-sizing: border-box;
+          width: auto;
+          min-height: 0;
+          background: #000;
+        }
   
         .playground-content-body.is-thread-task-detail-open,
         .playground-content-body.is-thread-side-detail-open,

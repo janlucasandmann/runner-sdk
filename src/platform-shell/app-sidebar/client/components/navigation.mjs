@@ -28,17 +28,10 @@ ${configurePrimaryEntries}              {
               },
               {
                 id: "tags",
-                label: "Tags",
+                label: "Tags and Plugins",
                 Icon: Tag,
-                active: activePage === "tools" && toolsView === "tags",
+                active: activePage === "tools" && (toolsView === "tags" || toolsView === "plugins"),
                 onClick: handleOpenTagsShortcut,
-              },
-              {
-                id: "plugins",
-                label: "Plugins",
-                Icon: Cable,
-                active: activePage === "tools" && toolsView === "plugins",
-                onClick: handleOpenPluginsShortcut,
               },
               {
                 id: "skills",

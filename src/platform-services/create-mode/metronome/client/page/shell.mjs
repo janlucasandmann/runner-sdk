@@ -154,11 +154,30 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
           const workflowVersionModalCloseTimerRef = useRef(null);
           const workflowVersionDescriptionTextareaRef = useRef(null);
 	          const [openMetronomeVersionMenuId, setOpenMetronomeVersionMenuId] = useState("");
-	          const [isMetronomePublishActionsMenuOpen, setIsMetronomePublishActionsMenuOpen] = useState(false);
 	          const [isMetronomePublishSettingsMenuOpen, setIsMetronomePublishSettingsMenuOpen] = useState(false);
           const [isMetronomeVersionsHeaderMenuOpen, setIsMetronomeVersionsHeaderMenuOpen] = useState(false);
           const [metronomeVersionChangesState, setMetronomeVersionChangesState] = useState(null);
+          const [activeMetronomeVersionChanges, setActiveMetronomeVersionChanges] = useState(false);
+          const metronomeVersionComparisonTimerRef = useRef(null);
+          const metronomeVersionComparisonTokenRef = useRef(0);
+          const metronomeVersionComparisonGraphRef = useRef({
+            workflowId: "",
+            selectedDeploymentId: "",
+            nodes: null,
+            edges: null,
+          });
+          const metronomeTopNavStateKeyRef = useRef("");
+          const metronomeLocalGraphSyncTimerRef = useRef(null);
+          const metronomeLocalGraphSyncPendingRef = useRef(null);
+          const metronomeLocalGraphObservedRef = useRef({
+            workflowId: "",
+            nodes: null,
+            edges: null,
+          });
+          const activeMetronomeWorkflowRef = useRef(null);
+          const replaceMetronomeWorkflowInEditableStateRef = useRef(null);
           const metronomeAutosaveTimerRef = useRef(null);
+          const metronomeAutosaveRevisionRef = useRef(0);
           const metronomeAutosaveLastSavedKeyRef = useRef("");
           const metronomeAutosaveLatestKeyRef = useRef("");
           const [metronomeEditorMode, setMetronomeEditorMode] = useState("edit");
@@ -197,9 +216,6 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
           const lastHandledCreateWorkflowRequestTokenRef = useRef("");
           const pendingMetronomeOpenRunRef = useRef({ workflowId: "", runId: "", mode: "" });
           const [metronomeEditorHighlightRunId, setMetronomeEditorHighlightRunId] = useState("");
-          const [isMetronomeRunSidebarOpen, setIsMetronomeRunSidebarOpen] = useState(false);
-          const [isMetronomeRunSidebarMenuOpen, setIsMetronomeRunSidebarMenuOpen] = useState(false);
-          const [metronomeRunPrompt, setMetronomeRunPrompt] = useState("");
           const [metronomeRunState, setMetronomeRunState] = useState({ status: "idle", message: "" });
           const [metronomeRunTraceWorkExpanded, setMetronomeRunTraceWorkExpanded] = useState(true);
           const [isMetronomePublishMenuOpen, setIsMetronomePublishMenuOpen] = useState(false);
@@ -225,8 +241,6 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
             key: "",
             type: "string",
           });
-          const [metronomeRunAgentId, setMetronomeRunAgentId] = useState("");
-          const [metronomeRunEnvironmentId, setMetronomeRunEnvironmentId] = useState("");
           const [metronomeFlowZoom, setMetronomeFlowZoom] = useState(1);
           const [isMetronomeAgentSelectorOpen, setIsMetronomeAgentSelectorOpen] = useState(false);
           const [metronomeAgentSelectorMode, setMetronomeAgentSelectorMode] = useState("agents");
@@ -322,6 +336,7 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
               || null;
           }, [builtInMetronomeWorkflows, resourceTemplateMetronomePreviewWorkflows, activeWorkflowId]);
           const activeWorkflow = activeStoredWorkflow || activeSharedWorkflow || activeBuiltInWorkflow || null;
+          activeMetronomeWorkflowRef.current = activeWorkflow;
           const isActiveWorkflowOwnedByCurrentUser = Boolean(
             activeWorkflow
             && (
@@ -349,7 +364,6 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
             activeBuiltInWorkflow && isMetronomeWorkflowBuiltIn(activeBuiltInWorkflow)
             || isActiveWorkflowTeamShared && !isActiveWorkflowTeamSharedEditable
           );
-          const isActiveWorkflowRunnableReadOnly = Boolean(isActiveWorkflowBuiltIn && hasMetronomeWorkflowGraphNodes(activeWorkflow));
           const isEditor = Boolean(activeWorkflow);
           const replaceMetronomeWorkflowInEditableState = useCallback((oldWorkflowId, nextWorkflow, options = {}) => {
             const normalizedWorkflow = normalizeMetronomeWorkflow(nextWorkflow);
@@ -376,6 +390,7 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
             }
             setWorkflows((current) => replaceMetronomeWorkflowById(current, normalizedOldWorkflowId || normalizedWorkflow.id, normalizedWorkflow));
           }, [activeWorkflowId, isActiveWorkflowTeamShared, ownedMetronomeWorkflowIdSet, isMetronomeWorkflowOwnedByCurrentUser]);
+          replaceMetronomeWorkflowInEditableStateRef.current = replaceMetronomeWorkflowInEditableState;
           const saveEditableMetronomeWorkflowApi = useCallback((workflow) => {
             return saveMetronomeWorkflowApi(workflow, {
               createOnNotFound: !isMetronomeWorkflowTeamShared(workflow),
@@ -688,18 +703,6 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
           }, [metronomeWorkflowOptionRows, activeWorkflowId]);
 
           useEffect(() => {
-            if (!metronomeRunAgentId && defaultMetronomeAgentOption?.id) {
-              setMetronomeRunAgentId(defaultMetronomeAgentOption.id);
-            }
-          }, [metronomeRunAgentId, defaultMetronomeAgentOption]);
-
-          useEffect(() => {
-            if (!metronomeRunEnvironmentId && defaultMetronomeComputerOption?.id) {
-              setMetronomeRunEnvironmentId(defaultMetronomeComputerOption.id);
-            }
-          }, [metronomeRunEnvironmentId, defaultMetronomeComputerOption]);
-
-          useEffect(() => {
             if (!normalizedMetronomeProjectFilterId || !activeWorkflowId) return;
             if (activeBuiltInWorkflow) return;
             if (!metronomeAvailableWorkflowRows.some((workflow) => workflow.id === activeWorkflowId)) {
@@ -732,7 +735,11 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
               if (!workflow?.id) return;
               setActiveWorkflowId(workflow.id);
               setMetronomeEditorMode(requestedMode === "run-detail" ? "runs" : (requestedMode || "edit"));
-              setMetronomeRunInlineDetailId(requestedMode === "run-detail" ? requestedRunId : "");
+              setMetronomeRunInlineDetailId(
+                requestedMode === "run-detail" || requestedMode === "runs" && requestedRunId
+                  ? requestedRunId
+                  : ""
+              );
               if (requestedRunId) {
                 setSelectedMetronomeRunId(requestedRunId);
               }
@@ -1159,6 +1166,29 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
               window.clearTimeout(metronomeAutosaveTimerRef.current);
               metronomeAutosaveTimerRef.current = null;
             }
+            metronomeAutosaveRevisionRef.current += 1;
+            if (metronomeVersionComparisonTimerRef.current) {
+              window.clearTimeout(metronomeVersionComparisonTimerRef.current);
+              metronomeVersionComparisonTimerRef.current = null;
+            }
+            metronomeVersionComparisonTokenRef.current += 1;
+            metronomeVersionComparisonGraphRef.current = {
+              workflowId: activeWorkflowId,
+              selectedDeploymentId: readMetronomeSelectedDeploymentId(activeWorkflow),
+              workflow: activeWorkflow,
+              deployments: null,
+              nodes: nextNodes,
+              edges: nextEdges,
+              codeDirty: false,
+              flowReady: false,
+              readOnly: isActiveWorkflowBuiltIn,
+            };
+            metronomeLocalGraphObservedRef.current = {
+              workflowId: activeWorkflowId,
+              nodes: nextNodes,
+              edges: nextEdges,
+            };
+            setActiveMetronomeVersionChanges(false);
             setSelectedNodeId("");
             setActiveMetronomeRichTextField("");
             setMetronomeDynamicContentPicker({ fieldKey: "", rect: null, query: "" });
@@ -1181,11 +1211,7 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
             setMetronomeRunInlineDetailId("");
             setMetronomeEditorHighlightRunId("");
             setMetronomeCanvasInteractionMode("pan");
-            setIsMetronomeRunSidebarOpen(false);
-            setIsMetronomeRunSidebarMenuOpen(false);
-            setMetronomeRunPrompt("");
             setMetronomeRunState({ status: "idle", message: "" });
-            setIsMetronomePublishActionsMenuOpen(false);
             setIsMetronomePublishMenuOpen(false);
             setIsMetronomeDeploymentHistoryModalOpen(false);
             setMetronomePublishState({ status: "idle", message: "" });
@@ -1252,26 +1278,19 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
                   ? String(pendingOpen.runId || "").trim()
                   : "";
                 const hasPendingRun = pendingRunId && items.some((run) => run.id === pendingRunId);
-                const shouldOpenRunSidebar = pendingOpen.workflowId === activeWorkflowId && pendingOpen.mode === "runs";
-                const shouldShowRunInlineDetail = pendingOpen.workflowId === activeWorkflowId && pendingOpen.mode === "run-detail";
+                const shouldShowRunInlineDetail = pendingOpen.workflowId === activeWorkflowId
+                  && (
+                    pendingOpen.mode === "run-detail"
+                    || pendingOpen.mode === "runs" && Boolean(pendingRunId)
+                  );
                 setSelectedMetronomeRunId((current) => {
                   if (hasPendingRun) return pendingRunId;
                   return current && items.some((run) => run.id === current) ? current : (items[0]?.id || "");
                 });
                 if (shouldShowRunInlineDetail && (hasPendingRun || items.length)) {
                   setSelectedNodeId("");
-                  setIsMetronomePublishActionsMenuOpen(false);
                   setIsMetronomePublishMenuOpen(false);
-                  setIsMetronomeRunSidebarMenuOpen(false);
-                  setIsMetronomeRunSidebarOpen(false);
                   setMetronomeRunInlineDetailId(hasPendingRun ? pendingRunId : (items[0]?.id || ""));
-                }
-                if (shouldOpenRunSidebar && (!pendingRunId || hasPendingRun || items.length)) {
-                  setSelectedNodeId("");
-                  setIsMetronomePublishActionsMenuOpen(false);
-                  setIsMetronomePublishMenuOpen(false);
-                  setIsMetronomeRunSidebarMenuOpen(false);
-                  setIsMetronomeRunSidebarOpen(true);
                 }
                 if (pendingOpen.workflowId === activeWorkflowId && (!pendingRunId || hasPendingRun || items.length)) {
                   pendingMetronomeOpenRunRef.current = { workflowId: "", runId: "", mode: "" };
@@ -1457,40 +1476,97 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
             };
           }, [activeWorkflowId, isActiveWorkflowBuiltIn, isMetronomeApiAvailable]);
 
-          useEffect(() => {
-            if (!activeWorkflowId || isActiveWorkflowBuiltIn) return;
-            replaceMetronomeWorkflowInEditableState(
-              activeWorkflowId,
-              createMetronomeWorkflowWithSelectedVersionSnapshot({
-                ...(activeWorkflow || {}),
-                id: activeWorkflowId,
-                updatedAt: new Date().toISOString(),
-              }, nodes, edges)
-            );
-          }, [nodes, edges, activeWorkflowId, isActiveWorkflowBuiltIn, replaceMetronomeWorkflowInEditableState]);
+          const flushMetronomeLocalGraphSync = useCallback(() => {
+            if (metronomeLocalGraphSyncTimerRef.current) {
+              window.clearTimeout(metronomeLocalGraphSyncTimerRef.current);
+              metronomeLocalGraphSyncTimerRef.current = null;
+            }
+            const pendingSync = metronomeLocalGraphSyncPendingRef.current;
+            metronomeLocalGraphSyncPendingRef.current = null;
+            if (!pendingSync?.workflowId || pendingSync.readOnly) return;
+            const currentWorkflow = activeMetronomeWorkflowRef.current;
+            const workflowForSync = currentWorkflow?.id === pendingSync.workflowId
+              ? currentWorkflow
+              : pendingSync.workflow;
+            if (!workflowForSync || isMetronomeWorkflowBuiltIn(workflowForSync)) return;
+            const nextWorkflow = createMetronomeWorkflowWithSelectedVersionSnapshot({
+              ...workflowForSync,
+              id: pendingSync.workflowId,
+              updatedAt: new Date().toISOString(),
+            }, pendingSync.nodes, pendingSync.edges);
+            if (typeof replaceMetronomeWorkflowInEditableStateRef.current === "function") {
+              replaceMetronomeWorkflowInEditableStateRef.current(pendingSync.workflowId, nextWorkflow);
+            }
+          }, []);
 
           useEffect(() => {
+            const observedGraph = metronomeLocalGraphObservedRef.current || {};
+            const hasSameObservedWorkflow = observedGraph.workflowId === activeWorkflowId;
+            const hasPersistedGraphChanges = !hasSameObservedWorkflow
+              || haveMetronomePersistedNodesChanged(observedGraph.nodes, nodes)
+              || haveMetronomePersistedEdgesChanged(observedGraph.edges, edges);
+            metronomeLocalGraphObservedRef.current = {
+              workflowId: activeWorkflowId,
+              nodes,
+              edges,
+            };
+            const pendingSync = metronomeLocalGraphSyncPendingRef.current;
+            if (pendingSync?.workflowId && pendingSync.workflowId !== activeWorkflowId) {
+              flushMetronomeLocalGraphSync();
+            }
+            if (
+              !activeWorkflowId
+              || !activeWorkflow
+              || isActiveWorkflowBuiltIn
+              || !isMetronomeFlowReady
+              || !hasPersistedGraphChanges
+            ) {
+              return () => {};
+            }
+            metronomeLocalGraphSyncPendingRef.current = {
+              workflowId: activeWorkflowId,
+              workflow: activeWorkflow,
+              nodes,
+              edges,
+              readOnly: isActiveWorkflowBuiltIn,
+            };
+            if (metronomeLocalGraphSyncTimerRef.current) {
+              window.clearTimeout(metronomeLocalGraphSyncTimerRef.current);
+            }
+            const graphSyncTimer = window.setTimeout(() => {
+              if (metronomeLocalGraphSyncTimerRef.current !== graphSyncTimer) return;
+              flushMetronomeLocalGraphSync();
+            }, 120);
+            metronomeLocalGraphSyncTimerRef.current = graphSyncTimer;
+          }, [nodes, edges, activeWorkflowId, isActiveWorkflowBuiltIn, isMetronomeFlowReady, flushMetronomeLocalGraphSync]);
+
+          useEffect(() => {
+            const autosaveRevision = metronomeAutosaveRevisionRef.current + 1;
+            metronomeAutosaveRevisionRef.current = autosaveRevision;
+            if (metronomeAutosaveTimerRef.current) {
+              window.clearTimeout(metronomeAutosaveTimerRef.current);
+              metronomeAutosaveTimerRef.current = null;
+            }
             if (!activeWorkflowId || !activeWorkflow || isActiveWorkflowBuiltIn || !isMetronomeApiAvailable || isLoadingMetronomes) {
               return () => {};
             }
-            const workflowForSave = createMetronomeWorkflowWithSelectedVersionSnapshot(activeWorkflow, nodes, edges);
-            const autosaveKey = createMetronomePersistedWorkflowKey(workflowForSave, workflowForSave.nodes, workflowForSave.edges);
-            if (!autosaveKey || autosaveKey === metronomeAutosaveLastSavedKeyRef.current) {
-              return () => {};
-            }
-            metronomeAutosaveLatestKeyRef.current = autosaveKey;
-            if (metronomeAutosaveTimerRef.current) {
-              window.clearTimeout(metronomeAutosaveTimerRef.current);
-            }
             metronomeAutosaveTimerRef.current = window.setTimeout(() => {
               metronomeAutosaveTimerRef.current = null;
+              if (metronomeAutosaveRevisionRef.current !== autosaveRevision) return;
+              const workflowForSave = createMetronomeWorkflowWithSelectedVersionSnapshot(activeWorkflow, nodes, edges);
+              const autosaveKey = createMetronomePersistedWorkflowKey(workflowForSave, workflowForSave.nodes, workflowForSave.edges);
+              if (!autosaveKey || autosaveKey === metronomeAutosaveLastSavedKeyRef.current) return;
+              metronomeAutosaveLatestKeyRef.current = autosaveKey;
               const requestKey = autosaveKey;
               void saveEditableMetronomeWorkflowApi({
                 ...workflowForSave,
                 updatedAt: new Date().toISOString(),
               })
                 .then(async (savedWorkflow) => {
-                  if (metronomeAutosaveLatestKeyRef.current !== requestKey) {
+                  if (
+                    metronomeAutosaveRevisionRef.current !== autosaveRevision
+                    || metronomeAutosaveLatestKeyRef.current !== requestKey
+                  ) {
                     return;
                   }
                   metronomeAutosaveLastSavedKeyRef.current = requestKey;
@@ -1529,12 +1605,21 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
                       }
                     }
                   }
-                  replaceMetronomeWorkflowInEditableState(workflowForSave.id, workflowForState);
+                  if (
+                    metronomeAutosaveRevisionRef.current !== autosaveRevision
+                    || metronomeAutosaveLatestKeyRef.current !== requestKey
+                  ) {
+                    return;
+                  }
+                  if (typeof replaceMetronomeWorkflowInEditableStateRef.current === "function") {
+                    replaceMetronomeWorkflowInEditableStateRef.current(workflowForSave.id, workflowForState);
+                  }
                   if (workflowForState.id && workflowForState.id !== activeWorkflowId) {
                     setActiveWorkflowId(workflowForState.id);
                   }
                 })
                 .catch((error) => {
+                  if (metronomeAutosaveRevisionRef.current !== autosaveRevision) return;
                   console.warn("[Metronome] Autosave failed", error);
                   setIsMetronomeApiAvailable(false);
                 });
@@ -1545,7 +1630,7 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
                 metronomeAutosaveTimerRef.current = null;
               }
             };
-          }, [activeWorkflow, activeWorkflowId, nodes, edges, isActiveWorkflowBuiltIn, isMetronomeApiAvailable, isLoadingMetronomes, replaceMetronomeWorkflowInEditableState]);
+          }, [activeWorkflow, activeWorkflowId, isActiveWorkflowBuiltIn, isMetronomeApiAvailable, isLoadingMetronomes]);
 
 	          const selectedNode = useMemo(() => nodes.find((node) => node.id === selectedNodeId) || null, [nodes, selectedNodeId]);
 `;

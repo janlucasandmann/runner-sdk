@@ -36,6 +36,7 @@ export function createPlatformGateway(config) {
         proxyThreadMessages: modules.proxyThreadMessages,
         proxyThreadMessagesGet: modules.proxyThreadMessagesGet,
         proxyThreadPermissionDecision: modules.proxyThreadPermissionDecision,
+        proxyThreadSearch: modules.proxyThreadSearch,
         proxyThreadStepHtmlPreview: modules.proxyThreadStepHtmlPreview,
         proxyThreadTraceClustersGet: modules.proxyThreadTraceClustersGet,
         proxyUpstreamBinaryGet: modules.proxyUpstreamBinaryGet,

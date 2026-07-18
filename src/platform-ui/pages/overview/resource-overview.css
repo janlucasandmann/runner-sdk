@@ -13,6 +13,10 @@
   color: #fff;
 }
 
+.resource-overview-page.is-tags {
+  gap: 76px;
+}
+
 .resource-overview-page__controls,
 .resource-overview-page__header-actions {
   display: flex;
@@ -134,6 +138,10 @@
 }
 
 @media (max-width: 900px) {
+  .resource-overview-page.is-tags {
+    gap: 56px;
+  }
+
   .tags-overview-guide__cards {
     margin-top: 48px;
   }
@@ -144,6 +152,10 @@
 }
 
 @media (max-width: 700px) {
+  .resource-overview-page.is-tags {
+    gap: 48px;
+  }
+
   .tags-overview-guide__cards {
     margin-top: 36px;
     grid-template-columns: 1fr;

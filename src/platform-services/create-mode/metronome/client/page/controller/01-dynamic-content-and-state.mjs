@@ -3,8 +3,6 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
             return buildMetronomeDynamicContentGroups(nodes, edges, selectedNodeId);
           }, [nodes, edges, selectedNodeId]);
           const selectMetronomeNodeFromCanvas = useCallback((nodeId) => {
-            setIsMetronomeRunSidebarOpen(false);
-            setIsMetronomePublishActionsMenuOpen(false);
             setIsMetronomePublishMenuOpen(false);
             setSelectedNodeId(String(nodeId || ""));
           }, []);
@@ -158,24 +156,21 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
             const activeEdgeId = String(output.activeEdgeId || "").trim();
             return { completedNodeIds, completedEdgeIds, activeNodeId, activeEdgeId };
           }, [highlightedMetronomeRun]);
-          const metronomeWorkflowDefinition = useMemo(
-            () => createMetronomeWorkflowDefinition(activeWorkflow, nodes, edges),
-            [activeWorkflow, nodes, edges]
-          );
+          const shouldGenerateMetronomePythonFiles = metronomeEditorMode === "code";
           const generatedMetronomePythonFiles = useMemo(
-            () => generateMetronomePythonSdkFiles(activeWorkflow, nodes, edges),
-            [activeWorkflow, nodes, edges]
-          );
-          const generatedMetronomePythonCode = useMemo(
-            () => generatedMetronomePythonFiles.find((file) => file.path === "main.py")?.value || "",
-            [generatedMetronomePythonFiles]
+            () => shouldGenerateMetronomePythonFiles
+              ? generateMetronomePythonSdkFiles(activeWorkflow, nodes, edges)
+              : [],
+            [shouldGenerateMetronomePythonFiles, activeWorkflow, nodes, edges]
           );
           useEffect(() => {
-            if (!isMetronomeCodeDirty) {
+            if (shouldGenerateMetronomePythonFiles && !isMetronomeCodeDirty) {
               setMetronomeCodeFilesDraft(generatedMetronomePythonFiles.map((file) => ({ ...file, originalValue: file.value })));
             }
-          }, [generatedMetronomePythonFiles, isMetronomeCodeDirty]);
-          const metronomeCodeFiles = metronomeCodeFilesDraft.length ? metronomeCodeFilesDraft : generatedMetronomePythonFiles;
+          }, [shouldGenerateMetronomePythonFiles, generatedMetronomePythonFiles, isMetronomeCodeDirty]);
+          const metronomeCodeFiles = isMetronomeCodeDirty
+            ? metronomeCodeFilesDraft
+            : generatedMetronomePythonFiles;
           const activeMetronomeCodeFile = metronomeCodeFiles.find((file) => file.path === activeMetronomeCodeFilePath)
             || metronomeCodeFiles.find((file) => file.path === "main.py")
             || metronomeCodeFiles[0]
@@ -285,6 +280,88 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
             || isMetronomeCodeDirty
             || hasSelectedMetronomeDeploymentEditorChanges(getSelectedMetronomeDeploymentVersion())
           );
+          const selectedMetronomeDeploymentIdForChanges = readMetronomeSelectedDeploymentId(activeWorkflow);
+          useEffect(() => {
+            const previousGraph = metronomeVersionComparisonGraphRef.current || {};
+            const hasSameComparisonContext = previousGraph.workflowId === activeWorkflowId
+              && previousGraph.selectedDeploymentId === selectedMetronomeDeploymentIdForChanges;
+            const hasPersistedGraphChanges = hasSameComparisonContext && (
+              haveMetronomePersistedNodesChanged(previousGraph.nodes, nodes)
+              || haveMetronomePersistedEdgesChanged(previousGraph.edges, edges)
+            );
+            const shouldRecompare = !hasSameComparisonContext
+              || hasPersistedGraphChanges
+              || previousGraph.workflow !== activeWorkflow
+              || previousGraph.deployments !== activeWorkflowDeployments
+              || previousGraph.codeDirty !== isMetronomeCodeDirty
+              || previousGraph.flowReady !== isMetronomeFlowReady
+              || previousGraph.readOnly !== isActiveWorkflowBuiltIn;
+
+            metronomeVersionComparisonGraphRef.current = {
+              workflowId: activeWorkflowId,
+              selectedDeploymentId: selectedMetronomeDeploymentIdForChanges,
+              workflow: activeWorkflow,
+              deployments: activeWorkflowDeployments,
+              nodes,
+              edges,
+              codeDirty: isMetronomeCodeDirty,
+              flowReady: isMetronomeFlowReady,
+              readOnly: isActiveWorkflowBuiltIn,
+            };
+
+            if (!activeWorkflow || !isMetronomeFlowReady || isActiveWorkflowBuiltIn) {
+              if (metronomeVersionComparisonTimerRef.current) {
+                window.clearTimeout(metronomeVersionComparisonTimerRef.current);
+                metronomeVersionComparisonTimerRef.current = null;
+              }
+              metronomeVersionComparisonTokenRef.current += 1;
+              setActiveMetronomeVersionChanges((current) => current ? false : current);
+              return;
+            }
+            if (!activeWorkflowDeployments.length || isMetronomeCodeDirty) {
+              if (metronomeVersionComparisonTimerRef.current) {
+                window.clearTimeout(metronomeVersionComparisonTimerRef.current);
+                metronomeVersionComparisonTimerRef.current = null;
+              }
+              metronomeVersionComparisonTokenRef.current += 1;
+              setActiveMetronomeVersionChanges((current) => current ? current : true);
+              return;
+            }
+            if (!shouldRecompare) {
+              return;
+            }
+            if (metronomeVersionComparisonTimerRef.current) {
+              window.clearTimeout(metronomeVersionComparisonTimerRef.current);
+              metronomeVersionComparisonTimerRef.current = null;
+            }
+            const comparisonToken = metronomeVersionComparisonTokenRef.current + 1;
+            metronomeVersionComparisonTokenRef.current = comparisonToken;
+            if (!hasSameComparisonContext) {
+              setActiveMetronomeVersionChanges((current) => current ? false : current);
+            } else if (hasPersistedGraphChanges) {
+              setActiveMetronomeVersionChanges((current) => current ? current : true);
+            }
+
+            const comparisonTimer = window.setTimeout(() => {
+              if (metronomeVersionComparisonTokenRef.current !== comparisonToken) return;
+              metronomeVersionComparisonTimerRef.current = null;
+              const hasChanges = hasSelectedMetronomeDeploymentEditorChanges(
+                getSelectedMetronomeDeploymentVersion()
+              );
+              setActiveMetronomeVersionChanges((current) => current === hasChanges ? current : hasChanges);
+            }, 140);
+            metronomeVersionComparisonTimerRef.current = comparisonTimer;
+          }, [
+            activeWorkflow,
+            activeWorkflowId,
+            activeWorkflowDeployments,
+            edges,
+            isActiveWorkflowBuiltIn,
+            isMetronomeCodeDirty,
+            isMetronomeFlowReady,
+            nodes,
+            selectedMetronomeDeploymentIdForChanges,
+          ]);
           const canPublishMetronomeDeploymentVersion = (deployment) => {
             const normalizedDeploymentId = String(deployment?.id || "").trim();
             if (!normalizedDeploymentId) {
@@ -340,9 +417,6 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
             const fallbackLeftSourceId = getMetronomeVersionCompareSourceId(versionId)
               || getDefaultMetronomeVersionCompareLeftSourceId();
             setSelectedNodeId("");
-            setIsMetronomeRunSidebarOpen(false);
-            setIsMetronomeRunSidebarMenuOpen(false);
-            setIsMetronomePublishActionsMenuOpen(false);
             setIsMetronomePublishMenuOpen(true);
             setMetronomeVersionChangesState({
               leftSourceId: explicitLeftSourceId || fallbackLeftSourceId,

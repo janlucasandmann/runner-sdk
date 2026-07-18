@@ -460,13 +460,14 @@ export const METRONOME_INSPECTOR_01_FRAGMENT = String.raw`
                   }).then((run) => ({ run, savedWorkflow }));
                 })
                 .then(({ run, savedWorkflow }) => {
-                  const normalizedRun = normalizeMetronomeRun(run);
-                  setMetronomeRuns((current) => [normalizedRun, ...current.filter((item) => item.id !== normalizedRun.id)]);
-                  setSelectedMetronomeRunId(normalizedRun.id);
-                  setMetronomeEditorHighlightRunId(normalizedRun.id);
-                  setIsMetronomeRunSidebarMenuOpen(false);
-                  setIsMetronomeRunSidebarOpen(true);
-                  setMetronomeTriggerTestState({ status: "success", message: "Trigger test started." });
+	                  const normalizedRun = normalizeMetronomeRun(run);
+	                  setMetronomeRuns((current) => [normalizedRun, ...current.filter((item) => item.id !== normalizedRun.id)]);
+	                  setSelectedMetronomeRunId(normalizedRun.id);
+	                  setMetronomeEditorHighlightRunId(normalizedRun.id);
+	                  setSelectedNodeId("");
+	                  setMetronomeEditorMode("runs");
+	                  setMetronomeRunInlineDetailId(normalizedRun.id);
+	                  setMetronomeTriggerTestState({ status: "success", message: "Trigger test started." });
                   return fetchMetronomeTriggerEventsApi(savedWorkflow.id, 20);
                 })
                 .then((items) => {
@@ -524,11 +525,13 @@ export const METRONOME_INSPECTOR_01_FRAGMENT = String.raw`
                                 event.runId
                                   ? React.createElement("button", {
                                       type: "button",
-                                      className: "playground-metronome-trigger-diagnostics-link",
-                                      onClick: () => {
-                                        setSelectedMetronomeRunId(event.runId);
-                                        setIsMetronomeRunSidebarOpen(true);
-                                      },
+	                                      className: "playground-metronome-trigger-diagnostics-link",
+	                                      onClick: () => {
+	                                        setSelectedMetronomeRunId(event.runId);
+	                                        setSelectedNodeId("");
+	                                        setMetronomeEditorMode("runs");
+	                                        setMetronomeRunInlineDetailId(event.runId);
+	                                      },
                                     }, "Run " + event.runId.slice(0, 8))
                                   : React.createElement("span", null, event.reason || "No run")
                               )

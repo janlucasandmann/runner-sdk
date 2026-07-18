@@ -42,7 +42,9 @@ assert.match(fragments.searchProjection, /const loadThreadSearchResourceMode = u
 assert.match(fragments.searchProjection, /threadSearchMode !== "files"/);
 assert.match(fragments.searchProjection, /fetchMetronomeWorkflowsFromApi/);
 assert.match(fragments.searchProjection, /proxyBackendBase \+ "\/threads\/search"/);
-assert.match(fragments.searchProjection, /limit: 100/);
+assert.match(fragments.searchProjection, /const THREAD_SEARCH_RESULT_LIMIT = 20/);
+assert.match(fragments.searchProjection, /limit: THREAD_SEARCH_RESULT_LIMIT/);
+assert.match(fragments.searchProjection, /\.slice\(0, THREAD_SEARCH_RESULT_LIMIT\)/);
 assert.match(fragments.searchProjection, /threadSearchThreadAbortControllerRef\.current\?\.abort\(\)/);
 assert.match(fragments.searchProjection, /threadSearchThreadResultsCacheRef\.current/);
 assert.match(fragments.navigation, /function handleThreadSearchTicketSelect/);
@@ -172,6 +174,7 @@ assert.doesNotMatch(APP_HEADER_STYLE_FRAGMENTS.header, /\.playground-top-nav-pat
 assert.match(APP_HEADER_STYLE_FRAGMENTS.accountMenu, /\.account-menu/);
 assert.match(APP_HEADER_STYLE_FRAGMENTS.notificationsPopup, /\.notification-menu/);
 assert.match(APP_HEADER_STYLE_FRAGMENTS.notificationsPopup, /\.notification-menu-footer[\s\S]*border-top: 1px solid rgba\(255, 255, 255, 0\.075\)/);
+assert.match(APP_HEADER_STYLE_FRAGMENTS.searchModal, /\.platform-loading-state/);
 assert.match(APP_HEADER_STYLE_FRAGMENTS.searchModal, /\.platform-global-search-modal/);
 assert.equal(Object.values(APP_HEADER_STYLE_FRAGMENTS).join(""), APP_HEADER_STYLES);
 

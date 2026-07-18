@@ -761,7 +761,7 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
                       metronomeRunTraceState.error
                         ? React.createElement("div", { className: "agent-step-item" },
                             React.createElement("div", { className: "agent-step-content" },
-                              React.createElement("div", { className: "playground-metronome-run-sidebar-copy" }, metronomeRunTraceState.error)
+                              React.createElement("div", { className: "playground-metronome-run-trace-empty-copy" }, metronomeRunTraceState.error)
                             )
                           )
                         : null,
@@ -785,7 +785,7 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
                         : shouldShowNoStepsMessage
                           ? React.createElement("div", { className: "agent-step-item" },
                             React.createElement("div", { className: "agent-step-content" },
-                              React.createElement("div", { className: "playground-metronome-run-sidebar-copy" },
+                              React.createElement("div", { className: "playground-metronome-run-trace-empty-copy" },
                                 "No workflow steps were recorded."
                               )
                             )

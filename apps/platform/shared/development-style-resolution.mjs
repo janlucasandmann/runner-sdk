@@ -14,6 +14,7 @@ export const PLATFORM_PAGE_STYLE_SOURCE_PATHS = Object.freeze([
   "src/platform-ui/components/composite/analytics/analytics.css",
   "src/platform-ui/components/composite/empty-state/empty-state.css",
   "src/platform-ui/components/composite/loading-state/loading-state.css",
+  "src/platform-ui/components/composite/code-editor-workspace/code-editor-workspace.css",
   "src/platform-ui/components/composite/code-preview-box/code-preview-box.css",
   "src/platform-ui/components/composite/page-hero/page-hero.css",
   "src/platform-ui/components/composite/ui-card/ui-card.css",

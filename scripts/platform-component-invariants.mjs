@@ -7,6 +7,7 @@ const componentRoot = path.join(packageRoot, "src", "platform-ui", "components")
 const primitiveComponents = ["button", "icon-button", "label", "search", "selector", "switch"];
 const compositeComponents = [
   "analytics",
+  "code-editor-workspace",
   "code-preview-box",
   "data-table",
   "detail-sidebar",
@@ -134,6 +135,10 @@ const canonicalExports = new Map([
   [
     "./platform-ui/components/composite/analytics",
     "./dist/platform-ui/components/composite/analytics/index.js",
+  ],
+  [
+    "./platform-ui/components/composite/code-editor-workspace",
+    "./dist/platform-ui/components/composite/code-editor-workspace/index.js",
   ],
   [
     "./platform-ui/components/composite/code-preview-box",

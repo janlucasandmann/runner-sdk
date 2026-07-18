@@ -1,0 +1,205 @@
+.platform-code-editor-workspace {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
+  flex: 1 1 0;
+  display: grid;
+  grid-template-columns: 252px minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: #000;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.platform-code-editor-workspace.is-full-screen {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  flex: 1 1 0;
+  align-self: stretch;
+}
+
+.platform-code-editor-workspace__sidebar {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.platform-code-editor-workspace__sidebar-header {
+  min-height: 54px;
+  padding: 14px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.platform-code-editor-workspace__sidebar-title {
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.platform-code-editor-workspace__file-list {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  padding: 0 0 12px;
+  scrollbar-width: none;
+}
+
+.platform-code-editor-workspace__file-list::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.platform-code-editor-workspace__file {
+  width: 100%;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.82);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.platform-code-editor-workspace__file:hover,
+.platform-code-editor-workspace__file.is-active {
+  background: rgba(255, 255, 255, 0.09);
+  color: #fff;
+}
+
+.platform-code-editor-workspace__file:disabled {
+  color: rgba(255, 255, 255, 0.42);
+  cursor: default;
+}
+
+.platform-code-editor-workspace__file-spacer {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+}
+
+.platform-code-editor-workspace__file-icon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.platform-code-editor-workspace__file-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.platform-code-editor-workspace__file-label {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  color: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-code-editor-workspace__editor {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #000;
+}
+
+.platform-code-editor-workspace__editor-body {
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.platform-code-editor-workspace__editor-body > * {
+  min-height: 0;
+  flex: 1;
+}
+
+.platform-code-editor-workspace__empty {
+  min-height: 80px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.46);
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.platform-code-editor-workspace__empty.is-editor {
+  flex: 1;
+}
+
+.platform-code-editor-workspace__footer {
+  min-height: 42px;
+  flex: 0 0 auto;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.platform-code-editor-workspace__status {
+  min-width: 0;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 12px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-code-editor-workspace__status.is-success {
+  color: #6ee7b7;
+}
+
+.platform-code-editor-workspace__status.is-error {
+  color: #ff9a9a;
+}
+
+.platform-code-editor-workspace__status.is-loading {
+  color: #66a6ff;
+}
+
+.platform-code-editor-workspace__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}

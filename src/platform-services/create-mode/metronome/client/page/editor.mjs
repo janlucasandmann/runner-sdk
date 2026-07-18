@@ -29,25 +29,6 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
             return portalTarget ? createPortal(sidebar, portalTarget) : null;
           };
 
-          const renderMetronomeCodeFileRow = (file) => {
-            const normalizedPath = String(file?.path || "").trim();
-            if (!normalizedPath) return null;
-            const isActive = normalizedPath === String(activeMetronomeCodeFile?.path || activeMetronomeCodeFilePath || "");
-            const Icon = normalizedPath === "requirements.txt" ? Package : FileText;
-            return React.createElement("button", {
-              key: normalizedPath,
-              type: "button",
-              className: "playground-servers-code-file-row playground-metronome-code-file-row" + (isActive ? " is-active" : ""),
-              onClick: () => handleMetronomeCodeFileSelect(normalizedPath),
-            },
-              React.createElement("span", { className: "playground-servers-code-file-chevron", "aria-hidden": "true" }),
-              React.createElement("span", { className: "playground-servers-code-file-icon", "aria-hidden": "true" },
-                React.createElement(Icon, { width: 15, height: 15, strokeWidth: 1.8 })
-              ),
-              React.createElement("span", { className: "playground-servers-code-file-name" }, normalizedPath)
-            );
-          };
-
           const getMetronomeVersionPopupActions = (options = {}) => {
             const isBusy = Boolean(options.isBusy) || metronomePublishState.status === "loading";
             const hasVersionChanges = hasActiveMetronomeVersionChanges();
@@ -69,88 +50,6 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
               },
             ];
           };
-
-          const renderMetronomePublishControl = () => {
-            if (!activeWorkflow) return null;
-            if (isActiveWorkflowBuiltIn) {
-              return React.createElement("button", {
-                type: "button",
-                className: "playground-metronome-create-button playground-metronome-publish-button",
-                onClick: () => void copyBuiltInWorkflow(activeWorkflow),
-              },
-                React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("span", null, "Copy")
-              );
-            }
-            const isBusy = metronomePublishState.status === "loading";
-            const hasMetronomePublishChanges = hasActiveMetronomeVersionChanges();
-            const isMetronomePublishControlDisabled = Boolean(isBusy || !hasMetronomePublishChanges);
-            const versionPopupActions = getMetronomeVersionPopupActions({ isBusy });
-            return React.createElement(PlatformButtonSelector, {
-              mode: "split-action",
-              buttonVariant: "primary",
-              buttonSize: "small",
-              open: isMetronomePublishActionsMenuOpen,
-              onOpenChange: (nextOpen) => {
-                if (nextOpen) {
-                  setIsMetronomePublishSettingsMenuOpen(false);
-                  setIsMetronomeVersionsHeaderMenuOpen(false);
-                }
-                setIsMetronomePublishActionsMenuOpen(nextOpen);
-              },
-              onAction: () => {
-                setSelectedNodeId("");
-                setIsMetronomeRunSidebarOpen(false);
-                setIsMetronomeRunSidebarMenuOpen(false);
-                setIsMetronomePublishActionsMenuOpen(false);
-                setIsMetronomePublishSettingsMenuOpen(false);
-                setIsMetronomeVersionsHeaderMenuOpen(false);
-                return publishActiveWorkflowVersion();
-              },
-              label: "Save & Publish",
-              leading: React.createElement(Rocket, { strokeWidth: 1.8 }),
-              actionAriaLabel: "Save and publish Metronome changes",
-              popupAriaLabel: "Version save options",
-              actionDisabled: isMetronomePublishControlDisabled,
-              popupDisabled: isMetronomePublishControlDisabled,
-              active: isMetronomePublishActionsMenuOpen,
-              popupAlignment: "right",
-              popupRole: "menu",
-              popupWidth: 268,
-              popupMaxHeight: "min(260px, calc(100vh - 160px))",
-              className: "playground-metronome-detail-publish-selector",
-              popupClassName: "playground-agents-detail-publish-menu playground-metronome-detail-publish-menu",
-            },
-              React.createElement(React.Fragment, null,
-                versionPopupActions.map((action) => React.createElement("button", {
-                    key: action.id || action.label,
-                    type: "button",
-                    className: "tb-popup-row",
-                    role: "menuitem",
-                    disabled: isBusy || action.disabled,
-                    onClick: () => {
-                      setIsMetronomePublishActionsMenuOpen(false);
-                      void action.onClick();
-                    },
-                  },
-                  React.createElement(action.Icon, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
-                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                    React.createElement("span", null, action.label)
-                  ),
-                  action.shortcut
-                    ? React.createElement("span", {
-                        className: "playground-agents-detail-publish-menu-shortcut",
-                        "aria-hidden": "true",
-                      }, action.shortcut)
-                    : null
-                ))
-              )
-            );
-          };
-
-          const renderMetronomeHeaderControls = () => React.createElement("div", { className: "playground-metronome-detail-header-controls" },
-            renderMetronomePublishControl()
-          );
 
           const renderMetronomeDeploymentHistory = () => {
             if (isLoadingMetronomeDeploymentEvents) {
@@ -246,7 +145,6 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
               onHeaderMenuOpenChange: setIsMetronomeVersionsHeaderMenuOpen,
               onClose: () => {
                 setOpenMetronomeVersionMenuId("");
-                setIsMetronomePublishActionsMenuOpen(false);
                 setIsMetronomePublishSettingsMenuOpen(false);
                 setIsMetronomeVersionsHeaderMenuOpen(false);
                 setMetronomeVersionChangesState(null);
@@ -346,7 +244,6 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
                 React.createElement("span", { className: "playground-version-changes-select-arrow", "aria-hidden": "true" }, "→"),
                 renderCompareSelect(rightSource.id, "right", "Compare version")
               ),
-              actions: renderMetronomeHeaderControls(),
               files: diffFiles,
               emptyMessage: "No changes between these versions.",
             });
@@ -355,67 +252,59 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
           const renderCodeMode = () => {
             const codeStatusMessage = metronomeCodeRunState.message
               || (isMetronomeCodeDirty ? "Unsaved changes" : (activeMetronomeCodeFile?.path || "Generated from visual workflow"));
-            const codeStatusClassName = "playground-metronome-code-statusbar-message is-" + (metronomeCodeRunState.status || "idle");
-            return React.createElement("div", { className: "playground-metronome-code-view playground-resources-page is-develop-server-kind-page" },
-              React.createElement("div", { className: "playground-metronome-palette-header playground-metronome-code-header" },
-                React.createElement("div", { className: "playground-metronome-code-header-title" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-metronome-palette-back-button",
-                    onClick: returnToMetronomeOverview,
-                    title: "Back to Metronomes",
-                    "aria-label": "Back to Metronomes",
-                  }, React.createElement(ArrowLeft, { width: 16, height: 16, strokeWidth: 1.9 })),
-                  React.createElement("div", { className: "playground-metronome-palette-title" }, activeWorkflow?.name || "Metronome")
-                ),
-                renderMetronomeHeaderControls()
-              ),
+            const codeStatusTone = ["success", "error", "loading"].includes(metronomeCodeRunState.status)
+              ? metronomeCodeRunState.status
+              : "default";
+            const activeCodeFilePath = String(activeMetronomeCodeFile?.path || activeMetronomeCodeFilePath || "");
+            const codeWorkspaceFiles = metronomeCodeFiles
+              .map((file) => {
+                const normalizedPath = String(file?.path || "").trim();
+                if (!normalizedPath) return null;
+                const Icon = normalizedPath === "requirements.txt" ? Package : FileText;
+                return {
+                  id: normalizedPath,
+                  label: normalizedPath,
+                  icon: React.createElement(Icon, { width: 15, height: 15, strokeWidth: 1.8 }),
+                };
+              })
+              .filter(Boolean);
+            return React.createElement("div", { className: "playground-metronome-code-view is-full-screen-workspace playground-resources-page is-develop-server-kind-page" },
               React.createElement("div", { className: "playground-server-detail-content is-code-tab playground-metronome-code-content" },
-                React.createElement("div", { className: "playground-servers-code-workspace playground-metronome-code-workspace" },
-                  React.createElement("aside", { className: "playground-servers-code-sidebar" },
-                    React.createElement("div", { className: "playground-servers-code-sidebar-header" },
-                      React.createElement("div", { className: "playground-servers-code-sidebar-title" }, "Files")
-                    ),
-                    React.createElement("div", { className: "playground-servers-code-file-list" },
-                      metronomeCodeFiles.length
-                        ? metronomeCodeFiles.map((file) => renderMetronomeCodeFileRow(file))
-                        : React.createElement("div", { className: "playground-servers-code-empty" }, "No code files.")
-                    )
-                  ),
-                  React.createElement("section", { className: "playground-servers-code-editor-main" },
-                    React.createElement("div", { className: "playground-servers-code-editor-body" },
-                      activeMetronomeCodeFile
-                        ? React.createElement(MetronomeGeneratedCodeEditor, {
-                            file: activeMetronomeCodeFile,
-                          value: activeMetronomeCodeFile.value,
-                          onChange: handleMetronomeCodeFileChange,
-                          readOnly: isActiveWorkflowBuiltIn,
-                        })
-                        : React.createElement("div", { className: "playground-servers-code-empty" }, "Select a file to edit.")
-                    ),
-                    React.createElement("div", { className: "playground-servers-code-editor-statusbar" },
-                      React.createElement("div", { className: codeStatusClassName }, codeStatusMessage),
-                      React.createElement("div", { className: "playground-servers-code-editor-status-actions" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-environments-action-button",
-                          onClick: handleRevertMetronomeCodeDraft,
-                          disabled: isActiveWorkflowBuiltIn || !isMetronomeCodeDirty,
-                        }, React.createElement("span", null, "Revert")),
-                        React.createElement(PlatformPrimaryButton, {
-                          size: "medium",
-                          type: "button",
-                          className: "playground-environments-action-button is-primary",
-                          onClick: handleApplyMetronomeCodeDraft,
-                          disabled: isActiveWorkflowBuiltIn || !isMetronomeCodeDirty,
-                        },
-                          React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 }),
-                          React.createElement("span", null, "Save")
-                        )
-                      )
-                    )
-                  )
-                )
+                React.createElement(PlatformCodeEditorWorkspace, {
+                  className: "playground-metronome-code-workspace",
+                  ariaLabel: "Metronome code editor",
+                  variant: "full-screen",
+                  files: codeWorkspaceFiles,
+                  activeFileId: activeCodeFilePath,
+                  onFileSelect: handleMetronomeCodeFileSelect,
+                  editor: activeMetronomeCodeFile
+                    ? React.createElement(MetronomeGeneratedCodeEditor, {
+                        file: activeMetronomeCodeFile,
+                        value: activeMetronomeCodeFile.value,
+                        onChange: handleMetronomeCodeFileChange,
+                        readOnly: isActiveWorkflowBuiltIn,
+                      })
+                    : null,
+                  status: codeStatusMessage,
+                  statusTone: codeStatusTone,
+                  actions: [
+                    {
+                      id: "revert",
+                      label: "Revert",
+                      variant: "secondary",
+                      onClick: handleRevertMetronomeCodeDraft,
+                      disabled: isActiveWorkflowBuiltIn || !isMetronomeCodeDirty,
+                    },
+                    {
+                      id: "save",
+                      label: "Save",
+                      icon: React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      variant: "primary",
+                      onClick: handleApplyMetronomeCodeDraft,
+                      disabled: isActiveWorkflowBuiltIn || !isMetronomeCodeDirty,
+                    },
+                  ],
+                })
               )
             );
           };
@@ -635,116 +524,6 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
               if (text) return text;
             }
             return "";
-          };
-
-          const getMetronomeNumberFromPath = (source, path) => {
-            const parts = String(path || "").split(".").filter(Boolean);
-            let current = source;
-            for (const part of parts) {
-              if (!current || typeof current !== "object") return null;
-              current = current[part];
-            }
-            const numeric = Number(current);
-            return Number.isFinite(numeric) ? numeric : null;
-          };
-
-          const firstMetronomeFiniteNumber = (source, paths) => {
-            for (const path of paths) {
-              const value = getMetronomeNumberFromPath(source, path);
-              if (Number.isFinite(value)) return value;
-            }
-            return null;
-          };
-
-          const calculateMetronomeRunCostBreakdown = (run) => {
-            const output = run?.output && typeof run.output === "object" ? run.output : {};
-            const topLevelLlm = firstMetronomeFiniteNumber(output, [
-              "usage.llmCt",
-              "usage.llm_ct",
-              "usage.llmInferenceCt",
-              "usage.llm_inference_ct",
-              "usage.inferenceCt",
-              "usage.inference_ct",
-              "cost.llmCt",
-              "costs.llmCt",
-              "llmCt",
-              "llm_ct",
-            ]);
-            const topLevelResources = firstMetronomeFiniteNumber(output, [
-              "usage.resourcesCt",
-              "usage.resourceCt",
-              "usage.resources_ct",
-              "usage.resource_ct",
-              "usage.computerCt",
-              "usage.computer_ct",
-              "usage.serverCt",
-              "usage.server_ct",
-              "cost.resourcesCt",
-              "costs.resourcesCt",
-              "resourcesCt",
-              "resourceCt",
-              "resources_ct",
-              "resource_ct",
-            ]);
-            const shouldSumLlm = !Number.isFinite(topLevelLlm);
-            const shouldSumResources = !Number.isFinite(topLevelResources);
-            let llmInference = shouldSumLlm ? 0 : topLevelLlm;
-            let resources = shouldSumResources ? 0 : topLevelResources;
-            if (shouldSumLlm || shouldSumResources) {
-              const steps = Array.isArray(output.steps) ? output.steps : [];
-              steps.forEach((step) => {
-                if (shouldSumLlm) {
-                  const stepLlm = firstMetronomeFiniteNumber(step, [
-                    "usage.llmCt",
-                    "usage.llm_ct",
-                    "usage.llmInferenceCt",
-                    "usage.llm_inference_ct",
-                    "usage.inferenceCt",
-                    "usage.inference_ct",
-                    "cost.llmCt",
-                    "costs.llmCt",
-                    "llmCt",
-                    "llm_ct",
-                  ]);
-                  if (Number.isFinite(stepLlm)) llmInference += stepLlm;
-                }
-                if (shouldSumResources) {
-                  const stepResources = firstMetronomeFiniteNumber(step, [
-                    "usage.resourcesCt",
-                    "usage.resourceCt",
-                    "usage.resources_ct",
-                    "usage.resource_ct",
-                    "usage.computerCt",
-                    "usage.computer_ct",
-                    "usage.serverCt",
-                    "usage.server_ct",
-                    "cost.resourcesCt",
-                    "costs.resourcesCt",
-                    "resourcesCt",
-                    "resourceCt",
-                    "resources_ct",
-                    "resource_ct",
-                  ]);
-                  if (Number.isFinite(stepResources)) resources += stepResources;
-                }
-              });
-            }
-            return {
-              llmInference: Math.max(0, llmInference || 0),
-              resources: Math.max(0, resources || 0),
-            };
-          };
-
-          const formatMetronomeRunCostCt = (value) => {
-            const numeric = Number(value);
-            const dollars = Number.isFinite(numeric) ? Math.max(0, numeric) / 100 : 0;
-            const smallValue = dollars > 0 && dollars < 0.01;
-            return new Intl.NumberFormat("en-US", {
-              style: "currency",
-              currency: "USD",
-              minimumFractionDigits: smallValue ? 4 : 2,
-              maximumFractionDigits: smallValue ? 4 : 2,
-            }).format(dollars);
           };
 
           const normalizeMetronomeMarkdownText = (value) => String(value || "")
@@ -1024,7 +803,7 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
               });
             }
             if (!traceItems.length) {
-              traceItems.push(React.createElement("div", { key: "empty", className: "playground-metronome-run-sidebar-copy" },
+              traceItems.push(React.createElement("div", { key: "empty", className: "playground-metronome-run-trace-empty-copy" },
                 metronomeRunState.status === "loading"
                   ? "Waiting for the first workflow event..."
                   : "No run trace has been recorded yet."
@@ -1038,7 +817,7 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
             const displayedWorkTraceItems = workTraceItems.length
               ? workTraceItems
               : [
-                  React.createElement("div", { key: "empty-work", className: "playground-metronome-run-sidebar-copy" },
+                  React.createElement("div", { key: "empty-work", className: "playground-metronome-run-trace-empty-copy" },
                     metronomeRunState.status === "loading"
                       ? "Loading workflow trace..."
                       : "No workflow steps were recorded."
@@ -1191,12 +970,9 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
               const normalizedRunId = String(runId || "").trim();
               if (!normalizedRunId) return;
               setSelectedNodeId("");
-              setIsMetronomePublishActionsMenuOpen(false);
               setIsMetronomePublishMenuOpen(false);
               setMetronomeRunToolbarPopover("");
               setMetronomeRunActionMenu(null);
-              setIsMetronomeRunSidebarMenuOpen(false);
-              setIsMetronomeRunSidebarOpen(false);
               setSelectedMetronomeRunId(normalizedRunId);
               setMetronomeRunInlineDetailId(normalizedRunId);
             };
@@ -1377,7 +1153,7 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
                 : null,
               emptyState: React.createElement("div", { className: "playground-metronome-table-main" },
                 React.createElement("div", { className: "playground-metronome-table-title" }, metronomeRuns.length ? "No matching runs" : "No runs yet"),
-                React.createElement("div", { className: "playground-metronome-table-subtitle" }, metronomeRuns.length ? "Try a different search term or filter." : "Start this workflow from the Run button.")
+                React.createElement("div", { className: "playground-metronome-table-subtitle" }, metronomeRuns.length ? "Try a different search term or filter." : "Published runs will appear here.")
               ),
               noResultsState: "No matching runs.",
             });
@@ -1392,264 +1168,14 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
             );
           };
 
-          const renderMetronomeRunSidebar = () => {
-            if (!isMetronomeRunSidebarOpen) return null;
-            const isRunning = metronomeRunState.status === "loading";
-            const selectedRunForSidebar = selectedMetronomeRunId
-              ? metronomeRuns.find((run) => run.id === selectedMetronomeRunId) || null
-              : null;
-            const selectedRunCosts = calculateMetronomeRunCostBreakdown(selectedRunForSidebar);
-            const selectedAgentId = metronomeRunAgentId || defaultMetronomeAgentOption?.id || "";
-            const selectedEnvironmentId = metronomeRunEnvironmentId || defaultMetronomeComputerOption?.id || "";
-            const startedLabel = selectedRunForSidebar
-              ? formatMetronomeRunTimestamp(selectedRunForSidebar.startedAt || selectedRunForSidebar.createdAt)
-              : "Not started";
-            const addSelectedRunToProject = () => {
-              setIsMetronomeRunSidebarMenuOpen(false);
-              if (!selectedRunForSidebar) {
-                setMetronomeRunState({ status: "error", message: "Start or select a run before adding it to a project." });
-                return;
-              }
-              const defaultProject = metronomeProjectOptions[0] || null;
-              const nextProjectId = window.prompt("Project ID", defaultProject?.id || "");
-              const normalizedProjectId = String(nextProjectId || "").trim();
-              if (!normalizedProjectId) return;
-              const selectedProject = metronomeProjectOptions.find((option) => option.id === normalizedProjectId) || null;
-              setMetronomeRuns((current) => current.map((run) => run.id === selectedRunForSidebar.id
-                ? {
-                    ...run,
-                    projectId: normalizedProjectId,
-                    projectName: selectedProject?.name || normalizedProjectId,
-                    updatedAt: new Date().toISOString(),
-                  }
-                : run
-              ));
-              setMetronomeRunState({ status: "idle", message: "" });
-            };
-            const deleteSelectedRun = () => {
-              setIsMetronomeRunSidebarMenuOpen(false);
-              if (!selectedRunForSidebar) {
-                setMetronomeRunState({ status: "error", message: "Select a run before deleting it." });
-                return;
-              }
-              const confirmed = window.confirm("Delete this Metronome run?");
-              if (!confirmed) return;
-              const runId = selectedRunForSidebar.id;
-              const workflowId = selectedRunForSidebar.metronomeId || activeWorkflow?.id || "";
-              const removeRunLocally = () => {
-                setMetronomeRuns((current) => current.filter((run) => run.id !== runId));
-                setSelectedMetronomeRunId("");
-                setMetronomeRunState({ status: "idle", message: "" });
-              };
-              if (workflowId && runId) {
-                void deleteMetronomeRunApi(workflowId, runId)
-                  .then(removeRunLocally)
-                  .catch((error) => {
-                    if (error?.status === 404 || error?.status === 405) {
-                      removeRunLocally();
-                      return;
-                    }
-                    setMetronomeRunState({
-                      status: "error",
-                      message: error instanceof Error ? error.message : "Failed to delete run.",
-                    });
-                  });
-              } else {
-                removeRunLocally();
-              }
-            };
-            return React.createElement("aside", { className: "playground-metronome-node-inspector playground-metronome-run-sidebar" },
-              React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar playground-metronome-run-sidebar-header" },
-                React.createElement("div", { className: "playground-metronome-run-sidebar-title" }, selectedRunForSidebar ? "Run trace" : "New chat"),
-                React.createElement("div", { className: "playground-metronome-run-sidebar-actions" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-metronome-run-sidebar-new-run",
-                    onClick: () => {
-                      setSelectedMetronomeRunId("");
-                      setMetronomeRunState({ status: "idle", message: "" });
-                      setIsMetronomeRunSidebarMenuOpen(false);
-                    },
-                  },
-                    React.createElement(Plus, { width: 13, height: 13, strokeWidth: 1.9 }),
-                    React.createElement("span", null, "New Run")
-                  ),
-                  React.createElement("span", { className: "playground-metronome-run-sidebar-divider", "aria-hidden": "true" }),
-                  React.createElement("span", { className: "playground-metronome-run-sidebar-menu-shell" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-metronome-run-sidebar-menu-trigger",
-                      onClick: () => setIsMetronomeRunSidebarMenuOpen((open) => !open),
-                      "aria-label": "Run options",
-                      "aria-expanded": isMetronomeRunSidebarMenuOpen ? "true" : "false",
-                    }, React.createElement(Ellipsis, { width: 15, height: 15, strokeWidth: 1.8 })),
-                    isMetronomeRunSidebarMenuOpen
-                      ? React.createElement(PlatformPopupSurface, {
-                          className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in playground-metronome-run-sidebar-menu",
-                          role: "menu",
-                        },
-                          React.createElement("div", { className: "tb-popup-row playground-thread-nav-popup-static-row" },
-                            React.createElement("span", { className: "tb-popup-check-slot", "aria-hidden": "true" }),
-                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                              React.createElement("span", null, "Workflow ID"),
-                              React.createElement("span", { className: "playground-thread-nav-popup-thread-id" }, activeWorkflow?.id || "Draft workflow")
-                            )
-                          ),
-                          React.createElement("div", { className: "playground-thread-nav-popup-divider" }),
-                          React.createElement("div", { className: "tb-popup-row playground-thread-nav-popup-static-row" },
-                            React.createElement("div", { className: "playground-thread-nav-popup-fact" },
-                              React.createElement("span", { className: "playground-thread-nav-popup-fact-label" }, "Started"),
-                              React.createElement("span", { className: "playground-thread-nav-popup-fact-value" }, startedLabel)
-                            )
-                          ),
-                          React.createElement("div", { className: "tb-popup-row playground-thread-nav-popup-static-row" },
-                            React.createElement("div", { className: "playground-thread-nav-popup-fact" },
-                              React.createElement("span", { className: "playground-thread-nav-popup-fact-label" }, "LLM Inference"),
-                              React.createElement("span", { className: "playground-thread-nav-popup-fact-value" }, formatMetronomeRunCostCt(selectedRunCosts.llmInference))
-                            )
-                          ),
-                          React.createElement("div", { className: "tb-popup-row playground-thread-nav-popup-static-row" },
-                            React.createElement("div", { className: "playground-thread-nav-popup-fact" },
-                              React.createElement("span", { className: "playground-thread-nav-popup-fact-label" }, "Resources"),
-                              React.createElement("span", { className: "playground-thread-nav-popup-fact-value" }, formatMetronomeRunCostCt(selectedRunCosts.resources))
-                            )
-                          ),
-                          React.createElement("div", { className: "playground-thread-nav-popup-divider" }),
-                          React.createElement("button", {
-                            type: "button",
-                            className: "tb-popup-row",
-                            onClick: addSelectedRunToProject,
-                          },
-                            React.createElement(FolderOpen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("span", null, "Add to Project")
-                          ),
-                          React.createElement("button", {
-                            type: "button",
-                            className: "tb-popup-row is-danger",
-                            onClick: deleteSelectedRun,
-                          },
-                            React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                            React.createElement("span", null, "Delete Run")
-                          )
-                        )
-                      : null
-                  ),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-header-icon-button is-plain playground-metronome-inspector-close",
-                    onClick: closeMetronomeRunSidebar,
-                    "aria-label": "Close run panel",
-                  }, React.createElement(X, { width: 15, height: 15, strokeWidth: 1.9 }))
-                )
-              ),
-              React.createElement("div", { className: "playground-metronome-run-sidebar-body" },
-                selectedRunForSidebar
-                  ? renderMetronomeRunTrace(selectedRunForSidebar, { includeComposerPrompt: true })
-                  : React.createElement("div", { className: "playground-metronome-run-empty-state" },
-                      React.createElement("div", { className: "playground-metronome-run-empty-card" },
-                        React.createElement("img", {
-                          className: "playground-metronome-run-empty-image",
-                          src: "/img/empty-state/metronome.webp",
-                          alt: "",
-                          "aria-hidden": "true",
-                        }),
-                        React.createElement("h3", { className: "playground-metronome-run-empty-title" }, "Preview your workflow"),
-                        React.createElement("p", { className: "playground-metronome-run-empty-copy" }, "Send a prompt as if you're the user.")
-                      )
-                    ),
-                isRunning
-                  ? React.createElement("div", { className: "playground-metronome-run-running-row" },
-                      React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Running workflow...")
-                    )
-                  : null,
-                metronomeRunState.message && metronomeRunState.status === "error"
-                  ? React.createElement("div", { className: "playground-metronome-run-sidebar-log is-error" }, metronomeRunState.message)
-                  : null
-              ),
-              React.createElement("div", { className: "playground-metronome-run-sidebar-composer" },
-                React.createElement(RunnerChat, {
-                  key: "metronome-run-composer:" + (activeWorkflow?.id || "new") + ":" + (selectedRunForSidebar?.id || "draft"),
-                  className: "playground-metronome-run-sidebar-runner-chat",
-                  backendUrl,
-                  apiKey,
-                  requestHeaders,
-                  appId: "runner-web-sdk-demo",
-                  environmentId: selectedEnvironmentId,
-                  agentId: selectedAgentId,
-                  agents: metronomeAgentOptions,
-                  environments: metronomeComputerOptions,
-                  inputMode: "computer-agents",
-                  placeholder: "Message this workflow...",
-                  autoCreateThread: true,
-                  autoFocusComposer: !selectedRunForSidebar,
-                  keepFocusOnSubmit: true,
-                  showUsageInStatus: false,
-                  maxAttachments: 10,
-                  disabled: isRunning,
-                  onAgentChange: (nextAgentId) => {
-                    const normalizedNextAgentId = String(nextAgentId || "").trim();
-                    if (normalizedNextAgentId) {
-                      setMetronomeRunAgentId(normalizedNextAgentId);
-                    }
-                  },
-                  onEnvironmentChange: (nextEnvironmentId) => {
-                    const normalizedNextEnvironmentId = String(nextEnvironmentId || "").trim();
-                    if (normalizedNextEnvironmentId) {
-                      setMetronomeRunEnvironmentId(normalizedNextEnvironmentId);
-                    }
-                  },
-                  onExternalRunRequestCreate: (request) => {
-                    const prompt = String(request?.displayPrompt || request?.prompt || "").trim();
-                    setMetronomeRunPrompt(prompt);
-                    if (request?.agentId) {
-                      setMetronomeRunAgentId(String(request.agentId || "").trim());
-                    }
-                    if (request?.environmentId) {
-                      setMetronomeRunEnvironmentId(String(request.environmentId || "").trim());
-                    }
-                    void startMetronomeRun(prompt, {
-                      agentId: request?.agentId || selectedAgentId,
-                      environmentId: request?.environmentId || selectedEnvironmentId,
-                      sourceThreadId: request?.threadId || null,
-                      attachments: Array.isArray(request?.attachments) ? request.attachments : [],
-                      enabledSkills: request?.enabledSkills || null,
-                    });
-                    return true;
-                  },
-                  onRunError: (error) => {
-                    setMetronomeRunState({
-                      status: "error",
-                      message: error instanceof Error ? error.message : "Failed to start workflow run.",
-                    });
-                  },
-                  onOpenPlansBudget: () => {},
-                  onDocumentPreviewOpenChange: () => {},
-                  onDeepResearchDetailOpenChange: () => {},
-                })
-              )
-            );
-          };
-
-          const renderMetronomeRunSidebarPortal = () => {
-            const sidebar = renderMetronomeRunSidebar();
-            if (!sidebar) return null;
-            if (!inspectorPortalId || typeof document === "undefined" || typeof createPortal !== "function") {
-              return inspectorPortalId ? null : sidebar;
-            }
-            const portalTarget = document.getElementById(inspectorPortalId);
-            return portalTarget ? createPortal(sidebar, portalTarget) : null;
-          };
-
-          const renderMetronomeChangesMode = () => React.createElement(React.Fragment, null,
+		          const renderMetronomeChangesMode = () => React.createElement(React.Fragment, null,
             React.createElement("div", { className: "playground-metronome-editor" },
               React.createElement("main", { className: "playground-metronome-editor-main" },
                 React.createElement("div", { className: "playground-metronome-version-changes-shell" },
                   renderMetronomeVersionChangesPage()
                 )
               )
-            ),
-            renderMetronomePublishSidebarPortal(),
-            renderMetronomeRunSidebarPortal()
-          );
+	            ),
+	            renderMetronomePublishSidebarPortal()
+	          );
 `;

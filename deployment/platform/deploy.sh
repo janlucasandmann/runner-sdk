@@ -5,7 +5,30 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
 PROJECT_ID="${PROJECT_ID:-firechatbot-a9654}"
 REGION="${REGION:-europe-west1}"
 SERVICE_NAME="${SERVICE_NAME:-computer-agents-platform}"
-IMAGE_URI="${IMAGE_URI:-gcr.io/${PROJECT_ID}/${SERVICE_NAME}:latest}"
+DEPLOYMENT_STAGE="${DEPLOYMENT_STAGE:-prod}"
+DEPLOY_ACTION="${DEPLOY_ACTION:-all}"
+RELEASE_ID="${RELEASE_ID:-$(git -C "${ROOT_DIR}/repos/runner-web-sdk" rev-parse --short=12 HEAD)}"
+SAFE_RELEASE_ID="$(printf '%s' "${RELEASE_ID}" | tr -cs 'A-Za-z0-9_.-' '-')"
+RELEASE_LABEL="$(printf '%s' "${SAFE_RELEASE_ID}" | tr '[:upper:].' '[:lower:]-' | cut -c1-63)"
+IMAGE_URI="${IMAGE_URI:-gcr.io/${PROJECT_ID}/${SERVICE_NAME}:${SAFE_RELEASE_ID}}"
+DEPLOY_IMAGE_URI="${DEPLOY_IMAGE_URI:-}"
+RELEASE_OUTPUT_FILE="${RELEASE_OUTPUT_FILE:-}"
+HARDENED_DEPLOYMENT="${HARDENED_DEPLOYMENT:-0}"
+CLOUD_RUN_SECRET_BINDINGS="${CLOUD_RUN_SECRET_BINDINGS:-}"
+CLOUD_RUN_SERVICE_ACCOUNT="${CLOUD_RUN_SERVICE_ACCOUNT:-}"
+APP_ORIGIN="${APP_ORIGIN:-https://computer-agents.com}"
+PLATFORM_ORIGIN="${PLATFORM_ORIGIN:-https://platform.computer-agents.com}"
+API_ORIGIN="${API_ORIGIN:-https://api.computer-agents.com}"
+LEMONSQUEEZY_MODE="${LEMONSQUEEZY_MODE:-$([[ "${DEPLOYMENT_STAGE}" == "prod" ]] && echo production || echo test)}"
+if [[ -n "${RUNTIME_ENV_SOURCE:-}" ]]; then
+  STAGE_ENV_SOURCE="${RUNTIME_ENV_SOURCE}"
+elif [[ "${HARDENED_DEPLOYMENT}" == "1" ]]; then
+  STAGE_ENV_SOURCE="${ROOT_DIR}/web/hosting/.env.${DEPLOYMENT_STAGE}"
+elif [[ "${DEPLOYMENT_STAGE}" == "prod" ]]; then
+  STAGE_ENV_SOURCE="${ROOT_DIR}/web/hosting/.env.production"
+else
+  STAGE_ENV_SOURCE="${ROOT_DIR}/web/hosting/.env.${DEPLOYMENT_STAGE}"
+fi
 CLOUDBUILD_SUBMIT_VIA_VM="${CLOUDBUILD_SUBMIT_VIA_VM:-0}"
 TMP_BUILD_DIR="$(mktemp -d)"
 TMP_ENV_FILE="$(mktemp)"
@@ -21,6 +44,18 @@ trap cleanup EXIT
 
 cd "${ROOT_DIR}"
 source "${ROOT_DIR}/web/deploy-helpers.sh"
+
+if [[ "${HARDENED_DEPLOYMENT}" == "1" ]]; then
+  deploy_assert_stage_env_safe "${STAGE_ENV_SOURCE}"
+  if [[ "${DEPLOY_ACTION}" != "build" && -z "${CLOUD_RUN_SECRET_BINDINGS}" ]]; then
+    echo "PLATFORM_SECRET_BINDINGS is required for hardened platform deployment." >&2
+    exit 1
+  fi
+  if [[ "${DEPLOY_ACTION}" != "build" && -z "${CLOUD_RUN_SERVICE_ACCOUNT}" ]]; then
+    echo "PLATFORM_RUNTIME_SERVICE_ACCOUNT is required for hardened platform deployment." >&2
+    exit 1
+  fi
+fi
 
 mkdir -p "${TMP_BUILD_DIR}/repos" "${TMP_BUILD_DIR}/web/hosting"
 rsync -a --exclude ".git" --exclude "node_modules" --exclude "dist" --exclude "img" "repos/runner-web-sdk/" "${TMP_BUILD_DIR}/repos/runner-web-sdk/"
@@ -114,13 +149,14 @@ repos/runner-web-sdk/dist
 repos/runner-web-sdk/dist/**
 EOF
 
-python3 - <<'PY' "${ROOT_DIR}/web/hosting/.env.production" "${TMP_ENV_FILE}"
+python3 - <<'PY' "${STAGE_ENV_SOURCE}" "${TMP_ENV_FILE}" "${DEPLOYMENT_STAGE}" "${APP_ORIGIN}" "${PLATFORM_ORIGIN}" "${API_ORIGIN}" "${LEMONSQUEEZY_MODE}"
 from pathlib import Path
 import json
 import sys
 
 source_path = Path(sys.argv[1])
 output_path = Path(sys.argv[2])
+deployment_stage, app_origin, platform_origin, api_origin, lemonsqueezy_mode = sys.argv[3:]
 keys = [
     "AIOS_APP_ORIGIN",
     "PLATFORM_APP_ORIGIN",
@@ -141,9 +177,11 @@ keys = [
 ]
 values = {
     "NODE_ENV": "production",
-    "AIOS_APP_ORIGIN": "https://computer-agents.com",
-    "PLATFORM_APP_ORIGIN": "https://platform.computer-agents.com",
-    "RUNNER_UPSTREAM_ORIGIN": "https://api.computer-agents.com",
+    "DEPLOYMENT_STAGE": deployment_stage,
+    "LEMONSQUEEZY_MODE": lemonsqueezy_mode,
+    "AIOS_APP_ORIGIN": app_origin,
+    "PLATFORM_APP_ORIGIN": platform_origin,
+    "RUNNER_UPSTREAM_ORIGIN": api_origin,
 }
 
 if source_path.exists():
@@ -163,10 +201,12 @@ with output_path.open("w") as f:
         f.write(f"{key}: {json.dumps(value)}\n")
 PY
 
-echo "Building platform image: ${IMAGE_URI}"
-COPYFILE_DISABLE=1 tar -czf "${TMP_SOURCE_ARCHIVE}" -C "${TMP_BUILD_DIR}" .
-SOURCE_SIZE="$(wc -c < "${TMP_SOURCE_ARCHIVE}" | tr -d '[:space:]')"
-if [[ "${CLOUDBUILD_SUBMIT_VIA_VM:-0}" == "1" ]]; then
+if [[ "${DEPLOY_ACTION}" != "deploy" ]]; then
+  echo "Building platform image: ${IMAGE_URI}"
+  COPYFILE_DISABLE=1 tar -czf "${TMP_SOURCE_ARCHIVE}" -C "${TMP_BUILD_DIR}" .
+  SOURCE_SIZE="$(wc -c < "${TMP_SOURCE_ARCHIVE}" | tr -d '[:space:]')"
+fi
+if [[ "${DEPLOY_ACTION}" != "deploy" && "${CLOUDBUILD_SUBMIT_VIA_VM:-0}" == "1" ]]; then
   BUILD_SUBMIT_VM_NAME="${BUILD_SUBMIT_VM_NAME:-testbase-mig-d25h}"
   BUILD_SUBMIT_VM_ZONE="${BUILD_SUBMIT_VM_ZONE:-us-central1-a}"
   REMOTE_ARCHIVE="/tmp/${SOURCE_ARCHIVE_NAME}"
@@ -187,21 +227,52 @@ if [[ "${CLOUDBUILD_SUBMIT_VIA_VM:-0}" == "1" ]]; then
       cd '${REMOTE_SOURCE_DIR}'
       gcloud builds submit --project '${PROJECT_ID}' --config 'repos/runner-web-sdk/deployment/platform/cloudbuild.yaml' --substitutions '_IMAGE_URI=${IMAGE_URI}' .
     "
-else
+elif [[ "${DEPLOY_ACTION}" != "deploy" ]]; then
   echo "Submitting platform build locally (${SOURCE_SIZE} bytes)..."
   deploy_gcloud_build_submit "${PROJECT_ID}" "${TMP_BUILD_DIR}" "repos/runner-web-sdk/deployment/platform/cloudbuild.yaml" "_IMAGE_URI=${IMAGE_URI}" "platform"
 fi
 
+if [[ -z "${DEPLOY_IMAGE_URI}" ]]; then
+  DEPLOY_IMAGE_URI="$(deploy_resolve_image_digest "${PROJECT_ID}" "${IMAGE_URI}")"
+fi
+echo "Immutable platform image: ${DEPLOY_IMAGE_URI}"
+if [[ -n "${RELEASE_OUTPUT_FILE}" ]]; then
+  printf 'PLATFORM_DEPLOY_IMAGE=%s\n' "${DEPLOY_IMAGE_URI}" > "${RELEASE_OUTPUT_FILE}"
+fi
+if [[ "${DEPLOY_ACTION}" == "build" ]]; then
+  exit 0
+fi
+if [[ ! "${DEPLOY_IMAGE_URI}" =~ @sha256:[a-f0-9]{64}$ ]]; then
+  echo "Refusing mutable deploy image: ${DEPLOY_IMAGE_URI}" >&2
+  exit 1
+fi
+
 echo "Deploying Cloud Run service: ${SERVICE_NAME}"
-gcloud run deploy "${SERVICE_NAME}" \
+DEPLOY_ARGS=(
+  gcloud run deploy "${SERVICE_NAME}"
   --project "${PROJECT_ID}" \
   --region "${REGION}" \
   --platform managed \
-  --image "${IMAGE_URI}" \
+  --image "${DEPLOY_IMAGE_URI}" \
   --allow-unauthenticated \
   --port 8080 \
   --memory 1Gi \
   --cpu 1 \
+  --labels "deployment-stage=${DEPLOYMENT_STAGE},release-id=${RELEASE_LABEL}" \
   --env-vars-file "${TMP_ENV_FILE}"
+)
+if [[ -n "${CLOUD_RUN_SECRET_BINDINGS}" ]]; then
+  DEPLOY_ARGS+=(--set-secrets "${CLOUD_RUN_SECRET_BINDINGS}")
+fi
+if [[ -n "${CLOUD_RUN_SERVICE_ACCOUNT}" ]]; then
+  DEPLOY_ARGS+=(--service-account "${CLOUD_RUN_SERVICE_ACCOUNT}")
+fi
+"${DEPLOY_ARGS[@]}"
+
+SERVICE_URL="$(gcloud run services describe "${SERVICE_NAME}" \
+  --project "${PROJECT_ID}" \
+  --region "${REGION}" \
+  --format='value(status.url)')"
+deploy_verify_http_service "${SERVICE_URL}" "platform ${DEPLOYMENT_STAGE}"
 
 echo "Done."

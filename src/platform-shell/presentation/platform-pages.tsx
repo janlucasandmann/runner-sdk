@@ -48,10 +48,6 @@ export const MetronomesOverviewPage = lazyNamed(
   () => import("../../platform-services/create-mode/metronome/client/overview/metronomes-overview-page.js"),
   "MetronomesOverviewPage",
 );
-export const PluginsOverviewPage = lazyNamed(
-  () => import("../../platform-resources/plugins/overview/plugins-overview-page.js"),
-  "PluginsOverviewPage",
-);
 export const SkillsOverviewPage = lazyNamed(
   () => import("../../platform-resources/skills/overview/skills-overview-page.js"),
   "SkillsOverviewPage",
@@ -59,6 +55,10 @@ export const SkillsOverviewPage = lazyNamed(
 export const TagsOverviewPage = lazyNamed(
   () => import("../../platform-resources/tags/overview/tags-overview-page.js"),
   "TagsOverviewPage",
+);
+export const TagDetailPage = lazyNamed(
+  () => import("../../platform-resources/tags/detail/tag-detail-page.js"),
+  "TagDetailPage",
 );
 export const ConfigureHomeOverviewPage = lazyNamed(
   () => import("../../platform-services/configure-mode/configure-home/client/page/configure-home-overview-page.js"),

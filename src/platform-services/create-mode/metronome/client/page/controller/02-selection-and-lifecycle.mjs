@@ -937,208 +937,19 @@ export const METRONOME_CONTROLLER_02_FRAGMENT = String.raw`                }
             }
           }, [activeMetronomeCodeFile]);
 
-          const handleTestRunGeneratedMetronome = useCallback(() => {
-            if (isActiveWorkflowBuiltIn) {
-              setMetronomeCodeRunState({ status: "error", message: "Copy this default workflow before running a test." });
-              return;
-            }
-            if (!activeWorkflow?.id) {
-              setMetronomeCodeRunState({ status: "error", message: "Save the workflow before running a test." });
-              return;
-            }
-            let nextDefinition = metronomeWorkflowDefinition;
-            if (isMetronomeCodeDirty) {
-              try {
-                const parsed = parseMetronomePythonSdkFiles(metronomeCodeFiles, activeWorkflow.name);
-                nextDefinition = createMetronomeWorkflowDefinition(
-                  { ...activeWorkflow, name: parsed.name || activeWorkflow.name },
-                  parsed.nodes,
-                  parsed.edges
-                );
-              } catch (error) {
-                setMetronomeCodeRunState({ status: "error", message: error?.message || "Fix code errors before running a test." });
-                return;
-              }
-            }
-            setMetronomeCodeRunState({ status: "loading", message: "Starting test run..." });
-            const workflowForRun = {
-              ...activeWorkflow,
-              nodes,
-              edges,
-              triggerSummary: deriveMetronomeTriggerSummary(nodes),
-              updatedAt: new Date().toISOString(),
-            };
-            void saveEditableMetronomeWorkflowApi(workflowForRun)
-              .then((savedWorkflow) => {
-                replaceMetronomeWorkflowInEditableState(workflowForRun.id, savedWorkflow);
-                if (savedWorkflow.id && savedWorkflow.id !== activeWorkflow.id) {
-                  setActiveWorkflowId(savedWorkflow.id);
-                }
-                return testRunMetronomeWorkflowApi(savedWorkflow.id, nextDefinition);
-              })
-              .then(() => {
-                setMetronomeCodeRunState({ status: "success", message: "Test run started." });
-              })
-              .catch((error) => {
-                setMetronomeCodeRunState({ status: "error", message: error?.message || "Test run failed." });
-              });
-          }, [isActiveWorkflowBuiltIn, activeWorkflow, nodes, edges, metronomeWorkflowDefinition, metronomeCodeFiles, isMetronomeCodeDirty, replaceMetronomeWorkflowInEditableState]);
-
-          const openMetronomeRunSidebar = useCallback((runId = "") => {
-            setSelectedNodeId("");
-            setIsMetronomePublishActionsMenuOpen(false);
-            setIsMetronomePublishMenuOpen(false);
-            setMetronomeRunInlineDetailId("");
-            const normalizedRunId = String(runId || "").trim();
-            if (normalizedRunId) {
-              setSelectedMetronomeRunId(normalizedRunId);
-            } else {
-              setSelectedMetronomeRunId("");
-            }
-            setIsMetronomeRunSidebarMenuOpen(false);
-            setIsMetronomeRunSidebarOpen(true);
-          }, []);
-
-          const closeMetronomeRunSidebar = useCallback(() => {
-            setIsMetronomeRunSidebarMenuOpen(false);
-            setIsMetronomeRunSidebarOpen(false);
-          }, []);
-
-          const getRunnableMetronomeDefinition = useCallback(() => {
-            if (!activeWorkflow) {
-              throw new Error("Open a Metronome workflow before running.");
-            }
-            if (metronomeEditorMode === "code" && isMetronomeCodeDirty) {
-              const parsed = parseMetronomePythonSdkFiles(metronomeCodeFiles, activeWorkflow.name);
-              return createMetronomeWorkflowDefinition(
-                { ...activeWorkflow, name: parsed.name || activeWorkflow.name },
-                parsed.nodes,
-                parsed.edges
-              );
-            }
-            return metronomeWorkflowDefinition;
-          }, [activeWorkflow, metronomeEditorMode, isMetronomeCodeDirty, metronomeCodeFiles, metronomeWorkflowDefinition]);
-
-          const startMetronomeRun = useCallback((prompt = metronomeRunPrompt, options = {}) => {
-            if (isActiveWorkflowBuiltIn && !isActiveWorkflowRunnableReadOnly) {
-              setMetronomeRunState({ status: "error", message: "Copy this default workflow before running it." });
-              return;
-            }
-            if (!activeWorkflow?.id) {
-              setMetronomeRunState({ status: "error", message: "Save this Metronome before running it." });
-              return;
-            }
-            const runAgentId = String(options?.agentId || metronomeRunAgentId || defaultMetronomeAgentOption?.id || "").trim();
-            const runEnvironmentId = String(options?.environmentId || metronomeRunEnvironmentId || defaultMetronomeComputerOption?.id || "").trim();
-            let nextDefinition = metronomeWorkflowDefinition;
-            try {
-              nextDefinition = getRunnableMetronomeDefinition();
-            } catch (error) {
-              setMetronomeRunState({ status: "error", message: error?.message || "Fix workflow code before running." });
-              return;
-            }
-            const workflowForRun = isActiveWorkflowRunnableReadOnly
-              ? createMetronomeWorkflowCopy(activeWorkflow, {
-                  name: activeWorkflow.name || "Default workflow",
-                  nodes,
-                  edges,
-                  creator: currentMetronomeUserCreator,
-                })
-              : {
-                  ...activeWorkflow,
-                  nodes,
-                  edges,
-                  triggerSummary: deriveMetronomeTriggerSummary(nodes),
-                  updatedAt: new Date().toISOString(),
-                };
-            setMetronomeRunState({ status: "loading", message: "Starting workflow run..." });
-            void saveEditableMetronomeWorkflowApi(workflowForRun)
-              .then((savedWorkflow) => {
-                setIsMetronomeApiAvailable(true);
-                if (isActiveWorkflowRunnableReadOnly) {
-                  setWorkflows((current) => replaceMetronomeWorkflow(current, savedWorkflow));
-                } else {
-                  replaceMetronomeWorkflowInEditableState(workflowForRun.id, savedWorkflow);
-                }
-                if (savedWorkflow.id && savedWorkflow.id !== activeWorkflow.id) {
-                  setActiveWorkflowId(savedWorkflow.id);
-                }
-                return createMetronomeRunApi(savedWorkflow.id, {
-                  definition: nextDefinition,
-                  prompt,
-                  inputs: {
-                    agentId: runAgentId,
-                    environmentId: runEnvironmentId,
-                    sourceThreadId: options?.sourceThreadId || null,
-                    attachments: Array.isArray(options?.attachments) ? options.attachments : [],
-                    enabledSkills: options?.enabledSkills || null,
-                  },
-                })
-                  .then((run) => ({ run, savedWorkflow }))
-                  .catch((error) => {
-                    if (error?.status !== 404) {
-                      throw error;
-                    }
-                    return createMetronomeWorkflowApi(workflowForRun)
-                      .then((recreatedWorkflow) => {
-                        setIsMetronomeApiAvailable(true);
-                        if (isActiveWorkflowRunnableReadOnly) {
-                          setWorkflows((current) => replaceMetronomeWorkflow(current, recreatedWorkflow));
-                        } else {
-                          replaceMetronomeWorkflowInEditableState(savedWorkflow.id || workflowForRun.id, recreatedWorkflow);
-                        }
-                        if (recreatedWorkflow.id && recreatedWorkflow.id !== activeWorkflow.id) {
-                          setActiveWorkflowId(recreatedWorkflow.id);
-                        }
-                        return createMetronomeRunApi(recreatedWorkflow.id, {
-                          definition: nextDefinition,
-                          prompt,
-                          inputs: {
-                            agentId: runAgentId,
-                            environmentId: runEnvironmentId,
-                            sourceThreadId: options?.sourceThreadId || null,
-                            attachments: Array.isArray(options?.attachments) ? options.attachments : [],
-                            enabledSkills: options?.enabledSkills || null,
-                          },
-                        }).then((run) => ({ run, savedWorkflow: recreatedWorkflow }));
-                      });
-                  });
-              })
-	              .then((run) => {
-	                const nextRun = run?.run || run;
-	                const savedWorkflow = run?.savedWorkflow || activeWorkflow;
-	                setMetronomeRuns((current) => [nextRun, ...current.filter((item) => item.id !== nextRun.id)]);
-	                if (typeof window !== "undefined") {
-	                  window.dispatchEvent(new CustomEvent("playground:metronome-run-upserted", {
-	                    detail: { workflow: savedWorkflow, run: nextRun },
-	                  }));
-	                }
-	                setSelectedMetronomeRunId(nextRun.id);
-                setMetronomeRunInlineDetailId("");
-                setMetronomeEditorHighlightRunId(nextRun.id);
-                setMetronomeEditorMode("runs");
-                setIsMetronomePublishActionsMenuOpen(false);
-                setIsMetronomePublishMenuOpen(false);
-                setIsMetronomeRunSidebarOpen(true);
-                setMetronomeRunPrompt("");
-                setMetronomeRunState({ status: "success", message: "Workflow run completed." });
-                replaceMetronomeWorkflowInEditableState(savedWorkflow.id, {
-                  ...savedWorkflow,
-                  lastRunAt: nextRun.createdAt || new Date().toISOString(),
-                  runsToday: (Number(savedWorkflow.runsToday) || 0) + 1,
-                });
-              })
-              .catch((error) => {
-                setMetronomeRunState({ status: "error", message: error?.message || "Workflow run failed." });
-              });
-          }, [isActiveWorkflowBuiltIn, isActiveWorkflowRunnableReadOnly, activeWorkflow, nodes, edges, currentMetronomeUserCreator, metronomeWorkflowDefinition, getRunnableMetronomeDefinition, metronomeRunPrompt, metronomeRunAgentId, metronomeRunEnvironmentId, defaultMetronomeAgentOption, defaultMetronomeComputerOption, replaceMetronomeWorkflowInEditableState]);
-
           const returnToMetronomeOverview = useCallback(() => {
+            flushMetronomeLocalGraphSync();
             setActiveWorkflowId("");
             setSelectedNodeId("");
             setMetronomeRunInlineDetailId("");
-            setIsMetronomeRunSidebarOpen(false);
-          }, []);
+          }, [flushMetronomeLocalGraphSync]);
+
+          const publishActiveWorkflowFromTopNav = useCallback(() => {
+            setSelectedNodeId("");
+            setIsMetronomePublishSettingsMenuOpen(false);
+            setIsMetronomeVersionsHeaderMenuOpen(false);
+            return publishActiveWorkflowVersion();
+          }, [publishActiveWorkflowVersion]);
 
           useEffect(() => {
             if (!topNavActionsRef) return;
@@ -1147,31 +958,31 @@ export const METRONOME_CONTROLLER_02_FRAGMENT = String.raw`                }
                 ? {
                     edit: null,
                     rename: null,
-	                    duplicate: duplicateActiveWorkflow,
-	                    share: null,
-	                    delete: null,
-	                    publish: null,
-		                    run: isActiveWorkflowRunnableReadOnly ? openMetronomeRunSidebar : null,
-		                    goOverview: returnToMetronomeOverview,
-		                    setMode: setMetronomeEditorModeFromNav,
-		                    selectVersion: null,
-		                    createVersion: null,
-		                    openVersionHistory: null,
-		                  }
+                    duplicate: duplicateActiveWorkflow,
+                    share: null,
+                    delete: null,
+                    publish: null,
+                    revertVersion: null,
+                    goOverview: returnToMetronomeOverview,
+                    setMode: setMetronomeEditorModeFromNav,
+                    selectVersion: null,
+                    createVersion: null,
+                    openVersionHistory: null,
+                  }
                 : {
                     edit: openEditWorkflowModal,
                     rename: openEditWorkflowModal,
                     duplicate: duplicateActiveWorkflow,
                     share: isActiveWorkflowTeamShared ? null : () => openMetronomeShareWorkflowModal(activeWorkflow),
                     delete: isActiveWorkflowTeamShared ? null : deleteActiveWorkflow,
-                    publish: null,
-	                    run: openMetronomeRunSidebar,
-	                    goOverview: returnToMetronomeOverview,
-	                    setMode: setMetronomeEditorModeFromNav,
-	                    selectVersion: restoreActiveWorkflowVersion,
-	                    createVersion: openCreateWorkflowVersionModal,
-	                    openVersionHistory: openMetronomeVersionChangesPage,
-	                  }
+                    publish: publishActiveWorkflowFromTopNav,
+                    revertVersion: revertActiveWorkflowToLastSavedVersion,
+                    goOverview: returnToMetronomeOverview,
+                    setMode: setMetronomeEditorModeFromNav,
+                    selectVersion: restoreActiveWorkflowVersion,
+                    createVersion: openCreateWorkflowVersionModal,
+                    openVersionHistory: openMetronomeVersionChangesPage,
+                  }
               : {
                   edit: null,
                   rename: null,
@@ -1179,68 +990,93 @@ export const METRONOME_CONTROLLER_02_FRAGMENT = String.raw`                }
                   share: null,
                   delete: null,
                   publish: null,
-                  run: null,
-	                  goOverview: returnToMetronomeOverview,
-	                  setMode: null,
-	                  selectVersion: null,
-	                  createVersion: null,
-	                  openVersionHistory: null,
-	                };
-          }, [topNavActionsRef, activeWorkflow, isActiveWorkflowBuiltIn, isActiveWorkflowRunnableReadOnly, isActiveWorkflowTeamShared, openEditWorkflowModal, duplicateActiveWorkflow, deleteActiveWorkflow, openMetronomeShareWorkflowModal, openMetronomeRunSidebar, returnToMetronomeOverview, setMetronomeEditorModeFromNav, restoreActiveWorkflowVersion, openCreateWorkflowVersionModal, openMetronomeVersionChangesPage]);
+                  revertVersion: null,
+                  goOverview: returnToMetronomeOverview,
+                  setMode: null,
+                  selectVersion: null,
+                  createVersion: null,
+                  openVersionHistory: null,
+                };
+          }, [topNavActionsRef, activeWorkflow, isActiveWorkflowBuiltIn, isActiveWorkflowTeamShared, openEditWorkflowModal, duplicateActiveWorkflow, deleteActiveWorkflow, openMetronomeShareWorkflowModal, publishActiveWorkflowFromTopNav, revertActiveWorkflowToLastSavedVersion, returnToMetronomeOverview, setMetronomeEditorModeFromNav, restoreActiveWorkflowVersion, openCreateWorkflowVersionModal, openMetronomeVersionChangesPage]);
 
           useEffect(() => {
             if (typeof onNodeDetailOpenChange === "function") {
-              onNodeDetailOpenChange(Boolean(isMetronomeRunSidebarOpen || isMetronomePublishMenuOpen));
+              onNodeDetailOpenChange(Boolean(isMetronomePublishMenuOpen));
             }
-          }, [onNodeDetailOpenChange, isMetronomeRunSidebarOpen, isMetronomePublishMenuOpen]);
+          }, [onNodeDetailOpenChange, isMetronomePublishMenuOpen]);
 
           useEffect(() => {
             if (typeof onTopNavStateChange !== "function") return;
             if (!activeWorkflow) {
-              onTopNavStateChange(null);
+              if (metronomeTopNavStateKeyRef.current) {
+                metronomeTopNavStateKeyRef.current = "";
+                onTopNavStateChange(null);
+              }
               return;
             }
-	            onTopNavStateChange({
-	              mode: "editor",
+            const versions = activeWorkflowDeployments.map((deployment, index) => {
+              const deploymentId = String(deployment?.id || "").trim() || "version-" + index;
+              const activeDeploymentId = String(activeWorkflowDeployment?.id || activeWorkflow?.activeDeploymentId || "").trim();
+              const selectedDeploymentId = String(
+                activeWorkflow?.metadata?.restoredFromDeploymentId
+                || activeWorkflow?.metadata?.restored_from_deployment_id
+                || activeDeploymentId
+                || ""
+              ).trim();
+              const status = deploymentId && deploymentId === activeDeploymentId
+                ? "Published"
+                : (String(deployment?.status || "").toLowerCase() === "active" ? "Published" : "Saved");
+              const timestamp = String(deployment?.publishedAt || deployment?.updatedAt || deployment?.createdAt || "").trim();
+              const formattedTimestamp = timestamp ? formatMetronomeDeploymentTimestamp(timestamp) : "";
+              return {
+                id: deploymentId,
+                title: String(deployment?.label || ("Version " + (deployment?.version || ""))).trim() || "Version",
+                meta: status + (formattedTimestamp ? " · " + formattedTimestamp : ""),
+                selected: deploymentId === selectedDeploymentId,
+              };
+            });
+            const nextTopNavState = {
+              mode: "editor",
               workflowId: activeWorkflow.id,
               runId: selectedMetronomeRunId || "",
               title: activeWorkflow.name || "Untitled Metronome",
               status: isActiveWorkflowTeamShared ? "shared" : isActiveWorkflowBuiltIn ? "default" : activeWorkflow.status === "active" ? "active" : "draft",
-	              readOnly: isActiveWorkflowBuiltIn,
-	              editorMode: metronomeEditorMode === "runs" ? "runs" : metronomeEditorMode === "code" ? "code" : "edit",
-	              showVersions: !isActiveWorkflowBuiltIn,
-	              versionsBusy: metronomePublishState.status === "loading",
-	              versionsLoading: isLoadingMetronomeVersions,
-	              versionsError: metronomeVersionsError || "",
-	              versions: activeWorkflowDeployments.map((deployment, index) => {
-	                const deploymentId = String(deployment?.id || "").trim() || "version-" + index;
-	                const activeDeploymentId = String(activeWorkflowDeployment?.id || activeWorkflow?.activeDeploymentId || "").trim();
-	                const selectedDeploymentId = String(
-	                  activeWorkflow?.metadata?.restoredFromDeploymentId
-	                  || activeWorkflow?.metadata?.restored_from_deployment_id
-	                  || activeDeploymentId
-	                  || ""
-	                ).trim();
-	                const status = deploymentId && deploymentId === activeDeploymentId
-	                  ? "Published"
-	                  : (String(deployment?.status || "").toLowerCase() === "active" ? "Published" : "Saved");
-	                const timestamp = String(deployment?.publishedAt || deployment?.updatedAt || deployment?.createdAt || "").trim();
-	                const formattedTimestamp = timestamp ? formatMetronomeDeploymentTimestamp(timestamp) : "";
-	                return {
-	                  id: deploymentId,
-	                  title: String(deployment?.label || ("Version " + (deployment?.version || ""))).trim() || "Version",
-	                  meta: status + (formattedTimestamp ? " · " + formattedTimestamp : ""),
-	                  selected: deploymentId === selectedDeploymentId,
-	                };
-	              }),
-	            });
-          }, [onTopNavStateChange, activeWorkflow?.id, activeWorkflow?.name, activeWorkflow?.status, activeWorkflow?.activeDeploymentId, activeWorkflow?.metadata?.restoredFromDeploymentId, activeWorkflow?.metadata?.restored_from_deployment_id, activeWorkflowDeployment?.id, activeWorkflowDeployments, isActiveWorkflowBuiltIn, isActiveWorkflowTeamShared, isLoadingMetronomeVersions, metronomeVersionsError, metronomePublishState.status, metronomeEditorMode, selectedMetronomeRunId]);
+              readOnly: isActiveWorkflowBuiltIn,
+              editorMode: metronomeEditorMode === "runs" ? "runs" : metronomeEditorMode === "code" ? "code" : "edit",
+              showPublish: !isActiveWorkflowBuiltIn
+                && !metronomeVersionChangesState
+                && (metronomeEditorMode === "edit" || metronomeEditorMode === "code"),
+              publishBusy: metronomePublishState.status === "loading",
+              publishDisabled: metronomePublishState.status === "loading" || !activeMetronomeVersionChanges,
+              canRevertVersion: activeWorkflowDeployments.length > 0 && activeMetronomeVersionChanges,
+              showVersions: !isActiveWorkflowBuiltIn,
+              versionsBusy: metronomePublishState.status === "loading",
+              versionsLoading: isLoadingMetronomeVersions,
+              versionsError: metronomeVersionsError || "",
+              versions,
+            };
+            const nextTopNavStateKey = JSON.stringify(nextTopNavState);
+            if (metronomeTopNavStateKeyRef.current === nextTopNavStateKey) return;
+            metronomeTopNavStateKeyRef.current = nextTopNavStateKey;
+            onTopNavStateChange(nextTopNavState);
+          }, [onTopNavStateChange, activeWorkflow?.id, activeWorkflow?.name, activeWorkflow?.status, activeWorkflow?.activeDeploymentId, activeWorkflow?.metadata?.restoredFromDeploymentId, activeWorkflow?.metadata?.restored_from_deployment_id, activeWorkflowDeployment?.id, activeWorkflowDeployments, activeMetronomeVersionChanges, isActiveWorkflowBuiltIn, isActiveWorkflowTeamShared, isLoadingMetronomeVersions, metronomeVersionsError, metronomePublishState.status, metronomeEditorMode, metronomeVersionChangesState, selectedMetronomeRunId]);
 
-	          useEffect(() => () => {
-	            if (topNavActionsRef) {
-	              topNavActionsRef.current = { edit: null, rename: null, duplicate: null, share: null, delete: null, publish: null, run: null, goOverview: null, setMode: null, selectVersion: null, createVersion: null, openVersionHistory: null };
-	            }
+          useEffect(() => () => {
+            if (metronomeLocalGraphSyncTimerRef.current) {
+              window.clearTimeout(metronomeLocalGraphSyncTimerRef.current);
+              metronomeLocalGraphSyncTimerRef.current = null;
+            }
+            metronomeLocalGraphSyncPendingRef.current = null;
+            if (metronomeVersionComparisonTimerRef.current) {
+              window.clearTimeout(metronomeVersionComparisonTimerRef.current);
+              metronomeVersionComparisonTimerRef.current = null;
+            }
+            metronomeVersionComparisonTokenRef.current += 1;
+            if (topNavActionsRef) {
+              topNavActionsRef.current = { edit: null, rename: null, duplicate: null, share: null, delete: null, publish: null, revertVersion: null, goOverview: null, setMode: null, selectVersion: null, createVersion: null, openVersionHistory: null };
+            }
             if (typeof onTopNavStateChange === "function") {
+              metronomeTopNavStateKeyRef.current = "";
               onTopNavStateChange(null);
             }
             if (typeof onNodeDetailOpenChange === "function") {

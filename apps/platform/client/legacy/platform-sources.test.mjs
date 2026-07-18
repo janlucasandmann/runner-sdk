@@ -41,6 +41,14 @@ assert.doesNotMatch(
 assert.ok(Buffer.byteLength(sources.documentTemplate) < 10_000);
 assert.ok(Buffer.byteLength(sources.styleSource) > 100_000);
 assert.ok(Buffer.byteLength(sources.moduleSource) > 100_000);
+assert.match(
+  sources.moduleSource,
+  /renderAppSidebar\(\)[\s\S]*className: "playground-content-body"[\s\S]*React\.createElement\(React\.Suspense,[\s\S]*fallback: React\.createElement\(PlatformLoadingState,[\s\S]*className: "playground-content-route-loading"/,
+);
+assert.match(
+  sources.styleSource,
+  /\.playground-content-body > \.playground-content-route-loading[\s\S]*position: absolute;[\s\S]*inset: 0;/,
+);
 
 console.log(
   "Explicit platform document, style, and module source contracts passed.",

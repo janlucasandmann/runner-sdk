@@ -2686,7 +2686,14 @@
                               : null,
   	                    }),
   	                  React.createElement("div", { className: "playground-content-body" + (isThreadTaskDetailOpen ? " is-thread-task-detail-open" : "") + (isThreadSideDetailOpen ? " is-thread-side-detail-open" : "") + (isMetronomeNodeDetailOpen ? " is-metronome-node-detail-open" : "") + (isResourcesVersionsDrawerOpen ? " is-agent-versions-detail-open" : "") + (activePage === "files" || activePage === "guardrails" || activePage === "evaluations" || activePage === "fine-tuning" ? " is-files-page" : "") + (activePage === "guardrails" ? " is-guardrails-page" : "") + (activePage === "evaluations" ? " is-evaluations-page" : "") + (activePage === "fine-tuning" ? " is-fine-tuning-page" : "") + (activePage === "imagine" ? " is-imagine-page" : "") + (activePage === "metronome" ? " is-metronome-page" : "") + (activePage === "tasks" ? " is-tasks-page" : "") + (activePage === "calendar" ? " is-calendar-page" : "") },
-  	                    activePage === "team"
+                              React.createElement(React.Suspense, {
+                                fallback: React.createElement(PlatformLoadingState, {
+                                  className: "playground-content-route-loading",
+                                  message: "Loading page...",
+                                  centered: true,
+                                }),
+                              },
+                                activePage === "team"
   	                        ? hasRealAccess
   	                          ? renderTeamPage()
   	                          : hasDemoAccess
@@ -3619,6 +3626,7 @@
                                 : null
                             )
                           )
+                      )
                     )
                     ,
                     activePage === "metronome"

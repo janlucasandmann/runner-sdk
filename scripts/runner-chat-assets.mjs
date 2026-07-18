@@ -142,6 +142,24 @@ const distPlatformComponentsAnalyticsCssPath = path.join(
   "analytics",
   "analytics.css",
 );
+const platformCodeEditorWorkspaceCssPath = path.join(
+  packageRoot,
+  "src",
+  "platform-ui",
+  "components",
+  "composite",
+  "code-editor-workspace",
+  "code-editor-workspace.css",
+);
+const distPlatformCodeEditorWorkspaceCssPath = path.join(
+  packageRoot,
+  "dist",
+  "platform-ui",
+  "components",
+  "composite",
+  "code-editor-workspace",
+  "code-editor-workspace.css",
+);
 const platformCodePreviewBoxCssPath = path.join(
   packageRoot,
   "src",
@@ -487,6 +505,7 @@ async function copy() {
     platformLoadingStateCssText,
     platformInstructionsEditorCssText,
     platformAnalyticsCssText,
+    platformCodeEditorWorkspaceCssText,
     platformCodePreviewBoxCssText,
     platformButtonCssText,
     platformIconButtonCssText,
@@ -514,6 +533,7 @@ async function copy() {
     fs.readFile(platformLoadingStateCssPath, "utf8"),
     fs.readFile(platformInstructionsEditorCssPath, "utf8"),
     fs.readFile(platformAnalyticsCssPath, "utf8"),
+    fs.readFile(platformCodeEditorWorkspaceCssPath, "utf8"),
     fs.readFile(platformCodePreviewBoxCssPath, "utf8"),
     fs.readFile(platformButtonCssPath, "utf8"),
     fs.readFile(platformIconButtonCssPath, "utf8"),
@@ -553,6 +573,12 @@ async function copy() {
   );
   await fs.mkdir(path.dirname(distPlatformComponentsAnalyticsCssPath), { recursive: true });
   await fs.writeFile(distPlatformComponentsAnalyticsCssPath, platformAnalyticsCssText, "utf8");
+  await fs.mkdir(path.dirname(distPlatformCodeEditorWorkspaceCssPath), { recursive: true });
+  await fs.writeFile(
+    distPlatformCodeEditorWorkspaceCssPath,
+    platformCodeEditorWorkspaceCssText,
+    "utf8",
+  );
   await fs.mkdir(path.dirname(distPlatformCodePreviewBoxCssPath), { recursive: true });
   await fs.writeFile(distPlatformCodePreviewBoxCssPath, platformCodePreviewBoxCssText, "utf8");
   await fs.mkdir(path.dirname(distPlatformComponentsButtonCssPath), { recursive: true });
@@ -584,7 +610,7 @@ async function copy() {
   await fs.mkdir(path.dirname(distPlatformGlobalSearchModalCssPath), { recursive: true });
   await fs.writeFile(
     distPlatformGlobalSearchModalCssPath,
-    platformGlobalSearchModalCssText,
+    `${platformLoadingStateCssText}\n\n${platformGlobalSearchModalCssText}`,
     "utf8",
   );
   await fs.mkdir(path.dirname(distPlatformHomePageCssPath), { recursive: true });
@@ -610,7 +636,7 @@ async function copy() {
   await fs.mkdir(path.dirname(distPlatformPagesCssPath), { recursive: true });
   await fs.writeFile(
     distPlatformPagesCssPath,
-    `${platformPopupCssText}\n\n${platformSelectorCssText}\n\n${platformDataTableCssText}\n\n${platformAnalyticsCssText}\n\n${platformEmptyStateCssText}\n\n${platformLoadingStateCssText}\n\n${platformCodePreviewBoxCssText}\n\n${platformPageHeroCssText}\n\n${platformUiCardCssText}\n\n${platformHomePageCssText}\n\n${platformOverviewPageCssText}\n\n${platformDetailTabBarCssText}\n\n${platformDetailSidebarCssText}\n\n${platformInstructionsEditorCssText}\n\n${platformSettingsSectionCssText}\n\n${platformDetailPageCssText}\n\n${platformPermissionsPageCssText}\n\n${agentDetailCssText}`,
+    `${platformPopupCssText}\n\n${platformSelectorCssText}\n\n${platformDataTableCssText}\n\n${platformAnalyticsCssText}\n\n${platformEmptyStateCssText}\n\n${platformLoadingStateCssText}\n\n${platformCodeEditorWorkspaceCssText}\n\n${platformCodePreviewBoxCssText}\n\n${platformPageHeroCssText}\n\n${platformUiCardCssText}\n\n${platformHomePageCssText}\n\n${platformOverviewPageCssText}\n\n${platformDetailTabBarCssText}\n\n${platformDetailSidebarCssText}\n\n${platformInstructionsEditorCssText}\n\n${platformSettingsSectionCssText}\n\n${platformDetailPageCssText}\n\n${platformPermissionsPageCssText}\n\n${agentDetailCssText}`,
     "utf8",
   );
   await fs.mkdir(distAssetsDir, { recursive: true });

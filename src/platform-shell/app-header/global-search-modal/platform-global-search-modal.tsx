@@ -1,5 +1,4 @@
 import {
-  ArrowUpRight,
   Bot,
   Check,
   FileText,
@@ -23,13 +22,13 @@ import {
   useState,
 } from "react";
 import { PlatformEmptyState } from "../../../platform-ui/components/composite/empty-state/index.js";
+import { PlatformLoadingState } from "../../../platform-ui/components/composite/loading-state/index.js";
 import {
   PlatformConfirmationModal,
   PlatformModal,
 } from "../../../platform-ui/components/composite/modal/index.js";
 import { PlatformPopup } from "../../../platform-ui/components/composite/popup/index.js";
 import { PlatformSecondaryButton } from "../../../platform-ui/components/ui/button/index.js";
-import { DotLoader } from "../../../platform-ui/components/ui/dot-loader/index.js";
 import { PlatformIconButton } from "../../../platform-ui/components/ui/icon-button/index.js";
 
 export type PlatformGlobalSearchMode = "threads" | "files" | "tickets" | "agents" | "workflows";
@@ -119,7 +118,6 @@ export interface PlatformGlobalSearchModalProps {
   emptyLabel?: string;
   emptyTitle?: ReactNode;
   emptyDescription?: ReactNode;
-  openResultLabel?: string;
   closeHintLabel?: string;
   className?: string;
   backdropClassName?: string;
@@ -165,11 +163,20 @@ function getModeItemLabel(mode: PlatformGlobalSearchMode) {
   return "thread";
 }
 
+function GlobalSearchShortcut({ children }: { children: ReactNode }) {
+  return (
+    <kbd className="platform-global-search-modal__shortcut" aria-hidden="true">
+      {children}
+    </kbd>
+  );
+}
+
 interface GlobalSearchResultRowProps {
   item: PlatformGlobalSearchResultItem;
   defaultIcon: ReactNode;
   editing: boolean;
   onEditingChange: (editing: boolean) => void;
+  onTargetChange: (resultId: string) => void;
   onSelect?: (resultId: string) => void;
   onOpenInNewTab?: (resultId: string) => void | Promise<void>;
   onRename?: (resultId: string, nextTitle: string) => void | Promise<void>;
@@ -181,6 +188,7 @@ function GlobalSearchResultRow({
   defaultIcon,
   editing,
   onEditingChange,
+  onTargetChange,
   onSelect,
   onOpenInNewTab,
   onRename,
@@ -251,6 +259,18 @@ function GlobalSearchResultRow({
       )}
       aria-busy={busy || undefined}
       title={actionError || undefined}
+      onMouseEnter={() => onTargetChange(item.id)}
+      onMouseLeave={() => onTargetChange("")}
+      onFocus={() => onTargetChange(item.id)}
+      onBlur={(event) => {
+        if (
+          event.relatedTarget instanceof Node &&
+          event.currentTarget.contains(event.relatedTarget)
+        ) {
+          return;
+        }
+        onTargetChange("");
+      }}
     >
       {editing ? (
         <form
@@ -314,8 +334,15 @@ function GlobalSearchResultRow({
             type="button"
             className="platform-global-search-modal__result-trigger"
             aria-current={item.active ? "page" : undefined}
-            onClick={() => onSelect?.(item.id)}
-            disabled={!onSelect || busy}
+            onClick={(event) => {
+              onTargetChange(item.id);
+              if ((event.metaKey || event.ctrlKey) && onOpenInNewTab) {
+                void runAction("open", () => onOpenInNewTab(item.id));
+                return;
+              }
+              onSelect?.(item.id);
+            }}
+            disabled={(!onSelect && !onOpenInNewTab) || busy}
           >
             <span
               className={joinClassNames(
@@ -342,6 +369,7 @@ function GlobalSearchResultRow({
             <PlatformIconButton
               aria-label={`Open ${item.title} in a new tab`}
               onClick={() => {
+                onTargetChange(item.id);
                 if (!onOpenInNewTab) return;
                 void runAction("open", () => onOpenInNewTab(item.id));
               }}
@@ -353,6 +381,7 @@ function GlobalSearchResultRow({
             <PlatformIconButton
               aria-label={`Rename ${item.title}`}
               onClick={() => {
+                onTargetChange(item.id);
                 setRenameValue(item.title);
                 setActionError("");
                 onEditingChange(true);
@@ -365,6 +394,7 @@ function GlobalSearchResultRow({
             <PlatformIconButton
               aria-label={`Delete ${item.title}`}
               onClick={() => {
+                onTargetChange(item.id);
                 if (!onDeleteRequest || !canDelete) return;
                 onDeleteRequest(item);
               }}
@@ -407,8 +437,7 @@ export function PlatformGlobalSearchModal({
   emptyLabel = "No results found.",
   emptyTitle,
   emptyDescription,
-  openResultLabel = "Open result",
-  closeHintLabel = "Esc close",
+  closeHintLabel = "Close",
   className = "",
   backdropClassName = "",
 }: PlatformGlobalSearchModalProps) {
@@ -416,6 +445,7 @@ export function PlatformGlobalSearchModal({
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const [modeMenuOpen, setModeMenuOpen] = useState(false);
   const [editingResultId, setEditingResultId] = useState("");
+  const [shortcutTargetResultId, setShortcutTargetResultId] = useState("");
   const [deleteCandidate, setDeleteCandidate] = useState<PlatformGlobalSearchResultItem | null>(
     null,
   );
@@ -429,6 +459,15 @@ export function PlatformGlobalSearchModal({
     () => resultGroups.reduce((count, group) => count + group.items.length, 0),
     [resultGroups],
   );
+  const resultItems = useMemo(
+    () => resultGroups.flatMap((group) => group.items),
+    [resultGroups],
+  );
+  const shortcutTargetResult =
+    resultItems.find((item) => item.id === shortcutTargetResultId) ?? resultItems[0] ?? null;
+  const footerActionTarget = resultItems.find(
+    (item) => item.id === shortcutTargetResultId,
+  ) ?? null;
   const resolvedResultCount = resultCount ?? resultItemCount;
   const defaultResultIcon = useMemo(() => getDefaultResultIcon(mode), [mode]);
   const emptyStateIcon = useMemo(() => getModeIcon(mode), [mode]);
@@ -444,12 +483,14 @@ export function PlatformGlobalSearchModal({
     if (!open) {
       setModeMenuOpen(false);
       setEditingResultId("");
+      setShortcutTargetResultId("");
       setDeleteCandidate(null);
     }
   }, [open]);
 
   useEffect(() => {
     setDeleteCandidate(null);
+    setShortcutTargetResultId("");
   }, [mode]);
 
   useEffect(() => {
@@ -465,9 +506,99 @@ export function PlatformGlobalSearchModal({
     return () => document.removeEventListener("keydown", handleEscape, true);
   }, [modeMenuOpen]);
 
+  useEffect(() => {
+    if (
+      !open ||
+      modeMenuOpen ||
+      deleteCandidate ||
+      editingResultId ||
+      !shortcutTargetResult
+    ) {
+      return undefined;
+    }
+
+    const handleResultShortcut = (event: KeyboardEvent) => {
+      if (event.repeat) return;
+
+      const target = event.target instanceof Element ? event.target : null;
+      const searchInput = searchInputRef.current;
+      if (
+        target &&
+        target !== searchInput &&
+        target.closest(
+          "button, a, textarea, select, [contenteditable='true'], .platform-global-search-modal__rename-form",
+        )
+      ) {
+        return;
+      }
+
+      const modifierPressed = event.metaKey || event.ctrlKey;
+      const normalizedKey = event.key.toLowerCase();
+
+      if (
+        event.key === "Enter" &&
+        !event.altKey &&
+        !event.shiftKey &&
+        (onResultSelect || (modifierPressed && onResultOpenInNewTab))
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (modifierPressed && onResultOpenInNewTab) {
+          void Promise.resolve(onResultOpenInNewTab(shortcutTargetResult.id)).catch(
+            () => undefined,
+          );
+        } else {
+          onResultSelect?.(shortcutTargetResult.id);
+        }
+        return;
+      }
+
+      if (
+        modifierPressed &&
+        event.shiftKey &&
+        !event.altKey &&
+        normalizedKey === "e" &&
+        onResultRename &&
+        !shortcutTargetResult.renameDisabled
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        setEditingResultId(shortcutTargetResult.id);
+        return;
+      }
+
+      if (
+        modifierPressed &&
+        event.shiftKey &&
+        !event.altKey &&
+        normalizedKey === "d" &&
+        onResultDelete &&
+        !shortcutTargetResult.deleteDisabled
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        setDeleteCandidate(shortcutTargetResult);
+      }
+    };
+
+    document.addEventListener("keydown", handleResultShortcut, true);
+    return () => document.removeEventListener("keydown", handleResultShortcut, true);
+  }, [
+    deleteCandidate,
+    editingResultId,
+    modeMenuOpen,
+    onResultDelete,
+    onResultOpenInNewTab,
+    onResultRename,
+    onResultSelect,
+    open,
+    shortcutTargetResult,
+  ]);
+
   const selectMode = (nextMode: PlatformGlobalSearchMode) => {
     setModeMenuOpen(false);
     setEditingResultId("");
+    setShortcutTargetResultId("");
     setDeleteCandidate(null);
     if (nextMode !== mode) {
       onModeChange?.(nextMode);
@@ -534,23 +665,52 @@ export function PlatformGlobalSearchModal({
 
   const footer = (
     <>
-      <div className="platform-global-search-modal__footer-copy">
-        <ArrowUpRight
-          className="platform-global-search-modal__footer-icon"
-          strokeWidth={1.85}
-          aria-hidden="true"
-        />
-        <span>{openResultLabel}</span>
-      </div>
-      <div className="platform-global-search-modal__footer-meta">
-        <span>
-          {resolvedResultCount} result{resolvedResultCount === 1 ? "" : "s"}
-        </span>
-        <span className="platform-global-search-modal__footer-separator" aria-hidden="true">
-          {"\u2022"}
-        </span>
+      <span className="platform-global-search-modal__footer-count">
+        {resolvedResultCount} result{resolvedResultCount === 1 ? "" : "s"}
+      </span>
+      {footerActionTarget ? (
+        <div
+          className="platform-global-search-modal__footer-actions"
+          aria-label={`Actions for ${footerActionTarget.title}`}
+        >
+          <span
+            className={joinClassNames(
+              "platform-global-search-modal__footer-action",
+              !onResultSelect && "is-disabled",
+            )}
+          >
+            <span>Go</span>
+            <GlobalSearchShortcut>{"\u21b5"}</GlobalSearchShortcut>
+          </span>
+          <span
+            className={joinClassNames(
+              "platform-global-search-modal__footer-action",
+              (!onResultRename || footerActionTarget.renameDisabled) && "is-disabled",
+            )}
+          >
+            <span>Edit</span>
+            <GlobalSearchShortcut>{"\u2318 \u21e7 E"}</GlobalSearchShortcut>
+          </span>
+          <span
+            className={joinClassNames(
+              "platform-global-search-modal__footer-action",
+              (!onResultDelete || footerActionTarget.deleteDisabled) && "is-disabled",
+            )}
+          >
+            <span>Delete</span>
+            <GlobalSearchShortcut>{"\u2318 \u21e7 D"}</GlobalSearchShortcut>
+          </span>
+        </div>
+      ) : null}
+      <button
+        type="button"
+        className="platform-global-search-modal__footer-close"
+        onClick={onClose}
+        aria-label="Close global search"
+      >
         <span>{closeHintLabel}</span>
-      </div>
+        <GlobalSearchShortcut>Esc</GlobalSearchShortcut>
+      </button>
     </>
   );
 
@@ -643,20 +803,12 @@ export function PlatformGlobalSearchModal({
           </section>
         ) : null}
 
-        {resultsLoading && resultItemCount === 0 ? (
-          <div
+        {resultsLoading ? (
+          <PlatformLoadingState
             className="platform-global-search-modal__center-state is-loading"
-            role="status"
-            aria-label={loadingLabel}
-          >
-            <DotLoader
-              className="platform-global-search-modal__dot-loader"
-              dotCount={9}
-              dotSize={3}
-              gap={2}
-              speed={800}
-            />
-          </div>
+            message={loadingLabel}
+            centered
+          />
         ) : resultGroups.length === 0 ? (
           <div className="platform-global-search-modal__center-state is-empty">
             <PlatformEmptyState
@@ -691,6 +843,7 @@ export function PlatformGlobalSearchModal({
                     onEditingChange={(editing) => {
                       setEditingResultId(editing ? resultItem.id : "");
                     }}
+                    onTargetChange={setShortcutTargetResultId}
                     onSelect={onResultSelect}
                     onOpenInNewTab={onResultOpenInNewTab}
                     onRename={onResultRename}

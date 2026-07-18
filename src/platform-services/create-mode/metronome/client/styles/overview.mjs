@@ -19,7 +19,7 @@ export const METRONOME_OVERVIEW_CSS = String.raw`
       }
 
       .playground-metronome-page.is-editor.is-code {
-        padding: 42px 44px 12px;
+        padding: 0;
       }
 
       .playground-metronome-overview {
@@ -89,7 +89,6 @@ export const METRONOME_OVERVIEW_CSS = String.raw`
       .playground-metronome-icon-button::before,
       .playground-metronome-table::before,
       .playground-metronome-empty::before,
-      .playground-metronome-code-button::before,
       .playground-metronome-palette-item-icon::before,
       .playground-metronome-node-icon::before {
         content: "";
@@ -1020,24 +1019,8 @@ export const METRONOME_OVERVIEW_CSS = String.raw`
         height: 14px;
       }
 
-      .playground-metronome-publish-shell {
-        position: relative;
-        z-index: 40;
-        display: inline-flex;
-        align-items: center;
-      }
-
       .playground-metronome-publish-button.is-active {
         background: rgba(255, 255, 255, 0.1);
-      }
-
-      .playground-metronome-detail-header-controls {
-        display: inline-flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 10px;
-        min-width: 0;
-        flex: 0 0 auto;
       }
 
       .playground-metronome-detail-version-selector-list {

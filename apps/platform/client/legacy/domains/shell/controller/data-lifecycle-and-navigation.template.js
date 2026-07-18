@@ -158,16 +158,6 @@
           }, [activePage, toolsView, selectedPluginId, hasSessionAuth]);
   
           useEffect(() => {
-            if (!tagInstructionsEditingId || typeof window === "undefined") {
-              return undefined;
-            }
-            const frameId = window.requestAnimationFrame(() => {
-              resizeTagInstructionsTextarea(tagInstructionsTextareaRef.current);
-            });
-            return () => window.cancelAnimationFrame(frameId);
-          }, [tagInstructionsEditingId, tagDetailConfigsById]);
-  
-          useEffect(() => {
             if (activePage === "tools" && toolsView === "skills") {
               return;
             }

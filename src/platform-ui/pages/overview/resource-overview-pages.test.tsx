@@ -111,18 +111,22 @@ describe("resource overview pages", () => {
     )],
     ["tags", () => (
       <TagsOverviewPage
-        rows={[{
+        mode="tags"
+        onModeChange={vi.fn()}
+        tagRows={[{
           id: "tag-1",
           name: "Email",
           connected: true,
           identityLabel: "mail@example.com",
           providerLabel: "Channel",
         }]}
+        pluginRows={[]}
         period="month"
         onPeriodChange={vi.fn()}
         analytics={analytics}
         controlsPortalId={CONTROLS_PORTAL_ID}
-        onOpen={vi.fn()}
+        onOpenTag={vi.fn()}
+        onOpenPlugin={vi.fn()}
       />
     )],
     ["plugins", () => (
@@ -158,7 +162,7 @@ describe("resource overview pages", () => {
     expect(container.querySelectorAll(".resource-overview-page__table-section")).toHaveLength(1);
     if (isTagsOverview) {
       expect(screen.queryByRole("radiogroup", { name: "Analytics time frame" })).toBeNull();
-      expect(screen.getByRole("region", { name: "Get started with Tags" })).not.toBeNull();
+      expect(screen.getByRole("region", { name: "Get started with Tags and Plugins" })).not.toBeNull();
       expect(screen.queryByText("No activity yet.")).toBeNull();
     } else {
       expect(screen.getByRole("radiogroup", { name: "Analytics time frame" }).getAttribute("data-platform-switch")).toBe("true");
@@ -166,15 +170,23 @@ describe("resource overview pages", () => {
       expect(screen.getByText("Analytics will appear here once activity has been recorded.")).not.toBeNull();
     }
     expect(container.querySelector(".platform-data-table.is-fill-layout.is-minimalistic-ui")).not.toBeNull();
-    expect(screen.getByRole("navigation", { name: /pagination/ })).not.toBeNull();
-    if (kind === "agents") {
-      const tabBar = screen.getByRole("navigation", { name: "Agent categories" });
+    if (isTagsOverview) {
+      expect(screen.queryByRole("navigation", { name: /pagination/ })).toBeNull();
+    } else {
+      expect(screen.getByRole("navigation", { name: /pagination/ })).not.toBeNull();
+    }
+    if (kind === "agents" || kind === "tags") {
+      const tabBar = screen.getByRole("navigation", {
+        name: kind === "agents" ? "Agent categories" : "Tag and plugin categories",
+      });
       expect(tabBar.getAttribute("data-platform-detail-tab-bar-variant")).toBe("minimal");
-      expect(screen.queryByRole("heading", { name: "All Agents", level: 2 })).toBeNull();
+      expect(screen.queryByRole("heading", { name: `All ${kind === "agents" ? "Agents" : "Tags"}`, level: 2 })).toBeNull();
     } else {
       expect(screen.getByRole("heading", { name: toolbarTitles[kind], level: 2 })).not.toBeNull();
     }
-    expect(screen.getByText("1-1 of 1")).not.toBeNull();
+    if (!isTagsOverview) {
+      expect(screen.getByText("1-1 of 1")).not.toBeNull();
+    }
     expect(screen.getByRole("button", { name: /Sort Name/ })).not.toBeNull();
   });
 
@@ -213,17 +225,27 @@ describe("resource overview pages", () => {
   it("renders the Tags guide, compact icons, and shared connection labels", async () => {
     const user = userEvent.setup();
     const onOpen = vi.fn();
+    const onOpenPlugin = vi.fn();
     const rows = [
       { id: "email", name: "Email", connected: true, identityLabel: "mail@example.com", providerLabel: "Channel" },
       { id: "telegram", name: "Telegram", connected: false, identityLabel: "Not connected", providerLabel: "Channel" },
     ];
+    const pluginRows = [
+      { id: "github", name: "GitHub", connected: true, identityLabel: "computer-agents", providerLabel: "Source control" },
+      { id: "notion", name: "Notion", connected: false, identityLabel: "Not connected", providerLabel: "Knowledge" },
+      { id: "google-drive", name: "Google Drive", connected: false, identityLabel: "Not connected", providerLabel: "Storage" },
+    ];
     const { container } = render(
       <TagsOverviewPage
-        rows={rows}
+        mode="tags"
+        onModeChange={vi.fn()}
+        tagRows={rows}
+        pluginRows={pluginRows}
         period="month"
         onPeriodChange={vi.fn()}
         analytics={analytics}
-        onOpen={onOpen}
+        onOpenTag={onOpen}
+        onOpenPlugin={onOpenPlugin}
       />,
     );
 
@@ -232,19 +254,73 @@ describe("resource overview pages", () => {
     expect(screen.getByText("Not Connected").getAttribute("data-platform-label-variant")).toBe("gray");
     expect(screen.queryByRole("button", { name: "New Custom Tag" })).toBeNull();
     expect(container.querySelector("[data-platform-page-hero='true']")).not.toBeNull();
-    expect(screen.getByRole("heading", { name: "Tags", level: 1 })).not.toBeNull();
+    expect(
+      screen.getByRole("heading", { name: "Connect agents everywhere", level: 1 }),
+    ).not.toBeNull();
+    expect(screen.getByRole("heading", { name: "Tags", level: 2 })).not.toBeNull();
+    expect(screen.getByRole("heading", { name: "Plugins", level: 2 })).not.toBeNull();
     expect(
       container.querySelectorAll(
         ".platform-ui-card.is-feature[data-platform-ui-card-variant='feature']",
       ),
     ).toHaveLength(2);
-    expect(screen.getByText("Connect Email, Telegram, and Discord to start agent tasks and receive results directly in those channels.")).not.toBeNull();
-    expect(screen.getByRole("link", { name: "Quickstart" }).getAttribute("href")).toBe("/developers/quickstart");
-    expect(screen.getByRole("link", { name: "Documentation" }).getAttribute("href")).toBe("/developers/run-and-scale/webhooks");
-    expect(screen.getByRole("link", { name: "Event-driven tutorial" }).getAttribute("href")).toBe("/tutorials/event-driven-triggers");
+    expect(container.querySelector(".platform-data-table__pagination")).toBeNull();
+    expect(screen.getByText("Use Tags to invoke agents from communication channels and Plugins to connect the external services agents use while working.")).not.toBeNull();
+    expect(screen.getByText(/Give agents identities in communication channels/)).not.toBeNull();
+    expect(screen.getByText(/Connect repositories, knowledge bases, and cloud storage/)).not.toBeNull();
 
-    await user.click(screen.getByRole("button", { name: "Run tasks by email" }));
+    await user.click(screen.getByRole("button", { name: "Explore Email" }));
     expect(onOpen).toHaveBeenCalledWith(rows[0]);
+    await user.click(screen.getByRole("button", { name: "Explore GitHub" }));
+    expect(onOpenPlugin).toHaveBeenCalledWith(pluginRows[0]);
+  });
+
+  it("uses the shared minimal tab bar for tag and plugin modes", async () => {
+    const user = userEvent.setup();
+    const onModeChange = vi.fn();
+    const sharedProps = {
+      onModeChange,
+      tagRows: [{
+        id: "email",
+        name: "Email",
+        connected: true,
+        identityLabel: "mail@example.com",
+        providerLabel: "Channel",
+      }],
+      pluginRows: [{
+        id: "github",
+        name: "GitHub",
+        connected: true,
+        identityLabel: "computer-agents",
+        providerLabel: "Integration",
+      }],
+      period: "month" as const,
+      onPeriodChange: vi.fn(),
+      analytics,
+      onOpenTag: vi.fn(),
+      onOpenPlugin: vi.fn(),
+    };
+    const { rerender } = render(
+      <TagsOverviewPage
+        mode="tags"
+        {...sharedProps}
+      />,
+    );
+
+    const tabBar = screen.getByRole("navigation", { name: "Tag and plugin categories" });
+    expect(tabBar.getAttribute("data-platform-detail-tab-bar-variant")).toBe("minimal");
+    expect(tabBar.classList.contains("has-divider")).toBe(false);
+    expect(within(tabBar).getByRole("tab", { name: "Tags" }).getAttribute("aria-selected")).toBe("true");
+    expect(screen.getByText("Email")).not.toBeNull();
+    expect(screen.queryByText("GitHub")).toBeNull();
+    await user.click(within(tabBar).getByRole("tab", { name: "Plugins" }));
+    expect(onModeChange).toHaveBeenCalledWith("plugins");
+
+    rerender(<TagsOverviewPage mode="plugins" {...sharedProps} />);
+    expect(within(tabBar).getByRole("tab", { name: "Plugins" }).getAttribute("aria-selected")).toBe("true");
+    expect(screen.getByText("GitHub")).not.toBeNull();
+    expect(screen.queryByText("Email")).toBeNull();
+    expect(screen.queryByRole("group", { name: "Plugin category" })).toBeNull();
   });
 
   it("routes period changes through the common selector", async () => {

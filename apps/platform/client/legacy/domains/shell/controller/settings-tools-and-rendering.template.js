@@ -1909,7 +1909,7 @@
             });
           }
   
-          function updateTagInstructionsValue(tagId, value, options = {}) {
+          function updateTagInstructionsValue(tagId, value) {
             const normalizedTagId = String(tagId || "").trim().toLowerCase();
             const nextValue = String(value ?? "");
             const currentConfig = getCurrentTagDetailConfig(normalizedTagId);
@@ -1917,194 +1917,7 @@
             if (previousValue === nextValue) {
               return;
             }
-            if (options.recordHistory !== false) {
-              setTagInstructionsHistoryById((current) => {
-                const history = current[normalizedTagId] || { past: [], future: [] };
-                return {
-                  ...current,
-                  [normalizedTagId]: {
-                    past: [...(Array.isArray(history.past) ? history.past : []), previousValue].slice(-80),
-                    future: [],
-                  },
-                };
-              });
-            }
             updateTagDetailConfig(normalizedTagId, { instructions: nextValue });
-          }
-  
-          function resizeTagInstructionsTextarea(textarea) {
-            if (!textarea) {
-              return;
-            }
-            const computedStyles = window.getComputedStyle(textarea);
-            const lineHeight = Number.parseFloat(computedStyles.lineHeight) || 21;
-            const paddingTop = Number.parseFloat(computedStyles.paddingTop) || 0;
-            const paddingBottom = Number.parseFloat(computedStyles.paddingBottom) || 0;
-            const borderTopWidth = Number.parseFloat(computedStyles.borderTopWidth) || 0;
-            const borderBottomWidth = Number.parseFloat(computedStyles.borderBottomWidth) || 0;
-            const singleLineHeight = Math.ceil(lineHeight + paddingTop + paddingBottom + borderTopWidth + borderBottomWidth);
-            textarea.style.height = "auto";
-            const nextHeight = String(textarea.value || "").trim()
-              ? Math.max(singleLineHeight, textarea.scrollHeight)
-              : singleLineHeight;
-            textarea.style.height = nextHeight + "px";
-          }
-  
-          function buildTagWrappedMarkdownEdit(value, selectionStart, selectionEnd, prefix, suffix = prefix) {
-            const safeStart = Math.max(0, selectionStart);
-            const safeEnd = Math.max(safeStart, selectionEnd);
-            const selectedText = value.slice(safeStart, safeEnd);
-            if (safeStart !== safeEnd) {
-              if (
-                selectedText.startsWith(prefix)
-                && selectedText.endsWith(suffix)
-                && selectedText.length >= prefix.length + suffix.length
-              ) {
-                const unwrappedText = selectedText.slice(prefix.length, selectedText.length - suffix.length);
-                const nextValue = value.slice(0, safeStart) + unwrappedText + value.slice(safeEnd);
-                return {
-                  value: nextValue,
-                  selectionStart: safeStart,
-                  selectionEnd: safeStart + unwrappedText.length,
-                };
-              }
-              const wrappedText = prefix + selectedText + suffix;
-              const nextValue = value.slice(0, safeStart) + wrappedText + value.slice(safeEnd);
-              return {
-                value: nextValue,
-                selectionStart: safeStart + prefix.length,
-                selectionEnd: safeStart + prefix.length + selectedText.length,
-              };
-            }
-            const insertedText = prefix + suffix;
-            const nextValue = value.slice(0, safeStart) + insertedText + value.slice(safeEnd);
-            return {
-              value: nextValue,
-              selectionStart: safeStart + prefix.length,
-              selectionEnd: safeStart + prefix.length,
-            };
-          }
-  
-          function buildTagListMarkdownEdit(value, selectionStart, selectionEnd, listType = "unordered") {
-            const safeStart = Math.max(0, selectionStart);
-            const safeEnd = Math.max(safeStart, selectionEnd);
-            const lineStart = value.lastIndexOf("\n", Math.max(0, safeStart - 1)) + 1;
-            let lineEnd = value.indexOf("\n", safeEnd);
-            if (lineEnd === -1) {
-              lineEnd = value.length;
-            }
-            const block = value.slice(lineStart, lineEnd);
-            const lines = block.split("\n");
-            const nonEmptyLines = lines.filter((line) => line.trim().length > 0);
-            const isOrderedList = listType === "ordered";
-            const orderedListPattern = /^(\s*)\d+\.\s+/;
-            const unorderedListPattern = /^(\s*)-\s+/;
-            const shouldRemoveList = nonEmptyLines.length > 0 && nonEmptyLines.every((line) => (
-              isOrderedList ? orderedListPattern.test(line) : unorderedListPattern.test(line)
-            ));
-            let orderedIndex = 1;
-            const nextLines = lines.map((line) => {
-              if (!line.trim()) {
-                if (shouldRemoveList) {
-                  return line;
-                }
-                return isOrderedList ? String(orderedIndex++) + ". " : "- ";
-              }
-              if (shouldRemoveList) {
-                return line.replace(isOrderedList ? orderedListPattern : unorderedListPattern, "$1");
-              }
-              const cleanLine = line.replace(/^(\s*)(?:-\s+|\d+\.\s+)/, "$1");
-              return cleanLine.replace(/^(\s*)/, (_match, indent) => (
-                String(indent || "") + (isOrderedList ? String(orderedIndex++) + ". " : "- ")
-              ));
-            });
-            const nextBlock = nextLines.join("\n");
-            const nextValue = value.slice(0, lineStart) + nextBlock + value.slice(lineEnd);
-            const markerLength = isOrderedList ? 3 : 2;
-            const collapsedSelection = safeStart === safeEnd;
-            const nextCaretOffset = shouldRemoveList
-              ? Math.max(0, safeStart - lineStart - markerLength)
-              : safeStart - lineStart + markerLength;
-            return {
-              value: nextValue,
-              selectionStart: collapsedSelection ? lineStart + Math.max(0, nextCaretOffset) : lineStart,
-              selectionEnd: collapsedSelection ? lineStart + Math.max(0, nextCaretOffset) : lineStart + nextBlock.length,
-            };
-          }
-  
-          function buildTagLinkMarkdownEdit(value, selectionStart, selectionEnd) {
-            const safeStart = Math.max(0, selectionStart);
-            const safeEnd = Math.max(safeStart, selectionEnd);
-            const selectedText = value.slice(safeStart, safeEnd);
-            const existingLinkMatch = selectedText.match(/^\[([^\]]+)\]\(([^)]*)\)$/);
-            if (existingLinkMatch) {
-              const unwrappedText = existingLinkMatch[1];
-              const nextValue = value.slice(0, safeStart) + unwrappedText + value.slice(safeEnd);
-              return {
-                value: nextValue,
-                selectionStart: safeStart,
-                selectionEnd: safeStart + unwrappedText.length,
-              };
-            }
-            const label = selectedText || "link text";
-            const url = "url";
-            const markdownLink = "[" + label + "](" + url + ")";
-            const nextValue = value.slice(0, safeStart) + markdownLink + value.slice(safeEnd);
-            const urlStart = safeStart + label.length + 3;
-            return {
-              value: nextValue,
-              selectionStart: urlStart,
-              selectionEnd: urlStart + url.length,
-            };
-          }
-  
-          function applyTagMarkdownSelection(tagId, textareaRef, nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
-            updateTagInstructionsValue(tagId, nextValue);
-            window.requestAnimationFrame(() => {
-              const textarea = textareaRef.current;
-              if (!textarea) {
-                return;
-              }
-              const maxLength = nextValue.length;
-              const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
-              const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
-              textarea.focus();
-              textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
-              resizeTagInstructionsTextarea(textarea);
-            });
-          }
-  
-          function handleTagMarkdownFormat(tagId, textareaRef, formatType) {
-            const textarea = textareaRef.current;
-            if (!textarea) {
-              return;
-            }
-            const currentConfig = getCurrentTagDetailConfig(tagId);
-            const value = String(currentConfig.instructions || "");
-            const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
-            const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
-            let edit = null;
-  
-            if (formatType === "bold") {
-              edit = buildTagWrappedMarkdownEdit(value, selectionStart, selectionEnd, "**");
-            } else if (formatType === "italic") {
-              edit = buildTagWrappedMarkdownEdit(value, selectionStart, selectionEnd, "*");
-            } else if (formatType === "underline") {
-              edit = buildTagWrappedMarkdownEdit(value, selectionStart, selectionEnd, "++");
-            } else if (formatType === "list") {
-              edit = buildTagListMarkdownEdit(value, selectionStart, selectionEnd, "unordered");
-            } else if (formatType === "ordered-list") {
-              edit = buildTagListMarkdownEdit(value, selectionStart, selectionEnd, "ordered");
-            } else if (formatType === "code") {
-              edit = buildTagWrappedMarkdownEdit(value, selectionStart, selectionEnd, String.fromCharCode(96));
-            } else if (formatType === "link") {
-              edit = buildTagLinkMarkdownEdit(value, selectionStart, selectionEnd);
-            }
-  
-            if (!edit) {
-              return;
-            }
-            applyTagMarkdownSelection(tagId, textareaRef, edit.value, edit.selectionStart, edit.selectionEnd);
           }
   
           function renderTagDetailBody(selectedTag) {
@@ -2207,8 +2020,12 @@
               if (!buttonState) {
                 return null;
               }
-              return React.createElement("button", {
+              const ButtonComponent = buttonState.tone === "primary"
+                ? PlatformPrimaryButton
+                : PlatformSecondaryButton;
+              return React.createElement(ButtonComponent, {
                 type: "button",
+                size: "small",
                 className: tagHeaderButtonClass + (buttonState.tone === "destructive" ? " is-destructive" : ""),
                 onClick: buttonState.onClick,
                 disabled: buttonState.disabled,
@@ -2228,20 +2045,6 @@
                 strokeWidth: 1.8,
               })
             );
-            const renderTagControlRow = (className) =>
-              React.createElement("div", { className },
-                renderTagConnectionButton(),
-                renderTagSidebarToggleButton()
-              );
-            const tagDetailBackButton = React.createElement("button", {
-                type: "button",
-                className: "playground-resource-detail-back-button",
-                onClick: () => setSelectedPluginId(""),
-                "aria-label": "Back to Tags",
-              },
-              React.createElement(ArrowLeft, { width: 12, height: 12, strokeWidth: 1.8 }),
-              React.createElement("span", null, "Back")
-            );
             const tagProfileSection = React.createElement("div", { className: "playground-agents-profile-section playground-tags-detail-profile-section" },
               React.createElement("div", { className: "profile-editor-avatar-wrap playground-agents-profile-avatar-wrap" },
                 React.createElement("div", { className: "profile-editor-avatar playground-agents-profile-avatar playground-tags-detail-profile-avatar" },
@@ -2257,31 +2060,6 @@
                     title: selectedTag.label || "Tag",
                   }, selectedTag.label || "Tag")
                 )
-              ),
-              tagDetailSidebarCollapsed
-                ? renderTagControlRow("playground-agents-detail-profile-actions playground-tags-detail-profile-actions")
-                : null
-            );
-            const tagDetailTabs = React.createElement("div", { className: "playground-agents-overview-tabs playground-plugin-detail-tabs" },
-              React.createElement("div", { className: "playground-project-overview-chart-tabs" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-project-overview-chart-tab" + (pluginDetailTab === "general" ? " is-active" : ""),
-                  onClick: () => setPluginDetailTab("general"),
-                  "aria-pressed": pluginDetailTab === "general" ? "true" : "false",
-                }, "General"),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-project-overview-chart-tab" + (pluginDetailTab === "permissions" ? " is-active" : ""),
-                  onClick: () => setPluginDetailTab("permissions"),
-                  "aria-pressed": pluginDetailTab === "permissions" ? "true" : "false",
-                }, "Permissions"),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-project-overview-chart-tab" + (pluginDetailTab === "tutorial" ? " is-active" : ""),
-                  onClick: () => setPluginDetailTab("tutorial"),
-                  "aria-pressed": pluginDetailTab === "tutorial" ? "true" : "false",
-                }, "Setup")
               )
             );
             const readThreadMetadata = (thread) => (
@@ -2330,13 +2108,12 @@
               return sourceValues.includes(tagId);
             };
             const tagDetailPerformanceRangeOptions = [
-              { id: "5d", label: "5D", bucketCount: 5 },
-              { id: "1m", label: "1M", bucketCount: 30 },
-              { id: "6m", label: "6M", bucketCount: 180 },
-              { id: "1y", label: "1Y", bucketCount: 365 },
+              { id: "day", label: "24H", bucketCount: 1 },
+              { id: "week", label: "7D", bucketCount: 7 },
+              { id: "month", label: "30D", bucketCount: 30 },
             ];
             const activeTagPerformanceRange = tagDetailPerformanceRangeOptions.find((option) => option.id === tagDetailPerformanceRange)
-              || tagDetailPerformanceRangeOptions[1];
+              || tagDetailPerformanceRangeOptions[2];
             const formatTagPerformanceInteger = (value) => Math.max(0, Math.round(Number(value || 0))).toLocaleString("en-US");
             const getTagLocalDayKey = (dateLike) => {
               const date = dateLike instanceof Date ? new Date(dateLike) : new Date(dateLike);
@@ -2403,434 +2180,70 @@
             const tagPerformanceSeries = [
               { id: "runs", values: tagPerformanceBuckets.map((bucket) => Math.max(0, Number(bucket.runCount || 0))) },
             ];
-            const maxTagRunValue = Math.max(1, ...tagPerformanceSeries.flatMap((entry) => entry.values || []));
-            const maxTagDailyCt = Math.max(1, ...tagPerformanceBuckets.map((bucket) => Math.max(0, Number(bucket.totalCT || 0))));
-  
-            function PlaygroundTagDetailPerformanceChart({ dailyCtBuckets, maxDailyCt, maxRunValue, series }) {
-              const canvasRef = useRef(null);
-              const chartRef = useRef(null);
-              const chartSignature = JSON.stringify({
-                buckets: dailyCtBuckets.map((bucket) => ({
-                  key: bucket.key,
-                  runCount: bucket.runCount,
-                  totalCT: bucket.totalCT,
-                })),
-                maxDailyCt,
-                maxRunValue,
-                series,
-              });
-  
-              useEffect(() => () => {
-                if (chartRef.current) {
-                  chartRef.current.destroy();
-                  chartRef.current = null;
-                }
-              }, []);
-  
-              useEffect(() => {
-                const canvas = canvasRef.current;
-                if (!canvas || typeof Chart !== "function") {
-                  return undefined;
-                }
-                const labels = dailyCtBuckets.map((bucket) => String(bucket.label || ""));
-                const dailyCtValues = dailyCtBuckets.map((bucket) => Math.max(0, Number(bucket.totalCT || 0)));
-                const longRangeTickIndexes = (() => {
-                  if (labels.length < 90) {
-                    return null;
-                  }
-                  const targetCount = labels.length >= 365 ? 7 : 6;
-                  const indexes = new Set();
-                  for (let tickIndex = 0; tickIndex < targetCount; tickIndex += 1) {
-                    indexes.add(Math.round(((labels.length - 1) * tickIndex) / Math.max(1, targetCount - 1)));
-                  }
-                  return indexes;
-                })();
-                const seriesById = series.reduce((map, entry) => {
-                  map[entry.id] = Array.isArray(entry.values) ? entry.values : [];
-                  return map;
-                }, {});
-                const makeVerticalGradient = (context, stops, fallback) => {
-                  const chart = context?.chart;
-                  const chartArea = chart?.chartArea;
-                  const ctx = chart?.ctx;
-                  if (!ctx || !chartArea) {
-                    return fallback;
-                  }
-                  const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-                  stops.forEach(([offset, color]) => gradient.addColorStop(offset, color));
-                  return gradient;
-                };
-                const chartData = {
-                  labels,
-                  datasets: [
-                    {
-                      id: "dailyCT",
-                      type: "bar",
-                      label: "Cost",
-                      data: dailyCtValues,
-                      yAxisID: "ct",
-                      backgroundColor: (context) => makeVerticalGradient(context, [
-                        [0, "rgba(102, 166, 255, 0.82)"],
-                        [1, "rgba(91, 103, 230, 0.64)"],
-                      ], "rgba(95, 112, 230, 0.72)"),
-                      borderWidth: 0,
-                      borderRadius: 2,
-                      barPercentage: 0.72,
-                      categoryPercentage: 0.86,
-                      maxBarThickness: 10,
-                      order: 4,
-                    },
-                    {
-                      id: "runs",
-                      type: "line",
-                      label: "Threads",
-                      data: seriesById.runs || [],
-                      yAxisID: "runs",
-                      borderColor: "#7EFFFF",
-                      backgroundColor: "rgba(126, 255, 255, 0.08)",
-                      borderWidth: 1.5,
-                      fill: false,
-                      pointBackgroundColor: "#7EFFFF",
-                      pointBorderColor: "#050505",
-                      pointBorderWidth: 2,
-                      pointRadius: (context) => context.dataIndex === (seriesById.runs || []).length - 1 ? 5 : 0,
-                      pointHoverRadius: 5,
-                      tension: 0.28,
-                      order: 2,
-                    },
-                  ],
-                };
-                const chartOptions = {
-                  animation: false,
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  normalized: true,
-                  interaction: { intersect: false, mode: "index" },
-                  layout: { padding: { top: 12, right: 4, bottom: 0, left: 0 } },
-                  plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                      enabled: true,
-                      backgroundColor: "rgba(8, 8, 8, 0.96)",
-                      borderColor: "rgba(255, 255, 255, 0.14)",
-                      borderWidth: 1,
-                      cornerRadius: 8,
-                      displayColors: true,
-                      titleColor: "rgba(255, 255, 255, 0.94)",
-                      bodyColor: "rgba(255, 255, 255, 0.78)",
-                      padding: 10,
-                      callbacks: {
-                        label: (context) => {
-                          const datasetId = context.dataset?.id || "";
-                          const value = Math.max(0, Number(context.parsed?.y || 0));
-                          return datasetId === "dailyCT"
-                            ? "Cost: " + formatSettingsComputeTokens(value)
-                            : "Threads: " + formatTagPerformanceInteger(value);
-                        },
-                      },
-                    },
-                  },
-                  scales: {
-                    x: {
-                      type: "category",
-                      bounds: "data",
-                      offset: false,
-                      grid: { display: false, offset: false, drawBorder: false },
-                      border: { display: false },
-                      ticks: {
-                        align: "inner",
-                        autoSkip: false,
-                        color: "rgba(255, 255, 255, 0.38)",
-                        font: { size: 11, weight: "400", family: "Inter, ui-sans-serif, system-ui, sans-serif" },
-                        maxRotation: 0,
-                        minRotation: 0,
-                        padding: 10,
-                        callback: (_value, index) => {
-                          const bucket = dailyCtBuckets[index];
-                          const key = String(bucket?.key || "");
-                          const date = key ? new Date(key + "T00:00:00") : null;
-                          if (longRangeTickIndexes) {
-                            return longRangeTickIndexes.has(index)
-                              ? (date && !Number.isNaN(date.getTime())
-                                ? date.toLocaleDateString("en-US", { month: "short" })
-                                : (labels[index] || ""))
-                              : "";
-                          }
-                          if (labels.length === 30) {
-                            return index === 0 || index === labels.length - 1 ? (labels[index] || "") : "";
-                          }
-                          if (labels.length <= 7) {
-                            return labels[index] || "";
-                          }
-                          if (date && !Number.isNaN(date.getTime()) && date.getDate() <= 2) {
-                            return date.toLocaleDateString("en-US", { month: "short" });
-                          }
-                          return index === 0 || index === labels.length - 1 ? (labels[index] || "") : "";
-                        },
-                      },
-                    },
-                    runs: {
-                      display: true,
-                      type: "linear",
-                      position: "left",
-                      min: 0,
-                      max: Math.max(1, Math.ceil(maxRunValue * 1.18)),
-                      ticks: {
-                        display: true,
-                        maxTicksLimit: 4,
-                        color: "rgba(255, 255, 255, 0.34)",
-                        padding: 8,
-                        font: { size: 11, weight: "400", family: "Inter, ui-sans-serif, system-ui, sans-serif" },
-                        callback: (value) => formatTagPerformanceInteger(value),
-                      },
-                      grid: { display: false, drawTicks: false },
-                      border: { display: false },
-                    },
-                    ct: {
-                      display: false,
-                      type: "linear",
-                      position: "left",
-                      min: 0,
-                      max: Math.max(1, Math.ceil(maxDailyCt * 1.22)),
-                      grid: { display: false, drawTicks: false },
-                      border: { display: false },
-                    },
-                  },
-                };
-                if (chartRef.current) {
-                  chartRef.current.data = chartData;
-                  chartRef.current.options = chartOptions;
-                  chartRef.current.update("none");
-                  return undefined;
-                }
-                chartRef.current = new Chart(canvas, {
+            const tagAnalyticsMetricColors = {
+              "total-runs": "#7effff",
+              cost: "#8fc4ff",
+              "avg-ct": "#ffffff",
+              "success-rate": "#54e5a6",
+            };
+            const tagAnalyticsModel = {
+              title: "Analytics",
+              ariaLabel: selectedTag.label + " analytics",
+              metrics: tagPerformanceKpis.map((item) => ({
+                id: item.id,
+                label: item.label,
+                value: item.value,
+                color: tagAnalyticsMetricColors[item.id] || "rgba(255, 255, 255, 0.72)",
+              })),
+              labels: tagPerformanceBuckets.map((bucket) => String(bucket?.label || "")),
+              series: [
+                {
+                  id: "cost",
+                  label: "Cost",
+                  values: tagPerformanceBuckets.map((bucket) => Math.max(0, Number(bucket?.totalCT || 0))),
+                  color: "#8fc4ff",
                   type: "bar",
-                  data: chartData,
-                  options: chartOptions,
-                });
-                return undefined;
-              }, [chartSignature]);
-  
-              return React.createElement("div", { className: "playground-project-overview-progress-combo-chart-frame" },
-                React.createElement("canvas", {
-                  ref: canvasRef,
-                  className: "playground-project-overview-progress-combo-canvas playground-agents-detail-progress-combo-canvas playground-tags-detail-progress-combo-canvas",
-                  role: "img",
-                  "aria-label": selectedTag.label + " analytics: threads and usage cost",
-                })
-              );
-            }
-  
-            const handleTagChartDownload = () => {
-              if (typeof document === "undefined") {
-                return;
-              }
-              const canvas = document.querySelector(".playground-tags-detail-progress-combo-canvas");
-              if (!canvas || typeof canvas.toDataURL !== "function") {
-                return;
-              }
-              const link = document.createElement("a");
-              link.href = canvas.toDataURL("image/png");
-              link.download = tagId + "-tag-analytics.png";
-              link.click();
-            };
-            const analyticsSection = React.createElement("section", { className: "playground-project-overview-progress-combo-card playground-agents-detail-progress-combo-card" },
-              React.createElement("div", { className: "playground-project-overview-progress-combo-topbar" },
-                React.createElement("h2", { className: "playground-project-overview-progress-combo-title" }, "Analytics"),
-                React.createElement("div", { className: "playground-project-overview-progress-combo-actions" },
-                  React.createElement("div", { className: "playground-project-overview-progress-combo-ranges", role: "group", "aria-label": "Performance range" },
-                    tagDetailPerformanceRangeOptions.map((option) =>
-                      React.createElement("button", {
-                        key: option.id,
-                        type: "button",
-                        className: "playground-project-overview-progress-combo-range" + (activeTagPerformanceRange.id === option.id ? " is-active" : ""),
-                        onClick: () => setTagDetailPerformanceRange(option.id),
-                        "aria-pressed": activeTagPerformanceRange.id === option.id ? "true" : "false",
-                      }, option.label)
-                    )
-                  ),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-project-overview-progress-combo-download",
-                    onClick: handleTagChartDownload,
-                    title: "Download chart",
-                    "aria-label": "Download analytics chart",
-                  }, React.createElement(Download, { width: 15, height: 15, strokeWidth: 1.8 }))
-                )
-              ),
-              React.createElement("div", { className: "playground-project-overview-progress-combo-metrics" },
-                tagPerformanceKpis.map((item) =>
-                  React.createElement("div", { key: item.id, className: "playground-project-overview-progress-combo-metric" },
-                    React.createElement("div", { className: "playground-project-overview-progress-combo-metric-label" },
-                      React.createElement("span", { className: "playground-project-overview-progress-combo-metric-dot is-" + item.id, "aria-hidden": "true" }),
-                      React.createElement("span", null, item.label)
-                    ),
-                    React.createElement("div", { className: "playground-project-overview-progress-combo-metric-value" }, item.value)
-                  )
-                )
-              ),
-              React.createElement("div", { className: "playground-project-overview-progress-combo-chart" },
-                isThreadsLoading
-                  ? React.createElement("div", { className: "playground-project-overview-progress-combo-chart-frame" },
-                      React.createElement("div", {
-                          className: "playground-overview-chart-loading",
-                          style: { position: "static", inset: "auto", height: "100%" },
-                          "aria-label": "Loading chart data",
-                        },
-                        React.createElement(Loader2, { className: "playground-overview-chart-loading-icon", strokeWidth: 1.8 })
-                      )
-                    )
-                  : React.createElement(PlaygroundTagDetailPerformanceChart, {
-                      dailyCtBuckets: tagPerformanceBuckets,
-                      maxDailyCt: maxTagDailyCt,
-                      maxRunValue: maxTagRunValue,
-                      series: tagPerformanceSeries,
-                    })
-              )
-            );
-  
-            const history = tagInstructionsHistoryById[tagId] || { past: [], future: [] };
-            const canUndoInstructions = Array.isArray(history.past) && history.past.length > 0;
-            const canRedoInstructions = Array.isArray(history.future) && history.future.length > 0;
-            const focusInstructionsTextareaAtEnd = (value) => {
-              window.requestAnimationFrame(() => {
-                const textarea = tagInstructionsTextareaRef.current;
-                if (!textarea) {
-                  return;
-                }
-                const nextCaret = String(value || "").length;
-                textarea.focus();
-                textarea.setSelectionRange(nextCaret, nextCaret);
-                resizeTagInstructionsTextarea(textarea);
-              });
-            };
-            const applyInstructionsHistoryValue = (value) => {
-              updateTagInstructionsValue(tagId, String(value ?? ""), { recordHistory: false });
-              focusInstructionsTextareaAtEnd(value);
-            };
-            const handleInstructionsUndo = () => {
-              if (!canUndoInstructions) {
-                return;
-              }
-              const currentValue = String(tagConfig.instructions || "");
-              const previousValue = history.past[history.past.length - 1];
-              setTagInstructionsHistoryById((current) => {
-                const currentHistory = current[tagId] || { past: [], future: [] };
-                return {
-                  ...current,
-                  [tagId]: {
-                    past: (Array.isArray(currentHistory.past) ? currentHistory.past : []).slice(0, -1),
-                    future: [currentValue, ...(Array.isArray(currentHistory.future) ? currentHistory.future : [])].slice(0, 80),
-                  },
-                };
-              });
-              applyInstructionsHistoryValue(previousValue);
-            };
-            const handleInstructionsRedo = () => {
-              if (!canRedoInstructions) {
-                return;
-              }
-              const currentValue = String(tagConfig.instructions || "");
-              const nextValue = history.future[0];
-              setTagInstructionsHistoryById((current) => {
-                const currentHistory = current[tagId] || { past: [], future: [] };
-                return {
-                  ...current,
-                  [tagId]: {
-                    past: [...(Array.isArray(currentHistory.past) ? currentHistory.past : []), currentValue].slice(-80),
-                    future: (Array.isArray(currentHistory.future) ? currentHistory.future : []).slice(1),
-                  },
-                };
-              });
-              applyInstructionsHistoryValue(nextValue);
-            };
-            const renderInstructionsToolbarButton = (action) =>
-              React.createElement("button", {
-                key: action.id,
-                type: "button",
-                className: "playground-tasks-detail-format-button",
-                title: action.label,
-                "aria-label": action.label,
-                disabled: Boolean(action.disabled),
-                onMouseDown: (event) => event.preventDefault(),
-                onClick: action.onClick,
-              }, React.createElement(action.icon, {
-                width: 14,
-                height: 14,
-                strokeWidth: action.strokeWidth || 1.8,
-              }));
-            const formatActionGroups = [
-              [
-                { id: "undo", label: "Undo", icon: Undo2, disabled: !canUndoInstructions, onClick: handleInstructionsUndo },
-                { id: "redo", label: "Redo", icon: Redo2, disabled: !canRedoInstructions, onClick: handleInstructionsRedo },
-              ],
-              [
-                { id: "bold", label: "Bold", icon: Bold, strokeWidth: 2.7 },
-                { id: "italic", label: "Italic", icon: Italic },
-                { id: "underline", label: "Underline", icon: Underline },
-              ],
-              [
-                { id: "list", label: "List", icon: List },
-                { id: "ordered-list", label: "Ordered list", icon: ListOrdered },
-              ],
-              [
-                { id: "code", label: "Code", icon: CodeXml },
-                { id: "link", label: "Link", icon: Link2 },
-              ],
-            ];
-            const instructionsSection = React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section" },
-              React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Instructions"),
-                React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                  formatActionGroups.flatMap((group, groupIndex) => [
-                    groupIndex > 0
-                      ? React.createElement("span", {
-                          key: "divider:" + groupIndex,
-                          className: "playground-agents-detail-instructions-toolbar-divider",
-                          "aria-hidden": "true",
-                        })
-                      : null,
-                    ...group.map((action) => renderInstructionsToolbarButton({
-                      ...action,
-                      onClick: action.onClick || (() => handleTagMarkdownFormat(tagId, tagInstructionsTextareaRef, action.id)),
-                    })),
-                  ])
-                )
-              ),
-              React.createElement("div", {
-                  className: "playground-tasks-detail-description-editor"
-                    + (tagInstructionsEditingId === tagId ? " is-editing" : " is-preview"),
+                  axis: "secondary",
+                  valueKind: "tokens",
                 },
-                tagInstructionsEditingId !== tagId
-                  ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                      String(tagConfig.instructions || "").trim()
-                        ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                            content: tagConfig.instructions,
-                            className: "playground-tasks-detail-description-preview tb-message-markdown",
-                          })
-                        : React.createElement("div", {
-                            className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                          }, "Add custom instructions that will be sent to the agent every time a thread is invoked from this tag.")
-                    )
-                  : null,
-                React.createElement("textarea", {
-                  ref: tagInstructionsTextareaRef,
-                  className: "playground-tasks-detail-description-input " + (tagInstructionsEditingId === tagId ? "is-editing" : "is-preview"),
-                  rows: 1,
-                  placeholder: tagInstructionsEditingId === tagId ? "Add custom instructions that will be sent to the agent every time a thread is invoked from this tag." : "",
-                  value: tagConfig.instructions || "",
-                  onFocus: () => {
-                    setTagInstructionsEditingId(tagId);
-                  },
-                  onChange: (event) => {
-                    updateTagInstructionsValue(tagId, event.target.value);
-                    resizeTagInstructionsTextarea(event.currentTarget);
-                  },
-                  onBlur: () => {
-                    setTagInstructionsEditingId("");
-                  },
-                })
-              ),
+                {
+                  id: "runs",
+                  label: "Threads",
+                  values: tagPerformanceSeries.find((entry) => entry.id === "runs")?.values || [],
+                  color: "#7effff",
+                  type: "line",
+                  axis: "primary",
+                  valueKind: "count",
+                },
+              ],
+              loading: isThreadsLoading,
+            };
+            const analyticsSection = React.createElement(PlatformAnalyticsSection, {
+              variant: "framed",
+              className: "playground-tags-detail-analytics",
+              analytics: tagAnalyticsModel,
+              title: "Analytics",
+              timeframe: {
+                value: activeTagPerformanceRange.id,
+                options: tagDetailPerformanceRangeOptions.map((option) => ({
+                  value: option.id,
+                  label: option.label,
+                })),
+                onValueChange: setTagDetailPerformanceRange,
+                ariaLabel: "Tag analytics time frame",
+              },
+            });
+  
+            const instructionsSection = React.createElement(React.Fragment, null,
+              React.createElement(PlatformInstructionsEditor, {
+                value: tagConfig.instructions || "",
+                onChange: (value) => updateTagInstructionsValue(tagId, value),
+                title: "Instructions",
+                placeholder: "Add custom instructions that will be sent to the agent every time a thread is invoked from this tag.",
+                ariaLabel: selectedTag.label + " instructions",
+                stickyHeader: true,
+                historyKey: tagId,
+              }),
               tagSaveState.status === "saving" || tagSaveState.status === "saved" || tagSaveState.error
                 ? React.createElement("div", { className: "playground-environments-muted" },
                     tagSaveState.error || (tagSaveState.status === "saving" ? "Saving..." : "Saved")
@@ -3050,13 +2463,7 @@
                 )
               ),
             });
-            const sidebar = React.createElement("aside", {
-                className: "playground-project-overview-sidebar playground-agents-detail-sidebar",
-                "aria-label": selectedTag.label + " settings",
-              },
-              !tagDetailSidebarCollapsed
-                ? renderTagControlRow("playground-agents-detail-sidebar-controls playground-tags-detail-sidebar-controls")
-                : null,
+            const sidebar = React.createElement(React.Fragment, null,
               React.createElement("section", {
                   className: "playground-project-overview-sidebar-card playground-tags-detail-properties-card" + (defaultEnvironmentPopoverOpen ? " is-computer-popup-open is-environment-popup-open" : ""),
                 },
@@ -3125,20 +2532,6 @@
                   )
                 )
               )
-            );
-  
-            const tagPermissionsSection = React.createElement("section", {
-                className: "playground-agents-permissions-section",
-                key: "permissions",
-                "data-section-id": "permissions",
-              },
-              React.createElement(PlatformPermissionsPage, {
-                permissionSet: normalizedPermissionSet,
-                subjectType: "agent",
-                onRingAccessChange: (ringId, access) => updateTagPermissionRingAccess(tagId, ringId, access),
-                onActionRingChange: (actionId, ringId) => updateTagPermissionActionRing(tagId, actionId, ringId),
-                onActionAccessChange: (actionId, access) => updateTagPermissionActionAccess(tagId, actionId, access),
-              })
             );
   
             const setupContent = (() => {
@@ -3266,32 +2659,46 @@
                 setupContent
               )
             );
-            const activeSection = pluginDetailTab === "permissions"
-              ? tagPermissionsSection
+            const normalizedTagDetailTab = pluginDetailTab === "permissions"
+              ? "permissions"
               : pluginDetailTab === "tutorial"
+                ? "setup"
+                : "general";
+            const activeSection = normalizedTagDetailTab === "permissions"
+              ? null
+              : normalizedTagDetailTab === "setup"
                 ? setupSection
                 : React.createElement(React.Fragment, null,
                     analyticsSection,
                     instructionsSection
                   );
-  
-            return React.createElement(React.Fragment, null,
-              tagDetailBackButton,
-              tagProfileSection,
-              React.createElement("div", {
-                  className: "playground-project-overview-layout playground-agents-detail-overview-layout" + (tagDetailSidebarCollapsed ? " is-sidebar-collapsed" : ""),
+            const tagDetailContent = isTagLoading
+              ? React.createElement(PlatformLoadingState, {
+                  centered: true,
+                  message: "Loading tag...",
+                })
+              : activeSection;
+
+            return React.createElement(TagDetailPage, {
+                header: tagProfileSection,
+                tabBarActions: renderTagConnectionButton(),
+                sidebarToggle: renderTagSidebarToggleButton(),
+                sidebar,
+                activeTab: normalizedTagDetailTab,
+                onTabChange: (tab) => setPluginDetailTab(tab === "setup" ? "tutorial" : tab),
+                sidebarCollapsed: tagDetailSidebarCollapsed,
+                sidebarPopoverOpen: defaultEnvironmentPopoverOpen,
+                permissions: {
+                  permissionSet: normalizedPermissionSet,
+                  subjectType: "agent",
+                  onRingAccessChange: (ringId, access) => updateTagPermissionRingAccess(tagId, ringId, access),
+                  onActionRingChange: (actionId, ringId) => updateTagPermissionActionRing(tagId, actionId, ringId),
+                  onActionAccessChange: (actionId, access) => updateTagPermissionActionAccess(tagId, actionId, access),
                 },
-                React.createElement("div", { className: "playground-project-overview-main playground-agents-detail-overview-main" },
-                  tagDetailTabs,
-                  isTagLoading
-                    ? React.createElement("div", { className: "playground-settings-loading-state" },
-                        React.createElement(Loader2, { className: "playground-settings-loading-icon", strokeWidth: 1.8 })
-                      )
-                    : null,
-                  activeSection
-                ),
-                sidebar
-              ),
+                ariaLabel: selectedTag.label + " tag details",
+                sidebarAriaLabel: selectedTag.label + " tag settings",
+              },
+              tagDetailContent
             );
           }
   
@@ -4325,7 +3732,11 @@
             const isPluginsDetailView = (isPluginsView || isTagsView) && Boolean(selectedPlugin);
             const isSkillsDetailView = isSkillsView && toolsSkillsHeaderState.mode === "detail";
             const hasMenu = ((isPluginsView || isTagsView) && !isPluginsDetailView) || isActionsView;
-            const toolsOverviewTitle = isActionsView ? "Actions" : isSkillsView ? "Skills" : isTagsView ? "Tags" : "Plugins";
+            const toolsOverviewTitle = isActionsView
+              ? "Actions"
+              : isSkillsView
+                ? "Skills"
+                : "Tags and Plugins";
             const toolsWorkspaceRoot = isActionsView ? "Develop" : "Configure";
   
             return renderAppHeader({
@@ -4459,27 +3870,29 @@
             }
   
             const isTagsView = toolsView === "tags";
-            const pluginsCatalog = isTagsView ? buildTagsCatalog() : buildPluginsCatalog();
+            const tagsCatalog = buildTagsCatalog();
+            const pluginCatalog = buildPluginsCatalog();
+            const pluginsCatalog = isTagsView ? tagsCatalog : pluginCatalog;
             const selectedPlugin = pluginsCatalog.find((plugin) => plugin.id === selectedPluginId) || null;
             if (!selectedPlugin) {
-              const OverviewPage = isTagsView ? TagsOverviewPage : PluginsOverviewPage;
-              const rows = pluginsCatalog.map((plugin) => {
+              const buildConnectionOverviewRows = (catalog, kind) => catalog.map((plugin) => {
+                const isTag = kind === "tags";
                 const preferredAction = Array.isArray(plugin?.actions) ? plugin.actions[0] : null;
                 const category = String(plugin?.category || "").trim().toLowerCase() === "channels"
                   ? "channel"
                   : "workspace";
-                const identityLabel = isTagsView
+                const identityLabel = isTag
                   ? String(getCurrentTagDetailConfig(plugin?.id).connectedIdentity || plugin?.statusCopy || "").trim() || "Not connected"
                   : String(plugin?.statusCopy || "").trim() || (plugin?.connected ? "Connected" : "Not connected");
                 return {
                   ...plugin,
                   id: String(plugin?.id || ""),
-                  name: String(plugin?.label || plugin?.id || (isTagsView ? "Tag" : "Plugin")),
+                  name: String(plugin?.label || plugin?.id || (isTag ? "Tag" : "Plugin")),
                   searchText: [plugin?.label, plugin?.description, plugin?.category, identityLabel].filter(Boolean).join(" "),
                   icon: renderPluginRowLogo(plugin),
                   connected: Boolean(plugin?.connected),
                   identityLabel,
-                  providerLabel: String(plugin?.category || (isTagsView ? "Channel" : "Integration")).trim() || (isTagsView ? "Channel" : "Integration"),
+                  providerLabel: String(plugin?.category || (isTag ? "Channel" : "Integration")).trim() || (isTag ? "Channel" : "Integration"),
                   category,
                   connectionAction: preferredAction
                     ? {
@@ -4490,28 +3903,32 @@
                     : undefined,
                 };
               });
-              const overviewPage = React.createElement(OverviewPage, {
-                rows,
+              const tagRows = buildConnectionOverviewRows(tagsCatalog, "tags");
+              const pluginRows = buildConnectionOverviewRows(pluginCatalog, "plugins");
+              const overviewPage = React.createElement(TagsOverviewPage, {
+                mode: isTagsView ? "tags" : "plugins",
+                onModeChange: (mode) => {
+                  setSelectedPluginId("");
+                  setToolsView(mode);
+                },
+                tagRows,
+                pluginRows,
                 period: connectionsOverviewChartTimescale,
                 onPeriodChange: setConnectionsOverviewChartTimescale,
                 controlsPortalId: "playground-tools-overview-controls",
-                onOpen: (plugin) => setSelectedPluginId(plugin.id),
-                ...(isTagsView ? {
-                  quickstartUrl: ${JSON.stringify(aiosOrigin + "/developers/quickstart")},
-                  documentationUrl: ${JSON.stringify(aiosOrigin + "/developers/run-and-scale/webhooks")},
-                  tutorialUrl: ${JSON.stringify(aiosOrigin + "/tutorials/event-driven-triggers")},
-                } : {}),
+                onOpenTag: (plugin) => {
+                  setToolsView("tags");
+                  setSelectedPluginId(plugin.id);
+                },
+                onOpenPlugin: (plugin) => {
+                  setToolsView("plugins");
+                  setSelectedPluginId(plugin.id);
+                },
               });
   
-              if (isTagsView) {
-                return React.createElement("section", {
-                  className: "playground-environments-detail playground-plugins-detail playground-skills-page playground-resources-page playground-tags-overview-page is-develop-configure-page",
-                }, overviewPage);
-              }
-  
-              return React.createElement("section", { className: "playground-environments-detail playground-plugins-detail" },
-                React.createElement("div", { className: "playground-environments-detail-scroll playground-settings-detail-scroll" }, overviewPage)
-              );
+              return React.createElement("section", {
+                className: "playground-environments-detail playground-plugins-detail playground-skills-page playground-resources-page playground-tags-overview-page is-develop-configure-page",
+              }, overviewPage);
             }
   	          if (selectedPlugin) {
               const pluginHeaderButtonClass = "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button playground-develop-link-button playground-develop-server-metrics-add-button playground-plugin-detail-connect-button";

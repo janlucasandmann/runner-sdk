@@ -265,5 +265,11 @@ export const METRONOME_MODALS_CSS = String.raw`
           width: 150px;
           max-height: calc(100% - 24px);
         }
+
+        .playground-metronome-inline-node-inspector {
+          top: 12px;
+          right: 12px;
+          max-height: calc(100% - 24px);
+        }
       }
 `;

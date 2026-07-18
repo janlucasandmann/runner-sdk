@@ -17,6 +17,7 @@
   	      import { RunnerClient } from "/dist/index.js";
   	      import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
   	      import { PlatformAnalyticsSection } from "/dist/platform-ui/components/composite/analytics/index.js";
+        import { PlatformCodeEditorWorkspace } from "/dist/platform-ui/components/composite/code-editor-workspace/index.js";
   	      import { PlatformCodePreviewBox } from "/dist/platform-ui/components/composite/code-preview-box/index.js";
   	      import { PlatformDataTable } from "/dist/platform-ui/components/composite/data-table/index.js";
   	      import { PlatformDetailTabBar } from "/dist/platform-ui/components/composite/detail-tab-bar/index.js";
@@ -59,7 +60,7 @@
   	      import { PlatformApplicationBoundary } from "/dist/platform-runtime/platform-application-boundary.js";
   	      import { AgentPermissionMeters, AgentPermissionRingIcons, AgentPublishControl, AgentsOverviewAnalyticsRequestError, ComputersOverviewAnalyticsRequestError, createAgentsOverviewAnalytics, createComputersOverviewAnalytics, deleteComputerResource, fetchAgentsOverviewAnalytics, fetchComputersOverviewAnalytics, getAgentPermissionSummary, invalidateAgentsOverviewAnalytics, invalidateComputersOverviewAnalytics, normalizeComputerOverviewRows, readCachedAgentsOverviewAnalytics, readCachedComputersOverviewAnalytics, saveComputerResource } from "/dist/platform-shell/presentation/platform-resource-api.js";
   	      import { ApiKeysOverviewAnalyticsRequestError, createApiKeysOverviewAnalytics, createDevelopResourceOverviewRows, createDevelopVoiceAgentOverviewRows, deleteDevelopResource, fetchApiKeysOverviewAnalytics, invalidateApiKeysOverviewAnalytics, readCachedApiKeysOverviewAnalytics, saveDevelopResource } from "/dist/platform-shell/presentation/platform-develop-api.js";
-        import { AgentDetailPage, AgentPermissionsPage, AgentsOverviewPage, ComputerDetailPage, ComputersOverviewPage, ConfigureHomeOverviewPage, DevelopApiKeysOverviewPage, DevelopHomeOverviewPage, DevelopResourceOverviewRoute, DevelopVoiceAgentsOverviewPage, DevelopWebhooksOverviewPage, MetronomesOverviewPage, ModelsOverviewPage, NotificationsOverviewPage, PluginsOverviewPage, ProjectDetailPage, SkillsOverviewPage, TagsOverviewPage } from "/dist/platform-shell/presentation/platform-pages.js";
+        import { AgentDetailPage, AgentPermissionsPage, AgentsOverviewPage, ComputerDetailPage, ComputersOverviewPage, ConfigureHomeOverviewPage, DevelopApiKeysOverviewPage, DevelopHomeOverviewPage, DevelopResourceOverviewRoute, DevelopVoiceAgentsOverviewPage, DevelopWebhooksOverviewPage, MetronomesOverviewPage, ModelsOverviewPage, NotificationsOverviewPage, ProjectDetailPage, SkillsOverviewPage, TagDetailPage, TagsOverviewPage } from "/dist/platform-shell/presentation/platform-pages.js";
   	      import { openGoogleDrivePicker } from "/dist/platform-integrations/google-drive/google-drive-picker.js";
   
   	      function getPlaygroundSafeIconComponent(Icon, fallbackIcon = Circle) {

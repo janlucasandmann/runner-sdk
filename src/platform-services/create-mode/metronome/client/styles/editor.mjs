@@ -31,13 +31,13 @@ export const METRONOME_EDITOR_CSS = String.raw`
 
       .playground-metronome-inline-node-inspector {
         position: absolute;
-        top: 64px;
+        top: 24px;
         right: 24px;
         z-index: 16;
         width: min(360px, calc(100% - 220px));
         min-width: 300px;
         height: auto;
-        max-height: calc(100% - 88px);
+        max-height: calc(100% - 48px);
         min-height: 0;
         border: 0;
         border-radius: 15px;
@@ -67,34 +67,6 @@ export const METRONOME_EDITOR_CSS = String.raw`
         overflow: hidden;
       }
 
-      .playground-metronome-editor-content-header {
-        position: absolute;
-        top: 24px;
-        left: 198px;
-        right: 24px;
-        z-index: 18;
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 12px;
-        pointer-events: none;
-      }
-
-      .playground-metronome-editor-content-header > * {
-        pointer-events: auto;
-      }
-
-      .playground-metronome-editor-content-title {
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        color: rgba(255, 255, 255, 0.9);
-        font-size: 14px;
-        line-height: 1.25;
-        font-weight: 500;
-      }
-
       .playground-metronome-code-view {
         width: min(100%, var(--playground-centered-page-max-width));
         max-width: var(--playground-centered-page-max-width);
@@ -108,86 +80,17 @@ export const METRONOME_EDITOR_CSS = String.raw`
         color: rgba(255, 255, 255, 0.94);
       }
 
-      .playground-metronome-code-header {
-        flex: 0 0 auto;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 18px;
-      }
-
-      .playground-metronome-code-header.playground-metronome-palette-header {
-        width: 100%;
-        max-width: 100%;
-        justify-content: space-between;
-      }
-
-      .playground-metronome-code-header-title {
-        min-width: 0;
-        flex: 1 1 auto;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .playground-metronome-code-header .playground-metronome-detail-header-controls {
-        margin-left: auto;
-      }
-
       .playground-metronome-code-content {
         flex: 1 1 0;
         min-height: 0;
         height: auto;
       }
 
-      .playground-metronome-code-toolbar {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 16px;
-      }
-
-      .playground-metronome-code-title {
-        font-size: 18px;
-        line-height: 1.2;
-        font-weight: 500;
-      }
-
-      .playground-metronome-code-copy {
-        margin-top: 5px;
-        max-width: 680px;
-        color: rgba(255, 255, 255, 0.56);
-        font-size: 12px;
-        line-height: 1.45;
-      }
-
-      .playground-metronome-code-actions {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .playground-metronome-code-button {
-        position: relative;
-        min-height: 34px;
-        border: 0;
-        border-radius: 999px;
-        padding: 0 13px;
-        background: rgba(255, 255, 255, 0.04);
-        color: rgba(255, 255, 255, 0.92);
-        font: inherit;
-        font-size: 12px;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 7px;
-        cursor: pointer;
-      }
-
-      .playground-metronome-code-button.is-primary {
-        background: #fff;
-        color: #050505;
+      .playground-metronome-code-view.is-full-screen-workspace,
+      .playground-metronome-code-view.is-full-screen-workspace .playground-metronome-code-content {
+        width: 100%;
+        max-width: none;
+        margin: 0;
       }
 
       .playground-metronome-code-editor-shell {
@@ -227,36 +130,6 @@ export const METRONOME_EDITOR_CSS = String.raw`
         max-height: 100%;
       }
 
-      .playground-metronome-code-workspace.playground-servers-code-workspace {
-        border: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      .playground-metronome-code-file-row {
-        min-height: 34px;
-      }
-
-      .playground-metronome-code-statusbar-message {
-        min-width: 0;
-        color: rgba(255, 255, 255, 0.48);
-        font-size: 12px;
-        line-height: 1.3;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .playground-metronome-code-statusbar-message.is-success {
-        color: #6ee7b7;
-      }
-
-      .playground-metronome-code-statusbar-message.is-error {
-        color: #ff9a9a;
-      }
-
-      .playground-metronome-code-statusbar-message.is-loading {
-        color: #66a6ff;
-      }
-
       .playground-metronome-code-monaco {
         position: absolute;
         inset: 0;
@@ -283,25 +156,6 @@ export const METRONOME_EDITOR_CSS = String.raw`
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
         font-size: 12px;
         line-height: 1.55;
-      }
-
-      .playground-metronome-code-status {
-        min-height: 16px;
-        color: rgba(255, 255, 255, 0.54);
-        font-size: 12px;
-        line-height: 1.3;
-      }
-
-      .playground-metronome-code-status.is-success {
-        color: #6ee7b7;
-      }
-
-      .playground-metronome-code-status.is-error {
-        color: #ff9a9a;
-      }
-
-      .playground-metronome-code-status.is-loading {
-        color: #66a6ff;
       }
 
       .playground-metronome-palette-header {

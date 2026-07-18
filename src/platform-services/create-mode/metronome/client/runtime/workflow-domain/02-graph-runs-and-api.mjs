@@ -333,6 +333,73 @@ export const METRONOME_WORKFLOW_DOMAIN_02_FRAGMENT = String.raw`            ...(
           return rest;
         }
 
+        function isMetronomeTransientGraphItemKey(key, itemType) {
+          if (itemType === "node") {
+            return key === "selected"
+              || key === "dragging"
+              || key === "resizing"
+              || key === "positionAbsolute"
+              || key === "measured"
+              || key === "width"
+              || key === "height";
+          }
+          return key === "selected"
+            || key === "className"
+            || key === "style"
+            || key === "animated"
+            || key === "markerEnd"
+            || key === "markerStart"
+            || key === "label"
+            || key === "labelStyle"
+            || key === "labelBgStyle"
+            || key === "labelBgPadding"
+            || key === "labelBgBorderRadius";
+        }
+
+        function hasMetronomePersistedGraphItemChanged(previousItem, nextItem, itemType) {
+          if (previousItem === nextItem) return false;
+          if (!previousItem || !nextItem) return true;
+          const itemKeys = new Set([
+            ...Object.keys(previousItem),
+            ...Object.keys(nextItem),
+          ]);
+          for (const key of itemKeys) {
+            if (isMetronomeTransientGraphItemKey(key, itemType)) continue;
+            if (itemType === "node" && key === "position") {
+              if (
+                Number(previousItem.position?.x || 0) !== Number(nextItem.position?.x || 0)
+                || Number(previousItem.position?.y || 0) !== Number(nextItem.position?.y || 0)
+              ) {
+                return true;
+              }
+              continue;
+            }
+            if (previousItem[key] !== nextItem[key]) return true;
+          }
+          return false;
+        }
+
+        function haveMetronomePersistedGraphItemsChanged(previousItems, nextItems, itemType) {
+          if (previousItems === nextItems) return false;
+          if (!Array.isArray(previousItems) || !Array.isArray(nextItems) || previousItems.length !== nextItems.length) {
+            return true;
+          }
+          for (let index = 0; index < nextItems.length; index += 1) {
+            if (hasMetronomePersistedGraphItemChanged(previousItems[index], nextItems[index], itemType)) {
+              return true;
+            }
+          }
+          return false;
+        }
+
+        function haveMetronomePersistedNodesChanged(previousNodes, nextNodes) {
+          return haveMetronomePersistedGraphItemsChanged(previousNodes, nextNodes, "node");
+        }
+
+        function haveMetronomePersistedEdgesChanged(previousEdges, nextEdges) {
+          return haveMetronomePersistedGraphItemsChanged(previousEdges, nextEdges, "edge");
+        }
+
         function createMetronomePersistedNodes(nodes) {
           return normalizeMetronomeNodes((Array.isArray(nodes) ? nodes : []).map(sanitizeMetronomeNodeForPersistence));
         }

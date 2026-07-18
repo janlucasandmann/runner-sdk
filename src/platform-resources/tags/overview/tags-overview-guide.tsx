@@ -1,107 +1,94 @@
-import { ArrowRight, ArrowUpRight, BookOpen, MessagesSquare } from "lucide-react";
+import { ArrowRight, Cable, Tag } from "lucide-react";
 import { PlatformPageHero } from "../../../platform-ui/components/composite/page-hero/index.js";
 import { PlatformUiCard } from "../../../platform-ui/components/composite/ui-card/index.js";
 import type { ConnectionOverviewRow } from "../../shared/connections/connection-overview-page.js";
 
 interface TagsOverviewGuideProps {
-  rows: readonly ConnectionOverviewRow[];
-  onOpen: (row: ConnectionOverviewRow) => void;
-  quickstartUrl: string;
-  documentationUrl: string;
-  tutorialUrl: string;
+  tagRows: readonly ConnectionOverviewRow[];
+  pluginRows: readonly ConnectionOverviewRow[];
+  onOpenTag: (row: ConnectionOverviewRow) => void;
+  onOpenPlugin: (row: ConnectionOverviewRow) => void;
 }
 
-const CHANNEL_EXAMPLES = [
-  { id: "email", label: "Run tasks by email" },
-  { id: "telegram", label: "Operate agents from Telegram" },
-  { id: "discord", label: "Coordinate work from Discord" },
+const TAG_EXAMPLES = [
+  { id: "email", label: "Explore Email" },
+  { id: "telegram", label: "Explore Telegram" },
+  { id: "discord", label: "Explore Discord" },
 ] as const;
 
-function ExternalGuideLink({ href, children }: { href: string; children: string }) {
+const PLUGIN_EXAMPLES = [
+  { id: "github", label: "Explore GitHub" },
+  { id: "notion", label: "Explore Notion" },
+  { id: "google-drive", label: "Explore Google Drive" },
+] as const;
+
+function ConnectionLinks({
+  examples,
+  rows,
+  onOpen,
+}: {
+  examples: readonly { id: string; label: string }[];
+  rows: readonly ConnectionOverviewRow[];
+  onOpen: (row: ConnectionOverviewRow) => void;
+}) {
+  const rowsById = new Map(rows.map((row) => [row.id.toLowerCase(), row]));
   return (
-    <a
-      className="platform-ui-card__feature-link"
-      href={href}
-      target="_blank"
-      rel="noreferrer"
-    >
-      <span className="platform-ui-card__feature-link-label">{children}</span>
-      <span className="platform-ui-card__feature-link-end">
-        <ArrowUpRight width={14} height={14} strokeWidth={1.8} aria-hidden="true" />
-      </span>
-    </a>
+    <div className="platform-ui-card__feature-links">
+      {examples.map((example) => {
+        const row = rowsById.get(example.id);
+        if (!row) return null;
+        return (
+          <button
+            key={example.id}
+            type="button"
+            className="platform-ui-card__feature-link"
+            onClick={() => onOpen(row)}
+          >
+            <span className="platform-ui-card__feature-link-label">{example.label}</span>
+            <span className="platform-ui-card__feature-link-end">
+              <ArrowRight width={14} height={14} strokeWidth={1.8} aria-hidden="true" />
+            </span>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
 export function TagsOverviewGuide({
-  rows,
-  onOpen,
-  quickstartUrl,
-  documentationUrl,
-  tutorialUrl,
+  tagRows,
+  pluginRows,
+  onOpenTag,
+  onOpenPlugin,
 }: TagsOverviewGuideProps) {
-  const rowsById = new Map(rows.map((row) => [row.id.toLowerCase(), row]));
-
   return (
-    <section className="tags-overview-guide" aria-label="Get started with Tags">
+    <section className="tags-overview-guide" aria-label="Get started with Tags and Plugins">
       <PlatformPageHero
         className="tags-overview-guide__hero"
-        title="Tags"
-        description="Connect Email, Telegram, and Discord to start agent tasks and receive results directly in those channels."
+        title="Connect agents everywhere"
+        description="Use Tags to invoke agents from communication channels and Plugins to connect the external services agents use while working."
       />
       <div className="tags-overview-guide__cards">
         <PlatformUiCard as="article" variant="feature">
           <span className="platform-ui-card__feature-icon is-cyan" aria-hidden="true">
-            <BookOpen width={34} height={34} strokeWidth={1.6} />
+            <Tag width={34} height={34} strokeWidth={1.6} />
           </span>
-          <h2 className="platform-ui-card__feature-title">Start with Tags</h2>
+          <h2 className="platform-ui-card__feature-title">Tags</h2>
           <p className="platform-ui-card__feature-description">
-            Connect communication channels so people can start agent work and receive results without leaving the tools they already use.
+            Give agents identities in communication channels. Messages can start or continue threads, with results returned to the same conversation.
           </p>
-          <nav
-            className="platform-ui-card__feature-links"
-            aria-label="Tags learning resources"
-          >
-            <ExternalGuideLink href={quickstartUrl}>Quickstart</ExternalGuideLink>
-            <ExternalGuideLink href={documentationUrl}>Documentation</ExternalGuideLink>
-            <ExternalGuideLink href={tutorialUrl}>Event-driven tutorial</ExternalGuideLink>
-          </nav>
+          <ConnectionLinks examples={TAG_EXAMPLES} rows={tagRows} onOpen={onOpenTag} />
         </PlatformUiCard>
 
         <PlatformUiCard as="article" variant="feature">
           <span className="platform-ui-card__feature-icon is-blue" aria-hidden="true">
-            <MessagesSquare width={34} height={34} strokeWidth={1.6} />
+            <Cable width={34} height={34} strokeWidth={1.6} />
           </span>
-          <h2 className="platform-ui-card__feature-title">Channel examples</h2>
+          <h2 className="platform-ui-card__feature-title">Plugins</h2>
           <p className="platform-ui-card__feature-description">
-            Inspect setup, capabilities, and access controls for each supported channel before connecting it.
+            Connect repositories, knowledge bases, and cloud storage so agents can use external context and provider actions while completing work.
           </p>
-          <div className="platform-ui-card__feature-links">
-            {CHANNEL_EXAMPLES.map((example) => {
-              const row = rowsById.get(example.id);
-              if (!row) return null;
-              return (
-                <button
-                  key={example.id}
-                  type="button"
-                  className="platform-ui-card__feature-link"
-                  onClick={() => onOpen(row)}
-                >
-                  <span className="platform-ui-card__feature-link-label">
-                    {example.label}
-                  </span>
-                  <span className="platform-ui-card__feature-link-end">
-                    <ArrowRight
-                      width={14}
-                      height={14}
-                      strokeWidth={1.8}
-                      aria-hidden="true"
-                    />
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          <ConnectionLinks examples={PLUGIN_EXAMPLES} rows={pluginRows} onOpen={onOpenPlugin} />
         </PlatformUiCard>
       </div>
     </section>

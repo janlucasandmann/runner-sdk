@@ -45,20 +45,30 @@ describe("PlatformGlobalSearchModal", () => {
     ).toBeTruthy();
   });
 
-  it("centers the shared dot loader while results are loading", () => {
+  it("centers the shared loading-state component while results are loading", () => {
     render(
       <PlatformGlobalSearchModal
         {...defaultProps}
         resultsLoading
         loadingLabel="Loading threads..."
+        resultGroups={[
+          {
+            id: "stale-results",
+            label: "Threads",
+            items: [{ id: "thread-stale", title: "Stale thread" }],
+          },
+        ]}
       />,
     );
 
     const loadingState = screen.getByRole("status", { name: "Loading threads..." });
-    const loader = loadingState.querySelector(".platform-global-search-modal__dot-loader");
+    const loader = loadingState.querySelector(".platform-loading-state__loader");
+    expect(loadingState.classList.contains("platform-loading-state")).toBe(true);
+    expect(loadingState.classList.contains("is-centered")).toBe(true);
+    expect(screen.getByText("Loading threads...")).toBeTruthy();
     expect(loader).toBeTruthy();
-    expect(loader?.children).toHaveLength(9);
     expect(loadingState.querySelector(".platform-empty-state")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Stale thread" })).toBeNull();
   });
 
   it("renders actions and grouped results inside a fixed-height modal", async () => {
@@ -212,14 +222,16 @@ describe("PlatformGlobalSearchModal", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Open Research Agent in a new tab" }));
+    const resultTrigger = screen.getByRole("button", {
+      name: /^Research Agent Gemini 3 Flash$/i,
+    });
+    fireEvent.click(resultTrigger, { metaKey: true });
     await waitFor(() => {
       expect(onResultOpenInNewTab).toHaveBeenCalledWith("agent-1");
-      expect(
-        (screen.getByRole("button", { name: "Rename Research Agent" }) as HTMLButtonElement)
-          .disabled,
-      ).toBe(false);
     });
+
+    fireEvent.mouseEnter(resultTrigger.closest(".platform-global-search-modal__result")!);
+    expect(screen.getByText("\u2318 \u21e7 E").tagName).toBe("KBD");
 
     fireEvent.click(screen.getByRole("button", { name: "Rename Research Agent" }));
     const renameInput = screen.getByRole("textbox", { name: "Rename Research Agent" });
@@ -283,6 +295,75 @@ describe("PlatformGlobalSearchModal", () => {
     expect(
       (screen.getByRole("button", { name: "Delete Loop" }) as HTMLButtonElement).disabled,
     ).toBe(true);
+  });
+
+  it("runs Go, Edit, and Delete against the hovered result with keyboard shortcuts", () => {
+    const onResultSelect = vi.fn();
+    const onResultRename = vi.fn();
+    const onResultDelete = vi.fn();
+
+    render(
+      <PlatformGlobalSearchModal
+        {...defaultProps}
+        mode="agents"
+        resultGroups={[
+          {
+            id: "agents",
+            label: "Agents",
+            items: [
+              { id: "agent-1", title: "Research Agent" },
+              { id: "agent-2", title: "Support Agent" },
+            ],
+          },
+        ]}
+        onResultSelect={onResultSelect}
+        onResultRename={onResultRename}
+        onResultDelete={onResultDelete}
+      />,
+    );
+
+    const supportResult = screen
+      .getByRole("button", { name: /^Support Agent$/i })
+      .closest(".platform-global-search-modal__result");
+    expect(supportResult).toBeTruthy();
+    expect(screen.queryByLabelText("Actions for Support Agent")).toBeNull();
+    fireEvent.mouseEnter(supportResult!);
+    expect(screen.getByLabelText("Actions for Support Agent")).toBeTruthy();
+
+    fireEvent.keyDown(document, { key: "Enter" });
+    expect(onResultSelect).toHaveBeenLastCalledWith("agent-2");
+
+    fireEvent.keyDown(document, { key: "E", metaKey: true, shiftKey: true });
+    expect(screen.getByRole("textbox", { name: "Rename Support Agent" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Cancel renaming Support Agent" }));
+
+    fireEvent.keyDown(document, { key: "D", ctrlKey: true, shiftKey: true });
+    expect(screen.getByRole("alertdialog", { name: "Delete Support Agent?" })).toBeTruthy();
+    expect(onResultDelete).not.toHaveBeenCalled();
+  });
+
+  it("keeps the result count left-aligned and exposes a labeled Escape close control", () => {
+    const onClose = vi.fn();
+    render(
+      <PlatformGlobalSearchModal
+        {...defaultProps}
+        onClose={onClose}
+        resultCount={4}
+      />,
+    );
+
+    const footer = document.querySelector(".platform-global-search-modal__footer");
+    expect(footer?.firstElementChild?.textContent).toBe("4 results");
+    expect(screen.queryByText("Open result")).toBeNull();
+
+    const closeButton = footer?.querySelector<HTMLButtonElement>(
+      ".platform-global-search-modal__footer-close",
+    );
+    expect(closeButton).toBeTruthy();
+    expect(closeButton?.textContent).toBe("CloseEsc");
+    expect(closeButton?.querySelector("kbd")?.textContent).toBe("Esc");
+    fireEvent.click(closeButton!);
+    expect(onClose).toHaveBeenCalledOnce();
   });
 
   it("exposes the optional actions expansion control independently of the query", () => {

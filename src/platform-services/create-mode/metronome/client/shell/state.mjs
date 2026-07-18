@@ -3,6 +3,7 @@ export const METRONOME_APP_STATE_SCRIPT = `
         const [metronomeOpenWorkflowRequest, setMetronomeOpenWorkflowRequest] = useState(null);
         const [metronomeTopNavState, setMetronomeTopNavState] = useState(null);
         const [metronomeTopNavMenuOpen, setMetronomeTopNavMenuOpen] = useState(false);
+        const [metronomeTopNavPublishMenuOpen, setMetronomeTopNavPublishMenuOpen] = useState(false);
         const [metronomeBreadcrumbVersionMenuOpen, setMetronomeBreadcrumbVersionMenuOpen] = useState(false);
         const [isMetronomeNodeDetailOpen, setIsMetronomeNodeDetailOpen] = useState(false);
         const [collapsedMetronomeRunGroups, setCollapsedMetronomeRunGroups] = useState({});
@@ -43,7 +44,7 @@ export const METRONOME_APP_STATE_SCRIPT = `
           share: null,
           delete: null,
           publish: null,
-          run: null,
+          revertVersion: null,
           goOverview: null,
           setMode: null,
           selectVersion: null,

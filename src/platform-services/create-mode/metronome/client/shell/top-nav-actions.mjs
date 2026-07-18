@@ -30,6 +30,7 @@ export const METRONOME_APP_TOP_NAV_ACTIONS_SCRIPT = `
               "aria-expanded": metronomeBreadcrumbVersionMenuOpen ? "true" : "false",
               onClick: () => {
                 setMetronomeTopNavMenuOpen(false);
+                setMetronomeTopNavPublishMenuOpen(false);
                 setMetronomeBreadcrumbVersionMenuOpen((current) => !current);
               },
             },
@@ -130,25 +131,99 @@ export const METRONOME_APP_TOP_NAV_ACTIONS_SCRIPT = `
                 { id: "delete", label: "Delete", icon: Trash2, action: () => metronomeTopNavActionsRef.current?.delete?.(), danger: true },
               ];
           const workflowId = String(state.workflowId || "").trim();
+          const showPublishControl = !isReadOnly
+            && state.showPublish
+            && (state.editorMode === "edit" || state.editorMode === "code");
+          const publishBusy = Boolean(state.publishBusy);
+          const publishDisabled = Boolean(state.publishDisabled);
+          const publishActions = [
+            {
+              id: "save-new",
+              label: "Save to new Version",
+              Icon: GitBranchPlus,
+              shortcut: "⇧⌘S",
+              disabled: publishDisabled,
+              action: () => metronomeTopNavActionsRef.current?.createVersion?.(),
+            },
+            {
+              id: "revert",
+              label: "Revert to last saved Version",
+              Icon: Undo2,
+              disabled: publishBusy || !state.canRevertVersion,
+              action: () => metronomeTopNavActionsRef.current?.revertVersion?.(),
+            },
+          ];
           return React.createElement(React.Fragment, null,
-            isReadOnly
-              ? null
-              : React.createElement(PlatformSecondaryButton, {
-                  type: "button",
-                  size: "small",
-                  className: "playground-metronome-top-nav-run-button",
-                  onClick: () => metronomeTopNavActionsRef.current?.run?.(),
+            showPublishControl
+              ? React.createElement(PlatformButtonSelector, {
+                  mode: "split-action",
+                  buttonVariant: "primary",
+                  buttonSize: "small",
+                  open: metronomeTopNavPublishMenuOpen,
+                  onOpenChange: (nextOpen) => {
+                    if (nextOpen) {
+                      setMetronomeTopNavMenuOpen(false);
+                      setMetronomeBreadcrumbVersionMenuOpen(false);
+                    }
+                    setMetronomeTopNavPublishMenuOpen(nextOpen);
+                  },
+                  onAction: () => {
+                    setMetronomeTopNavPublishMenuOpen(false);
+                    return metronomeTopNavActionsRef.current?.publish?.();
+                  },
+                  label: "Save & Publish",
+                  leading: React.createElement(Rocket, { strokeWidth: 1.8 }),
+                  actionAriaLabel: "Save and publish Metronome changes",
+                  popupAriaLabel: "Version save options",
+                  actionDisabled: publishDisabled,
+                  popupDisabled: publishDisabled,
+                  active: metronomeTopNavPublishMenuOpen,
+                  popupAlignment: "right",
+                  popupRole: "menu",
+                  popupWidth: 268,
+                  popupMaxHeight: "min(260px, calc(100vh - 96px))",
+                  className: "playground-metronome-detail-publish-selector",
+                  popupClassName: "playground-agents-detail-publish-menu playground-metronome-detail-publish-menu",
                 },
-                  React.createElement(Play, { strokeWidth: 1.8 }),
-                  React.createElement("span", null, "Run")
-                ),
+                  publishActions.map((action) => React.createElement("button", {
+                    key: action.id,
+                    type: "button",
+                    className: "tb-popup-row",
+                    role: "menuitem",
+                    disabled: action.disabled,
+                    onClick: () => {
+                      if (action.disabled) return;
+                      setMetronomeTopNavPublishMenuOpen(false);
+                      action.action();
+                    },
+                  },
+                    React.createElement(action.Icon, {
+                      className: "tb-popup-icon",
+                      width: 14,
+                      height: 14,
+                      strokeWidth: 2.15,
+                    }),
+                    React.createElement("span", null, action.label),
+                    action.shortcut
+                      ? React.createElement("span", {
+                          className: "playground-agents-detail-publish-menu-shortcut",
+                          "aria-hidden": "true",
+                        }, action.shortcut)
+                      : null
+                  ))
+                )
+              : null,
             React.createElement("div", { className: "playground-metronome-top-nav-menu-shell", ref: metronomeTopNavMenuRef },
               React.createElement("button", {
                 type: "button",
                 className: "playground-top-nav-private-chat-button playground-metronome-top-nav-menu-trigger" + (metronomeTopNavMenuOpen ? " is-active" : ""),
                 "aria-label": "Metronome actions",
                 "aria-expanded": metronomeTopNavMenuOpen ? "true" : "false",
-                onClick: () => setMetronomeTopNavMenuOpen((current) => !current),
+                onClick: () => {
+                  setMetronomeTopNavPublishMenuOpen(false);
+                  setMetronomeBreadcrumbVersionMenuOpen(false);
+                  setMetronomeTopNavMenuOpen((current) => !current);
+                },
               },
                 React.createElement(Ellipsis, { strokeWidth: 1.8 })
               ),

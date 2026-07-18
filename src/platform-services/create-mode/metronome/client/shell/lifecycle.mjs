@@ -5,6 +5,7 @@ export const METRONOME_APP_LIFECYCLE_SCRIPT = `
           }
           setMetronomeTopNavState(null);
           setMetronomeTopNavMenuOpen(false);
+          setMetronomeTopNavPublishMenuOpen(false);
           setMetronomeBreadcrumbVersionMenuOpen(false);
           setIsMetronomeNodeDetailOpen(false);
           metronomeTopNavActionsRef.current = {
@@ -14,7 +15,7 @@ export const METRONOME_APP_LIFECYCLE_SCRIPT = `
             share: null,
             delete: null,
             publish: null,
-            run: null,
+            revertVersion: null,
             goOverview: null,
             setMode: null,
             selectVersion: null,
@@ -64,8 +65,15 @@ export const METRONOME_APP_LIFECYCLE_SCRIPT = `
         }, [metronomeBreadcrumbVersionMenuOpen]);
 
         useEffect(() => {
+          setMetronomeTopNavPublishMenuOpen(false);
           setMetronomeBreadcrumbVersionMenuOpen(false);
         }, [metronomeTopNavState?.workflowId]);
+
+        useEffect(() => {
+          if (!metronomeTopNavState?.showPublish) {
+            setMetronomeTopNavPublishMenuOpen(false);
+          }
+        }, [metronomeTopNavState?.showPublish]);
 
         useEffect(() => {
           if (!isMetronomeNodeDetailOpen || !sidebarOpen) {

@@ -3,6 +3,7 @@
 Components that assemble multiple controls, behaviors, or presentation regions into a reusable interface live here.
 
 - `analytics`: KPI summaries, Chart.js rendering, axes, and analytics states.
+- `code-editor-workspace`: multi-file editing surfaces with file navigation, editor content, status, and centralized footer actions.
 - `code-preview-box`: quickstart and API example surfaces with language, copy, static preview, and lazy Monaco modes.
 - `data-table`: table state, toolbar, sorting, selection, and row presentation.
 - `detail-sidebar`: canonical resource-detail sidebars and section surfaces.

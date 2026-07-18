@@ -94,6 +94,10 @@ for (const file of [
   "src/platform-resources/computers/detail/README.md",
   "src/platform-resources/computers/detail/computer-detail-page.tsx",
   "src/platform-resources/computers/detail/computer-detail-page.test.tsx",
+  "src/platform-resources/tags/detail/index.ts",
+  "src/platform-resources/tags/detail/README.md",
+  "src/platform-resources/tags/detail/tag-detail-page.tsx",
+  "src/platform-resources/tags/detail/tag-detail-page.test.tsx",
   "src/platform-services/configure-mode/configure-home/client/page/configure-home-overview-page.tsx",
 ]) {
   if (!await pathExists(path.join(packageRoot, file))) {
@@ -147,6 +151,10 @@ for (const filePath of sourceFiles) {
 }
 
 const platformEntrySource = await readPlatformCompositionSource();
+const tagDetailPageSource = await fs.readFile(
+  path.join(packageRoot, "src", "platform-resources", "tags", "detail", "tag-detail-page.tsx"),
+  "utf8",
+);
 for (const retiredIdentifier of [
   "setAgentInstructionsHistory",
   "setIsAgentInstructionsEditing",
@@ -172,7 +180,10 @@ if (!platformEntrySource.includes("React.createElement(AgentPublishControl")) {
 if (platformEntrySource.includes("renderAgentPublishControlTrigger")) {
   failures.push("the platform application must not own the AgentPublishControl trigger");
 }
-if (!platformEntrySource.includes("React.createElement(PlatformPermissionsPage")) {
+if (
+  !platformEntrySource.includes("React.createElement(PlatformPermissionsPage")
+  && !tagDetailPageSource.includes("<PlatformPermissionsPage")
+) {
   failures.push("the platform application must consume the modular PlatformPermissionsPage");
 }
 const rolePermissionsConsumers = [
@@ -337,6 +348,29 @@ for (const retiredComputerDetailRenderer of [
   if (computerDetailControllerSource.includes(retiredComputerDetailRenderer)) {
     failures.push(`computer detail still owns retired shared UI: ${retiredComputerDetailRenderer}`);
   }
+}
+
+if (!tagDetailPageSource.includes("ResourceDetailPage")) {
+  failures.push("TagDetailPage must compose the shared ResourceDetailPage");
+}
+if (!tagDetailPageSource.includes("PlatformPermissionsPage")) {
+  failures.push("TagDetailPage must own its permissions-tab composition");
+}
+const tagDetailControllerSource = await fs.readFile(
+  path.join(packageRoot, "apps", "platform", "client", "legacy", "domains", "shell", "controller", "settings-tools-and-rendering.template.js"),
+  "utf8",
+);
+if (!tagDetailControllerSource.includes("React.createElement(TagDetailPage")) {
+  failures.push("the Tags detail controller must consume the modular TagDetailPage");
+}
+if (!tagDetailControllerSource.includes("React.createElement(PlatformAnalyticsSection")) {
+  failures.push("Tag detail analytics must use PlatformAnalyticsSection");
+}
+if (!tagDetailControllerSource.includes("React.createElement(PlatformInstructionsEditor")) {
+  failures.push("Tag instructions must use PlatformInstructionsEditor");
+}
+if (!tagDetailControllerSource.includes("React.createElement(PlatformLoadingState")) {
+  failures.push("Tag detail loading must use PlatformLoadingState");
 }
 
 const projectDetailPageSource = await fs.readFile(

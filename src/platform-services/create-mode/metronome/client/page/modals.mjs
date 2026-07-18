@@ -4,21 +4,16 @@ export const METRONOME_PAGE_MODALS_SCRIPT = String.raw`
             : metronomeEditorMode === "code"
             ? React.createElement(React.Fragment, null,
                 renderCodeMode(),
-                renderMetronomePublishSidebarPortal(),
-                renderMetronomeRunSidebarPortal()
+                renderMetronomePublishSidebarPortal()
               )
             : metronomeEditorMode === "runs"
               ? React.createElement(React.Fragment, null,
                   renderRunsMode(),
-                  renderMetronomePublishSidebarPortal(),
-                  renderMetronomeRunSidebarPortal()
+                  renderMetronomePublishSidebarPortal()
                 )
               : React.createElement(React.Fragment, null,
                   React.createElement("div", { className: "playground-metronome-editor" },
                     React.createElement("main", { className: "playground-metronome-editor-main" },
-                      React.createElement("div", { className: "playground-metronome-editor-content-header" },
-                        renderMetronomeHeaderControls()
-                      ),
                       isMetronomeFlowReady
                         ? React.createElement(ReactFlowProvider, { key: metronomeFlowGraphKey + "|mount:" + metronomeFlowMountVersion },
                             React.createElement(MetronomeFlowCanvas, {
@@ -54,8 +49,7 @@ export const METRONOME_PAGE_MODALS_SCRIPT = String.raw`
                       renderInlineNodeInspector()
                     )
                   ),
-                  renderMetronomePublishSidebarPortal(),
-                  renderMetronomeRunSidebarPortal()
+                  renderMetronomePublishSidebarPortal()
                 );
 
           const renderWorkflowNameModal = () => {

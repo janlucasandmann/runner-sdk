@@ -88,6 +88,13 @@
     "./platform-ui/components/composite/analytics/styles.css": {
       "default": "./dist/platform-ui/components/composite/analytics/analytics.css"
     },
+    "./platform-ui/components/composite/code-editor-workspace": {
+      "types": "./dist/platform-ui/components/composite/code-editor-workspace/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/code-editor-workspace/index.js"
+    },
+    "./platform-ui/components/composite/code-editor-workspace/styles.css": {
+      "default": "./dist/platform-ui/components/composite/code-editor-workspace/code-editor-workspace.css"
+    },
     "./platform-ui/components/composite/code-preview-box": {
       "types": "./dist/platform-ui/components/composite/code-preview-box/index.d.ts",
       "default": "./dist/platform-ui/components/composite/code-preview-box/index.js"

@@ -9,9 +9,12 @@ The component owns:
 - the shared minimal popup for selecting Threads, Files, Tickets, Agents, or Workflows;
 - generic action and grouped resource-result presentation;
 - single-line result rows with optional identifiers, resource-native visuals, and right-aligned metadata;
-- shared icon-only controls for opening, renaming, and requesting deletion;
+- hover-revealed icon controls for opening, renaming, and requesting deletion;
+- contextual Go, Edit, and Delete shortcut hints in the modal footer;
+- pointer-targeted result shortcuts for navigation, inline editing, and deletion;
 - reusable confirmation-modal deletion with pending and inline error handling;
-- loading, empty, active-result, and footer states;
+- the centralized loading-state component and shared empty-state presentation;
+- active-result, result-count, and Escape-close footer states;
 - accessible section and dialog semantics.
 
 The shell remains responsible for loading only the selected resource type, projecting it into the typed view models, and handling navigation after a result is selected. Organization-scoped resources are cached with the active request scope, preventing stale results from appearing after an organization switch. This keeps data access and routing outside the presentation component.

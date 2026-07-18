@@ -1,6 +1,10 @@
 import { Cable, ChevronRight, Link2, Unlink } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
-import type { PlatformDataTableAction, PlatformDataTableColumn } from "../../../platform-ui/components/composite/data-table/index.js";
+import type {
+  PlatformDataTableAction,
+  PlatformDataTableColumn,
+  PlatformDataTableProps,
+} from "../../../platform-ui/components/composite/data-table/index.js";
 import { PlatformLabel } from "../../../platform-ui/components/ui/label/index.js";
 import {
   ResourceOverviewPage,
@@ -39,6 +43,10 @@ export interface ConnectionOverviewPageProps {
   showPeriodSelector?: boolean;
   controlsPortalId?: string;
   headerActions?: ReactNode;
+  pageClassName?: string;
+  toolbarLeading?: ReactNode;
+  toolbarTitle?: ReactNode | false;
+  pagination?: PlatformDataTableProps<ConnectionOverviewRow>["pagination"];
   onOpen: (row: ConnectionOverviewRow) => void;
 }
 
@@ -70,16 +78,18 @@ export function ConnectionOverviewPage({
   showPeriodSelector,
   controlsPortalId,
   headerActions,
+  pageClassName,
+  toolbarLeading,
+  toolbarTitle,
+  pagination,
   onOpen,
 }: ConnectionOverviewPageProps) {
   const [statusFilter, setStatusFilter] = useState("all");
-  const [category, setCategory] = useState("all");
   const filteredRows = useMemo(() => rows.filter((row) => {
     if (statusFilter === "connected" && !row.connected) return false;
     if (statusFilter === "disconnected" && row.connected) return false;
-    if (kind === "plugins" && category !== "all" && row.category !== category) return false;
     return true;
-  }), [category, kind, rows, statusFilter]);
+  }), [rows, statusFilter]);
   const resolvedAnalytics = analytics || createFallbackAnalytics(kind, rows);
   const entity = kind === "tags" ? "Tags" : "Plugins";
 
@@ -141,14 +151,6 @@ export function ConnectionOverviewPage({
     } satisfies PlatformDataTableAction<ConnectionOverviewRow>] : []),
   ];
 
-  const categorySwitch = kind === "plugins" ? (
-    <div className="resource-overview-segmented" role="group" aria-label="Plugin category">
-      {[["all", "All"], ["channel", "Channel"], ["workspace", "Integration"]].map(([id, label]) => (
-        <button key={id} type="button" className={category === id ? "is-active" : ""} onClick={() => setCategory(id)} aria-pressed={category === id}>{label}</button>
-      ))}
-    </div>
-  ) : undefined;
-
   return (
     <ResourceOverviewPage<ConnectionOverviewRow>
       period={period}
@@ -158,7 +160,7 @@ export function ConnectionOverviewPage({
       showPeriodSelector={showPeriodSelector}
       controlsPortalId={controlsPortalId}
       headerActions={headerActions}
-      className={`is-${kind}`}
+      className={pageClassName || `is-${kind}`}
       table={{
         rows: filteredRows,
         columns,
@@ -167,8 +169,10 @@ export function ConnectionOverviewPage({
         className: `resource-overview-table is-${kind}`,
         sorting: { defaultValue: { id: "name", direction: "asc" } },
         selection: { enabled: true, ariaLabel: (row) => `Select ${row.name}` },
+        pagination: pagination === undefined ? (kind === "tags" ? false : undefined) : pagination,
         toolbar: {
-          title: `All ${entity}`,
+          title: toolbarTitle === false ? undefined : toolbarTitle || `All ${entity}`,
+          leading: toolbarLeading,
           search: { placeholder: `Search ${kind}`, getSearchText: (row) => row.searchText || `${row.name} ${row.identityLabel} ${row.providerLabel}` },
           filters: [{
             id: "status",
@@ -181,7 +185,6 @@ export function ConnectionOverviewPage({
               { id: "disconnected", label: "Not Connected" },
             ],
           }],
-          trailing: categorySwitch,
         },
         getRowActions,
         onRowActivate: onOpen,

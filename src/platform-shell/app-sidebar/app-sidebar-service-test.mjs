@@ -46,6 +46,11 @@ assert.match(
   fragments.navigationItems,
   /id: "new-thread"[\s\S]*id: "projects"[\s\S]*id: "files"[\s\S]*id: "create-services-label"[\s\S]*label: "Services"[\s\S]*id: "create-test"/,
 );
+assert.match(
+  fragments.navigationItems,
+  /id: "tags"[\s\S]*label: "Tags and Plugins"[\s\S]*toolsView === "tags" \|\| toolsView === "plugins"/,
+);
+assert.doesNotMatch(fragments.navigationItems, /id: "plugins"/);
 assert.match(fragments.navigationItems, /function handleSidebarNavigationItemClick\(item\)/);
 assert.match(fragments.navigationItems, /requestPlatformNavigation\(item\?\.onClick\)/);
 assert.doesNotMatch(fragments.navigationItems, /if \(item\.active\)/);

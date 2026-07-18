@@ -2,6 +2,7 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
           threadSearchFileInventoryByEnvironmentIdRef.current = threadSearchFileInventoryByEnvironmentId;
         }, [threadSearchFileInventoryByEnvironmentId]);
 
+        const THREAD_SEARCH_RESULT_LIMIT = 20;
         const threadSearchResourceScopeKey = useMemo(() => (
           proxyBackendBase + "|" + requestHeadersSignature
         ), [proxyBackendBase, requestHeadersSignature]);
@@ -360,7 +361,7 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
                 signal: controller.signal,
                 body: JSON.stringify({
                   query: searchQuery,
-                  limit: 100,
+                  limit: THREAD_SEARCH_RESULT_LIMIT,
                   offset: 0,
                   includeMessages: false,
                 }),
@@ -376,7 +377,7 @@ export const APP_HEADER_SEARCH_PROJECTION_SCRIPT = `        useEffect(() => {
               ).filter((thread) => (
                 !isPrivateThreadRecord(thread)
                 && !privateThreadIdsRef.current.has(String(thread?.id || "").trim())
-              ));
+              )).slice(0, THREAD_SEARCH_RESULT_LIMIT);
               const parsedTotal = Number(data?.total);
               const total = Number.isFinite(parsedTotal)
                 ? Math.max(items.length, parsedTotal)
