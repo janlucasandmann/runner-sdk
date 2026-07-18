@@ -43,6 +43,12 @@ export const APP_HEADER_NAVIGATION_SCRIPT = `        function getThreadSearchMod
             return;
           }
 
+          if (normalizedActionId === "create-agent") {
+            closeThreadSearch();
+            openPlatformResourceCreationModal("agent");
+            return;
+          }
+
           requestPlatformNavigation(() => {
             closeThreadSearch();
             if (normalizedActionId === "create-chat") {
@@ -63,12 +69,6 @@ export const APP_HEADER_NAVIGATION_SCRIPT = `        function getThreadSearchMod
             }
             if (normalizedActionId === "create-ticket") {
               openTopNavIssueComposer();
-              return;
-            }
-            if (normalizedActionId === "create-agent") {
-              openResourcesView("agents", { forceOverview: true });
-              setAgentCreationPageModelId("");
-              setAgentCreationPageRequestToken((current) => current + 1);
               return;
             }
             if (normalizedActionId === "create-workflow") {

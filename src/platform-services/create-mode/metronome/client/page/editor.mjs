@@ -19,36 +19,18 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
             }, inspector);
           };
 
-          const renderMetronomePublishSidebarPortal = () => {
-            const sidebar = renderMetronomePublishSidebar();
-            if (!sidebar) return null;
-            if (!inspectorPortalId || typeof document === "undefined" || typeof createPortal !== "function") {
-              return inspectorPortalId ? null : sidebar;
+          const renderMetronomeVersionHistorySidebarPortal = () => {
+            if (!activeWorkflow) return null;
+            let portalTarget = null;
+            if (inspectorPortalId) {
+              if (typeof document === "undefined") return null;
+              portalTarget = document.getElementById(inspectorPortalId);
+              if (!portalTarget) return null;
             }
-            const portalTarget = document.getElementById(inspectorPortalId);
-            return portalTarget ? createPortal(sidebar, portalTarget) : null;
-          };
-
-          const getMetronomeVersionPopupActions = (options = {}) => {
-            const isBusy = Boolean(options.isBusy) || metronomePublishState.status === "loading";
-            const hasVersionChanges = hasActiveMetronomeVersionChanges();
-            return [
-              {
-                id: "save-new",
-                label: "Save to new Version",
-                Icon: GitBranchPlus,
-                shortcut: "⇧⌘S",
-                disabled: isBusy || isActiveWorkflowBuiltIn || !hasVersionChanges,
-                onClick: () => openCreateWorkflowVersionModal(),
-              },
-              {
-                id: "revert",
-                label: "Revert to last saved Version",
-                Icon: Undo2,
-                disabled: isBusy || isActiveWorkflowBuiltIn || !activeWorkflowDeployments.length || !hasVersionChanges,
-                onClick: () => void revertActiveWorkflowToLastSavedVersion(),
-              },
-            ];
+            return renderMetronomeVersionHistorySidebar({
+              portal: Boolean(portalTarget),
+              portalTarget,
+            });
           };
 
           const renderMetronomeDeploymentHistory = () => {
@@ -92,8 +74,8 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
             );
           };
 
-          const renderMetronomePublishSidebar = () => {
-            if (!isMetronomePublishMenuOpen || !activeWorkflow) return null;
+          const renderMetronomeVersionHistorySidebar = (options = {}) => {
+            if (!activeWorkflow) return null;
             const isBusy = metronomePublishState.status === "loading";
             const isValidating = metronomePublishState.status === "validating";
             const publishIssues = Array.isArray(metronomePublishState.issues) ? metronomePublishState.issues : [];
@@ -104,14 +86,11 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
               || activeDeploymentId
               || ""
             ).trim();
-            const versionHeaderActions = getMetronomeVersionPopupActions({ isBusy });
-            const stateContent = React.createElement(React.Fragment, null,
-              isValidating
-                ? React.createElement("div", { className: "playground-metronome-publish-state" },
-                    metronomePublishState.message || "Checking workflow before publishing..."
-                  )
-                : null,
-              metronomePublishState.status === "error"
+            const stateContent = isValidating
+              ? React.createElement("div", { className: "platform-version-history-sidebar__state" },
+                  metronomePublishState.message || "Checking workflow before publishing..."
+                )
+              : metronomePublishState.status === "error"
                 ? React.createElement("div", { className: "playground-metronome-publish-issues" },
                     React.createElement("div", { className: "playground-metronome-publish-issues-title" }, "Resolve before publishing"),
                     publishIssues.length
@@ -126,48 +105,32 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
                         )
                       : React.createElement("div", null, metronomePublishState.message || "The workflow is not ready to publish.")
                   )
-                : null
-            );
-            return React.createElement(PlaygroundVersionSidebar, {
-              open: isMetronomePublishMenuOpen,
-              title: "Publish Metronome",
+                : null;
+            return React.createElement(PlatformVersionHistorySidebar, {
+              open: isMetronomeVersionHistorySidebarOpen,
+              title: "Version history",
+              sectionTitle: "Saved versions",
               className: "playground-metronome-workflow-versions-sidebar",
+              width: "var(--playground-thread-task-detail-width)",
+              portal: Boolean(options.portal),
+              portalTarget: options.portalTarget || null,
               versions: activeWorkflowDeployments,
               activeVersionId: activeDeploymentId,
               selectedVersionId: selectedDeploymentId,
-              state: metronomePublishState,
-              busy: isBusy,
-              openMenuId: openMetronomeVersionMenuId,
-              onOpenMenuIdChange: setOpenMetronomeVersionMenuId,
-              headerMenuOpen: isMetronomeVersionsHeaderMenuOpen,
-              headerMenuActions: versionHeaderActions,
-              headerMenuDisabled: isBusy,
-              onHeaderMenuOpenChange: setIsMetronomeVersionsHeaderMenuOpen,
+              loading: isLoadingMetronomeVersions,
+              loadingMessage: "Loading versions",
+              error: metronomeVersionsError || null,
+              busy: isBusy || isValidating,
+              stateContent,
               onClose: () => {
-                setOpenMetronomeVersionMenuId("");
-                setIsMetronomePublishSettingsMenuOpen(false);
-                setIsMetronomeVersionsHeaderMenuOpen(false);
                 setMetronomeVersionChangesState(null);
-                setIsMetronomePublishMenuOpen(false);
+                setIsMetronomeVersionHistorySidebarOpen(false);
               },
-              onSaveVersion: openCreateWorkflowVersionModal,
+              onCreateVersion: openCreateWorkflowVersionModal,
               onSelectVersion: (versionId) => void restoreActiveWorkflowVersion(versionId),
               onPublishVersion: (versionId) => void publishMetronomeDeploymentVersion(versionId),
               canPublishVersion: (deployment) => canPublishMetronomeDeploymentVersion(deployment),
-              stateContent,
-              unpublishLabel: "Unpublish workflow",
-              versionsSectionFooter: React.createElement("div", { className: "playground-metronome-publish-section-footer playground-agents-version-compare-footer" },
-                React.createElement(PlatformSecondaryButton, {
-                  size: "large",
-                  type: "button",
-                  className: "playground-metronome-secondary-button playground-metronome-publish-new-button playground-agents-version-compare-button",
-                  disabled: isBusy || !activeWorkflowDeployments.length,
-                  onClick: () => openMetronomeVersionChangesPage(),
-                },
-                  React.createElement(Code2, { width: 13, height: 13, strokeWidth: 1.8 }),
-                  React.createElement("span", null, "View Changes")
-                )
-              ),
+              onViewChanges: () => openMetronomeVersionChangesPage(),
               getVersionTitle: (deployment) => String(deployment.label || ("Version " + deployment.version)).trim(),
               getVersionDescription: () => "",
               getVersionMeta: (deployment) => (
@@ -179,25 +142,25 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
                 + String(deployment.edgeCount || 0)
                 + " connections"
               ),
-              getRowMenuItems: (deployment) => [
+              getVersionActions: (deployment) => [
                 {
                   id: "edit",
                   label: "Edit version",
                   icon: SquarePen,
-                  onClick: () => openEditWorkflowVersionModal(deployment.id),
+                  onSelect: () => openEditWorkflowVersionModal(deployment.id),
                 },
                 {
                   id: "compare",
                   label: "View Changes",
                   icon: Code2,
-                  onClick: () => openMetronomeVersionChangesPage(deployment.id),
+                  onSelect: () => openMetronomeVersionChangesPage(deployment.id),
                 },
                 {
                   id: "delete",
                   label: "Delete version",
                   icon: Trash2,
                   danger: true,
-                  onClick: () => void deleteWorkflowVersion(deployment.id),
+                  onSelect: () => void deleteWorkflowVersion(deployment.id),
                 },
               ],
             });
@@ -743,7 +706,9 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
                               className: "playground-metronome-run-thread-link",
                               onClick: () => {
                                 if (typeof onThreadOpen === "function") {
-                                  onThreadOpen(thread.id, { contentMode: "chat" });
+                                  requestMetronomeNavigation(() => (
+                                    onThreadOpen(thread.id, { contentMode: "chat" })
+                                  ));
                                 }
                               },
                             }, "Show thread")
@@ -970,7 +935,7 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
               const normalizedRunId = String(runId || "").trim();
               if (!normalizedRunId) return;
               setSelectedNodeId("");
-              setIsMetronomePublishMenuOpen(false);
+              setIsMetronomeVersionHistorySidebarOpen(false);
               setMetronomeRunToolbarPopover("");
               setMetronomeRunActionMenu(null);
               setSelectedMetronomeRunId(normalizedRunId);
@@ -1176,6 +1141,6 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
                 )
               )
 	            ),
-	            renderMetronomePublishSidebarPortal()
+	            renderMetronomeVersionHistorySidebarPortal()
 	          );
 `;

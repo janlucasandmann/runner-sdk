@@ -1,5 +1,5 @@
 export function createThreadHtmlPreviewGateway(bindings) {
-    const { fetchAiosApi, fetchAiosCloud, hasAiosSession, isUnauthorizedHttpStatus, parseUpstreamUrl, port, readOptionalApiKey, sendJson, withProxyOrganizationHeader } = bindings;
+    const { fetchAiosApi, fetchAiosCloud, hasAiosSession, identityService, isUnauthorizedHttpStatus, parseUpstreamUrl, port, readOptionalApiKey, sendJson, withProxyOrganizationHeader } = bindings;
     async function proxyThreadStepHtmlPreview(req, res, threadId, stepId, filePath) {
         try {
             const upstreamUrl = parseUpstreamUrl(req, {});
@@ -35,7 +35,10 @@ export function createThreadHtmlPreviewGateway(bindings) {
                 upstream = await fetchAiosCloud(req, `${upstreamPath}?${upstreamSearch.toString()}`, {
                     method: "GET",
                 });
-                if (isUnauthorizedHttpStatus(upstream.status) || upstream.status === 404) {
+                if (
+                    identityService.provider !== "oidc"
+                    && (isUnauthorizedHttpStatus(upstream.status) || upstream.status === 404)
+                ) {
                     upstream = await fetchAiosApi(req, `/api${upstreamPath}?${upstreamSearch.toString()}`, {
                         method: "GET",
                     });

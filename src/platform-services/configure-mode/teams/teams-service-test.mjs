@@ -47,7 +47,7 @@ assert.doesNotThrow(() => new Function(`
 assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.statePrimary, /teamPageLoadAbortControllerRef/);
 assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.stateDialogs, /teamPageCreateModalOpen/);
 assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.roleLifecycle, /setTeamPermissionChartAnimationKey/);
-assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.tableLifecycle, /teamOverviewToolbarPopover/);
+assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.tableLifecycle, /teamPageMemberToolbarPopover/);
 assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.dialogLifecycle, /closeTeamPageShareModal/);
 assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.resourceLifecycle, /setTeamPageProjectResourceIndexes/);
 assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.navigation, /function openTeamPage/);
@@ -90,12 +90,16 @@ assert.deepEqual(Object.keys(pageFragments), [
   "rolesAndView",
 ]);
 assert.match(pageFragments.setup, /function renderTeamPage/);
+assert.match(pageFragments.setup, /const teamOverviewRows =/);
 assert.match(pageFragments.overview, new RegExp(JSON.stringify(documentationUrl).replace(/[.*+?^\${}()|[\]\\]/g, "\\$&")));
+assert.match(pageFragments.overview, /React\.createElement\(TeamsOverviewPage/);
 assert.match(pageFragments.members, /const renderMembersTab/);
+assert.doesNotMatch(pageFragments.members, /normalizeTeamOverviewSortDirection/);
 assert.match(pageFragments.resourcesFoundation, /function buildTeamProjectResourceRows/);
 assert.match(pageFragments.resourcesView, /const renderResourcesTab/);
 assert.match(pageFragments.rolesAndView, /const renderRolesTab/);
 assert.doesNotThrow(() => new Function(Object.values(pageFragments).join("")));
+assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-teams-overview-controls/);
 
 const platformEntrySource = await readPlatformCompositionSource();
 assert.match(platformEntrySource, /from "\.\.\/\.\.\/\.\.\/src\/platform-services\/configure-mode\/teams\/index\.mjs"/);

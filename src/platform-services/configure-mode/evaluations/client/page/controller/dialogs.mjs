@@ -517,6 +517,19 @@ export const EVALUATIONS_PAGE_CONTROLLER_DIALOGS_SCRIPT = String.raw`        fun
               ? (activeSet.name || "Untitled Evaluation")
               : "Evaluations";
 
+        if (isEvaluationOverviewPage) {
+          return React.createElement(React.Fragment, null,
+            renderOverview(),
+            renderRunModal(),
+            renderEvaluationCaseEditorModal(),
+            renderEvaluationRenameModal(),
+            renderEvaluationThreadCaseModal(),
+            renderCreateModal(),
+            renderEvaluationVersionModal(),
+            renderEvaluationVersionsSidebarPortal()
+          );
+        }
+
         return React.createElement("section", { className: "playground-files-page playground-guardrails-page playground-evaluations-page" },
           renderEvaluationTopNavActions(),
           React.createElement("div", { className: "playground-files-shell playground-guardrails-shell" },
@@ -597,4 +610,3 @@ export const EVALUATIONS_PAGE_CONTROLLER_DIALOGS_SCRIPT = String.raw`        fun
 	        );
       }
 `;
-

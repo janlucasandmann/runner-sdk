@@ -25,6 +25,8 @@ assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.evaluations, /normalizePlayground
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.performanceChart, /PlaygroundFineTuningPerformanceChart/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.verification, /startFineTuningVerificationRuns/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /renderCreateModal/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.overview, /React\.createElement\(FineTuningOverviewPage/);
+assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.overview, /React\.createElement\(PlatformDataTable/);
 assert.equal(
   Object.values(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS).join(""),
   PLAYGROUND_FINE_TUNING_SCRIPT,
@@ -36,6 +38,7 @@ assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.historyCapture, /fineTuneJobId/);
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.historyRestore, /entry\.page === "fine-tuning"/);
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.lifecycle, /selectedFineTuningJobId/);
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.topNavigation, /function renderFineTuningPageNav/);
+assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-fine-tuning-overview-controls/);
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.pageView, /function renderFineTuningPage/);
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.sidebarEntry, /id: "fine-tuning"/);
 assert.doesNotThrow(() => new Function(String.raw`

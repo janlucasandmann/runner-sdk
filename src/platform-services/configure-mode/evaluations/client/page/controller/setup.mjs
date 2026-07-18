@@ -16,8 +16,6 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           setEvaluationsPageMode,
           evaluationDetailTab,
           setEvaluationDetailTab,
-          evaluationsSearchQuery,
-          setEvaluationsSearchQuery,
           evaluationCreateModalOpen,
           setEvaluationCreateModalOpen,
           evaluationCreateForm,
@@ -93,12 +91,6 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         const [evaluationCasesFilterMode, setEvaluationCasesFilterMode] = useState("all");
         const [evaluationCasesToolbarPopover, setEvaluationCasesToolbarPopover] = useState("");
         const [evaluationCasesVisibleCount, setEvaluationCasesVisibleCount] = useState(10);
-        const [evaluationSetsSortMode, setEvaluationSetsSortMode] = useState("updated-desc");
-        const [evaluationSetsFilterMode, setEvaluationSetsFilterMode] = useState("all");
-        const [evaluationSetsToolbarPopover, setEvaluationSetsToolbarPopover] = useState("");
-        const [evaluationSetsVisibleCount, setEvaluationSetsVisibleCount] = useState(10);
-        const [evaluationSetRowMenuId, setEvaluationSetRowMenuId] = useState("");
-        const [selectedEvaluationOverviewIds, setSelectedEvaluationOverviewIds] = useState(() => new Set());
         const [evaluationRunRowMenuId, setEvaluationRunRowMenuId] = useState("");
         const [evaluationCaseRowMenuId, setEvaluationCaseRowMenuId] = useState("");
         const [evaluationCreateModalVisible, setEvaluationCreateModalVisible] = useState(false);
@@ -788,4 +780,3 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         ]);
 
 `;
-

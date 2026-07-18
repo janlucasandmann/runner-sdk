@@ -1,4 +1,4 @@
-import type { MouseEventHandler, ReactNode } from "react";
+import type { MouseEventHandler, KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
 import {
   type PlatformButtonSize,
   type PlatformButtonVariant,
@@ -75,6 +75,10 @@ function renderAction(action: PlatformCodeEditorAction) {
   );
 }
 
+function stopEditorKeyboardPropagation(event: ReactKeyboardEvent<HTMLElement>) {
+  event.stopPropagation();
+}
+
 export function PlatformCodeEditorWorkspace({
   files,
   activeFileId = "",
@@ -101,6 +105,8 @@ export function PlatformCodeEditorWorkspace({
       aria-label={ariaLabel}
       data-platform-code-editor-workspace="true"
       data-platform-code-editor-workspace-variant={variant}
+      onKeyDown={stopEditorKeyboardPropagation}
+      onKeyUp={stopEditorKeyboardPropagation}
     >
       <aside className="platform-code-editor-workspace__sidebar">
         <div className="platform-code-editor-workspace__sidebar-header">

@@ -12,8 +12,6 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           setSelectedFineTuningJobId,
           fineTuningPageMode = "overview",
           setFineTuningPageMode,
-          fineTuningSearchQuery = "",
-          setFineTuningSearchQuery,
           fineTuningCreateModalOpen = false,
           setFineTuningCreateModalOpen,
           fineTuningCreateForm = {},
@@ -45,11 +43,6 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         const [createError, setCreateError] = useState("");
         const [createBusy, setCreateBusy] = useState(false);
         const [fineTuningJobsLoading, setFineTuningJobsLoading] = useState(false);
-        const [rowMenuId, setRowMenuId] = useState("");
-        const [fineTuningSortMode, setFineTuningSortMode] = useState("updated-desc");
-        const [fineTuningFilterMode, setFineTuningFilterMode] = useState("all");
-        const [fineTuningToolbarPopover, setFineTuningToolbarPopover] = useState("");
-        const [selectedFineTuningOverviewIds, setSelectedFineTuningOverviewIds] = useState(() => new Set());
         const [fineTuningDetailTab, setFineTuningDetailTab] = useState("analysis");
         const [fineTuningStopJobId, setFineTuningStopJobId] = useState("");
         const [evaluationSetPickerOpen, setEvaluationSetPickerOpen] = useState(false);
@@ -191,16 +184,6 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           avatarUrl: currentUserAvatarUrl || "",
         }), [currentUserId, currentUserName, currentUserEmail, currentUserAvatarUrl]);
         const selectedJob = scoredJobs.find((job) => job.id === selectedFineTuningJobId) || scoredJobs[0] || null;
-        const normalizedQuery = normalizePlaygroundFineTuningString(fineTuningSearchQuery).toLowerCase();
-        const filteredJobs = scoredJobs.filter((job) => {
-          if (!normalizedQuery) return true;
-          return [
-            job.name,
-            job.agentName,
-            job.environmentName,
-            job.evaluationSets.map((set) => set.name).join(" "),
-          ].join(" ").toLowerCase().includes(normalizedQuery);
-        });
 
         function isDefaultFineTuningTargetAgent(agent) {
           const metadata = agent?.metadata && typeof agent.metadata === "object" && !Array.isArray(agent.metadata) ? agent.metadata : {};
@@ -590,4 +573,3 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         }, [backendUrl, displaySourceJobs.map((job) => job.id + ":" + job.status + ":" + (job.threadId || "") + ":" + (Array.isArray(job.diffFiles) ? job.diffFiles.length : 0)).join("|")]);
 
 `;
-

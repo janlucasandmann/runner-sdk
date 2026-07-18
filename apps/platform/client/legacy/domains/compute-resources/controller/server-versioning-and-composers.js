@@ -1303,6 +1303,9 @@
               }));
               setSelectedEnvironmentId(savedEnvironment.id);
               setDraftEnvironment(savedEnvironment);
+              if (!creationOnly) {
+                setIsHomeViewActive(false);
+              }
               setEnvironmentComposerOpen(false);
               setEnvironmentComposerDraft(buildPlaygroundDefaultEnvironmentDraft());
               setEnvironmentComposerSaveState({
@@ -1310,8 +1313,18 @@
                 error: "",
               });
   
+              if (creationOnly && typeof onCreationRequestClose === "function") {
+                onCreationRequestClose({
+                  reason: "created",
+                  resourceId: String(savedEnvironment.id || "").trim(),
+                });
+              }
               if (onEnvironmentMutated) {
-                await onEnvironmentMutated();
+                try {
+                  await onEnvironmentMutated();
+                } catch (refreshError) {
+                  console.warn("Computer created, but the computer list could not be refreshed.", refreshError);
+                }
               }
             } catch (error) {
               setEnvironmentComposerSaveState({
@@ -1798,259 +1811,94 @@
   	          );
           }
   
-          function renderEnvironmentCreationSetupPage() {
+          function renderEnvironmentCreationSetupModal() {
+            if (!environmentComposerOpen) {
+              return null;
+            }
+
             const composerDraft = environmentComposerDraft || buildPlaygroundDefaultEnvironmentDraft();
-            const isSaving = environmentComposerSaveState.isSaving;
-  
-            return React.createElement("div", {
-                className: "playground-environments-detail-scroll playground-settings-detail-scroll playground-computer-creation-scroll",
-                ref: resourcesDetailScrollRef,
+            const isSaving = Boolean(environmentComposerSaveState.isSaving);
+            const hasOpenSelector = Boolean(environmentComposerRuntimePopover);
+
+            return React.createElement(PlatformModal, {
+              open: environmentComposerOpen,
+              title: "Create Computer",
+              description: "Configure the profile and runtime versions for the new computer.",
+              headerVariant: "search",
+              headerSearchProps: {
+                inputRef: environmentCreationNameInputRef,
+                value: composerDraft.name || "",
+                placeholder: "New Computer",
+                "aria-label": "Computer name",
+                title: composerDraft.name || "Computer name",
+                disabled: isSaving,
+                onKeyDown: (event) => event.stopPropagation(),
+                onChange: (event) => updateEnvironmentComposerField("name", event.target.value),
               },
-              React.createElement("form", {
-                  className: "playground-resources-detail-content playground-agents-creation-form playground-computer-creation-form",
-                  onKeyDown: handleComposerSubmitShortcut,
-                  onSubmit: (event) => void handleEnvironmentComposerSubmit(event),
-                },
-                React.createElement("div", { className: "playground-computer-creation-header" },
-                  React.createElement("h2", { className: "playground-computer-creation-title" }, "Create a new Computer"),
-                  React.createElement("p", { className: "playground-computer-creation-subtitle" },
-                    "Computers give agents a dedicated runtime with their own persistent file base for project work."
+              size: "medium",
+              as: "form",
+              className: "playground-agents-creation-modal playground-computer-creation-modal",
+              bodyClassName: "playground-agents-creation-modal-body playground-computer-creation-modal-body",
+              footerClassName: "playground-agents-creation-modal-footer playground-computer-creation-modal-footer",
+              initialFocusRef: environmentCreationNameInputRef,
+              closeButtonLabel: "Close computer creation",
+              closeButtonDisabled: isSaving,
+              closeOnBackdrop: !isSaving && !hasOpenSelector,
+              closeOnEscape: !isSaving && !hasOpenSelector,
+              onClose: closeEnvironmentComposer,
+              surfaceProps: {
+                onSubmit: (event) => void handleEnvironmentComposerSubmit(event),
+              },
+              footer: React.createElement(React.Fragment, null,
+                React.createElement(PlatformSecondaryButton, {
+                  size: "medium",
+                  type: "button",
+                  onClick: closeEnvironmentComposer,
+                  disabled: isSaving,
+                }, "Cancel"),
+                React.createElement(PlatformPrimaryButton, {
+                  size: "medium",
+                  type: "submit",
+                  disabled: isSaving || !String(composerDraft.name || "").trim(),
+                }, isSaving ? "Creating..." : "Create Computer")
+              ),
+            },
+              React.createElement("div", { className: "playground-agents-creation-config-box playground-computer-creation-modal-config" },
+                React.createElement("section", { className: "playground-computer-creation-field" },
+                  React.createElement("div", { className: "playground-tasks-project-modal-label playground-computer-creation-label" }, "Computer Profile"),
+                  renderEnvironmentComputeProfileSelector(
+                    composerDraft.computeProfile,
+                    (profileId) => updateEnvironmentComposerField("computeProfile", profileId),
+                    { disabled: isSaving }
                   )
                 ),
-                React.createElement("div", { className: "playground-agents-creation-config-box playground-computer-creation-config-box" },
-                  React.createElement("div", { className: "playground-computer-creation-name-row" },
-                    React.createElement("input", {
-                      type: "text",
-                      className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input playground-agents-profile-name-input playground-computer-creation-name-input",
-                      value: composerDraft.name || "",
-                      placeholder: "New Computer",
-                      "aria-label": "Computer name",
-                      title: composerDraft.name || "Computer name",
-                      autoFocus: true,
-                      disabled: isSaving,
-                      onKeyDown: (event) => event.stopPropagation(),
-                      onChange: (event) => updateEnvironmentComposerField("name", event.target.value),
-                    })
-                  ),
-                  React.createElement("div", { className: "playground-computer-creation-field" },
-                    React.createElement("div", { className: "playground-tasks-project-modal-label playground-computer-creation-label" }, "Computer Profile"),
-                    renderEnvironmentComputeProfileSelector(
-                      composerDraft.computeProfile,
-                      (profileId) => updateEnvironmentComposerField("computeProfile", profileId),
-                      { disabled: isSaving }
-                    )
-                  ),
-                  composerDraft.computeProfile === "desktop"
-                    ? React.createElement("div", { className: "playground-computer-creation-field" },
-                        React.createElement("div", { className: "playground-tasks-project-modal-label playground-computer-creation-label" }, "Office Apps"),
-                        React.createElement("div", { className: "playground-environment-composer-toggle-row" },
-                          React.createElement("div", { className: "playground-environment-composer-toggle-help" },
-                            "Install Writer and Calc on the Desktop profile for document and spreadsheet work."
-                          ),
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-environments-toggle" + (composerDraft.officeAppsEnabled === true ? " is-active" : ""),
-                            onClick: () => updateEnvironmentComposerField("officeAppsEnabled", !(composerDraft.officeAppsEnabled === true)),
-                            "aria-pressed": composerDraft.officeAppsEnabled === true ? "true" : "false",
-                            title: composerDraft.officeAppsEnabled === true ? "Office apps enabled" : "Office apps disabled",
-                            disabled: isSaving,
-                          }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
-                        )
+                composerDraft.computeProfile === "desktop"
+                  ? React.createElement("section", { className: "playground-computer-creation-field" },
+                      React.createElement("div", { className: "playground-tasks-project-modal-label playground-computer-creation-label" }, "Office Apps"),
+                      React.createElement("div", { className: "playground-environment-composer-toggle-row" },
+                        React.createElement("div", { className: "playground-environment-composer-toggle-help" },
+                          "Install Writer and Calc for document and spreadsheet work."
+                        ),
+                        React.createElement("button", {
+                          type: "button",
+                          className: "playground-environments-toggle" + (composerDraft.officeAppsEnabled === true ? " is-active" : ""),
+                          onClick: () => updateEnvironmentComposerField("officeAppsEnabled", !(composerDraft.officeAppsEnabled === true)),
+                          "aria-pressed": composerDraft.officeAppsEnabled === true ? "true" : "false",
+                          title: composerDraft.officeAppsEnabled === true ? "Office apps enabled" : "Office apps disabled",
+                          disabled: isSaving,
+                        }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
                       )
-                    : null,
-                  React.createElement("div", { className: "playground-computer-creation-field" },
-                    React.createElement("div", { className: "playground-tasks-project-modal-label playground-computer-creation-label" }, "Runtime Versions"),
-                    renderEnvironmentComposerRuntimeSettings(composerDraft, isSaving)
-                  ),
-                  React.createElement("div", { className: "playground-agents-creation-actions playground-computer-creation-actions" },
-                    React.createElement(PlatformSecondaryButton, {
-                      size: "medium",
-                      type: "button",
-                      className: "playground-agents-creation-action-button is-secondary",
-                      disabled: isSaving,
-                      onClick: () => {
-                        closeEnvironmentComposer();
-                        setIsHomeViewActive(true);
-                      },
-                    }, "Cancel"),
-                    React.createElement(PlatformPrimaryButton, {
-                      size: "medium",
-                      type: "submit",
-                      className: "playground-agents-creation-action-button is-primary",
-                      disabled: isSaving || !String(composerDraft.name || "").trim(),
-                    }, isSaving ? "Creating..." : "Create Computer")
-                  )
+                    )
+                  : null,
+                React.createElement("section", { className: "playground-computer-creation-field" },
+                  React.createElement("div", { className: "playground-tasks-project-modal-label playground-computer-creation-label" }, "Runtime Versions"),
+                  renderEnvironmentComposerRuntimeSettings(composerDraft, isSaving)
                 ),
                 environmentComposerSaveState.error
                   ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, environmentComposerSaveState.error)
                   : null
               )
             );
-          }
-  
-          function renderEnvironmentComposerDialog() {
-            if (!environmentComposerOpen || (embeddedInResources && !isServersMode)) {
-              return null;
-            }
-  
-            const composerDraft = environmentComposerDraft || buildPlaygroundDefaultEnvironmentDraft();
-  
-            return React.createElement(PlatformModalBackdrop, {
-                className: "playground-tasks-project-modal-backdrop",
-                onClick: () => {
-                  if (!environmentComposerSaveState.isSaving) {
-                    closeEnvironmentComposer();
-                  }
-                },
-              },
-                React.createElement(PlatformModalSurface, {
-                    as: "form",
-                    className: "playground-tasks-project-modal playground-environment-composer-modal",
-                    onClick: (event) => event.stopPropagation(),
-                    onKeyDown: handleComposerSubmitShortcut,
-                    onSubmit: (event) => void handleEnvironmentComposerSubmit(event),
-                  },
-                  React.createElement("div", { className: "playground-tasks-project-modal-top" },
-                    React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
-                      React.createElement("div", {
-                        className: "playground-tasks-project-modal-icon-trigger",
-                        "aria-hidden": "true",
-                      }, React.createElement(HardDrive, { width: 18, height: 18, strokeWidth: 1.9 })),
-                      React.createElement("input", {
-                        className: "playground-tasks-project-modal-name-input",
-                        value: composerDraft.name,
-                        onChange: (event) => updateEnvironmentComposerField("name", event.target.value),
-                        placeholder: "Environment name",
-                        autoFocus: true,
-                        disabled: environmentComposerSaveState.isSaving,
-                      })
-                    ),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-settings-icon-button playground-tasks-project-modal-close",
-                      onClick: closeEnvironmentComposer,
-                      title: "Close",
-                      disabled: environmentComposerSaveState.isSaving,
-                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-                  ),
-                  React.createElement("div", { className: "playground-environment-composer-modal-body" },
-                    React.createElement("div", { className: "playground-tasks-project-modal-field" },
-                      React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Computer Profile"),
-                      renderEnvironmentComputeProfileSelector(
-                        composerDraft.computeProfile,
-                        (profileId) => updateEnvironmentComposerField("computeProfile", profileId),
-                        { disabled: environmentComposerSaveState.isSaving }
-                      )
-                    ),
-                    composerDraft.computeProfile === "desktop"
-                      ? React.createElement("div", { className: "playground-tasks-project-modal-field" },
-                          React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Office Apps"),
-                          React.createElement("div", { className: "playground-environment-composer-toggle-row" },
-                            React.createElement("div", { className: "playground-environment-composer-toggle-help" },
-                              "Install Writer and Calc on the Desktop profile for document and spreadsheet work."
-                            ),
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-environments-toggle" + (composerDraft.officeAppsEnabled === true ? " is-active" : ""),
-                              onClick: () => updateEnvironmentComposerField("officeAppsEnabled", !(composerDraft.officeAppsEnabled === true)),
-                              "aria-pressed": composerDraft.officeAppsEnabled === true ? "true" : "false",
-                              title: composerDraft.officeAppsEnabled === true ? "Office apps enabled" : "Office apps disabled",
-                              disabled: environmentComposerSaveState.isSaving,
-                            }, React.createElement("span", { className: "playground-environments-toggle-thumb" }))
-                          )
-                        )
-                      : null,
-                    React.createElement("div", { className: "playground-tasks-project-modal-field" },
-                      React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Runtime Versions"),
-                      React.createElement("div", { className: "playground-environment-composer-runtime-facts" },
-                        PLAYGROUND_RUNTIME_DEFINITIONS
-                          .filter((runtime) => runtime.key === "python" || runtime.key === "nodejs")
-                          .map((runtime) => {
-                            const currentValue = composerDraft.runtimes?.[runtime.key] || "";
-                            const runtimeOptions = currentValue && !(availableRuntimes[runtime.key] || []).includes(currentValue)
-                              ? [currentValue, ...(availableRuntimes[runtime.key] || [])]
-                              : (availableRuntimes[runtime.key] || []);
-                            const isPopoverOpen = environmentComposerRuntimePopover === runtime.key;
-  
-                            return React.createElement("div", { className: "playground-tasks-detail-fact", key: runtime.key },
-                              React.createElement("div", { className: "playground-tasks-detail-fact-label" }, runtime.label),
-                              React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                                React.createElement("div", {
-                                    className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-detail-select-shell" + (isPopoverOpen ? " is-open" : ""),
-                                    ref: isPopoverOpen ? environmentComposerRuntimePopoverRef : null,
-                                  },
-                                  React.createElement("button", {
-                                    type: "button",
-                                    className: "playground-environments-runtime-value-button playground-tasks-detail-select-trigger" + (currentValue ? "" : " is-empty") + (isPopoverOpen ? " is-active" : ""),
-                                    onClick: () => setEnvironmentComposerRuntimePopover((current) => current === runtime.key ? "" : runtime.key),
-                                    disabled: environmentComposerSaveState.isSaving,
-                                  },
-                                    React.createElement("span", { className: "playground-environments-runtime-value-label" }, currentValue || "Disabled"),
-                                    React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", width: 14, height: 14, strokeWidth: 1.8 })
-                                  ),
-                                  isPopoverOpen
-                                    ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                                        React.createElement("button", {
-                                            type: "button",
-                                            className: "tb-popup-row tb-popup-row-select" + (!currentValue ? " selected" : ""),
-                                            onClick: () => {
-                                              updateEnvironmentComposerRuntime(runtime.key, "");
-                                              setEnvironmentComposerRuntimePopover("");
-                                            },
-                                          },
-                                          React.createElement("span", { className: "tb-popup-check-slot" },
-                                            !currentValue
-                                              ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                              : null
-                                          ),
-                                          React.createElement("span", null, "Disabled")
-                                        ),
-                                        runtimeOptions.map((option) =>
-                                          React.createElement("button", {
-                                              key: runtime.key + ":" + option,
-                                              type: "button",
-                                              className: "tb-popup-row tb-popup-row-select" + (currentValue === option ? " selected" : ""),
-                                              onClick: () => {
-                                                updateEnvironmentComposerRuntime(runtime.key, option);
-                                                setEnvironmentComposerRuntimePopover("");
-                                              },
-                                            },
-                                            React.createElement("span", { className: "tb-popup-check-slot" },
-                                              currentValue === option
-                                                ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                                : null
-                                            ),
-                                            React.createElement("span", null, option)
-                                          )
-                                        )
-                                      )
-                                    : null
-                                )
-                              )
-                            );
-                          })
-                      )
-                    ),
-                  ),
-                  environmentComposerSaveState.error
-                    ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, environmentComposerSaveState.error)
-                    : null,
-                  React.createElement("div", { className: "playground-tasks-project-modal-actions" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-environments-action-button",
-                      onClick: closeEnvironmentComposer,
-                      disabled: environmentComposerSaveState.isSaving,
-                    }, "Cancel"),
-                    React.createElement(PlatformPrimaryButton, {
-                      size: "medium",
-                      type: "submit",
-                      className: "playground-environments-action-button is-primary",
-                      disabled: environmentComposerSaveState.isSaving || !String(composerDraft.name || "").trim(),
-                    }, environmentComposerSaveState.isSaving ? "Creating..." : "Create")
-                  )
-                )
-              );
           }
   
           function updateRuntime(key, value) {

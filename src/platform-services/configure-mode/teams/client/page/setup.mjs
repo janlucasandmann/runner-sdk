@@ -611,27 +611,11 @@ export const TEAMS_PAGE_SETUP_SCRIPT = `        function renderTeamPage() {
               return;
             }
             if (normalizedType === "environment") {
-              setEnvironmentsNavigationTargetId(PLAYGROUND_ENVIRONMENT_DRAFT_ID);
-              setSidebarWorkspaceMode("configure");
-              setResourcesView("computers");
-              setResourcesHeaderState({
-                mode: "overview",
-                title: "",
-              });
-              setActivePage("resources");
-              setEnvironmentsOpenToken((current) => current + 1);
+              openPlatformResourceCreationModal("computer");
               return;
             }
             if (normalizedType === "agent") {
-              setAgentPageSelectionRequest(null);
-              setSidebarWorkspaceMode("work");
-              setResourcesView("agents");
-              setResourcesHeaderState({
-                mode: "overview",
-                title: "",
-              });
-              setActivePage("resources");
-              setAgentCreationPageRequestToken((current) => current + 1);
+              openPlatformResourceCreationModal("agent");
               return;
             }
             if (normalizedType === "metronome") {
@@ -853,9 +837,6 @@ export const TEAMS_PAGE_SETUP_SCRIPT = `        function renderTeamPage() {
               : modalElement;
           };
 
-          const normalizeTeamOverviewSortDirection = (direction) =>
-            direction === "desc" ? "desc" : "asc";
-          const normalizedTeamOverviewSortDirection = normalizeTeamOverviewSortDirection(teamOverviewSortDirection);
           const getTeamOverviewDisplayName = (team) => String(team?.name || "Untitled team").trim();
           const getTeamOverviewCreatedTimestamp = (team) => {
             const timestamp = Date.parse(String(team?.createdAt || team?.created_at || ""));
@@ -891,164 +872,26 @@ export const TEAMS_PAGE_SETUP_SCRIPT = `        function renderTeamPage() {
             return "Team";
           };
           const getTeamOverviewRoleLabel = (team) => formatRole(team?.role);
-          const getTeamOverviewSortValue = (team, sortKey) => {
-            switch (sortKey) {
-              case "role":
-                return getTeamOverviewRoleLabel(team);
-              case "owner":
-                return getTeamOverviewOwnerLabel(team);
-              case "created":
-                return getTeamOverviewCreatedTimestamp(team);
-              case "name":
-              default:
-                return getTeamOverviewDisplayName(team);
-            }
-          };
-          const compareTeamOverviewSortValues = (left, right, sortKey) => {
-            const leftValue = getTeamOverviewSortValue(left, sortKey);
-            const rightValue = getTeamOverviewSortValue(right, sortKey);
-            if (typeof leftValue === "number" || typeof rightValue === "number") {
-              const leftNumber = typeof leftValue === "number" && Number.isFinite(leftValue) ? leftValue : 0;
-              const rightNumber = typeof rightValue === "number" && Number.isFinite(rightValue) ? rightValue : 0;
-              if (leftNumber !== rightNumber) {
-                return leftNumber - rightNumber;
-              }
-            } else {
-              const textComparison = String(leftValue || "").localeCompare(String(rightValue || ""), undefined, {
-                numeric: true,
-                sensitivity: "base",
-              });
-              if (textComparison !== 0) {
-                return textComparison;
-              }
-            }
-            return getTeamOverviewDisplayName(left).localeCompare(getTeamOverviewDisplayName(right), undefined, {
-              numeric: true,
-              sensitivity: "base",
-            });
-          };
-          const normalizedTeamOverviewSearchQuery = String(teamOverviewSearchQuery || "").trim().toLowerCase();
-          const visibleOverviewTeams = (Array.isArray(teamPageTeams) ? teamPageTeams : [])
-            .filter((team) => {
-              if (teamOverviewFilter === "owned" && String(team?.ownerUserId || team?.ownerId || "").trim() !== String(sessionState.userId || "").trim()) {
-                return false;
-              }
-              if (teamOverviewFilter === "member" && String(team?.ownerUserId || team?.ownerId || "").trim() === String(sessionState.userId || "").trim()) {
-                return false;
-              }
-              if (!normalizedTeamOverviewSearchQuery) {
-                return true;
-              }
-              const haystack = [
-                getTeamOverviewDisplayName(team),
-                getTeamOverviewRoleLabel(team),
-                getTeamOverviewOwnerLabel(team),
-                team?.id || "",
-              ].join(" ").toLowerCase();
-              return haystack.includes(normalizedTeamOverviewSearchQuery);
+          const teamOverviewRows = (Array.isArray(teamPageTeams) ? teamPageTeams : [])
+            .map((team) => {
+              const id = String(team?.id || "").trim();
+              const name = getTeamOverviewDisplayName(team);
+              const roleLabel = getTeamOverviewRoleLabel(team);
+              const ownerLabel = getTeamOverviewOwnerLabel(team);
+              const createdValue = team?.createdAt || team?.created_at || "";
+              const ownerId = String(team?.ownerUserId || team?.ownerId || "").trim();
+              const isOwned = Boolean(ownerId) && ownerId === String(sessionState.userId || "").trim();
+              return {
+                id,
+                name,
+                roleLabel,
+                ownerLabel,
+                ownership: isOwned ? "owned" : "member",
+                createdAt: getTeamOverviewCreatedTimestamp(team),
+                createdLabel: formatDate(createdValue) || "-",
+                createdTitle: createdValue ? formatPlaygroundExactDate(createdValue) : "",
+                searchText: [name, roleLabel, ownerLabel, id].filter(Boolean).join(" "),
+              };
             })
-            .slice()
-            .sort((left, right) => {
-              const baseComparison = compareTeamOverviewSortValues(left, right, teamOverviewSort);
-              return normalizedTeamOverviewSortDirection === "desc" ? -baseComparison : baseComparison;
-            });
-          const visibleOverviewTeamIds = visibleOverviewTeams.map((team) => String(team?.id || "").trim()).filter(Boolean);
-          const selectedVisibleTeamOverviewIds = visibleOverviewTeamIds.filter((teamId) => selectedTeamOverviewIds.has(teamId));
-          const allVisibleTeamsSelected = visibleOverviewTeamIds.length > 0 && selectedVisibleTeamOverviewIds.length === visibleOverviewTeamIds.length;
-          const teamOverviewFilterOptions = [
-            { id: "all", label: "All Teams", description: "Show every team workspace" },
-            { id: "owned", label: "Owned by You", description: "Only show teams you own" },
-            { id: "member", label: "Member Teams", description: "Only show teams where you are a member" },
-          ];
-	          const teamOverviewColumns = [
-	            {
-	              id: "name",
-	              header: "Name",
-	              accessor: getTeamOverviewDisplayName,
-	              sortable: true,
-	              width: "minmax(220px, 1.35fr)",
-	              cell: ({ row: team }) => React.createElement("div", { className: "playground-agents-overview-name-title" }, getTeamOverviewDisplayName(team)),
-	            },
-	            {
-	              id: "role",
-	              header: "Role",
-	              accessor: getTeamOverviewRoleLabel,
-	              sortable: true,
-	              width: "minmax(105px, 0.55fr)",
-	              cell: ({ row: team }) => React.createElement("div", { className: "playground-agents-overview-table-value" }, getTeamOverviewRoleLabel(team)),
-	            },
-	            {
-	              id: "owner",
-	              header: "Owner",
-	              accessor: getTeamOverviewOwnerLabel,
-	              sortable: true,
-	              width: "minmax(170px, 0.85fr)",
-	              hideBelow: 760,
-	              cell: ({ row: team }) => React.createElement("div", { className: "playground-agents-overview-table-value" }, getTeamOverviewOwnerLabel(team)),
-	            },
-	            {
-	              id: "created",
-	              header: "Created",
-	              accessor: getTeamOverviewCreatedTimestamp,
-	              sortable: true,
-	              sortDescFirst: true,
-	              width: "minmax(120px, 0.6fr)",
-	              align: "end",
-	              hideBelow: 900,
-	              cell: ({ row: team }) => {
-	                const createdAt = team?.createdAt || team?.created_at || "";
-	                return React.createElement("div", {
-	                  className: "playground-agents-overview-table-value is-right",
-	                  title: createdAt ? formatPlaygroundExactDate(createdAt) : "",
-	                }, formatDate(createdAt) || "-");
-	              },
-	            },
-	          ];
-	          const getTeamOverviewActions = (team) => [
-	            { id: "open", label: "Open", icon: ChevronRight, onSelect: () => openTeamDetail(team.id) },
-	            {
-	              id: "rename",
-	              label: "Rename",
-	              icon: SquarePen,
-	              onSelect: () => {
-	                setTeamPageSelectedTeamId(String(team?.id || ""));
-	                setTeamPageRenameName(team?.name || "");
-	                setTeamPageRenameModalOpen(true);
-	              },
-	            },
-	          ];
-	          const teamOverviewDataTable = React.createElement(PlatformDataTable, {
-	            rows: visibleOverviewTeams,
-	            columns: teamOverviewColumns,
-	            getRowId: (team) => String(team?.id || ""),
-	            ariaLabel: "Teams",
-	            className: "playground-teams-platform-data-table",
-	            surface: "plain",
-	            sorting: {
-	              value: { id: teamOverviewSort, direction: normalizedTeamOverviewSortDirection },
-	              manual: true,
-	              onChange: (nextSorting) => {
-	                if (!nextSorting) return;
-	                setTeamOverviewSort(nextSorting.id);
-	                setTeamOverviewSortDirection(nextSorting.direction);
-	                setTeamOverviewToolbarPopover("");
-	              },
-	            },
-	            selection: {
-	              enabled: true,
-	              value: selectedTeamOverviewIds,
-	              onChange: ({ selectedIds }) => setSelectedTeamOverviewIds(new Set(selectedIds)),
-	              ariaLabel: (team) => "Select " + getTeamOverviewDisplayName(team),
-	            },
-	            toolbar: {
-	              search: { value: teamOverviewSearchQuery, onChange: setTeamOverviewSearchQuery, placeholder: "Search teams", manual: true },
-	              filters: [{ id: "ownership", label: "Ownership", value: teamOverviewFilter, options: teamOverviewFilterOptions, onChange: setTeamOverviewFilter }],
-	              primaryAction: { label: "New Team", icon: Plus, onClick: () => setTeamPageCreateModalOpen(true) },
-	            },
-	            getRowActions: getTeamOverviewActions,
-	            getRowAriaLabel: getTeamOverviewDisplayName,
-	            onRowActivate: (team) => openTeamDetail(team.id),
-	            loading: teamPageLoading && visibleOverviewTeams.length === 0,
-	            emptyState: normalizedTeamOverviewSearchQuery ? "No matching teams found." : "No teams yet.",
-	          });
+            .filter((team) => team.id);
 `;

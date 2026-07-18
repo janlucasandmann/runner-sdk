@@ -42,6 +42,8 @@ assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.execution, /startPlaygroundEvalua
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.threadCases, /handleGenerateEvaluationCasesFromThreads/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /renderRunsTable/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs, /renderEvaluationRenameModal/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /React\.createElement\(EvaluationsOverviewPage/);
+assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /React\.createElement\(PlatformDataTable/);
 
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.state, /evaluationSets/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.navigation, /function openEvaluationsPage/);
@@ -49,6 +51,7 @@ assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.historyCapture, /evaluationRunId/)
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.historyRestore, /entry\.page === "evaluations"/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.lifecycle, /selectedEvaluationSetId/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /function renderEvaluationsPageNav/);
+assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-evaluations-overview-controls/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView, /function renderEvaluationsPage/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.sidebarEntry, /id: "evaluations"/);
 

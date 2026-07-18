@@ -69,7 +69,8 @@ assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, /label: "New"/);
 for (const label of ["Agent", "Computer", "Skill", "Team", "Organization"]) {
   assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, new RegExp(`label: "${label}"`));
 }
-assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, /openResourcesView\("computers", \{ create: true/);
+assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, /normalizedTargetId === "agent" \|\| normalizedTargetId === "computer"/);
+assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, /openPlatformResourceCreationModal\(normalizedTargetId\)/);
 assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, /openToolsView\("skills", \{ create: true/);
 assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.sidebarEntry, /id: "configure-home"/);
 assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.sidebarEntry, /id: "configure-notifications"/);

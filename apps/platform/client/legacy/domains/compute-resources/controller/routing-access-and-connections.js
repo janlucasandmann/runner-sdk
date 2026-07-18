@@ -15,7 +15,6 @@
             setSearchPopupQuery("");
             setEnvironmentListActionMenuState(null);
             setServerResourceActionMenuState(null);
-            setIsHomeViewActive(false);
             setEnvironmentComposerSaveState({
               isSaving: false,
               error: "",
@@ -39,6 +38,9 @@
               error: "",
             });
             setEnvironmentComposerDraft(buildPlaygroundDefaultEnvironmentDraft());
+            if (creationOnly && typeof onCreationRequestClose === "function") {
+              onCreationRequestClose({ reason: "cancelled" });
+            }
           }
   
           function handleCreateEnvironment() {

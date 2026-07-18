@@ -20,17 +20,19 @@ const APP_HEADER_BREADCRUMB_BAR_TEMPLATE = `        function renderAppHeaderBrea
               const key = String(index) + ":" + label;
               const isClickable = typeof item.onClick === "function" && (!isCurrent || item.allowCurrentClick === true);
               const itemContent = React.createElement("span", { className: "playground-top-nav-path-label" }, label);
-              const itemNode = isClickable
-                ? React.createElement("button", {
-                    type: "button",
-                    className: "playground-top-nav-path-item" + (isCurrent ? " is-current" : ""),
-                    onClick: () => requestPlatformNavigation(item.onClick),
-                    title: label,
-                  }, itemContent)
-                : React.createElement("span", {
-                    className: "playground-top-nav-path-item" + (isCurrent ? " is-current" : ""),
-                    title: label,
-                  }, itemContent);
+              const itemNode = item.node != null
+                ? item.node
+                : isClickable
+                  ? React.createElement("button", {
+                      type: "button",
+                      className: "playground-top-nav-path-item" + (isCurrent ? " is-current" : ""),
+                      onClick: () => requestPlatformNavigation(item.onClick),
+                      title: label,
+                    }, itemContent)
+                  : React.createElement("span", {
+                      className: "playground-top-nav-path-item" + (isCurrent ? " is-current" : ""),
+                      title: label,
+                    }, itemContent);
               const itemWithTrailing = item.trailing
                 ? React.createElement("span", {
                     className: "playground-top-nav-path-item-group" + (isCurrent ? " is-current" : ""),

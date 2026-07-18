@@ -91,31 +91,4 @@ export const TEAMS_TABLE_LIFECYCLE_SCRIPT = `        useEffect(() => {
 		            }
 		          });
 		        }, []);
-	        useEffect(() => {
-	          if ((!teamOverviewToolbarPopover && !teamOverviewMenuId) || typeof document === "undefined") {
-	            return undefined;
-	          }
-          const handlePointerDown = (event) => {
-            const target = event.target;
-            if (
-              target
-              && teamOverviewToolbarRef.current
-              && teamOverviewToolbarRef.current.contains(target)
-            ) {
-              return;
-            }
-            if (
-              target
-              && typeof target.closest === "function"
-              && target.closest(".playground-team-overview-action-shell")
-            ) {
-              return;
-            }
-            setTeamOverviewToolbarPopover("");
-            setTeamOverviewMenuId("");
-          };
-	          document.addEventListener("mousedown", handlePointerDown);
-	          return () => document.removeEventListener("mousedown", handlePointerDown);
-	        }, [teamOverviewMenuId, teamOverviewToolbarPopover]);
 `;
-

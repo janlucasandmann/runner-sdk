@@ -2375,13 +2375,15 @@
   
   ${DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.operationalMetrics}
   ${DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.homeMetricsLifecycle}
-          function handleNewThread() {
+          function handleNewThread(options = {}) {
+            const nextInitialPrompt = normalizePlaygroundInitialPrompt(options?.initialPrompt);
             const previousThreadId = String(currentThreadId || "").trim();
             if (isPrivateThreadId(previousThreadId)) {
               discardPrivateThread(previousThreadId);
             }
             metronomeRunTraceSelectionRef.current = null;
             setSidebarWorkspaceMode("work");
+            setInitialLandingPrompt(nextInitialPrompt);
             setInitialThreadPrivateMode(false);
             setActivePage("thread");
             setCurrentThreadId("");
@@ -3046,7 +3048,10 @@
   
           function openResourcesView(nextView, options = {}) {
             const normalizedView = nextView === "servers" ? "servers" : nextView === "computers" ? "computers" : "agents";
-            const shouldCreateComputer = normalizedView === "computers" && options.create === true;
+            if (normalizedView === "computers" && options.create === true) {
+              openPlatformResourceCreationModal("computer");
+              return;
+            }
             const normalizedServerKind = normalizedView === "servers"
               ? normalizeDevelopServerPageKind(options.serverKind)
               : "";
@@ -3075,9 +3080,7 @@
               setResourcesBackRequestToken((current) => current + 1);
             }
             if (normalizedView === "computers") {
-              setEnvironmentsNavigationTargetId(
-                shouldCreateComputer ? PLAYGROUND_ENVIRONMENT_DRAFT_ID : "",
-              );
+              setEnvironmentsNavigationTargetId("");
               setEnvironmentsOpenToken((current) => current + 1);
             }
           }

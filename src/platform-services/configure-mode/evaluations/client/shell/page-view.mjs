@@ -64,8 +64,6 @@ export const EVALUATIONS_APP_PAGE_VIEW_SCRIPT = `        function renderEvaluati
             },
             evaluationDetailTab,
             setEvaluationDetailTab,
-            evaluationsSearchQuery,
-            setEvaluationsSearchQuery,
             evaluationCreateModalOpen,
             setEvaluationCreateModalOpen,
             evaluationCreateForm,

@@ -6,14 +6,6 @@ export const ORGANIZATIONS_STATE_DIALOGS_SCRIPT = `        const [organizationPa
 	        const [organizationPageInviteEmail, setOrganizationPageInviteEmail] = useState("");
 	        const [organizationPageInviteRole, setOrganizationPageInviteRole] = useState("member");
 	        const [organizationPageActionId, setOrganizationPageActionId] = useState("");
-	        const organizationOverviewToolbarRef = useRef(null);
-	        const [organizationOverviewSearchQuery, setOrganizationOverviewSearchQuery] = useState("");
-	        const [organizationOverviewSort, setOrganizationOverviewSort] = useState("name");
-	        const [organizationOverviewSortDirection, setOrganizationOverviewSortDirection] = useState("asc");
-	        const [organizationOverviewFilter, setOrganizationOverviewFilter] = useState("all");
-	        const [organizationOverviewToolbarPopover, setOrganizationOverviewToolbarPopover] = useState("");
-	        const [organizationOverviewMenuId, setOrganizationOverviewMenuId] = useState("");
-	        const [selectedOrganizationOverviewIds, setSelectedOrganizationOverviewIds] = useState(() => new Set());
 	        const organizationMemberToolbarRef = useRef(null);
 	        const [organizationMemberSearchQuery, setOrganizationMemberSearchQuery] = useState("");
 	        const [organizationMemberSort, setOrganizationMemberSort] = useState("user");

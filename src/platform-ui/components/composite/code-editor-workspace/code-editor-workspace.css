@@ -21,6 +21,8 @@
   max-height: none;
   flex: 1 1 0;
   align-self: stretch;
+  border: 0;
+  border-radius: 0;
 }
 
 .platform-code-editor-workspace__sidebar {
@@ -167,7 +169,7 @@
 .platform-code-editor-workspace__footer {
   min-height: 42px;
   flex: 0 0 auto;
-  padding: 0 16px;
+  padding: 6px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;

@@ -180,7 +180,7 @@ export const TEAMS_PAGE_MEMBERS_SCRIPT = `          const getTeamMemberUserId = 
 	              sensitivity: "base",
 	            });
 	          };
-	          const normalizedTeamPageMemberSortDirection = normalizeTeamOverviewSortDirection(teamPageMemberSortDirection);
+		          const normalizedTeamPageMemberSortDirection = teamPageMemberSortDirection === "desc" ? "desc" : "asc";
 	          const normalizedTeamPageMemberSearchQuery = String(teamPageMemberSearchQuery || "").trim().toLowerCase();
 	          const visibleTeamMemberRows = memberRows
 	            .filter((row) => {

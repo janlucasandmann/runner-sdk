@@ -5,6 +5,7 @@ export const GUARDRAILS_APP_TOP_NAVIGATION_SCRIPT = `        function renderGuar
           if (guardrailsPageMode === "detail" && activeGuardrailSet?.name) {
             guardrailsPathItems.push({ label: activeGuardrailSet.name });
           }
+          const isGuardrailsOverview = guardrailsPageMode !== "detail";
           const canShowGuardrailDetailActions = Boolean(
             guardrailsPageMode === "detail"
             && activeGuardrailSet
@@ -41,8 +42,13 @@ export const GUARDRAILS_APP_TOP_NAVIGATION_SCRIPT = `        function renderGuar
           return renderAppHeader({
             className: "playground-configure-navbar playground-models-navbar",
             pathItems: guardrailsPathItems,
-            extraActions: guardrailDetailTopNavActions,
-            includeSearchDivider: canShowGuardrailDetailActions,
+            extraActions: isGuardrailsOverview
+              ? React.createElement("div", {
+                  id: "playground-guardrails-overview-controls",
+                  className: "playground-tools-overview-controls-slot",
+                })
+              : guardrailDetailTopNavActions,
+            includeSearchDivider: isGuardrailsOverview || canShowGuardrailDetailActions,
             hideCommonActions: isResourcesVersionsDrawerOpen,
           });
         }

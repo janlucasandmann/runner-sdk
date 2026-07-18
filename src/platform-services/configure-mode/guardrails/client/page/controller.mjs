@@ -1,7 +1,6 @@
 export const GUARDRAILS_PAGE_CONTROLLER_SCRIPT = `        function renderGuardrailsPage() {
           const safeGuardrailSets = Array.isArray(allGuardrailSets) ? allGuardrailSets : [];
           const customGuardrailSets = Array.isArray(guardrailSets) ? guardrailSets : [];
-          const normalizedQuery = String(guardrailsSearchQuery || "").trim().toLowerCase();
           const isGuardrailSetReadonly = (set) => isPlaygroundDefaultGuardrailSet(set);
           const formatGuardrailDate = (value) => {
             const date = new Date(value || "");
@@ -92,55 +91,6 @@ export const GUARDRAILS_PAGE_CONTROLLER_SCRIPT = `        function renderGuardra
             const creator = getGuardrailCreatorIdentity(set);
             return String(creator.name || creator.email || creator.id || creator.userId || "Unknown").trim();
           };
-          function renderGuardrailCreatorCell(set) {
-            const creator = getGuardrailCreatorIdentity(set);
-            const label = getGuardrailCreatorLabel(set);
-            const avatarUrl = canRenderAvatarImage(creator.avatarUrl) ? creator.avatarUrl : "";
-            return React.createElement("span", { className: "playground-guardrails-creator-cell", title: label },
-              React.createElement("span", {
-                className: "playground-guardrails-creator-avatar" + (creator.isSystem ? " is-system" : ""),
-                "aria-hidden": "true",
-              },
-                avatarUrl
-                  ? React.createElement("img", { src: avatarUrl, alt: "" })
-                  : getAccountInitials(label)
-              ),
-              React.createElement("span", { className: "playground-guardrails-creator-label" }, label)
-            );
-          }
-          const filteredGuardrailSets = safeGuardrailSets
-            .filter((set) => {
-              const isDefaultSet = isGuardrailSetReadonly(set);
-              if (guardrailsSetFilter === "default" && !isDefaultSet) return false;
-              if (guardrailsSetFilter === "custom" && isDefaultSet) return false;
-              if (!normalizedQuery) return true;
-              const promptText = (Array.isArray(set?.prompts) ? set.prompts : [])
-                .map((prompt) => [prompt?.title, prompt?.prompt].filter(Boolean).join(" "))
-                .join(" ");
-              const haystack = [
-                set?.name,
-                set?.description,
-                promptText,
-              ].filter(Boolean).join(" ").toLowerCase();
-              return haystack.includes(normalizedQuery);
-            })
-	            .sort((left, right) => {
-	              let comparison = 0;
-	              if (guardrailsSort === "name") {
-	                comparison = String(left?.name || "").localeCompare(String(right?.name || ""));
-	              } else if (guardrailsSort === "creator") {
-	                comparison = getGuardrailCreatorLabel(left).localeCompare(getGuardrailCreatorLabel(right));
-	              } else if (guardrailsSort === "type") {
-	                const leftType = isGuardrailSetReadonly(left) ? "Default" : "Custom";
-	                const rightType = isGuardrailSetReadonly(right) ? "Default" : "Custom";
-	                comparison = leftType.localeCompare(rightType) || String(left?.name || "").localeCompare(String(right?.name || ""));
-	              } else {
-	                const rightTime = new Date(right?.updatedAt || right?.createdAt || 0).getTime() || 0;
-	                const leftTime = new Date(left?.updatedAt || left?.createdAt || 0).getTime() || 0;
-	                comparison = leftTime - rightTime;
-	              }
-	              return guardrailsSortDirection === "desc" ? -comparison : comparison;
-	            });
           const selectedGuardrailSet = safeGuardrailSets.find((set) => set?.id === selectedGuardrailSetId)
             || safeGuardrailSets[0]
             || null;
@@ -184,7 +134,6 @@ export const GUARDRAILS_PAGE_CONTROLLER_SCRIPT = `        function renderGuardra
               const detailedSet = await fetchBackendGuardrailSetDetails(createdSet);
               replaceGuardrailSetFromBackend(detailedSet, { select: true, rememberBaseline: true });
               setGuardrailsBackendSyncState({ status: "idle", error: "" });
-              setGuardrailsSetFilter("custom");
               setGuardrailsPageMode("detail");
               setGuardrailsToolbarPopover("");
               setGuardrailSetActionMenuId("");

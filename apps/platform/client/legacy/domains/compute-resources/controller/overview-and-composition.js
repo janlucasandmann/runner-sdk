@@ -1292,8 +1292,13 @@
   		        );
   		      }
   
+            if (creationOnly) {
+              return React.createElement(React.Fragment, null,
+                renderEnvironmentCreationSetupModal()
+              );
+            }
+
   	        if (embeddedInResources) {
-  	          const shouldShowEnvironmentCreationSetup = !isServersMode && environmentComposerOpen;
   	          const shouldShowServerCreationSetup = isServersMode && serverComposerOpen && normalizedEmbeddedServerKind && normalizedEmbeddedServerKind !== "voice_agent";
   	          const normalizedEmbeddedDatabaseDetailTab = ["data", "usage", "settings"].includes(databaseDetailTab) ? databaseDetailTab : "data";
   	          const isEmbeddedDatabaseDataTab = Boolean(isServersMode && selectedDatabaseId && !selectedServerId && normalizedEmbeddedDatabaseDetailTab === "data");
@@ -1351,10 +1356,6 @@
                 ? React.createElement("section", { className: embeddedResourcesPageClassName },
                     renderServerCreationSetupPage()
                   )
-                : shouldShowEnvironmentCreationSetup
-                ? React.createElement("section", { className: embeddedResourcesPageClassName },
-                    renderEnvironmentCreationSetupPage()
-                  )
                 : shouldShowEnvironmentHome
   	              ? React.createElement("section", { className: embeddedResourcesPageClassName },
   	                  renderEnvironmentsHome(
@@ -1400,7 +1401,7 @@
               renderServerRenameModal(),
               shouldShowEnvironmentHome ? renderDatabaseRenameModal() : null,
               renderServerAuthUserComposerModal(),
-              renderEnvironmentComposerDialog(),
+              renderEnvironmentCreationSetupModal(),
               renderServerComposerDialog()
             );
           }
@@ -1739,7 +1740,7 @@
             renderServerRenameModal(),
             shouldShowEnvironmentHome ? renderDatabaseRenameModal() : null,
             renderServerAuthUserComposerModal(),
-            renderEnvironmentComposerDialog(),
+            renderEnvironmentCreationSetupModal(),
             renderServerComposerDialog()
           );
         }

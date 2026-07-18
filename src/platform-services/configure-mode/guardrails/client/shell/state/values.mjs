@@ -1,14 +1,9 @@
 export const GUARDRAILS_APP_VALUES_SCRIPT = `        const [guardrailSets, setGuardrailSets] = useState([]);
         const [selectedGuardrailSetId, setSelectedGuardrailSetId] = useState("");
         const [guardrailsBackendSyncState, setGuardrailsBackendSyncState] = useState({ status: "idle", error: "" });
-        const [guardrailsSearchQuery, setGuardrailsSearchQuery] = useState("");
-        const [guardrailsSort, setGuardrailsSort] = useState("updated");
-	        const [guardrailsSortDirection, setGuardrailsSortDirection] = useState("desc");
-        const [guardrailsSetFilter, setGuardrailsSetFilter] = useState("all");
         const [guardrailsPageMode, setGuardrailsPageMode] = useState("overview");
         const [guardrailsToolbarPopover, setGuardrailsToolbarPopover] = useState("");
         const [guardrailSetActionMenuId, setGuardrailSetActionMenuId] = useState("");
-        const [selectedGuardrailsOverviewIds, setSelectedGuardrailsOverviewIds] = useState(() => new Set());
         const [guardrailDetailActionsMenuOpen, setGuardrailDetailActionsMenuOpen] = useState(false);
         const [guardrailPublishMenuOpen, setGuardrailPublishMenuOpen] = useState(false);
         const [guardrailVersionsHeaderMenuOpen, setGuardrailVersionsHeaderMenuOpen] = useState(false);

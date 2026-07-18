@@ -1843,7 +1843,7 @@
 	                  { label: "Metronome", onClick: () => metronomeTopNavActionsRef.current?.goOverview?.() },
 	                  {
 	                    label: metronomeTopNavState?.title || "Untitled Metronome",
-	                    trailing: renderMetronomeBreadcrumbVersionSelector(),
+	                    node: renderMetronomeBreadcrumbVersionSelector(),
 	                  },
 	                ]
               : [{ label: "Create" }, { label: "Metronome" }];
@@ -1877,7 +1877,7 @@
             });
           }
   
-          function renderResourcesPage() {
+  ${RESOURCE_CREATION_APP_SCRIPT_FRAGMENTS.host}          function renderResourcesPage() {
             if (activeResourcesView === "agents") {
               return hasRealAccess
                 ? React.createElement(PlaygroundAgentsPage, {
@@ -2006,6 +2006,11 @@
                           setPreferredAgentId(normalizedAgentId);
                         }
                         handleNewThread();
+                      });
+                    },
+                    onGenerateInstructions: (initialPrompt) => {
+                      handleNewThread({
+                        initialPrompt: normalizePlaygroundInitialPrompt(initialPrompt) || "/agent",
                       });
                     },
   ${MODELS_AGENT_SCRIPT_FRAGMENTS.hostProps}                  embeddedInResources: true,
@@ -2248,6 +2253,7 @@
               renderedPlaygroundOnboarding,
               renderedSubscriptionSuccessModal,
               renderedComposerAgentUpgradeModal,
+              renderPlatformResourceCreationHost(),
               renderAppHeaderSearchModal(),
               renderAppHeaderNotificationsPopup(),
               renderThreadActionMenu(),
@@ -2874,15 +2880,7 @@
                                   setEnvironmentsOpenToken((current) => current + 1);
                                 },
                                 onCreateEnvironment: () => {
-                                  setEnvironmentsNavigationTargetId(PLAYGROUND_ENVIRONMENT_DRAFT_ID);
-                                  setSidebarWorkspaceMode("configure");
-                                  setResourcesView("computers");
-                                  setResourcesHeaderState({
-                                    mode: "overview",
-                                    title: "",
-                                  });
-                                  setActivePage("resources");
-                                  setEnvironmentsOpenToken((current) => current + 1);
+                                  openPlatformResourceCreationModal("computer");
                                 },
                                 onEnvironmentMutated: async () => {
                                   await refreshEnvironments();
@@ -3032,6 +3030,8 @@
                                 currentUserName: hasSessionAuth ? accountName : "Me",
                                 currentUserEmail: hasSessionAuth ? accountEmail : "",
                                 currentUserAvatarUrl: hasSessionAuth ? accountAvatarUrl : "",
+                                onNavigationGuardChange: registerPlatformNavigationGuard,
+                                onNavigationRequest: requestPlatformNavigation,
                                 onThreadOpen: (threadId, options = {}) => {
                                   const normalizedThreadId = String(threadId || "").trim();
                                   if (!normalizedThreadId) {
@@ -3630,9 +3630,9 @@
                     )
                     ,
                     activePage === "metronome"
-                      ? React.createElement("aside", {
+                      ? React.createElement("div", {
                           id: "playground-metronome-node-drawer-root",
-                          className: "playground-metronome-node-drawer" + (isMetronomeNodeDetailOpen ? " is-open" : ""),
+                          className: "platform-floating-sidebar-portal",
                         })
                       : null
                     ,

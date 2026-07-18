@@ -38,18 +38,9 @@ export const TEAMS_STATE_PRIMARY_SCRIPT = `        const teamPageRef = useRef(nu
 	        const [teamPageMemberFilter, setTeamPageMemberFilter] = useState("all");
 	        const [teamPageMemberToolbarPopover, setTeamPageMemberToolbarPopover] = useState("");
 	        const [selectedTeamPageMemberIds, setSelectedTeamPageMemberIds] = useState(() => new Set());
-	        const teamOverviewToolbarRef = useRef(null);
-	        const [teamOverviewSearchQuery, setTeamOverviewSearchQuery] = useState("");
-        const [teamOverviewSort, setTeamOverviewSort] = useState("name");
-        const [teamOverviewSortDirection, setTeamOverviewSortDirection] = useState("asc");
-        const [teamOverviewFilter, setTeamOverviewFilter] = useState("all");
-        const [teamOverviewToolbarPopover, setTeamOverviewToolbarPopover] = useState("");
-        const [teamOverviewMenuId, setTeamOverviewMenuId] = useState("");
-        const [selectedTeamOverviewIds, setSelectedTeamOverviewIds] = useState(() => new Set());
         const [teamPageMembers, setTeamPageMembers] = useState([]);
         const [teamPageInvitations, setTeamPageInvitations] = useState([]);
         const [teamPageShares, setTeamPageShares] = useState([]);
         const [teamPageProjectResourceIndexes, setTeamPageProjectResourceIndexes] = useState({});
         const [teamPageMetronomeWorkflows, setTeamPageMetronomeWorkflows] = useState([]);
 `;
-

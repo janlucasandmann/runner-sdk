@@ -15,12 +15,14 @@ import { createVncWebSocketProxy } from "./vnc-websocket-proxy.mjs";
 import { createPlatformRequestHandler } from "./request-handler.mjs";
 import { createPlatformGateway } from "./gateway/create-platform-gateway.mjs";
 import { createPlatformConfig } from "./platform-config.mjs";
+import { createIdentityService } from "./identity/create-identity-service.mjs";
 import { createPlatformServices } from "./platform-services.mjs";
 import { createAdminPageRenderers } from "./admin/pages.mjs";
 import {
   createLegacyPlatformApplicationSources,
 } from "../client/legacy/create-legacy-platform-application.mjs";
 
+const platformConfig = createPlatformConfig();
 const {
   aiosOrigin,
   aiosPublicRoot,
@@ -42,7 +44,9 @@ const {
   port,
   shouldForwardLocalCloudApiOverride,
   xlsxRoot,
-} = createPlatformConfig();
+  identityProvider,
+} = platformConfig;
+const identityService = createIdentityService(platformConfig);
 const {
   serveDistAsset,
   serveAiosPublicAsset,
@@ -65,6 +69,7 @@ const {
 const platformApplicationSources = createLegacyPlatformApplicationSources({
   aiosOrigin,
   defaultUpstreamOrigin,
+  identityProvider,
   platformOrigin,
 });
 const platformDocumentAssets = platformViteOrigin
@@ -90,6 +95,7 @@ const platformGateway = createPlatformGateway({
   serveProductUsageSummaryPageV2,
   shouldForwardLocalCloudApiOverride,
   shouldRetryUpstreamWithAiosSession,
+  identityService,
 });
 const platformServices = createPlatformServices({
   gateway: platformGateway,
@@ -100,6 +106,7 @@ const platformServices = createPlatformServices({
 const server = http.createServer(createPlatformRequestHandler({
   ...platformGateway,
   ...platformServices,
+  identityService,
   aiosOrigin,
   githubOauthAllowedOrigins,
   githubOauthEnvFileCandidates,

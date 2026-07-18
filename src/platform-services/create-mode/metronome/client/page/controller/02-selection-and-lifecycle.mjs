@@ -29,8 +29,6 @@ export const METRONOME_CONTROLLER_02_FRAGMENT = String.raw`                }
             if (!activeWorkflow) return;
             const existingDeployments = readMetronomeWorkflowDeployments(activeWorkflow);
             const nextVersion = existingDeployments.reduce((maxVersion, deployment) => Math.max(maxVersion, Number(deployment.version || 0)), 0) + 1;
-            setOpenMetronomeVersionMenuId("");
-            setIsMetronomePublishSettingsMenuOpen(false);
             setWorkflowVersionNameDraft("Version " + nextVersion);
             setWorkflowVersionDescriptionDraft("");
             setIsWorkflowVersionDescriptionEditing(false);
@@ -42,7 +40,6 @@ export const METRONOME_CONTROLLER_02_FRAGMENT = String.raw`                }
             const normalizedDeploymentId = String(deploymentId || "").trim();
             const targetDeployment = readMetronomeWorkflowDeployments(activeWorkflow).find((deployment) => deployment.id === normalizedDeploymentId);
             if (!targetDeployment) return;
-            setOpenMetronomeVersionMenuId("");
             setWorkflowVersionNameDraft(String(targetDeployment.label || ("Version " + targetDeployment.version)).trim());
             setWorkflowVersionDescriptionDraft(String(targetDeployment.description || "").trim());
             setIsWorkflowVersionDescriptionEditing(false);
@@ -149,7 +146,6 @@ export const METRONOME_CONTROLLER_02_FRAGMENT = String.raw`                }
             const targetTitle = String(targetDeployment.label || ("Version " + targetDeployment.version)).trim();
             const confirmed = window.confirm("Delete \"" + targetTitle + "\"? This version history entry cannot be undone.");
             if (!confirmed) return;
-            setOpenMetronomeVersionMenuId("");
             const nextDeployments = normalizeMetronomeDeployments(existingDeployments.filter((deployment) => deployment.id !== normalizedDeploymentId));
             const activeDeploymentId = String(activeWorkflow.activeDeploymentId || activeWorkflow.metadata?.activeDeploymentId || activeWorkflow.metadata?.active_deployment_id || "").trim();
             const deletedActiveDeployment = targetDeployment.id === activeDeploymentId || targetDeployment.status === "active";
@@ -478,6 +474,47 @@ export const METRONOME_CONTROLLER_02_FRAGMENT = String.raw`                }
             if (!deploymentId) return;
             await restoreActiveWorkflowVersion(deploymentId);
           }, [activeWorkflow, activeWorkflowDeployment, activeWorkflowDeployments, restoreActiveWorkflowVersion]);
+
+          const requestMetronomeNavigation = useCallback((continuation) => {
+            if (typeof continuation !== "function") {
+              return false;
+            }
+            if (typeof onNavigationRequest === "function") {
+              return onNavigationRequest(continuation);
+            }
+            continuation();
+            return true;
+          }, [onNavigationRequest]);
+
+          const hasUnsavedMetronomeChanges = Boolean(
+            isEditor
+            && activeWorkflow
+            && !isActiveWorkflowBuiltIn
+            && activeMetronomeVersionChanges
+          );
+
+          useEffect(() => {
+            if (typeof onNavigationGuardChange !== "function") {
+              return;
+            }
+            const workflowName = String(activeWorkflow?.name || "").trim() || "this Metronome workflow";
+            onNavigationGuardChange(hasUnsavedMetronomeChanges
+              ? {
+                  id: "metronome-details-unsaved-changes",
+                  active: true,
+                  title: "Leave without saving?",
+                  description: "Your changes to " + workflowName + " have not been saved. If you leave now, they will be lost.",
+                }
+              : null
+            );
+          }, [activeWorkflow?.id, activeWorkflow?.name, hasUnsavedMetronomeChanges, onNavigationGuardChange]);
+
+          useEffect(() => {
+            if (typeof onNavigationGuardChange !== "function") {
+              return undefined;
+            }
+            return () => onNavigationGuardChange(null);
+          }, [onNavigationGuardChange]);
 
           useEffect(() => {
             if (!isEditor || isActiveWorkflowBuiltIn || !activeWorkflow) {
@@ -937,17 +974,19 @@ export const METRONOME_CONTROLLER_02_FRAGMENT = String.raw`                }
             }
           }, [activeMetronomeCodeFile]);
 
-          const returnToMetronomeOverview = useCallback(() => {
+          const performReturnToMetronomeOverview = useCallback(() => {
             flushMetronomeLocalGraphSync();
             setActiveWorkflowId("");
             setSelectedNodeId("");
             setMetronomeRunInlineDetailId("");
           }, [flushMetronomeLocalGraphSync]);
 
+          const returnToMetronomeOverview = useCallback(() => (
+            requestMetronomeNavigation(performReturnToMetronomeOverview)
+          ), [performReturnToMetronomeOverview, requestMetronomeNavigation]);
+
           const publishActiveWorkflowFromTopNav = useCallback(() => {
             setSelectedNodeId("");
-            setIsMetronomePublishSettingsMenuOpen(false);
-            setIsMetronomeVersionsHeaderMenuOpen(false);
             return publishActiveWorkflowVersion();
           }, [publishActiveWorkflowVersion]);
 
@@ -981,7 +1020,7 @@ export const METRONOME_CONTROLLER_02_FRAGMENT = String.raw`                }
                     setMode: setMetronomeEditorModeFromNav,
                     selectVersion: restoreActiveWorkflowVersion,
                     createVersion: openCreateWorkflowVersionModal,
-                    openVersionHistory: openMetronomeVersionChangesPage,
+                    openVersionHistory: openMetronomeVersionHistorySidebar,
                   }
               : {
                   edit: null,
@@ -997,13 +1036,13 @@ export const METRONOME_CONTROLLER_02_FRAGMENT = String.raw`                }
                   createVersion: null,
                   openVersionHistory: null,
                 };
-          }, [topNavActionsRef, activeWorkflow, isActiveWorkflowBuiltIn, isActiveWorkflowTeamShared, openEditWorkflowModal, duplicateActiveWorkflow, deleteActiveWorkflow, openMetronomeShareWorkflowModal, publishActiveWorkflowFromTopNav, revertActiveWorkflowToLastSavedVersion, returnToMetronomeOverview, setMetronomeEditorModeFromNav, restoreActiveWorkflowVersion, openCreateWorkflowVersionModal, openMetronomeVersionChangesPage]);
+          }, [topNavActionsRef, activeWorkflow, isActiveWorkflowBuiltIn, isActiveWorkflowTeamShared, openEditWorkflowModal, duplicateActiveWorkflow, deleteActiveWorkflow, openMetronomeShareWorkflowModal, publishActiveWorkflowFromTopNav, revertActiveWorkflowToLastSavedVersion, returnToMetronomeOverview, setMetronomeEditorModeFromNav, restoreActiveWorkflowVersion, openCreateWorkflowVersionModal, openMetronomeVersionHistorySidebar]);
 
           useEffect(() => {
             if (typeof onNodeDetailOpenChange === "function") {
-              onNodeDetailOpenChange(Boolean(isMetronomePublishMenuOpen));
+              onNodeDetailOpenChange(Boolean(isMetronomeVersionHistorySidebarOpen));
             }
-          }, [onNodeDetailOpenChange, isMetronomePublishMenuOpen]);
+          }, [onNodeDetailOpenChange, isMetronomeVersionHistorySidebarOpen]);
 
           useEffect(() => {
             if (typeof onTopNavStateChange !== "function") return;

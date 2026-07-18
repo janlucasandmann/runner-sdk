@@ -4,5 +4,6 @@ export {
 } from "./platform-instructions-editor.js";
 export type {
   PlatformInstructionsEditorProps,
+  PlatformInstructionsEditorVariant,
   PlatformMarkdownRendererProps,
 } from "./platform-instructions-editor.js";

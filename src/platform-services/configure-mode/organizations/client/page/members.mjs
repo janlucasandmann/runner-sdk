@@ -20,7 +20,7 @@ export const ORGANIZATIONS_PAGE_MEMBERS_SCRIPT = `          const renderInvitati
 	              .filter((invitation) => String(invitation?.status || "").toLowerCase() === "pending")
 	              .map((invitation) => ({ kind: "invitation", id: String(invitation?.id || ""), item: invitation }));
 	            const rows = [...memberRows, ...invitationRows].filter((row) => row.id);
-	            const normalizedOrganizationMemberSortDirection = normalizeOrganizationTableSortDirection(organizationMemberSortDirection);
+	            const normalizedOrganizationMemberSortDirection = organizationMemberSortDirection === "desc" ? "desc" : "asc";
 	            const getOrganizationMemberDisplayName = (row) => row?.kind === "invitation"
 	              ? String(row?.item?.email || row?.item?.emailNormalized || row?.item?.email_normalized || "Pending invitation").trim()
 	              : getMemberDisplayName(row?.item || {});

@@ -41,3 +41,52 @@ test("builds restricted login redirects with the original query", () => {
     "https://platform.example.test/feedback-summary?period=month",
   );
 });
+
+test("uses the local OIDC BFF for restricted appliance pages", async () => {
+  const identityService = {
+    provider: "oidc",
+    async readSession() {
+      return {
+        profile: { email: "operator@example.test" },
+        principal: {},
+      };
+    },
+  };
+  const authorization = createAdminAuthorization({
+    aiosOrigin: "https://hosted-app.example.test",
+    feedbackSummaryAdminEnvFileCandidates: [],
+    fetchAiosApi: async () => {
+      throw new Error("hosted BFF must not be called");
+    },
+    hasAiosSession: () => true,
+    identityService,
+    platformOrigin: "https://platform.appliance.example.test",
+    port: 4177,
+  });
+  const login = new URL(authorization.buildFeedbackSummaryLoginUrl({
+    url: "/feedback-summary?period=month",
+    headers: {},
+  }));
+  assert.equal(login.origin, "https://platform.appliance.example.test");
+  assert.equal(login.pathname, "/api/platform/auth/login");
+  assert.equal(
+    login.searchParams.get("return_to"),
+    "/feedback-summary?period=month",
+  );
+  assert.deepEqual(
+    await authorization.fetchSessionEmail({ headers: {} }),
+    { status: 200, email: "operator@example.test" },
+  );
+
+  const accountSwitch = new URL(
+    authorization.buildFeedbackSummaryLoginUrl({
+      url: "/feedback-summary",
+      headers: {},
+    }, { signedOut: true }),
+  );
+  assert.equal(accountSwitch.pathname, "/api/platform/auth/logout");
+  assert.match(
+    accountSwitch.searchParams.get("return_to"),
+    /^\/api\/platform\/auth\/login\?/,
+  );
+});

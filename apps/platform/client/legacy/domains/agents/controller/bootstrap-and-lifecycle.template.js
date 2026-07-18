@@ -37,6 +37,7 @@
           onThreadStarted,
           onAgentMutated,
           onStartThreadWithAgent,
+          onGenerateInstructions,
           onUpgradeToIndividual,
   ${MODELS_AGENT_SCRIPT_FRAGMENTS.props}        embeddedInResources = false,
           topNavActionsPortalId = "",
@@ -47,6 +48,8 @@
           onNavigationGuardChange,
           onNavigationRequest,
           backRequestToken = 0,
+          creationOnly = false,
+          onCreationRequestClose,
         }) {
           const searchPopupInputRef = useRef(null);
           const editorDirtyRef = useRef(false);
@@ -58,9 +61,9 @@
           const agentAutosaveInFlightRef = useRef(false);
           const agentDetailMainRef = useRef(null);
           const agentResourcesDetailScrollRef = useRef(null);
-          const agentCreationInstructionsTextareaRef = useRef(null);
           const agentComposerInstructionsTextareaRef = useRef(null);
           const agentProfileAvatarPickerRef = useRef(null);
+          const agentProfileAvatarPickerSurfaceRef = useRef(null);
           const agentActionsPopoverRef = useRef(null);
           const agentVersionDescriptionTextareaRef = useRef(null);
           const agentVersionModalCloseTimerRef = useRef(null);
@@ -84,13 +87,10 @@
           const agentOwnerCandidateProfileLookupKeyRef = useRef("");
           const agentRenameInputRef = useRef(null);
           const agentCreationNameInputRef = useRef(null);
-          const agentCreationRunnerRef = useRef(null);
           const agentCreationAssistantSavePromiseRef = useRef(null);
           const agentCreationNameAutofocusedRef = useRef(false);
           const agentModelPopoverRef = useRef(null);
           const agentModelPickerCloseTimerRef = useRef(null);
-          const agentCreationPermissionModalCloseTimerRef = useRef(null);
-          const agentCreationPermissionModalFrameRef = useRef(null);
           const agentComposerModelPopoverRef = useRef(null);
           const agentComposerModelTriggerRef = useRef(null);
           const agentComposerReasoningTriggerRef = useRef(null);
@@ -242,9 +242,6 @@
           const [agentCreationSetupSubmitting, setAgentCreationSetupSubmitting] = useState(false);
           const [agentCreationSetupResetToken, setAgentCreationSetupResetToken] = useState(0);
           const [agentCreationPermissionModalOpen, setAgentCreationPermissionModalOpen] = useState(false);
-          const [agentCreationPermissionModalVisible, setAgentCreationPermissionModalVisible] = useState(false);
-          const [agentCreationPermissionModalClosing, setAgentCreationPermissionModalClosing] = useState(false);
-          const [isAgentCreationInstructionsEditing, setIsAgentCreationInstructionsEditing] = useState(false);
           const [agentCreationInstructionRunRequest, setAgentCreationInstructionRunRequest] = useState(null);
           const [agentCreationInstructionContext, setAgentCreationInstructionContext] = useState(null);
           const [agentVersionsSidebarOpen, setAgentVersionsSidebarOpen] = useState(false);
@@ -1609,9 +1606,7 @@
               return;
             }
             onResourcesHeaderChange(
-              agentCreationSetupOpen
-                ? { mode: "detail", title: "New Agent", resourceType: "agent", resourceId: PLAYGROUND_AGENT_DRAFT_ID }
-                : isHomeViewActive
+              isHomeViewActive || agentCreationSetupOpen
                 ? { mode: "overview", title: "", resourceType: "agent", resourceId: "" }
                 : { mode: "detail", title: selectedResourcesDetailTitle, resourceType: "agent", resourceId: selectedAgentId }
             );
@@ -2640,7 +2635,7 @@
             resetEditorAuxiliaryState();
             finishCloseAgentSendToTeamModal();
             finishCloseAgentAddSquadModal();
-            finishCloseAgentCreationPermissionModal();
+            closeAgentCreationPermissionModal();
             setToolbarPopover("");
             setSearchPopupQuery("");
             setAgentListActionMenuState(null);
@@ -2664,6 +2659,19 @@
   
           function showAgentsHome() {
             requestAgentNavigation(performShowAgentsHome);
+          }
+
+          function handleAgentCreationGenerateInstructions() {
+            if (agentCreationSetupSubmitting || saveState.isSaving) {
+              return;
+            }
+            performShowAgentsHome();
+            if (creationOnly && typeof onCreationRequestClose === "function") {
+              onCreationRequestClose({ reason: "generate-instructions" });
+            }
+            if (typeof onGenerateInstructions === "function") {
+              onGenerateInstructions("/agent");
+            }
           }
   
           function stageAgentsHomeCreationCommand(commandType) {
@@ -2769,28 +2777,6 @@
               },
             });
             return true;
-          }
-  
-          function buildAgentCreationInstructionTaskPrompt(agentRecord, userPrompt) {
-            const normalizedAgent = normalizePlaygroundAgentRecord(agentRecord || buildPlaygroundDefaultAgentDraft());
-            const permissionSet = normalizePlaygroundPermissionSet(normalizedAgent.permissionSet, "agent");
-            const instructionsFilePath = "/tmp/" + (String(normalizedAgent.id || "agent").trim().replace(/[^A-Za-z0-9_.-]+/g, "-") || "agent") + "-instructions.md";
-            return [
-              "Task: create or refine the instructions for the target ACP agent below.",
-              "Before calling a tool, decide whether the user's request is specific enough. If it is missing important context, ask a compact numbered set of clarifying questions and stop without updating the agent.",
-              "If the request is specific enough, write the final instructions to " + instructionsFilePath + " and run exactly: python3 /workspace/.claude/skills/computer-agents/scripts/computer-agents.py agents update " + String(normalizedAgent.id || "").trim() + " --instructions-file " + instructionsFilePath + ". Do not create another agent, list unrelated resources, browse documentation, or run help first unless that update command is unavailable or fails because syntax is unknown.",
-              [
-                "Target agent:",
-                "- ID: " + String(normalizedAgent.id || "").trim(),
-                "- Name: " + (String(normalizedAgent.name || "").trim() || "New Agent"),
-                "- Description: " + (String(normalizedAgent.description || "").trim() || "Not set"),
-                "- Model: " + (String(normalizedAgent.model || "").trim() || "Not set"),
-                "- Permission summary: " + getAgentPermissionSummary(permissionSet),
-                "- Permission set JSON: " + JSON.stringify(permissionSet),
-              ].join("\n"),
-              "Instruction quality checklist: include role, scope, normal workflow, tool-use policy, clarification rules, expected outputs, and constraints implied by the description. Keep the result operational and directly useful for future runs.",
-              "User description of what the agent should do and what it is for:\n" + String(userPrompt || "").trim(),
-            ].filter(Boolean).join("\n\n");
           }
   
           function buildAgentCreationEnabledSkillsPayload(source) {
@@ -3012,7 +2998,7 @@
   
             void (async () => {
               try {
-                await persistAgentCreationSetupDraft();
+                const savedAgent = await persistAgentCreationSetupDraft();
                 setAgentCreationSetupOpen(false);
                 setAgentCreationSetupSubmitting(false);
                 setAgentCreationPermissionModalOpen(false);
@@ -3025,8 +3011,18 @@
                   error: "",
                   message: "Saved",
                 });
+                if (creationOnly && typeof onCreationRequestClose === "function") {
+                  onCreationRequestClose({
+                    reason: "created",
+                    resourceId: String(savedAgent?.id || "").trim(),
+                  });
+                }
                 if (typeof onAgentMutated === "function") {
-                  await onAgentMutated();
+                  try {
+                    await onAgentMutated();
+                  } catch (refreshError) {
+                    console.warn("Agent created, but the agent list could not be refreshed.", refreshError);
+                  }
                 }
               } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : "Failed to create agent.";
@@ -3041,166 +3037,109 @@
             })();
           }
   
-          function handleAgentCreationSetupRunRequest(runRequest) {
-            const normalizedThreadId = String(runRequest?.threadId || "").trim();
-            const normalizedPrompt = String(runRequest?.prompt || "").trim();
-            if (!normalizedThreadId || !normalizedPrompt) {
-              return false;
+          function renderAgentCreationSetupModal() {
+            if (!agentCreationSetupOpen) {
+              return null;
             }
-  
-            setAgentCreationSetupSubmitting(true);
-            setAgentCreationSetupError("");
-            setSaveState({
-              isSaving: true,
-              error: "",
-              message: "",
-            });
-  
-            void (async () => {
-              try {
-                await ensureAgentCreationAssistantAgent();
-                const savedAgent = await persistAgentCreationSetupDraft();
-                const requestToken = runRequest.token || (Date.now().toString(36) + Math.random().toString(36).slice(2));
-                const instructionPrompt = buildAgentCreationInstructionTaskPrompt(savedAgent, normalizedPrompt);
-  
-                setAgentCreationSetupOpen(false);
-                setAgentCreationSetupSubmitting(false);
-                setAgentCreationPermissionModalOpen(false);
-                setAgentAssistantOpen(true);
-                setAgentAssistantCommandRequest(null);
-                setSaveState({
-                  isSaving: false,
-                  error: "",
-                  message: "Saved",
-                });
-                setAgentCreationInstructionContext({
-                  agentId: savedAgent.id,
-                  threadId: normalizedThreadId,
-                  status: "running",
-                });
-                rememberAgentAssistantThread(savedAgent.id, normalizedThreadId);
-                setAgentCreationInstructionRunRequest({
-                  token: "agent-instructions:" + requestToken,
-                  threadId: normalizedThreadId,
-                  prompt: instructionPrompt,
-                  displayPrompt: normalizedPrompt,
-                  attachments: Array.isArray(runRequest.attachments) ? runRequest.attachments : [],
-                  githubRepo: runRequest.githubRepo || null,
-                  enabledSkills: buildAgentCreationEnabledSkillsPayload(runRequest.enabledSkills),
-                  environmentId: typeof runRequest.environmentId === "string" ? runRequest.environmentId : "",
-                  quotedSelection: runRequest.quotedSelection || null,
-                });
-                if (typeof onThreadRegistered === "function") {
-                  onThreadRegistered(normalizedThreadId, { private: true });
-                }
-                if (typeof onAgentMutated === "function") {
-                  void Promise.resolve(onAgentMutated());
-                }
-              } catch (error) {
-                const errorMessage = error instanceof Error ? error.message : "Failed to create agent.";
-                setAgentCreationSetupSubmitting(false);
-                setAgentCreationSetupError(errorMessage);
-                setAgentCreationSetupResetToken((current) => current + 1);
-                setSaveState({
-                  isSaving: false,
-                  error: errorMessage,
-                  message: "",
-                });
-              }
-            })();
-  
-            return true;
-          }
-  
-          function renderAgentCreationSetupEmptyState() {
+
             const setupDraft = normalizePlaygroundAgentRecord(draftAgent || buildPlaygroundDefaultAgentDraft("single"));
             const selectedSetupModel = getPlaygroundAgentModelMeta((setupDraft.model || "claude-haiku-4-5"), resolvedAgentModelOptions);
             const setupPermissionSet = normalizePlaygroundPermissionSet(setupDraft.permissionSet, "agent");
             const setupPermissionSummary = getAgentPermissionSummary(setupPermissionSet);
-            const avatarPhotoUrl = agentProfilePhotoUrl;
+            const defaultSetupAvatarPhotoUrl = PLAYGROUND_AGENT_PROFILE_PRESET_OPTIONS[0]?.url || PLAYGROUND_SPARK_AGENT_PROFILE_URL;
+            const setupAvatarPhotoUrl = getPlaygroundAgentProfilePhotoUrl(setupDraft);
+            const avatarPhotoUrl = canRenderAvatarImage(setupAvatarPhotoUrl)
+              ? setupAvatarPhotoUrl
+              : defaultSetupAvatarPhotoUrl;
             const isSubmitting = Boolean(agentCreationSetupSubmitting || saveState.isSaving);
-            const isAgentCreatorReady = Boolean(agentCreationAssistantAgent?.id && !agentCreationAssistantPreparing && !agentCreationAssistantError);
             const visibleCreationSetupError = agentCreationSetupError
               ? (isPlaygroundPaidModelSubscriptionError(agentCreationSetupError) ? "" : agentCreationSetupError)
-              : (isPlaygroundPaidModelSubscriptionError(agentCreationAssistantError) ? "" : agentCreationAssistantError);
-  
-            const setupBackButton = React.createElement("button", {
-                type: "button",
-                className: "playground-resource-detail-back-button",
-                onClick: showAgentsHome,
-                "aria-label": "Back to Agents",
-              },
-              React.createElement(ArrowLeft, { width: 12, height: 12, strokeWidth: 1.8 }),
-              React.createElement("span", null, "Back")
+              : "";
+            const hasNestedCreationModal = Boolean(
+              agentCreationPermissionModalOpen
+              || agentModelPickerState
+              || agentProfileAvatarPickerOpen
             );
-  
-            const setupProfileSection = React.createElement("div", { className: "playground-agents-profile-section" },
-              React.createElement("div", { className: "profile-editor-avatar-wrap playground-agents-profile-avatar-wrap" },
-                React.createElement("div", { className: "profile-editor-avatar playground-agents-profile-avatar" },
-                  React.createElement("div", { className: "profile-editor-avatar-surface" },
-                    avatarPhotoUrl
-                      ? React.createElement("img", {
-                          className: "profile-editor-avatar-image",
-                          src: avatarPhotoUrl,
-                          alt: getAccountInitials(setupDraft.name || "Agent"),
-                          onError: () => setAgentProfileAvatarBroken(true),
-                        })
-                      : React.createElement("span", { className: "profile-editor-avatar-fallback" }, getAccountInitials(setupDraft.name || "Agent"))
-                  ),
-                  React.createElement("div", {
-                      className: "playground-agents-avatar-picker-shell playground-tasks-toolbar-popup-shell" + (agentProfileAvatarPickerOpen ? " is-open" : ""),
-                      ref: agentProfileAvatarPickerOpen ? agentProfileAvatarPickerRef : null,
-                    },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "profile-editor-avatar-trigger",
-                      onClick: () => setAgentProfileAvatarPickerOpen((current) => !current),
-                      disabled: isSubmitting,
-                      "aria-label": "Choose agent profile picture",
-                      "aria-expanded": agentProfileAvatarPickerOpen ? "true" : "false",
-                    }, React.createElement(Camera, { className: "profile-editor-camera-icon", strokeWidth: 1.9 })),
-                    agentProfileAvatarPickerOpen
-                      ? React.createElement(PlatformPopupSurface, {
-                          className: "playground-agents-avatar-picker-menu playground-tasks-toolbar-popup-menu-animate-down-in",
+
+            const setupProfileSection = React.createElement("div", {
+                className: "playground-agents-creation-modal-hero",
+              },
+              React.createElement("div", { className: "playground-agents-creation-modal-identity" },
+                React.createElement("div", { className: "profile-editor-avatar-wrap playground-agents-profile-avatar-wrap playground-agents-creation-modal-avatar-wrap" },
+                  React.createElement("div", { className: "profile-editor-avatar playground-agents-profile-avatar" },
+                    React.createElement("div", { className: "profile-editor-avatar-surface" },
+                      avatarPhotoUrl
+                        ? React.createElement("img", {
+                            className: "profile-editor-avatar-image",
+                            src: avatarPhotoUrl,
+                            alt: getAccountInitials(setupDraft.name || "Agent"),
+                            onError: () => setAgentProfileAvatarBroken(true),
+                          })
+                        : React.createElement("span", { className: "profile-editor-avatar-fallback" }, getAccountInitials(setupDraft.name || "Agent"))
+                    ),
+                    React.createElement(PlatformPopup, {
+                        open: agentProfileAvatarPickerOpen,
+                        variant: "minimal",
+                        rootRef: agentProfileAvatarPickerOpen ? agentProfileAvatarPickerRef : undefined,
+                        surfaceRef: agentProfileAvatarPickerSurfaceRef,
+                        portal: true,
+                        placement: "bottom-start",
+                        portalOffset: 8,
+                        portalCollisionPadding: 12,
+                        rootClassName: "playground-agents-avatar-picker-shell playground-tasks-toolbar-popup-shell",
+                        surfaceClassName: "playground-agents-avatar-picker-menu playground-agents-creation-avatar-picker-menu",
+                        animation: "down-in",
+                        surfaceProps: {
+                          role: "dialog",
+                          "aria-label": "Choose agent profile picture",
+                          onMouseDown: (event) => event.stopPropagation(),
                           onClick: (event) => event.stopPropagation(),
                         },
-                          PLAYGROUND_AGENT_PROFILE_PRESET_OPTIONS.map((option) =>
-                            React.createElement("button", {
-                                key: option.id,
-                                type: "button",
-                                className: "playground-agents-avatar-picker-option" + (avatarPhotoUrl === option.url ? " is-selected" : ""),
-                                onClick: () => handleAgentProfilePhotoSelection(option.url),
-                                disabled: isSubmitting,
-                                title: option.label,
-                                "aria-label": option.label,
-                              },
-                              React.createElement("div", { className: "playground-agents-avatar-picker-option-surface" },
-                                React.createElement("img", {
-                                  className: "playground-agents-avatar-picker-option-image",
-                                  src: option.url,
-                                  alt: option.label,
-                                })
-                              )
-                            )
+                        trigger: React.createElement("button", {
+                        type: "button",
+                        className: "profile-editor-avatar-trigger",
+                        onClick: () => setAgentProfileAvatarPickerOpen((current) => !current),
+                        disabled: isSubmitting,
+                        "aria-label": "Choose agent profile picture",
+                        "aria-expanded": agentProfileAvatarPickerOpen ? "true" : "false",
+                      }, React.createElement(Camera, { className: "profile-editor-camera-icon", strokeWidth: 1.9 })),
+                      },
+                      PLAYGROUND_AGENT_PROFILE_PRESET_OPTIONS.map((option) =>
+                        React.createElement("button", {
+                            key: option.id,
+                            type: "button",
+                            className: "playground-agents-avatar-picker-option" + (avatarPhotoUrl === option.url ? " is-selected" : ""),
+                            onClick: () => handleAgentProfilePhotoSelection(option.url),
+                            disabled: isSubmitting,
+                            title: option.label,
+                            "aria-label": option.label,
+                          },
+                          React.createElement("div", { className: "playground-agents-avatar-picker-option-surface" },
+                            React.createElement("img", {
+                              className: "playground-agents-avatar-picker-option-image",
+                              src: option.url,
+                              alt: option.label,
+                            })
                           )
                         )
-                      : null
+                      )
                     )
+                  )
+                ),
+                React.createElement("div", { className: "playground-agents-profile-name-wrap playground-agents-creation-modal-name-wrap" },
+                  React.createElement("input", {
+                    ref: agentCreationNameInputRef,
+                    type: "text",
+                    className: "playground-agents-profile-name-input playground-agents-creation-modal-name-input",
+                    value: setupDraft.name || "",
+                    placeholder: "New Agent",
+                    "aria-label": "Agent name",
+                    title: setupDraft.name || "Agent name",
+                    disabled: isSubmitting,
+                    onKeyDown: (event) => event.stopPropagation(),
+                    onChange: (event) => updateAgentField("name", event.target.value),
+                  })
                 )
-              ),
-              React.createElement("div", { className: "playground-agents-profile-name-wrap" },
-                React.createElement("input", {
-                  ref: agentCreationNameInputRef,
-                  type: "text",
-                  className: "playground-content-title playground-tasks-detail-navbar-title-input playground-environments-editor-title-input playground-agents-profile-name-input",
-                  value: setupDraft.name || "",
-                  placeholder: "New Agent",
-                  "aria-label": "Agent name",
-                  title: setupDraft.name || "Agent name",
-                  disabled: isSubmitting,
-                  onKeyDown: (event) => event.stopPropagation(),
-                  onChange: (event) => updateAgentField("name", event.target.value),
-                })
               )
             );
   
@@ -3229,80 +3168,62 @@
               React.createElement("div", { className: "playground-tasks-detail-fact-control" }, control)
             );
   
-            const focusSetupInstructionsTextarea = () => {
-              if (isSubmitting) {
-                return;
-              }
-              setIsAgentCreationInstructionsEditing(true);
-              window.requestAnimationFrame(() => {
-                const textarea = agentCreationInstructionsTextareaRef.current;
-                if (!textarea || textarea.disabled) {
-                  return;
+            const renderSetupInstructionsSection = () => React.createElement(PlatformInstructionsEditor, {
+              value: setupDraft.instructions || "",
+              onChange: (value) => updateAgentField("instructions", value),
+              title: "Instructions",
+              placeholder: "Add agent instructions here.",
+              ariaLabel: "Agent instructions",
+              readOnly: isSubmitting,
+              historyKey: setupDraft.id || "new-agent",
+              variant: "minimalistic-ui",
+              className: "playground-agents-creation-instructions-section",
+            });
+  
+            return React.createElement(PlatformModal, {
+              open: agentCreationSetupOpen,
+              title: "Create Agent",
+              description: "Configure the identity, model, permissions, and instructions for the new agent.",
+              headerVariant: "media",
+              headerMedia: setupProfileSection,
+              size: "medium",
+              as: "form",
+              className: "playground-agents-creation-modal",
+              bodyClassName: "playground-agents-creation-modal-body",
+              footerClassName: "playground-agents-creation-modal-footer",
+              initialFocusRef: agentCreationNameInputRef,
+              closeButtonLabel: "Close agent creation",
+              closeButtonDisabled: isSubmitting,
+              closeOnBackdrop: !isSubmitting && !hasNestedCreationModal,
+              closeOnEscape: !isSubmitting && !hasNestedCreationModal,
+              onClose: () => {
+                if (!isSubmitting) {
+                  performShowAgentsHome();
+                  if (creationOnly && typeof onCreationRequestClose === "function") {
+                    onCreationRequestClose({ reason: "cancelled" });
+                  }
                 }
-                textarea.focus();
-                resizeAgentDescriptionTextarea(textarea);
-              });
-            };
-  
-            const renderSetupInstructionsSection = () => React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description playground-agents-creation-instructions-section" },
-              React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Instructions"),
-                React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                  [
-                    { id: "bold", label: "Bold", icon: Bold },
-                    { id: "italic", label: "Italic", icon: Italic },
-                    { id: "underline", label: "Underline", icon: Underline },
-                    { id: "list", label: "List", icon: List },
-                  ].map((action) =>
-                    React.createElement("button", {
-                      key: "creation-instructions-" + action.id,
-                      type: "button",
-                      className: "playground-tasks-detail-format-button",
-                      title: action.label,
-                      "aria-label": action.label,
-                      disabled: isSubmitting,
-                      onMouseDown: (event) => event.preventDefault(),
-                      onClick: () => handleAgentMarkdownFormat("instructions", agentCreationInstructionsTextareaRef, action.id),
-                    }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
-                  )
-                )
-              ),
-              React.createElement("div", {
-                  className: "playground-tasks-detail-description-editor" + (isAgentCreationInstructionsEditing ? " is-editing" : " is-preview"),
-                  onClick: focusSetupInstructionsTextarea,
+              },
+              surfaceProps: {
+                onSubmit: (event) => {
+                  event.preventDefault();
+                  handleAgentCreationSetupCreateOnly();
                 },
-                !isAgentCreationInstructionsEditing
-                  ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                      String(setupDraft.instructions || "").trim()
-                        ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                            content: setupDraft.instructions,
-                            className: "playground-tasks-detail-description-preview tb-message-markdown",
-                          })
-                        : React.createElement("div", {
-                            className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                          }, "Add agent instructions here.")
-                    )
-                  : null,
-                React.createElement("textarea", {
-                  ref: agentCreationInstructionsTextareaRef,
-                  className: "playground-tasks-detail-description-input playground-agents-creation-instructions-input " + (isAgentCreationInstructionsEditing ? "is-editing" : "is-preview"),
-                  rows: 1,
-                  placeholder: isAgentCreationInstructionsEditing ? "Add agent instructions here." : "",
-                  value: setupDraft.instructions || "",
+              },
+              footer: React.createElement(React.Fragment, null,
+                React.createElement(PlatformSecondaryButton, {
+                  size: "medium",
+                  type: "button",
+                  onClick: handleAgentCreationGenerateInstructions,
                   disabled: isSubmitting,
-                  onFocus: () => setIsAgentCreationInstructionsEditing(true),
-                  onChange: (event) => {
-                    updateAgentField("instructions", event.target.value);
-                    resizeAgentDescriptionTextarea(event.currentTarget);
-                  },
-                  onBlur: () => setIsAgentCreationInstructionsEditing(false),
-                })
-              )
-            );
-  
-            return React.createElement("div", { className: "playground-agents-creation-form" },
-              setupBackButton,
-              setupProfileSection,
+                }, "Generate instructions"),
+                React.createElement(PlatformPrimaryButton, {
+                  size: "medium",
+                  type: "submit",
+                  disabled: isSubmitting,
+                }, isSubmitting ? "Creating..." : "Create Agent")
+              ),
+            },
               React.createElement("div", { className: "playground-agents-creation-config-box" },
                 React.createElement("div", { className: "playground-environment-composer-runtime-facts playground-agents-creation-settings" },
                   renderSetupFactRow("Model",
@@ -3316,16 +3237,7 @@
                     renderSetupPermissionButton()
                   )
                 ),
-                renderSetupInstructionsSection(),
-                React.createElement("div", { className: "playground-agents-creation-actions" },
-                  React.createElement(PlatformSecondaryButton, {
-                    size: "medium",
-                    type: "button",
-                    className: "playground-agents-creation-action-button is-secondary",
-                    onClick: handleAgentCreationSetupCreateOnly,
-                    disabled: isSubmitting,
-                  }, "Create Agent")
-                )
+                renderSetupInstructionsSection()
               ),
               visibleCreationSetupError
                 ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, visibleCreationSetupError)
@@ -3333,109 +3245,40 @@
             );
           }
   
-          function renderAgentCreationSetupThread() {
-            const creationAssistantAgentId = String(agentCreationAssistantAgent?.id || "").trim();
-            const isAgentCreatorReady = Boolean(creationAssistantAgentId && !agentCreationAssistantPreparing && !agentCreationAssistantError);
-            return React.createElement("div", { className: "playground-agents-creation-setup-pane", ref: agentCreationRunnerRef },
-              React.createElement(RunnerChat, {
-                key: "agent-creation-setup:" + (draftAgent?.id || "draft") + ":" + agentCreationSetupResetToken,
-                className: "playground-agents-creation-runner",
-                backendUrl,
-                apiKey,
-                fetchCustomSkills,
-                speechToTextUrl: speechToTextUrl || undefined,
-                requestHeaders,
-                appId: "runner-web-sdk-demo",
-                inputMode: "computer-agents",
-                computerAgents: computerAgents || undefined,
-                environments: (Array.isArray(environments) ? environments : []).map((environment) => ({
-                  ...environment,
-                  ...(preferredEnvironmentId && environment.id === preferredEnvironmentId ? { isDefault: true } : {}),
-                })),
-                agents: agentCreationAssistantRunnerAgents,
-                hideAgentSelector: true,
-                skills: Array.isArray(skills) ? skills : [],
-                skillDefaults: getDemoImageGenerationSkillDefaults(),
-                environmentId: preferredEnvironmentId || undefined,
-                agentId: creationAssistantAgentId || undefined,
-                privateMode: true,
-                autoFocusComposer: false,
-                keepFocusOnSubmit: true,
-                showUsageInStatus: false,
-                disabled: agentCreationSetupSubmitting || !isAgentCreatorReady,
-                placeholder: agentCreationAssistantPreparing
-                  ? "Preparing agent creator..."
-                  : agentCreationAssistantError
-                    ? "Agent creator unavailable"
-                    : "Describe your Agent to generate Instructions",
-                emptyState: renderAgentCreationSetupEmptyState(),
-                onExternalRunRequestCreate: handleAgentCreationSetupRunRequest,
-                onThreadIdChange: (threadId) => {
-                  const normalizedThreadId = String(threadId || "").trim();
-                  if (!normalizedThreadId || typeof onThreadRegistered !== "function") {
-                    return;
-                  }
-                  onThreadRegistered(normalizedThreadId, { private: true });
-                },
-                onEnvironmentChange: (nextEnvironmentId) => {
-                  if (typeof onPreferredEnvironmentChange === "function") {
-                    onPreferredEnvironmentChange(String(nextEnvironmentId || "").trim());
-                  }
-                },
-              })
-            );
-          }
-  
           function renderAgentCreationPermissionModal() {
-            if (!agentCreationPermissionModalOpen || !agentCreationSetupOpen) {
+            if (!agentCreationSetupOpen) {
               return null;
             }
   
-            return renderPlaygroundPlatformModal({
+            return React.createElement(PlatformModal, {
               open: Boolean(agentCreationPermissionModalOpen && agentCreationSetupOpen),
-              visible: agentCreationPermissionModalVisible,
-              closing: agentCreationPermissionModalClosing,
               onClose: () => closeAgentCreationPermissionModal(),
-              backdropClassName: "playground-tasks-project-issue-backdrop playground-agents-permission-modal-backdrop",
-              className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal playground-agents-permission-modal",
+              title: "Permissions",
+              size: "large",
+              maxWidth: "800px",
+              maxHeight: "min(700px, calc(100dvh - 48px))",
+              className: "playground-agents-permission-modal",
+              bodyClassName: "playground-agents-permission-modal-body",
+              footerClassName: "playground-agents-permission-modal-footer",
+              closeButtonLabel: "Close permissions",
               ariaLabel: "Permissions",
-              children: React.createElement(React.Fragment, null,
-                React.createElement("div", { className: "playground-tasks-project-modal-top" },
-                  React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
-                    React.createElement("div", {
-                      className: "playground-content-title playground-tasks-project-modal-name-input",
-                      style: { display: "flex", alignItems: "center" },
-                    }, "Permissions"),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-settings-icon-button playground-tasks-project-modal-close",
-                      onClick: () => closeAgentCreationPermissionModal(),
-                      title: "Close",
-                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-                  )
-                ),
-                React.createElement("div", { className: "playground-tasks-issue-modal-body playground-agents-permission-modal-body" },
-                  React.createElement("div", { className: "playground-agents-permissions-card" },
-                    React.createElement(AgentPermissionsPage, {
-                      permissionSet: draftAgent?.permissionSet,
-                      showOverview: false,
-                      showEffectiveAccess: true,
-                      onPermissionSetChange: (permissionSet) => {
-                        updateDraftAgent((current) => ({ ...current, permissionSet }));
-                      },
-                    })
-                  )
-                ),
-                React.createElement("div", { className: "playground-tasks-project-modal-actions" },
-                  React.createElement(PlatformPrimaryButton, {
-                    size: "medium",
-                    type: "button",
-                    className: "playground-environments-action-button is-primary",
-                    onClick: () => closeAgentCreationPermissionModal(),
-                  }, "Done")
-                )
+              footer: React.createElement(PlatformPrimaryButton, {
+                size: "medium",
+                type: "button",
+                onClick: () => closeAgentCreationPermissionModal(),
+              }, "Done"),
+            },
+              React.createElement("div", { className: "playground-agents-permissions-card" },
+                React.createElement(AgentPermissionsPage, {
+                  permissionSet: draftAgent?.permissionSet,
+                  showOverview: false,
+                  showEffectiveAccess: true,
+                  onPermissionSetChange: (permissionSet) => {
+                    updateDraftAgent((current) => ({ ...current, permissionSet }));
+                  },
+                })
               )
-            });
+            );
           }
   
           function renderAgentListAvatar(agent, className) {
@@ -3798,7 +3641,11 @@
   
             function handleAgentAvatarPickerPointerDown(event) {
               const target = event?.target instanceof Node ? event.target : null;
-              if (!target || !agentProfileAvatarPickerRef.current || agentProfileAvatarPickerRef.current.contains(target)) {
+              if (
+                !target
+                || agentProfileAvatarPickerRef.current?.contains(target)
+                || agentProfileAvatarPickerSurfaceRef.current?.contains(target)
+              ) {
                 return;
               }
               setAgentProfileAvatarPickerOpen(false);
@@ -4192,7 +4039,7 @@
   
   ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogLifecycle}
           useEffect(() => {
-            if (!agentCreationSetupOpen && !agentAssistantOpen) {
+            if (!agentAssistantOpen) {
               return;
             }
             if (agentCreationAssistantAgent?.id && agentCreationAssistantAgent.id !== PLAYGROUND_AGENT_DRAFT_ID) {
@@ -4204,7 +4051,6 @@
           }, [
             agentAssistantOpen,
             agentCreationAssistantAgent?.id,
-            agentCreationSetupOpen,
             allKnownAgents.length,
             resolvedAgentModelOptions,
           ]);
@@ -4311,19 +4157,6 @@
               window.cancelAnimationFrame(focusFrame);
             };
           }, [agentCreationSetupOpen, agentCreationSetupResetToken]);
-  
-          useLayoutEffect(() => {
-            if (!agentCreationSetupOpen) {
-              return;
-            }
-            resizeAgentDescriptionTextarea(agentCreationInstructionsTextareaRef.current);
-          }, [agentCreationSetupOpen, draftAgent?.instructions, draftAgent?.id]);
-  
-          useEffect(() => {
-            if (!agentCreationSetupOpen) {
-              setIsAgentCreationInstructionsEditing(false);
-            }
-          }, [agentCreationSetupOpen]);
   
           useLayoutEffect(() => {
             if (!agentComposerOpen) {

@@ -3,6 +3,9 @@ export const GUARDRAILS_PAGE_VIEW_SCRIPT = `          const listContent = render
           const guardrailsPageTitle = isGuardrailsDetailPage
             ? (selectedGuardrailSet.name || "Untitled Guardrail Set")
             : "Guardrails";
+          if (!isGuardrailsDetailPage) {
+            return listContent;
+          }
           function applyGuardrailDescriptionMarkdownFormat(formatType) {
             if (!selectedGuardrailSet || selectedGuardrailSetReadonly) {
               return;

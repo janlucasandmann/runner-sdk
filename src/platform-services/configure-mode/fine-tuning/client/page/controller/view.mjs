@@ -3,6 +3,12 @@ export const FINE_TUNING_PAGE_CONTROLLER_VIEW_SCRIPT = String.raw`        const 
         const detailJob = isDetailPage ? normalizePlaygroundFineTuningJob(selectedJob) : null;
         const showStopButton = detailJob ? canStopPlaygroundFineTuningJob(detailJob) : false;
         const isStoppingDetailJob = detailJob ? fineTuningStopJobId === detailJob.id : false;
+        if (!isDetailPage) {
+          return React.createElement(React.Fragment, null,
+            renderOverview(),
+            renderCreateModal()
+          );
+        }
         return React.createElement("section", { className: "playground-files-page playground-guardrails-page playground-evaluations-page playground-fine-tuning-page" },
           React.createElement("div", { className: "playground-files-shell playground-guardrails-shell" },
             React.createElement("section", { className: "playground-files-browser playground-guardrails-browser" },
@@ -56,4 +62,3 @@ export const FINE_TUNING_PAGE_CONTROLLER_VIEW_SCRIPT = String.raw`        const 
       }
 
 `;
-

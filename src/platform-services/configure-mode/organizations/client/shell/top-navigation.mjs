@@ -2,6 +2,7 @@ export const ORGANIZATIONS_TOP_NAVIGATION_SCRIPT = `        function renderOrgan
 	          const selectedOrganization = organizationPageOrganizations.find((organization) => (
 	            String(organization?.id || "").trim() === String(organizationPageSelectedOrganizationId || "").trim()
 	          ));
+	          const isOrganizationOverview = !selectedOrganization;
 	          const organizationTabLabel = {
 	            members: "Members",
 	            resources: "Resources",
@@ -25,6 +26,13 @@ export const ORGANIZATIONS_TOP_NAVIGATION_SCRIPT = `        function renderOrgan
 	                  { label: organizationTabLabel },
 	                ]
 	              : [{ label: "Configure" }, { label: "Organizations" }],
+            includeSearchDivider: isOrganizationOverview,
+            extraActions: isOrganizationOverview
+              ? React.createElement("div", {
+                  id: "playground-organizations-overview-controls",
+                  className: "playground-tools-overview-controls-slot",
+                })
+              : null,
           });
         }
 `;

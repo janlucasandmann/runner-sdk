@@ -13,6 +13,7 @@ const compositeComponents = [
   "detail-sidebar",
   "detail-tab-bar",
   "empty-state",
+  "floating-sidebar",
   "instructions-editor",
   "loading-state",
   "modal",
@@ -20,6 +21,7 @@ const compositeComponents = [
   "popup",
   "settings-section",
   "ui-card",
+  "version-history-sidebar",
   "widgets",
 ];
 const threadComponents = ["document-preview", "log-boxes"];
@@ -161,6 +163,10 @@ const canonicalExports = new Map([
     "./dist/platform-ui/components/composite/empty-state/index.js",
   ],
   [
+    "./platform-ui/components/composite/floating-sidebar",
+    "./dist/platform-ui/components/composite/floating-sidebar/index.js",
+  ],
+  [
     "./platform-ui/components/composite/instructions-editor",
     "./dist/platform-ui/components/composite/instructions-editor/index.js",
   ],
@@ -187,6 +193,10 @@ const canonicalExports = new Map([
   [
     "./platform-ui/components/composite/ui-card",
     "./dist/platform-ui/components/composite/ui-card/index.js",
+  ],
+  [
+    "./platform-ui/components/composite/version-history-sidebar",
+    "./dist/platform-ui/components/composite/version-history-sidebar/index.js",
   ],
   [
     "./platform-ui/components/composite/widgets",

@@ -3,7 +3,7 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
             return buildMetronomeDynamicContentGroups(nodes, edges, selectedNodeId);
           }, [nodes, edges, selectedNodeId]);
           const selectMetronomeNodeFromCanvas = useCallback((nodeId) => {
-            setIsMetronomePublishMenuOpen(false);
+            setIsMetronomeVersionHistorySidebarOpen(false);
             setSelectedNodeId(String(nodeId || ""));
           }, []);
           const selectedFirecrawlCredentialVaultId = useMemo(() => {
@@ -411,13 +411,18 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
               });
             }).filter(Boolean);
           };
+          const openMetronomeVersionHistorySidebar = useCallback(() => {
+            setSelectedNodeId("");
+            setMetronomeVersionChangesState(null);
+            setIsMetronomeVersionHistorySidebarOpen(true);
+          }, []);
           const openMetronomeVersionChangesPage = (versionId = "", options = {}) => {
             const explicitLeftSourceId = String(options.leftSourceId || "").trim();
             const explicitRightSourceId = String(options.rightSourceId || "").trim();
             const fallbackLeftSourceId = getMetronomeVersionCompareSourceId(versionId)
               || getDefaultMetronomeVersionCompareLeftSourceId();
             setSelectedNodeId("");
-            setIsMetronomePublishMenuOpen(true);
+            setIsMetronomeVersionHistorySidebarOpen(true);
             setMetronomeVersionChangesState({
               leftSourceId: explicitLeftSourceId || fallbackLeftSourceId,
               rightSourceId: explicitRightSourceId || METRONOME_VERSION_COMPARE_CURRENT_EDITOR_ID,

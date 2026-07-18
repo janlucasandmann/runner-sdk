@@ -3,7 +3,7 @@ import { createDeploymentVmAdminClient } from "./deployment-vm-admin-client.mjs"
 import { readResponseJson } from "./http-utils.mjs";
 
 export function createAdminGateway(bindings) {
-    const { aiosOrigin, deploymentVmNameOverride, deploymentVmNamePrefix, deploymentVmProject, feedbackSummaryAdminEnvFileCandidates, feedbackSummaryAllowedEmail, fetchAiosApi, hasAiosSession, normalizeBackendUrl, parseUpstreamUrl, platformOrigin, port, sendJson, serveFeedbackSummaryPage, serveProductUsageSummaryPageV2, } = bindings;
+    const { aiosOrigin, deploymentVmNameOverride, deploymentVmNamePrefix, deploymentVmProject, feedbackSummaryAdminEnvFileCandidates, feedbackSummaryAllowedEmail, fetchAiosApi, hasAiosSession, identityService, normalizeBackendUrl, parseUpstreamUrl, platformOrigin, port, sendJson, serveFeedbackSummaryPage, serveProductUsageSummaryPageV2, } = bindings;
     const {
         fetchFeedbackSummaryViaDeploymentVm,
         fetchProductUsageSummaryViaDeploymentVm,
@@ -27,6 +27,7 @@ export function createAdminGateway(bindings) {
         feedbackSummaryAdminEnvFileCandidates,
         fetchAiosApi,
         hasAiosSession,
+        identityService,
         platformOrigin,
         port,
     });
@@ -221,6 +222,13 @@ export function createAdminGateway(bindings) {
         }
     }
     async function proxyContactSalesSummaryGet(req, res) {
+        if (identityService.provider === "oidc") {
+            return sendJson(res, 501, {
+                error: "Capability unavailable",
+                code: "ON_PREM_CONNECTOR_CAPABILITY_UNAVAILABLE",
+                message: "The hosted contact-sales connector is not enabled on this appliance.",
+            });
+        }
         try {
             const session = await fetchFeedbackSummarySessionEmail(req);
             if (session.status === 401 || session.status === 403 || !session.email) {

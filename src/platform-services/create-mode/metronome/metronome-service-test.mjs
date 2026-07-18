@@ -47,7 +47,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Metronome controller runtime",
     source: METRONOME_PAGE_CONTROLLER_SCRIPT,
-    expectedSha256: "0573f9048214e4fdcf7b9aad0cb589ba16512008cafd9a37a8836886a9cde135",
+    expectedSha256: "21fdad47adf8348636bc4ef3b7acff78a68cb4397885690358f544ef637ab316",
     fragmentGroups: [{
       baseUrl: metronomePageUrl,
       paths: METRONOME_PAGE_CONTROLLER_FRAGMENT_PATHS,
@@ -67,7 +67,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Metronome templates runtime",
     source: METRONOME_TEMPLATES_RUNTIME_SCRIPT,
-    expectedSha256: "16b230ef154671f13aa4eb2af6a443e9840d669cdba72ec3ddc929140c0f7552",
+    expectedSha256: "38964cbfae34b922cc6abca71212eaa435a29e403e8ce94816d69d9cfb646686",
     fragmentGroups: [{
       baseUrl: metronomeRuntimeUrl,
       paths: METRONOME_TEMPLATES_FRAGMENT_PATHS,
@@ -109,6 +109,9 @@ await Promise.all([
 assert.match(METRONOME_DOMAIN_RUNTIME_SCRIPT, /function getMetronomeNodeIOContract/);
 assert.match(METRONOME_DOMAIN_RUNTIME_SCRIPT, /function haveMetronomePersistedNodesChanged/);
 assert.match(METRONOME_DOMAIN_RUNTIME_SCRIPT, /function haveMetronomePersistedEdgesChanged/);
+assert.match(METRONOME_TEMPLATES_RUNTIME_SCRIPT, /function stopMetronomeInputKeyPropagation\(event\)\s*\{[\s\S]*?event\.stopPropagation\(\)/);
+assert.doesNotMatch(METRONOME_DOMAIN_RUNTIME_SCRIPT, /stopImmediatePropagation/);
+assert.match(METRONOME_DOMAIN_RUNTIME_SCRIPT, /onMount: \(\) => \{\s*setIsMonacoReady\(true\)/);
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /function PlaygroundMetronomePage/);
 assert.match(METRONOME_PAGE_SCRIPT, /function PlaygroundMetronomePage/);
 assert.match(METRONOME_PAGE_CSS, /playground-metronome/);
@@ -145,8 +148,16 @@ assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /React\.createElement\(PlatformSecon
 assert.doesNotMatch(METRONOME_PAGE_RUNTIME_SCRIPT, /renderMetronomeVersionSelector/);
 assert.doesNotMatch(METRONOME_PAGE_RUNTIME_SCRIPT, /renderMetronomeRunSidebar/);
 assert.doesNotMatch(METRONOME_PAGE_RUNTIME_SCRIPT, /metronome-run-composer/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /React\.createElement\(PlatformVersionHistorySidebar, \{/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /const openMetronomeVersionHistorySidebar = useCallback\(\(\) => \{\s*setSelectedNodeId\(""\);\s*setMetronomeVersionChangesState\(null\);\s*setIsMetronomeVersionHistorySidebarOpen\(true\)/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /openVersionHistory: openMetronomeVersionHistorySidebar/);
+assert.doesNotMatch(METRONOME_PAGE_RUNTIME_SCRIPT, /openVersionHistory: openMetronomeVersionChangesPage/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /onViewChanges: \(\) => openMetronomeVersionChangesPage\(\)/);
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.topNavActions, /function renderMetronomeBreadcrumbVersionSelector/);
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.topNavActions, /React\.createElement\(PlatformPopup,[\s\S]*variant: "minimal"/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.topNavActions, /React\.createElement\("span", \{ className: "playground-top-nav-path-label" \}, title\)/);
+assert.doesNotMatch(METRONOME_APP_SCRIPT_FRAGMENTS.topNavActions, /maxHeight: "min\(340px, calc\(100vh - 96px\)\)"/);
+assert.doesNotMatch(METRONOME_STYLE_FRAGMENTS.overview, /\.playground-metronome-detail-version-selector-footer\s*\{[^}]*padding-top:/);
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /showVersions: !isActiveWorkflowBuiltIn/);
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /showPublish: !isActiveWorkflowBuiltIn/);
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /const shouldGenerateMetronomePythonFiles = metronomeEditorMode === "code"/);
@@ -160,6 +171,11 @@ assert.doesNotMatch(METRONOME_PAGE_RUNTIME_SCRIPT, /const metronomeWorkflowDefin
 assert.doesNotMatch(METRONOME_PAGE_RUNTIME_SCRIPT, /const generatedMetronomePythonCode = useMemo/);
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /const \[activeMetronomeVersionChanges, setActiveMetronomeVersionChanges\] = useState\(false\)/);
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /const comparisonTimer = window\.setTimeout\(\(\) => \{[\s\S]{0,600}hasSelectedMetronomeDeploymentEditorChanges/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /const hasUnsavedMetronomeChanges = Boolean\(\s*isEditor\s*&& activeWorkflow\s*&& !isActiveWorkflowBuiltIn\s*&& activeMetronomeVersionChanges\s*\)/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /id: "metronome-details-unsaved-changes"[\s\S]{0,220}title: "Leave without saving\?"/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /onNavigationGuardChange\(hasUnsavedMetronomeChanges/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /requestMetronomeNavigation\(performReturnToMetronomeOverview\)/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /requestMetronomeNavigation\(\(\) => \(\s*onThreadOpen\(thread\.id, \{ contentMode: "chat" \}\)/);
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /const nextTopNavStateKey = JSON\.stringify\(nextTopNavState\)/);
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /publishDisabled: metronomePublishState\.status === "loading" \|\| !activeMetronomeVersionChanges/);
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /const flushMetronomeLocalGraphSync = useCallback/);
@@ -187,6 +203,10 @@ assert.match(platformEntrySource, /from "\.\.\/\.\.\/\.\.\/src\/platform-service
 assert.match(platformEntrySource, /metronomeService\.handleRequest\(req, res, url\)/);
 assert.match(platformEntrySource, /MetronomesOverviewPage/);
 assert.match(platformEntrySource, /playground-metronome-overview-controls/);
+assert.match(platformEntrySource, /node: renderMetronomeBreadcrumbVersionSelector\(\)/);
+assert.match(platformEntrySource, /React\.createElement\(PlaygroundMetronomePage, \{[\s\S]*?onNavigationGuardChange: registerPlatformNavigationGuard,\s*onNavigationRequest: requestPlatformNavigation/);
+assert.match(platformEntrySource, /id: "playground-metronome-node-drawer-root",\s*className: "platform-floating-sidebar-portal"/);
+assert.match(platformEntrySource, /PlatformVersionHistorySidebar/);
 assert.doesNotMatch(platformEntrySource, /function PlaygroundMetronomePage/);
 assert.doesNotMatch(platformEntrySource, /function getThreadMetronomeMetadata/);
 assert.doesNotMatch(platformEntrySource, /function openMetronomePage/);

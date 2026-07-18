@@ -174,7 +174,6 @@ export const FINE_TUNING_PAGE_CONTROLLER_ACTIONS_SCRIPT = String.raw`        asy
             if (typeof setSelectedFineTuningJobId === "function") setSelectedFineTuningJobId("");
             if (typeof setFineTuningPageMode === "function") setFineTuningPageMode("overview");
           }
-          setRowMenuId("");
           const normalizedBackendUrl = normalizePlaygroundFineTuningString(backendUrl).replace(/\/+$/, "");
           if (normalizedBackendUrl && normalizedJobId) {
             void fetch(normalizedBackendUrl + "/fine-tuning/jobs/" + encodeURIComponent(normalizedJobId), {
@@ -187,4 +186,3 @@ export const FINE_TUNING_PAGE_CONTROLLER_ACTIONS_SCRIPT = String.raw`        asy
         }
 
 `;
-

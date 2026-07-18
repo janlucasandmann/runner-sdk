@@ -24,10 +24,7 @@ export function createResourceGateway(bindings) {
         }
         if (hasAiosSession(req)) {
             const normalizedPath = upstreamPath.startsWith("/") ? upstreamPath : `/${upstreamPath}`;
-            const [pathname, queryString = ""] = normalizedPath.split("?");
-            const targetUrl = new URL(`${aiosOrigin}/api/playground/cloud${pathname}`);
-            targetUrl.search = queryString ? `?${queryString}` : "";
-            const upstream = await fetch(targetUrl.toString(), {
+            const upstream = await fetchAiosCloud(req, normalizedPath, {
                 method: "GET",
                 headers: withProxyOrganizationHeader(req, {}, {
                     cookie: req.headers.cookie || "",

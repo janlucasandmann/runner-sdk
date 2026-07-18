@@ -18,3 +18,7 @@ export {
 export {
   PLATFORM_NAVIGATION_GUARD_APP_SCRIPT_FRAGMENTS,
 } from "./navigation-guard/index.mjs";
+
+export {
+  RESOURCE_CREATION_APP_SCRIPT_FRAGMENTS,
+} from "./resource-creation/index.mjs";

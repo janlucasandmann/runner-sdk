@@ -4,6 +4,7 @@ export const EVALUATIONS_APP_TOP_NAVIGATION_SCRIPT = `        function renderEva
             .find((set) => set?.id === selectedEvaluationSetId);
           const activeEvaluationRun = activeEvaluationSet?.runs?.find((run) => run?.id === selectedEvaluationRunId);
           const evaluationsPathItems = [{ label: "Configure" }, { label: "Evaluations" }];
+          const isEvaluationsOverview = evaluationsPageMode === "overview";
           const showEvaluationSetActions = evaluationsPageMode === "detail" && Boolean(activeEvaluationSet?.id) && !isResourcesVersionsDrawerOpen;
           if ((evaluationsPageMode === "detail" || evaluationsPageMode === "run") && activeEvaluationSet?.name) {
             evaluationsPathItems.push({ label: activeEvaluationSet.name });
@@ -14,13 +15,18 @@ export const EVALUATIONS_APP_TOP_NAVIGATION_SCRIPT = `        function renderEva
           return renderAppHeader({
             className: "playground-configure-navbar playground-models-navbar",
             pathItems: evaluationsPathItems,
-            includeSearchDivider: showEvaluationSetActions,
-            extraActions: showEvaluationSetActions
+            includeSearchDivider: isEvaluationsOverview || showEvaluationSetActions,
+            extraActions: isEvaluationsOverview
               ? React.createElement("div", {
-                  id: "playground-evaluations-nav-actions",
-                  className: "playground-evaluations-nav-actions",
+                  id: "playground-evaluations-overview-controls",
+                  className: "playground-tools-overview-controls-slot",
                 })
-              : null,
+              : showEvaluationSetActions
+                ? React.createElement("div", {
+                    id: "playground-evaluations-nav-actions",
+                    className: "playground-evaluations-nav-actions",
+                  })
+                : null,
             hideCommonActions: isResourcesVersionsDrawerOpen,
           });
         }

@@ -28,7 +28,7 @@ import { useModalResizeTransition } from "./use-modal-resize-transition.js";
 export type PlatformModalVariant = "small" | "medium" | "large";
 export type PlatformModalSize = PlatformModalVariant | "compact" | "wide" | "full";
 export type PlatformModalCloseReason = "backdrop" | "escape" | "close-button";
-export type PlatformModalHeaderVariant = "default" | "search";
+export type PlatformModalHeaderVariant = "default" | "search" | "media";
 
 export interface PlatformModalHeaderSearchProps extends PlatformSearchProps {
   inputRef?: Ref<HTMLInputElement>;
@@ -59,6 +59,7 @@ export interface PlatformModalProps {
   description?: ReactNode;
   headerVariant?: PlatformModalHeaderVariant;
   headerSearchProps?: PlatformModalHeaderSearchProps;
+  headerMedia?: ReactNode;
   headerActions?: ReactNode;
   footer?: ReactNode;
   children?: ReactNode;
@@ -113,6 +114,7 @@ export interface PlatformModalHeaderProps extends Omit<HTMLAttributes<HTMLDivEle
   title?: ReactNode;
   description?: ReactNode;
   searchProps?: PlatformModalHeaderSearchProps;
+  media?: ReactNode;
   actions?: ReactNode;
   titleId?: string;
   descriptionId?: string;
@@ -297,6 +299,7 @@ export function PlatformModal({
   description,
   headerVariant = "default",
   headerSearchProps,
+  headerMedia,
   headerActions,
   footer,
   children,
@@ -514,6 +517,7 @@ export function PlatformModal({
               ...headerSearchProps,
               inputRef: setHeaderSearchInputRef,
             } : undefined}
+            media={headerVariant === "media" ? headerMedia : undefined}
             actions={headerActions}
             titleId={titleId}
             descriptionId={descriptionId}
@@ -589,6 +593,7 @@ export function PlatformModalHeader({
   title,
   description,
   searchProps = {},
+  media,
   actions,
   titleId,
   descriptionId,
@@ -613,6 +618,47 @@ export function PlatformModalHeader({
       <X width={16} height={16} strokeWidth={2} aria-hidden="true" />
     </button>
   ) : null;
+
+  if (variant === "media") {
+    return (
+      <div
+        {...props}
+        data-platform-modal-part="header"
+        className={joinClassNames("platform-modal-header", "is-media", className)}
+      >
+        {title != null ? (
+          <h2
+            id={titleId}
+            className={joinClassNames(
+              "platform-modal-header__title",
+              "platform-modal-header__visually-hidden",
+              titleClassName,
+            )}
+          >
+            {title}
+          </h2>
+        ) : null}
+        {description != null ? (
+          <p
+            id={descriptionId}
+            className={joinClassNames(
+              "platform-modal-header__description",
+              "platform-modal-header__visually-hidden",
+              descriptionClassName,
+            )}
+          >
+            {description}
+          </p>
+        ) : null}
+        <div className="platform-modal-header__media">{media}</div>
+        {actions != null ? (
+          <div className="platform-modal-header__actions">{actions}</div>
+        ) : null}
+        {closeControl}
+        {children}
+      </div>
+    );
+  }
 
   if (variant === "search") {
     const {

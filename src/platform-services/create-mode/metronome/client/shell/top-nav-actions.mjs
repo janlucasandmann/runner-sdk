@@ -8,6 +8,7 @@ export const METRONOME_APP_TOP_NAV_ACTIONS_SCRIPT = `
           }
           const versions = Array.isArray(state.versions) ? state.versions : [];
           const isBusy = Boolean(state.versionsBusy);
+          const title = String(state.title || "").trim() || "Untitled Metronome";
           return React.createElement(PlatformPopup, {
             open: metronomeBreadcrumbVersionMenuOpen,
             variant: "minimal",
@@ -18,22 +19,23 @@ export const METRONOME_APP_TOP_NAV_ACTIONS_SCRIPT = `
               role: "menu",
               "aria-label": "Choose Metronome version",
               width: 284,
-              maxHeight: "min(340px, calc(100vh - 96px))",
             },
             animation: "down-in",
             trigger: React.createElement("button", {
               type: "button",
-              className: "playground-metronome-breadcrumb-version-trigger" + (metronomeBreadcrumbVersionMenuOpen ? " is-active" : ""),
+              className: "playground-top-nav-path-item is-current playground-metronome-breadcrumb-version-trigger" + (metronomeBreadcrumbVersionMenuOpen ? " is-active" : ""),
               disabled: isBusy,
-              "aria-label": "Choose Metronome version",
+              "aria-label": "Choose version for " + title,
               "aria-haspopup": "menu",
               "aria-expanded": metronomeBreadcrumbVersionMenuOpen ? "true" : "false",
+              title,
               onClick: () => {
                 setMetronomeTopNavMenuOpen(false);
                 setMetronomeTopNavPublishMenuOpen(false);
                 setMetronomeBreadcrumbVersionMenuOpen((current) => !current);
               },
             },
+              React.createElement("span", { className: "playground-top-nav-path-label" }, title),
               React.createElement(ChevronDown, { width: 13, height: 13, strokeWidth: 1.8, "aria-hidden": "true" })
             ),
           },

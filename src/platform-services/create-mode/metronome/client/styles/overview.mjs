@@ -1031,18 +1031,20 @@ export const METRONOME_OVERVIEW_CSS = String.raw`
 
       .playground-metronome-detail-version-selector-footer {
         margin-top: 4px;
-        padding-top: 6px;
         border-top: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       .playground-metronome-breadcrumb-version-selector {
+        min-width: 0;
+        max-width: min(360px, 42vw);
         display: inline-flex;
         align-items: center;
         z-index: 121;
       }
 
       .playground-metronome-breadcrumb-version-trigger {
-        width: 22px;
+        width: auto;
+        max-width: 100%;
         height: 22px;
         padding: 0;
         border: 0;
@@ -1052,8 +1054,13 @@ export const METRONOME_OVERVIEW_CSS = String.raw`
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 4px;
         cursor: pointer;
         transition: background-color 160ms ease, color 160ms ease;
+      }
+
+      .playground-metronome-breadcrumb-version-trigger > svg {
+        flex: 0 0 auto;
       }
 
       .playground-metronome-breadcrumb-version-trigger:hover,

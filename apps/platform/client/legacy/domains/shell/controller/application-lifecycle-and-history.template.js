@@ -1804,23 +1804,9 @@
             });
             setActivePage("resources");
           }, [refreshAgents]);
-          const openAgentCreationInResources = useCallback((options = {}) => {
-            const requestedModelId = String(options?.modelId || "").trim();
-            const requestedSidebarMode = options?.sidebarMode === "configure" ? "configure" : "work";
-            void refreshAgents();
-            setSelectedWelcomeComposerTaskId("");
-            setThreadAgentSelectionOverride(null);
-            setAgentPageSelectionRequest(null);
-            setAgentCreationPageModelId(requestedModelId);
-            setSidebarWorkspaceMode(requestedSidebarMode);
-            setResourcesView("agents");
-            setResourcesHeaderState({
-              mode: "overview",
-              title: "",
-            });
-            setActivePage("resources");
-            setAgentCreationPageRequestToken((current) => current + 1);
-          }, [refreshAgents]);
+  ${RESOURCE_CREATION_APP_SCRIPT_FRAGMENTS.actions}          const openAgentCreationInResources = useCallback((options = {}) => {
+            openPlatformResourceCreationModal("agent", options);
+          }, []);
           const handleThreadTurnAgentClick = useCallback((payload = {}) => {
             const requestedAgentId = String(payload?.agentId || "").trim();
             const normalizedAgentName = String(payload?.agentName || "").trim().toLowerCase();

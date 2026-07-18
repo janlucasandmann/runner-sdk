@@ -54,6 +54,7 @@ export function createAdminAuthorization({
   feedbackSummaryAdminEnvFileCandidates,
   fetchAiosApi,
   hasAiosSession,
+  identityService = { provider: "firebase" },
   platformOrigin,
   port,
 }) {
@@ -158,6 +159,15 @@ export function createAdminAuthorization({
 
   async function fetchSessionEmail(req) {
     if (!hasAiosSession(req)) return { status: 401, email: "" };
+    if (identityService.provider === "oidc") {
+      const session = await identityService.readSession(req);
+      const email = normalizeEmail(
+        session?.profile?.email || session?.principal?.email,
+      );
+      return email
+        ? { status: 200, email }
+        : { status: 401, email: "" };
+    }
     const verifiedTokenEmail = await verifyTokenEmail(req);
     if (verifiedTokenEmail) return { status: 200, email: verifiedTokenEmail };
     try {
@@ -189,6 +199,21 @@ export function createAdminAuthorization({
     );
     const redirectUrl = new URL(normalizedPagePath, platformOrigin);
     if (requestUrl.search) redirectUrl.search = requestUrl.search;
+    if (identityService.provider === "oidc") {
+      const loginUrl = new URL("/api/platform/auth/login", platformOrigin);
+      loginUrl.searchParams.set(
+        "return_to",
+        `${redirectUrl.pathname}${redirectUrl.search}`,
+      );
+      if (!options?.signedOut) return loginUrl.toString();
+      loginUrl.searchParams.set("prompt", "select_account");
+      const logoutUrl = new URL("/api/platform/auth/logout", platformOrigin);
+      logoutUrl.searchParams.set(
+        "return_to",
+        `${loginUrl.pathname}${loginUrl.search}`,
+      );
+      return logoutUrl.toString();
+    }
     const loginUrl = new URL("/login", aiosOrigin);
     loginUrl.searchParams.set("redirect", redirectUrl.toString());
     if (options?.signedOut) loginUrl.searchParams.set("signed_out", "1");

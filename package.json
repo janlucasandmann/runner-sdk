@@ -130,6 +130,13 @@
     "./platform-ui/components/composite/empty-state/styles.css": {
       "default": "./dist/platform-ui/components/composite/empty-state/empty-state.css"
     },
+    "./platform-ui/components/composite/floating-sidebar": {
+      "types": "./dist/platform-ui/components/composite/floating-sidebar/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/floating-sidebar/index.js"
+    },
+    "./platform-ui/components/composite/floating-sidebar/styles.css": {
+      "default": "./dist/platform-ui/components/composite/floating-sidebar/floating-sidebar.css"
+    },
     "./platform-ui/components/composite/loading-state": {
       "types": "./dist/platform-ui/components/composite/loading-state/index.d.ts",
       "default": "./dist/platform-ui/components/composite/loading-state/index.js"
@@ -178,6 +185,13 @@
     },
     "./platform-ui/components/composite/ui-card/styles.css": {
       "default": "./dist/platform-ui/components/composite/ui-card/ui-card.css"
+    },
+    "./platform-ui/components/composite/version-history-sidebar": {
+      "types": "./dist/platform-ui/components/composite/version-history-sidebar/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/version-history-sidebar/index.js"
+    },
+    "./platform-ui/components/composite/version-history-sidebar/styles.css": {
+      "default": "./dist/platform-ui/components/composite/version-history-sidebar/version-history-sidebar.css"
     },
     "./platform-ui/components/composite/widgets": {
       "types": "./dist/platform-ui/components/composite/widgets/index.d.ts",
@@ -388,6 +402,7 @@
     "platform-resource-detail-test": "npm run platform-component-invariants && npm run platform-resource-invariants && vitest run src/platform-ui/pages/details src/platform-ui/pages/permissions src/platform-ui/components/composite/detail-tab-bar src/platform-ui/components/composite/detail-sidebar src/platform-ui/components/composite/instructions-editor src/platform-ui/components/composite/settings-section src/platform-resources/agents/detail src/platform-resources/computers/detail src/platform-services/create-mode/projects/client/detail",
     "smoke": "npm run build && node ./tests/smoke.test.mjs",
     "platform:asset-test": "node ./apps/platform/server/platform-assets.test.mjs",
+    "platform:identity-test": "node --test ./apps/platform/server/identity/*.test.mjs ./apps/platform/server/platform-config.test.mjs",
     "platform:development-asset-test": "node ./apps/platform/server/platform-development-assets.test.mjs && node ./apps/platform/development/vite-base.test.mjs && node ./apps/platform/development/runner-chat-css-hmr.test.mjs && node ./apps/platform/development/backend-reload-policy.test.mjs",
     "platform:legacy-template-test": "node ./apps/platform/client/legacy/source-template.test.mjs",
     "platform:legacy-source-test": "node ./src/platform-services/legacy-browser-source.test.mjs",
@@ -415,6 +430,7 @@
     "docx-preview": "^0.3.7",
     "dompurify": "^3.4.12",
     "jszip": "^3.10.1",
+    "jose": "^6.2.3",
     "lucide-react": "^0.575.0",
     "novnc-next": "^1.0.0",
     "pdfjs-dist": "^5.4.624",

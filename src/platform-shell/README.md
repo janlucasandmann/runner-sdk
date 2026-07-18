@@ -8,4 +8,5 @@ dedicated subdirectory. Product pages remain under `src/platform-services`.
 
 - `app-header` owns the App Header, Breadcrumb Bar, Account Menu, Notifications Popup, and global Search Modal.
 - `app-sidebar` owns expanded and collapsed navigation, platform mode selection, thread-list UI, and sidebar layout styles.
+- `resource-creation` owns cross-page Agent and Computer creation overlay lifecycle.
 - `settings-modal` owns the settings experience opened from the Account Menu.

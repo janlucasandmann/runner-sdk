@@ -578,8 +578,6 @@
         .playground-content-shell.is-thread-side-detail-open > .playground-content-nav > .playground-content-nav-right,
         .playground-content-shell.is-resources-side-detail-open > .playground-content-nav > .playground-content-nav-center,
         .playground-content-shell.is-resources-side-detail-open > .playground-content-nav > .playground-content-nav-right,
-        .playground-content-shell.is-metronome-node-detail-open > .playground-content-nav > .playground-content-nav-center,
-        .playground-content-shell.is-metronome-node-detail-open > .playground-content-nav > .playground-content-nav-right,
         .playground-content-shell:has(> .playground-content-body.is-files-page .playground-files-shell.has-preview > .playground-files-preview) > .playground-content-nav > .playground-content-nav-center,
         .playground-content-shell:has(> .playground-content-body.is-files-page .playground-files-shell.has-preview > .playground-files-preview) > .playground-content-nav > .playground-content-nav-right,
         .playground-content-shell:has(> .playground-content-body.is-files-page .playground-files-shell.has-preview > .playground-files-preview) > .playground-content-nav .playground-top-nav-left-extra,
@@ -14173,6 +14171,7 @@
         }
   
         .playground-agents-avatar-picker-menu {
+          --platform-popup-padding: 12px;
           position: absolute;
           right: -10px;
           top: 40px;
@@ -19223,18 +19222,6 @@
           grid-template-columns: minmax(0, 1fr) 400px;
         }
   
-        .playground-agents-detail-layout.is-creation-setup {
-          grid-template-columns: minmax(0, 1fr);
-        }
-  
-        .playground-agents-page.is-creation-setup .playground-environments-shell {
-          grid-template-columns: minmax(0, 1fr);
-        }
-  
-        .playground-agents-page.is-creation-setup .playground-environments-list-pane {
-          display: none;
-        }
-  
         .playground-agents-detail-main-pane {
           min-width: 0;
           min-height: 0;
@@ -19630,251 +19617,212 @@
           cursor: default;
         }
   
-        .playground-agents-creation-thread-detail {
-          overflow: hidden;
+        .playground-agents-creation-modal {
+          max-height: min(800px, calc(100dvh - 48px));
         }
-  
-        .playground-agents-creation-setup-pane {
-          min-width: 0;
-          min-height: 0;
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
+
+        .playground-agents-creation-modal .platform-modal-header.is-media {
+          border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+          background: rgba(0, 0, 0, 0.5);
         }
-  
-        .tb-runner-chat.playground-agents-creation-runner {
-          flex: 1 1 auto;
-          min-width: 0;
-          min-height: 0;
-          width: 100%;
-          height: 100%;
+
+        .playground-agents-creation-modal .platform-modal-header.is-media .platform-modal-header__close,
+        .playground-agents-creation-modal .platform-modal-header.is-media .platform-modal-header__close:hover,
+        .playground-agents-creation-modal .platform-modal-header.is-media .platform-modal-header__close:focus-visible {
+          padding: 0;
+          border-radius: 0;
+          background: transparent;
+          -webkit-backdrop-filter: none;
+          backdrop-filter: none;
         }
-  
-        .tb-runner-chat.playground-agents-creation-runner .tb-log-scroll.is-custom-empty-state {
+
+        .playground-agents-creation-modal-hero {
           position: relative;
+          box-sizing: border-box;
+          width: 100%;
+          padding: 28px 32px;
+          display: flex;
+          align-items: flex-end;
+          background-position: center 46%;
+          background-size: cover;
+          background-repeat: no-repeat;
+        }
+
+        .playground-agents-creation-modal-identity {
+          position: relative;
+          z-index: 1;
+          width: 100%;
+          min-width: 0;
           display: flex;
           align-items: center;
-          justify-content: center;
-          padding: 28px;
+          gap: 18px;
         }
-  
-        .tb-runner-chat.playground-agents-creation-runner .tb-content-width.is-custom-empty-state {
-          width: min(100%, 760px);
-          max-width: 760px;
-        }
-  
-        .tb-runner-chat.playground-agents-creation-runner .task-input-box {
-          --tb-task-input-outline: rgba(255, 255, 255, 0.1);
-          --tb-task-input-border: rgba(255, 255, 255, 0.1);
-        }
-  
-        .tb-runner-chat.playground-agents-creation-runner .task-input-box:has(.sidebar-textarea:focus) {
-          --tb-task-input-outline: rgba(77, 163, 255, 0.42);
-          --tb-task-input-border: linear-gradient(-10deg, rgba(77, 163, 255, 0.24), rgba(141, 197, 255, 0.58), rgba(77, 163, 255, 0.3), rgba(77, 163, 255, 0.66));
-        }
-  
-        .playground-agents-creation-form {
-          width: 100%;
-          margin: 0 auto;
-          display: flex;
-          flex-direction: column;
-          gap: 0;
-        }
-  
-        .tb-runner-chat.playground-agents-creation-runner .playground-agents-creation-form > .playground-resource-detail-back-button {
-          position: absolute;
-          top: 28px;
-          left: 28px;
-          z-index: 2;
+
+        .playground-agents-creation-modal-avatar-wrap.profile-editor-avatar-wrap {
+          flex: 0 0 auto;
           margin: 0;
         }
-  
-        .playground-agents-creation-form .playground-agents-profile-avatar-wrap {
-          margin-top: -55px;
+
+        .playground-agents-creation-modal .playground-agents-profile-avatar.profile-editor-avatar {
+          width: 82px;
+          height: 82px;
         }
-  
-        .playground-agents-creation-form .playground-agents-profile-name-input::placeholder {
-          color: rgba(255, 255, 255, 0.5);
+
+        .playground-agents-creation-modal .playground-agents-profile-avatar .profile-editor-avatar-surface {
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          background: rgba(0, 0, 0, 0.24);
+          box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3);
+        }
+
+        .playground-agents-creation-modal .playground-agents-profile-avatar .profile-editor-avatar-surface::before {
+          content: none;
+        }
+
+        .playground-agents-creation-modal .profile-editor-avatar-trigger {
+          right: -3px;
+          bottom: -3px;
+          width: 28px;
+          height: 28px;
+          border-color: rgba(255, 255, 255, 0.2);
+          background: rgba(18, 18, 18, 0.88);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+        }
+
+        .playground-agents-creation-modal-name-wrap.playground-agents-profile-name-wrap {
+          min-width: 0;
+          width: auto;
+          flex: 1 1 auto;
+          justify-content: flex-start;
+          margin: 0;
+        }
+
+        .playground-agents-creation-modal-name-input.playground-agents-profile-name-input {
+          width: 100%;
+          min-width: 0;
+          padding: 0;
+          border: 0;
+          outline: 0;
+          background: transparent;
+          color: #fff;
+          font-size: 20px;
+          font-weight: 400;
+          line-height: 1.25;
+          text-align: left;
+          text-overflow: ellipsis;
+        }
+
+        .playground-agents-creation-modal-name-input.playground-agents-profile-name-input::placeholder {
+          color: rgba(255, 255, 255, 0.62);
           opacity: 1;
         }
-  
-        .playground-agents-creation-form .playground-agents-profile-actions,
-        .playground-agents-creation-form .playground-agents-profile-email-group {
-          display: none;
+
+        .playground-agents-creation-modal-body.platform-modal-body {
+          min-height: 390px;
+          overflow-y: auto;
         }
-  
+
         .playground-agents-creation-config-box {
-          --playground-agents-creation-border: linear-gradient(
-            -10deg,
-            rgba(200, 200, 200, 0.25),
-            rgba(255, 255, 255, 0.1),
-            rgba(255, 255, 255, 0.15),
-            rgba(255, 255, 255, 0.375)
-          );
           width: 100%;
-          margin-top: 20px;
-          padding: 20px;
-          position: relative;
-          z-index: 0;
+          margin: 0;
+          padding: 0;
           border: 0;
-          border-radius: 15px;
           background: transparent;
           display: flex;
           flex-direction: column;
-          gap: 6px;
-          overflow: hidden;
-        }
-  
-        .playground-agents-creation-config-box::before {
-          content: "";
-          pointer-events: none;
-          position: absolute;
-          inset: 0;
-          border-radius: inherit;
-          padding: 1px;
-          background: var(--playground-agents-creation-border);
-          mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-          mask-clip: content-box, border-box;
-          mask-composite: exclude;
-          mask-origin: content-box, border-box;
-          mask-repeat: repeat, repeat;
-          mask-size: auto, auto;
-        }
-  
-        .playground-agents-creation-config-box > * {
-          position: relative;
-          z-index: 1;
+          gap: 8px;
         }
   
         .playground-agents-creation-config-box .playground-tasks-detail-description.playground-environments-editor-description {
           margin-top: 0;
           padding-top: 0;
         }
-  
-        .playground-agents-creation-instructions-section .playground-tasks-detail-section-header {
-          margin-bottom: 8px;
+
+        .playground-agents-creation-instructions-section.platform-instructions-editor {
+          min-height: 220px;
+          margin-bottom: 0;
         }
-  
-        .playground-agents-creation-instructions-section .playground-tasks-detail-description-editor {
-          height: 88px;
-          min-height: 88px;
-          max-height: 88px;
-          overflow: hidden;
-          cursor: text;
+
+        .playground-agents-creation-instructions-section .platform-instructions-editor__body {
+          min-height: 174px;
         }
-  
-        .playground-agents-creation-instructions-section .playground-tasks-detail-description-input,
-        .playground-agents-creation-instructions-section .playground-tasks-detail-description-preview {
-          height: 88px;
-          min-height: 88px;
-          max-height: 88px;
-          padding-bottom: 0;
-        }
-  
-        .playground-agents-creation-instructions-section .playground-tasks-detail-description-preview-scope.tb-runner-chat {
-          overflow-y: auto;
-          scrollbar-width: none;
-          pointer-events: auto;
-        }
-  
-        .playground-agents-creation-instructions-section .playground-tasks-detail-description-input {
-          height: 88px !important;
-          overflow-y: auto;
-          scrollbar-width: none;
-        }
-  
-        .playground-agents-creation-instructions-section .playground-tasks-detail-description-preview-scope.tb-runner-chat::-webkit-scrollbar,
-        .playground-agents-creation-instructions-section .playground-tasks-detail-description-input::-webkit-scrollbar {
-          display: none;
-        }
-  
-        .playground-agents-creation-instructions-section .playground-tasks-detail-description-editor.is-preview .playground-tasks-detail-description-input {
-          pointer-events: none;
+
+        .playground-agents-creation-instructions-section .platform-instructions-editor__preview-scope,
+        .playground-agents-creation-instructions-section .platform-instructions-editor__preview,
+        .playground-agents-creation-instructions-section .platform-instructions-editor__input {
+          min-height: 132px;
         }
   
         .playground-agents-creation-settings {
           width: 100%;
         }
-  
-        .playground-agents-creation-actions {
-          display: flex;
-          align-items: center;
-          justify-content: flex-end;
+
+        .playground-agents-creation-settings .playground-tasks-detail-fact:first-child {
+          padding-top: 0;
+        }
+
+        .playground-agents-creation-settings .playground-tasks-detail-fact:last-child {
+          padding-bottom: 0;
+        }
+
+        .playground-agents-creation-modal .playground-agents-avatar-picker-shell.playground-tasks-toolbar-popup-shell {
+          z-index: 8;
+        }
+
+        .playground-agents-creation-modal .playground-agents-avatar-picker-menu {
+          right: auto;
+          left: 0;
+          z-index: 9;
+        }
+
+        .playground-agents-creation-avatar-picker-menu.platform-popup-surface.is-portaled {
+          right: auto;
+          top: auto;
+          z-index: var(--platform-popup-portal-z-index, 12060);
+          pointer-events: auto;
+        }
+
+        .playground-agents-creation-modal .playground-environments-editor-notice {
+          margin: 16px 0 0;
+        }
+
+        .playground-computer-creation-modal-body.platform-modal-body {
+          min-height: 390px;
+        }
+
+        .playground-computer-creation-modal-config {
           gap: 8px;
-          margin-top: 2px;
         }
-  
-        .playground-agents-creation-action-button {
-          min-height: 30px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 6px;
-          padding: 0 14px;
-          border-radius: 999px;
-          border: 1px solid transparent;
-          font-size: 12px;
-          font-weight: 400;
-          line-height: 1;
-          font-family: inherit;
-          cursor: pointer;
-          transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, opacity 160ms ease;
+
+        .playground-computer-creation-modal .playground-environment-profile-selector {
+          width: 100%;
         }
-  
-        .playground-agents-creation-action-button:disabled {
-          opacity: 0.45;
-          cursor: default;
+
+        .playground-computer-creation-modal .playground-environments-editor-notice {
+          margin: 0;
         }
-  
-        .playground-agents-creation-action-button.is-secondary {
-          --playground-agents-creation-button-border: linear-gradient(
-            -10deg,
-            rgba(200, 200, 200, 0.25),
-            rgba(255, 255, 255, 0.1),
-            rgba(255, 255, 255, 0.15),
-            rgba(255, 255, 255, 0.375)
-          );
-          position: relative;
-          z-index: 0;
-          border: 0;
-          background: transparent;
-          color: #fff;
-          overflow: hidden;
-        }
-  
-        .playground-agents-creation-action-button.is-secondary::before {
-          content: "";
-          pointer-events: none;
-          position: absolute;
-          inset: 0;
-          border-radius: inherit;
-          padding: 1px;
-          background: var(--playground-agents-creation-button-border);
-          mask-image: linear-gradient(#fff 0 0), linear-gradient(#fff 0 0);
-          mask-clip: content-box, border-box;
-          mask-composite: exclude;
-          mask-origin: content-box, border-box;
-          mask-repeat: repeat, repeat;
-          mask-size: auto, auto;
-        }
-  
-        .playground-agents-creation-action-button.is-secondary:hover:not(:disabled) {
-          background: rgba(255, 255, 255, 0.04);
-        }
-  
-        .playground-agents-creation-action-button.is-primary {
-          border-color: #fff;
-          background: #fff;
-          color: #000;
-        }
-  
-        .playground-agents-creation-action-button.is-primary:hover:not(:disabled) {
-          background: rgba(255, 255, 255, 0.92);
-          border-color: rgba(255, 255, 255, 0.92);
-        }
-  
-        .playground-agents-creation-form .playground-environments-editor-notice {
-          margin-top: 16px;
+
+        @media (max-width: 640px) {
+          .playground-agents-creation-modal-hero {
+            padding: 24px;
+          }
+
+          .playground-agents-creation-modal .playground-agents-profile-avatar.profile-editor-avatar {
+            width: 68px;
+            height: 68px;
+          }
+
+          .playground-agents-creation-modal-name-input.playground-agents-profile-name-input {
+            font-size: 18px;
+          }
+
+          .playground-agents-creation-modal-body.platform-modal-body {
+            min-height: min(390px, calc(100dvh - 280px));
+          }
+
+          .playground-computer-creation-modal-body.platform-modal-body {
+            min-height: min(390px, calc(100dvh - 240px));
+          }
         }
   
         .playground-computer-creation-scroll {
@@ -20002,20 +19950,31 @@
   	        padding-right: 0;
   	      }
   
-  	      .playground-tasks-project-modal.playground-agents-permission-modal {
-  	        width: min(800px, calc(100vw - 48px));
-  	        max-height: min(700px, calc(100vh - 48px));
-  	        display: flex;
-  	        flex-direction: column;
-  	        overflow: visible;
-  	        scrollbar-width: none;
-  	      }
-  
         .playground-agents-permission-modal .playground-agents-permission-modal-body {
-          gap: 18px;
           max-height: min(488px, calc(100vh - 260px));
           overflow: auto;
           scrollbar-width: none;
+        }
+
+        .playground-agents-permission-modal .platform-settings-section__header,
+        .playground-agents-permission-modal .platform-settings-section__body,
+        .playground-agents-permission-modal .platform-data-table__surface,
+        .playground-agents-permission-modal .platform-data-table__scroll {
+          background: transparent;
+        }
+
+        .playground-agents-permission-modal .platform-settings-data-table.platform-data-table.is-minimalistic-ui > .platform-data-table__surface,
+        .playground-agents-permission-modal .platform-settings-data-table.platform-data-table.is-minimalistic-ui .platform-data-table__scroll,
+        .playground-agents-permission-modal .platform-settings-data-table.platform-data-table.is-minimalistic-ui .platform-data-table__sticky,
+        .playground-agents-permission-modal .platform-settings-data-table.platform-data-table.is-minimalistic-ui .platform-data-table__header-group,
+        .playground-agents-permission-modal .platform-settings-data-table.platform-data-table.is-minimalistic-ui .platform-data-table__header,
+        .playground-agents-permission-modal .platform-settings-data-table.platform-data-table.is-minimalistic-ui .platform-data-table__row {
+          background: transparent;
+        }
+
+        .playground-agents-permission-modal .platform-settings-data-table {
+          --platform-data-table-row-background: transparent;
+          --platform-data-table-sticky-background: transparent;
         }
   
         .playground-agents-permission-modal::-webkit-scrollbar,
@@ -24916,7 +24875,7 @@
         .playground-environment-composer-runtime-facts {
           display: flex;
           flex-direction: column;
-          gap: 4px;
+          gap: 8px;
         }
   
         .playground-environment-composer-runtime-facts .playground-tasks-detail-fact {

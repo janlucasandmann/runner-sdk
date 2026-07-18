@@ -909,9 +909,6 @@ export const METRONOME_TEMPLATES_01_FRAGMENT = String.raw`
         function stopMetronomeInputKeyPropagation(event) {
           if (!event || typeof event.stopPropagation !== "function") return;
           event.stopPropagation();
-          if (event.nativeEvent && typeof event.nativeEvent.stopImmediatePropagation === "function") {
-            event.nativeEvent.stopImmediatePropagation();
-          }
         }
 
         function stopMetronomePointerPropagation(event) {

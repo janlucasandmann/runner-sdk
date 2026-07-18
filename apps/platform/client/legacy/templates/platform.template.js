@@ -11,8 +11,7 @@
         import { visit as unistVisit } from "unist-util-visit";
         import Chart from "chart.js/auto";
         import { addEdge, Background, BaseEdge, Controls, EdgeLabelRenderer, getSimpleBezierPath, Handle, MarkerType, NodeResizer, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from "@xyflow/react";
-        import { getApps, initializeApp } from "https://esm.sh/firebase@10.12.2/app";
-        import { browserLocalPersistence, getAuth, GoogleAuthProvider, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOut as signOutFirebaseAuth } from "https://esm.sh/firebase@10.12.2/auth";
+        import { browserLocalPersistence, getApps, getAuth, GoogleAuthProvider, initializeApp, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOutFirebaseAuth } from "/api/platform/auth/browser-module.js";
   	      import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, KeyRound, LassoSelect, Layers, LayoutDashboard, LayoutGrid, LibraryBig, Lightbulb, Link2, List, ListFilter, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Underline, Undo2, Unlink, User, UserRound, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
   	      import { RunnerClient } from "/dist/index.js";
   	      import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
@@ -22,6 +21,7 @@
   	      import { PlatformDataTable } from "/dist/platform-ui/components/composite/data-table/index.js";
   	      import { PlatformDetailTabBar } from "/dist/platform-ui/components/composite/detail-tab-bar/index.js";
   	      import { PlatformEmptyState } from "/dist/platform-ui/components/composite/empty-state/index.js";
+        import { PlatformVersionHistorySidebar } from "/dist/platform-ui/components/composite/version-history-sidebar/index.js";
   	      import { PlatformInstructionsEditor } from "/dist/platform-ui/components/composite/instructions-editor/index.js";
   	      import { PlatformLoadingState } from "/dist/platform-ui/components/composite/loading-state/index.js";
         import { PlatformSettingsSection, PlatformSettingsSectionList } from "/dist/platform-ui/components/composite/settings-section/index.js";
@@ -60,7 +60,7 @@
   	      import { PlatformApplicationBoundary } from "/dist/platform-runtime/platform-application-boundary.js";
   	      import { AgentPermissionMeters, AgentPermissionRingIcons, AgentPublishControl, AgentsOverviewAnalyticsRequestError, ComputersOverviewAnalyticsRequestError, createAgentsOverviewAnalytics, createComputersOverviewAnalytics, deleteComputerResource, fetchAgentsOverviewAnalytics, fetchComputersOverviewAnalytics, getAgentPermissionSummary, invalidateAgentsOverviewAnalytics, invalidateComputersOverviewAnalytics, normalizeComputerOverviewRows, readCachedAgentsOverviewAnalytics, readCachedComputersOverviewAnalytics, saveComputerResource } from "/dist/platform-shell/presentation/platform-resource-api.js";
   	      import { ApiKeysOverviewAnalyticsRequestError, createApiKeysOverviewAnalytics, createDevelopResourceOverviewRows, createDevelopVoiceAgentOverviewRows, deleteDevelopResource, fetchApiKeysOverviewAnalytics, invalidateApiKeysOverviewAnalytics, readCachedApiKeysOverviewAnalytics, saveDevelopResource } from "/dist/platform-shell/presentation/platform-develop-api.js";
-        import { AgentDetailPage, AgentPermissionsPage, AgentsOverviewPage, ComputerDetailPage, ComputersOverviewPage, ConfigureHomeOverviewPage, DevelopApiKeysOverviewPage, DevelopHomeOverviewPage, DevelopResourceOverviewRoute, DevelopVoiceAgentsOverviewPage, DevelopWebhooksOverviewPage, MetronomesOverviewPage, ModelsOverviewPage, NotificationsOverviewPage, ProjectDetailPage, SkillsOverviewPage, TagDetailPage, TagsOverviewPage } from "/dist/platform-shell/presentation/platform-pages.js";
+        import { AgentDetailPage, AgentPermissionsPage, AgentsOverviewPage, ComputerDetailPage, ComputersOverviewPage, ConfigureHomeOverviewPage, DevelopApiKeysOverviewPage, DevelopHomeOverviewPage, DevelopResourceOverviewRoute, DevelopVoiceAgentsOverviewPage, DevelopWebhooksOverviewPage, EvaluationsOverviewPage, FineTuningOverviewPage, GuardrailsOverviewPage, MetronomesOverviewPage, ModelsOverviewPage, NotificationsOverviewPage, OrganizationsOverviewPage, ProjectDetailPage, SkillsOverviewPage, TagDetailPage, TagsOverviewPage, TeamsOverviewPage } from "/dist/platform-shell/presentation/platform-pages.js";
   	      import { openGoogleDrivePicker } from "/dist/platform-integrations/google-drive/google-drive-picker.js";
   
   	      function getPlaygroundSafeIconComponent(Icon, fallbackIcon = Circle) {
@@ -693,6 +693,7 @@
         const FIREBASE_STORAGE_BUCKET = __PLATFORM_COMPATIBILITY_BINDING_077__;
         const FIREBASE_MESSAGING_SENDER_ID = __PLATFORM_COMPATIBILITY_BINDING_078__;
         const FIREBASE_APP_ID = __PLATFORM_COMPATIBILITY_BINDING_079__;
+        const PLATFORM_IDENTITY_PROVIDER = __PLATFORM_COMPATIBILITY_BINDING_133__;
         const SEARCH_THREAD_FETCH_LIMIT = 20;
         const SETTINGS_CT_PER_DOLLAR = 100;
         const PLAYGROUND_SERVER_IDLE_RATE_PER_MINUTE = {
@@ -2041,6 +2042,9 @@
         }
   
         function getPlaygroundFirebaseAuth() {
+          if (PLATFORM_IDENTITY_PROVIDER !== "firebase") {
+            return null;
+          }
           if (!FIREBASE_WEB_API_KEY || !FIREBASE_AUTH_DOMAIN || !FIREBASE_PROJECT_ID) {
             return null;
           }
@@ -2304,6 +2308,9 @@
         }
   
         async function lookupFirebaseSessionIdentity() {
+          if (PLATFORM_IDENTITY_PROVIDER !== "firebase") {
+            return null;
+          }
           const sessionToken = readNamedCookie("__session");
           if (!sessionToken) {
             return null;
@@ -2347,6 +2354,9 @@
         }
   
         async function syncFirebaseSessionCookieFromCurrentUser(forceRefresh = false) {
+          if (PLATFORM_IDENTITY_PROVIDER !== "firebase") {
+            return false;
+          }
           try {
             const auth = await ensurePlaygroundFirebaseAuth();
             const currentUser = auth?.currentUser || null;
@@ -5130,7 +5140,11 @@
             isActive: true,
             isDefault: false,
             isSystem: false,
-            metadata: null,
+            metadata: {
+              profile: {
+                photoURL: PLAYGROUND_SPARK_AGENT_PROFILE_URL,
+              },
+            },
           };
         }
   

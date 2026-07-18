@@ -22,6 +22,8 @@ export const PLATFORM_PAGE_STYLE_SOURCE_PATHS = Object.freeze([
   "src/platform-ui/pages/overview/resource-overview.css",
   "src/platform-ui/components/composite/detail-tab-bar/detail-tab-bar.css",
   "src/platform-ui/components/composite/detail-sidebar/detail-sidebar.css",
+  "src/platform-ui/components/composite/floating-sidebar/floating-sidebar.css",
+  "src/platform-ui/components/composite/version-history-sidebar/version-history-sidebar.css",
   "src/platform-ui/components/composite/instructions-editor/instructions-editor.css",
   "src/platform-ui/components/composite/settings-section/settings-section.css",
   "src/platform-ui/pages/details/resource-detail.css",

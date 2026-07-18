@@ -10,6 +10,8 @@ Every `PlatformModal` requires exactly one `title`, accepts an optional `descrip
 
 Set `headerVariant="search"` and provide `headerSearchProps` for search-first selection dialogs. This variant keeps `title` as the dialog's visually hidden accessible name, renders the shared search input as the header content, and focuses that input whenever the modal opens. Optional `headerActions` appear after the search field for filters or other tightly related controls.
 
+Set `headerVariant="media"` and provide `headerMedia` when a workflow needs a visual identity or preview area in place of the standard title row. The slot accepts arbitrary React content, including a background-image container and editable identity controls, and imposes no minimum height of its own. The required `title` and optional `description` remain visually hidden as the accessible dialog name and description, while the modal retains its canonical close behavior.
+
 The high-level modal always owns three structural slots: header, body, and footer. Children become body content and the optional `footer` prop becomes footer content. Existing explicit `PlatformModalBody` and `PlatformModalFooter` children are recognized without adding nested slots. Set `showHeader`, `showBody`, or `showFooter` to `false` when a flow intentionally omits that part; an omitted visual header retains the title as the accessible dialog name.
 
 The structured surface itself has no padding. The body owns 24px padding, while the header and footer each own 12px vertical and 24px horizontal padding. Empty body and footer slots collapse visually. Low-level `PlatformModalSurface` usage retains 24px compatibility padding unless it opts into the structured layout.

@@ -377,19 +377,8 @@ export const METRONOME_CANVAS_RUNTIME_SCRIPT = String.raw`
                   theme: typeof PLAYGROUND_CODE_EDITOR_THEME_NAME === "string" ? PLAYGROUND_CODE_EDITOR_THEME_NAME : "vs-dark",
                   value: String(value || ""),
                   beforeMount: ensurePlaygroundCodeEditorTheme,
-                  onMount: (editor) => {
+                  onMount: () => {
                     setIsMonacoReady(true);
-                    if (editor && typeof editor.onKeyDown === "function") {
-                      editor.onKeyDown((monacoEvent) => {
-                        const browserEvent = monacoEvent?.browserEvent;
-                        if (browserEvent && typeof browserEvent.stopPropagation === "function") {
-                          browserEvent.stopPropagation();
-                        }
-                        if (browserEvent && typeof browserEvent.stopImmediatePropagation === "function") {
-                          browserEvent.stopImmediatePropagation();
-                        }
-                      });
-                    }
                   },
                   onChange: (nextValue) => {
                     if (readOnly) return;

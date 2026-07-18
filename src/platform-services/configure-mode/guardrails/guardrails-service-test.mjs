@@ -31,11 +31,14 @@ assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.controller, /function rend
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.versionActions, /publishCurrentGuardrailVersion/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.versionViews, /renderGuardrailVersionsSidebar/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.table, /function renderGuardrailsTable/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.table, /React\.createElement\(GuardrailsOverviewPage/);
+assert.doesNotMatch(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.table, /React\.createElement\(PlatformDataTable/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT, /function renderGuardrailVersionChangesPage/);
 assert.match(GUARDRAILS_APP_STATE_SCRIPT, /guardrailsBackendLoadRef/);
 assert.match(GUARDRAILS_APP_RUNTIME_SCRIPT, /async function loadBackendGuardrailSets/);
 assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.navigation, /function openGuardrailsPage/);
 assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /function renderGuardrailsPageNav/);
+assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-guardrails-overview-controls/);
 assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.historyCapture, /guardrailId: selectedGuardrailSetId/);
 assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.sidebarEntry, /label: "Guardrails"/);
 assert.match(GUARDRAILS_AGENT_DOMAIN_SCRIPT, /function buildPlaygroundAgentGuardrailBundle/);

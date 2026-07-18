@@ -15,6 +15,8 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
           apiKey = "",
           requestHeaders = {},
           onThreadOpen,
+          onNavigationGuardChange,
+          onNavigationRequest,
           currentUserId = "",
           currentUserName = "Me",
           currentUserEmail = "",
@@ -153,9 +155,6 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
           const workflowVersionModalFrameRef = useRef(null);
           const workflowVersionModalCloseTimerRef = useRef(null);
           const workflowVersionDescriptionTextareaRef = useRef(null);
-	          const [openMetronomeVersionMenuId, setOpenMetronomeVersionMenuId] = useState("");
-	          const [isMetronomePublishSettingsMenuOpen, setIsMetronomePublishSettingsMenuOpen] = useState(false);
-          const [isMetronomeVersionsHeaderMenuOpen, setIsMetronomeVersionsHeaderMenuOpen] = useState(false);
           const [metronomeVersionChangesState, setMetronomeVersionChangesState] = useState(null);
           const [activeMetronomeVersionChanges, setActiveMetronomeVersionChanges] = useState(false);
           const metronomeVersionComparisonTimerRef = useRef(null);
@@ -218,7 +217,7 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
           const [metronomeEditorHighlightRunId, setMetronomeEditorHighlightRunId] = useState("");
           const [metronomeRunState, setMetronomeRunState] = useState({ status: "idle", message: "" });
           const [metronomeRunTraceWorkExpanded, setMetronomeRunTraceWorkExpanded] = useState(true);
-          const [isMetronomePublishMenuOpen, setIsMetronomePublishMenuOpen] = useState(false);
+          const [isMetronomeVersionHistorySidebarOpen, setIsMetronomeVersionHistorySidebarOpen] = useState(false);
           const [metronomePublishState, setMetronomePublishState] = useState({ status: "idle", message: "" });
           const [isMetronomeDeploymentHistoryModalOpen, setIsMetronomeDeploymentHistoryModalOpen] = useState(false);
           const [metronomeNodeSchemaRegistry, setMetronomeNodeSchemaRegistry] = useState(null);
@@ -564,33 +563,6 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
               cancelled = true;
             };
           }, [isMetronomeApiAvailable]);
-          useEffect(() => {
-            if ((!openMetronomeVersionMenuId && !isMetronomePublishSettingsMenuOpen) || typeof document === "undefined") return undefined;
-            const handleOutsidePointer = (event) => {
-              const target = event?.target;
-              if (target && typeof target.closest === "function" && target.closest(".playground-metronome-publish-row-menu-shell")) {
-                return;
-              }
-              if (target && typeof target.closest === "function" && target.closest(".playground-metronome-publish-title-actions")) {
-                return;
-              }
-              setOpenMetronomeVersionMenuId("");
-              setIsMetronomePublishSettingsMenuOpen(false);
-            };
-            const handleEscape = (event) => {
-              if (event.key === "Escape") {
-                setOpenMetronomeVersionMenuId("");
-                setIsMetronomePublishSettingsMenuOpen(false);
-              }
-            };
-            document.addEventListener("mousedown", handleOutsidePointer);
-            document.addEventListener("keydown", handleEscape);
-            return () => {
-              document.removeEventListener("mousedown", handleOutsidePointer);
-              document.removeEventListener("keydown", handleEscape);
-            };
-          }, [openMetronomeVersionMenuId, isMetronomePublishSettingsMenuOpen]);
-
           const metronomeFunctionOptions = useMemo(() => {
             return metronomeServerResources
               .filter((resource) => {
@@ -1212,7 +1184,7 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
             setMetronomeEditorHighlightRunId("");
             setMetronomeCanvasInteractionMode("pan");
             setMetronomeRunState({ status: "idle", message: "" });
-            setIsMetronomePublishMenuOpen(false);
+            setIsMetronomeVersionHistorySidebarOpen(false);
             setIsMetronomeDeploymentHistoryModalOpen(false);
             setMetronomePublishState({ status: "idle", message: "" });
             closeMetronomeAttachmentPopover({ immediate: true });
@@ -1289,7 +1261,7 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
                 });
                 if (shouldShowRunInlineDetail && (hasPendingRun || items.length)) {
                   setSelectedNodeId("");
-                  setIsMetronomePublishMenuOpen(false);
+                  setIsMetronomeVersionHistorySidebarOpen(false);
                   setMetronomeRunInlineDetailId(hasPendingRun ? pendingRunId : (items[0]?.id || ""));
                 }
                 if (pendingOpen.workflowId === activeWorkflowId && (!pendingRunId || hasPendingRun || items.length)) {

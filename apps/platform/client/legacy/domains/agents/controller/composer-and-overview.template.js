@@ -251,6 +251,7 @@
               const normalizedKind = kind === "team" ? "team" : "single";
               const seedDraft = buildAgentComposerSeedDraft(normalizedKind, options?.draft || null);
               resetEditorAuxiliaryState();
+              setAgentProfileAvatarBroken(false);
               setToolbarPopover("");
               setSearchPopupQuery("");
               setAgentListActionMenuState(null);
@@ -265,7 +266,7 @@
               setDraftAgent(normalizedKind === "single" ? { ...seedDraft, name: "" } : seedDraft);
               selectedAgentIdRef.current = PLAYGROUND_AGENT_DRAFT_ID;
               setSelectedAgentId(PLAYGROUND_AGENT_DRAFT_ID);
-              setIsHomeViewActive(false);
+              setIsHomeViewActive(normalizedKind === "single");
               setAgentCreationInstructionRunRequest(null);
               setAgentCreationInstructionContext(null);
               if (normalizedKind === "single") {
@@ -432,88 +433,12 @@
             if (!agentCreationSetupOpen) {
               return;
             }
-            if (agentCreationPermissionModalCloseTimerRef.current) {
-              window.clearTimeout(agentCreationPermissionModalCloseTimerRef.current);
-              agentCreationPermissionModalCloseTimerRef.current = null;
-            }
-            if (agentCreationPermissionModalFrameRef.current) {
-              window.cancelAnimationFrame(agentCreationPermissionModalFrameRef.current);
-              agentCreationPermissionModalFrameRef.current = null;
-            }
-            setAgentCreationPermissionModalVisible(false);
-            setAgentCreationPermissionModalClosing(false);
             setAgentCreationPermissionModalOpen(true);
-            agentCreationPermissionModalFrameRef.current = window.requestAnimationFrame(() => {
-              agentCreationPermissionModalFrameRef.current = window.requestAnimationFrame(() => {
-                agentCreationPermissionModalFrameRef.current = null;
-                setAgentCreationPermissionModalVisible(true);
-              });
-            });
           }
   
-          function finishCloseAgentCreationPermissionModal() {
-            if (agentCreationPermissionModalCloseTimerRef.current) {
-              window.clearTimeout(agentCreationPermissionModalCloseTimerRef.current);
-              agentCreationPermissionModalCloseTimerRef.current = null;
-            }
-            if (agentCreationPermissionModalFrameRef.current) {
-              window.cancelAnimationFrame(agentCreationPermissionModalFrameRef.current);
-              agentCreationPermissionModalFrameRef.current = null;
-            }
-            setAgentCreationPermissionModalVisible(false);
-            setAgentCreationPermissionModalClosing(false);
+          function closeAgentCreationPermissionModal() {
             setAgentCreationPermissionModalOpen(false);
           }
-  
-          function closeAgentCreationPermissionModal(options = {}) {
-            if (options?.animate === false || (!agentCreationPermissionModalOpen && !agentCreationPermissionModalVisible && !agentCreationPermissionModalClosing)) {
-              finishCloseAgentCreationPermissionModal();
-              return;
-            }
-            if (agentCreationPermissionModalClosing) {
-              return;
-            }
-            if (agentCreationPermissionModalFrameRef.current) {
-              window.cancelAnimationFrame(agentCreationPermissionModalFrameRef.current);
-              agentCreationPermissionModalFrameRef.current = null;
-            }
-            setAgentCreationPermissionModalVisible(false);
-            setAgentCreationPermissionModalClosing(true);
-            if (agentCreationPermissionModalCloseTimerRef.current) {
-              window.clearTimeout(agentCreationPermissionModalCloseTimerRef.current);
-            }
-            agentCreationPermissionModalCloseTimerRef.current = window.setTimeout(() => {
-              agentCreationPermissionModalCloseTimerRef.current = null;
-              finishCloseAgentCreationPermissionModal();
-            }, 75);
-          }
-  
-          useEffect(() => {
-            return () => {
-              if (agentCreationPermissionModalCloseTimerRef.current) {
-                window.clearTimeout(agentCreationPermissionModalCloseTimerRef.current);
-                agentCreationPermissionModalCloseTimerRef.current = null;
-              }
-              if (agentCreationPermissionModalFrameRef.current) {
-                window.cancelAnimationFrame(agentCreationPermissionModalFrameRef.current);
-                agentCreationPermissionModalFrameRef.current = null;
-              }
-            };
-          }, []);
-  
-          useEffect(() => {
-            if (!agentCreationPermissionModalOpen || !agentCreationSetupOpen) {
-              return undefined;
-            }
-  
-            function handleAgentCreationPermissionModalEscape(event) {
-              if (event.key !== "Escape") return;
-              closeAgentCreationPermissionModal();
-            }
-  
-            window.addEventListener("keydown", handleAgentCreationPermissionModalEscape);
-            return () => window.removeEventListener("keydown", handleAgentCreationPermissionModalEscape);
-          }, [agentCreationPermissionModalClosing, agentCreationPermissionModalOpen, agentCreationSetupOpen]);
   
           function renderPlaygroundAgentModelButton(modelMeta, onClick, isDisabled, isDetailView = false) {
             const providerIcon = getPlaygroundAgentModelProviderIcon(modelMeta);

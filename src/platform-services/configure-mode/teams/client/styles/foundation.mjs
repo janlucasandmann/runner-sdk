@@ -10,6 +10,21 @@ export const TEAMS_FOUNDATION_CSS = `      .playground-team-page {
         scrollbar-width: none;
       }
 
+      .playground-team-page.is-team-overview-page {
+        padding: 0;
+        overflow: hidden;
+        background: #000;
+      }
+
+      .playground-team-page.is-team-overview-page .playground-team-shell {
+        width: 100%;
+        max-width: none;
+        height: 100%;
+        min-height: 0;
+        padding: 0;
+        gap: 0;
+      }
+
       .playground-team-page:has(.playground-team-resources-panel) {
         padding-top: 0;
       }
@@ -1163,4 +1178,3 @@ export const TEAMS_FOUNDATION_CSS = `      .playground-team-page {
       }
 
 `;
-

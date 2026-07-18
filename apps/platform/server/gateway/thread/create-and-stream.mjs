@@ -1,7 +1,7 @@
 import { isAgentAssistantPresetExecutionContent } from "./message-sanitization.mjs";
 
 export function createThreadMessageGateway(bindings) {
-    const { fetchAiosApi, hasAiosSession, parseUpstreamUrl, readOptionalApiKey, readRequestBody, sendJson, summarizeRunnerStreamChunkForLog, withProxyOrganizationHeader } = bindings;
+    const { fetchSessionApi, hasAiosSession, parseUpstreamUrl, readOptionalApiKey, readRequestBody, sendJson, summarizeRunnerStreamChunkForLog, withProxyOrganizationHeader } = bindings;
     let threadPayloadEnricher = async (_req, _upstreamUrl, _apiKey, payload) => payload;
     async function proxyCreateThread(req, res) {
         try {
@@ -32,7 +32,7 @@ export function createThreadMessageGateway(bindings) {
                 });
             }
             else if (hasAiosSession(req)) {
-                upstream = await fetchAiosApi(req, "/api/threads", {
+                upstream = await fetchSessionApi(req, "/threads", "/api/threads", {
                     method: "POST",
                     headers: {
                         "content-type": "application/json",
@@ -107,17 +107,22 @@ export function createThreadMessageGateway(bindings) {
                     threadId,
                     mode: "aios-session",
                 });
-                upstream = await fetchAiosApi(req, `/api/threads/${encodeURIComponent(threadId)}/messages`, {
-                    method: "POST",
-                    headers: {
-                        "content-type": "application/json",
+                upstream = await fetchSessionApi(
+                    req,
+                    `/threads/${encodeURIComponent(threadId)}/messages`,
+                    `/api/threads/${encodeURIComponent(threadId)}/messages`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "content-type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            ...body,
+                            content: payload.content,
+                            task: payload.content,
+                        }),
                     },
-                    body: JSON.stringify({
-                        ...body,
-                        content: payload.content,
-                        task: payload.content,
-                    }),
-                });
+                );
             }
             else {
                 return sendJson(res, 401, {

@@ -11,7 +11,7 @@ import {
 import { summarizeRunnerStreamChunkForLog } from "./runner-stream-utils.mjs";
 
 export function createCoreGateway(bindings) {
-    const { aiosOrigin, defaultUpstreamOrigin, port, shouldForwardLocalCloudApiOverride, shouldRetryUpstreamWithAiosSession, } = bindings;
+    const { aiosOrigin, defaultUpstreamOrigin, identityService, port, shouldForwardLocalCloudApiOverride, shouldRetryUpstreamWithAiosSession, } = bindings;
     function parseUpstreamUrl(req, body) {
         const headerUpstream = readHeader(req, "X-Runner-Upstream-Url");
         const bodyUpstream = body && typeof body.backendUrl === "string" ? body.backendUrl : "";
@@ -44,7 +44,7 @@ export function createCoreGateway(bindings) {
         return apiKey;
     }
     function hasAiosSession(req) {
-        return Boolean((req.headers.cookie || "").trim() || (req.headers.authorization || "").trim());
+        return identityService.hasSession(req);
     }
     function buildAiosCloudTarget(req, upstreamPath) {
         const requestUrl = new URL(req.url || "/", `http://localhost:${port}`);
@@ -54,6 +54,9 @@ export function createCoreGateway(bindings) {
         return targetUrl;
     }
     async function fetchAiosCloud(req, upstreamPath, init = {}) {
+        if (identityService.provider === "oidc") {
+            return identityService.fetchControlApi(req, upstreamPath, init);
+        }
         const targetUrl = buildAiosCloudTarget(req, upstreamPath);
         const headers = withProxyOrganizationHeader(req, {}, {
             cookie: req.headers.cookie || "",
@@ -83,6 +86,12 @@ export function createCoreGateway(bindings) {
             signal: init.signal,
             body: init.body,
         });
+    }
+    async function fetchSessionApi(req, controlPath, hostedApiPath, init = {}) {
+        if (identityService.provider === "oidc") {
+            return identityService.fetchControlApi(req, controlPath, init);
+        }
+        return fetchAiosApi(req, hostedApiPath, init);
     }
     async function proxyUpstreamGet(req, res, upstreamPath, options = {}) {
         const controller = new AbortController();
@@ -275,7 +284,6 @@ export function createCoreGateway(bindings) {
             });
         }
         else if (hasAiosSession(req)) {
-            const targetUrl = new URL(`${aiosOrigin}/api/playground/cloud${normalizedPath}`);
             const headers = withProxyOrganizationHeader(req, body || {}, {
                 cookie: req.headers.cookie || "",
                 authorization: req.headers.authorization || "",
@@ -284,7 +292,7 @@ export function createCoreGateway(bindings) {
             if (shouldForwardLocalCloudApiOverride && !headers["x-runner-upstream-url"]) {
                 headers["x-runner-upstream-url"] = defaultUpstreamOrigin;
             }
-            upstream = await fetch(targetUrl.toString(), {
+            upstream = await fetchAiosCloud(req, normalizedPath, {
                 method,
                 headers,
                 body: body === undefined ? undefined : JSON.stringify(body),
@@ -508,7 +516,8 @@ export function createCoreGateway(bindings) {
                 upstream = await fetchAiosCloud(req, upstreamPath, {
                     method: "GET",
                 });
-                if (isUnauthorizedHttpStatus(upstream.status) || upstream.status === 404) {
+                if (identityService.provider !== "oidc"
+                    && (isUnauthorizedHttpStatus(upstream.status) || upstream.status === 404)) {
                     const fallbackApiPath = `/api${upstreamPath}${requestUrl.search}`;
                     const fallbackResponse = await fetchAiosApi(req, fallbackApiPath, {
                         method: "GET",
@@ -597,6 +606,7 @@ export function createCoreGateway(bindings) {
     return Object.freeze({
         fetchAiosApi,
         fetchAiosCloud,
+        fetchSessionApi,
         fetchUpstreamJsonForProxy,
         fetchUpstreamJsonForProxyExactPath,
         hasAiosSession,

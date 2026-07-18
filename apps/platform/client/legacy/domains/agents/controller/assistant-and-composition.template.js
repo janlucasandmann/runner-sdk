@@ -776,17 +776,20 @@
           const agentsHomeComposerAgents = agentsHomeComposerSourceAgents.map((agent) => (
             buildPlaygroundRunnerAgentOption(agent, agentsHomeComposerAgentId && agent.id === agentsHomeComposerAgentId ? { isDefault: true } : {})
           ));
+
+          if (creationOnly) {
+            return React.createElement(React.Fragment, null,
+              renderAgentCreationSetupModal(),
+              renderAgentCreationPermissionModal(),
+              renderAgentModelPickerDialog(),
+              renderAgentUpgradeModal()
+            );
+          }
   
           if (embeddedInResources) {
             return React.createElement(React.Fragment, null,
               agentsTopNavActions,
-              agentCreationSetupOpen
-                ? React.createElement("section", { className: "playground-environments-detail playground-plugins-detail playground-skills-page playground-resources-page playground-agents-detail-assistant-page playground-agents-creation-thread-detail" },
-                    React.createElement("div", { className: "playground-agents-detail-layout is-creation-setup" },
-                      renderAgentCreationSetupThread()
-                    )
-                  )
-                : shouldShowAgentsHome
+              shouldShowAgentsHome || agentCreationSetupOpen
                 ? React.createElement("section", { className: "playground-environments-detail playground-plugins-detail playground-skills-page playground-resources-page playground-agents-overview-page is-develop-configure-page" },
                     renderModularAgentsOverviewPage()
                   )
@@ -812,6 +815,7 @@
               renderAgentBulkActionMenu(),
               renderAgentRenameModal(),
               renderAgentComposerDialog(),
+              renderAgentCreationSetupModal(),
               renderAgentCreationPermissionModal(),
               renderAgentModelPickerDialog(),
               renderAgentSendToTeamModal(),
@@ -821,7 +825,7 @@
             );
           }
   
-          return React.createElement("div", { className: "playground-environments-page playground-agents-page" + (agentCreationSetupOpen ? " is-creation-setup" : "") },
+          return React.createElement("div", { className: "playground-environments-page playground-agents-page" },
             React.createElement("div", { className: "playground-environments-shell" },
               React.createElement("aside", { className: "playground-environments-list-pane" },
                 React.createElement("div", { className: "playground-files-browser-header playground-environments-list-header" },
@@ -1015,9 +1019,7 @@
                 )
               ),
               React.createElement("section", { className: "playground-environments-detail" },
-                agentCreationSetupOpen
-                  ? renderAgentCreationSetupThread()
-                  : shouldShowAgentsHome
+                shouldShowAgentsHome || agentCreationSetupOpen
                   ? renderAgentsHome()
                   : (
                       isLoadingCurrentAgent && !draftAgent
@@ -1092,6 +1094,7 @@
             renderAgentBulkActionMenu(),
             renderAgentRenameModal(),
             renderAgentComposerDialog(),
+            renderAgentCreationSetupModal(),
             renderAgentCreationPermissionModal(),
             renderAgentModelPickerDialog(),
             renderAgentSendToTeamModal(),

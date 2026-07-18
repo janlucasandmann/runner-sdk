@@ -8,6 +8,8 @@ Use `variant="framed"` for detail-page analytics cards that need a title, a righ
 
 Both variants always render `PlatformAnalyticsChart`. Framing is strictly presentational, so chart styling and behavior stay synchronized across overview and detail pages.
 
+Line series use the canonical smooth area treatment by default: layered blue fills, a purple contour, and dashed horizontal guides. Set `fill: false` on a series only when the data must be presented as an unfilled line.
+
 Empty charts always render the shared `PlatformAnalyticsEmptyState`, which uses the
 `ChartColumnIncreasing` icon and canonical, resource-neutral copy. Analytics producers
 only provide data, loading, and error state; they do not define page-specific empty

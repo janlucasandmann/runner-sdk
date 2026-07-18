@@ -22,6 +22,7 @@ assert.match(platformEntrySource, /onNavigationGuardChange:\s*registerPlatformNa
 assert.match(platformEntrySource, /onNavigationRequest:\s*requestPlatformNavigation/);
 assert.match(platformEntrySource, /const hasUnsavedAgentChanges = Boolean/);
 assert.match(platformEntrySource, /requestAgentNavigation\(\(\) => performAgentSelect/);
+assert.match(platformEntrySource, /React\.createElement\(PlaygroundMetronomePage, \{[\s\S]*?onNavigationGuardChange:\s*registerPlatformNavigationGuard,\s*onNavigationRequest:\s*requestPlatformNavigation/);
 assert.match(platformEntrySource, /requestPlatformNavigation\(\s*\(\) => applyPlatformNavigationEntry\(entry\)/);
 assert.match(platformEntrySource, /function handleOpenAgentsShortcut\(\) \{\s*openResourcesView\("agents", \{ forceOverview: true \}\)/);
 assert.match(platformEntrySource, /function handleOpenEnvironmentsShortcut\(\) \{\s*openResourcesView\("computers", \{ forceOverview: true \}\)/);

@@ -84,6 +84,7 @@ import {
 import {
   APP_HEADER_STYLE_FRAGMENTS,
   PLATFORM_NAVIGATION_GUARD_APP_SCRIPT_FRAGMENTS,
+  RESOURCE_CREATION_APP_SCRIPT_FRAGMENTS,
   SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS,
   SETTINGS_MODAL_CSS,
   createAppHeaderScriptFragments,
@@ -151,6 +152,7 @@ import { createLegacyPlatformSources } from "./create-legacy-platform-sources.mj
 export function createLegacyPlatformApplicationBindings({
   aiosOrigin,
   defaultUpstreamOrigin,
+  identityProvider = "firebase",
   platformOrigin,
 }) {
   function stringifyForBrowserSource(value) {
@@ -295,6 +297,7 @@ export function createLegacyPlatformApplicationBindings({
     PROJECTS_INTEGRATIONS_RUNTIME_SCRIPT,
     PROJECTS_PAGE_RUNTIME_SCRIPT,
     PROJECTS_STYLE_FRAGMENTS,
+    RESOURCE_CREATION_APP_SCRIPT_FRAGMENTS,
     SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS,
     SETTINGS_MODAL_CSS,
     SETTINGS_MODAL_PAGE_SCRIPT,
@@ -308,6 +311,7 @@ export function createLegacyPlatformApplicationBindings({
     VERSION_SIDEBAR_SCRIPT,
     aiosOrigin,
     defaultUpstreamOrigin,
+    identityProvider,
     platformOrigin,
   });
 }

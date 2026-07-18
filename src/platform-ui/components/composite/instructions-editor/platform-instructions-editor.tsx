@@ -34,6 +34,8 @@ export interface PlatformMarkdownRendererProps {
   className?: string;
 }
 
+export type PlatformInstructionsEditorVariant = "default" | "minimalistic-ui";
+
 export interface PlatformInstructionsEditorProps {
   value: string;
   onChange: (value: string) => void;
@@ -43,6 +45,7 @@ export interface PlatformInstructionsEditorProps {
   readOnly?: boolean;
   stickyHeader?: boolean;
   historyKey?: string | number;
+  variant?: PlatformInstructionsEditorVariant;
   className?: string;
   onEditingChange?: (editing: boolean) => void;
 }
@@ -249,6 +252,7 @@ export function PlatformInstructionsEditor({
   readOnly = false,
   stickyHeader = true,
   historyKey = "default",
+  variant = "default",
   className = "",
   onEditingChange,
 }: PlatformInstructionsEditorProps) {
@@ -366,8 +370,9 @@ export function PlatformInstructionsEditor({
 
   return (
     <section
-      className={`platform-instructions-editor playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section${stickyHeader && !readOnly ? " is-sticky" : " is-static"}${readOnly ? " is-readonly" : ""}${className ? ` ${className}` : ""}`}
+      className={`platform-instructions-editor playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section${stickyHeader && !readOnly ? " is-sticky" : " is-static"}${readOnly ? " is-readonly" : ""}${variant === "minimalistic-ui" ? " is-minimalistic-ui" : ""}${className ? ` ${className}` : ""}`}
       data-platform-instructions-editor="true"
+      data-platform-instructions-editor-variant={variant}
     >
       <header className={`platform-instructions-editor__header playground-tasks-detail-section-header${stickyHeader && !readOnly ? "" : " is-static-transparent"}`}>
         <h2 className="platform-instructions-editor__title playground-tasks-detail-section-title">{title}</h2>

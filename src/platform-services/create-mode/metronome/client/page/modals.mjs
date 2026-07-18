@@ -4,12 +4,12 @@ export const METRONOME_PAGE_MODALS_SCRIPT = String.raw`
             : metronomeEditorMode === "code"
             ? React.createElement(React.Fragment, null,
                 renderCodeMode(),
-                renderMetronomePublishSidebarPortal()
+                renderMetronomeVersionHistorySidebarPortal()
               )
             : metronomeEditorMode === "runs"
               ? React.createElement(React.Fragment, null,
                   renderRunsMode(),
-                  renderMetronomePublishSidebarPortal()
+                  renderMetronomeVersionHistorySidebarPortal()
                 )
               : React.createElement(React.Fragment, null,
                   React.createElement("div", { className: "playground-metronome-editor" },
@@ -49,7 +49,7 @@ export const METRONOME_PAGE_MODALS_SCRIPT = String.raw`
                       renderInlineNodeInspector()
                     )
                   ),
-                  renderMetronomePublishSidebarPortal()
+                  renderMetronomeVersionHistorySidebarPortal()
                 );
 
           const renderWorkflowNameModal = () => {

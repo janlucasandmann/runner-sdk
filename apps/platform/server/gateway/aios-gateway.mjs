@@ -6,8 +6,12 @@ import {
 import { readResponseJson } from "./http-utils.mjs";
 
 export function createAiosGateway(bindings) {
-    const { aiosOrigin, defaultUpstreamOrigin, isUnauthorizedHttpStatus, normalizeBackendUrl, normalizePlaygroundApiKey, notionOauthCallbackUri, port, readHeader, readRequestBody, sendJson, withProxyOrganizationHeader, } = bindings;
+    const { aiosOrigin, defaultUpstreamOrigin, fetchAiosCloud, identityService, isUnauthorizedHttpStatus, normalizeBackendUrl, normalizePlaygroundApiKey, notionOauthCallbackUri, port, readHeader, readRequestBody, sendJson, withProxyOrganizationHeader, } = bindings;
     async function proxyAiosJsonRequest(req, res, upstreamPath, method) {
+        if (identityService.provider === "oidc") {
+            await identityService.handleAccountJsonRequest(req, res, upstreamPath, method);
+            return;
+        }
         try {
             const requestUrl = new URL(req.url || "/", `http://localhost:${port}`);
             const upstreamTarget = new URL(`${aiosOrigin}${upstreamPath}`);
@@ -47,6 +51,10 @@ export function createAiosGateway(bindings) {
         }
     }
     async function handleAiosUserSessionRequest(req, res) {
+        if (identityService.provider === "oidc") {
+            await identityService.handleSessionRequest(req, res);
+            return;
+        }
         const baseHeaders = {
             cookie: req.headers.cookie || "",
             authorization: req.headers.authorization || "",
@@ -109,6 +117,13 @@ export function createAiosGateway(bindings) {
         }
     }
     async function proxyAiosNotionLoginRequest(req, res) {
+        if (identityService.provider === "oidc") {
+            return sendJson(res, 501, {
+                error: "Capability unavailable",
+                code: "ON_PREM_CONNECTOR_CAPABILITY_UNAVAILABLE",
+                message: "The hosted Notion connector is not enabled on this appliance.",
+            });
+        }
         try {
             const requestUrl = new URL(req.url || "/", `http://localhost:${port}`);
             const upstreamTarget = new URL(`${aiosOrigin}/api/notion/login`);
@@ -160,6 +175,13 @@ export function createAiosGateway(bindings) {
         }
     }
     async function proxyAiosLatestBriefingHtml(req, res) {
+        if (identityService.provider === "oidc") {
+            return sendJson(res, 501, {
+                error: "Capability unavailable",
+                code: "ON_PREM_CONNECTOR_CAPABILITY_UNAVAILABLE",
+                message: "The hosted briefing connector is not enabled on this appliance.",
+            });
+        }
         try {
             const briefingMetaResponse = await fetch(new URL("/api/briefing/url", aiosOrigin).toString(), {
                 method: "GET",
@@ -207,6 +229,22 @@ export function createAiosGateway(bindings) {
     }
     async function proxyPlaygroundCustomSkills(req, res) {
         try {
+            if (identityService.provider === "oidc") {
+                const upstreamResponse = await fetchAiosCloud(req, "/skills", {
+                    method: "GET",
+                });
+                const upstreamPayload = await readResponseJson(upstreamResponse);
+                if (!upstreamResponse.ok) {
+                    return sendJson(res, upstreamResponse.status, upstreamPayload);
+                }
+                const skills = Array.isArray(upstreamPayload?.skills)
+                    ? upstreamPayload.skills
+                    : (Array.isArray(upstreamPayload?.data) ? upstreamPayload.data : []);
+                return sendJson(res, 200, {
+                    skills: mergeCustomSkillLists(skills),
+                    source: "control_api",
+                });
+            }
             const requestUrl = new URL(req.url || "/", `http://localhost:${port}`);
             let projectId = requestUrl.searchParams.get("projectId")?.trim() || "";
             const cookie = req.headers.cookie || "";

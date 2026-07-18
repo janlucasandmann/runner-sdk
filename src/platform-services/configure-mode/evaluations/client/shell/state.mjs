@@ -5,7 +5,6 @@ export const EVALUATIONS_APP_STATE_SCRIPT = `        const [evaluationSets, setE
         const [evaluationRunReturnTarget, setEvaluationRunReturnTarget] = useState(null);
         const [evaluationsPageMode, setEvaluationsPageMode] = useState("overview");
         const [evaluationDetailTab, setEvaluationDetailTab] = useState("general");
-        const [evaluationsSearchQuery, setEvaluationsSearchQuery] = useState("");
         const [evaluationRunsSearchQuery, setEvaluationRunsSearchQuery] = useState("");
         const [evaluationRunsSortMode, setEvaluationRunsSortMode] = useState("recent-desc");
         const [evaluationRunsFilterMode, setEvaluationRunsFilterMode] = useState("all");

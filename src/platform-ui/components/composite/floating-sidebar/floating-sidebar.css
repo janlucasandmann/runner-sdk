@@ -1,0 +1,105 @@
+.platform-floating-sidebar-portal {
+  position: absolute;
+  inset: 0;
+  z-index: 120;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.platform-floating-sidebar {
+  --platform-floating-sidebar-animation-duration: 240ms;
+  position: absolute;
+  inset: 0 0 0 auto;
+  z-index: 120;
+  box-sizing: border-box;
+  width: min(520px, 42vw);
+  max-width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-left: 1px solid rgba(255, 255, 255, 0.075);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  opacity: 0;
+  transform: translate3d(100%, 0, 0);
+  pointer-events: none;
+  will-change: transform, opacity;
+  transition:
+    transform var(--platform-floating-sidebar-animation-duration) cubic-bezier(0.16, 1, 0.3, 1),
+    opacity min(var(--platform-floating-sidebar-animation-duration), 180ms) ease;
+}
+
+.platform-floating-sidebar.is-fixed {
+  position: fixed;
+}
+
+.platform-floating-sidebar[data-state="open"] {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  pointer-events: auto;
+}
+
+.platform-floating-sidebar__header {
+  box-sizing: border-box;
+  min-height: 56px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 12px 0 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+  background: transparent;
+}
+
+.platform-floating-sidebar__title {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-floating-sidebar__header-actions {
+  min-width: 0;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.platform-floating-sidebar__body {
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.platform-floating-sidebar__footer {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  padding: 10px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.075);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+@media (max-width: 760px) {
+  .platform-floating-sidebar {
+    width: min(100%, 420px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .platform-floating-sidebar {
+    transition-duration: 1ms;
+  }
+}

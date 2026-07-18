@@ -14,7 +14,7 @@ import { readPlatformCompositionSource } from "../../../../apps/platform/testing
 
 assert.deepEqual(Object.keys(ORGANIZATIONS_STYLE_FRAGMENTS), ["billing", "overview"]);
 assert.match(ORGANIZATIONS_STYLE_FRAGMENTS.billing, /\.playground-organization-billing-panel/);
-assert.match(ORGANIZATIONS_STYLE_FRAGMENTS.overview, /\.playground-organization-overview-hero-intro/);
+assert.match(ORGANIZATIONS_STYLE_FRAGMENTS.overview, /\.playground-team-page\.is-organization-overview-page/);
 assert.equal(Object.values(ORGANIZATIONS_STYLE_FRAGMENTS).join(""), ORGANIZATIONS_PAGE_CSS);
 
 assert.match(ORGANIZATIONS_DOMAIN_SCRIPT_FRAGMENTS.constants, /PLAYGROUND_ORGANIZATION_HEADER/);
@@ -47,7 +47,8 @@ assert.match(ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.billingState, /organizationPageB
 assert.match(ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.statePrimary, /organizationPageLoadAbortControllerRef/);
 assert.match(ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.stateDialogs, /organizationPageCreateModalOpen/);
 assert.match(ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.roleLifecycle, /setOrganizationPermissionChartAnimationKey/);
-assert.match(ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.tableLifecycle, /organizationOverviewToolbarPopover/);
+assert.match(ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.tableLifecycle, /organizationMemberToolbarPopover/);
+assert.doesNotMatch(ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.tableLifecycle, /organizationOverviewToolbarPopover/);
 assert.match(ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.requestScope, /PLAYGROUND_ORGANIZATION_HEADER/);
 assert.match(ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.workspaceLifecycle, /activeOrganizationResourceScopeKeyRef/);
 assert.match(ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.navigation, /function openOrganizationPage/);
@@ -98,10 +99,14 @@ assert.deepEqual(Object.keys(pageFragments), [
 assert.match(pageFragments.setup, /function renderOrganizationPage/);
 assert.match(pageFragments.identityAndBilling, /const renderOrganizationBillingSnapshot/);
 assert.match(pageFragments.overview, new RegExp(JSON.stringify(documentationUrl).replace(/[.*+?^\${}()|[\]\\]/g, "\\$&")));
+assert.match(pageFragments.overview, /const organizationOverviewRows =/);
+assert.match(pageFragments.overview, /React\.createElement\(OrganizationsOverviewPage/);
 assert.match(pageFragments.members, /const renderMembers/);
+assert.doesNotMatch(pageFragments.members, /normalizeOrganizationTableSortDirection/);
 assert.match(pageFragments.resources, /const renderOrganizationResources/);
 assert.match(pageFragments.rolesAndView, /const renderOrganizationRoles/);
 assert.doesNotThrow(() => new Function(Object.values(pageFragments).join("")));
+assert.match(ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-organizations-overview-controls/);
 
 const platformEntrySource = await readPlatformCompositionSource();
 assert.match(platformEntrySource, /from "\.\.\/\.\.\/\.\.\/src\/platform-services\/configure-mode\/organizations\/index\.mjs"/);

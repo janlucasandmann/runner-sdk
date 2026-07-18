@@ -61,6 +61,9 @@
           onDevelopAnalyticsMenuOpenChange = null,
           onOpenSettingsUsage = null,
           onOpenSettingsApi = null,
+          creationOnly = false,
+          creationRequestToken = 0,
+          onCreationRequestClose,
         }) {
           backendUrl = normalizePlaygroundRealApiBackendUrl(backendUrl);
           const databaseListScopeKey = buildPlaygroundDatabaseListScopeKey(backendUrl, requestHeaders, databaseListIdentity);
@@ -94,6 +97,8 @@
           const environmentGuiScrollTimerRef = useRef(null);
           const environmentRuntimePopoverRef = useRef(null);
           const environmentComposerRuntimePopoverRef = useRef(null);
+          const environmentCreationNameInputRef = useRef(null);
+          const lastAppliedCreationRequestTokenRef = useRef("");
           const environmentActionsPopoverRef = useRef(null);
           const environmentVersionDescriptionTextareaRef = useRef(null);
           const environmentVersionModalCloseTimerRef = useRef(null);
@@ -1465,8 +1470,7 @@
               ? (selectedDatabaseId ? "database" : "server")
               : "computer";
             const isResourceCreateViewOpen = Boolean(serverComposerOpen && isServersMode && normalizedEmbeddedServerKind);
-            const isComputerCreateViewOpen = Boolean(environmentComposerOpen && !isServersMode);
-            const shouldUseDetailHeader = !isHomeViewActive || isResourceCreateViewOpen || isComputerCreateViewOpen;
+            const shouldUseDetailHeader = !isHomeViewActive || isResourceCreateViewOpen;
             onResourcesHeaderChange(
               shouldUseDetailHeader
                 ? { mode: "detail", title: selectedResourcesDetailTitle, sideDetailOpen: isSourcePreviewOpen, resourceMode, resourceId: selectedResourcesDetailId, resourceType: selectedResourcesDetailType }
@@ -5809,6 +5813,21 @@
           }, [serverDetailsCollapsed, serverVersionsSidebarOpen]);
   
           useEffect(() => {
+            if (!creationOnly) {
+              return;
+            }
+            const normalizedCreationToken = String(creationRequestToken || "").trim();
+            if (
+              !normalizedCreationToken
+              || lastAppliedCreationRequestTokenRef.current === normalizedCreationToken
+            ) {
+              return;
+            }
+            lastAppliedCreationRequestTokenRef.current = normalizedCreationToken;
+            openEnvironmentComposer();
+          }, [creationOnly, creationRequestToken]);
+
+          useEffect(() => {
             const normalizedTargetEnvironmentId = String(navigationTargetEnvironmentId || "").trim();
             const previousRequest = environmentNavigationRequestRef.current || {
               token: null,
@@ -5845,7 +5864,7 @@
               setServerFileActionsPopoverOpen(false);
               setDatabaseActionsPopoverOpen(false);
               setResourceMode("computers");
-              setIsHomeViewActive(false);
+              setIsHomeViewActive(true);
               setSelectedEnvironmentId("");
               setSelectedServerId("");
               setSelectedDatabaseId("");

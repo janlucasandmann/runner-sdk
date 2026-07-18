@@ -83,4 +83,33 @@ describe("PlatformCodeEditorWorkspace", () => {
       "full-screen",
     );
   });
+
+  it("isolates editor shortcuts without cancelling Backspace or Delete", () => {
+    const onParentKeyDown = vi.fn();
+    render(
+      <div role="application" aria-label="Editor host" onKeyDown={onParentKeyDown}>
+        <PlatformCodeEditorWorkspace
+          files={[]}
+          editor={<textarea aria-label="Editable source" defaultValue={"\n"} />}
+        />
+      </div>,
+    );
+    const editor = screen.getByLabelText("Editable source");
+    const dispatchEditorKey = (key: "Backspace" | "Delete") => {
+      const event = new KeyboardEvent("keydown", {
+        key,
+        code: key,
+        bubbles: true,
+        cancelable: true,
+      });
+      const stopImmediatePropagation = vi.spyOn(event, "stopImmediatePropagation");
+
+      expect(editor.dispatchEvent(event)).toBe(true);
+      expect(stopImmediatePropagation).not.toHaveBeenCalled();
+    };
+
+    dispatchEditorKey("Backspace");
+    dispatchEditorKey("Delete");
+    expect(onParentKeyDown).not.toHaveBeenCalled();
+  });
 });

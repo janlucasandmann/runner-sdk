@@ -9,6 +9,25 @@ import type {
   PlatformAnalyticsValueKind,
 } from "./platform-analytics-types.js";
 
+const PLATFORM_ANALYTICS_AREA_STYLES = [
+  {
+    borderColor: "#7657ff",
+    backgroundColor: "rgba(193, 218, 248, 0.92)",
+  },
+  {
+    borderColor: "#7657ff",
+    backgroundColor: "rgba(53, 126, 239, 0.9)",
+  },
+  {
+    borderColor: "#4da3ff",
+    backgroundColor: "rgba(77, 163, 255, 0.52)",
+  },
+  {
+    borderColor: "#7effff",
+    backgroundColor: "rgba(126, 255, 255, 0.28)",
+  },
+] as const;
+
 function formatChartValue(value: number, kind: PlatformAnalyticsValueKind = "count"): string {
   if (kind === "currency") {
     return new Intl.NumberFormat("en-US", {
@@ -32,7 +51,10 @@ function formatChartValue(value: number, kind: PlatformAnalyticsValueKind = "cou
   return new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 }).format(value);
 }
 
-function resolveSeriesType(series: PlatformAnalyticsSeries, chartType: PlatformAnalyticsChartProps["chartType"]) {
+function resolveSeriesType(
+  series: PlatformAnalyticsSeries,
+  chartType: PlatformAnalyticsChartProps["chartType"],
+) {
   return chartType || series.type || "line";
 }
 
@@ -40,16 +62,21 @@ function getAxisSeries(series: readonly PlatformAnalyticsSeries[], axis: Platfor
   return series.filter((entry) => (entry.axis || "primary") === axis);
 }
 
+function resolveAreaStyle(seriesIndex: number) {
+  return PLATFORM_ANALYTICS_AREA_STYLES[seriesIndex % PLATFORM_ANALYTICS_AREA_STYLES.length];
+}
+
 export function PlatformAnalyticsChart({ analytics, chartType }: PlatformAnalyticsChartProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const chartRef = useRef<Chart | null>(null);
   const labels = useMemo(() => Array.from(analytics.labels || []), [analytics.labels]);
   const series = useMemo(
-    () => Array.from(analytics.series || []).filter((entry) => entry.values.length === labels.length),
+    () =>
+      Array.from(analytics.series || []).filter((entry) => entry.values.length === labels.length),
     [analytics.series, labels.length],
   );
-  const hasData = labels.length > 0 && series.some((entry) => entry.values.some((value) => Number(value) !== 0));
-  const signature = useMemo(() => JSON.stringify({ chartType, labels, series }), [chartType, labels, series]);
+  const hasData =
+    labels.length > 0 && series.some((entry) => entry.values.some((value) => Number(value) !== 0));
 
   useEffect(() => {
     return () => {
@@ -68,9 +95,15 @@ export function PlatformAnalyticsChart({ analytics, chartType }: PlatformAnalyti
 
     chartRef.current?.destroy();
     const primarySeries = getAxisSeries(series, "primary");
-    const referenceSeries = primarySeries.length > 0 ? primarySeries : getAxisSeries(series, "secondary");
+    const referenceSeries =
+      primarySeries.length > 0 ? primarySeries : getAxisSeries(series, "secondary");
     const referenceAxisId = primarySeries.length > 0 ? "y" : "y1";
-    const maxValue = Math.max(0, ...referenceSeries.flatMap((entry) => entry.values.map((value) => Math.max(0, Number(value) || 0))));
+    const maxValue = Math.max(
+      0,
+      ...referenceSeries.flatMap((entry) =>
+        entry.values.map((value) => Math.max(0, Number(value) || 0)),
+      ),
+    );
     const maxReferencePlugin = {
       id: "platform-analytics-max-reference",
       afterDatasetsDraw(chart: Chart) {
@@ -91,8 +124,32 @@ export function PlatformAnalyticsChart({ analytics, chartType }: PlatformAnalyti
         context.restore();
       },
     };
+    const dashedGridPlugin = {
+      id: "platform-analytics-dashed-grid",
+      beforeDatasetsDraw(chart: Chart) {
+        const yScale = chart.scales[referenceAxisId];
+        const chartArea = chart.chartArea;
+        if (!yScale || !chartArea) return;
+        const context = chart.ctx;
+        context.save();
+        context.setLineDash([4, 5]);
+        context.strokeStyle = "rgba(255,255,255,0.075)";
+        context.lineWidth = 1;
+        yScale.ticks.forEach((tick) => {
+          const y = yScale.getPixelForValue(tick.value);
+          if (y < chartArea.top || y > chartArea.bottom) return;
+          context.beginPath();
+          context.moveTo(chartArea.left, y);
+          context.lineTo(chartArea.right, y);
+          context.stroke();
+        });
+        context.restore();
+      },
+    };
     const hasSecondaryAxis = series.some((entry) => entry.axis === "secondary");
-    const isStacked = series.some((entry) => resolveSeriesType(entry, chartType) === "bar" && Boolean(entry.stack));
+    const isStacked = series.some(
+      (entry) => resolveSeriesType(entry, chartType) === "bar" && Boolean(entry.stack),
+    );
     const primaryKind = primarySeries[0]?.valueKind;
     const secondaryKind = getAxisSeries(series, "secondary")[0]?.valueKind;
     const rootType = chartType || series[0]?.type || "line";
@@ -101,20 +158,36 @@ export function PlatformAnalyticsChart({ analytics, chartType }: PlatformAnalyti
       type: rootType,
       data: {
         labels,
-        datasets: series.map((entry) => {
+        datasets: series.map((entry, seriesIndex) => {
           const resolvedType = resolveSeriesType(entry, chartType);
           const isLine = resolvedType === "line";
+          const usesAreaTreatment = isLine && entry.fill !== false;
+          const areaStyle = resolveAreaStyle(seriesIndex);
           return {
             type: resolvedType,
             label: entry.label,
             data: entry.values.map((value) => Math.max(0, Number(value) || 0)),
-            borderColor: entry.color,
-            backgroundColor: isLine ? `${entry.color}22` : entry.color,
-            borderWidth: isLine ? 1.35 : 0,
+            borderColor: usesAreaTreatment ? areaStyle.borderColor : entry.color,
+            backgroundColor: usesAreaTreatment
+              ? areaStyle.backgroundColor
+              : isLine
+                ? "transparent"
+                : entry.color,
+            borderWidth: isLine ? 1.5 : 0,
             pointRadius: 0,
-            pointHoverRadius: 3,
-            tension: 0.32,
-            fill: isLine && Boolean(entry.fill),
+            pointHoverRadius: isLine ? 4 : 0,
+            pointHitRadius: isLine ? 12 : 0,
+            pointHoverBorderWidth: isLine ? 2 : 0,
+            pointHoverBorderColor: isLine ? "#fff" : undefined,
+            pointHoverBackgroundColor: isLine
+              ? usesAreaTreatment
+                ? areaStyle.borderColor
+                : entry.color
+              : undefined,
+            tension: 0.38,
+            cubicInterpolationMode: isLine ? "monotone" : undefined,
+            spanGaps: true,
+            fill: usesAreaTreatment ? "origin" : false,
             yAxisID: entry.axis === "secondary" ? "y1" : "y",
             stack: isLine ? undefined : entry.stack,
             borderRadius: isLine ? 0 : 3,
@@ -130,6 +203,11 @@ export function PlatformAnalyticsChart({ analytics, chartType }: PlatformAnalyti
         responsive: true,
         maintainAspectRatio: false,
         normalized: true,
+        layout: {
+          padding: {
+            top: 8,
+          },
+        },
         interaction: { intersect: false, mode: "index" },
         plugins: {
           legend: { display: false },
@@ -155,8 +233,9 @@ export function PlatformAnalyticsChart({ analytics, chartType }: PlatformAnalyti
             border: { display: false },
             grid: { display: false },
             ticks: {
-              color: "rgba(255,255,255,0.4)",
+              color: "rgba(255,255,255,0.42)",
               font: { family: "Inter, sans-serif", size: 11, weight: 400 },
+              padding: 10,
               maxRotation: 0,
               autoSkip: true,
               maxTicksLimit: 7,
@@ -167,46 +246,66 @@ export function PlatformAnalyticsChart({ analytics, chartType }: PlatformAnalyti
             stacked: isStacked,
             position: "left",
             border: { display: false },
-            grid: { color: "rgba(255,255,255,0.08)", lineWidth: 1 },
+            grace: "14%",
+            grid: {
+              display: false,
+              drawTicks: false,
+            },
             ticks: {
-              color: "rgba(255,255,255,0.4)",
+              color: "rgba(255,255,255,0.42)",
               font: { family: "Inter, sans-serif", size: 11, weight: 400 },
-              maxTicksLimit: 5,
+              padding: 12,
+              maxTicksLimit: 4,
               callback(value) {
                 return formatChartValue(Number(value), primaryKind);
               },
             },
           },
-          ...(hasSecondaryAxis ? {
-            y1: {
-              beginAtZero: true,
-              position: "right" as const,
-              border: { display: false },
-              grid: { drawOnChartArea: false },
-              ticks: {
-                color: "rgba(255,255,255,0.4)",
-                font: { family: "Inter, sans-serif", size: 11, weight: 400 as const },
-                maxTicksLimit: 5,
-                callback(value: string | number) {
-                  return formatChartValue(Number(value), secondaryKind);
+          ...(hasSecondaryAxis
+            ? {
+                y1: {
+                  beginAtZero: true,
+                  position: "right" as const,
+                  border: { display: false },
+                  grace: "14%",
+                  grid: { drawOnChartArea: false },
+                  ticks: {
+                    color: "rgba(255,255,255,0.42)",
+                    font: { family: "Inter, sans-serif", size: 11, weight: 400 as const },
+                    padding: 12,
+                    maxTicksLimit: 4,
+                    callback(value: string | number) {
+                      return formatChartValue(Number(value), secondaryKind);
+                    },
+                  },
                 },
-              },
-            },
-          } : {}),
+              }
+            : {}),
         },
       },
-      plugins: [maxReferencePlugin],
+      plugins: [dashedGridPlugin, maxReferencePlugin],
     });
-  }, [analytics.error, analytics.loading, chartType, hasData, labels, series, signature]);
+  }, [analytics.error, analytics.loading, chartType, hasData, labels, series]);
 
   if (analytics.loading) {
     return (
       <div className="platform-analytics-chart__state" role="status" aria-label="Loading analytics">
-        <DotLoader className="platform-analytics-chart__loader" dotCount={9} dotSize={3} gap={2} speed={800} />
+        <DotLoader
+          className="platform-analytics-chart__loader"
+          dotCount={9}
+          dotSize={3}
+          gap={2}
+          speed={800}
+        />
       </div>
     );
   }
-  if (analytics.error) return <div className="platform-analytics-chart__state is-error" role="alert">{analytics.error}</div>;
+  if (analytics.error)
+    return (
+      <div className="platform-analytics-chart__state is-error" role="alert">
+        {analytics.error}
+      </div>
+    );
   if (!hasData) {
     return (
       <div className="platform-analytics-chart__state is-empty">
@@ -217,7 +316,11 @@ export function PlatformAnalyticsChart({ analytics, chartType }: PlatformAnalyti
 
   return (
     <div className="platform-analytics-chart__frame">
-      <canvas ref={canvasRef} role="img" aria-label={analytics.ariaLabel || analytics.title || "Resource usage"} />
+      <canvas
+        ref={canvasRef}
+        role="img"
+        aria-label={analytics.ariaLabel || analytics.title || "Resource usage"}
+      />
     </div>
   );
 }

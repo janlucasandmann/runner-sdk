@@ -10,3 +10,5 @@
 - Read-only presentation
 
 Consumers provide a controlled value and persist changes through `onChange`; they must not duplicate Markdown toolbar or renderer logic.
+
+Use `variant="minimalistic-ui"` for modal and compact composition surfaces that need the same editing behavior without the editor's framed header and body treatment. This variant uses transparent, zero-padding, square container surfaces while preserving the Markdown controls and interaction model.

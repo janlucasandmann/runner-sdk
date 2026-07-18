@@ -135,7 +135,7 @@
           const [agentPageSelectionRequest, setAgentPageSelectionRequest] = useState(null);
           const [agentCreationPageRequestToken, setAgentCreationPageRequestToken] = useState(0);
           const [agentCreationPageModelId, setAgentCreationPageModelId] = useState("");
-          const [threadAgentSelectionOverride, setThreadAgentSelectionOverride] = useState(null);
+  ${RESOURCE_CREATION_APP_SCRIPT_FRAGMENTS.state}        const [threadAgentSelectionOverride, setThreadAgentSelectionOverride] = useState(null);
           const [currentThreadId, setCurrentThreadId] = useState(() => (isDemoMode ? DEFAULT_DEMO_THREAD_ID : readInitialThreadDeepLinkId()));
           const [initialThreadPrivateMode, setInitialThreadPrivateMode] = useState(false);
           const [privateThreadIds, setPrivateThreadIds] = useState([]);
@@ -930,6 +930,14 @@
   
           function buildAiosLoginUrl(options) {
             const nextOptions = options && typeof options === "object" ? options : {};
+            if (PLATFORM_IDENTITY_PROVIDER === "oidc") {
+              const loginUrl = new URL("/api/platform/auth/login", window.location.origin);
+              loginUrl.searchParams.set(
+                "return_to",
+                window.location.pathname + window.location.search + window.location.hash
+              );
+              return loginUrl.toString();
+            }
             const loginUrl = new URL("/login", ${JSON.stringify(aiosOrigin)});
             loginUrl.searchParams.set("redirect", window.location.href);
             if (nextOptions.signedOut) {
@@ -1069,6 +1077,11 @@
           }, [isDemoMode]);
   
           function buildAiosLogoutUrl() {
+            if (PLATFORM_IDENTITY_PROVIDER === "oidc") {
+              const logoutUrl = new URL("/api/platform/auth/logout", window.location.origin);
+              logoutUrl.searchParams.set("return_to", "/");
+              return logoutUrl.toString();
+            }
             const logoutUrl = new URL("/logout", ${JSON.stringify(aiosOrigin)});
             logoutUrl.searchParams.set("redirect", buildAiosLoginUrl({ signedOut: true }));
             return logoutUrl.toString();
@@ -1082,9 +1095,11 @@
             setPlatformAuthBusy("signout");
             setPlatformAuthError("");
             try {
-              const auth = await ensurePlaygroundFirebaseAuth();
-              if (auth) {
-                await signOutFirebaseAuth(auth).catch(() => {});
+              if (PLATFORM_IDENTITY_PROVIDER === "firebase") {
+                const auth = await ensurePlaygroundFirebaseAuth();
+                if (auth) {
+                  await signOutFirebaseAuth(auth).catch(() => {});
+                }
               }
             } finally {
               clearFirebaseSessionCookie();
@@ -2727,7 +2742,6 @@
               clearPlaygroundAuthRedirectState();
               return;
             }
-  
             if (sessionState.status === "authenticated") {
               explicitSignOutInProgressRef.current = false;
               hasAuthenticatedSessionThisMountRef.current = true;
@@ -2771,6 +2785,9 @@
               setApiKey("");
               return;
             }
+            if (PLATFORM_IDENTITY_PROVIDER !== "firebase") {
+              return undefined;
+            }
   
             let disposed = false;
             let unsubscribe = () => {};
@@ -2808,6 +2825,10 @@
             if (event?.preventDefault) {
               event.preventDefault();
             }
+            if (PLATFORM_IDENTITY_PROVIDER === "oidc") {
+              handleSignInWithComputerAgents();
+              return;
+            }
             const email = String(platformAuthForm.email || "").trim();
             const password = String(platformAuthForm.password || "");
             if (!email || !password) {
@@ -2841,6 +2862,10 @@
           }
   
           async function handlePlatformGoogleSignIn() {
+            if (PLATFORM_IDENTITY_PROVIDER === "oidc") {
+              handleSignInWithComputerAgents();
+              return;
+            }
             setPlatformAuthBusy("google");
             setPlatformAuthError("");
             try {

@@ -58,6 +58,7 @@ describe("PlatformModal", () => {
     expect(css).toMatch(/\.platform-modal-header__search-input\.platform-search__input[\s\S]*font-size:\s*14px;/);
     expect(css).toMatch(/\.platform-modal-header__close[\s\S]*color:\s*#fff;/);
     expect(css).toMatch(/\.platform-modal-header__close:hover,[\s\S]*background:\s*transparent;/);
+    expect(css).toMatch(/\.platform-modal-header\.is-media\s*\{[\s\S]*min-height:\s*0;/);
   });
 
   it("renders the standard backdrop and a configurable semantic surface", () => {
@@ -242,6 +243,37 @@ describe("PlatformModal", () => {
 
     fireEvent.change(searchInput, { target: { value: "deepseek" } });
     expect(onSearchChange).toHaveBeenCalledOnce();
+  });
+
+  it("renders arbitrary media in an accessible media header", () => {
+    render(
+      <PlatformModal
+        open
+        visible
+        portal={false}
+        title="Create agent"
+        description="Configure the new agent."
+        headerVariant="media"
+        headerMedia={<div data-testid="agent-identity-preview">Agent identity</div>}
+        onClose={() => {}}
+      >
+        Agent fields
+      </PlatformModal>
+    );
+
+    const dialog = screen.getByRole("dialog", { name: "Create agent" });
+    expect(dialog.querySelector(".platform-modal-header.is-media")).not.toBeNull();
+    expect(
+      dialog.querySelector(".platform-modal-header__media")
+        ?.contains(screen.getByTestId("agent-identity-preview")),
+    ).toBe(true);
+    expect(
+      screen.getByRole("heading", { name: "Create agent", level: 2 })
+        .classList.contains("platform-modal-header__visually-hidden"),
+    ).toBe(true);
+    expect(screen.getByText("Configure the new agent.").classList.contains(
+      "platform-modal-header__visually-hidden",
+    )).toBe(true);
   });
 
   it("closes only for an enabled backdrop or Escape interaction", () => {

@@ -2,17 +2,12 @@ export const CONFIGURE_HOME_TOP_NAVIGATION_SCRIPT = `        function openConfig
           const normalizedTargetId = String(targetId || "").trim();
           if (!normalizedTargetId) return;
 
+          if (normalizedTargetId === "agent" || normalizedTargetId === "computer") {
+            openPlatformResourceCreationModal(normalizedTargetId);
+            return;
+          }
+
           requestPlatformNavigation(() => {
-            if (normalizedTargetId === "agent") {
-              openResourcesView("agents", { forceOverview: true });
-              setAgentCreationPageModelId("");
-              setAgentCreationPageRequestToken((current) => current + 1);
-              return;
-            }
-            if (normalizedTargetId === "computer") {
-              openResourcesView("computers", { create: true, forceOverview: true });
-              return;
-            }
             if (normalizedTargetId === "skill") {
               openToolsView("skills", { create: true, forceOverview: true });
               return;

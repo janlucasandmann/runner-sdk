@@ -134,6 +134,29 @@
 .platform-instructions-editor__input::placeholder { color: rgba(255, 255, 255, 0.38); }
 .platform-instructions-editor__preview.playground-tasks-detail-description-placeholder { color: rgba(255, 255, 255, 0.38); }
 
+.platform-instructions-editor.is-minimalistic-ui,
+.platform-instructions-editor.is-minimalistic-ui .platform-instructions-editor__header,
+.platform-instructions-editor.is-minimalistic-ui .platform-instructions-editor__body {
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.platform-instructions-editor.is-minimalistic-ui .platform-instructions-editor__body {
+  width: 100%;
+  margin-left: 0;
+  border: none;
+}
+
+.platform-instructions-editor.is-minimalistic-ui .platform-instructions-editor__preview,
+.platform-instructions-editor.is-minimalistic-ui .platform-instructions-editor__input {
+  padding: 0;
+}
+
+.platform-instructions-editor.is-minimalistic-ui .platform-instructions-editor__input {
+  border: none;
+}
+
 .platform-markdown { color: rgba(255, 255, 255, 0.7); font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
 .platform-markdown > :first-child { margin-top: 0; }
 .platform-markdown > :last-child { margin-bottom: 0; }

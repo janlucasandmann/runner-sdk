@@ -2,7 +2,7 @@ import {
   createLegacyPlatformShellScript,
 } from "../domains/shell/source.mjs";
 
-export const PLATFORM_COMPATIBILITY_BINDING_COUNT = 133;
+export const PLATFORM_COMPATIBILITY_BINDING_COUNT = 134;
 
 export function createPlatformCompatibilityTemplateBindings(bindings) {
   const PLATFORM_SHELL_SCRIPT = createLegacyPlatformShellScript(bindings);
@@ -101,6 +101,7 @@ export function createPlatformCompatibilityTemplateBindings(bindings) {
     aiosOrigin,
     defaultUpstreamOrigin,
     platformOrigin,
+    identityProvider,
   } = bindings;
 
   return Object.freeze([
@@ -237,5 +238,6 @@ export function createPlatformCompatibilityTemplateBindings(bindings) {
     JSON.stringify(platformOrigin),
     JSON.stringify(aiosOrigin),
     JSON.stringify(process.env.NODE_ENV === "development" ? "development" : "production"),
+    JSON.stringify(identityProvider),
   ]);
 }
