@@ -1,6 +1,13 @@
+.platform-version-history-sidebar .platform-floating-sidebar__header {
+  padding-right: 20px;
+  padding-left: 20px;
+}
+
 .platform-version-history-sidebar__body {
   display: flex;
   flex-direction: column;
+  padding-right: 20px;
+  padding-left: 20px;
   padding-bottom: 16px;
 }
 
@@ -25,117 +32,141 @@
   color: rgba(255, 205, 205, 0.92);
 }
 
-.platform-version-history-sidebar__table {
-  min-height: 0;
-  flex: 1 1 auto;
-  --platform-data-table-surface: transparent;
-  --platform-data-table-body-background: transparent;
-  --platform-data-table-row-background: transparent;
-  --platform-data-table-header-background: transparent;
+.platform-version-history-sidebar__toolbar {
+  flex: 0 0 auto;
+  margin-top: 24px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.platform-version-history-sidebar__table.is-minimalistic-ui .platform-data-table__sticky,
-.platform-version-history-sidebar__table.is-minimalistic-ui .platform-data-table__header-group,
-.platform-version-history-sidebar__table.is-minimalistic-ui .platform-data-table__header,
-.platform-version-history-sidebar__table .platform-data-table__scroll {
-  background: transparent;
+.platform-version-history-sidebar__toolbar .platform-data-table__toolbar-title {
+  font-size: 18px;
 }
 
-.platform-version-history-sidebar__table .platform-data-table__header {
-  padding-right: 6px;
-  padding-left: 6px;
+.platform-version-history-sidebar__filter-popup {
+  flex: 0 0 auto;
 }
 
-.platform-version-history-sidebar__table .platform-data-table__row {
-  padding-top: 9px;
-  padding-bottom: 9px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+.platform-version-history-sidebar__list {
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.platform-version-history-sidebar__table .platform-data-table__row-group:last-child > .platform-data-table__row {
-  border-bottom: 0;
-}
-
-.platform-version-history-sidebar__version-cell {
+.platform-version-history-sidebar__row {
+  box-sizing: border-box;
+  width: 100%;
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-
-.platform-version-history-sidebar__selection {
-  box-sizing: border-box;
-  width: 18px;
-  height: 18px;
-  flex: 0 0 18px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 5px;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
   background: transparent;
-  color: #fff;
-  cursor: pointer;
+  transition: background-color 120ms ease;
 }
 
-.platform-version-history-sidebar__selection[aria-pressed="true"] {
-  border-color: #4da3ff;
-  background: #4da3ff;
+.platform-version-history-sidebar__row:hover {
+  background: rgba(255, 255, 255, 0.0375);
 }
 
-.platform-version-history-sidebar__selection:disabled {
-  cursor: default;
+.platform-version-history-sidebar__row.is-selected,
+.platform-version-history-sidebar__row.is-selected:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
-.platform-version-history-sidebar__selection > svg {
-  width: 12px;
-  height: 12px;
-  stroke-width: 2.4;
-}
-
-.platform-version-history-sidebar__version-copy {
+.platform-version-history-sidebar__row-main {
   min-width: 0;
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-}
-
-.platform-version-history-sidebar__row-title-line {
-  width: 100%;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 7px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
 .platform-version-history-sidebar__row-title {
-  min-width: 0;
-  overflow: hidden;
-  color: rgba(255, 255, 255, 0.94);
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.35;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.platform-version-history-sidebar__status-label {
-  flex: 0 0 auto;
-  margin-left: auto;
-}
-
-.platform-version-history-sidebar__created-at {
   display: block;
+  width: 100%;
   min-width: 0;
   overflow: hidden;
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 11px;
+  color: #fff;
+  font-size: 12px;
   font-weight: 400;
   line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.platform-version-history-sidebar__created-at {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin-top: 4px;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-version-history-sidebar__row-main[aria-disabled="true"] {
+  cursor: default;
+}
+
+.platform-version-history-sidebar__row-actions {
+  min-width: 0;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.platform-version-history-sidebar__status-label {
+  flex: 0 0 auto;
+}
+
+.platform-version-history-sidebar__action-popup {
+  flex: 0 0 auto;
+}
+
+.platform-version-history-sidebar__popup {
+  --platform-popup-font-size: 12px;
+}
+
+.platform-version-history-sidebar__menu-item {
+  min-height: 34px;
+  padding: 8px 10px;
+}
+
+.platform-version-history-sidebar__menu-item.is-danger {
+  color: #ff8f8f;
+}
+
+.platform-version-history-sidebar__menu-icon {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.platform-version-history-sidebar__menu-icon > svg {
+  width: 13px;
+  height: 13px;
 }
 
 .platform-version-history-sidebar__loading,
@@ -175,7 +206,9 @@
 }
 
 .platform-version-history-sidebar__footer {
-  padding: 10px 12px;
+  padding: 10px 20px 20px;
+  border-top: 0;
+  background: transparent;
 }
 
 .platform-version-history-sidebar__footer-actions {
@@ -188,8 +221,25 @@
   min-width: 0;
 }
 
+.platform-version-history-sidebar__footer-actions .platform-button.is-secondary {
+  height: 32px !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.platform-version-history-sidebar__footer-actions .platform-button.is-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.14) !important;
+}
+
+.platform-version-history-sidebar__view-changes-button {
+  --platform-button-height: 32px;
+  height: 32px !important;
+  min-height: 32px !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .platform-version-history-sidebar__table .platform-data-table__row {
+  .platform-version-history-sidebar__row {
     transition-duration: 1ms;
   }
 }

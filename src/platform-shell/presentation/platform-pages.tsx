@@ -41,6 +41,10 @@ export const ProjectDetailPage = lazyNamed(
   () => import("../../platform-services/create-mode/projects/client/detail/project-detail-page.js"),
   "ProjectDetailPage",
 );
+export const TicketDetailPage = lazyNamed(
+  () => import("../../platform-services/create-mode/projects/client/detail/ticket-detail-page.js"),
+  "TicketDetailPage",
+);
 export const MetronomesOverviewPage = lazyNamed(
   () =>
     import(
@@ -69,6 +73,27 @@ export const OrganizationsOverviewPage = lazyNamed(
       "../../platform-services/configure-mode/organizations/client/page/overview/organizations-overview-page.js"
     ),
   "OrganizationsOverviewPage",
+);
+export const MarketplaceOverviewPage = lazyNamed(
+  () =>
+    import(
+      "../../platform-services/configure-mode/marketplace/client/page/overview/marketplace-overview-page.js"
+    ),
+  "MarketplaceOverviewPage",
+);
+export const InferenceOverviewPage = lazyNamed(
+  () =>
+    import(
+      "../../platform-services/configure-mode/inference/client/page/overview/inference-overview-page.js"
+    ),
+  "InferenceOverviewPage",
+);
+export const InferenceEndpointDetailPage = lazyNamed(
+  () =>
+    import(
+      "../../platform-services/configure-mode/inference/client/page/detail/inference-endpoint-detail-page.js"
+    ),
+  "InferenceEndpointDetailPage",
 );
 export const GuardrailsOverviewPage = lazyNamed(
   () =>

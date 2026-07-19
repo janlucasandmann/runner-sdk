@@ -1843,7 +1843,7 @@
 	                  { label: "Metronome", onClick: () => metronomeTopNavActionsRef.current?.goOverview?.() },
 	                  {
 	                    label: metronomeTopNavState?.title || "Untitled Metronome",
-	                    node: renderMetronomeBreadcrumbVersionSelector(),
+	                    trailing: renderMetronomeBreadcrumbVersionSelector(),
 	                  },
 	                ]
               : [{ label: "Create" }, { label: "Metronome" }];

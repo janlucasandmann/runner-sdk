@@ -170,7 +170,12 @@ export const METRONOME_WORKFLOW_DOMAIN_02_FRAGMENT = String.raw`            ...(
           const nodes = normalizeMetronomeNodes(graphRawNodes);
           const edges = normalizeMetronomeEdgesForNodes(graphRawEdges, nodes);
           const activeDeploymentId = activeDeployment?.id || activeDeploymentFromMetadata;
-          const activeDeploymentVersion = activeDeployment?.version || Number(metadata.activeDeploymentVersion || metadata.active_deployment_version || 0) || 0;
+          const activeDeploymentVersion = normalizeMetronomeVersionNumber(
+            activeDeployment?.version
+            ?? metadata.activeDeploymentVersion
+            ?? metadata.active_deployment_version,
+            0
+          );
           const publishedAt = String(
             workflow.publishedAt
             || workflow.published_at
@@ -202,7 +207,7 @@ export const METRONOME_WORKFLOW_DOMAIN_02_FRAGMENT = String.raw`            ...(
               deployments,
               metronomeDeployments: deployments,
               ...(activeDeploymentId ? { activeDeploymentId, active_deployment_id: activeDeploymentId } : {}),
-              ...(activeDeploymentVersion ? { activeDeploymentVersion, active_deployment_version: activeDeploymentVersion } : {}),
+              ...(activeDeploymentId ? { activeDeploymentVersion, active_deployment_version: activeDeploymentVersion } : {}),
               ...(publishedAt ? { publishedAt, published_at: publishedAt } : {}),
             },
             deployments,
@@ -408,21 +413,6 @@ export const METRONOME_WORKFLOW_DOMAIN_02_FRAGMENT = String.raw`            ...(
           return normalizeMetronomeEdges((Array.isArray(edges) ? edges : []).map(sanitizeMetronomeEdgeForPersistence));
         }
 
-        function createMetronomePersistedWorkflowSnapshot(workflow, nodes, edges) {
-          const baseWorkflow = workflow && typeof workflow === "object" ? workflow : {};
-          const persistedNodes = createMetronomePersistedNodes(nodes);
-          const persistedEdges = normalizeMetronomeEdgesForNodes(
-            (Array.isArray(edges) ? edges : []).map(sanitizeMetronomeEdgeForPersistence),
-            persistedNodes
-          );
-          return normalizeMetronomeWorkflow({
-            ...baseWorkflow,
-            nodes: persistedNodes,
-            edges: persistedEdges,
-            triggerSummary: deriveMetronomeTriggerSummary(persistedNodes),
-          });
-        }
-
         function readMetronomeSelectedDeploymentId(workflow) {
           const source = workflow && typeof workflow === "object" ? workflow : {};
           const metadata = source.metadata && typeof source.metadata === "object" ? source.metadata : {};
@@ -436,56 +426,6 @@ export const METRONOME_WORKFLOW_DOMAIN_02_FRAGMENT = String.raw`            ...(
             || metadata.active_deployment_id
             || ""
           ).trim();
-        }
-
-        function createMetronomeWorkflowWithSelectedVersionSnapshot(workflow, nodes, edges) {
-          const baseWorkflow = createMetronomePersistedWorkflowSnapshot(workflow, nodes, edges);
-          const deployments = readMetronomeWorkflowDeployments(workflow);
-          const selectedDeploymentId = readMetronomeSelectedDeploymentId(workflow);
-          const selectedDeployment = selectedDeploymentId
-            ? deployments.find((deployment) => deployment.id === selectedDeploymentId)
-            : null;
-          const selectedDeploymentIsEditable = Boolean(
-            selectedDeployment
-            && String(selectedDeployment.status || "").toLowerCase() !== "active"
-            && !String(selectedDeployment.publishedAt || "").trim()
-          );
-          if (!selectedDeployment || !selectedDeploymentIsEditable) {
-            return baseWorkflow;
-          }
-          const now = new Date().toISOString();
-          const persistedNodes = createMetronomePersistedNodes(baseWorkflow.nodes);
-          const persistedEdges = createMetronomePersistedEdges(baseWorkflow.edges);
-          const triggerSummary = deriveMetronomeTriggerSummary(persistedNodes);
-          const updatedDeployment = normalizeMetronomeDeploymentVersion({
-            ...selectedDeployment,
-            nodes: persistedNodes,
-            edges: persistedEdges,
-            definition: createMetronomeWorkflowDefinition(baseWorkflow, persistedNodes, persistedEdges),
-            triggerSummary,
-            nodeCount: persistedNodes.length,
-            edgeCount: persistedEdges.length,
-            updatedAt: now,
-            updated_at: now,
-          });
-          const nextDeployments = normalizeMetronomeDeployments(deployments.map((deployment) => (
-            deployment.id === selectedDeploymentId ? updatedDeployment : deployment
-          )));
-          const metadata = baseWorkflow.metadata && typeof baseWorkflow.metadata === "object" ? baseWorkflow.metadata : {};
-          const nextMetadata = {
-            ...metadata,
-            deployments: nextDeployments,
-            metronomeDeployments: nextDeployments,
-            restoredFromDeploymentId: updatedDeployment.id,
-            restored_from_deployment_id: updatedDeployment.id,
-            restoredFromDeploymentVersion: updatedDeployment.version,
-            restored_from_deployment_version: updatedDeployment.version,
-          };
-          return normalizeMetronomeWorkflow({
-            ...baseWorkflow,
-            deployments: nextDeployments,
-            metadata: nextMetadata,
-          });
         }
 
         function createMetronomeWorkflowWithVersionList(workflow, versions, preferredSelectedId = "") {
@@ -529,20 +469,6 @@ export const METRONOME_WORKFLOW_DOMAIN_02_FRAGMENT = String.raw`            ...(
             metadata: nextMetadata,
             nodes: selectedNodes,
             edges: selectedEdges,
-          });
-        }
-
-        function createMetronomePersistedWorkflowKey(workflow, nodes, edges) {
-          const baseWorkflow = workflow && typeof workflow === "object" ? workflow : {};
-          return JSON.stringify({
-            id: String(baseWorkflow.id || ""),
-            name: String(baseWorkflow.name || ""),
-            description: String(baseWorkflow.description || ""),
-            status: String(baseWorkflow.status || "draft"),
-            projectId: readMetronomeWorkflowProjectId(baseWorkflow),
-            projectName: readMetronomeWorkflowProjectName(baseWorkflow),
-            nodes: createMetronomePersistedNodes(nodes),
-            edges: createMetronomePersistedEdges(edges),
           });
         }
 
@@ -595,14 +521,20 @@ export const METRONOME_WORKFLOW_DOMAIN_02_FRAGMENT = String.raw`            ...(
           const deployments = readMetronomeWorkflowDeployments(workflow);
           const activeDeploymentId = String(workflow?.activeDeploymentId || metadata.activeDeploymentId || metadata.active_deployment_id || deployments.find((deployment) => deployment.status === "active")?.id || "").trim();
           const activeDeployment = deployments.find((deployment) => deployment.id === activeDeploymentId) || null;
-          const activeDeploymentVersion = Number(workflow?.activeDeploymentVersion || metadata.activeDeploymentVersion || metadata.active_deployment_version || activeDeployment?.version || 0) || 0;
+          const activeDeploymentVersion = normalizeMetronomeVersionNumber(
+            workflow?.activeDeploymentVersion
+            ?? metadata.activeDeploymentVersion
+            ?? metadata.active_deployment_version
+            ?? activeDeployment?.version,
+            0
+          );
           const publishedAt = String(workflow?.publishedAt || metadata.publishedAt || metadata.published_at || activeDeployment?.publishedAt || "").trim();
           const enrichedMetadata = {
             ...metadata,
             deployments,
             metronomeDeployments: deployments,
             ...(activeDeploymentId ? { activeDeploymentId, active_deployment_id: activeDeploymentId } : {}),
-            ...(activeDeploymentVersion ? { activeDeploymentVersion, active_deployment_version: activeDeploymentVersion } : {}),
+            ...(activeDeploymentId ? { activeDeploymentVersion, active_deployment_version: activeDeploymentVersion } : {}),
             ...(publishedAt ? { publishedAt, published_at: publishedAt } : {}),
           };
           return {
@@ -902,10 +834,8 @@ export const METRONOME_WORKFLOW_DOMAIN_02_FRAGMENT = String.raw`            ...(
           const persistedNodes = createMetronomePersistedNodes(nodes || workflow?.nodes || []);
           const persistedEdges = createMetronomePersistedEdges(edges || workflow?.edges || []);
           const includeDefinition = options.includeDefinition !== false;
-          const label = String(details?.label || details?.name || "").trim();
-          const description = String(details?.description || "").trim();
+          const description = String(details?.description || "").trim().slice(0, 240);
           return {
-            ...(label ? { label, name: label } : {}),
             description,
             ...(includeDefinition
               ? {

@@ -7,7 +7,7 @@ export function ResourceDetailPage<TTab extends string = string>({
   title,
   header,
   headerActions,
-  tabs,
+  tabs = [],
   activeTab,
   onTabChange,
   tabBarActions,
@@ -27,9 +27,11 @@ export function ResourceDetailPage<TTab extends string = string>({
 }: ResourceDetailPageProps<TTab>) {
   const generatedId = useId().replace(/:/g, "");
   const panelId = `resource-detail-panel-${generatedId}`;
-  const activeTabDefinition = tabs.find((tab) => tab.id === activeTab);
+  const hasTabs = tabs.length > 0 && activeTab !== undefined && typeof onTabChange === "function";
+  const activeTabDefinition = hasTabs ? tabs.find((tab) => tab.id === activeTab) : undefined;
   const panelLabel = activeTabDefinition?.ariaLabel
     || (typeof activeTabDefinition?.label === "string" ? activeTabDefinition.label : `${ariaLabel} content`);
+  const hasHeader = header !== undefined || title !== undefined || headerActions !== undefined;
   const hasSidebar = sidebar !== undefined && sidebar !== null;
   const tabBarEndActions = tabBarActions || sidebarToggle ? (
     <div className={`resource-detail-page__tab-bar-actions${tabBarActionsClassName ? ` ${tabBarActionsClassName}` : ""}`}>
@@ -44,31 +46,35 @@ export function ResourceDetailPage<TTab extends string = string>({
 
   return (
     <section
-      className={`resource-detail-page${hasSidebar ? " has-sidebar" : " is-sidebar-empty"}${sidebarCollapsed ? " is-sidebar-collapsed" : ""}${className ? ` ${className}` : ""}`}
+      className={`resource-detail-page${hasTabs ? " has-tabs" : " is-tabless"}${hasSidebar ? " has-sidebar" : " is-sidebar-empty"}${sidebarCollapsed ? " is-sidebar-collapsed" : ""}${className ? ` ${className}` : ""}`}
       aria-label={ariaLabel}
       data-resource-detail-page="true"
     >
-      <header className={`resource-detail-page__header${headerClassName ? ` ${headerClassName}` : ""}`}>
-        <div className="resource-detail-page__header-content">
-          {header ?? <h1 className="resource-detail-page__title">{title}</h1>}
-        </div>
-        {headerActions ? <div className="resource-detail-page__header-actions">{headerActions}</div> : null}
-      </header>
+      {hasHeader ? (
+        <header className={`resource-detail-page__header${headerClassName ? ` ${headerClassName}` : ""}`}>
+          <div className="resource-detail-page__header-content">
+            {header ?? <h1 className="resource-detail-page__title">{title}</h1>}
+          </div>
+          {headerActions ? <div className="resource-detail-page__header-actions">{headerActions}</div> : null}
+        </header>
+      ) : null}
 
-      <PlatformDetailTabBar<TTab>
-        tabs={tabs}
-        value={activeTab}
-        onValueChange={onTabChange}
-        endActions={tabBarEndActions}
-        ariaLabel={tabAriaLabel}
-        panelId={panelId}
-        className={tabBarClassName}
-      />
+      {hasTabs ? (
+        <PlatformDetailTabBar<TTab>
+          tabs={tabs}
+          value={activeTab}
+          onValueChange={onTabChange}
+          endActions={tabBarEndActions}
+          ariaLabel={tabAriaLabel}
+          panelId={panelId}
+          className={tabBarClassName}
+        />
+      ) : null}
 
       <section
         id={panelId}
-        role="tabpanel"
-        aria-label={panelLabel}
+        role={hasTabs ? "tabpanel" : undefined}
+        aria-label={hasTabs ? panelLabel : undefined}
         className={`resource-detail-page__content${contentClassName ? ` ${contentClassName}` : ""}`}
       >
         {children}

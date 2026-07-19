@@ -50,6 +50,9 @@ describe("PlatformModal", () => {
     );
     expect(css).toMatch(/\.platform-modal-header\s*\{[\s\S]*padding:\s*12px 24px;/);
     expect(css).toMatch(/\.platform-modal-header\s*\{[\s\S]*border-bottom:\s*1px solid rgba\(255,\s*255,\s*255,\s*0\.1\);/);
+    expect(css).toMatch(
+      /\.platform-modal-header\.is-title-only\s*\{[\s\S]*padding-top:\s*24px;[\s\S]*border-bottom:\s*0;/,
+    );
     expect(css).toMatch(/\.platform-modal-body\s*\{[\s\S]*padding:\s*24px;/);
     expect(css).toMatch(
       /\.platform-modal-footer\s*\{[\s\S]*padding:\s*12px 24px;[\s\S]*border-top:\s*1px solid rgba\(255,\s*255,\s*255,\s*0\.075\);[\s\S]*background:\s*rgba\(255,\s*255,\s*255,\s*0\.05\);/,
@@ -101,6 +104,39 @@ describe("PlatformModal", () => {
     ).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "Close modal" }));
     expect(onClose).toHaveBeenLastCalledWith("close-button");
+  });
+
+  it("marks default headers containing only a title", () => {
+    const { rerender } = render(
+      <PlatformModal
+        open
+        visible
+        portal={false}
+        title="Title only"
+        onClose={() => {}}
+      >
+        Modal content
+      </PlatformModal>
+    );
+
+    const titleOnlyDialog = screen.getByRole("dialog", { name: "Title only" });
+    expect(titleOnlyDialog.querySelector(".platform-modal-header.is-title-only")).not.toBeNull();
+
+    rerender(
+      <PlatformModal
+        open
+        visible
+        portal={false}
+        title="Title with description"
+        description="Supporting copy"
+        onClose={() => {}}
+      >
+        Modal content
+      </PlatformModal>
+    );
+
+    const describedDialog = screen.getByRole("dialog", { name: "Title with description" });
+    expect(describedDialog.querySelector(".platform-modal-header.is-title-only")).toBeNull();
   });
 
   it("mounts in the opening render and keeps close timing stable across rerenders", () => {

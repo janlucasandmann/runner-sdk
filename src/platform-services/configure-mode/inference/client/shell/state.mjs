@@ -1,4 +1,6 @@
-export const INFERENCE_APP_STATE_SCRIPT = `        const [settingsInferenceSettings, setSettingsInferenceSettings] = useState(() => readDemoSettingsPlatformConfig().inference);
+export const INFERENCE_APP_STATE_SCRIPT = `        const [settingsInferenceEndpoints, setSettingsInferenceEndpoints] = useState(() => readDemoSettingsPlatformConfig().inferenceEndpoints);
+        const [settingsInferenceSettings, setSettingsInferenceSettings] = useState(() => getDefaultDemoInferenceEndpoint(readDemoSettingsPlatformConfig().inferenceEndpoints));
+        const [settingsInferenceSelectedEndpointId, setSettingsInferenceSelectedEndpointId] = useState("");
         const [settingsInferenceModelInput, setSettingsInferenceModelInput] = useState("");
         const [settingsInferenceApiKeyInput, setSettingsInferenceApiKeyInput] = useState("");
         const [settingsClearInferenceApiKey, setSettingsClearInferenceApiKey] = useState(false);
@@ -36,4 +38,3 @@ export const INFERENCE_APP_STATE_SCRIPT = `        const [settingsInferenceSetti
           loadedAt: "",
         });
 `;
-

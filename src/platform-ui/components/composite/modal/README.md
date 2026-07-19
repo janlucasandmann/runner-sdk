@@ -1,4 +1,8 @@
+<!-- platform-directory-guide:v1 -->
+
 # Platform modal
+
+## Purpose
 
 `PlatformModal` is the default dialog primitive for the platform. It owns portal rendering, backdrop and Escape dismissal, focus trapping and restoration, document scroll locking, animation state, accessibility attributes, and the canonical title area.
 
@@ -23,3 +27,25 @@ Intrinsic width and height changes animate by default with a 140ms resize transi
 The canonical surface is intentionally solid and minimal: `#1a1a1a` background, a `1px` white/7.5 border, 15px radius, no decorative pseudo-border, and visually hidden scrollbars while preserving scrolling. The backdrop applies the shared 10px blur while visible and closing.
 
 `PlatformConfirmationModal` is the reusable confirmation composite for irreversible or consequential actions. It places initial focus on Cancel, blocks dismissal while its async confirmation is pending, and renders rejected mutation errors inside the dialog. Use `tone="destructive"` for deletion while keeping the initiating toolbar icon visually neutral.
+
+## Working in this directory
+
+Keep changes inside this directory's stated ownership boundary and use the parent's public entry point instead of importing sibling internals. Update this guide when responsibilities, entry points, or verification commands change. Place focused tests beside the behavior they protect and promote reusable, domain-neutral presentation to `src/platform-ui`.
+
+## Verification
+
+Run the narrowest relevant checks from the repository root:
+
+```bash
+npm run platform-modal-test
+npm run check:static
+```
+
+Escalate to `npm run check` before merging changes that affect shared contracts,
+build output, or application composition.
+
+## Related documentation
+
+- [Parent directory guide](../README.md)
+- [Platform architecture](../../../../../docs/platform-architecture.md)
+- [Directory README standard](../../../../../docs/development/readme-standard.md)

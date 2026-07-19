@@ -92,6 +92,12 @@ function isValidOidcIssuer(value) {
 
 export function createPlatformConfig(env = process.env) {
   const port = Number(env.PORT || 4177);
+  const bindAddress = String(
+    env.PLATFORM_BIND_ADDRESS || env.HOST || "0.0.0.0",
+  ).trim();
+  if (!/^[A-Za-z0-9_.:-]+$/.test(bindAddress)) {
+    throw new Error("PLATFORM_BIND_ADDRESS is invalid.");
+  }
   const deploymentTopology = normalizeDeploymentTopology(
     env.DEPLOYMENT_TOPOLOGY || env.PLATFORM_TOPOLOGY,
   );
@@ -222,6 +228,7 @@ export function createPlatformConfig(env = process.env) {
     aiosHostingRoot,
     aiosOrigin,
     aiosPublicRoot: path.join(aiosHostingRoot, "public"),
+    bindAddress,
     defaultUpstreamOrigin,
     deploymentTopology,
     deploymentVmNameOverride: String(

@@ -65,28 +65,13 @@ export const PROJECT_OVERVIEW_CSS_01_FRAGMENT = String.raw`
       }
 
       .playground-project-overview-sidebar-card {
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 10px;
-        background: rgba(255, 255, 255, 0.05);
-        padding: 12px;
-        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
-      }
-
-      .playground-project-overview-sidebar-card-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        margin-bottom: 10px;
+        overflow: visible;
       }
 
       .playground-project-overview-sidebar-title {
-        min-width: 0;
-        margin: 0;
+        color: #fff;
         font-size: 12px;
-        line-height: 1.3;
-        font-weight: 500;
-        color: rgba(255, 255, 255, 0.7);
+        font-weight: 400;
       }
 
       .playground-project-overview-sidebar-title-with-caret {
@@ -179,141 +164,20 @@ export const PROJECT_OVERVIEW_CSS_01_FRAGMENT = String.raw`
         width: 100%;
       }
 
-      .playground-project-overview-sidebar-select-shell {
-        position: relative;
-        z-index: 1;
-        min-width: 0;
+      .playground-project-overview-sidebar-selector {
         width: 100%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: flex-start;
       }
 
-      .playground-project-overview-sidebar-select-shell.is-open {
-        z-index: 340;
-      }
-
-      .playground-project-overview-sidebar-select-trigger {
-        min-width: 0;
+      .playground-project-overview-sidebar-selector-trigger {
         max-width: 100%;
-        min-height: 28px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: flex-start;
-        gap: 6px;
-        border: 0;
-        border-radius: 7px;
-        background: transparent;
-        padding: 0;
-        color: rgba(255, 255, 255, 0.86);
-        font: inherit;
-        font-size: 12px;
-        line-height: 1.25;
-        text-align: left;
-        cursor: pointer;
       }
 
-      .playground-project-overview-sidebar-select-trigger:hover,
-      .playground-project-overview-sidebar-select-trigger.is-open {
-        color: rgba(255, 255, 255, 0.96);
-      }
-
-      .playground-project-overview-sidebar-select-trigger.is-empty {
+      .playground-project-overview-sidebar-selector-trigger.is-empty {
         color: rgba(255, 255, 255, 0.46);
       }
 
-      .playground-project-overview-sidebar-select-trigger-copy {
-        min-width: 0;
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .playground-project-overview-sidebar-select-trigger-caret {
-        width: 12px;
-        height: 12px;
-        flex: 0 0 12px;
-        color: rgba(255, 255, 255, 0.42);
-      }
-
-      .playground-project-overview-sidebar-select-menu {
-        position: absolute;
-        top: calc(100% + 8px);
-        left: 0;
-        right: auto;
-        z-index: 360;
+      .playground-project-overview-sidebar-selector-popup {
         width: min(280px, calc(100vw - 48px));
-        max-height: min(320px, calc(100vh - 120px));
-        overflow: auto;
-        padding: 6px;
-      }
-
-      .playground-project-overview-sidebar-select-option {
-        width: 100%;
-        min-height: 34px;
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 16px;
-        align-items: center;
-        gap: 10px;
-        border: 0;
-        border-radius: 7px;
-        background: transparent;
-        padding: 7px 8px;
-        color: rgba(255, 255, 255, 0.82);
-        font: inherit;
-        text-align: left;
-        cursor: pointer;
-      }
-
-      .playground-project-overview-sidebar-select-option:hover,
-      .playground-project-overview-sidebar-select-option.is-selected {
-        background: rgba(255, 255, 255, 0.08);
-        border-radius: 999px;
-        color: rgba(255, 255, 255, 0.96);
-      }
-
-      .playground-project-overview-sidebar-select-option-main {
-        min-width: 0;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        overflow: hidden;
-      }
-
-      .playground-project-overview-sidebar-select-option-copy {
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-      }
-
-      .playground-project-overview-sidebar-select-option-label {
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        font-size: 12px;
-        line-height: 1.25;
-        font-weight: 500;
-      }
-
-      .playground-project-overview-sidebar-select-option-description {
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        font-size: 11px;
-        line-height: 1.25;
-        color: rgba(255, 255, 255, 0.46);
-      }
-
-      .playground-project-overview-sidebar-select-option-check {
-        width: 14px;
-        height: 14px;
-        color: rgba(255, 255, 255, 0.86);
       }
 
       .playground-project-overview-sidebar-date-fields {
@@ -356,8 +220,8 @@ export const PROJECT_OVERVIEW_CSS_01_FRAGMENT = String.raw`
         color: rgba(255, 255, 255, 0.96);
       }
 
-      .playground-project-overview-sidebar-select-option .playground-tasks-priority-value,
-      .playground-project-overview-sidebar-select-trigger .playground-tasks-priority-value {
+      .playground-project-overview-sidebar-selector-popup .playground-tasks-priority-value,
+      .playground-project-overview-sidebar-selector-trigger .playground-tasks-priority-value {
         font-size: 12px;
         line-height: 1.25;
       }
@@ -400,7 +264,6 @@ export const PROJECT_OVERVIEW_CSS_01_FRAGMENT = String.raw`
         color: rgba(255, 255, 255, 0.96);
       }
 
-      .playground-project-overview-sidebar-card,
       .playground-project-overview-sidebar-rows {
         overflow: visible;
       }
@@ -716,6 +579,14 @@ export const PROJECT_OVERVIEW_CSS_01_FRAGMENT = String.raw`
         display: flex;
         flex-direction: column;
         gap: 0;
+      }
+
+      .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-overview {
+        padding-top: 0 !important;
+      }
+
+      .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-overview .playground-project-overview-summary-title {
+        margin-top: 42px;
       }
 
       .playground-project-overview-summary-title-row {

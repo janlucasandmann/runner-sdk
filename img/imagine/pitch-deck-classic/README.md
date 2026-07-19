@@ -1,0 +1,40 @@
+<!-- platform-directory-guide:v1 -->
+
+# Classic pitch-deck assets
+
+## Purpose
+
+This directory contains classic pitch-deck assets consumed by platform presentation. Keep source attribution and usage discoverable, and avoid duplicating equivalent assets.
+
+## Contents
+
+- [`01.png`](01.png) — Presentation asset.
+- [`01.webp`](01.webp) — Presentation asset.
+- [`02.png`](02.png) — Presentation asset.
+- [`02.webp`](02.webp) — Presentation asset.
+- [`03.png`](03.png) — Presentation asset.
+- [`03.webp`](03.webp) — Presentation asset.
+- [`04.png`](04.png) — Presentation asset.
+- [`04.webp`](04.webp) — Presentation asset.
+
+## Working in this directory
+
+Reference assets through their owning feature rather than relying on unexplained global paths. Optimize large files before committing, retain source/licensing information when applicable, and remove an asset only after searching both typed and legacy browser sources for consumers.
+
+## Verification
+
+Run the narrowest relevant checks from the repository root:
+
+```bash
+npm run build
+npm run check:static
+```
+
+Escalate to `npm run check` before merging changes that affect shared contracts,
+build output, or application composition.
+
+## Related documentation
+
+- [Parent directory guide](../README.md)
+- [Platform architecture](../../../docs/platform-architecture.md)
+- [Directory README standard](../../../docs/development/readme-standard.md)

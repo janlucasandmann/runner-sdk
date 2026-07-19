@@ -1,4 +1,8 @@
+<!-- platform-directory-guide:v1 -->
+
 # Projects service
+
+## Purpose
 
 `src/platform-services/create-mode/projects` is the ownership boundary for the platform
 Projects experience.
@@ -8,7 +12,7 @@ Projects experience.
 
 - `catalog.mjs` contains the immutable project-type catalog and lookup helpers.
 - `client/domain-foundation.mjs` defines project/task constants that must be
-  available before other shared demo runtimes initialize.
+  available before dependent browser fragments initialize.
 - `client/domain-runtime.mjs` owns project, task, release, sprint, and Mission
   Control normalization and presentation helpers. Calendar-owned fragments are
   composed through `src/platform-services/create-mode/calendar`.
@@ -37,7 +41,29 @@ matching, task execution semantics, and project-owned UI implementations belong
 in this directory. Cross-service consumers (for example Files assigning an
 attachment to a project) remain explicit integration points in the host.
 
-The client runtime is currently exposed as compiled script fragments because the
-demo application itself is emitted as one inline browser module. Keeping those
-fragments behind this boundary preserves browser behavior while allowing the
-project service to evolve independently of the HTML/server composition shell.
+The client runtime is currently exposed as ordered script fragments consumed by
+the single platform document. Keeping those fragments behind this boundary
+preserves browser behavior while allowing the project service to evolve
+independently of the host and toward typed page composition.
+
+## Working in this directory
+
+Keep changes inside this directory's stated ownership boundary and use the parent's public entry point instead of importing sibling internals. Update this guide when responsibilities, entry points, or verification commands change. Place focused tests beside the behavior they protect and promote reusable, domain-neutral presentation to `src/platform-ui`.
+
+## Verification
+
+Run the narrowest relevant checks from the repository root:
+
+```bash
+npm run projects-service-test
+npm run check:static
+```
+
+Escalate to `npm run check` before merging changes that affect shared contracts,
+build output, or application composition.
+
+## Related documentation
+
+- [Parent directory guide](../README.md)
+- [Platform architecture](../../../../docs/platform-architecture.md)
+- [Directory README standard](../../../../docs/development/readme-standard.md)

@@ -53,7 +53,12 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
               visibleMetronomeDeploymentEvents.map((event) => {
                 const action = String(event.action || "").toLowerCase();
                 const isUnpublish = action === "unpublish";
-                const versionLabel = event.label || (event.version ? "Version " + event.version : event.versionId ? "Version " + event.versionId.slice(0, 8) : "Workflow");
+                const versionLabel = event.label
+                  || (event.version !== undefined && event.version !== null
+                    ? formatMetronomeVersionLabel(event.version)
+                    : event.versionId
+                      ? "Version " + event.versionId.slice(0, 8)
+                      : "Workflow");
                 return React.createElement("div", { key: event.id, className: "playground-metronome-deployment-history-row" },
                   React.createElement("div", { className: "playground-metronome-deployment-history-icon is-" + (isUnpublish ? "unpublish" : "publish") },
                     React.createElement(isUnpublish ? PauseCircle : Rocket, { width: 13, height: 13, strokeWidth: 1.8 })
@@ -109,7 +114,7 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
             return React.createElement(PlatformVersionHistorySidebar, {
               open: isMetronomeVersionHistorySidebarOpen,
               title: "Version history",
-              sectionTitle: "Saved versions",
+              sectionTitle: "All Versions",
               className: "playground-metronome-workflow-versions-sidebar",
               width: "var(--playground-thread-task-detail-width)",
               portal: Boolean(options.portal),
@@ -126,19 +131,17 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
                 setMetronomeVersionChangesState(null);
                 setIsMetronomeVersionHistorySidebarOpen(false);
               },
-              onCreateVersion: openCreateWorkflowVersionModal,
               onSelectVersion: (versionId) => void restoreActiveWorkflowVersion(versionId),
               onPublishVersion: (versionId) => void publishMetronomeDeploymentVersion(versionId),
               canPublishVersion: (deployment) => canPublishMetronomeDeploymentVersion(deployment),
               onViewChanges: () => openMetronomeVersionChangesPage(),
-              getVersionTitle: (deployment) => String(deployment.label || ("Version " + deployment.version)).trim(),
               getVersionCreatedAt: (deployment) => deployment.createdAt
                 ? formatMetronomeDeploymentTimestamp(deployment.createdAt)
                 : "-",
               getVersionActions: (deployment) => [
                 {
                   id: "edit",
-                  label: "Edit version",
+                  label: "Edit description",
                   icon: SquarePen,
                   onSelect: () => openEditWorkflowVersionModal(deployment.id),
                 },

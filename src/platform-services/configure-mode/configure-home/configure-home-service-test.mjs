@@ -16,6 +16,10 @@ assert.deepEqual(Object.keys(CONFIGURE_HOME_STYLE_FRAGMENTS), [
   "notificationPage",
 ]);
 assert.match(CONFIGURE_HOME_STYLE_FRAGMENTS.notificationPage, /\.configure-home-notification__identity/);
+assert.match(
+  CONFIGURE_HOME_STYLE_FRAGMENTS.notificationPage,
+  /\.platform-empty-state\.configure-home-notification__empty-state[\s\S]*?margin-top: 36px;[\s\S]*?margin-bottom: 36px;/,
+);
 assert.equal(Object.values(CONFIGURE_HOME_STYLE_FRAGMENTS).join(""), CONFIGURE_HOME_PAGE_CSS);
 assert.equal(
   await fs.readFile(

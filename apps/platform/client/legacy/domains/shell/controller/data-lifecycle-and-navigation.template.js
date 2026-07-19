@@ -3327,6 +3327,7 @@
                 writeDemoSettingsPlatformConfig({
                   billing: nextBillingPreferences,
                   inference: settingsInferenceSettings,
+                  inferenceEndpoints: settingsInferenceEndpoints,
                 });
               }
               setSettingsPlatformConfigSuccess("");
@@ -3335,7 +3336,7 @@
             } finally {
               setSettingsPlatformConfigSaving(false);
             }
-          }, [billingAuthRequestHeaders, hasRealAccess, proxyBackendBase, settingsBillingPreferences, settingsCanConfigureUsageBilling, settingsInferenceSettings]);
+          }, [billingAuthRequestHeaders, hasRealAccess, proxyBackendBase, settingsBillingPreferences, settingsCanConfigureUsageBilling, settingsInferenceEndpoints, settingsInferenceSettings]);
   
           const queueSettingsResourceCapAutosave = useCallback((nextBillingPreferences, immediate = false) => {
             setSettingsBillingPreferences(nextBillingPreferences);

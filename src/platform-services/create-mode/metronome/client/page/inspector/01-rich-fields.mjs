@@ -434,32 +434,26 @@ export const METRONOME_INSPECTOR_01_FRAGMENT = String.raw`
               const normalizedTriggerType = selectedTriggerType === "thread"
                 ? "thread_event"
                 : String(selectedTriggerType || "manual_test").trim() || "manual_test";
-              const definition = createMetronomeWorkflowDefinition(activeWorkflow, nodes, edges);
-              const workflowForTest = {
-                ...activeWorkflow,
+              const workflowIdForTest = String(activeWorkflow.id || "").trim();
+              const definition = createMetronomeWorkflowDefinition(
+                activeMetronomeEditorWorkflow || activeWorkflow,
                 nodes,
-                edges,
-                triggerSummary: deriveMetronomeTriggerSummary(nodes),
-                updatedAt: new Date().toISOString(),
-              };
+                edges
+              );
               setMetronomeTriggerTestState({ status: "loading", message: "Testing trigger..." });
-              void saveEditableMetronomeWorkflowApi(workflowForTest)
-                .then((savedWorkflow) => {
+              void testRunMetronomeWorkflowApi(workflowIdForTest, definition, {
+                triggerType: normalizedTriggerType,
+                inputs: {
+                  source: "trigger_diagnostics",
+                  prompt: "Trigger diagnostics test",
+                  selectedNodeId: selectedNodeId || null,
+                },
+              })
+                .then((run) => {
                   setIsMetronomeApiAvailable(true);
-                  setWorkflows((current) => replaceMetronomeWorkflowById(current, workflowForTest.id, savedWorkflow));
-                  if (savedWorkflow.id && savedWorkflow.id !== activeWorkflow.id) {
-                    setActiveWorkflowId(savedWorkflow.id);
-                  }
-                  return testRunMetronomeWorkflowApi(savedWorkflow.id, definition, {
-                    triggerType: normalizedTriggerType,
-                    inputs: {
-                      source: "trigger_diagnostics",
-                      prompt: "Trigger diagnostics test",
-                      selectedNodeId: selectedNodeId || null,
-                    },
-                  }).then((run) => ({ run, savedWorkflow }));
+                  return run;
                 })
-                .then(({ run, savedWorkflow }) => {
+                .then((run) => {
 	                  const normalizedRun = normalizeMetronomeRun(run);
 	                  setMetronomeRuns((current) => [normalizedRun, ...current.filter((item) => item.id !== normalizedRun.id)]);
 	                  setSelectedMetronomeRunId(normalizedRun.id);
@@ -468,7 +462,7 @@ export const METRONOME_INSPECTOR_01_FRAGMENT = String.raw`
 	                  setMetronomeEditorMode("runs");
 	                  setMetronomeRunInlineDetailId(normalizedRun.id);
 	                  setMetronomeTriggerTestState({ status: "success", message: "Trigger test started." });
-                  return fetchMetronomeTriggerEventsApi(savedWorkflow.id, 20);
+                  return fetchMetronomeTriggerEventsApi(workflowIdForTest, 20);
                 })
                 .then((items) => {
                   setMetronomeTriggerEvents(items);

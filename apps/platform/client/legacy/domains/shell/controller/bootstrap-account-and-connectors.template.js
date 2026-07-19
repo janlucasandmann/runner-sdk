@@ -4376,7 +4376,11 @@
             if (!hasRealAccess) {
               const localConfig = readDemoSettingsPlatformConfig();
               setSettingsBillingPreferences(localConfig.billing);
-              setSettingsInferenceSettings(localConfig.inference);
+              setSettingsInferenceEndpoints(localConfig.inferenceEndpoints);
+              setSettingsInferenceSettings((current) =>
+                getDemoInferenceEndpoint(localConfig.inferenceEndpoints, current?.id)
+                || getDefaultDemoInferenceEndpoint(localConfig.inferenceEndpoints)
+              );
               setSettingsInferenceApiKeyInput("");
               setSettingsClearInferenceApiKey(false);
               setSettingsInferenceApiKeyEditing(false);
@@ -4396,36 +4400,38 @@
               }
   
               const nextBillingPreferences = normalizeDemoSettingsBillingPreferences(data?.billing);
-              const backendInferenceApiKeyPreview = typeof data?.inference?.apiKeyPreview === "string"
-                ? data.inference.apiKeyPreview.trim()
-                : "";
-              const localInferenceApiKeyPreview = typeof localConfig?.inference?.apiKeyPreview === "string"
-                ? localConfig.inference.apiKeyPreview.trim()
-                : "";
-              const nextInferenceApiKeyPreview = backendInferenceApiKeyPreview.length >= localInferenceApiKeyPreview.length
-                ? backendInferenceApiKeyPreview
-                : localInferenceApiKeyPreview;
-              const nextInferenceSettings = normalizeDemoSettingsInferenceSettings({
-                ...data?.inference,
-                apiKeyPreview: nextInferenceApiKeyPreview,
-              });
+              const nextInferenceEndpoints = normalizeDemoInferenceEndpointCollection(
+                data?.inferenceEndpoints,
+                data?.inference,
+              );
+              const nextInferenceSettings = getDefaultDemoInferenceEndpoint(nextInferenceEndpoints);
               setSettingsBillingPreferences(nextBillingPreferences);
-              setSettingsInferenceSettings(nextInferenceSettings);
+              setSettingsInferenceEndpoints(nextInferenceEndpoints);
+              setSettingsInferenceSettings((current) =>
+                getDemoInferenceEndpoint(nextInferenceEndpoints, current?.id)
+                || nextInferenceSettings
+              );
               setSettingsInferenceApiKeyInput("");
               setSettingsClearInferenceApiKey(false);
               setSettingsInferenceApiKeyEditing(false);
               writeDemoSettingsPlatformConfig({
                 billing: nextBillingPreferences,
                 inference: nextInferenceSettings,
+                inferenceEndpoints: nextInferenceEndpoints,
               });
               return {
                 billing: nextBillingPreferences,
                 inference: nextInferenceSettings,
+                inferenceEndpoints: nextInferenceEndpoints,
               };
             } catch (error) {
               const localConfig = readDemoSettingsPlatformConfig();
               setSettingsBillingPreferences(localConfig.billing);
-              setSettingsInferenceSettings(localConfig.inference);
+              setSettingsInferenceEndpoints(localConfig.inferenceEndpoints);
+              setSettingsInferenceSettings((current) =>
+                getDemoInferenceEndpoint(localConfig.inferenceEndpoints, current?.id)
+                || getDefaultDemoInferenceEndpoint(localConfig.inferenceEndpoints)
+              );
               setSettingsInferenceApiKeyInput("");
               setSettingsClearInferenceApiKey(false);
               setSettingsInferenceApiKeyEditing(false);

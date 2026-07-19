@@ -40,8 +40,8 @@ describe("NotificationsOverviewPage", () => {
     expect(screen.getByText("Permission needed")).not.toBeNull();
   });
 
-  it("uses the notification-specific empty state", () => {
-    render(
+  it("uses the canonical notification empty state", () => {
+    const { container } = render(
       <NotificationsOverviewPage
         notifications={[]}
         totalNotificationCount={0}
@@ -57,6 +57,12 @@ describe("NotificationsOverviewPage", () => {
       />,
     );
 
+    expect(
+      container.querySelector(
+        ".platform-empty-state.configure-home-notification__empty-state",
+      ),
+    ).not.toBeNull();
+    expect(container.querySelector(".lucide-bell")).not.toBeNull();
     expect(screen.getByText("No notifications yet")).not.toBeNull();
     expect(screen.getByText(
       "Notifications come from agent activity, permission requests, team invitations, and product updates.",

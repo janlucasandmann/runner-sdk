@@ -6,7 +6,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { PlatformDataTableColumn } from "../../../../../platform-ui/components/composite/data-table/index.js";
 import {
   getModelContextLabelVariant,
-  getModelSpeedLabelVariant,
   ModelsOverviewPage,
   type ModelsOverviewRow,
 } from "./models-overview-page.js";
@@ -84,8 +83,40 @@ describe("ModelsOverviewPage", () => {
     expect(card?.classList.contains("is-feature")).toBe(true);
     expect(card?.getAttribute("data-platform-ui-card-variant")).toBe("feature");
     expect(screen.getByText("DeepSeek V4 Flash")).not.toBeNull();
-    expect(screen.getByText("Speed & value")).not.toBeNull();
+    const badge = screen.getByText("Speed & value");
+    expect(badge.classList.contains("platform-label")).toBe(true);
+    expect(badge.getAttribute("data-platform-label-has-icon")).toBeNull();
+    expect(badge.querySelector("svg")).toBeNull();
     expect(screen.getByText(/Fast, cost-efficient execution/)).not.toBeNull();
+  });
+
+  it("limits the featured model section to the first three recommendations", () => {
+    const featuredModels = [
+      { id: "deepseek-v4-flash", label: "DeepSeek V4 Flash" },
+      { id: "kimi-k2.7-code", label: "Kimi K2.7 Code" },
+      { id: "glm-5.2", label: "GLM 5.2" },
+      { id: "grok-4.5", label: "Grok 4.5" },
+    ].map((model) => ({
+      ...model,
+      description: `${model.label} description`,
+      provider: "Provider",
+      providerType: "provider",
+      category: "agent" as const,
+      contextWindow: "128k",
+      speed: "Fast",
+    }));
+
+    const { container } = render(
+      <ModelsFeaturedSection models={featuredModels} />,
+    );
+
+    expect(
+      container.querySelectorAll(".playground-models-featured-card"),
+    ).toHaveLength(3);
+    expect(screen.getByText("DeepSeek V4 Flash")).not.toBeNull();
+    expect(screen.getByText("Kimi K2.7 Code")).not.toBeNull();
+    expect(screen.getByText("GLM 5.2")).not.toBeNull();
+    expect(screen.queryByText("Grok 4.5")).toBeNull();
   });
 
   it("maps context capacities to the shared label variants", () => {
@@ -95,18 +126,6 @@ describe("ModelsOverviewPage", () => {
     expect(getModelContextLabelVariant("300k")).toBe("blue");
     expect(getModelContextLabelVariant("999,999")).toBe("blue");
     expect(getModelContextLabelVariant("1M")).toBe("green");
-  });
-
-  it("maps model speeds to the shared label variants", () => {
-    expect(getModelSpeedLabelVariant(undefined)).toBe("gray");
-    expect(getModelSpeedLabelVariant("—")).toBe("gray");
-    expect(getModelSpeedLabelVariant("59.9 t/s")).toBe("yellow");
-    expect(getModelSpeedLabelVariant("60 t/s")).toBe("blue");
-    expect(getModelSpeedLabelVariant("119.9 TPS")).toBe("blue");
-    expect(getModelSpeedLabelVariant("120 TPS")).toBe("green");
-    expect(getModelSpeedLabelVariant("Slow")).toBe("yellow");
-    expect(getModelSpeedLabelVariant("Fast")).toBe("blue");
-    expect(getModelSpeedLabelVariant("Very Fast")).toBe("green");
   });
 
   it("uses the canonical overview shell with featured cards instead of analytics", async () => {
@@ -153,7 +172,7 @@ describe("ModelsOverviewPage", () => {
     expect(screen.getByRole("table", { name: "Models" })).not.toBeNull();
     expect(screen.queryByRole("heading", { name: "All Models" })).toBeNull();
     expect(screen.getByText("262k").getAttribute("data-platform-label-variant")).toBe("yellow");
-    expect(screen.getByText("97.7 t/s").getAttribute("data-platform-label-variant")).toBe("blue");
+    expect(screen.getByText("97.7 t/s").closest(".platform-label")).toBeNull();
 
     const selectAll = screen.getByRole("checkbox", { name: "Select all visible rows" });
     const selectModel = screen.getByRole("checkbox", { name: "Select Model One" });

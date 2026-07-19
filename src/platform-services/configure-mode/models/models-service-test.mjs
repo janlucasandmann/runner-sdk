@@ -138,6 +138,8 @@ const modelsOverviewPresentationSource = await fs.readFile(
 assert.match(modelsOverviewPresentationSource, /<PlatformUiCard/);
 assert.match(modelsOverviewPresentationSource, /variant="feature"/);
 assert.match(modelsOverviewPresentationSource, /className=\{`playground-models-featured-card/);
+assert.match(modelsOverviewPresentationSource, /const MAX_FEATURED_MODELS = 3/);
+assert.match(modelsOverviewPresentationSource, /\.slice\(0, MAX_FEATURED_MODELS\)/);
 
 const modelDetailsModalSource = await fs.readFile(
   new URL("./client/page/model-details-modal.tsx", import.meta.url),

@@ -1,5 +1,8 @@
 import {
+  useEffect,
   useMemo,
+  useRef,
+  useState,
   type CSSProperties,
   type ComponentType,
   type ReactNode,
@@ -8,17 +11,19 @@ import {
 import {
   Check,
   Code2,
+  EllipsisVertical,
+  ListFilter,
   Plus,
   Rocket,
 } from "lucide-react";
 import { PlatformSecondaryButton } from "../../ui/button/index.js";
+import { PlatformIconButton } from "../../ui/icon-button/index.js";
 import { PlatformLabel } from "../../ui/label/index.js";
 import {
-  PlatformDataTable,
-  type PlatformDataTableAction,
-  type PlatformDataTableColumn,
-} from "../data-table/index.js";
+  formatPlatformVersionTitle,
+} from "../../ui/version-label/index.js";
 import { PlatformLoadingState } from "../loading-state/index.js";
+import { PlatformPopup } from "../popup/index.js";
 import {
   PlatformFloatingSidebar,
   type PlatformFloatingSidebarCloseReason,
@@ -74,7 +79,9 @@ export interface PlatformVersionHistorySidebarProps<
   selectedVersionId?: string;
   title?: ReactNode;
   sectionTitle?: ReactNode;
+  /** @deprecated The version history uses a list rather than table columns. */
   versionColumnLabel?: ReactNode;
+  /** @deprecated The version history uses a list rather than table columns. */
   createdAtColumnLabel?: ReactNode;
   activeLabel?: ReactNode;
   createVersionLabel?: ReactNode;
@@ -129,7 +136,7 @@ export interface PlatformVersionHistorySidebarProps<
   className?: string;
 }
 
-interface PlatformVersionHistoryTableRow<
+interface PlatformVersionHistoryListItem<
   TVersion extends PlatformVersionHistoryRecord,
 > {
   version: TVersion;
@@ -143,8 +150,25 @@ interface PlatformVersionHistoryTableRow<
   actions: PlatformVersionHistoryAction<TVersion>[];
 }
 
+interface PlatformVersionHistoryResolvedAction {
+  id: string;
+  label: ReactNode;
+  Icon?: PlatformVersionHistoryActionIcon;
+  disabled?: boolean;
+  danger?: boolean;
+  onSelect: () => void | Promise<void>;
+}
+
 function normalizeId(value: unknown) {
   return String(value ?? "").trim();
+}
+
+function isProductionVersion<
+  TVersion extends PlatformVersionHistoryRecord,
+>(
+  row: PlatformVersionHistoryListItem<TVersion>,
+) {
+  return row.context.isActiveVersion;
 }
 
 function joinClassNames(...classNames: Array<string | false | null | undefined>) {
@@ -164,9 +188,8 @@ function getAccessibleVersionTitle(
     if (normalizedTitle) return normalizedTitle;
   }
   const label = normalizeId(version.label);
-  if (label) return label;
-  const versionNumber = normalizeId(version.version);
-  return versionNumber ? `Version ${versionNumber}` : `Version ${index + 1}`;
+  const versionIdentifier = version.version ?? label ?? index;
+  return formatPlatformVersionTitle(versionIdentifier, version.description);
 }
 
 export function PlatformVersionHistorySidebar<
@@ -177,10 +200,8 @@ export function PlatformVersionHistorySidebar<
   activeVersionId = "",
   selectedVersionId = "",
   title = "Version history",
-  sectionTitle = "Saved versions",
-  versionColumnLabel = "Version",
-  createdAtColumnLabel = "Created",
-  activeLabel = "Published",
+  sectionTitle = "All Versions",
+  activeLabel = "Production",
   createVersionLabel = "Version",
   publishVersionLabel = "Publish",
   viewChangesLabel = "View Changes",
@@ -219,6 +240,49 @@ export function PlatformVersionHistorySidebar<
     () => (Array.isArray(versions) ? versions : []),
     [versions],
   );
+  const [versionFilter, setVersionFilter] = useState("all");
+  const [filterMenuOpen, setFilterMenuOpen] = useState(false);
+  const [actionMenuVersionId, setActionMenuVersionId] = useState("");
+  const filterPopupRootRef = useRef<HTMLDivElement | null>(null);
+  const filterPopupSurfaceRef = useRef<HTMLDivElement | null>(null);
+  const actionPopupRootRef = useRef<HTMLDivElement | null>(null);
+  const actionPopupSurfaceRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!filterMenuOpen && !actionMenuVersionId) return undefined;
+
+    const handlePointerDown = (event: globalThis.MouseEvent) => {
+      const target = event.target instanceof Node ? event.target : null;
+      if (!target) return;
+
+      if (
+        filterMenuOpen
+        && !filterPopupRootRef.current?.contains(target)
+        && !filterPopupSurfaceRef.current?.contains(target)
+      ) {
+        setFilterMenuOpen(false);
+      }
+      if (
+        actionMenuVersionId
+        && !actionPopupRootRef.current?.contains(target)
+        && !actionPopupSurfaceRef.current?.contains(target)
+      ) {
+        setActionMenuVersionId("");
+      }
+    };
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setFilterMenuOpen(false);
+      setActionMenuVersionId("");
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    window.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [actionMenuVersionId, filterMenuOpen]);
 
   const footer = onViewChanges || footerExtra ? (
     <div className="platform-version-history-sidebar__footer-actions">
@@ -227,6 +291,7 @@ export function PlatformVersionHistorySidebar<
           type="button"
           size="small"
           fullWidth
+          className="platform-version-history-sidebar__view-changes-button"
           disabled={busy || resolvedVersions.length === 0}
           onClick={() => void onViewChanges()}
         >
@@ -238,7 +303,7 @@ export function PlatformVersionHistorySidebar<
     </div>
   ) : null;
 
-  const tableRows = resolvedVersions.map<PlatformVersionHistoryTableRow<TVersion>>(
+  const versionItems = resolvedVersions.map<PlatformVersionHistoryListItem<TVersion>>(
     (version, index) => {
       const versionId = normalizeId(getVersionId?.(version, index))
         || normalizeId(version.id)
@@ -255,10 +320,14 @@ export function PlatformVersionHistorySidebar<
         isBusy: busy,
         versionCount: resolvedVersions.length,
       };
-      const fallbackTitle = normalizeId(
-        version.label
-        || (version.version !== undefined ? `Version ${version.version}` : ""),
-      ) || "Version";
+      const fallbackVersionIdentifier = version.version
+        ?? version.label
+        ?? version.id
+        ?? Math.max(0, resolvedVersions.length - index - 1);
+      const fallbackTitle = formatPlatformVersionTitle(
+        fallbackVersionIdentifier,
+        version.description,
+      );
       const versionTitle = getVersionTitle?.(version, context) ?? fallbackTitle;
       const versionCreatedAt = getVersionCreatedAt?.(version, context)
         ?? getVersionMeta?.(version, context)
@@ -285,82 +354,39 @@ export function PlatformVersionHistorySidebar<
     },
   );
 
-  const columns: PlatformDataTableColumn<PlatformVersionHistoryTableRow<TVersion>>[] = [
-    {
-      id: "version",
-      header: versionColumnLabel,
-      width: "minmax(0, 1fr)",
-      cell: ({ row }) => (
-        <div className="platform-version-history-sidebar__version-cell">
-          <button
-            type="button"
-            className="platform-version-history-sidebar__selection"
-            disabled={!row.canSelect}
-            aria-label={`Display ${row.accessibleTitle}`}
-            aria-pressed={row.context.isSelectedVersion}
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              if (row.canSelect) {
-                void onSelectVersion?.(row.versionId, row.version);
-              }
-            }}
-          >
-            {row.context.isSelectedVersion ? <Check aria-hidden="true" /> : null}
-          </button>
-          <div className="platform-version-history-sidebar__version-copy">
-            <span className="platform-version-history-sidebar__row-title-line">
-              <span className="platform-version-history-sidebar__row-title">{row.title}</span>
-              {row.context.isActiveVersion ? (
-                <PlatformLabel
-                  className="platform-version-history-sidebar__status-label"
-                  variant="green"
-                >
-                  {activeLabel}
-                </PlatformLabel>
-              ) : null}
-            </span>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: "createdAt",
-      header: createdAtColumnLabel,
-      width: "112px",
-      cell: ({ row }) => (
-        <span className="platform-version-history-sidebar__created-at">
-          {row.createdAt || "-"}
-        </span>
-      ),
-    },
-  ];
+  const visibleVersionItems = versionItems.filter((item) => {
+    if (versionFilter === "production") {
+      if (!isProductionVersion(item)) return false;
+    }
+    if (versionFilter === "saved") {
+      if (isProductionVersion(item)) return false;
+    }
+    return true;
+  });
 
-  const getRowActions = onPublishVersion || getVersionActions
-    ? (
-        row: PlatformVersionHistoryTableRow<TVersion>,
-      ): readonly PlatformDataTableAction<PlatformVersionHistoryTableRow<TVersion>>[] => [
-        ...(onPublishVersion ? [{
-          id: "publish-version",
-          label: publishVersionLabel,
-          icon: Rocket,
-          disabled: busy || !row.canPublish,
-          onSelect: () => onPublishVersion(row.versionId, row.version),
-        }] : []),
-        ...row.actions.map((action) => ({
-          id: action.id,
-          label: action.label,
-          icon: action.Icon || action.icon,
-          disabled: busy || action.disabled,
-          danger: action.danger,
-          onSelect: () => action.onSelect(
-            row.versionId,
-            row.version,
-            row.context,
-          ),
-        })),
-      ]
-    : undefined;
+  const getItemActions = (
+    item: PlatformVersionHistoryListItem<TVersion>,
+  ): PlatformVersionHistoryResolvedAction[] => [
+    ...(onPublishVersion ? [{
+      id: "publish-version",
+      label: publishVersionLabel,
+      Icon: Rocket,
+      disabled: busy || !item.canPublish,
+      onSelect: () => onPublishVersion(item.versionId, item.version),
+    }] : []),
+    ...item.actions.map((action) => ({
+      id: action.id,
+      label: action.label,
+      Icon: action.Icon || action.icon,
+      disabled: busy || action.disabled,
+      danger: action.danger,
+      onSelect: () => action.onSelect(
+        item.versionId,
+        item.version,
+        item.context,
+      ),
+    })),
+  ];
 
   const emptyState = loading ? (
     <PlatformLoadingState
@@ -393,23 +419,32 @@ export function PlatformVersionHistorySidebar<
     </>
   );
 
-  const handleRowActivate = (
-    row: PlatformVersionHistoryTableRow<TVersion>,
+  const handleItemActivate = (
+    item: PlatformVersionHistoryListItem<TVersion>,
   ) => {
-    if (!row.canSelect || !onSelectVersion) return;
-    void onSelectVersion(row.versionId, row.version);
+    if (!item.canSelect || !onSelectVersion) return;
+    void onSelectVersion(item.versionId, item.version);
   };
 
-  const getRowClassName = (
-    row: PlatformVersionHistoryTableRow<TVersion>,
-  ) => joinClassNames(
-    "platform-version-history-sidebar__row",
-    row.context.isActiveVersion && "is-active",
-  );
-
-  const tableAriaLabel = typeof sectionTitle === "string"
+  const listAriaLabel = typeof sectionTitle === "string"
     ? sectionTitle
-    : "Saved versions";
+    : "All Versions";
+  const filterOptions = [
+    { id: "all", label: "All versions" },
+    { id: "production", label: "Production" },
+    { id: "saved", label: "Saved" },
+  ];
+  const handleActionSelect = (action: PlatformVersionHistoryResolvedAction) => {
+    if (action.disabled) return;
+    setActionMenuVersionId("");
+    try {
+      void Promise.resolve(action.onSelect()).catch((actionError) => {
+        console.error("[PlatformVersionHistorySidebar] Version action failed", actionError);
+      });
+    } catch (actionError) {
+      console.error("[PlatformVersionHistorySidebar] Version action failed", actionError);
+    }
+  };
 
   return (
     <PlatformFloatingSidebar
@@ -436,24 +471,162 @@ export function PlatformVersionHistorySidebar<
           {error}
         </div>
       ) : null}
-      <PlatformDataTable
-        rows={tableRows}
-        columns={columns}
-        getRowId={(row) => row.versionId}
-        ariaLabel={tableAriaLabel}
-        className="platform-version-history-sidebar__table"
-        surface="plain"
-        variant="minimalistic-ui"
-        sticky={false}
-        pagination={false}
-        toolbar={{ title: sectionTitle }}
-        rowMinHeight={48}
-        getRowActions={getRowActions}
-        onRowActivate={onSelectVersion ? handleRowActivate : undefined}
-        getRowClassName={getRowClassName}
-        getRowAriaLabel={(row) => row.accessibleTitle}
-        emptyState={emptyState}
-      />
+      <div className="platform-data-table__toolbar platform-version-history-sidebar__toolbar">
+        <h2 className="platform-data-table__toolbar-title">{sectionTitle}</h2>
+        <PlatformPopup
+          open={filterMenuOpen}
+          rootRef={filterPopupRootRef}
+          surfaceRef={filterPopupSurfaceRef}
+          rootClassName="platform-version-history-sidebar__filter-popup"
+          surfaceClassName="platform-version-history-sidebar__popup"
+          surfaceProps={{ role: "menu", width: 180 }}
+          animation="down-in"
+          variant="minimal"
+          portal
+          placement="bottom-start"
+          trigger={({ open: popupOpen }) => (
+            <PlatformIconButton
+              size="small"
+              active={popupOpen}
+              aria-label="Filter"
+              aria-haspopup="menu"
+              aria-expanded={popupOpen}
+              onClick={() => {
+                setActionMenuVersionId("");
+                setFilterMenuOpen((current) => !current);
+              }}
+            >
+              <ListFilter aria-hidden="true" />
+            </PlatformIconButton>
+          )}
+        >
+          {filterOptions.map((option) => {
+            const selected = versionFilter === option.id;
+            return (
+              <button
+                key={option.id}
+                type="button"
+                role="menuitemradio"
+                aria-checked={selected}
+                className={joinClassNames(
+                  "tb-popup-row",
+                  "platform-version-history-sidebar__menu-item",
+                  selected && "is-selected",
+                )}
+                onClick={() => {
+                  setVersionFilter(option.id);
+                  setFilterMenuOpen(false);
+                  setActionMenuVersionId("");
+                }}
+              >
+                <span className="tb-popup-check-slot">
+                  {selected ? <Check aria-hidden="true" /> : null}
+                </span>
+                <span>{option.label}</span>
+              </button>
+            );
+          })}
+        </PlatformPopup>
+      </div>
+      {loading ? emptyState : resolvedVersions.length === 0 ? emptyState : visibleVersionItems.length === 0 ? (
+        <div className="platform-version-history-sidebar__empty">
+          <h3>No matching versions</h3>
+          <p>Adjust the filter to see more versions.</p>
+        </div>
+      ) : (
+        <div className="platform-version-history-sidebar__list" role="list" aria-label={listAriaLabel}>
+          {visibleVersionItems.map((item) => {
+            const itemActions = getItemActions(item);
+            const actionMenuOpen = actionMenuVersionId === item.versionId;
+            return (
+              <div
+                key={item.versionId}
+                className={joinClassNames(
+                  "platform-version-history-sidebar__row",
+                  item.context.isSelectedVersion && "is-selected",
+                )}
+                role="listitem"
+                data-version-id={item.versionId}
+              >
+                <button
+                  type="button"
+                  className="platform-version-history-sidebar__row-main"
+                  aria-label={`Display ${item.accessibleTitle}`}
+                  aria-pressed={item.context.isSelectedVersion}
+                  aria-disabled={!item.canSelect}
+                  onClick={() => handleItemActivate(item)}
+                >
+                  <span className="platform-version-history-sidebar__row-title">{item.title}</span>
+                  <span className="platform-version-history-sidebar__created-at">
+                    {item.createdAt || "-"}
+                  </span>
+                </button>
+                <div className="platform-version-history-sidebar__row-actions">
+                  {item.context.isActiveVersion ? (
+                    <PlatformLabel
+                      className="platform-version-history-sidebar__status-label"
+                      variant="green"
+                    >
+                      {activeLabel}
+                    </PlatformLabel>
+                  ) : null}
+                  <PlatformPopup
+                    open={actionMenuOpen}
+                    rootRef={actionMenuOpen ? actionPopupRootRef : undefined}
+                    surfaceRef={actionMenuOpen ? actionPopupSurfaceRef : undefined}
+                    rootClassName="platform-version-history-sidebar__action-popup"
+                    surfaceClassName="platform-version-history-sidebar__popup"
+                    surfaceProps={{ role: "menu", width: 190 }}
+                    animation="down-in"
+                    variant="minimal"
+                    portal
+                    placement="bottom-end"
+                    trigger={({ open: popupOpen }) => (
+                      <PlatformIconButton
+                        size="compact"
+                        active={popupOpen}
+                        disabled={itemActions.length === 0}
+                        aria-label={`Open actions for ${item.accessibleTitle}`}
+                        aria-haspopup="menu"
+                        aria-expanded={popupOpen}
+                        onClick={() => {
+                          if (!itemActions.length) return;
+                          setFilterMenuOpen(false);
+                          setActionMenuVersionId((current) => (
+                            current === item.versionId ? "" : item.versionId
+                          ));
+                        }}
+                      >
+                        <EllipsisVertical aria-hidden="true" />
+                      </PlatformIconButton>
+                    )}
+                  >
+                    {itemActions.map((action) => (
+                      <button
+                        key={action.id}
+                        type="button"
+                        role="menuitem"
+                        className={joinClassNames(
+                          "tb-popup-row",
+                          "platform-version-history-sidebar__menu-item",
+                          action.danger && "is-danger",
+                        )}
+                        disabled={action.disabled}
+                        onClick={() => handleActionSelect(action)}
+                      >
+                        <span className="platform-version-history-sidebar__menu-icon">
+                          {action.Icon ? <action.Icon aria-hidden="true" /> : null}
+                        </span>
+                        <span>{action.label}</span>
+                      </button>
+                    ))}
+                  </PlatformPopup>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </PlatformFloatingSidebar>
   );
 }

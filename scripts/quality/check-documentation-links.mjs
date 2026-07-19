@@ -4,7 +4,19 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const ignoredDirectories = new Set([".git", ".platform-dev", "dist", "node_modules"]);
+const ignoredDirectories = new Set([
+  ".cache",
+  ".git",
+  ".next",
+  ".nyc_output",
+  ".platform-dev",
+  ".turbo",
+  ".vite",
+  "build",
+  "coverage",
+  "dist",
+  "node_modules",
+]);
 
 async function collectMarkdownFiles(directory) {
   const files = [];

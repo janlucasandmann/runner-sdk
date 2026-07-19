@@ -27,6 +27,7 @@ export const RUNNER_CHAT_STYLE_SOURCE_PATHS = Object.freeze([
   "src/platform-ui/components/ui/button/button.css",
   "src/platform-ui/components/ui/icon-button/icon-button.css",
   "src/platform-ui/components/ui/label/label.css",
+  "src/platform-ui/components/ui/version-label/version-label.css",
 ]);
 
 export function resolveRunnerChatStyleSourcePaths(packageRoot) {

@@ -13,6 +13,7 @@ import type {
   PlatformDataTableColumn,
   PlatformDataTableSortState,
 } from "../../../../../platform-ui/components/composite/data-table/index.js";
+import { PlatformEmptyState } from "../../../../../platform-ui/components/composite/empty-state/index.js";
 import {
   ResourceOverviewPage,
   ResourceOverviewValue,
@@ -174,18 +175,16 @@ export function NotificationsOverviewPage({
       : { id: "time", direction: "desc" };
   const noNotifications = totalNotificationCount === 0;
   const emptyState = (
-    <div className="configure-home-notification__empty">
-      <span>
-        {noNotifications
-          ? "No notifications yet"
-          : "No matching notifications"}
-      </span>
-      <span>
-        {noNotifications
-          ? "Notifications come from agent activity, permission requests, team invitations, and product updates."
-          : "Try adjusting your search or filter settings."}
-      </span>
-    </div>
+    <PlatformEmptyState
+      icon={Bell}
+      className="configure-home-notification__empty-state"
+      title={noNotifications
+        ? "No notifications yet"
+        : "No matching notifications"}
+      description={noNotifications
+        ? "Notifications come from agent activity, permission requests, team invitations, and product updates."
+        : "Try adjusting your search or filter settings."}
+    />
   );
 
   return (
@@ -236,10 +235,12 @@ export function NotificationsOverviewPage({
         loading,
         emptyState,
         noResultsState: (
-          <div className="configure-home-notification__empty">
-            <span>No matching notifications</span>
-            <span>Try adjusting your search or filter settings.</span>
-          </div>
+          <PlatformEmptyState
+            icon={Bell}
+            className="configure-home-notification__empty-state"
+            title="No matching notifications"
+            description="Try adjusting your search or filter settings."
+          />
         ),
       }}
     />

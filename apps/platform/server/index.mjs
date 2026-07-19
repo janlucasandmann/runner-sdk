@@ -26,6 +26,7 @@ const platformConfig = createPlatformConfig();
 const {
   aiosOrigin,
   aiosPublicRoot,
+  bindAddress,
   defaultUpstreamOrigin,
   deploymentVmNameOverride,
   deploymentVmNamePrefix,
@@ -132,8 +133,8 @@ server.on("upgrade", (req, socket, head) => {
   vncWebSocketProxy.handleUpgrade(req, socket, head, { port });
 });
 
-server.listen(port, () => {
-  console.log(`Platform listening at http://localhost:${port}`);
+server.listen(port, bindAddress, () => {
+  console.log(`Platform listening at http://${bindAddress}:${port}`);
   console.log(
     `[platform] document=${platformDocumentAssets.metrics.documentBytes}B `
     + `css=${platformDocumentAssets.metrics.cssBytes}B `

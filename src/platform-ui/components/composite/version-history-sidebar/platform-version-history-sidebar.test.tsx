@@ -25,12 +25,13 @@ describe("PlatformVersionHistorySidebar", () => {
         versions={[
           {
             id: "v2",
+            version: 2,
             label: "Version 2",
             description: "Internal subtitle",
             status: "active",
             createdAt: "Today",
           },
-          { id: "v1", label: "Version 1", createdAt: "Yesterday" },
+          { id: "v1", version: 1, label: "Version 1", createdAt: "Yesterday" },
         ]}
         activeVersionId="v2"
         selectedVersionId="v2"
@@ -41,27 +42,36 @@ describe("PlatformVersionHistorySidebar", () => {
     );
 
     await act(async () => {});
-    expect(screen.getByRole("table", { name: "Saved versions" })).not.toBeNull();
-    expect(screen.getByRole("heading", { name: "Saved versions" })).not.toBeNull();
-    expect(screen.getByRole("columnheader", { name: "Version" })).not.toBeNull();
-    expect(screen.getByRole("columnheader", { name: "Created" })).not.toBeNull();
-    expect(screen.getByRole("cell", { name: "Today" })).not.toBeNull();
-    expect(screen.queryByText("Internal subtitle")).toBeNull();
-    const publishedLabel = screen.getByText("Published");
-    expect(publishedLabel.classList.contains("platform-label")).toBe(true);
-    expect(
-      publishedLabel.classList.contains("platform-version-history-sidebar__status-label"),
-    ).toBe(true);
-    expect(publishedLabel.querySelector("svg")).toBeNull();
+    expect(screen.queryByRole("table", { name: "All Versions" })).toBeNull();
+    expect(screen.getByRole("list", { name: "All Versions" })).not.toBeNull();
+    expect(screen.getByRole("heading", { name: "All Versions" })).not.toBeNull();
+    const filterButton = screen.getByRole("button", { name: "Filter" });
     expect(
       screen
-        .getByRole("button", { name: "Display Version 2" })
-        .closest(".platform-data-table__row")
+        .getByRole("heading", { name: "All Versions" })
+        .nextElementSibling
+        ?.contains(filterButton),
+    ).toBe(true);
+    expect(screen.queryByRole("searchbox")).toBeNull();
+    expect(screen.queryByRole("columnheader")).toBeNull();
+    expect(screen.getByText("Today")).not.toBeNull();
+    expect(screen.getByText("v2 | Internal subtitle")).not.toBeNull();
+    const productionLabel = screen.getByText("Production");
+    expect(productionLabel.classList.contains("platform-label")).toBe(true);
+    expect(
+      productionLabel.classList.contains("platform-version-history-sidebar__status-label"),
+    ).toBe(true);
+    expect(productionLabel.querySelector("svg")).toBeNull();
+    expect(
+      screen
+        .getByRole("button", { name: "Display v2 | Internal subtitle" })
+        .closest(".platform-version-history-sidebar__row")
         ?.classList.contains("is-selected"),
-    ).toBe(false);
+    ).toBe(true);
+    expect(document.querySelector(".platform-version-history-sidebar__selection")).toBeNull();
     expect(onViewChanges).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole("button", { name: "Display Version 1" }));
+    fireEvent.click(screen.getByRole("button", { name: "Display v1" }));
     expect(onSelectVersion).toHaveBeenCalledWith(
       "v1",
       expect.objectContaining({ id: "v1" }),
@@ -69,6 +79,11 @@ describe("PlatformVersionHistorySidebar", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "View Changes" }));
     expect(onViewChanges).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(filterButton);
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "Saved" }));
+    expect(screen.queryByText("v2 | Internal subtitle")).toBeNull();
+    expect(screen.getByText("v1")).not.toBeNull();
   });
 
   it("renders reusable row actions in the shared popup", async () => {
@@ -81,7 +96,7 @@ describe("PlatformVersionHistorySidebar", () => {
     render(
       <PlatformVersionHistorySidebar
         open
-        versions={[{ id: "v1", label: "Version 1" }]}
+        versions={[{ id: "v1", version: 1, label: "Version 1" }]}
         onClose={() => {}}
         getVersionActions={() => [{
           id: "rename",
@@ -93,7 +108,7 @@ describe("PlatformVersionHistorySidebar", () => {
     );
 
     await act(async () => {});
-    fireEvent.click(screen.getByRole("button", { name: "Open actions for Version 1" }));
+    fireEvent.click(screen.getByRole("button", { name: "Open actions for v1" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Rename" }));
     expect(onRename).toHaveBeenCalledWith(
       "v1",
@@ -112,17 +127,17 @@ describe("PlatformVersionHistorySidebar", () => {
     const { container } = render(
       <PlatformVersionHistorySidebar
         open
-        versions={[{ id: "v1", label: "Version 1" }]}
+        versions={[{ id: "v1", version: 1, label: "Version 1" }]}
         onClose={() => {}}
         onPublishVersion={onPublishVersion}
       />,
     );
 
     await act(async () => {});
-    expect(screen.queryByRole("columnheader", { name: "Publish" })).toBeNull();
+    expect(screen.queryByRole("columnheader")).toBeNull();
     expect(container.querySelector("[data-column-id='publish']")).toBeNull();
 
-    fireEvent.click(screen.getByRole("button", { name: "Open actions for Version 1" }));
+    fireEvent.click(screen.getByRole("button", { name: "Open actions for v1" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Publish" }));
     expect(onPublishVersion).toHaveBeenCalledWith(
       "v1",
@@ -156,7 +171,7 @@ describe("PlatformVersionHistorySidebar", () => {
     const { container } = render(
       <PlatformVersionHistorySidebar
         open
-        versions={[{ id: "v1", label: "Version 1" }]}
+        versions={[{ id: "v1", version: 1, label: "Version 1" }]}
         onClose={() => {}}
         onCreateVersion={onCreateVersion}
       />,
@@ -165,11 +180,9 @@ describe("PlatformVersionHistorySidebar", () => {
     await act(async () => {});
     const createButton = screen.getByRole("button", { name: "Version" });
     expect(createButton.closest(".platform-floating-sidebar__header")).not.toBeNull();
-    expect(container.querySelector(".platform-version-history-sidebar__toolbar")).toBeNull();
+    expect(container.querySelector(".platform-version-history-sidebar__toolbar")).not.toBeNull();
     expect(
-      screen
-        .getByRole("table", { name: "Saved versions" })
-        .closest(".platform-data-table.is-minimalistic-ui"),
+      screen.getByRole("list", { name: "All Versions" }),
     ).not.toBeNull();
 
     fireEvent.click(createButton);

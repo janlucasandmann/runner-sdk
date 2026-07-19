@@ -20,7 +20,7 @@ export const PROJECT_OVERVIEW_CSS_04_FRAGMENT = String.raw`        cursor: point
       .playground-project-resource-template-actions {
         display: flex;
         justify-content: center;
-        margin-top: 2px;
+        margin-top: 12px;
       }
 
       .playground-project-resource-template-browse-button.playground-project-overview-summary-mission-button {
@@ -792,25 +792,6 @@ export const PROJECT_OVERVIEW_CSS_04_FRAGMENT = String.raw`        cursor: point
         font-weight: 500;
       }
 
-      .playground-project-overview-add-outcome-button.playground-files-control-button {
-        padding: 0;
-        border: 0;
-        border-radius: 0;
-        background: transparent !important;
-        background-color: transparent !important;
-        background-image: none !important;
-        -webkit-backdrop-filter: none;
-        backdrop-filter: none;
-      }
-
-      .playground-project-overview-add-outcome-button.playground-files-control-button:hover,
-      .playground-project-overview-add-outcome-button.playground-files-control-button:active,
-      .playground-project-overview-add-outcome-button.playground-files-control-button:focus-visible {
-        background: transparent !important;
-        background-color: transparent !important;
-        background-image: none !important;
-      }
-
       .playground-project-overview-strategy-card-header {
         display: flex;
         align-items: center;
@@ -837,6 +818,7 @@ export const PROJECT_OVERVIEW_CSS_04_FRAGMENT = String.raw`        cursor: point
 
       .playground-project-overview-strategy-progress-card.playground-project-overview-progress-combo-card {
         min-height: 0;
+        margin-bottom: 24px;
       }
 
       .playground-project-overview-strategy-progress-card .playground-project-overview-progress-combo-chart {
@@ -897,8 +879,94 @@ export const PROJECT_OVERVIEW_CSS_04_FRAGMENT = String.raw`        cursor: point
         margin-left: 2px;
       }
 
+      .playground-project-overview-outcome-preview-trailing {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        flex: 0 0 auto;
+      }
+
+      .playground-project-overview-outcome-preview-progress {
+        width: 100px;
+        height: 4px;
+        flex: 0 0 100px;
+        overflow: hidden;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-project-overview-outcome-preview-progress-fill {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: #fff;
+      }
+
+      .playground-project-overview-outcome-action-menu-shell {
+        display: inline-flex;
+        flex: 0 0 auto;
+      }
+
+      .playground-project-overview-outcome-action-trigger,
+      .playground-project-overview-outcome-inline-rename-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        width: 26px;
+        height: 26px;
+        padding: 0;
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.62);
+        cursor: pointer;
+        transition: color 140ms ease, background-color 140ms ease, opacity 140ms ease;
+      }
+
+      .playground-project-overview-outcome-action-trigger:hover,
+      .playground-project-overview-outcome-action-trigger:focus-visible,
+      .playground-project-overview-outcome-inline-rename-button:hover,
+      .playground-project-overview-outcome-inline-rename-button:focus-visible {
+        outline: none;
+        color: #fff;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .playground-project-overview-outcome-inline-rename-button:disabled {
+        opacity: 0.36;
+        cursor: default;
+      }
+
+      .playground-project-overview-outcome-action-menu {
+        width: 180px;
+        min-width: 180px;
+      }
+
+      .playground-project-overview-outcome-action-menu-dismiss-layer {
+        z-index: 12050;
+      }
+
+      .playground-project-overview-outcome-inline-rename {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+
+      .playground-project-overview-outcome-inline-rename-input {
+        min-width: 80px;
+        padding-right: 4px;
+      }
+
       .playground-project-overview-outcome-editor-modal {
         max-width: min(720px, calc(100vw - 32px));
+        overflow: visible;
+      }
+
+      .playground-project-overview-outcome-editor-shell {
+        overflow: visible;
       }
 
       .playground-project-overview-rule-editor-modal {
@@ -917,6 +985,10 @@ export const PROJECT_OVERVIEW_CSS_04_FRAGMENT = String.raw`        cursor: point
 
       .playground-project-overview-outcome-delete-button {
         margin-right: auto;
+      }
+
+      .playground-project-overview-outcome-milestone-field > .playground-tasks-detail-section-header {
+        margin-bottom: 12px;
       }
 
       .playground-project-overview-outcome-editor-body {
@@ -1112,6 +1184,12 @@ export const PROJECT_OVERVIEW_CSS_04_FRAGMENT = String.raw`        cursor: point
         min-height: 0;
       }
 
+      .playground-project-overview-strategy-tab .platform-instructions-editor {
+        background: rgba(255, 255, 255, 0.075);
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.075);
+      }
+
       .playground-project-overview-rules-tab {
         position: relative;
         min-height: 0;
@@ -1157,7 +1235,13 @@ export const PROJECT_OVERVIEW_CSS_04_FRAGMENT = String.raw`        cursor: point
       }
 
       .playground-project-overview-strategy-tab .playground-project-overview-progress-combo-card {
-        padding: 18px;
+        padding: 0;
+        border-radius: 0;
+      }
+
+      .playground-project-overview-strategy-tab .playground-project-overview-progress-combo-card::before {
+        content: none;
+        display: none;
       }
 
       .playground-project-overview-rules-list {

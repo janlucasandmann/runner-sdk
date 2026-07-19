@@ -1429,9 +1429,9 @@ export const PROJECT_OVERVIEW_CSS_03_FRAGMENT = String.raw`        position: rel
       }
 
       .playground-project-resource-template-card {
-        border: 0;
+        border: 1px solid rgba(255, 255, 255, 0.075);
         border-radius: 15px;
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.075);
         color: rgba(255, 255, 255, 0.96);
         padding: 14px;
         min-height: 154px;

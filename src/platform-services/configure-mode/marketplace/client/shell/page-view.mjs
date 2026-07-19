@@ -123,10 +123,6 @@ export const MARKETPLACE_APP_PAGE_VIEW_SCRIPT = `        function getPlaygroundR
             notice: resourceTemplateNotice,
             setNotice: setResourceTemplateNotice,
             onPublishTemplate: publishResourceTemplateToProject,
-            templateSlideIndex: resourceTemplateSlideIndex,
-            setTemplateSlideIndex: setResourceTemplateSlideIndex,
-            templateToolbarPopover: resourceTemplateToolbarPopover,
-            setTemplateToolbarPopover: setResourceTemplateToolbarPopover,
             onPreviewTemplate: (template) => {
               const normalizedTemplateId = String(template?.id || "").trim();
               const normalizedTemplateType = String(template?.type || "").trim();

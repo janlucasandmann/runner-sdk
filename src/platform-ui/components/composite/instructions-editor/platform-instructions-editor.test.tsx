@@ -2,13 +2,16 @@
 
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { useState } from "react";
 import { PlatformInstructionsEditor } from "./platform-instructions-editor.js";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 describe("PlatformInstructionsEditor", () => {
   it("renders Markdown and owns formatting history", async () => {
@@ -84,6 +87,38 @@ describe("PlatformInstructionsEditor", () => {
     );
     expect(css).toMatch(
       /\.platform-instructions-editor\.is-minimalistic-ui \.platform-instructions-editor__input\s*\{[\s\S]*border:\s*none;/,
+    );
+  });
+
+  it("removes the top radius only while the sticky header is pinned", () => {
+    const { container } = render(
+      <div data-testid="scroll-container" style={{ height: "100px", overflowY: "auto" }}>
+        <PlatformInstructionsEditor value="Instructions" onChange={() => undefined} />
+      </div>,
+    );
+    const scrollContainer = screen.getByTestId("scroll-container");
+    const editor = container.querySelector(".platform-instructions-editor") as HTMLElement;
+    const header = container.querySelector(".platform-instructions-editor__header") as HTMLElement;
+    let editorTop = -20;
+
+    vi.spyOn(scrollContainer, "getBoundingClientRect").mockImplementation(() => ({ top: 0 } as DOMRect));
+    vi.spyOn(editor, "getBoundingClientRect").mockImplementation(() => ({ top: editorTop } as DOMRect));
+    vi.spyOn(header, "getBoundingClientRect").mockImplementation(() => ({ top: 0 } as DOMRect));
+
+    fireEvent.scroll(scrollContainer);
+    expect(header.classList.contains("is-stuck")).toBe(true);
+    expect(header.getAttribute("data-platform-instructions-editor-header-stuck")).toBe("true");
+
+    editorTop = 0;
+    fireEvent.scroll(scrollContainer);
+    expect(header.classList.contains("is-stuck")).toBe(false);
+
+    const css = readFileSync(
+      path.join(process.cwd(), "src/platform-ui/components/composite/instructions-editor/instructions-editor.css"),
+      "utf8",
+    );
+    expect(css).toMatch(
+      /\.platform-instructions-editor\.is-sticky \.platform-instructions-editor__header\.is-stuck\s*\{[\s\S]*border-top-left-radius:\s*0;[\s\S]*border-top-right-radius:\s*0;/,
     );
   });
 });

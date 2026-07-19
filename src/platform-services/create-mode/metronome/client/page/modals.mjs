@@ -200,7 +200,6 @@ export const METRONOME_PAGE_MODALS_SCRIPT = String.raw`
             if (!workflowVersionModal) return null;
             const isBusy = metronomePublishState.status === "loading";
             const isEdit = workflowVersionModal.mode === "edit";
-            const trimmedVersionName = String(workflowVersionNameDraft || "").trim();
             const renderDescriptionField = () => React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-initial-setup-goal-editor playground-tasks-issue-description-editor playground-agents-version-description-editor playground-metronome-version-description-editor" },
               React.createElement("div", { className: "playground-tasks-detail-section-header" },
                 React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
@@ -241,8 +240,10 @@ export const METRONOME_PAGE_MODALS_SCRIPT = String.raw`
                   ref: workflowVersionDescriptionTextareaRef,
                   className: "playground-tasks-detail-description-input " + (isWorkflowVersionDescriptionEditing ? "is-editing" : "is-preview"),
                   rows: 1,
+                  maxLength: 240,
                   placeholder: isWorkflowVersionDescriptionEditing ? "Describe what changed in this version." : "",
                   value: workflowVersionDescriptionDraft || "",
+                  autoFocus: true,
                   disabled: isBusy,
                   onFocus: () => setIsWorkflowVersionDescriptionEditing(true),
                   onChange: (event) => setWorkflowVersionDescriptionDraft(event.target.value),
@@ -287,10 +288,10 @@ export const METRONOME_PAGE_MODALS_SCRIPT = String.raw`
                       type: "text",
                       className: "playground-tasks-project-modal-name-input playground-tasks-issue-modal-title-input",
                       value: workflowVersionNameDraft,
-                      placeholder: "Version name",
-                      autoFocus: true,
+                      "aria-label": "Version identifier",
+                      readOnly: true,
+                      tabIndex: -1,
                       disabled: isBusy,
-                      onChange: (event) => setWorkflowVersionNameDraft(event.target.value),
                     })
                   ),
                   React.createElement("button", {
@@ -318,10 +319,57 @@ export const METRONOME_PAGE_MODALS_SCRIPT = String.raw`
                     size: "medium",
                     type: "submit",
                     className: "playground-environments-action-button is-primary",
-                    disabled: isBusy || !trimmedVersionName,
+                    disabled: isBusy,
                   }, isBusy ? (isEdit ? "Saving..." : "Creating...") : (isEdit ? "Save Version" : "Create Version"))
                 )
               )
+            });
+          };
+
+          const renderWorkflowVersionSaveDialog = () => {
+            if (!workflowVersionSaveDialog) return null;
+            const versionData = buildMetronomeVersionSaveDialogData();
+            const isBusy = metronomePublishState.status === "loading"
+              || metronomePublishState.status === "validating";
+            return React.createElement(PlatformVersionSaveDialog, {
+              open: true,
+              title: "Review changes",
+              currentVersion: versionData.currentVersion,
+              nextVersion: versionData.nextVersion,
+              currentDescription: versionData.currentDescription,
+              initialMode: workflowVersionSaveDialog.initialMode || "new",
+              canSaveCurrent: versionData.canSaveCurrent,
+              instanceKey: workflowVersionSaveDialog.key,
+              pending: isBusy,
+              error: metronomePublishState.status === "error"
+                ? metronomePublishState.message
+                : null,
+              changes: versionData.diffFiles.map((file) => ({
+                id: file.id,
+                label: file.label || file.filePath,
+                content: React.createElement(PlatformDiffViewer, {
+                  filePath: file.filePath,
+                  diffContent: file.diffContent || "",
+                  fileContent: file.fileContent || "",
+                  additions: file.additions,
+                  deletions: file.deletions,
+                  hideTopbar: true,
+                  embedded: true,
+                  defaultExpanded: true,
+                  maxHeight: 330,
+                }),
+              })),
+              emptyChanges: "No changes were found between the editor and the selected version.",
+              onClose: () => {
+                if (!isBusy) setWorkflowVersionSaveDialog(null);
+              },
+              onSubmit: async (details) => {
+                const published = await publishActiveWorkflowVersion(details);
+                if (!published) {
+                  throw new Error("The workflow could not be saved and published. Review the validation details and try again.");
+                }
+                setWorkflowVersionSaveDialog(null);
+              },
             });
           };
 
@@ -450,6 +498,7 @@ export const METRONOME_PAGE_MODALS_SCRIPT = String.raw`
             }, isEditor ? renderEditor() : renderOverview()),
             renderWorkflowNameModal(),
             renderWorkflowVersionModal(),
+            renderWorkflowVersionSaveDialog(),
             renderMetronomeShareWorkflowModal(),
             renderMetronomeDeploymentHistoryModal()
           );

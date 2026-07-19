@@ -893,8 +893,6 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
           }
           setProjectOverviewOutcomeEditorVisible(false);
           setProjectOverviewOutcomeEditorClosing(false);
-          setProjectOverviewOutcomeDescriptionEditing(false);
-          setProjectOverviewOutcomeSuccessCriteriaEditing(false);
           setProjectOverviewOutcomeMilestonePickerOpen(false);
           projectOverviewOutcomeEditorFrameRef.current = window.requestAnimationFrame(() => {
             projectOverviewOutcomeEditorFrameRef.current = window.requestAnimationFrame(() => {

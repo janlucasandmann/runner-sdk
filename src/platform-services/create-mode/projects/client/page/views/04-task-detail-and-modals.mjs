@@ -254,6 +254,7 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
           }
 
           function renderTaskDetailThreadsSection(options = {}) {
+            const contentOnly = options.contentOnly === true;
             const showThreadActions = options.showActions !== false;
             const hasThreadHistory = selectedTaskThreads.length > 0;
             const hasVisibleThreads = visibleTaskDetailThreads.length > 0;
@@ -282,8 +283,11 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                   ? "No ticket threads found."
                   : "No thread has run for this ticket yet.";
 
-            return React.createElement("section", { className: "playground-plugins-section playground-tasks-detail-threads-section" },
-              React.createElement("div", { className: "playground-plugins-section-header" },
+            return React.createElement("section", {
+                className: "playground-plugins-section playground-tasks-detail-threads-section"
+                  + (contentOnly ? " is-centralized-sidebar-content" : ""),
+              },
+              contentOnly ? null : React.createElement("div", { className: "playground-plugins-section-header" },
                 React.createElement("div", { className: "playground-plugins-section-copy" },
                   React.createElement("h3", { className: "playground-plugins-section-title" }, "Threads")
                 )
@@ -440,12 +444,14 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
             );
           }
 
-          function renderTaskDetailFactsSection() {
+          function renderTaskDetailFactsSection(options = {}) {
+            const contentOnly = options.contentOnly === true;
             return React.createElement("div", {
                   className: "playground-tasks-detail-facts"
+                    + (contentOnly ? " is-centralized-sidebar-content" : "")
                     + ((taskDetailSelectPopover || taskSkillsPopoverOpen || taskScheduleDialogState) ? " is-popover-open" : ""),
                 },
-                React.createElement("div", { className: "playground-tasks-detail-facts-header" },
+                contentOnly ? null : React.createElement("div", { className: "playground-tasks-detail-facts-header" },
                   React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Details"),
                   React.createElement("button", {
                     type: "button",
@@ -762,14 +768,9 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                   : null
               )
           }
-	          return React.createElement("div", {
-	              className: "playground-tasks-detail-shell"
-	                + (previewedTaskAttachment ? " is-preview-open" : "")
-	                + (isFullPageTaskDetail ? " is-ticket-full-page" : "")
-	                + (isFullPageTaskDetail && ticketDetailSidebarCollapsed ? " is-ticket-sidebar-collapsed" : ""),
-	            },
-            React.createElement("div", { className: "playground-tasks-detail-main" + (projectWallpaperActive ? " is-project-wallpaper-active" : ""), ref: taskDetailMainRef },
-              React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar" },
+	          const taskDetailNavbar = React.createElement("div", {
+                className: "playground-content-nav playground-tasks-detail-navbar",
+              },
 	                isFullPageTaskDetail
 	                  ? React.createElement("div", { className: "playground-tasks-ticket-page-nav-title" },
 	                      React.createElement("button", {
@@ -934,85 +935,30 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
 	                        "aria-label": "Close task detail",
 	                      }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
 	                )
-	              ),
+	              );
+	          const taskDetailMain = React.createElement("div", {
+              className: "playground-tasks-detail-main" + (projectWallpaperActive ? " is-project-wallpaper-active" : ""),
+              ref: taskDetailMainRef,
+            },
+              isFullPageTaskDetail ? null : taskDetailNavbar,
               React.createElement("div", { className: "playground-tasks-detail-body" },
                 React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll" },
                 isFullPageTaskDetail ? null : renderTaskDetailThreadsSection(),
-                React.createElement("div", { className: "playground-tasks-detail-description" },
-                  React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
-                    React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                      [
-                        {
-                          id: "bold",
-                          label: "Bold",
-                          icon: Bold,
-                        },
-                        {
-                          id: "italic",
-                          label: "Italic",
-                          icon: Italic,
-                        },
-                        {
-                          id: "underline",
-                          label: "Underline",
-                          icon: Underline,
-                        },
-                        {
-                          id: "list",
-                          label: "List",
-                          icon: List,
-                        },
-                      ].map((action) =>
-                        React.createElement("button", {
-                          key: action.id,
-                          type: "button",
-                          className: "playground-tasks-detail-format-button",
-                          title: action.label,
-                          "aria-label": action.label,
-                          disabled: isTaskConfigLocked,
-                          onMouseDown: (event) => event.preventDefault(),
-                          onClick: () => handleTaskDescriptionFormat(action.id),
-                        }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
-                      )
-                    )
-                  ),
-                  React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isTaskDescriptionEditing ? " is-editing" : " is-preview") },
-                    !isTaskDescriptionEditing
-                      ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                          String(draftTask.description || "").trim()
-                            ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                                content: draftTask.description,
-                                className: "playground-tasks-detail-description-preview tb-message-markdown",
-                              })
-                            : React.createElement("div", {
-                                className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                              }, "Add Description here")
-                        )
-                      : null,
-                    React.createElement("textarea", {
-                      ref: taskDescriptionTextareaRef,
-                      className: "playground-tasks-detail-description-input " + (isTaskDescriptionEditing ? "is-editing" : "is-preview"),
-                      rows: 1,
-                      placeholder: isTaskDescriptionEditing ? "Add Description here" : "",
-                      value: draftTask.description,
-                      readOnly: isTaskConfigLocked,
-                      onFocus: () => {
-                        if (!isTaskConfigLocked) {
-                          setIsTaskDescriptionEditing(true);
-                        }
-                      },
-                      onChange: (event) => {
-                        updateDraftField("description", event.target.value);
-                        resizeTaskDescriptionTextarea(event.currentTarget);
-                      },
-                      onBlur: () => {
-                        setIsTaskDescriptionEditing(false);
-                        commitDraftTaskIfDirty();
-                      },
-                    })
-                  )
-                ),
+                React.createElement(PlatformInstructionsEditor, {
+                  value: String(draftTask.description || ""),
+                  onChange: (nextValue) => updateDraftField("description", nextValue),
+                  title: "Description",
+                  placeholder: "Add description here",
+                  ariaLabel: "Ticket description",
+                  readOnly: isTaskConfigLocked,
+                  historyKey: "ticket-description:" + draftTask.id,
+                  onEditingChange: (editing) => {
+                    setIsTaskDescriptionEditing(editing);
+                    if (!editing) {
+                      commitDraftTaskIfDirty();
+                    }
+                  },
+                }),
                 isFullPageTaskDetail ? null : renderTaskDetailFactsSection(),
                 React.createElement("div", { className: "playground-tasks-attachments" },
                   React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
@@ -1296,32 +1242,54 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                 ),
                 null
               )
-            ),
-		            isFullPageTaskDetail
-		              ? React.createElement("aside", { className: "playground-tasks-ticket-screen-sidebar" },
-		                  ticketDetailSidebarCollapsed
-			                    ? null
-			                    : React.createElement(React.Fragment, null,
-			                        renderTaskDetailFactsSection(),
-			                        renderTaskDetailThreadsSection({ showActions: false, showRunThreadAction: true })
-			                      )
-		                )
-	              : null,
-            React.createElement("div", { className: "playground-tasks-detail-preview-pane" },
-              previewedTaskAttachment
-                ? React.createElement("div", { className: "tb-runner-document-preview-host tb-runner-document-preview-host-inline playground-tasks-detail-preview-host" },
-                    React.createElement(RunnerDocumentPreviewDrawer, {
-                      attachment: previewedTaskAttachment,
-                      backendUrl,
-                      requestHeaders,
-                      inline: true,
-                      onClose: () => setPreviewedTaskAttachmentId(""),
-                      showResizeHandle: false,
-                    })
-                  )
-                : null
-            )
-          );
+            );
+            const taskDetailPreview = previewedTaskAttachment
+              ? React.createElement("div", {
+                  className: "tb-runner-document-preview-host tb-runner-document-preview-host-inline playground-tasks-detail-preview-host",
+                },
+                  React.createElement(RunnerDocumentPreviewDrawer, {
+                    attachment: previewedTaskAttachment,
+                    backendUrl,
+                    requestHeaders,
+                    inline: true,
+                    onClose: () => setPreviewedTaskAttachmentId(""),
+                    showResizeHandle: false,
+                  })
+                )
+              : null;
+
+            if (isFullPageTaskDetail) {
+              return React.createElement(TicketDetailPage, {
+                  header: taskDetailNavbar,
+                  details: renderTaskDetailFactsSection({ contentOnly: true }),
+                  detailsActions: React.createElement("button", {
+                    type: "button",
+                    className: "playground-tasks-detail-facts-toggle" + (taskDetailsCollapsed ? " is-collapsed" : ""),
+                    onClick: () => setTaskDetailsCollapsed((current) => !current),
+                    title: taskDetailsCollapsed ? "Expand details" : "Collapse details",
+                    "aria-label": taskDetailsCollapsed ? "Expand details" : "Collapse details",
+                    "aria-expanded": taskDetailsCollapsed ? "false" : "true",
+                  }, React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.9 })),
+                  threads: renderTaskDetailThreadsSection({
+                    contentOnly: true,
+                    showActions: false,
+                    showRunThreadAction: true,
+                  }),
+                  preview: taskDetailPreview,
+                  sidebarCollapsed: ticketDetailSidebarCollapsed,
+                  sidebarPopoverOpen: Boolean(taskDetailSelectPopover || taskSkillsPopoverOpen || taskScheduleDialogState),
+                },
+                taskDetailMain
+              );
+            }
+
+	          return React.createElement("div", {
+	              className: "playground-tasks-detail-shell"
+	                + (previewedTaskAttachment ? " is-preview-open" : ""),
+	            },
+              taskDetailMain,
+              React.createElement("div", { className: "playground-tasks-detail-preview-pane" }, taskDetailPreview)
+            );
         }
 
         function renderProjectTaskDetailScreen() {

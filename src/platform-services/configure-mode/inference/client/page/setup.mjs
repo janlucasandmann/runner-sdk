@@ -1,20 +1,5 @@
 export const INFERENCE_PAGE_SETUP_SCRIPT = `            case "inference":
               detailContent = (() => {
-                const inferenceEndpointConfigured = Boolean(String(settingsInferenceSettings.baseUrl || "").trim());
-                const inferenceProviderLabel = SETTINGS_INFERENCE_PROVIDER_OPTIONS.find((option) => option.value === settingsInferenceSettings.providerType)?.label
-                  || settingsInferenceSettings.providerType;
-                const inferenceStatusLabel = settingsInferenceSettings.healthStatus === "healthy"
-                  ? "Healthy"
-                  : settingsInferenceSettings.healthStatus === "error"
-                    ? "Needs attention"
-                    : "Not tested";
-                const inferenceLastCheckedLabel = settingsInferenceSettings.lastValidatedAt
-                  ? new Date(settingsInferenceSettings.lastValidatedAt).toLocaleString()
-                  : "Never";
-                const inferenceRoutingLabel = inferenceEndpointConfigured ? "External endpoint configured" : "Not configured";
-                const inferenceApiKeyLabel = settingsInferenceSettings.apiKeyConfigured || Boolean(settingsInferenceApiKeyInput.trim())
-                  ? "Configured"
-                  : "Not configured";
                 const inferenceSavedApiKeyPreview = settingsClearInferenceApiKey ? "" : settingsInferenceSettings.apiKeyPreview;
                 const inferenceShowingSavedApiKeyPreview = !settingsInferenceApiKeyEditing
                   && !settingsInferenceApiKeyInput
@@ -22,10 +7,6 @@ export const INFERENCE_PAGE_SETUP_SCRIPT = `            case "inference":
                 const inferenceApiKeyDisplayValue = inferenceShowingSavedApiKeyPreview
                   ? inferenceSavedApiKeyPreview
                   : settingsInferenceApiKeyInput;
-                const showRemoveInferenceButton = inferenceEndpointConfigured
-                  || settingsInferenceSettings.availableModels.length > 0
-                  || settingsInferenceSettings.apiKeyConfigured
-                  || Boolean(settingsInferenceApiKeyInput.trim());
                 const fallbackSettingsRuntimeTargets = [
                   {
                     kind: "cloud",
@@ -121,4 +102,3 @@ export const INFERENCE_PAGE_SETUP_SCRIPT = `            case "inference":
                   )
                 );
 `;
-

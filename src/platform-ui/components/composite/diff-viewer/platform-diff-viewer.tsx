@@ -4,10 +4,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, ChevronRight, EllipsisVertical } from "lucide-react";
 import { DiffModeEnum, DiffView } from "@git-diff-view/react";
 import { generateDiffFile } from "@git-diff-view/file";
-import { PlatformPopupSurface } from "../../composite/popup/index.js";
-import { mountRunnerChatStyles } from "../styles/index.js";
+import { PlatformPopupSurface } from "../popup/index.js";
+import { mountRunnerChatStyles } from "../../thread-components/styles/index.js";
 
-export interface RunnerFileDiffSurfaceProps {
+export interface PlatformDiffViewerProps {
   filePath?: string;
   diffContent: string;
   fileContent?: string;
@@ -714,7 +714,7 @@ function RunnerDiffFallbackViewer({
   return <RunnerDiffSplitFallbackViewer language={language} rows={visibleRows} filePath={filePath} emptyMessage={emptyMessage} />;
 }
 
-export function RunnerFileDiffSurface({
+export function PlatformDiffViewer({
   filePath,
   diffContent,
   fileContent,
@@ -731,7 +731,7 @@ export function RunnerFileDiffSurface({
   controlsAccessory,
   hideTopbar = false,
   embedded = false,
-}: RunnerFileDiffSurfaceProps) {
+}: PlatformDiffViewerProps) {
   mountRunnerChatStyles();
 
   const [viewMode, setViewMode] = useState<"split" | "unified">(defaultViewMode);
@@ -808,7 +808,7 @@ export function RunnerFileDiffSurface({
   );
 
   return (
-    <div className={`tb-runner-diff-surface${bleed ? " is-bleed" : ""}${embedded ? " is-embedded" : ""}`.trim()}>
+    <div className={`platform-diff-viewer tb-runner-diff-surface${bleed ? " is-bleed" : ""}${embedded ? " is-embedded" : ""}`.trim()}>
       {!hideTopbar ? (
         <div className="tb-runner-diff-surface-topbar">
           <div className="tb-runner-diff-surface-meta">
@@ -896,3 +896,6 @@ export function RunnerFileDiffSurface({
     </div>
   );
 }
+
+export type RunnerFileDiffSurfaceProps = PlatformDiffViewerProps;
+export const RunnerFileDiffSurface = PlatformDiffViewer;

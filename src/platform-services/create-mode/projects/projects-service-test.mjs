@@ -63,7 +63,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects overview runtime",
     source: PROJECT_OVERVIEW_SCRIPT,
-    expectedSha256: "06623463067aca819aba592062d620d9b1775f65bd6c4945e0b79131dfad13e9",
+    expectedSha256: "e4bba8d30a32a98d70b2d4955092da3f7d18c054af7804d8d7b79918d326f013",
     fragmentGroups: [{
       baseUrl: projectsOverviewUrl,
       paths: PROJECT_OVERVIEW_SCRIPT_FRAGMENT_PATHS,
@@ -73,7 +73,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects overview styles",
     source: PROJECT_OVERVIEW_CSS,
-    expectedSha256: "5e18726190503dc134c38aa2b556a9ec4389a105d6eb2b7c705daa816c18adaa",
+    expectedSha256: "656bc9fce832f0ac121a7f6f46dfefc0e3e5645beca0322b45b35dac2e91e24e",
     fragmentGroups: [{
       baseUrl: projectsOverviewUrl,
       paths: PROJECT_OVERVIEW_CSS_FRAGMENT_PATHS,
@@ -83,7 +83,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects actions runtime",
     source: PROJECTS_PAGE_ACTIONS_SCRIPT,
-    expectedSha256: "27ebb7a9fb83ecb8a84c7e24dcdb75f7a2c5e3a8a616d50c797d619eb0ed9527",
+    expectedSha256: "357a98a4345c49c9d41a3691bb0a8eed3b4e8bdb0c30f6d14dd3538bfd7f7dea",
     fragmentGroups: [{
       baseUrl: projectsPageUrl,
       paths: PROJECTS_PAGE_ACTIONS_FRAGMENT_PATHS,
@@ -93,7 +93,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects data runtime",
     source: PROJECTS_PAGE_DATA_SCRIPT,
-    expectedSha256: "b0195f31038cb744a40d79e1dd14b60db7159ac17580cb107c89fe028c386321",
+    expectedSha256: "816c67fb0aec0c799c9e8cb84f6d9e9946a698f37bf29a5c88c0d6325a12ebad",
     fragmentGroups: [{
       baseUrl: projectsPageUrl,
       paths: PROJECTS_PAGE_DATA_FRAGMENT_PATHS,
@@ -103,7 +103,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects shell runtime",
     source: PROJECTS_PAGE_SHELL_SCRIPT,
-    expectedSha256: "36b127d400caef9b8b5b2e83adf4c6a12dcddf309a77b221232d4a8a81cc1ce9",
+    expectedSha256: "6072497467cf83d0f8871c68a9113db35bf7825e5ee7f8f3363f09c4173ed922",
     fragmentGroups: [{
       baseUrl: projectsPageUrl,
       paths: PROJECTS_PAGE_SHELL_FRAGMENT_PATHS,
@@ -113,7 +113,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects views runtime",
     source: PROJECTS_PAGE_VIEWS_SCRIPT,
-    expectedSha256: "0808bb7d6cd296af7eb702097b00a5842e798366afbbfcf89cf61abd28b4f139",
+    expectedSha256: "b5e383ecec791974a33d0874048b0b92e9954744da943c37379a851284367083",
     fragmentGroups: [{
       baseUrl: projectsPageUrl,
       paths: PROJECTS_PAGE_VIEWS_FRAGMENT_PATHS,
@@ -123,7 +123,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects core styles",
     source: PROJECTS_CORE_CSS,
-    expectedSha256: "5813bf8e174a3a3f25958f68c351069a630ba14ea405b4252213a49457651b7e",
+    expectedSha256: "c813e57d55b8fcfe60340e55ba66fe70331471f4999b951fd3d6599cb212fe6d",
     fragmentGroups: [{
       baseUrl: projectsStylesUrl,
       paths: PROJECTS_CORE_CSS_FRAGMENT_PATHS,
@@ -138,7 +138,23 @@ assert.match(PROJECTS_INTEGRATIONS_RUNTIME_SCRIPT, /buildPlaygroundProjectLinked
 assert.match(PROJECTS_INTEGRATIONS_RUNTIME_SCRIPT, /createPlaygroundProjectTeamRolePermissionSet/);
 assert.match(PROJECTS_PAGE_RUNTIME_SCRIPT, /function PlaygroundTasksPage/);
 assert.match(PROJECTS_PAGE_RUNTIME_SCRIPT, /function renderProjectOverviewView/);
+assert.match(PROJECT_OVERVIEW_CSS, /\.playground-environments-detail-scroll\.playground-tasks-project-workspace-scroll\.is-overview\s*\{\s*padding-top: 0 !important;/);
+assert.match(PROJECT_OVERVIEW_CSS, /\.playground-environments-detail-scroll\.playground-tasks-project-workspace-scroll\.is-overview \.playground-project-overview-summary-title\s*\{\s*margin-top: 42px;/);
 assert.match(PROJECT_OVERVIEW_SCRIPT, /tabBarActions: activeProjectOverviewHomeTab === "general"/);
+assert.equal((PROJECT_OVERVIEW_SCRIPT.match(/React\.createElement\(PlatformUiCard, \{/g) || []).length, 3);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /variant: "sidebar",\s*cardTitle: "Properties"/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /variant: "sidebar",\s*cardTitle: "Resources"/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /variant: "sidebar",\s*cardTitle: "Milestones"/);
+assert.match(PROJECT_OVERVIEW_CSS, /\.playground-project-overview-sidebar-card\s*\{\s*overflow: visible;\s*\}/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /return React\.createElement\(PlatformSelector, \{/);
+assert.equal(
+  (PROJECT_OVERVIEW_SCRIPT.match(/renderProjectOverviewSidebarSelectControl\("(?:priority|lead|type|computer)"/g) || []).length,
+  4,
+);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /popupClassName: "playground-project-overview-sidebar-selector-popup"/);
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /renderProjectOverviewSidebarSelectOption/);
+assert.doesNotMatch(PROJECT_OVERVIEW_CSS, /playground-project-overview-sidebar-select-(?:shell|menu|option)/);
+assert.doesNotMatch(PROJECTS_PAGE_SHELL_SCRIPT, /handleProjectOverviewSidebarPropertyPointerDown/);
 assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /headerActions: React\.createElement\(PlatformSecondaryButton/);
 assert.match(PROJECT_OVERVIEW_SCRIPT, /ariaLabel: "Project threads",\s*variant: "minimalistic-ui"/);
 assert.match(PROJECT_OVERVIEW_SCRIPT, /useCentralSearch: true,\s*useCentralNewSelector: true,\s*useCentralFilterPopup: true/);
@@ -147,8 +163,56 @@ assert.match(PROJECT_OVERVIEW_SCRIPT, /toolbarTitle: "All Resources",\s*showView
 assert.match(PROJECT_OVERVIEW_SCRIPT, /renderNewMenuItems: renderProjectOverviewResourceNewMenuItems/);
 assert.match(PROJECT_OVERVIEW_SCRIPT, /hasMoreProjectThreads\s*\? React\.createElement\("div", \{ className: "playground-project-overview-threads-load-more"/);
 assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /trailing: React\.createElement\(PlatformSecondaryButton/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /function renderProjectOverviewRecommendedTemplatesEmptyState\(\) \{\s*return React\.createElement\("div", \{ className: "playground-project-resources-empty has-templates" \},\s*React\.createElement\("div", \{ className: "playground-project-resource-template-grid" \},\s*projectOverviewRecommendedTemplates\.map\(\(template\) => renderProjectOverviewTemplateCard\(template\)\)/);
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /"Recommended templates"/);
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /"Start with resources that fit this project type/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /React\.createElement\(PlatformSecondaryButton, \{\s*type: "button",\s*size: "small",\s*className: "playground-project-resource-template-browse-button"[\s\S]*?React\.createElement\("span", null, "All Templates"\)/);
+assert.match(PROJECT_OVERVIEW_CSS, /\.playground-project-resource-template-actions\s*\{\s*display: flex;\s*justify-content: center;\s*margin-top: 12px;/);
+assert.match(PROJECT_OVERVIEW_CSS, /\.playground-project-resource-template-card\s*\{\s*border: 1px solid rgba\(255, 255, 255, 0\.075\);\s*border-radius: 15px;\s*background: rgba\(255, 255, 255, 0\.075\);/);
+assert.match(PROJECT_OVERVIEW_CSS, /\.playground-project-overview-strategy-tab \.platform-instructions-editor\s*\{\s*background: rgba\(255, 255, 255, 0\.075\);\s*border-radius: 15px;\s*border: 1px solid rgba\(255, 255, 255, 0\.075\);/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /const linkedTicketCompletionPercent = progressInfo\.tasks\.length > 0\s*\? Math\.round\(\(progressInfo\.doneTasks\.length \/ progressInfo\.tasks\.length\) \* 100\)\s*: 0;/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /const linkedTicketVisualPercent = linkedTicketCompletionPercent === 0\s*\? 2\s*: linkedTicketCompletionPercent;/);
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /const linkedLabel = linkedMilestoneLabel/);
+assert.match(PROJECT_OVERVIEW_CSS, /\.playground-project-overview-outcome-preview-progress\s*\{\s*width: 100px;\s*height: 4px;\s*flex: 0 0 100px;\s*overflow: hidden;\s*border-radius: 2px;\s*background: rgba\(255, 255, 255, 0\.1\);/);
+assert.match(PROJECT_OVERVIEW_CSS, /\.playground-project-overview-outcome-preview-progress-fill\s*\{\s*display: block;\s*height: 100%;\s*border-radius: inherit;\s*background: #fff;/);
+assert.match(PROJECTS_PAGE_ACTIONS_SCRIPT, /const content = React\.createElement\(PlatformModal, \{\s*open: Boolean\(projectOverviewOutcomeEditorState\) && !projectOverviewOutcomeEditorClosing,[\s\S]*?size: "medium",[\s\S]*?title: "Edit Outcome",\s*headerVariant: "search",\s*headerSearchProps: \{\s*icon: Award,[\s\S]*?value: draft\.title,[\s\S]*?onChange: \(event\) => updateProjectOverviewOutcomeEditorDraft\(\{ title: event\.target\.value \}\)/);
+assert.doesNotMatch(PROJECTS_PAGE_ACTIONS_SCRIPT, /playground-project-overview-outcome-title-field/);
+assert.equal((PROJECTS_PAGE_ACTIONS_SCRIPT.match(/React\.createElement\(PlatformInstructionsEditor, \{/g) || []).length, 2);
+assert.match(PROJECTS_PAGE_ACTIONS_SCRIPT, /React\.createElement\(PlatformInstructionsEditor, \{\s*variant: "minimalistic-ui",\s*title: "Description",[\s\S]*?onChange: \(nextValue\) => updateProjectOverviewOutcomeEditorDraft\(\{ description: nextValue \}\)/);
+assert.match(PROJECTS_PAGE_ACTIONS_SCRIPT, /React\.createElement\(PlatformInstructionsEditor, \{\s*variant: "minimalistic-ui",\s*title: "Success criteria",[\s\S]*?onChange: \(nextValue\) => updateProjectOverviewOutcomeEditorDraft\(\{ successCriteriaInput: nextValue \}\)/);
+assert.doesNotMatch(PROJECTS_PAGE_ACTIONS_SCRIPT, /function renderProjectOverviewOutcomeMarkdownEditor/);
+assert.match(PROJECTS_PAGE_ACTIONS_SCRIPT, /React\.createElement\(Trash2, \{ width: 14, height: 14, strokeWidth: 1\.8, "aria-hidden": "true" \}\),\s*React\.createElement\("span", null, "Delete"\)/);
+assert.match(PROJECT_OVERVIEW_CSS, /\.playground-project-overview-outcome-milestone-field > \.playground-tasks-detail-section-header\s*\{\s*margin-bottom: 12px;/);
+assert.match(PROJECTS_PAGE_ACTIONS_SCRIPT, /footer: React\.createElement\(React\.Fragment, null,[\s\S]*?React\.createElement\(PlatformSecondaryButton,[\s\S]*?React\.createElement\(PlatformPrimaryButton/);
+assert.doesNotMatch(PROJECTS_PAGE_ACTIONS_SCRIPT, /className: "playground-tasks-project-modal playground-mission-control-modal playground-project-overview-outcome-editor-modal"/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /function renderProjectOverviewOutcomeEditorModal\(\) \{\s*return renderSharedProjectOverviewOutcomeEditorModal\(\{/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /React\.createElement\(PlatformPopup, \{\s*open: isActionMenuOpen,\s*variant: "minimal",\s*portal: true,\s*placement: "bottom-end"/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /React\.createElement\("span", null, "Rename"\)/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /React\.createElement\("span", null, "View Details"\)/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /React\.createElement\("span", null, "Delete"\)/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /async function saveProjectOverviewOutcomeRename\(\)/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /React\.createElement\(X, \{ width: 13, height: 13, strokeWidth: 1\.9 \}\)/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /React\.createElement\(Check, \{ width: 13, height: 13, strokeWidth: 2 \}\)/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /React\.createElement\(PlatformSecondaryButton, \{\s*type: "button",\s*size: "small",\s*className: "playground-project-overview-add-outcome-button"[\s\S]*?React\.createElement\("span", null, "Outcome"\)/);
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /const strategyKpis =/);
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /className: "playground-project-overview-progress-combo-metrics"/);
+assert.match(PROJECT_OVERVIEW_CSS, /\.playground-project-overview-strategy-progress-card\.playground-project-overview-progress-combo-card\s*\{\s*min-height: 0;\s*margin-bottom: 24px;/);
+assert.match(PROJECT_OVERVIEW_CSS, /\.playground-project-overview-strategy-tab \.playground-project-overview-progress-combo-card\s*\{\s*padding: 0;\s*border-radius: 0;/);
+assert.match(PROJECT_OVERVIEW_CSS, /\.playground-project-overview-strategy-tab \.playground-project-overview-progress-combo-card::before\s*\{\s*content: none;\s*display: none;/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(PlatformLoadingState/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /message: "Loading projects\.\.\."/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /message: "Loading project\.\.\.",\s*centered: true/);
+assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /playground-tasks-loading-copy" \}, "Loading project/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(PlatformInstructionsEditor, \{\s*value: missionControlDocumentDraft[\s\S]*?historyKey: "full-strategy:" \+ selectedProject\.id/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(TicketDetailPage, \{/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(TicketDetailPage, \{\s*header: taskDetailNavbar,/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /details: renderTaskDetailFactsSection\(\{ contentOnly: true \}\)/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /threads: renderTaskDetailThreadsSection\(\{\s*contentOnly: true,/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(PlatformInstructionsEditor, \{\s*value: String\(draftTask\.description \|\| ""\),[\s\S]*?historyKey: "ticket-description:" \+ draftTask\.id/);
+assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /onClick: \(\) => handleTaskDescriptionFormat\(action\.id\)/);
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /title: "Strategy Notes"[\s\S]*?stickyHeader: false/);
+assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /historyKey: "full-strategy:" \+ selectedProject\.id,\s*stickyHeader: false/);
+assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /renderMissionControlDocumentToolbarButton/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(PlatformSearch/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(PlatformPopup/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(ListFilter/);
@@ -160,11 +224,16 @@ assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /title: "Sort projects"/);
 assert.match(PROJECTS_STYLES, /playground-project-overview/);
 assert.match(PROJECTS_STYLE_FRAGMENTS.core, /playground-tasks-page/);
 assert.match(PROJECTS_STYLE_FRAGMENTS.connectorBrowser, /playground-tasks-connector-browser-portal/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-ticket-detail-frame\s*\{/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-ticket-detail-page\s*\{/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-ticket-screen-panel\s+\.playground-ticket-detail-content\s+\.playground-environments-detail-scroll\.playground-tasks-detail-scroll\s*\{\s*padding-top: 0 !important;/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-ticket-detail-sidebar \.is-centralized-sidebar-content\s*\{/);
 
 const platformEntrySource = await readPlatformCompositionSource();
 assert.match(platformEntrySource, /React\.createElement\(PlatformSearch, \{\s*className: "playground-project-resources-central-search"/);
 assert.match(platformEntrySource, /React\.createElement\(PlatformButtonSelector, \{\s*mode: "popup",\s*buttonVariant: "secondary"[\s\S]*?popupVariant: "minimal"/);
 assert.match(platformEntrySource, /React\.createElement\(PlatformPopup, \{[\s\S]*?variant: "minimal",\s*placement: "bottom-start"/);
+assert.match(platformEntrySource, /import \{ PlatformUiCard \} from "\/dist\/platform-ui\/components\/composite\/ui-card\/index\.js";/);
 assert.match(platformEntrySource, /React\.createElement\(ListFilter, \{ width: 14/);
 assert.match(platformEntrySource, /playground-project-resources-toolbar-title-group/);
 assert.match(platformEntrySource, /renderSharedFilterControl\(\)[\s\S]*?renderSharedNewControl\(\),\s*renderSharedSearchControl\(\)/);

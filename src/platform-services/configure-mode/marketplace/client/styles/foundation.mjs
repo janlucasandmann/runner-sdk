@@ -139,6 +139,13 @@ export const MARKETPLACE_STYLE_FOUNDATION = String.raw`
         line-height: 1.4;
       }
 
+      .marketplace-overview__notice {
+        color: #66a6ff;
+        font-size: 11px;
+        font-weight: 400;
+        white-space: nowrap;
+      }
+
       .playground-resource-templates-section-header {
         align-items: flex-start;
       }

@@ -607,6 +607,13 @@ export function PlatformModalHeader({
   children,
   ...props
 }: PlatformModalHeaderProps) {
+  const isTitleOnly = (
+    variant === "default"
+    && title != null
+    && description == null
+    && actions == null
+    && children == null
+  );
   const closeControl = onClose ? (
     <button
       type="button"
@@ -732,7 +739,11 @@ export function PlatformModalHeader({
     <div
       {...props}
       data-platform-modal-part="header"
-      className={joinClassNames("platform-modal-header", className)}
+      className={joinClassNames(
+        "platform-modal-header",
+        isTitleOnly && "is-title-only",
+        className,
+      )}
     >
       <div className="platform-modal-header__copy">
         <h2

@@ -44,4 +44,22 @@ describe("ResourceDetailPage", () => {
       "Toggle sidebar",
     ]);
   });
+
+  it("supports detail screens without a tab bar", () => {
+    const { container } = render(
+      <ResourceDetailPage
+        header={<h1>Ticket 010</h1>}
+        sidebar={<div>Ticket properties</div>}
+      >
+        <div>Ticket description</div>
+      </ResourceDetailPage>,
+    );
+
+    const page = container.querySelector("[data-resource-detail-page='true']");
+    expect(page?.classList.contains("is-tabless")).toBe(true);
+    expect(container.querySelector("[data-platform-detail-tab-bar='true']")).toBeNull();
+    expect(container.querySelector(".resource-detail-page__content")?.getAttribute("role")).toBeNull();
+    expect(screen.getByText("Ticket description")).not.toBeNull();
+    expect(screen.getByText("Ticket properties")).not.toBeNull();
+  });
 });

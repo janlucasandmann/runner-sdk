@@ -243,6 +243,18 @@ function resizeTextarea(textarea: HTMLTextAreaElement | null) {
   textarea.style.height = `${Math.max(36, textarea.scrollHeight)}px`;
 }
 
+function findInstructionsEditorScrollContainer(element: HTMLElement | null) {
+  let parent = element?.parentElement || null;
+  while (parent) {
+    const style = window.getComputedStyle(parent);
+    if (/(auto|scroll|overlay)/.test(`${style.overflow} ${style.overflowY}`)) {
+      return parent;
+    }
+    parent = parent.parentElement;
+  }
+  return null;
+}
+
 export function PlatformInstructionsEditor({
   value,
   onChange,
@@ -258,6 +270,9 @@ export function PlatformInstructionsEditor({
 }: PlatformInstructionsEditorProps) {
   const [editing, setEditing] = useState(false);
   const [history, setHistory] = useState<EditorHistory>({ past: [], future: [] });
+  const [headerStuck, setHeaderStuck] = useState(false);
+  const editorRef = useRef<HTMLElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const valueRef = useRef(value);
   const historyKeyRef = useRef(historyKey);
@@ -278,6 +293,46 @@ export function PlatformInstructionsEditor({
   useLayoutEffect(() => {
     resizeTextarea(textareaRef.current);
   }, [editing, value]);
+
+  useEffect(() => {
+    if (!stickyHeader || readOnly) {
+      setHeaderStuck(false);
+      return undefined;
+    }
+    const editor = editorRef.current;
+    const header = headerRef.current;
+    if (!editor || !header) return undefined;
+
+    const scrollContainer = findInstructionsEditorScrollContainer(editor);
+    const updateStickyState = () => {
+      const editorRect = editor.getBoundingClientRect();
+      const headerRect = header.getBoundingClientRect();
+      const scrollTop = scrollContainer?.getBoundingClientRect().top || 0;
+      const stickyOffset = Number.parseFloat(window.getComputedStyle(header).top) || 0;
+      const pinnedTop = scrollTop + stickyOffset;
+      const nextHeaderStuck = (
+        editorRect.top < headerRect.top - 0.5
+        && Math.abs(headerRect.top - pinnedTop) <= 2
+      );
+      setHeaderStuck((current) => current === nextHeaderStuck ? current : nextHeaderStuck);
+    };
+
+    const scrollTarget: HTMLElement | Window = scrollContainer || window;
+    updateStickyState();
+    scrollTarget.addEventListener("scroll", updateStickyState, { passive: true });
+    window.addEventListener("resize", updateStickyState);
+    const resizeObserver = typeof ResizeObserver === "undefined"
+      ? null
+      : new ResizeObserver(updateStickyState);
+    resizeObserver?.observe(editor);
+    if (scrollContainer) resizeObserver?.observe(scrollContainer);
+
+    return () => {
+      scrollTarget.removeEventListener("scroll", updateStickyState);
+      window.removeEventListener("resize", updateStickyState);
+      resizeObserver?.disconnect();
+    };
+  }, [readOnly, stickyHeader]);
 
   const commit = (nextValue: string, recordHistory = true) => {
     const previousValue = valueRef.current;
@@ -370,11 +425,16 @@ export function PlatformInstructionsEditor({
 
   return (
     <section
+      ref={editorRef}
       className={`platform-instructions-editor playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section${stickyHeader && !readOnly ? " is-sticky" : " is-static"}${readOnly ? " is-readonly" : ""}${variant === "minimalistic-ui" ? " is-minimalistic-ui" : ""}${className ? ` ${className}` : ""}`}
       data-platform-instructions-editor="true"
       data-platform-instructions-editor-variant={variant}
     >
-      <header className={`platform-instructions-editor__header playground-tasks-detail-section-header${stickyHeader && !readOnly ? "" : " is-static-transparent"}`}>
+      <header
+        ref={headerRef}
+        className={`platform-instructions-editor__header playground-tasks-detail-section-header${stickyHeader && !readOnly ? "" : " is-static-transparent"}${headerStuck ? " is-stuck" : ""}`}
+        data-platform-instructions-editor-header-stuck={headerStuck ? "true" : undefined}
+      >
         <h2 className="platform-instructions-editor__title playground-tasks-detail-section-title">{title}</h2>
         {!readOnly ? (
           <div className="platform-instructions-editor__toolbar playground-tasks-detail-format-actions" role="toolbar" aria-label="Markdown formatting">

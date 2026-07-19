@@ -88,6 +88,24 @@ const distPlatformVersionHistorySidebarCssPath = path.join(
   "version-history-sidebar",
   "version-history-sidebar.css",
 );
+const platformVersionSaveDialogCssPath = path.join(
+  packageRoot,
+  "src",
+  "platform-ui",
+  "components",
+  "composite",
+  "versioning",
+  "version-save-dialog.css",
+);
+const distPlatformVersionSaveDialogCssPath = path.join(
+  packageRoot,
+  "dist",
+  "platform-ui",
+  "components",
+  "composite",
+  "versioning",
+  "version-save-dialog.css",
+);
 const platformDetailTabBarCssPath = path.join(
   packageRoot,
   "src",
@@ -267,6 +285,24 @@ const distPlatformComponentsLabelCssPath = path.join(
   "ui",
   "label",
   "label.css",
+);
+const platformVersionLabelCssPath = path.join(
+  packageRoot,
+  "src",
+  "platform-ui",
+  "components",
+  "ui",
+  "version-label",
+  "version-label.css",
+);
+const distPlatformComponentsVersionLabelCssPath = path.join(
+  packageRoot,
+  "dist",
+  "platform-ui",
+  "components",
+  "ui",
+  "version-label",
+  "version-label.css",
 );
 const platformSearchCssPath = path.join(
   packageRoot,
@@ -538,6 +574,7 @@ async function copy() {
     platformDetailSidebarCssText,
     platformFloatingSidebarCssText,
     platformVersionHistorySidebarCssText,
+    platformVersionSaveDialogCssText,
     platformDetailTabBarCssText,
     platformEmptyStateCssText,
     platformLoadingStateCssText,
@@ -548,6 +585,7 @@ async function copy() {
     platformButtonCssText,
     platformIconButtonCssText,
     platformLabelCssText,
+    platformVersionLabelCssText,
     platformSearchCssText,
     platformSelectorCssText,
     platformPopupCssText,
@@ -568,6 +606,7 @@ async function copy() {
     fs.readFile(platformDetailSidebarCssPath, "utf8"),
     fs.readFile(platformFloatingSidebarCssPath, "utf8"),
     fs.readFile(platformVersionHistorySidebarCssPath, "utf8"),
+    fs.readFile(platformVersionSaveDialogCssPath, "utf8"),
     fs.readFile(platformDetailTabBarCssPath, "utf8"),
     fs.readFile(platformEmptyStateCssPath, "utf8"),
     fs.readFile(platformLoadingStateCssPath, "utf8"),
@@ -578,6 +617,7 @@ async function copy() {
     fs.readFile(platformButtonCssPath, "utf8"),
     fs.readFile(platformIconButtonCssPath, "utf8"),
     fs.readFile(platformLabelCssPath, "utf8"),
+    fs.readFile(platformVersionLabelCssPath, "utf8"),
     fs.readFile(platformSearchCssPath, "utf8"),
     fs.readFile(platformSelectorCssPath, "utf8"),
     fs.readFile(platformPopupCssPath, "utf8"),
@@ -605,6 +645,12 @@ async function copy() {
   await fs.writeFile(
     distPlatformVersionHistorySidebarCssPath,
     platformVersionHistorySidebarCssText,
+    "utf8",
+  );
+  await fs.mkdir(path.dirname(distPlatformVersionSaveDialogCssPath), { recursive: true });
+  await fs.writeFile(
+    distPlatformVersionSaveDialogCssPath,
+    platformVersionSaveDialogCssText,
     "utf8",
   );
   await fs.mkdir(path.dirname(distPlatformDetailTabBarCssPath), { recursive: true });
@@ -635,6 +681,12 @@ async function copy() {
   await fs.writeFile(distPlatformComponentsIconButtonCssPath, platformIconButtonCssText, "utf8");
   await fs.mkdir(path.dirname(distPlatformComponentsLabelCssPath), { recursive: true });
   await fs.writeFile(distPlatformComponentsLabelCssPath, platformLabelCssText, "utf8");
+  await fs.mkdir(path.dirname(distPlatformComponentsVersionLabelCssPath), { recursive: true });
+  await fs.writeFile(
+    distPlatformComponentsVersionLabelCssPath,
+    platformVersionLabelCssText,
+    "utf8",
+  );
   await fs.mkdir(path.dirname(distPlatformComponentsSearchCssPath), { recursive: true });
   await fs.writeFile(distPlatformComponentsSearchCssPath, platformSearchCssText, "utf8");
   await fs.mkdir(path.dirname(distPlatformComponentsSelectorCssPath), { recursive: true });
@@ -684,7 +736,7 @@ async function copy() {
   await fs.mkdir(path.dirname(distPlatformPagesCssPath), { recursive: true });
   await fs.writeFile(
     distPlatformPagesCssPath,
-    `${platformPopupCssText}\n\n${platformSelectorCssText}\n\n${platformDataTableCssText}\n\n${platformAnalyticsCssText}\n\n${platformEmptyStateCssText}\n\n${platformLoadingStateCssText}\n\n${platformCodeEditorWorkspaceCssText}\n\n${platformCodePreviewBoxCssText}\n\n${platformPageHeroCssText}\n\n${platformUiCardCssText}\n\n${platformHomePageCssText}\n\n${platformOverviewPageCssText}\n\n${platformDetailTabBarCssText}\n\n${platformDetailSidebarCssText}\n\n${platformFloatingSidebarCssText}\n\n${platformVersionHistorySidebarCssText}\n\n${platformInstructionsEditorCssText}\n\n${platformSettingsSectionCssText}\n\n${platformDetailPageCssText}\n\n${platformPermissionsPageCssText}\n\n${agentDetailCssText}`,
+    `${platformPopupCssText}\n\n${platformSelectorCssText}\n\n${platformDataTableCssText}\n\n${platformAnalyticsCssText}\n\n${platformEmptyStateCssText}\n\n${platformLoadingStateCssText}\n\n${platformCodeEditorWorkspaceCssText}\n\n${platformCodePreviewBoxCssText}\n\n${platformPageHeroCssText}\n\n${platformUiCardCssText}\n\n${platformVersionLabelCssText}\n\n${platformHomePageCssText}\n\n${platformOverviewPageCssText}\n\n${platformDetailTabBarCssText}\n\n${platformDetailSidebarCssText}\n\n${platformFloatingSidebarCssText}\n\n${platformVersionHistorySidebarCssText}\n\n${platformVersionSaveDialogCssText}\n\n${platformInstructionsEditorCssText}\n\n${platformSettingsSectionCssText}\n\n${platformDetailPageCssText}\n\n${platformPermissionsPageCssText}\n\n${agentDetailCssText}`,
     "utf8",
   );
   await fs.mkdir(distAssetsDir, { recursive: true });

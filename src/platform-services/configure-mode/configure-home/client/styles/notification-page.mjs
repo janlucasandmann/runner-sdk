@@ -61,19 +61,8 @@ export const CONFIGURE_HOME_NOTIFICATION_PAGE_CSS = `      .configure-home-notif
         background: rgba(102, 166, 255, 0.14);
       }
 
-      .configure-home-notification__empty {
-        min-height: 160px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        color: #fff;
-        text-align: center;
-      }
-
-      .configure-home-notification__empty > span:last-child {
-        color: rgba(255, 255, 255, 0.5);
-        font-weight: 400;
+      .platform-empty-state.configure-home-notification__empty-state {
+        margin-top: 36px;
+        margin-bottom: 36px;
       }
 `;

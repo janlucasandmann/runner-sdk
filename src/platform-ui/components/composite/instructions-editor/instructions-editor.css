@@ -26,6 +26,11 @@
   height: 40px;
 }
 
+.platform-instructions-editor.is-sticky .platform-instructions-editor__header.is-stuck {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
 .platform-instructions-editor.is-static .platform-instructions-editor__header {
   position: static;
   padding-left: 23px;

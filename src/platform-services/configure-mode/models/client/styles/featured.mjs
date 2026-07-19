@@ -5,7 +5,7 @@ export const MODELS_STYLE_FEATURED = String.raw`      .playground-models-feature
 
       .playground-models-featured-grid {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 12px;
       }
 
@@ -48,15 +48,16 @@ export const MODELS_STYLE_FEATURED = String.raw`      .playground-models-feature
       }
 
       .playground-models-featured-provider-icon {
-        width: 24px;
-        height: 24px;
+        width: 15px;
+        height: 15px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         flex: 0 0 auto;
-        border: 1px solid rgba(var(--playground-model-featured-accent), 0.18);
-        border-radius: 6px;
-        background: rgba(var(--playground-model-featured-accent), 0.08);
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: none;
       }
 
       .playground-models-featured-provider-icon .playground-agents-model-provider-icon-shell {
@@ -74,23 +75,13 @@ export const MODELS_STYLE_FEATURED = String.raw`      .playground-models-feature
       .playground-models-featured-provider-label {
         min-width: 0;
         overflow: hidden;
+        color: #fff;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
 
       .playground-models-featured-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
         flex: 0 0 auto;
-        padding: 4px 7px;
-        border-radius: 999px;
-        background: rgba(var(--playground-model-featured-accent), 0.1);
-        color: rgba(var(--playground-model-featured-accent), 0.94);
-        font-size: 10px;
-        font-weight: 500;
-        line-height: 1;
-        white-space: nowrap;
       }
 
       .playground-models-featured-name {
@@ -124,15 +115,15 @@ export const MODELS_STYLE_FEATURED = String.raw`      .playground-models-feature
       }
 
       .playground-models-featured-metric-label {
-        color: rgba(255, 255, 255, 0.36);
-        font-size: 9px;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 10px;
         line-height: 1.2;
       }
 
       .playground-models-featured-metric-value {
         margin-top: 4px;
-        color: rgba(255, 255, 255, 0.82);
-        font-size: 11px;
+        color: #fff;
+        font-size: 12px;
         font-weight: 400;
         line-height: 1.2;
       }

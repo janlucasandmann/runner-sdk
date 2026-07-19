@@ -1023,67 +1023,6 @@ export const METRONOME_OVERVIEW_CSS = String.raw`
         background: rgba(255, 255, 255, 0.1);
       }
 
-      .playground-metronome-detail-version-selector-list {
-        max-height: min(278px, calc(100vh - 248px));
-        overflow-y: auto;
-        overscroll-behavior: contain;
-      }
-
-      .playground-metronome-detail-version-selector-footer {
-        margin-top: 4px;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      .playground-metronome-breadcrumb-version-selector {
-        min-width: 0;
-        max-width: min(360px, 42vw);
-        display: inline-flex;
-        align-items: center;
-        z-index: 121;
-      }
-
-      .playground-metronome-breadcrumb-version-trigger {
-        width: auto;
-        max-width: 100%;
-        height: 22px;
-        padding: 0;
-        border: 0;
-        border-radius: 6px;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.58);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 4px;
-        cursor: pointer;
-        transition: background-color 160ms ease, color 160ms ease;
-      }
-
-      .playground-metronome-breadcrumb-version-trigger > svg {
-        flex: 0 0 auto;
-      }
-
-      .playground-metronome-breadcrumb-version-trigger:hover,
-      .playground-metronome-breadcrumb-version-trigger:focus-visible,
-      .playground-metronome-breadcrumb-version-trigger.is-active {
-        outline: none;
-        background: rgba(255, 255, 255, 0.075);
-        color: rgba(255, 255, 255, 0.94);
-      }
-
-      .playground-metronome-breadcrumb-version-trigger:disabled {
-        cursor: default;
-        opacity: 0.45;
-      }
-
-      .playground-metronome-breadcrumb-version-menu {
-        top: calc(100% + 8px);
-        left: 0;
-        right: auto;
-        overflow: hidden;
-        transform-origin: top left;
-      }
-
       .playground-metronome-publish-menu {
         position: absolute;
         top: calc(100% + 10px);
@@ -1957,5 +1896,14 @@ export const METRONOME_OVERVIEW_CSS = String.raw`
         color: rgba(255, 255, 255, 0.56);
         font-size: 13px;
         line-height: 1.5;
+      }
+
+      .playground-metronome-breadcrumb-version-label {
+        margin-left: 6px;
+        color: #fff;
+      }
+
+      .playground-metronome-breadcrumb-version-label .platform-version-label__separator {
+        color: #fff;
       }
 `;

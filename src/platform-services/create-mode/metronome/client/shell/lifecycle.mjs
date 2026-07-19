@@ -6,7 +6,6 @@ export const METRONOME_APP_LIFECYCLE_SCRIPT = `
           setMetronomeTopNavState(null);
           setMetronomeTopNavMenuOpen(false);
           setMetronomeTopNavPublishMenuOpen(false);
-          setMetronomeBreadcrumbVersionMenuOpen(false);
           setIsMetronomeNodeDetailOpen(false);
           metronomeTopNavActionsRef.current = {
             edit: null,
@@ -45,28 +44,7 @@ export const METRONOME_APP_LIFECYCLE_SCRIPT = `
         }, [metronomeTopNavMenuOpen]);
 
         useEffect(() => {
-          if (!metronomeBreadcrumbVersionMenuOpen) {
-            return;
-          }
-          const handleMetronomeBreadcrumbVersionMenuPointerDown = (event) => {
-            const target = event.target;
-            if (
-              metronomeBreadcrumbVersionMenuRef.current
-              && target
-              && !metronomeBreadcrumbVersionMenuRef.current.contains(target)
-            ) {
-              setMetronomeBreadcrumbVersionMenuOpen(false);
-            }
-          };
-          document.addEventListener("mousedown", handleMetronomeBreadcrumbVersionMenuPointerDown);
-          return () => {
-            document.removeEventListener("mousedown", handleMetronomeBreadcrumbVersionMenuPointerDown);
-          };
-        }, [metronomeBreadcrumbVersionMenuOpen]);
-
-        useEffect(() => {
           setMetronomeTopNavPublishMenuOpen(false);
-          setMetronomeBreadcrumbVersionMenuOpen(false);
         }, [metronomeTopNavState?.workflowId]);
 
         useEffect(() => {

@@ -52,35 +52,6 @@ export function getModelContextLabelVariant(value: unknown): PlatformLabelVarian
   return "green";
 }
 
-function readModelSpeedTps(value: unknown): number | null {
-  if (typeof value === "number") {
-    return Number.isFinite(value) && value > 0 ? value : null;
-  }
-
-  const normalized = String(value ?? "").trim().toLowerCase().replace(/,/g, "");
-  if (!normalized) return null;
-  const match = normalized.match(/[0-9]+(?:\.[0-9]+)?/);
-  if (!match) return null;
-
-  const numericValue = Number(match[0]);
-  return Number.isFinite(numericValue) && numericValue > 0 ? numericValue : null;
-}
-
-export function getModelSpeedLabelVariant(value: unknown): PlatformLabelVariant {
-  const tps = readModelSpeedTps(value);
-  if (tps !== null) {
-    if (tps < 60) return "yellow";
-    if (tps < 120) return "blue";
-    return "green";
-  }
-
-  const normalized = String(value ?? "").trim().toLowerCase();
-  if (normalized.includes("very fast")) return "green";
-  if (normalized.includes("fast")) return "blue";
-  if (normalized.includes("medium") || normalized.includes("slow")) return "yellow";
-  return "gray";
-}
-
 export interface ModelsOverviewPageProps<
   TRow extends ModelsOverviewRow = ModelsOverviewRow,
 > {
@@ -148,22 +119,9 @@ export function ModelsOverviewPage<
           },
         };
       }
-      if (column.id === "speed" && activeTab !== "video") {
-        return {
-          ...column,
-          cell: ({ value }: PlatformDataTableCellContext<TRow>) => {
-            const label = String(value ?? "").trim() || "—";
-            return (
-              <PlatformLabel variant={getModelSpeedLabelVariant(value)}>
-                {label}
-              </PlatformLabel>
-            );
-          },
-        };
-      }
       return column;
     }),
-    [activeTab, columns],
+    [columns],
   );
   const tabBar = (
     <PlatformDetailTabBar

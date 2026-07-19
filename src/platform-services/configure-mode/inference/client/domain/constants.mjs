@@ -10,12 +10,5 @@ export const INFERENCE_DOMAIN_CONSTANTS_SCRIPT = `      const SETTINGS_DEFAULT_I
         healthStatus: "idle",
         lastError: "",
       };
-      const SETTINGS_INFERENCE_PROVIDER_OPTIONS = [
-        { value: "openai-compatible", label: "OpenAI-Compatible" },
-        { value: "vllm", label: "vLLM" },
-        { value: "tgi", label: "Hugging Face TGI" },
-        { value: "ollama", label: "Ollama" },
-        { value: "custom", label: "Custom" },
-      ];
+      const SETTINGS_ORGANIZATION_INFERENCE_ENDPOINT_ID = "organization-inference-endpoint";
 `;
-

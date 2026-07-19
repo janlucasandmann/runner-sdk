@@ -114,6 +114,7 @@ export function createPlatformServices({
       proxyAiosJsonRequest,
     }),
     inferenceService: createInferenceService({
+      proxyUpstreamGet,
       proxyUpstreamJsonRequest,
     }),
     marketplaceService: createMarketplaceService({

@@ -73,8 +73,6 @@ export const PROJECTS_ACTIONS_04_FRAGMENT = `          updateMissionControlStrat
           }
           setProjectOverviewOutcomeEditorVisible(false);
           setProjectOverviewOutcomeEditorClosing(false);
-          setProjectOverviewOutcomeDescriptionEditing(false);
-          setProjectOverviewOutcomeSuccessCriteriaEditing(false);
           setProjectOverviewOutcomeMilestonePickerOpen(false);
           setProjectOverviewOutcomeEditorState(null);
         }
@@ -213,50 +211,6 @@ export const PROJECTS_ACTIONS_04_FRAGMENT = `          updateMissionControlStrat
           }
         }
 
-        function applyProjectOverviewOutcomeEditorSelection(field, textareaRef, nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
-          updateProjectOverviewOutcomeEditorDraft({ [field]: nextValue });
-          window.requestAnimationFrame(() => {
-            const textarea = textareaRef.current;
-            if (!textarea) {
-              return;
-            }
-            const maxLength = nextValue.length;
-            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
-            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
-            textarea.focus();
-            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
-            resizeTaskDescriptionTextarea(textarea);
-          });
-        }
-
-        function handleProjectOverviewOutcomeEditorFormat(field, textareaRef, formatType) {
-          const textarea = textareaRef.current;
-          if (!textarea) {
-            return;
-          }
-          const draft = projectOverviewOutcomeEditorState?.draft || {};
-          const value = String(draft?.[field] || "");
-          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
-          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
-          let edit = null;
-
-          if (formatType === "bold") {
-            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "**");
-          } else if (formatType === "italic") {
-            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "*");
-          } else if (formatType === "underline") {
-            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "++");
-          } else if (formatType === "list") {
-            edit = buildTaskDescriptionListEdit(value, selectionStart, selectionEnd);
-          }
-
-          if (!edit) {
-            return;
-          }
-
-          applyProjectOverviewOutcomeEditorSelection(field, textareaRef, edit.value, edit.selectionStart, edit.selectionEnd);
-        }
-
         function renderSharedProjectOverviewOutcomeEditorModal(options = {}) {
           const sourceStrategyBrief = normalizePlaygroundProjectStrategyBrief(options?.strategyBrief || missionControlStrategyDraft);
           const normalizedOverviewTasks = Array.isArray(options?.normalizedOverviewTasks)
@@ -281,70 +235,6 @@ export const PROJECTS_ACTIONS_04_FRAGMENT = `          updateMissionControlStrat
             return result;
           }, {});
           const sortedOutcomeMilestones = releases.slice().sort(compareTaskReleaseOrder);
-          const outcomeMarkdownActions = [
-            { id: "bold", label: "Bold", icon: Bold },
-            { id: "italic", label: "Italic", icon: Italic },
-            { id: "underline", label: "Underline", icon: Underline },
-            { id: "list", label: "List", icon: List },
-          ];
-
-          function renderProjectOverviewOutcomeMarkdownEditor({
-            title,
-            field,
-            value,
-            placeholder,
-            isEditing,
-            setEditing,
-            textareaRef,
-          }) {
-            const hasValue = Boolean(String(value || "").trim());
-            return React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-initial-setup-goal-editor playground-mission-control-modal-context-editor" },
-              React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                React.createElement("div", { className: "playground-tasks-detail-section-title" }, title),
-                React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                  outcomeMarkdownActions.map((action) =>
-                    React.createElement("button", {
-                      key: action.id,
-                      type: "button",
-                      className: "playground-tasks-detail-format-button",
-                      title: action.label,
-                      "aria-label": action.label,
-                      onMouseDown: (event) => event.preventDefault(),
-                      onClick: () => handleProjectOverviewOutcomeEditorFormat(field, textareaRef, action.id),
-                    }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
-                  )
-                )
-              ),
-              React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isEditing ? " is-editing" : " is-preview") },
-                !isEditing
-                  ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                      hasValue
-                        ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                            content: value,
-                            className: "playground-tasks-detail-description-preview tb-message-markdown",
-                          })
-                        : React.createElement("div", {
-                            className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                          }, placeholder)
-                    )
-                  : null,
-                React.createElement("textarea", {
-                  ref: textareaRef,
-                  className: "playground-tasks-detail-description-input " + (isEditing ? "is-editing" : "is-preview"),
-                  rows: 1,
-                  placeholder: isEditing ? placeholder : "",
-                  value,
-                  onFocus: () => setEditing(true),
-                  onChange: (event) => {
-                    updateProjectOverviewOutcomeEditorDraft({ [field]: event.target.value });
-                    resizeTaskDescriptionTextarea(event.currentTarget);
-                  },
-                  onBlur: () => setEditing(false),
-                })
-              )
-            );
-          }
-
           function renderProjectOverviewOutcomeMilestonePicker() {
             return renderPlaygroundPlatformPopup({
               open: projectOverviewOutcomeMilestonePickerOpen,
@@ -427,89 +317,81 @@ export const PROJECTS_ACTIONS_04_FRAGMENT = `          updateMissionControlStrat
             );
           }
 
-          const content = renderPlaygroundPlatformModal({
-            open: Boolean(projectOverviewOutcomeEditorState),
-            visible: projectOverviewOutcomeEditorVisible,
-            closing: projectOverviewOutcomeEditorClosing,
-            onClose: () => closeProjectOverviewOutcomeEditor(),
-            as: "form",
-            backdropClassName: "playground-mission-control-modal-backdrop playground-project-overview-outcome-editor-backdrop",
-            className: "playground-tasks-project-modal playground-mission-control-modal playground-project-overview-outcome-editor-modal",
-            ariaLabel: "Edit outcome",
-            surfaceProps: {
-              onSubmit: (event) => {
+          const content = React.createElement(PlatformModal, {
+              open: Boolean(projectOverviewOutcomeEditorState) && !projectOverviewOutcomeEditorClosing,
+              onClose: () => closeProjectOverviewOutcomeEditor(),
+              animationDurationMs: projectOverviewOutcomeEditorAnimationMs,
+              as: "form",
+              size: "medium",
+              title: "Edit Outcome",
+              headerVariant: "search",
+              headerSearchProps: {
+                icon: Award,
+                value: draft.title,
+                placeholder: "Outcome title",
+                "aria-label": "Outcome title",
+                onChange: (event) => updateProjectOverviewOutcomeEditorDraft({ title: event.target.value }),
+              },
+              backdropClassName: "playground-project-overview-outcome-editor-backdrop",
+              className: "playground-project-overview-outcome-editor-modal",
+              bodyClassName: "playground-project-overview-outcome-editor-shell",
+              footerClassName: "playground-project-overview-outcome-editor-footer",
+              closeButtonLabel: "Close outcome editor",
+              surfaceProps: {
+                onSubmit: (event) => {
                   event.preventDefault();
                   void saveProjectOverviewOutcomeEditor({ strategyBrief: sourceStrategyBrief });
                 },
-            },
-            children: React.createElement(React.Fragment, null,
-              React.createElement("div", { className: "playground-tasks-project-modal-top" },
-                React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
-                  React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
-                    React.createElement(Award, { width: 18, height: 18, strokeWidth: 1.9 })
-                  ),
-                  React.createElement("input", {
-                    type: "text",
-                    className: "playground-tasks-project-modal-name-input playground-project-overview-outcome-editor-title-input",
-                    value: draft.title,
-                    placeholder: "Outcome title",
-                    autoFocus: true,
-                    onChange: (event) => updateProjectOverviewOutcomeEditorDraft({ title: event.target.value }),
-                  })
-                ),
-                React.createElement("button", {
+              },
+              footer: React.createElement(React.Fragment, null,
+                React.createElement(PlatformSecondaryButton, {
+                  size: "medium",
                   type: "button",
-                  className: "playground-settings-icon-button playground-tasks-project-modal-close",
-                  onClick: () => closeProjectOverviewOutcomeEditor(),
-                  title: "Close",
-                }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-              ),
-              React.createElement("div", { className: "playground-mission-control-modal-body playground-project-overview-outcome-editor-shell" },
-                React.createElement("div", { className: "playground-mission-control-modal-context playground-project-overview-outcome-editor-body" },
-                  renderProjectOverviewOutcomeMarkdownEditor({
-                    title: "Description",
-                    field: "description",
-                    value: draft.description,
-                    placeholder: "What this outcome should achieve",
-                    isEditing: projectOverviewOutcomeDescriptionEditing,
-                    setEditing: setProjectOverviewOutcomeDescriptionEditing,
-                    textareaRef: projectOverviewOutcomeDescriptionTextareaRef,
-                  }),
-                  renderProjectOverviewOutcomeMarkdownEditor({
-                    title: "Success criteria",
-                    field: "successCriteriaInput",
-                    value: draft.successCriteriaInput,
-                    placeholder: "One success criterion per line",
-                    isEditing: projectOverviewOutcomeSuccessCriteriaEditing,
-                    setEditing: setProjectOverviewOutcomeSuccessCriteriaEditing,
-                    textareaRef: projectOverviewOutcomeSuccessCriteriaTextareaRef,
-                  }),
-                  renderProjectOverviewOutcomeMilestoneField()
+                  className: "playground-project-overview-outcome-delete-button",
+                  onClick: () => deleteProjectOverviewOutcomeEditor({ strategyBrief: sourceStrategyBrief }),
+                },
+                  React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                  React.createElement("span", null, "Delete")
                 ),
-                missionControlSaveState?.error
-                  ? React.createElement("div", { className: "playground-environments-error playground-tasks-comment-feedback" }, missionControlSaveState.error)
-                  : null,
-                React.createElement("div", { className: "playground-tasks-project-modal-actions" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-environments-action-button playground-project-overview-outcome-delete-button",
-                    onClick: () => deleteProjectOverviewOutcomeEditor({ strategyBrief: sourceStrategyBrief }),
-                  }, "Delete"),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-environments-action-button",
-                    onClick: () => closeProjectOverviewOutcomeEditor(),
-                  }, "Cancel"),
-                  React.createElement(PlatformPrimaryButton, {
-                    size: "medium",
-                    type: "submit",
-                    className: "playground-environments-action-button is-primary",
-                    disabled: missionControlSaveState.isSaving || !String(draft.title || "").trim(),
-                  }, "Save Outcome")
-                )
-              )
+                React.createElement(PlatformSecondaryButton, {
+                  size: "medium",
+                  type: "button",
+                  onClick: () => closeProjectOverviewOutcomeEditor(),
+                }, "Cancel"),
+                React.createElement(PlatformPrimaryButton, {
+                  size: "medium",
+                  type: "submit",
+                  disabled: missionControlSaveState.isSaving || !String(draft.title || "").trim(),
+                }, "Save Outcome")
+              ),
+            },
+            React.createElement("div", { className: "playground-project-overview-outcome-editor-body" },
+              React.createElement(PlatformInstructionsEditor, {
+                variant: "minimalistic-ui",
+                title: "Description",
+                value: draft.description,
+                onChange: (nextValue) => updateProjectOverviewOutcomeEditorDraft({ description: nextValue }),
+                placeholder: "What this outcome should achieve",
+                ariaLabel: "Outcome description",
+                historyKey: "project-outcome-description:" + String(selectedProjectId || "") + ":" + index,
+                stickyHeader: false,
+              }),
+              React.createElement(PlatformInstructionsEditor, {
+                variant: "minimalistic-ui",
+                title: "Success criteria",
+                value: draft.successCriteriaInput,
+                onChange: (nextValue) => updateProjectOverviewOutcomeEditorDraft({ successCriteriaInput: nextValue }),
+                placeholder: "One success criterion per line",
+                ariaLabel: "Outcome success criteria",
+                historyKey: "project-outcome-success-criteria:" + String(selectedProjectId || "") + ":" + index,
+                stickyHeader: false,
+              }),
+              renderProjectOverviewOutcomeMilestoneField(),
+              missionControlSaveState?.error
+                ? React.createElement("div", { className: "playground-environments-error playground-tasks-comment-feedback" }, missionControlSaveState.error)
+                : null
             )
-          });
+          );
           return content;
         }
 

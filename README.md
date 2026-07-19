@@ -1,4 +1,8 @@
+<!-- platform-directory-guide:v1 -->
+
 # Computer Agents Platform
+
+## Purpose
 
 The product application for creating, configuring, developing, and supervising
 autonomous AI agents. This repository contains the platform frontend, its local
@@ -87,6 +91,29 @@ being replaced by a parallel application. The complete ownership map and
 migration rules are documented in
 [`docs/platform-architecture.md`](docs/platform-architecture.md).
 
+## Documentation map
+
+Start with the guide closest to the code you intend to change. Every maintained
+directory contains a `README.md`, and every child guide links back to its parent
+and to the durable architecture documentation.
+
+- [`apps/platform`](apps/platform/) explains the executable browser, server,
+  development, and testing composition.
+- [`src`](src/) maps the typed runtime, services, resources, shell, shared UI,
+  canonical thread domain, and compatibility surfaces.
+- [`docs`](docs/) contains architecture, decisions, contributor workflows, and
+  compatibility contracts.
+- [`deployment`](deployment/) documents the platform deployment artifacts.
+- [`scripts`](scripts/) documents repository automation and enforced
+  invariants.
+- [`tests`](tests/) and [`examples`](examples/) distinguish automated
+  cross-module validation from manually launched consumer examples.
+
+The documentation convention and coverage policy are defined in
+[`docs/development/readme-standard.md`](docs/development/readme-standard.md).
+Run `npm run docs:check` after moving files, adding a directory, or changing
+local documentation links.
+
 ## Verification
 
 Run the complete local/CI gate:
@@ -114,3 +141,16 @@ for runtime configuration.
 The former SDK surface remains as a private compatibility API for `RunnerClient`,
 `RunnerChat`, and embedded execution views. Its documentation is in
 [`docs/runner-client.md`](docs/runner-client.md).
+
+## Working in this directory
+
+Use the root only for package configuration, repository-wide documentation, and
+public compatibility entry points. Put executable application code in `apps`,
+owned product behavior in `src`, and operational definitions in `deployment`.
+When adding or moving a directory, update its guide and run the documentation
+coverage check in the same change.
+
+## Related documentation
+
+- [Platform architecture](docs/platform-architecture.md)
+- [Directory README standard](docs/development/readme-standard.md)

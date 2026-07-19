@@ -56,6 +56,13 @@
     "./platform-ui/components/ui/label/styles.css": {
       "default": "./dist/platform-ui/components/ui/label/label.css"
     },
+    "./platform-ui/components/ui/version-label": {
+      "types": "./dist/platform-ui/components/ui/version-label/index.d.ts",
+      "default": "./dist/platform-ui/components/ui/version-label/index.js"
+    },
+    "./platform-ui/components/ui/version-label/styles.css": {
+      "default": "./dist/platform-ui/components/ui/version-label/version-label.css"
+    },
     "./platform-ui/components/ui/search": {
       "types": "./dist/platform-ui/components/ui/search/index.d.ts",
       "default": "./dist/platform-ui/components/ui/search/index.js"
@@ -122,6 +129,10 @@
     },
     "./platform-ui/components/composite/detail-tab-bar/styles.css": {
       "default": "./dist/platform-ui/components/composite/detail-tab-bar/detail-tab-bar.css"
+    },
+    "./platform-ui/components/composite/diff-viewer": {
+      "types": "./dist/platform-ui/components/composite/diff-viewer/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/diff-viewer/index.js"
     },
     "./platform-ui/components/composite/empty-state": {
       "types": "./dist/platform-ui/components/composite/empty-state/index.d.ts",
@@ -192,6 +203,13 @@
     },
     "./platform-ui/components/composite/version-history-sidebar/styles.css": {
       "default": "./dist/platform-ui/components/composite/version-history-sidebar/version-history-sidebar.css"
+    },
+    "./platform-ui/components/composite/versioning": {
+      "types": "./dist/platform-ui/components/composite/versioning/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/versioning/index.js"
+    },
+    "./platform-ui/components/composite/versioning/styles.css": {
+      "default": "./dist/platform-ui/components/composite/versioning/version-save-dialog.css"
     },
     "./platform-ui/components/composite/widgets": {
       "types": "./dist/platform-ui/components/composite/widgets/index.d.ts",
@@ -340,7 +358,9 @@
     "check:static": "npm run typecheck && npm run lint && npm run format:check && npm run check:boundaries && npm run docs:check",
     "check:artifacts": "node ./scripts/quality/check-build-artifacts.mjs",
     "check:boundaries": "node ./scripts/quality/check-import-boundaries.mjs",
-    "docs:check": "node ./scripts/quality/check-documentation-links.mjs",
+    "docs:check": "npm run docs:readmes && node ./scripts/quality/check-documentation-links.mjs",
+    "docs:readmes": "node ./scripts/quality/directory-readmes.mjs",
+    "docs:readmes:write": "node ./scripts/quality/directory-readmes.mjs --write",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "biome lint ./src/thread ./src/realtime ./src/react/runner-chat ./scripts/quality && npm run lint:thread-log-boundaries && npm run lint:thread-document-preview-boundaries",
     "lint:thread-log-boundaries": "biome lint ./src/platform-ui/components/thread-components/log-boxes/permission-request-view.tsx ./src/platform-ui/components/thread-components/log-boxes/permission-request-view.test.ts ./src/platform-ui/components/thread-components/log-boxes/metronome-workflow-state.ts ./src/platform-ui/components/thread-components/log-boxes/metronome-workflow-state.test.ts ./src/platform-ui/components/thread-components/log-boxes/metronome-workflow-view.tsx ./src/platform-ui/components/thread-components/log-boxes/list-files-state.ts ./src/platform-ui/components/thread-components/log-boxes/list-files-state.test.ts ./src/platform-ui/components/thread-components/log-boxes/list-files-view.tsx ./src/platform-ui/components/thread-components/log-boxes/command-parsing.test.ts",

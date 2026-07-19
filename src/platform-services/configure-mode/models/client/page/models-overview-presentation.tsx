@@ -1,10 +1,6 @@
 import {
   Bot,
   Brain,
-  Code2,
-  Sparkles,
-  Zap,
-  type LucideIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -12,6 +8,10 @@ import type {
   PlatformDataTableColumn,
 } from "../../../../../platform-ui/components/composite/data-table/index.js";
 import { PlatformUiCard } from "../../../../../platform-ui/components/composite/ui-card/index.js";
+import {
+  PlatformLabel,
+  type PlatformLabelVariant,
+} from "../../../../../platform-ui/components/ui/label/index.js";
 import {
   ResourceOverviewValue,
 } from "../../../../../platform-ui/pages/overview/index.js";
@@ -274,9 +274,9 @@ interface FeaturedModelDefinition {
   id: string;
   displayName: string;
   badge: string;
+  badgeVariant: PlatformLabelVariant;
   description: string;
   className: string;
-  icon: LucideIcon;
   metrics: readonly {
     label: string;
     value: (model: ModelCatalogRow) => string;
@@ -288,9 +288,9 @@ const FEATURED_MODELS: readonly FeaturedModelDefinition[] = [
     id: "deepseek-v4-flash",
     displayName: "DeepSeek V4 Flash",
     badge: "Speed & value",
+    badgeVariant: "blue",
     description: "Fast, cost-efficient execution for high-volume agents and everyday production work.",
     className: "is-speed",
-    icon: Zap,
     metrics: [
       { label: "Speed", value: getModelSpeedLabel },
       {
@@ -304,9 +304,9 @@ const FEATURED_MODELS: readonly FeaturedModelDefinition[] = [
     id: "kimi-k2.7-code",
     displayName: "Kimi K2.7 Code",
     badge: "Coding",
+    badgeVariant: "blue",
     description: "Maximum coding performance for complex implementation work and long-horizon engineering.",
     className: "is-code",
-    icon: Code2,
     metrics: [
       {
         label: "Intelligence",
@@ -323,9 +323,9 @@ const FEATURED_MODELS: readonly FeaturedModelDefinition[] = [
     id: "glm-5.2",
     displayName: "GLM 5.2",
     badge: "Agent value",
+    badgeVariant: "green",
     description: "Strong autonomous agent performance with excellent throughput at a low operating cost.",
     className: "is-agent",
-    icon: Bot,
     metrics: [
       {
         label: "Intelligence",
@@ -342,9 +342,9 @@ const FEATURED_MODELS: readonly FeaturedModelDefinition[] = [
     id: "grok-4.5",
     displayName: "Grok 4.5",
     badge: "Frontier",
+    badgeVariant: "yellow",
     description: "Maximum performance and efficient token use for demanding agentic and knowledge work.",
     className: "is-frontier",
-    icon: Sparkles,
     metrics: [
       {
         label: "Intelligence",
@@ -356,6 +356,8 @@ const FEATURED_MODELS: readonly FeaturedModelDefinition[] = [
   },
 ];
 
+const MAX_FEATURED_MODELS = 3;
+
 export function ModelsFeaturedSection({
   models,
 }: {
@@ -364,7 +366,7 @@ export function ModelsFeaturedSection({
   const entries = FEATURED_MODELS.flatMap((definition) => {
     const model = models.find((candidate) => candidate.id === definition.id);
     return model ? [{ definition, model }] : [];
-  });
+  }).slice(0, MAX_FEATURED_MODELS);
   if (!entries.length) return null;
   return (
     <section
@@ -373,7 +375,6 @@ export function ModelsFeaturedSection({
     >
       <div className="playground-models-featured-grid">
         {entries.map(({ definition, model }) => {
-          const RecommendationIcon = definition.icon;
           return (
             <PlatformUiCard
               key={definition.id}
@@ -393,14 +394,12 @@ export function ModelsFeaturedSection({
                     {getModelProviderLabel(model)}
                   </span>
                 </div>
-                <span className="playground-models-featured-badge">
-                  <RecommendationIcon
-                    width={11}
-                    height={11}
-                    strokeWidth={1.9}
-                  />
-                  <span>{definition.badge}</span>
-                </span>
+                <PlatformLabel
+                  variant={definition.badgeVariant}
+                  className="playground-models-featured-badge"
+                >
+                  {definition.badge}
+                </PlatformLabel>
               </div>
               <h3 className="platform-ui-card__feature-title playground-models-featured-name">
                 {definition.displayName}

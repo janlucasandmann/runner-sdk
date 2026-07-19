@@ -1270,7 +1270,6 @@
 	            setThreadTaskListMenuOpen(false);
 	            setMetronomeTopNavMenuOpen(false);
 	            setMetronomeTopNavPublishMenuOpen(false);
-	            setMetronomeBreadcrumbVersionMenuOpen(false);
 	            setImagineToolbarPopover("");
             setPluginsNavPopover("");
   

@@ -1325,20 +1325,6 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
           return () => document.removeEventListener("mousedown", handleProjectOverviewFileToolbarPointerDown);
         }, [projectOverviewFileToolbarPopover]);
         useEffect(() => {
-          if (!projectOverviewSidebarPropertyPopover) return undefined;
-
-          function handleProjectOverviewSidebarPropertyPointerDown(event) {
-            const target = event?.target instanceof Node ? event.target : null;
-            if (!target || target.closest(".playground-project-overview-sidebar-select-shell")) {
-              return;
-            }
-            setProjectOverviewSidebarPropertyPopover("");
-          }
-
-          document.addEventListener("mousedown", handleProjectOverviewSidebarPropertyPointerDown);
-          return () => document.removeEventListener("mousedown", handleProjectOverviewSidebarPropertyPointerDown);
-        }, [projectOverviewSidebarPropertyPopover]);
-        useEffect(() => {
           if (!projectOverviewTeamMenuId && !projectOverviewMilestoneMenuId && !projectOverviewResourceMenuId) return undefined;
 
           function handleProjectOverviewMenusPointerDown(event) {

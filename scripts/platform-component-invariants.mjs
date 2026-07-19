@@ -4,7 +4,15 @@ import { fileURLToPath } from "node:url";
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const componentRoot = path.join(packageRoot, "src", "platform-ui", "components");
-const primitiveComponents = ["button", "icon-button", "label", "search", "selector", "switch"];
+const primitiveComponents = [
+  "button",
+  "icon-button",
+  "label",
+  "search",
+  "selector",
+  "switch",
+  "version-label",
+];
 const compositeComponents = [
   "analytics",
   "code-editor-workspace",
@@ -12,6 +20,7 @@ const compositeComponents = [
   "data-table",
   "detail-sidebar",
   "detail-tab-bar",
+  "diff-viewer",
   "empty-state",
   "floating-sidebar",
   "instructions-editor",
@@ -22,6 +31,7 @@ const compositeComponents = [
   "settings-section",
   "ui-card",
   "version-history-sidebar",
+  "versioning",
   "widgets",
 ];
 const threadComponents = ["document-preview", "log-boxes"];
@@ -131,6 +141,10 @@ const canonicalExports = new Map([
     "./dist/platform-ui/components/ui/icon-button/index.js",
   ],
   ["./platform-ui/components/ui/label", "./dist/platform-ui/components/ui/label/index.js"],
+  [
+    "./platform-ui/components/ui/version-label",
+    "./dist/platform-ui/components/ui/version-label/index.js",
+  ],
   ["./platform-ui/components/ui/search", "./dist/platform-ui/components/ui/search/index.js"],
   ["./platform-ui/components/ui/selector", "./dist/platform-ui/components/ui/selector/index.js"],
   ["./platform-ui/components/ui/switch", "./dist/platform-ui/components/ui/switch/index.js"],
@@ -157,6 +171,10 @@ const canonicalExports = new Map([
   [
     "./platform-ui/components/composite/detail-tab-bar",
     "./dist/platform-ui/components/composite/detail-tab-bar/index.js",
+  ],
+  [
+    "./platform-ui/components/composite/diff-viewer",
+    "./dist/platform-ui/components/composite/diff-viewer/index.js",
   ],
   [
     "./platform-ui/components/composite/empty-state",
@@ -197,6 +215,10 @@ const canonicalExports = new Map([
   [
     "./platform-ui/components/composite/version-history-sidebar",
     "./dist/platform-ui/components/composite/version-history-sidebar/index.js",
+  ],
+  [
+    "./platform-ui/components/composite/versioning",
+    "./dist/platform-ui/components/composite/versioning/index.js",
   ],
   [
     "./platform-ui/components/composite/widgets",

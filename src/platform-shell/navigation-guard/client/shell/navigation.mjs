@@ -8,6 +8,7 @@ export const PLATFORM_NAVIGATION_GUARD_NAVIGATION_SCRIPT = `        const regist
                   guard.description
                   || "Your changes have not been saved. If you leave now, they will be lost."
                 ).trim(),
+                onDiscard: typeof guard.onDiscard === "function" ? guard.onDiscard : null,
               }
             : null;
           platformNavigationGuardRef.current = normalizedGuard;
@@ -33,6 +34,7 @@ export const PLATFORM_NAVIGATION_GUARD_NAVIGATION_SCRIPT = `        const regist
           platformNavigationPendingActionRef.current = {
             continuation,
             onCancel: typeof options?.onCancel === "function" ? options.onCancel : null,
+            onDiscard: typeof activeGuard.onDiscard === "function" ? activeGuard.onDiscard : null,
           };
           setPlatformNavigationGuardDialog({
             open: true,
@@ -84,6 +86,9 @@ export const PLATFORM_NAVIGATION_GUARD_NAVIGATION_SCRIPT = `        const regist
           }
           platformNavigationGuardBypassRef.current = true;
           try {
+            if (typeof pendingAction.onDiscard === "function") {
+              pendingAction.onDiscard();
+            }
             pendingAction.continuation();
           } finally {
             window.queueMicrotask(() => {

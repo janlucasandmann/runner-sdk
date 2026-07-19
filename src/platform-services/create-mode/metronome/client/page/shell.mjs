@@ -155,6 +155,7 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
           const workflowVersionModalFrameRef = useRef(null);
           const workflowVersionModalCloseTimerRef = useRef(null);
           const workflowVersionDescriptionTextareaRef = useRef(null);
+          const [workflowVersionSaveDialog, setWorkflowVersionSaveDialog] = useState(null);
           const [metronomeVersionChangesState, setMetronomeVersionChangesState] = useState(null);
           const [activeMetronomeVersionChanges, setActiveMetronomeVersionChanges] = useState(false);
           const metronomeVersionComparisonTimerRef = useRef(null);
@@ -166,19 +167,7 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
             edges: null,
           });
           const metronomeTopNavStateKeyRef = useRef("");
-          const metronomeLocalGraphSyncTimerRef = useRef(null);
-          const metronomeLocalGraphSyncPendingRef = useRef(null);
-          const metronomeLocalGraphObservedRef = useRef({
-            workflowId: "",
-            nodes: null,
-            edges: null,
-          });
-          const activeMetronomeWorkflowRef = useRef(null);
-          const replaceMetronomeWorkflowInEditableStateRef = useRef(null);
-          const metronomeAutosaveTimerRef = useRef(null);
-          const metronomeAutosaveRevisionRef = useRef(0);
-          const metronomeAutosaveLastSavedKeyRef = useRef("");
-          const metronomeAutosaveLatestKeyRef = useRef("");
+          const metronomeVisitBaselineKeyRef = useRef("");
           const [metronomeEditorMode, setMetronomeEditorMode] = useState("edit");
           const [metronomeCanvasInteractionMode, setMetronomeCanvasInteractionMode] = useState("pan");
           const [graphUndoStack, setGraphUndoStack] = useState([]);
@@ -188,6 +177,7 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
           const [metronomeSecretVaultSecretsLoadingId, setMetronomeSecretVaultSecretsLoadingId] = useState("");
           const [metronomeCodeRunState, setMetronomeCodeRunState] = useState({ status: "idle", message: "" });
           const [metronomeCodeFilesDraft, setMetronomeCodeFilesDraft] = useState([]);
+          const [metronomeWorkflowNameDraft, setMetronomeWorkflowNameDraft] = useState("");
           const [activeMetronomeCodeFilePath, setActiveMetronomeCodeFilePath] = useState("main.py");
           const [isMetronomeCodeDirty, setIsMetronomeCodeDirty] = useState(false);
           const [metronomeRuns, setMetronomeRuns] = useState([]);
@@ -335,7 +325,15 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
               || null;
           }, [builtInMetronomeWorkflows, resourceTemplateMetronomePreviewWorkflows, activeWorkflowId]);
           const activeWorkflow = activeStoredWorkflow || activeSharedWorkflow || activeBuiltInWorkflow || null;
-          activeMetronomeWorkflowRef.current = activeWorkflow;
+          const activeMetronomeEditorWorkflow = useMemo(() => (
+            activeWorkflow
+              ? {
+                  ...activeWorkflow,
+                  name: String(metronomeWorkflowNameDraft || activeWorkflow.name || "Untitled Metronome").trim()
+                    || "Untitled Metronome",
+                }
+              : null
+          ), [activeWorkflow, metronomeWorkflowNameDraft]);
           const isActiveWorkflowOwnedByCurrentUser = Boolean(
             activeWorkflow
             && (
@@ -389,7 +387,6 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
             }
             setWorkflows((current) => replaceMetronomeWorkflowById(current, normalizedOldWorkflowId || normalizedWorkflow.id, normalizedWorkflow));
           }, [activeWorkflowId, isActiveWorkflowTeamShared, ownedMetronomeWorkflowIdSet, isMetronomeWorkflowOwnedByCurrentUser]);
-          replaceMetronomeWorkflowInEditableStateRef.current = replaceMetronomeWorkflowInEditableState;
           const saveEditableMetronomeWorkflowApi = useCallback((workflow) => {
             return saveMetronomeWorkflowApi(workflow, {
               createOnNotFound: !isMetronomeWorkflowTeamShared(workflow),
@@ -1125,20 +1122,14 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
           useEffect(() => {
             let cancelled = false;
             setIsMetronomeFlowReady(false);
-            const nextNodes = activeWorkflow?.nodes || [];
+            const nextNodes = createMetronomePersistedNodes(activeWorkflow?.nodes || []);
             const nextEdges = normalizeMetronomeEdgesForNodes(activeWorkflow?.edges || [], nextNodes);
             setNodes(nextNodes);
             setEdges(nextEdges);
-            const persistedKey = activeWorkflow
-              ? createMetronomePersistedWorkflowKey(activeWorkflow, nextNodes, nextEdges)
+            setMetronomeWorkflowNameDraft(String(activeWorkflow?.name || ""));
+            metronomeVisitBaselineKeyRef.current = activeWorkflow
+              ? createMetronomeVisitEditorKey(activeWorkflow, nextNodes, nextEdges)
               : "";
-            metronomeAutosaveLastSavedKeyRef.current = persistedKey;
-            metronomeAutosaveLatestKeyRef.current = persistedKey;
-            if (metronomeAutosaveTimerRef.current) {
-              window.clearTimeout(metronomeAutosaveTimerRef.current);
-              metronomeAutosaveTimerRef.current = null;
-            }
-            metronomeAutosaveRevisionRef.current += 1;
             if (metronomeVersionComparisonTimerRef.current) {
               window.clearTimeout(metronomeVersionComparisonTimerRef.current);
               metronomeVersionComparisonTimerRef.current = null;
@@ -1154,11 +1145,6 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
               codeDirty: false,
               flowReady: false,
               readOnly: isActiveWorkflowBuiltIn,
-            };
-            metronomeLocalGraphObservedRef.current = {
-              workflowId: activeWorkflowId,
-              nodes: nextNodes,
-              edges: nextEdges,
             };
             setActiveMetronomeVersionChanges(false);
             setSelectedNodeId("");
@@ -1447,162 +1433,6 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
               cancelled = true;
             };
           }, [activeWorkflowId, isActiveWorkflowBuiltIn, isMetronomeApiAvailable]);
-
-          const flushMetronomeLocalGraphSync = useCallback(() => {
-            if (metronomeLocalGraphSyncTimerRef.current) {
-              window.clearTimeout(metronomeLocalGraphSyncTimerRef.current);
-              metronomeLocalGraphSyncTimerRef.current = null;
-            }
-            const pendingSync = metronomeLocalGraphSyncPendingRef.current;
-            metronomeLocalGraphSyncPendingRef.current = null;
-            if (!pendingSync?.workflowId || pendingSync.readOnly) return;
-            const currentWorkflow = activeMetronomeWorkflowRef.current;
-            const workflowForSync = currentWorkflow?.id === pendingSync.workflowId
-              ? currentWorkflow
-              : pendingSync.workflow;
-            if (!workflowForSync || isMetronomeWorkflowBuiltIn(workflowForSync)) return;
-            const nextWorkflow = createMetronomeWorkflowWithSelectedVersionSnapshot({
-              ...workflowForSync,
-              id: pendingSync.workflowId,
-              updatedAt: new Date().toISOString(),
-            }, pendingSync.nodes, pendingSync.edges);
-            if (typeof replaceMetronomeWorkflowInEditableStateRef.current === "function") {
-              replaceMetronomeWorkflowInEditableStateRef.current(pendingSync.workflowId, nextWorkflow);
-            }
-          }, []);
-
-          useEffect(() => {
-            const observedGraph = metronomeLocalGraphObservedRef.current || {};
-            const hasSameObservedWorkflow = observedGraph.workflowId === activeWorkflowId;
-            const hasPersistedGraphChanges = !hasSameObservedWorkflow
-              || haveMetronomePersistedNodesChanged(observedGraph.nodes, nodes)
-              || haveMetronomePersistedEdgesChanged(observedGraph.edges, edges);
-            metronomeLocalGraphObservedRef.current = {
-              workflowId: activeWorkflowId,
-              nodes,
-              edges,
-            };
-            const pendingSync = metronomeLocalGraphSyncPendingRef.current;
-            if (pendingSync?.workflowId && pendingSync.workflowId !== activeWorkflowId) {
-              flushMetronomeLocalGraphSync();
-            }
-            if (
-              !activeWorkflowId
-              || !activeWorkflow
-              || isActiveWorkflowBuiltIn
-              || !isMetronomeFlowReady
-              || !hasPersistedGraphChanges
-            ) {
-              return () => {};
-            }
-            metronomeLocalGraphSyncPendingRef.current = {
-              workflowId: activeWorkflowId,
-              workflow: activeWorkflow,
-              nodes,
-              edges,
-              readOnly: isActiveWorkflowBuiltIn,
-            };
-            if (metronomeLocalGraphSyncTimerRef.current) {
-              window.clearTimeout(metronomeLocalGraphSyncTimerRef.current);
-            }
-            const graphSyncTimer = window.setTimeout(() => {
-              if (metronomeLocalGraphSyncTimerRef.current !== graphSyncTimer) return;
-              flushMetronomeLocalGraphSync();
-            }, 120);
-            metronomeLocalGraphSyncTimerRef.current = graphSyncTimer;
-          }, [nodes, edges, activeWorkflowId, isActiveWorkflowBuiltIn, isMetronomeFlowReady, flushMetronomeLocalGraphSync]);
-
-          useEffect(() => {
-            const autosaveRevision = metronomeAutosaveRevisionRef.current + 1;
-            metronomeAutosaveRevisionRef.current = autosaveRevision;
-            if (metronomeAutosaveTimerRef.current) {
-              window.clearTimeout(metronomeAutosaveTimerRef.current);
-              metronomeAutosaveTimerRef.current = null;
-            }
-            if (!activeWorkflowId || !activeWorkflow || isActiveWorkflowBuiltIn || !isMetronomeApiAvailable || isLoadingMetronomes) {
-              return () => {};
-            }
-            metronomeAutosaveTimerRef.current = window.setTimeout(() => {
-              metronomeAutosaveTimerRef.current = null;
-              if (metronomeAutosaveRevisionRef.current !== autosaveRevision) return;
-              const workflowForSave = createMetronomeWorkflowWithSelectedVersionSnapshot(activeWorkflow, nodes, edges);
-              const autosaveKey = createMetronomePersistedWorkflowKey(workflowForSave, workflowForSave.nodes, workflowForSave.edges);
-              if (!autosaveKey || autosaveKey === metronomeAutosaveLastSavedKeyRef.current) return;
-              metronomeAutosaveLatestKeyRef.current = autosaveKey;
-              const requestKey = autosaveKey;
-              void saveEditableMetronomeWorkflowApi({
-                ...workflowForSave,
-                updatedAt: new Date().toISOString(),
-              })
-                .then(async (savedWorkflow) => {
-                  if (
-                    metronomeAutosaveRevisionRef.current !== autosaveRevision
-                    || metronomeAutosaveLatestKeyRef.current !== requestKey
-                  ) {
-                    return;
-                  }
-                  metronomeAutosaveLastSavedKeyRef.current = requestKey;
-                  let workflowForState = savedWorkflow;
-                  const selectedVersionId = readMetronomeSelectedDeploymentId(workflowForSave);
-                  const selectedVersion = selectedVersionId
-                    ? readMetronomeWorkflowDeployments(workflowForSave).find((deployment) => deployment.id === selectedVersionId)
-                    : null;
-                  const canAutosaveVersion = Boolean(
-                    selectedVersionId
-                    && selectedVersion
-                    && selectedVersion.status !== "active"
-                    && !selectedVersion.publishedAt
-                  );
-                  if (canAutosaveVersion) {
-                    const workflowIdForVersion = savedWorkflow.id || workflowForSave.id;
-                    try {
-                      await updateMetronomeVersionApi(
-                        workflowIdForVersion,
-                        selectedVersionId,
-                        workflowForSave,
-                        workflowForSave.nodes,
-                        workflowForSave.edges,
-                        {
-                          label: selectedVersion.label,
-                          description: selectedVersion.description,
-                        }
-                      );
-                      const versions = await fetchMetronomeVersionsApi(workflowIdForVersion);
-                      workflowForState = createMetronomeWorkflowWithVersionList(savedWorkflow, versions, selectedVersionId);
-                    } catch (versionAutosaveError) {
-                      const message = String(versionAutosaveError?.message || "").toLowerCase();
-                      const isImmutableVersion = versionAutosaveError?.status === 400 && message.includes("immutable");
-                      if (!isImmutableVersion) {
-                        console.warn("[Metronome] Failed to autosave selected version", versionAutosaveError);
-                      }
-                    }
-                  }
-                  if (
-                    metronomeAutosaveRevisionRef.current !== autosaveRevision
-                    || metronomeAutosaveLatestKeyRef.current !== requestKey
-                  ) {
-                    return;
-                  }
-                  if (typeof replaceMetronomeWorkflowInEditableStateRef.current === "function") {
-                    replaceMetronomeWorkflowInEditableStateRef.current(workflowForSave.id, workflowForState);
-                  }
-                  if (workflowForState.id && workflowForState.id !== activeWorkflowId) {
-                    setActiveWorkflowId(workflowForState.id);
-                  }
-                })
-                .catch((error) => {
-                  if (metronomeAutosaveRevisionRef.current !== autosaveRevision) return;
-                  console.warn("[Metronome] Autosave failed", error);
-                  setIsMetronomeApiAvailable(false);
-                });
-            }, 650);
-            return () => {
-              if (metronomeAutosaveTimerRef.current) {
-                window.clearTimeout(metronomeAutosaveTimerRef.current);
-                metronomeAutosaveTimerRef.current = null;
-              }
-            };
-          }, [activeWorkflow, activeWorkflowId, isActiveWorkflowBuiltIn, isMetronomeApiAvailable, isLoadingMetronomes]);
 
 	          const selectedNode = useMemo(() => nodes.find((node) => node.id === selectedNodeId) || null, [nodes, selectedNodeId]);
 `;

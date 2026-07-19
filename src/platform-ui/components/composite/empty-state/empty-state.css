@@ -4,7 +4,7 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  width: min(100%, 500px);
+  width: min(100%, 700px);
   margin: 0 auto;
   text-align: center;
 }
@@ -23,7 +23,7 @@
 }
 
 .platform-empty-state__description {
-  max-width: 500px;
+  max-width: 700px;
   color: rgba(255, 255, 255, 0.5);
   font-size: 12px;
   font-weight: 400;

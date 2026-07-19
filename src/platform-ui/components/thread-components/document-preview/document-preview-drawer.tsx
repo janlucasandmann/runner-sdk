@@ -28,7 +28,7 @@ import {
   type RunnerPreviewAttachment,
 } from "./preview-contracts.js";
 import { RunnerImagePreviewSurface } from "./image-preview-surface.js";
-import { RunnerFileDiffSurface } from "./file-diff-surface.js";
+import { RunnerFileDiffSurface } from "../../composite/diff-viewer/index.js";
 import {
   RunnerImageCropOverlay,
   RunnerImageSelectionMaskOverlay,

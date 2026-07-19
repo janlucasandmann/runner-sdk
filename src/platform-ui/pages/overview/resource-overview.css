@@ -17,6 +17,8 @@
 .resource-overview-page.is-skills,
 .resource-overview-page.is-teams,
 .resource-overview-page.is-organizations,
+.resource-overview-page.is-marketplace,
+.resource-overview-page.is-inference,
 .resource-overview-page.is-guardrails,
 .resource-overview-page.is-evaluations,
 .resource-overview-page.is-fine-tuning {
@@ -178,6 +180,7 @@
   color: #fff;
 }
 
+.resource-overview-guide,
 .tags-overview-guide,
 .skills-overview-guide,
 .teams-overview-guide,
@@ -191,6 +194,7 @@
   flex-direction: column;
 }
 
+.resource-overview-guide__cards,
 .tags-overview-guide__cards,
 .skills-overview-guide__cards,
 .teams-overview-guide__cards,
@@ -211,12 +215,15 @@
   .resource-overview-page.is-skills,
   .resource-overview-page.is-teams,
   .resource-overview-page.is-organizations,
+  .resource-overview-page.is-marketplace,
+  .resource-overview-page.is-inference,
   .resource-overview-page.is-guardrails,
   .resource-overview-page.is-evaluations,
   .resource-overview-page.is-fine-tuning {
     gap: 56px;
   }
 
+  .resource-overview-guide__cards,
   .tags-overview-guide__cards,
   .skills-overview-guide__cards,
   .teams-overview-guide__cards,
@@ -240,12 +247,15 @@
   .resource-overview-page.is-skills,
   .resource-overview-page.is-teams,
   .resource-overview-page.is-organizations,
+  .resource-overview-page.is-marketplace,
+  .resource-overview-page.is-inference,
   .resource-overview-page.is-guardrails,
   .resource-overview-page.is-evaluations,
   .resource-overview-page.is-fine-tuning {
     gap: 48px;
   }
 
+  .resource-overview-guide__cards,
   .tags-overview-guide__cards,
   .skills-overview-guide__cards,
   .teams-overview-guide__cards,

@@ -315,15 +315,13 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         });
         const [projectOverviewFileActivityReloadNonce, setProjectOverviewFileActivityReloadNonce] = useState(0);
         const [projectOverviewOutcomeEditorState, setProjectOverviewOutcomeEditorState] = useState(null);
+        const [projectOverviewOutcomeActionMenuId, setProjectOverviewOutcomeActionMenuId] = useState("");
+        const [projectOverviewOutcomeRenameState, setProjectOverviewOutcomeRenameState] = useState(null);
         const [projectOverviewOutcomeEditorVisible, setProjectOverviewOutcomeEditorVisible] = useState(false);
         const [projectOverviewOutcomeEditorClosing, setProjectOverviewOutcomeEditorClosing] = useState(false);
-        const [projectOverviewOutcomeDescriptionEditing, setProjectOverviewOutcomeDescriptionEditing] = useState(false);
-        const [projectOverviewOutcomeSuccessCriteriaEditing, setProjectOverviewOutcomeSuccessCriteriaEditing] = useState(false);
         const [projectOverviewOutcomeMilestonePickerOpen, setProjectOverviewOutcomeMilestonePickerOpen] = useState(false);
         const projectOverviewOutcomeEditorCloseTimerRef = useRef(null);
         const projectOverviewOutcomeEditorFrameRef = useRef(null);
-        const projectOverviewOutcomeDescriptionTextareaRef = useRef(null);
-        const projectOverviewOutcomeSuccessCriteriaTextareaRef = useRef(null);
         const projectOverviewOutcomeMilestonePickerRef = useRef(null);
         const projectOverviewOutcomeEditorAnimationMs = 75;
         const [projectOverviewSuppressedFileKeys, setProjectOverviewSuppressedFileKeys] = useState(() => {

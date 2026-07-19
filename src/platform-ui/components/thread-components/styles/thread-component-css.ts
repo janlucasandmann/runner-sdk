@@ -1410,13 +1410,18 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .platform-modal-header {
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   flex: 0 0 auto;
   min-width: 0;
   padding: 12px 24px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   margin: 0;
+}
+
+.platform-modal-header.is-title-only {
+  padding-top: 24px;
+  border-bottom: 0;
 }
 
 .platform-modal-header.is-search {
@@ -17031,5 +17036,66 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 .platform-label.is-red {
   color: #ff8f8f;
   background: rgba(255, 143, 143, 0.1);
+}
+
+
+.platform-version-label {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 3px 7px;
+  border: 0;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.72);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 0;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    opacity 120ms ease;
+}
+
+.platform-version-label:hover:not(:disabled),
+.platform-version-label:focus-visible {
+  outline: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.platform-version-label:focus-visible {
+  box-shadow: 0 0 0 2px #000, 0 0 0 3px rgba(77, 163, 255, 0.72);
+}
+
+.platform-version-label:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.platform-version-label__version,
+.platform-version-label__qualifier {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.platform-version-label__separator {
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .platform-version-label {
+    transition-duration: 1ms;
+  }
 }
 `;

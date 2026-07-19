@@ -907,10 +907,10 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                       )
                     : null,
                   taskLoadState.status === "loading" && tasks.length === 0
-                    ? React.createElement("div", { className: "playground-tasks-loading-state" },
-                        React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
-                        React.createElement("div", { className: "playground-tasks-loading-copy" }, "Loading project…")
-                      )
+                    ? React.createElement(PlatformLoadingState, {
+                        message: "Loading project...",
+                        centered: true,
+                      })
                     : taskLoadState.status === "error" && tasks.length === 0
                       ? React.createElement("div", { className: "playground-tasks-empty" },
                           React.createElement("div", { className: "playground-tasks-empty-title" }, "Project workspace unavailable"),
@@ -1023,37 +1023,6 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                   : 0,
               }))
               .filter((segment) => segment.count > 0);
-            const hasStrategyDocument = Boolean(String(missionControlDocumentDraft || selectedProjectMissionControl.document || "").trim());
-            const canUndoMissionControlDocument = Array.isArray(missionControlDocumentHistory?.past) && missionControlDocumentHistory.past.length > 0;
-            const canRedoMissionControlDocument = Array.isArray(missionControlDocumentHistory?.future) && missionControlDocumentHistory.future.length > 0;
-            const renderMissionControlDocumentToolbarButton = (action) =>
-              React.createElement("button", {
-                key: action.id,
-                type: "button",
-                className: "playground-tasks-detail-format-button",
-                title: action.label,
-                "aria-label": action.label,
-                disabled: Boolean(action.disabled),
-                onMouseDown: (event) => event.preventDefault(),
-                onClick: action.onClick,
-              }, React.createElement(action.icon, {
-                width: 14,
-                height: 14,
-                strokeWidth: action.strokeWidth || 1.8,
-              }));
-            const missionControlDocumentTextFormatActions = [
-              { id: "bold", label: "Bold", icon: Bold, strokeWidth: 2.7 },
-              { id: "italic", label: "Italic", icon: Italic },
-              { id: "underline", label: "Underline", icon: Underline },
-            ];
-            const missionControlDocumentListFormatActions = [
-              { id: "list", label: "List", icon: List },
-              { id: "ordered-list", label: "Ordered list", icon: ListOrdered },
-            ];
-            const missionControlDocumentInsertFormatActions = [
-              { id: "code", label: "Code", icon: CodeXml },
-              { id: "link", label: "Link", icon: Link2 },
-            ];
             return React.createElement("div", { className: "playground-tasks-detail-shell" },
               React.createElement("div", { className: "playground-tasks-detail-main" + (projectWallpaperActive ? " is-project-wallpaper-active" : ""), ref: taskDetailMainRef },
                 React.createElement("div", { className: "playground-content-nav playground-tasks-detail-navbar" },
@@ -1165,94 +1134,22 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                           )
                         : null
                     ),
-                    React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section playground-project-strategy-notes-section" },
-                      React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                        React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Strategy Notes"),
-                        React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                          renderMissionControlDocumentToolbarButton({
-                            id: "undo",
-                            label: "Undo",
-                            icon: Undo2,
-                            disabled: !canUndoMissionControlDocument,
-                            onClick: handleMissionControlDocumentUndo,
-                          }),
-                          renderMissionControlDocumentToolbarButton({
-                            id: "redo",
-                            label: "Redo",
-                            icon: Redo2,
-                            disabled: !canRedoMissionControlDocument,
-                            onClick: handleMissionControlDocumentRedo,
-                          }),
-                          React.createElement("span", {
-                            key: "history-divider",
-                            className: "playground-agents-detail-instructions-toolbar-divider",
-                            "aria-hidden": "true",
-                          }),
-                          missionControlDocumentTextFormatActions.map((action) =>
-                            renderMissionControlDocumentToolbarButton({
-                              ...action,
-                              onClick: () => handleMissionControlDocumentFormat(action.id),
-                            })
-                          ),
-                          React.createElement("span", {
-                            key: "list-divider-start",
-                            className: "playground-agents-detail-instructions-toolbar-divider",
-                            "aria-hidden": "true",
-                          }),
-                          missionControlDocumentListFormatActions.map((action) =>
-                            renderMissionControlDocumentToolbarButton({
-                              ...action,
-                              onClick: () => handleMissionControlDocumentFormat(action.id),
-                            })
-                          ),
-                          React.createElement("span", {
-                            key: "list-divider-end",
-                            className: "playground-agents-detail-instructions-toolbar-divider",
-                            "aria-hidden": "true",
-                          }),
-                          missionControlDocumentInsertFormatActions.map((action) =>
-                            renderMissionControlDocumentToolbarButton({
-                              ...action,
-                              onClick: () => handleMissionControlDocumentFormat(action.id),
-                            })
-                          )
-                        )
-                      ),
-                      React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isMissionControlDocumentEditing ? " is-editing" : " is-preview") },
-                        !isMissionControlDocumentEditing
-                          ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                              hasStrategyDocument
-                                ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                                    content: missionControlDocumentDraft,
-                                    className: "playground-tasks-detail-description-preview tb-message-markdown",
-                                  })
-                                : React.createElement("div", {
-                                    className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                                  }, "Run Mission Control first to generate the project strategy and backlog plan.")
-                            )
-                          : null,
-                        React.createElement("textarea", {
-                          ref: missionControlDocumentTextareaRef,
-                          className: "playground-tasks-detail-description-input " + (isMissionControlDocumentEditing ? "is-editing" : "is-preview"),
-                          rows: 1,
-                          placeholder: isMissionControlDocumentEditing ? "Add Strategy here" : "",
-                          value: missionControlDocumentDraft,
-                          onFocus: () => {
-                            setIsMissionControlDocumentEditing(true);
-                          },
-                          onChange: (event) => {
-                            updateMissionControlDocumentDraftValue(event.target.value, {
-                              previousValue: missionControlDocumentDraft,
-                            });
-                            resizeTaskDescriptionTextarea(event.currentTarget);
-                          },
-                          onBlur: () => {
-                            setIsMissionControlDocumentEditing(false);
-                            commitMissionControlDocumentIfDirty();
-                          },
-                        })
-                      )
-                    ),
+                    React.createElement(PlatformInstructionsEditor, {
+                      value: missionControlDocumentDraft,
+                      onChange: (nextValue) => updateMissionControlDocumentDraftValue(nextValue, {
+                        previousValue: missionControlDocumentDraft,
+                      }),
+                      title: "Strategy Notes",
+                      placeholder: "Run Mission Control first to generate the project strategy and backlog plan.",
+                      ariaLabel: "Project strategy notes",
+                      historyKey: "full-strategy:" + selectedProject.id,
+                      onEditingChange: (editing) => {
+                        setIsMissionControlDocumentEditing(editing);
+                        if (!editing) {
+                          commitMissionControlDocumentIfDirty();
+                        }
+                      },
+                    }),
                     React.createElement("div", { className: "playground-tasks-comments" },
                       React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Comments"),
                       selectedProjectMissionComments.length > 0

@@ -365,123 +365,123 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
         background: transparent;
       }
 
-	      .playground-tasks-ticket-screen-panel .playground-tasks-detail-shell.is-ticket-full-page {
-	        grid-template-columns: minmax(0, 1fr) 320px 0px;
-	        column-gap: 42px;
-	        row-gap: 0;
-	      }
-
-	      .playground-tasks-ticket-screen-panel .playground-tasks-detail-shell.is-ticket-full-page.is-preview-open {
-	        grid-template-columns: minmax(0, 1fr) 320px minmax(300px, 360px);
-	        column-gap: 42px;
-	        row-gap: 0;
-	      }
-
-	      .playground-tasks-ticket-screen-panel .playground-tasks-detail-shell.is-ticket-full-page.is-ticket-sidebar-collapsed {
-	        grid-template-columns: minmax(0, 1fr) 0px 0px;
-	        gap: 0;
-	      }
-
-	      .playground-tasks-ticket-screen-panel .playground-tasks-detail-shell.is-ticket-full-page.is-ticket-sidebar-collapsed.is-preview-open {
-	        grid-template-columns: minmax(0, 1fr) 0px minmax(300px, 360px);
-	        gap: 0;
-	      }
-
-      .playground-tasks-ticket-screen-panel .playground-tasks-detail-shell.is-ticket-full-page > .playground-tasks-detail-main {
-        grid-column: 1;
+      .playground-ticket-detail-frame {
+        width: 100%;
+        height: 100%;
+        min-width: 0;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        column-gap: 42px;
+        overflow: hidden;
       }
 
-      .playground-tasks-ticket-screen-panel .playground-tasks-detail-shell.is-ticket-full-page > .playground-tasks-ticket-screen-sidebar {
-        grid-column: 2;
+      .playground-ticket-detail-frame.has-preview {
+        grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
       }
 
-      .playground-tasks-ticket-screen-panel .playground-tasks-detail-shell.is-ticket-full-page > .playground-tasks-detail-preview-pane {
-        grid-column: 3;
+      .playground-ticket-detail-page {
+        height: 100%;
+        min-height: 0;
+        grid-template-rows: auto minmax(0, 1fr);
+        row-gap: 24px;
+        align-items: stretch;
       }
 
-	      .playground-tasks-ticket-screen-sidebar {
-	        flex: 0 0 320px;
-	        width: 320px;
-	        display: flex;
-	        flex-direction: column;
-		        gap: 12px;
-			        padding-top: 12px;
-		        overflow: auto;
-		        scrollbar-width: none;
-		        transition: width 220ms cubic-bezier(0.16, 1, 0.3, 1), flex-basis 220ms cubic-bezier(0.16, 1, 0.3, 1);
-		      }
+      .playground-ticket-detail-page.is-sidebar-collapsed {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 0);
+      }
 
-	      .playground-tasks-detail-shell.is-ticket-full-page.is-ticket-sidebar-collapsed > .playground-tasks-ticket-screen-sidebar {
-	        flex-basis: 0;
-	        width: 0;
-	        min-width: 0;
-	        overflow: hidden;
-	        pointer-events: none;
-	      }
+      .playground-ticket-detail-header,
+      .playground-ticket-detail-header .resource-detail-page__header-content,
+      .playground-ticket-detail-header .playground-tasks-detail-navbar {
+        width: 100%;
+        min-width: 0;
+      }
 
-	      .playground-tasks-ticket-screen-sidebar::-webkit-scrollbar {
-	        display: none;
-	      }
+      .playground-ticket-detail-content {
+        min-height: 0;
+        height: 100%;
+        overflow: hidden;
+        gap: 0;
+      }
 
-		      .playground-tasks-ticket-sidebar-card,
-		      .playground-tasks-ticket-screen-sidebar .playground-tasks-detail-threads-section,
-		      .playground-tasks-ticket-screen-sidebar .playground-tasks-detail-facts {
-		        position: relative;
-		        overflow: hidden;
-		        border: 1px solid rgba(255, 255, 255, 0.05);
-		        border-radius: 10px;
-		        background: rgba(255, 255, 255, 0.05);
-	        padding: 12px;
-	        display: flex;
-	        flex-direction: column;
-	        gap: 12px;
-	        box-sizing: border-box;
-	      }
+      .playground-ticket-detail-content > .playground-tasks-detail-main {
+        width: 100%;
+        height: 100%;
+      }
 
-		      .playground-tasks-ticket-sidebar-card::before,
-		      .playground-tasks-ticket-screen-sidebar .playground-tasks-detail-threads-section::before,
-		      .playground-tasks-ticket-screen-sidebar .playground-tasks-detail-facts::before {
-	        content: "";
-	        position: absolute;
-	        inset: 0;
-	        pointer-events: none;
-        border-radius: inherit;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0) 48%);
-	        opacity: 0.45;
-	      }
+      .playground-tasks-ticket-screen-panel
+        .playground-ticket-detail-content
+        .playground-environments-detail-scroll.playground-tasks-detail-scroll {
+        padding-top: 0 !important;
+      }
 
-	      .playground-tasks-ticket-screen-sidebar .playground-tasks-ticket-controls-card::before,
-	      .playground-tasks-ticket-screen-sidebar .playground-tasks-detail-threads-section::before {
-	        content: none;
-	        display: none;
-	      }
+      .playground-ticket-detail-sidebar.playground-agents-detail-sidebar.playground-project-overview-sidebar {
+        position: relative;
+        top: auto;
+        align-self: start;
+        min-height: 0;
+        max-height: 100%;
+        margin-top: 0;
+        padding-top: 0;
+        overflow-x: visible;
+        overflow-y: auto;
+        scrollbar-width: none;
+      }
 
-	      .playground-tasks-ticket-sidebar-card > *,
-	      .playground-tasks-ticket-screen-sidebar .playground-tasks-detail-threads-section > *,
-	      .playground-tasks-ticket-screen-sidebar .playground-tasks-detail-facts > * {
-	        position: relative;
-	        z-index: 1;
-	      }
+      .playground-ticket-detail-sidebar::-webkit-scrollbar {
+        display: none;
+      }
 
-	      .playground-tasks-ticket-sidebar-card-title,
-	      .playground-tasks-ticket-screen-sidebar .playground-tasks-detail-section-title,
-	      .playground-tasks-ticket-screen-sidebar .playground-plugins-section-title {
-	        color: rgba(255, 255, 255, 0.94);
-	        font-size: 12px;
-	        line-height: 1.25;
-	        font-weight: 500;
-	      }
+      .playground-ticket-detail-sidebar.is-popover-open,
+      .playground-ticket-detail-sidebar-section:has(.is-popover-open) {
+        z-index: 30;
+      }
 
-	      .playground-tasks-ticket-screen-sidebar .playground-tasks-detail-facts {
-	        overflow: visible;
-	        box-shadow: none;
-	        backdrop-filter: blur(50px);
-	        -webkit-backdrop-filter: blur(50px);
-	      }
+      .playground-ticket-detail-sidebar-section {
+        overflow: visible;
+        box-shadow: none;
+      }
 
-		      .playground-tasks-ticket-sidebar-toggle-button {
-		        flex: 0 0 auto;
-		      }
+      .playground-ticket-detail-sidebar-section .platform-detail-sidebar__section-title {
+        color: rgba(255, 255, 255, 0.94);
+      }
+
+      .playground-ticket-detail-sidebar .is-centralized-sidebar-content {
+        position: relative;
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+        overflow: visible;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+
+      .playground-ticket-detail-sidebar .is-centralized-sidebar-content::before {
+        content: none;
+        display: none;
+      }
+
+      .playground-ticket-detail-sidebar .playground-tasks-detail-threads-section.is-centralized-sidebar-content {
+        gap: 0;
+      }
+
+      .playground-ticket-detail-preview {
+        min-width: 0;
+        min-height: 0;
+        overflow: hidden;
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(0, 0, 0, 0.5);
+      }
+
+      .playground-tasks-ticket-sidebar-toggle-button {
+        flex: 0 0 auto;
+      }
 
       .playground-tasks-ticket-controls-card {
         gap: 12px;

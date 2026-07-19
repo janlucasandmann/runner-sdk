@@ -1,5 +1,8 @@
 export * from "./document-preview-drawer.js";
-export * from "./file-diff-surface.js";
+export {
+  RunnerFileDiffSurface,
+  type RunnerFileDiffSurfaceProps,
+} from "../../composite/diff-viewer/index.js";
 export * from "./image-edit-overlays.js";
 export * from "./image-preview-surface.js";
 export * from "./presentation-preview.js";

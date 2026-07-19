@@ -25,12 +25,29 @@ assert.match(MARKETPLACE_PAGE_CSS, /\.playground-resource-templates-resource-tab
 assert.match(MARKETPLACE_PAGE_CSS, /\.playground-resource-templates-modal/);
 assert.equal(Object.values(MARKETPLACE_STYLE_FRAGMENTS).join(""), MARKETPLACE_PAGE_CSS);
 
-assert.match(MARKETPLACE_PAGE_SCRIPT, /function renderTemplateFilterOption/);
-assert.match(MARKETPLACE_PAGE_SCRIPT, /function renderTemplatesTable/);
+assert.match(MARKETPLACE_PAGE_SCRIPT, /React\.createElement\(MarketplaceOverviewPage/);
+assert.match(MARKETPLACE_PAGE_SCRIPT, /onOpen: previewTemplate/);
+assert.match(MARKETPLACE_PAGE_SCRIPT, /onPublish: \(template\)/);
 assert.match(MARKETPLACE_PAGE_SCRIPT, /function renderTemplateModal/);
-assert.match(MARKETPLACE_PAGE_SCRIPT, /Start from reusable project resources/);
+assert.doesNotMatch(MARKETPLACE_PAGE_SCRIPT, /playground-resource-templates-hero-slider/);
+assert.doesNotMatch(MARKETPLACE_PAGE_SCRIPT, /function renderTemplatesTable/);
 assert.equal(Object.values(MARKETPLACE_PAGE_SCRIPT_FRAGMENTS).join(""), MARKETPLACE_PAGE_SCRIPT);
 assert.doesNotThrow(() => new Function(MARKETPLACE_PAGE_SCRIPT));
+
+const marketplaceOverviewPageSource = await fs.readFile(
+  new URL("./client/page/overview/marketplace-overview-page.tsx", import.meta.url),
+  "utf8",
+);
+const marketplaceOverviewGuideSource = await fs.readFile(
+  new URL("./client/page/overview/marketplace-overview-guide.tsx", import.meta.url),
+  "utf8",
+);
+assert.match(marketplaceOverviewPageSource, /ResourceOverviewPage/);
+assert.match(marketplaceOverviewPageSource, /MarketplaceOverviewGuide/);
+assert.match(marketplaceOverviewPageSource, /className="is-marketplace"/);
+assert.match(marketplaceOverviewPageSource, /pagination: false/);
+assert.match(marketplaceOverviewGuideSource, /PlatformPageHero/);
+assert.match(marketplaceOverviewGuideSource, /PlatformUiCard/);
 
 const domainFragments = createMarketplaceDomainScriptFragments({
   serialize: (value) => JSON.stringify(value).replace(/</g, "\\u003c"),
@@ -45,7 +62,7 @@ assert.doesNotThrow(() => new Function(Object.values(domainFragments).join("")))
 
 assert.match(MARKETPLACE_APP_SCRIPT_FRAGMENTS.previewResources, /resourceTemplatePreviewResources/);
 assert.match(MARKETPLACE_APP_SCRIPT_FRAGMENTS.state, /resourceTemplateTypeFilter/);
-assert.match(MARKETPLACE_APP_SCRIPT_FRAGMENTS.lifecycle, /resourceTemplateHeroCount/);
+assert.equal(MARKETPLACE_APP_SCRIPT_FRAGMENTS.lifecycle, "");
 assert.match(MARKETPLACE_APP_SCRIPT_FRAGMENTS.navigation, /function openResourceTemplatesPage/);
 assert.match(MARKETPLACE_APP_SCRIPT_FRAGMENTS.historyCapture, /page: "resource-templates"/);
 assert.match(MARKETPLACE_APP_SCRIPT_FRAGMENTS.historyRestore, /entry\.page === "resource-templates"/);
@@ -94,6 +111,7 @@ assert.match(platformEntrySource, /\$\{MARKETPLACE_PAGE_SCRIPT\}/);
 assert.match(platformEntrySource, /\$\{MARKETPLACE_DOMAIN_SCRIPT_FRAGMENTS\.catalog\}/);
 assert.match(platformEntrySource, /\$\{MARKETPLACE_APP_SCRIPT_FRAGMENTS\.pageView\}/);
 assert.match(platformEntrySource, /configureInfrastructureEntries:[^\n]*MARKETPLACE_APP_SCRIPT_FRAGMENTS\.sidebarEntry/);
+assert.match(platformEntrySource, /MarketplaceOverviewPage/);
 assert.doesNotMatch(platformEntrySource, /demo-resource-templates(?:-page)?\.mjs/);
 assert.doesNotMatch(platformEntrySource, /function openResourceTemplatesPage\(/);
 assert.doesNotMatch(platformEntrySource, /function renderResourceTemplatesPage\(/);

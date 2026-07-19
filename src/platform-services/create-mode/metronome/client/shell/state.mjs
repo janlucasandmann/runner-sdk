@@ -4,7 +4,6 @@ export const METRONOME_APP_STATE_SCRIPT = `
         const [metronomeTopNavState, setMetronomeTopNavState] = useState(null);
         const [metronomeTopNavMenuOpen, setMetronomeTopNavMenuOpen] = useState(false);
         const [metronomeTopNavPublishMenuOpen, setMetronomeTopNavPublishMenuOpen] = useState(false);
-        const [metronomeBreadcrumbVersionMenuOpen, setMetronomeBreadcrumbVersionMenuOpen] = useState(false);
         const [isMetronomeNodeDetailOpen, setIsMetronomeNodeDetailOpen] = useState(false);
         const [collapsedMetronomeRunGroups, setCollapsedMetronomeRunGroups] = useState({});
         const [metronomeRunTraceSelection, setMetronomeRunTraceSelection] = useState(null);
@@ -35,7 +34,6 @@ export const METRONOME_APP_STATE_SCRIPT = `
         });
         const absorbedMetronomeTriggerThreadIdsRef = useRef({});
         const metronomeTopNavMenuRef = useRef(null);
-        const metronomeBreadcrumbVersionMenuRef = useRef(null);
         const wasMetronomeVisualEditorOpenRef = useRef(false);
         const metronomeTopNavActionsRef = useRef({
           edit: null,

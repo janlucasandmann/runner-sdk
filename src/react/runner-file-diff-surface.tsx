@@ -1,1 +1,4 @@
-export * from "../platform-ui/components/thread-components/document-preview/file-diff-surface.js";
+export {
+  RunnerFileDiffSurface,
+  type RunnerFileDiffSurfaceProps,
+} from "../platform-ui/components/composite/diff-viewer/index.js";

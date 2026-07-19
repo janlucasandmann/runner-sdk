@@ -57,7 +57,7 @@ import {
   type RunnerPreviewAttachment,
   type RunnerWebSearchPreviewData,
 } from "../document-preview/preview-contracts.js";
-import { RunnerFileDiffSurface } from "../document-preview/file-diff-surface.js";
+import { RunnerFileDiffSurface } from "../../composite/diff-viewer/index.js";
 import { RunnerImagePreviewSurface } from "../document-preview/image-preview-surface.js";
 import { parseComputerAgentsListCommandOutput, parseComputerAgentsListLogDetails, type ComputerAgentsListAgent, type ComputerAgentsListAvailableAgent } from "./agents-list-log-box.js";
 import { parseComputerAgentsEnvironmentsListLogDetails } from "./environments-list-log-box.js";

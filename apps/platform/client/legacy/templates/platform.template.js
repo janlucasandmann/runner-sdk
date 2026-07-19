@@ -20,11 +20,13 @@
   	      import { PlatformCodePreviewBox } from "/dist/platform-ui/components/composite/code-preview-box/index.js";
   	      import { PlatformDataTable } from "/dist/platform-ui/components/composite/data-table/index.js";
   	      import { PlatformDetailTabBar } from "/dist/platform-ui/components/composite/detail-tab-bar/index.js";
+        import { PlatformDiffViewer } from "/dist/platform-ui/components/composite/diff-viewer/index.js";
   	      import { PlatformEmptyState } from "/dist/platform-ui/components/composite/empty-state/index.js";
-        import { PlatformVersionHistorySidebar } from "/dist/platform-ui/components/composite/version-history-sidebar/index.js";
+        import { PlatformVersionHistorySidebar, PlatformVersionLabel, PlatformVersionSaveDialog, formatPlatformVersionLabel } from "/dist/platform-ui/components/composite/versioning/index.js";
   	      import { PlatformInstructionsEditor } from "/dist/platform-ui/components/composite/instructions-editor/index.js";
   	      import { PlatformLoadingState } from "/dist/platform-ui/components/composite/loading-state/index.js";
         import { PlatformSettingsSection, PlatformSettingsSectionList } from "/dist/platform-ui/components/composite/settings-section/index.js";
+        import { PlatformUiCard } from "/dist/platform-ui/components/composite/ui-card/index.js";
   	      import { PlatformButton, PlatformPrimaryButton, PlatformSecondaryButton } from "/dist/platform-ui/components/ui/button/index.js";
   	      import { PlatformLabel } from "/dist/platform-ui/components/ui/label/index.js";
   	      import { PlatformSearch } from "/dist/platform-ui/components/ui/search/index.js";
@@ -60,7 +62,7 @@
   	      import { PlatformApplicationBoundary } from "/dist/platform-runtime/platform-application-boundary.js";
   	      import { AgentPermissionMeters, AgentPermissionRingIcons, AgentPublishControl, AgentsOverviewAnalyticsRequestError, ComputersOverviewAnalyticsRequestError, createAgentsOverviewAnalytics, createComputersOverviewAnalytics, deleteComputerResource, fetchAgentsOverviewAnalytics, fetchComputersOverviewAnalytics, getAgentPermissionSummary, invalidateAgentsOverviewAnalytics, invalidateComputersOverviewAnalytics, normalizeComputerOverviewRows, readCachedAgentsOverviewAnalytics, readCachedComputersOverviewAnalytics, saveComputerResource } from "/dist/platform-shell/presentation/platform-resource-api.js";
   	      import { ApiKeysOverviewAnalyticsRequestError, createApiKeysOverviewAnalytics, createDevelopResourceOverviewRows, createDevelopVoiceAgentOverviewRows, deleteDevelopResource, fetchApiKeysOverviewAnalytics, invalidateApiKeysOverviewAnalytics, readCachedApiKeysOverviewAnalytics, saveDevelopResource } from "/dist/platform-shell/presentation/platform-develop-api.js";
-        import { AgentDetailPage, AgentPermissionsPage, AgentsOverviewPage, ComputerDetailPage, ComputersOverviewPage, ConfigureHomeOverviewPage, DevelopApiKeysOverviewPage, DevelopHomeOverviewPage, DevelopResourceOverviewRoute, DevelopVoiceAgentsOverviewPage, DevelopWebhooksOverviewPage, EvaluationsOverviewPage, FineTuningOverviewPage, GuardrailsOverviewPage, MetronomesOverviewPage, ModelsFeaturedSection, ModelsOverviewPage, NotificationsOverviewPage, OrganizationsOverviewPage, ProjectDetailPage, SkillsOverviewPage, TagDetailPage, TagsOverviewPage, TeamsOverviewPage } from "/dist/platform-shell/presentation/platform-pages.js";
+        import { AgentDetailPage, AgentPermissionsPage, AgentsOverviewPage, ComputerDetailPage, ComputersOverviewPage, ConfigureHomeOverviewPage, DevelopApiKeysOverviewPage, DevelopHomeOverviewPage, DevelopResourceOverviewRoute, DevelopVoiceAgentsOverviewPage, DevelopWebhooksOverviewPage, EvaluationsOverviewPage, FineTuningOverviewPage, GuardrailsOverviewPage, InferenceEndpointDetailPage, InferenceOverviewPage, MarketplaceOverviewPage, MetronomesOverviewPage, ModelsFeaturedSection, ModelsOverviewPage, NotificationsOverviewPage, OrganizationsOverviewPage, ProjectDetailPage, SkillsOverviewPage, TagDetailPage, TagsOverviewPage, TeamsOverviewPage, TicketDetailPage } from "/dist/platform-shell/presentation/platform-pages.js";
   	      import { openGoogleDrivePicker } from "/dist/platform-integrations/google-drive/google-drive-picker.js";
   
   	      function getPlaygroundSafeIconComponent(Icon, fallbackIcon = Circle) {
@@ -1962,12 +1964,17 @@
             return {
               billing: normalizeDemoSettingsBillingPreferences(source.billing),
               inference: normalizeDemoSettingsInferenceSettings(source.inference),
+              inferenceEndpoints: normalizeDemoInferenceEndpointCollection(
+                source.inferenceEndpoints,
+                source.inference,
+              ),
               skills: normalizeDemoSettingsSkillsConfig(source.skills),
             };
           } catch {
             return {
               billing: normalizeDemoSettingsBillingPreferences(null),
               inference: normalizeDemoSettingsInferenceSettings(null),
+              inferenceEndpoints: normalizeDemoInferenceEndpointCollection(null),
               skills: normalizeDemoSettingsSkillsConfig(null),
             };
           }
@@ -1978,6 +1985,10 @@
             localStorage.setItem(SETTINGS_PLATFORM_CONFIG_STORAGE_KEY, JSON.stringify({
               billing: normalizeDemoSettingsBillingPreferences(config?.billing),
               inference: normalizeDemoSettingsInferenceSettings(config?.inference),
+              inferenceEndpoints: normalizeDemoInferenceEndpointCollection(
+                config?.inferenceEndpoints,
+                config?.inference,
+              ),
               skills: normalizeDemoSettingsSkillsConfig(config?.skills),
             }));
           } catch {}

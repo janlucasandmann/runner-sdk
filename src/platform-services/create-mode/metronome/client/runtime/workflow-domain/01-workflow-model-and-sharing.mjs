@@ -668,7 +668,14 @@ export const METRONOME_WORKFLOW_DOMAIN_01_FRAGMENT = String.raw`
             deployments,
             metronomeDeployments: deployments,
             activeDeploymentId: String(workflowMetadata.activeDeploymentId || workflowMetadata.active_deployment_id || metadata.activeDeploymentId || metadata.active_deployment_id || activeDeployment?.id || "").trim(),
-            activeDeploymentVersion: Number(workflowMetadata.activeDeploymentVersion || workflowMetadata.active_deployment_version || metadata.activeDeploymentVersion || metadata.active_deployment_version || activeDeployment?.version || 0) || 0,
+            activeDeploymentVersion: normalizeMetronomeVersionNumber(
+              workflowMetadata.activeDeploymentVersion
+              ?? workflowMetadata.active_deployment_version
+              ?? metadata.activeDeploymentVersion
+              ?? metadata.active_deployment_version
+              ?? activeDeployment?.version,
+              0
+            ),
             publishedAt: String(workflowMetadata.publishedAt || workflowMetadata.published_at || metadata.publishedAt || metadata.published_at || activeDeployment?.publishedAt || "").trim(),
             lastRunAt: workflowMetadata.lastRunAt || workflowMetadata.last_run_at || metadata.lastRunAt || metadata.last_run_at || "",
             createdAt: workflowMetadata.createdAt || workflowMetadata.created_at || share?.createdAt || share?.created_at || "",
@@ -938,6 +945,29 @@ export const METRONOME_WORKFLOW_DOMAIN_01_FRAGMENT = String.raw`
           return rest;
         }
 
+        function normalizeMetronomeVersionNumber(value, fallback = 0) {
+          if (typeof value === "string") {
+            const match = value.trim().match(/^(?:v|version\s*)?(\d+)$/i);
+            if (match) return Number(match[1]);
+          }
+          const parsed = Number(value);
+          if (Number.isFinite(parsed) && parsed >= 0) return Math.floor(parsed);
+          const parsedFallback = Number(fallback);
+          return Number.isFinite(parsedFallback) && parsedFallback >= 0
+            ? Math.floor(parsedFallback)
+            : 0;
+        }
+
+        function formatMetronomeVersionLabel(value) {
+          return "v" + normalizeMetronomeVersionNumber(value);
+        }
+
+        function formatMetronomeVersionTitle(value, description = "") {
+          const label = formatMetronomeVersionLabel(value);
+          const normalizedDescription = String(description || "").trim();
+          return normalizedDescription ? label + " | " + normalizedDescription : label;
+        }
+
         function normalizeMetronomeDeploymentVersion(rawDeployment, fallbackIndex = 0) {
           const deployment = rawDeployment && typeof rawDeployment === "object" ? rawDeployment : {};
           const definition = deployment.definition && typeof deployment.definition === "object" ? deployment.definition : {};
@@ -955,13 +985,16 @@ export const METRONOME_WORKFLOW_DOMAIN_01_FRAGMENT = String.raw`
           const edges = createMetronomePersistedEdges(rawEdges);
           const createdAt = String(deployment.createdAt || deployment.created_at || deployment.publishedAt || deployment.published_at || new Date().toISOString()).trim();
           const id = String(deployment.id || deployment.deploymentId || deployment.deployment_id || ("mdep_" + (fallbackIndex + 1))).trim();
-          const versionNumber = Number(deployment.version || deployment.versionNumber || deployment.version_number || 0) || (fallbackIndex + 1);
+          const versionNumber = normalizeMetronomeVersionNumber(
+            deployment.version ?? deployment.versionNumber ?? deployment.version_number,
+            fallbackIndex
+          );
           const rawStatus = String(deployment.status || "").trim().toLowerCase();
           const status = ["active", "saved", "superseded", "unpublished"].includes(rawStatus) ? rawStatus : "saved";
           return {
             id,
             version: versionNumber,
-            label: String(deployment.label || ("Version " + versionNumber)).trim(),
+            label: formatMetronomeVersionLabel(versionNumber),
             description: String(deployment.description || deployment.summary || "").trim(),
             status,
             createdAt,
@@ -1020,7 +1053,13 @@ export const METRONOME_WORKFLOW_DOMAIN_01_FRAGMENT = String.raw`
           const persistedNodes = createMetronomePersistedNodes(nodes);
           const persistedEdges = createMetronomePersistedEdges(edges);
           const normalizedExisting = normalizeMetronomeDeployments(existingDeployments);
-          const nextVersion = normalizedExisting.reduce((maxVersion, deployment) => Math.max(maxVersion, Number(deployment.version || 0)), 0) + 1;
+          const nextVersion = normalizedExisting.reduce(
+            (maxVersion, deployment) => Math.max(
+              maxVersion,
+              normalizeMetronomeVersionNumber(deployment.version, 0)
+            ),
+            -1
+          ) + 1;
           const sanitizedWorkflow = {
             ...(workflow && typeof workflow === "object" ? workflow : {}),
             metadata: stripMetronomeDeploymentMetadata(buildMetronomeWorkflowProjectMetadata(workflow)),
@@ -1029,7 +1068,7 @@ export const METRONOME_WORKFLOW_DOMAIN_01_FRAGMENT = String.raw`
           return normalizeMetronomeDeploymentVersion({
             id: createMetronomeDeploymentId(),
             version: nextVersion,
-            label: String(options?.label || ("Version " + nextVersion)).trim(),
+            label: formatMetronomeVersionLabel(nextVersion),
             description: String(options?.description || "").trim(),
             status,
             createdAt: now,
@@ -1040,7 +1079,7 @@ export const METRONOME_WORKFLOW_DOMAIN_01_FRAGMENT = String.raw`
             nodes: persistedNodes,
             edges: persistedEdges,
             definition,
-          }, nextVersion - 1);
+          }, nextVersion);
         }
 
         function formatMetronomeDeploymentTimestamp(value) {
@@ -1063,15 +1102,16 @@ export const METRONOME_WORKFLOW_DOMAIN_01_FRAGMENT = String.raw`
           const action = rawAction === "unpublish" ? "unpublish" : "publish";
           const rawStatus = String(event.status || metadata.status || "").trim().toLowerCase();
           const status = rawStatus || (action === "unpublish" ? "unpublished" : "published");
-          const versionNumber = Number(
-            event.version
-            || event.versionNumber
-            || event.version_number
-            || metadata.versionNumber
-            || metadata.version_number
-            || metadata.version
-            || 0
-          ) || 0;
+          const rawVersionNumber = event.version
+            ?? event.versionNumber
+            ?? event.version_number
+            ?? metadata.versionNumber
+            ?? metadata.version_number
+            ?? metadata.version;
+          const hasVersionNumber = rawVersionNumber !== undefined
+            && rawVersionNumber !== null
+            && String(rawVersionNumber).trim() !== "";
+          const versionNumber = normalizeMetronomeVersionNumber(rawVersionNumber, 0);
           const id = String(event.id || metadata.id || "").trim();
           return {
             id,
@@ -1080,7 +1120,9 @@ export const METRONOME_WORKFLOW_DOMAIN_01_FRAGMENT = String.raw`
             action,
             status,
             version: versionNumber,
-            label: String(event.label || event.name || metadata.versionName || metadata.version_name || (versionNumber ? "Version " + versionNumber : "")).trim(),
+            label: hasVersionNumber
+              ? formatMetronomeVersionLabel(versionNumber)
+              : String(event.label || event.name || metadata.versionName || metadata.version_name || "").trim(),
             triggerSummary: String(event.triggerSummary || event.trigger_summary || metadata.triggerSummary || metadata.trigger_summary || deriveMetronomeTriggerSummary(definition.nodes || event.nodes || []) || "").trim(),
             nodeCount: Number(event.nodeCount || event.node_count || (Array.isArray(event.nodes) ? event.nodes.length : Array.isArray(definition.nodes) ? definition.nodes.length : 0)) || 0,
             edgeCount: Number(event.edgeCount || event.edge_count || (Array.isArray(event.edges) ? event.edges.length : Array.isArray(definition.edges) ? definition.edges.length : 0)) || 0,

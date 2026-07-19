@@ -1,5 +1,30 @@
+<!-- platform-directory-guide:v1 -->
+
 # Version history sidebar
 
-`PlatformVersionHistorySidebar` composes the floating-sidebar shell with an embedded minimal `PlatformDataTable`. The table uses the shared title toolbar and dedicated version and creation-date columns. It supports active and selected versions, restoring, publishing, centralized per-version row actions, loading and error states, creating versions from the sidebar header, and an explicit comparison action.
+## Purpose
 
-Resource domains remain responsible for persistence and for mapping their version records into titles, creation dates, and actions. Opening the sidebar is deliberately independent from opening a comparison page.
+`PlatformVersionHistorySidebar` composes the floating-sidebar shell with a compact version list. Each item presents its title and creation date, identifies the production version, highlights the currently displayed version, and exposes centralized popup actions. The `All Versions` title toolbar retains production-status filtering. The sidebar also supports loading and error states, creating versions from its header, and an explicit comparison action.
+
+Version titles default to the canonical shared format: `vN`, or `vN | description` when an optional description is present. Resource domains remain responsible for persistence, creation dates, and actions. Opening the sidebar is deliberately independent from opening a comparison page.
+
+## Working in this directory
+
+Keep changes inside this directory's stated ownership boundary and use the parent's public entry point instead of importing sibling internals. Update this guide when responsibilities, entry points, or verification commands change. Place focused tests beside the behavior they protect and promote reusable, domain-neutral presentation to `src/platform-ui`.
+
+## Verification
+
+Run the narrowest relevant checks from the repository root:
+
+```bash
+npm run check:static
+```
+
+Escalate to `npm run check` before merging changes that affect shared contracts,
+build output, or application composition.
+
+## Related documentation
+
+- [Parent directory guide](../README.md)
+- [Platform architecture](../../../../../docs/platform-architecture.md)
+- [Directory README standard](../../../../../docs/development/readme-standard.md)

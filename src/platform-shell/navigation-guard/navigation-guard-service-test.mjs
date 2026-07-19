@@ -12,6 +12,8 @@ const platformEntrySource = readPlatformCompositionSourceSync();
 assert.match(PLATFORM_NAVIGATION_GUARD_APP_SCRIPT_FRAGMENTS.navigation, /requestPlatformNavigation/);
 assert.match(PLATFORM_NAVIGATION_GUARD_APP_SCRIPT_FRAGMENTS.navigation, /registerPlatformNavigationGuard/);
 assert.match(PLATFORM_NAVIGATION_GUARD_APP_SCRIPT_FRAGMENTS.navigation, /requestPlatformStateChange/);
+assert.match(PLATFORM_NAVIGATION_GUARD_APP_SCRIPT_FRAGMENTS.navigation, /onDiscard: typeof guard\.onDiscard === "function"/);
+assert.match(PLATFORM_NAVIGATION_GUARD_APP_SCRIPT_FRAGMENTS.navigation, /pendingAction\.onDiscard\(\)/);
 assert.match(PLATFORM_NAVIGATION_GUARD_APP_SCRIPT_FRAGMENTS.lifecycle, /beforeunload/);
 assert.match(PLATFORM_NAVIGATION_GUARD_APP_SCRIPT_FRAGMENTS.modal, /PlatformUnsavedChangesModal/);
 assert.match(platformEntrySource, /\$\{PLATFORM_NAVIGATION_GUARD_APP_SCRIPT_FRAGMENTS\.state\}/);
@@ -35,7 +37,7 @@ assert.equal(
 );
 assert.match(platformEntrySource, /const agentsTopNavActions = topNavActionsContainer\s*&& !shouldShowAgentsHome\s*&& !agentCreationSetupOpen\s*&& !agentVersionsSidebarOpen/);
 assert.match(platformEntrySource, /function renderAgentPublishAction\(\) \{\s*const canShowPublish = Boolean\(\s*!shouldShowAgentsHome/);
-assert.match(platformEntrySource, /function performShowAgentsHome\(\) \{\s*discardUnsavedAgentDraft\(\);\s*resetEditorAuxiliaryState\(\);\s*finishCloseAgentSendToTeamModal\(\);\s*finishCloseAgentAddSquadModal\(\);\s*finishCloseAgentCreationPermissionModal\(\);/);
+assert.match(platformEntrySource, /function performShowAgentsHome\(\) \{\s*discardUnsavedAgentDraft\(\);\s*resetEditorAuxiliaryState\(\);\s*finishCloseAgentSendToTeamModal\(\);\s*finishCloseAgentAddSquadModal\(\);\s*closeAgentCreationPermissionModal\(\);/);
 assert.match(platformEntrySource, /function resetEditorAuxiliaryState\(\) \{[\s\S]*?setAgentPublishMenuOpen\(false\);[\s\S]*?setAgentVersionSelectorMenuOpen\(false\);[\s\S]*?setAgentVersionChangesState\(null\);/);
 
 console.log("navigation guard service tests passed");

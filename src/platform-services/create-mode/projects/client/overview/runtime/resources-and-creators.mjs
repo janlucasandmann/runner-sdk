@@ -588,27 +588,18 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
 
           function renderProjectOverviewRecommendedTemplatesEmptyState() {
             return React.createElement("div", { className: "playground-project-resources-empty has-templates" },
-              React.createElement("section", { className: "playground-project-resource-template-section" },
-                React.createElement("div", { className: "playground-project-resource-template-header" },
-                  React.createElement("div", null,
-                    React.createElement("h3", { className: "playground-project-resource-template-title" }, "Recommended templates"),
-                    React.createElement("p", { className: "playground-project-resource-template-copy" }, "Start with resources that fit this project type, then publish them into the project when they are ready.")
-                  )
-                ),
-                projectOverviewRecommendedTemplates.length > 0
-                  ? React.createElement("div", { className: "playground-project-resource-template-grid" },
-                      projectOverviewRecommendedTemplates.map((template) => renderProjectOverviewTemplateCard(template))
-                    )
-                  : React.createElement("div", { className: "playground-project-resources-empty" }, "No recommended templates available yet."),
-                React.createElement("div", { className: "playground-project-resource-template-actions" },
-                  React.createElement(PlatformSecondaryButton, {
-                    type: "button",
-                    className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-resource-template-browse-button",
-                    onClick: () => typeof onOpenResourceTemplatesPage === "function" && onOpenResourceTemplatesPage({ type: "all" }),
-                  },
-                    React.createElement(Layers, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", { className: "playground-project-overview-summary-mission-label" }, "Browse all templates")
-                  )
+              React.createElement("div", { className: "playground-project-resource-template-grid" },
+                projectOverviewRecommendedTemplates.map((template) => renderProjectOverviewTemplateCard(template))
+              ),
+              React.createElement("div", { className: "playground-project-resource-template-actions" },
+                React.createElement(PlatformSecondaryButton, {
+                  type: "button",
+                  size: "small",
+                  className: "playground-project-resource-template-browse-button",
+                  onClick: () => typeof onOpenResourceTemplatesPage === "function" && onOpenResourceTemplatesPage({ type: "all" }),
+                },
+                  React.createElement(Layers, { width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", null, "All Templates")
                 )
               )
             );

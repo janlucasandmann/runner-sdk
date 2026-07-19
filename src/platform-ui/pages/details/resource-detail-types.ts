@@ -5,9 +5,9 @@ export interface ResourceDetailPageProps<TTab extends string = string> {
   title?: ReactNode;
   header?: ReactNode;
   headerActions?: ReactNode;
-  tabs: readonly PlatformDetailTab<TTab>[];
-  activeTab: TTab;
-  onTabChange: (tab: TTab) => void;
+  tabs?: readonly PlatformDetailTab<TTab>[];
+  activeTab?: TTab;
+  onTabChange?: (tab: TTab) => void;
   tabBarActions?: ReactNode;
   sidebarToggle?: ReactNode;
   children: ReactNode;
