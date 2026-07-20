@@ -66,7 +66,9 @@
               }))
               .filter((document) => document.name || document.content);
   
-            const metadata = clonePlaygroundEnvironmentMetadata(normalizedEnvironment?.metadata);
+            const metadata = stripPlaygroundEnvironmentVersionMetadata(
+              clonePlaygroundEnvironmentMetadata(normalizedEnvironment?.metadata)
+            );
             const pricing = metadata.pricing && typeof metadata.pricing === "object" && !Array.isArray(metadata.pricing)
               ? { ...metadata.pricing }
               : {};
@@ -2149,6 +2151,13 @@
               return;
             }
             if (!isPlaygroundTextPreviewable(entry)) {
+              const historyKey = String(draftServer.id || "") + "|" + normalizeHistoryPath(entry.path);
+              setServerFileEditorHistoryByKey((current) => {
+                if (!Object.prototype.hasOwnProperty.call(current, historyKey)) return current;
+                const next = { ...current };
+                delete next[historyKey];
+                return next;
+              });
               setServerFileEditorState({
                 path: entry.path,
                 status: "error",
@@ -2164,12 +2173,25 @@
             }
             await loadServerFileContent(draftServer.id, entry.path);
           }
-  
-          function handleServerFileEditorChange(nextValue) {
-            if (isSelectedServerTemplatePreview) {
-              return;
-            }
+
+          function getActiveServerFileEditorHistoryKey() {
+            const serverId = String(draftServer?.id || selectedServerId || "").trim();
+            const filePath = normalizeHistoryPath(serverFileEditorState.path || "");
+            return serverId && filePath ? serverId + "|" + filePath : "";
+          }
+
+          function applyServerFileEditorValue(nextValue) {
             const normalizedValue = typeof nextValue === "string" ? nextValue : "";
+            const serverId = String(draftServer?.id || selectedServerId || "").trim();
+            const filePath = normalizeHistoryPath(serverFileEditorState.path || "");
+            if (serverId && filePath) {
+              const draftKey = serverId + "|" + filePath;
+              if (normalizedValue === String(serverFileEditorState.initialValue || "")) {
+                serverSourceDraftContentsRef.current.delete(draftKey);
+              } else {
+                serverSourceDraftContentsRef.current.set(draftKey, normalizedValue);
+              }
+            }
             setServerFileEditorState((current) => ({
               ...current,
               value: normalizedValue,
@@ -2178,18 +2200,75 @@
             }));
             serverVersionDraftTouchedRef.current = true;
           }
-  
-          function handleServerFileEditorRevert() {
-            setServerFileEditorState((current) => ({
+
+          function handleServerFileEditorChange(nextValue) {
+            if (isSelectedServerTemplatePreview) {
+              return;
+            }
+            const normalizedValue = typeof nextValue === "string" ? nextValue : "";
+            const currentValue = String(serverFileEditorState.value || "");
+            if (normalizedValue === currentValue) {
+              return;
+            }
+            const historyKey = getActiveServerFileEditorHistoryKey();
+            if (historyKey) {
+              setServerFileEditorHistoryByKey((current) => {
+                const history = current[historyKey] || { past: [], future: [] };
+                return {
+                  ...current,
+                  [historyKey]: {
+                    past: [...history.past, currentValue].slice(-100),
+                    future: [],
+                  },
+                };
+              });
+            }
+            applyServerFileEditorValue(normalizedValue);
+          }
+
+          function handleServerFileEditorUndo() {
+            const historyKey = getActiveServerFileEditorHistoryKey();
+            const history = historyKey
+              ? serverFileEditorHistoryByKey[historyKey] || { past: [], future: [] }
+              : { past: [], future: [] };
+            if (!history.past.length || isSelectedServerTemplatePreview) {
+              return;
+            }
+            const previousValue = history.past[history.past.length - 1];
+            const currentValue = String(serverFileEditorState.value || "");
+            setServerFileEditorHistoryByKey((current) => ({
               ...current,
-              value: current.initialValue,
-              saveError: "",
-              saveMessage: "",
+              [historyKey]: {
+                past: history.past.slice(0, -1),
+                future: [...history.future, currentValue].slice(-100),
+              },
             }));
+            applyServerFileEditorValue(previousValue);
+          }
+
+          function handleServerFileEditorRedo() {
+            const historyKey = getActiveServerFileEditorHistoryKey();
+            const history = historyKey
+              ? serverFileEditorHistoryByKey[historyKey] || { past: [], future: [] }
+              : { past: [], future: [] };
+            if (!history.future.length || isSelectedServerTemplatePreview) {
+              return;
+            }
+            const nextValue = history.future[history.future.length - 1];
+            const currentValue = String(serverFileEditorState.value || "");
+            setServerFileEditorHistoryByKey((current) => ({
+              ...current,
+              [historyKey]: {
+                past: [...history.past, currentValue].slice(-100),
+                future: history.future.slice(0, -1),
+              },
+            }));
+            applyServerFileEditorValue(nextValue);
           }
   
           function handleCloseServerFileEditor() {
             setServerFileActionsPopoverOpen(false);
+            setServerFileEditorHistoryByKey({});
             setServerFileEditorState({
               path: "",
               status: "idle",
@@ -2215,6 +2294,10 @@
                 saveMessage: "",
                 isSaving: false,
               }));
+              return;
+            }
+            if (isAuthoritativelyVersionedServer(draftServer)) {
+              openAuthoritativeServerVersionSaveDialog();
               return;
             }
   
@@ -2812,7 +2895,6 @@
           }
   
           function openServerCustomDomainModal(existingCustomDomain) {
-            setServerCustomDomainMenuDomain("");
             setServerCustomDomainModalState({
               open: true,
               domain: existingCustomDomain?.domain || draftServer?.customDomain || "",
@@ -2844,7 +2926,6 @@
               return;
             }
   
-            setServerCustomDomainMenuDomain("");
             setServerCustomDomainRemoveState({
               domain: normalizedDomain,
               status: "removing",

@@ -1,10 +1,11 @@
-import type { MouseEventHandler, KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
-import {
-  type PlatformButtonSize,
-  type PlatformButtonVariant,
-  PlatformPrimaryButton,
-  PlatformSecondaryButton,
-} from "../../ui/button/index.js";
+import { Redo2, Undo2 } from "lucide-react";
+import type {
+  DragEventHandler,
+  KeyboardEvent as ReactKeyboardEvent,
+  MouseEventHandler,
+  ReactNode,
+} from "react";
+import { PlatformIconButton } from "../../ui/icon-button/index.js";
 
 export type PlatformCodeEditorStatusTone = "default" | "success" | "error" | "loading";
 export type PlatformCodeEditorWorkspaceVariant = "default" | "full-screen";
@@ -13,20 +14,17 @@ export interface PlatformCodeEditorFile {
   id: string;
   label?: ReactNode;
   icon?: ReactNode;
+  leading?: ReactNode;
+  depth?: number;
   disabled?: boolean;
   ariaLabel?: string;
 }
 
-export interface PlatformCodeEditorAction {
-  id: string;
-  label: ReactNode;
-  icon?: ReactNode;
-  variant?: PlatformButtonVariant;
-  size?: PlatformButtonSize;
-  disabled?: boolean;
-  ariaLabel?: string;
-  className?: string;
-  onClick?: MouseEventHandler<HTMLButtonElement>;
+export interface PlatformCodeEditorHistoryControls {
+  onUndo?: MouseEventHandler<HTMLButtonElement>;
+  onRedo?: MouseEventHandler<HTMLButtonElement>;
+  undoDisabled?: boolean;
+  redoDisabled?: boolean;
 }
 
 export interface PlatformCodeEditorWorkspaceProps {
@@ -34,16 +32,20 @@ export interface PlatformCodeEditorWorkspaceProps {
   activeFileId?: string;
   onFileSelect?: (fileId: string) => void;
   sidebarTitle?: ReactNode;
+  sidebarActions?: ReactNode;
   editor?: ReactNode;
   emptyFiles?: ReactNode;
   emptyEditor?: ReactNode;
   status?: ReactNode;
   statusTone?: PlatformCodeEditorStatusTone;
-  actions?: readonly PlatformCodeEditorAction[];
+  historyControls?: PlatformCodeEditorHistoryControls;
   showFooter?: boolean;
   variant?: PlatformCodeEditorWorkspaceVariant;
   ariaLabel?: string;
   className?: string;
+  onDragOver?: DragEventHandler<HTMLElement>;
+  onDragLeave?: DragEventHandler<HTMLElement>;
+  onDrop?: DragEventHandler<HTMLElement>;
 }
 
 function joinClassNames(...classNames: Array<string | false | null | undefined>) {
@@ -56,27 +58,33 @@ function joinClassNames(...classNames: Array<string | false | null | undefined>)
     .join(" ");
 }
 
-function renderAction(action: PlatformCodeEditorAction) {
-  const Button = action.variant === "primary" ? PlatformPrimaryButton : PlatformSecondaryButton;
-
-  return (
-    <Button
-      key={action.id}
-      type="button"
-      size={action.size ?? "medium"}
-      className={action.className}
-      disabled={action.disabled}
-      aria-label={action.ariaLabel}
-      onClick={action.onClick}
-    >
-      {action.icon}
-      <span>{action.label}</span>
-    </Button>
-  );
-}
-
 function stopEditorKeyboardPropagation(event: ReactKeyboardEvent<HTMLElement>) {
   event.stopPropagation();
+}
+
+function renderHistoryControls(historyControls: PlatformCodeEditorHistoryControls) {
+  return (
+    <>
+      <PlatformIconButton
+        aria-label="Undo"
+        title="Undo"
+        size="small"
+        disabled={historyControls.undoDisabled}
+        onClick={historyControls.onUndo}
+      >
+        <Undo2 />
+      </PlatformIconButton>
+      <PlatformIconButton
+        aria-label="Redo"
+        title="Redo"
+        size="small"
+        disabled={historyControls.redoDisabled}
+        onClick={historyControls.onRedo}
+      >
+        <Redo2 />
+      </PlatformIconButton>
+    </>
+  );
 }
 
 export function PlatformCodeEditorWorkspace({
@@ -84,16 +92,20 @@ export function PlatformCodeEditorWorkspace({
   activeFileId = "",
   onFileSelect,
   sidebarTitle = "Files",
+  sidebarActions = null,
   editor = null,
   emptyFiles = "No code files.",
   emptyEditor = "Select a file to edit.",
   status = null,
   statusTone = "default",
-  actions = [],
+  historyControls,
   showFooter = true,
   variant = "default",
   ariaLabel = "Code editor",
   className = "",
+  onDragOver,
+  onDragLeave,
+  onDrop,
 }: PlatformCodeEditorWorkspaceProps) {
   return (
     <section
@@ -105,12 +117,20 @@ export function PlatformCodeEditorWorkspace({
       aria-label={ariaLabel}
       data-platform-code-editor-workspace="true"
       data-platform-code-editor-workspace-variant={variant}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
       onKeyDown={stopEditorKeyboardPropagation}
       onKeyUp={stopEditorKeyboardPropagation}
     >
       <aside className="platform-code-editor-workspace__sidebar">
         <div className="platform-code-editor-workspace__sidebar-header">
           <div className="platform-code-editor-workspace__sidebar-title">{sidebarTitle}</div>
+          {sidebarActions ? (
+            <div className="platform-code-editor-workspace__sidebar-actions">
+              {sidebarActions}
+            </div>
+          ) : null}
         </div>
         <div className="platform-code-editor-workspace__file-list">
           {files.length > 0 ? (
@@ -127,12 +147,17 @@ export function PlatformCodeEditorWorkspace({
                   disabled={file.disabled}
                   aria-current={isActive ? "page" : undefined}
                   aria-label={file.ariaLabel}
+                  style={{
+                    paddingInlineStart: `${14 + Math.max(0, Number(file.depth) || 0) * 16}px`,
+                  }}
                   onClick={() => onFileSelect?.(file.id)}
                 >
                   <span
                     className="platform-code-editor-workspace__file-spacer"
                     aria-hidden="true"
-                  />
+                  >
+                    {file.leading}
+                  </span>
                   {file.icon ? (
                     <span className="platform-code-editor-workspace__file-icon" aria-hidden="true">
                       {file.icon}
@@ -167,9 +192,9 @@ export function PlatformCodeEditorWorkspace({
             >
               {status}
             </div>
-            {actions.length > 0 ? (
+            {historyControls ? (
               <div className="platform-code-editor-workspace__actions">
-                {actions.map(renderAction)}
+                {renderHistoryControls(historyControls)}
               </div>
             ) : null}
           </div>

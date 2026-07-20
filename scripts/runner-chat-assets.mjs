@@ -16,6 +16,24 @@ const generatedTsPath = path.join(
   "thread-component-css.ts",
 );
 const distCssPath = path.join(packageRoot, "dist", "react", "runner-chat.css");
+const platformAttachmentsCssPath = path.join(
+  packageRoot,
+  "src",
+  "platform-ui",
+  "components",
+  "composite",
+  "attachments",
+  "attachments.css",
+);
+const distPlatformAttachmentsCssPath = path.join(
+  packageRoot,
+  "dist",
+  "platform-ui",
+  "components",
+  "composite",
+  "attachments",
+  "attachments.css",
+);
 const platformDataTableCssPath = path.join(
   packageRoot,
   "src",
@@ -512,6 +530,16 @@ const distPlatformDetailPageCssPath = path.join(
   "details",
   "resource-detail.css",
 );
+const developServerDetailPageCssPath = path.join(
+  packageRoot,
+  "src",
+  "platform-services",
+  "develop-mode",
+  "shared",
+  "client",
+  "page",
+  "develop-server-detail-page.css",
+);
 const platformPermissionsPageCssPath = path.join(
   packageRoot,
   "src",
@@ -570,6 +598,7 @@ async function prepare() {
 async function copy() {
   const [
     cssText,
+    platformAttachmentsCssText,
     platformDataTableCssText,
     platformDetailSidebarCssText,
     platformFloatingSidebarCssText,
@@ -598,10 +627,12 @@ async function copy() {
     platformHomePageCssText,
     platformOverviewPageCssText,
     platformDetailPageCssText,
+    developServerDetailPageCssText,
     platformPermissionsPageCssText,
     agentDetailCssText,
   ] = await Promise.all([
     loadBundledCss(),
+    fs.readFile(platformAttachmentsCssPath, "utf8"),
     fs.readFile(platformDataTableCssPath, "utf8"),
     fs.readFile(platformDetailSidebarCssPath, "utf8"),
     fs.readFile(platformFloatingSidebarCssPath, "utf8"),
@@ -630,11 +661,14 @@ async function copy() {
     fs.readFile(platformHomePageCssPath, "utf8"),
     fs.readFile(platformOverviewPageCssPath, "utf8"),
     fs.readFile(platformDetailPageCssPath, "utf8"),
+    fs.readFile(developServerDetailPageCssPath, "utf8"),
     fs.readFile(platformPermissionsPageCssPath, "utf8"),
     fs.readFile(agentDetailCssPath, "utf8"),
   ]);
   await fs.mkdir(path.dirname(distCssPath), { recursive: true });
   await fs.writeFile(distCssPath, cssText, "utf8");
+  await fs.mkdir(path.dirname(distPlatformAttachmentsCssPath), { recursive: true });
+  await fs.writeFile(distPlatformAttachmentsCssPath, platformAttachmentsCssText, "utf8");
   await fs.mkdir(path.dirname(distPlatformComponentsDataTableCssPath), { recursive: true });
   await fs.writeFile(distPlatformComponentsDataTableCssPath, platformDataTableCssText, "utf8");
   await fs.mkdir(path.dirname(distPlatformDetailSidebarCssPath), { recursive: true });
@@ -736,7 +770,7 @@ async function copy() {
   await fs.mkdir(path.dirname(distPlatformPagesCssPath), { recursive: true });
   await fs.writeFile(
     distPlatformPagesCssPath,
-    `${platformPopupCssText}\n\n${platformSelectorCssText}\n\n${platformDataTableCssText}\n\n${platformAnalyticsCssText}\n\n${platformEmptyStateCssText}\n\n${platformLoadingStateCssText}\n\n${platformCodeEditorWorkspaceCssText}\n\n${platformCodePreviewBoxCssText}\n\n${platformPageHeroCssText}\n\n${platformUiCardCssText}\n\n${platformVersionLabelCssText}\n\n${platformHomePageCssText}\n\n${platformOverviewPageCssText}\n\n${platformDetailTabBarCssText}\n\n${platformDetailSidebarCssText}\n\n${platformFloatingSidebarCssText}\n\n${platformVersionHistorySidebarCssText}\n\n${platformVersionSaveDialogCssText}\n\n${platformInstructionsEditorCssText}\n\n${platformSettingsSectionCssText}\n\n${platformDetailPageCssText}\n\n${platformPermissionsPageCssText}\n\n${agentDetailCssText}`,
+    `${platformPopupCssText}\n\n${platformSelectorCssText}\n\n${platformAttachmentsCssText}\n\n${platformDataTableCssText}\n\n${platformAnalyticsCssText}\n\n${platformEmptyStateCssText}\n\n${platformLoadingStateCssText}\n\n${platformCodeEditorWorkspaceCssText}\n\n${platformCodePreviewBoxCssText}\n\n${platformPageHeroCssText}\n\n${platformUiCardCssText}\n\n${platformVersionLabelCssText}\n\n${platformHomePageCssText}\n\n${platformOverviewPageCssText}\n\n${platformDetailTabBarCssText}\n\n${platformDetailSidebarCssText}\n\n${platformFloatingSidebarCssText}\n\n${platformVersionHistorySidebarCssText}\n\n${platformVersionSaveDialogCssText}\n\n${platformInstructionsEditorCssText}\n\n${platformSettingsSectionCssText}\n\n${platformDetailPageCssText}\n\n${developServerDetailPageCssText}\n\n${platformPermissionsPageCssText}\n\n${agentDetailCssText}`,
     "utf8",
   );
   await fs.mkdir(distAssetsDir, { recursive: true });

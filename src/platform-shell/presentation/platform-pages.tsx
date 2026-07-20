@@ -168,6 +168,13 @@ export const DevelopResourceOverviewRoute = lazyNamed(
   () => import("../../platform-services/develop-mode/resource-page-registry.js"),
   "DevelopResourceOverviewRoute",
 );
+export const DevelopServerDetailPage = lazyNamed(
+  () =>
+    import(
+      "../../platform-services/develop-mode/shared/client/page/develop-server-detail-page.js"
+    ),
+  "DevelopServerDetailPage",
+);
 export const DevelopVoiceAgentsOverviewPage = lazyNamed(
   () => import("../../platform-services/develop-mode/voice-agents/client/page/overview-page.js"),
   "DevelopVoiceAgentsOverviewPage",

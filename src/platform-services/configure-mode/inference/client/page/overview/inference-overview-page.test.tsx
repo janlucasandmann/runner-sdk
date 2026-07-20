@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { InferenceOverviewPage } from "./inference-overview-page.js";
@@ -16,7 +16,7 @@ describe("InferenceOverviewPage", () => {
   it("uses the shared hero, cards, overview shell, and endpoint table", async () => {
     const user = userEvent.setup();
     const onOpenEndpoint = vi.fn();
-    const onConfigureEndpoint = vi.fn();
+    const onConfigureEndpoint = vi.fn(() => true);
     const controls = document.createElement("div");
     controls.id = CONTROLS_PORTAL_ID;
     document.body.append(controls);
@@ -70,7 +70,27 @@ describe("InferenceOverviewPage", () => {
     expect(screen.getByPlaceholderText("Search endpoints")).not.toBeNull();
 
     await user.click(await screen.findByRole("button", { name: "New Endpoint" }));
-    expect(onConfigureEndpoint).toHaveBeenCalledOnce();
+    expect(onConfigureEndpoint).not.toHaveBeenCalled();
+    expect(screen.getByRole("dialog", { name: "New Inference Endpoint" })).not.toBeNull();
+    expect(document.querySelector(".platform-modal-surface")).not.toBeNull();
+
+    await user.type(screen.getByLabelText("Name"), "Production GPU");
+    await user.type(
+      screen.getByLabelText("Endpoint URL"),
+      "https://models.example.com/v1/",
+    );
+    await user.click(screen.getByRole("button", { name: "Add Endpoint" }));
+
+    expect(onConfigureEndpoint).toHaveBeenCalledWith({
+      name: "Production GPU",
+      providerType: "openai-compatible",
+      baseUrl: "https://models.example.com/v1",
+      apiKey: "",
+      isDefault: false,
+    });
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "New Inference Endpoint" })).toBeNull();
+    });
 
     await user.click(screen.getByText("Primary Inference"));
     expect(onOpenEndpoint).toHaveBeenCalledWith("organization-inference-endpoint");

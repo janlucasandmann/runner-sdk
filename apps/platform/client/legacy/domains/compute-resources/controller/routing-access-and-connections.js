@@ -1,29 +1,43 @@
           function handleEnvironmentSelect(environmentId) {
-            commitDraftEnvironmentIfDirty();
-            setToolbarPopover("");
-            setSearchPopupQuery("");
-            setEnvironmentListActionMenuState(null);
-            setServerResourceActionMenuState(null);
-            setIsHomeViewActive(false);
-            setSelectedEnvironmentId(environmentId);
+            const normalizedEnvironmentId = String(environmentId || "").trim();
+            if (!normalizedEnvironmentId) {
+              return;
+            }
+            if (
+              !isHomeViewActive
+              && normalizedEnvironmentId === String(selectedEnvironmentId || "").trim()
+            ) {
+              return;
+            }
+            requestEnvironmentNavigation(() => {
+              discardUnsavedEnvironmentDraft();
+              setToolbarPopover("");
+              setSearchPopupQuery("");
+              setEnvironmentListActionMenuState(null);
+              setServerResourceActionMenuState(null);
+              setIsHomeViewActive(false);
+              setSelectedEnvironmentId(normalizedEnvironmentId);
+            });
           }
   
           function openEnvironmentComposer() {
-            commitDraftEnvironmentIfDirty();
-            resetEditorAuxiliaryState();
-            setToolbarPopover("");
-            setSearchPopupQuery("");
-            setEnvironmentListActionMenuState(null);
-            setServerResourceActionMenuState(null);
-            setEnvironmentComposerSaveState({
-              isSaving: false,
-              error: "",
+            requestEnvironmentNavigation(() => {
+              discardUnsavedEnvironmentDraft();
+              resetEditorAuxiliaryState();
+              setToolbarPopover("");
+              setSearchPopupQuery("");
+              setEnvironmentListActionMenuState(null);
+              setServerResourceActionMenuState(null);
+              setEnvironmentComposerSaveState({
+                isSaving: false,
+                error: "",
+              });
+              setEnvironmentComposerDraft({
+                ...buildPlaygroundDefaultEnvironmentDraft(),
+                name: "",
+              });
+              setEnvironmentComposerOpen(true);
             });
-            setEnvironmentComposerDraft({
-              ...buildPlaygroundDefaultEnvironmentDraft(),
-              name: "",
-            });
-            setEnvironmentComposerOpen(true);
           }
   
           function closeEnvironmentComposer() {
@@ -1642,8 +1656,8 @@
             return "";
           }
   
-          function showEnvironmentsHome() {
-            commitDraftEnvironmentIfDirty();
+          function performShowEnvironmentsHome() {
+            discardUnsavedEnvironmentDraft();
             void commitDraftServerIfDirty();
             setToolbarPopover("");
             setResourcesOverviewToolbarPopover("");
@@ -1678,6 +1692,10 @@
             resetServerEditorAuxiliaryState();
             resetDatabaseEditorAuxiliaryState();
             setIsHomeViewActive(true);
+          }
+
+          function showEnvironmentsHome() {
+            requestEnvironmentNavigation(performShowEnvironmentsHome);
           }
   
           useEffect(() => {
@@ -2449,6 +2467,9 @@
   
           async function commitDraftServerIfDirty() {
             if (!serverEditorDirtyRef.current || !draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID) {
+              return;
+            }
+            if (isAuthoritativelyVersionedServer(draftServer)) {
               return;
             }
             if (isSelectedServerTemplatePreview || isPlaygroundResourceTemplatePreviewRecord(draftServer)) {

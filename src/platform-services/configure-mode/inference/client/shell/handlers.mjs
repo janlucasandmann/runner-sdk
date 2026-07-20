@@ -12,12 +12,27 @@ export const INFERENCE_APP_HANDLERS_SCRIPT = `        const persistInferenceEndp
           return { collection, selectedEndpoint };
         }, [settingsBillingPreferences]);
 
-        const handleSettingsInferenceCreateEndpoint = useCallback(async () => {
+        const handleSettingsInferenceCreateEndpoint = useCallback(async (endpointInputValue = null) => {
           if (!settingsCanConfigureBusinessFeatures) {
             setSettingsPlatformConfigError("Upgrade to Team to configure inference.");
             setSettingsPlatformConfigSuccess("");
-            return;
+            return false;
           }
+
+          const endpointInput = endpointInputValue && typeof endpointInputValue === "object"
+            ? endpointInputValue
+            : {};
+          const endpointName = String(endpointInput.name || "New Inference Endpoint")
+            .replace(/\\s+/g, " ")
+            .trim()
+            .slice(0, 120) || "New Inference Endpoint";
+          const providerType = String(
+            endpointInput.providerType || SETTINGS_DEFAULT_INFERENCE_SETTINGS.providerType
+          ).trim() || SETTINGS_DEFAULT_INFERENCE_SETTINGS.providerType;
+          const baseUrl = String(endpointInput.baseUrl || "").trim().replace(/\\/+$/, "");
+          const apiKey = String(endpointInput.apiKey || "").trim();
+          const isDefault = settingsInferenceEndpoints.endpoints.length === 0
+            || Boolean(endpointInput.isDefault);
 
           setSettingsPlatformConfigSaving(true);
           setSettingsPlatformConfigError("");
@@ -34,10 +49,12 @@ export const INFERENCE_APP_HANDLERS_SCRIPT = `        const persistInferenceEndp
                 },
                 body: JSON.stringify({
                   endpoint: {
-                    name: "New Inference Endpoint",
-                    providerType: SETTINGS_DEFAULT_INFERENCE_SETTINGS.providerType,
+                    name: endpointName,
+                    providerType,
+                    baseUrl,
+                    apiKey: apiKey || undefined,
                     enabled: false,
-                    isDefault: settingsInferenceEndpoints.endpoints.length === 0,
+                    isDefault,
                   },
                 }),
               });
@@ -53,8 +70,12 @@ export const INFERENCE_APP_HANDLERS_SCRIPT = `        const persistInferenceEndp
               createdEndpoint = normalizeDemoInferenceEndpoint({
                 ...SETTINGS_DEFAULT_INFERENCE_SETTINGS,
                 id: endpointId,
-                name: "New Inference Endpoint",
-                isDefault: settingsInferenceEndpoints.endpoints.length === 0,
+                name: endpointName,
+                providerType,
+                baseUrl,
+                apiKeyConfigured: Boolean(apiKey),
+                apiKeyPreview: buildDemoInferenceApiKeyPreview(apiKey),
+                isDefault,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
               });
@@ -69,8 +90,10 @@ export const INFERENCE_APP_HANDLERS_SCRIPT = `        const persistInferenceEndp
             setSettingsInferenceApiKeyEditing(false);
             setSettingsClearInferenceApiKey(false);
             setSettingsInferenceModelInput("");
+            return true;
           } catch (error) {
             setSettingsPlatformConfigError(error instanceof Error ? error.message : "Failed to create inference endpoint.");
+            return false;
           } finally {
             setSettingsPlatformConfigSaving(false);
           }

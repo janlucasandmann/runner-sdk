@@ -3,6 +3,9 @@
   min-width: 0;
   margin: 0 0 42px;
   padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.075);
   overflow: visible;
 }
 
@@ -143,6 +146,7 @@
 .platform-instructions-editor.is-minimalistic-ui .platform-instructions-editor__header,
 .platform-instructions-editor.is-minimalistic-ui .platform-instructions-editor__body {
   padding: 0;
+  border: none;
   border-radius: 0;
   background: transparent;
 }

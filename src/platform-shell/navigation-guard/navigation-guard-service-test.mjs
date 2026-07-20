@@ -35,8 +35,10 @@ assert.equal(
   platformEntrySource.match(/label: resourcesOverviewTitle,\s*onClick: returnToResourcesOverview/g)?.length,
   2,
 );
-assert.match(platformEntrySource, /const agentsTopNavActions = topNavActionsContainer\s*&& !shouldShowAgentsHome\s*&& !agentCreationSetupOpen\s*&& !agentVersionsSidebarOpen/);
+assert.match(platformEntrySource, /const agentsTopNavActions = topNavActionsContainer\s*&& !shouldShowAgentsHome\s*&& !agentCreationSetupOpen\s*\? createPortal/);
+assert.doesNotMatch(platformEntrySource, /const agentsTopNavActions = topNavActionsContainer[\s\S]{0,180}&& !agentVersionsSidebarOpen/);
 assert.match(platformEntrySource, /function renderAgentPublishAction\(\) \{\s*const canShowPublish = Boolean\(\s*!shouldShowAgentsHome/);
+assert.match(platformEntrySource, /id: "agent-details-unsaved-changes"[\s\S]*?onDiscard: discardUnsavedAgentDraft/);
 assert.match(platformEntrySource, /function performShowAgentsHome\(\) \{\s*discardUnsavedAgentDraft\(\);\s*resetEditorAuxiliaryState\(\);\s*finishCloseAgentSendToTeamModal\(\);\s*finishCloseAgentAddSquadModal\(\);\s*closeAgentCreationPermissionModal\(\);/);
 assert.match(platformEntrySource, /function resetEditorAuxiliaryState\(\) \{[\s\S]*?setAgentPublishMenuOpen\(false\);[\s\S]*?setAgentVersionSelectorMenuOpen\(false\);[\s\S]*?setAgentVersionChangesState\(null\);/);
 

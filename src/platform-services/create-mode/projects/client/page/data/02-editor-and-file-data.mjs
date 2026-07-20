@@ -918,6 +918,14 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
           return () => window.removeEventListener("pointerdown", handleOutcomeMilestonePickerPointerDown);
         }, [projectOverviewOutcomeMilestonePickerOpen]);
 
+        const selectedTaskHeaderTicketNumber = selectedTaskId
+          ? String(
+              taskTicketNumbersById[selectedTaskId]
+              || selectedTaskSnapshot?.ticketNumber
+              || ""
+            ).trim()
+          : "";
+
         useEffect(() => {
           if (typeof onTasksHeaderChange !== "function") {
             return undefined;
@@ -927,8 +935,12 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
               mode: "project",
               title: selectedProjectWorkspaceTitle,
               view: taskView,
+              extraActions: taskView === "backlog" || taskView === "board"
+                ? renderProjectAppHeaderMilestoneSelector()
+                : null,
               projectId: selectedProject.id,
               taskId: selectedTaskId,
+              ticketNumber: selectedTaskHeaderTicketNumber,
               scheduleId: selectedScheduleId,
               detailMode: selectedTaskId
                 ? "task"
@@ -943,8 +955,10 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
               mode: isStandaloneCalendarMode ? "calendar" : "overview",
               title: isStandaloneCalendarMode ? "Calendar" : "Projects",
               view: isStandaloneCalendarMode ? "calendar" : "overview",
+              extraActions: null,
               projectId: selectedProjectId,
               taskId: selectedTaskId,
+              ticketNumber: selectedTaskHeaderTicketNumber,
               scheduleId: selectedScheduleId,
               detailMode: selectedTaskId
                 ? "task"
@@ -961,9 +975,12 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
           selectedProject?.id,
           selectedProjectId,
           selectedProjectWorkspaceTitle,
+          selectedReleaseId,
           selectedScheduleId,
           selectedTaskId,
+          selectedTaskHeaderTicketNumber,
           scheduleViewMode,
+          sortedReleaseOptions,
           taskView,
         ]);
 

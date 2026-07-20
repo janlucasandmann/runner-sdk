@@ -177,6 +177,8 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
           const [metronomeSecretVaultSecretsLoadingId, setMetronomeSecretVaultSecretsLoadingId] = useState("");
           const [metronomeCodeRunState, setMetronomeCodeRunState] = useState({ status: "idle", message: "" });
           const [metronomeCodeFilesDraft, setMetronomeCodeFilesDraft] = useState([]);
+          const [metronomeCodeUndoStack, setMetronomeCodeUndoStack] = useState([]);
+          const [metronomeCodeRedoStack, setMetronomeCodeRedoStack] = useState([]);
           const [metronomeWorkflowNameDraft, setMetronomeWorkflowNameDraft] = useState("");
           const [activeMetronomeCodeFilePath, setActiveMetronomeCodeFilePath] = useState("main.py");
           const [isMetronomeCodeDirty, setIsMetronomeCodeDirty] = useState(false);
@@ -1155,6 +1157,8 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
             setGraphRedoStack([]);
             setIsMetronomeCodeDirty(false);
             setMetronomeCodeFilesDraft([]);
+            setMetronomeCodeUndoStack([]);
+            setMetronomeCodeRedoStack([]);
             setActiveMetronomeCodeFilePath("main.py");
             setMetronomeCodeRunState({ status: "idle", message: "" });
             setMetronomeRuns([]);

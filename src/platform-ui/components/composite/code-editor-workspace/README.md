@@ -7,9 +7,10 @@
 `PlatformCodeEditorWorkspace` is the canonical multi-file editing surface. It owns:
 
 - the file navigation rail and active-file presentation;
+- nested-file disclosure and optional sidebar actions;
 - the editor content region and empty states;
 - the status footer;
-- primary and secondary footer actions rendered through the shared button primitives.
+- Undo and Redo controls rendered through the shared icon-button primitive.
 
 The caller remains responsible for file data, editor implementation, draft state, and persistence.
 Use `variant="full-screen"` when the workspace should occupy the complete width and height exposed by its content container.
@@ -22,10 +23,12 @@ Use `variant="full-screen"` when the workspace should occupy the complete width 
   onFileSelect={setActiveFileId}
   editor={<Editor value={source} onChange={setSource} />}
   status="Unsaved changes"
-  actions={[
-    { id: "revert", label: "Revert", onClick: revert },
-    { id: "save", label: "Save", variant: "primary", onClick: save },
-  ]}
+  historyControls={{
+    onUndo: undo,
+    onRedo: redo,
+    undoDisabled: !canUndo,
+    redoDisabled: !canRedo,
+  }}
 />
 ```
 

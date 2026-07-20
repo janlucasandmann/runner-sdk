@@ -6,10 +6,12 @@ const domainRoot = path.dirname(fileURLToPath(import.meta.url));
 
 export const COMPUTE_RESOURCES_CONTROLLER_FRAGMENT_PATHS = Object.freeze([
   "controller/bootstrap-and-effects.js",
+  "controller/catalog-and-lifecycle.js",
   "controller/routing-access-and-connections.js",
   "controller/mutations-and-data.js",
   "controller/environment-versioning.js",
   "controller/server-versioning-and-composers.js",
+  "controller/server-authoritative-versioning.js",
   "controller/server-detail-view.js",
   "controller/database-detail-view.js",
   "controller/computer-detail-view.js",

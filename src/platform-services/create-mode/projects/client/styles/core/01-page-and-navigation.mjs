@@ -289,63 +289,14 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
         min-width: 0;
         width: 100%;
         display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        justify-content: center;
-        gap: 5px;
-      }
-
-      .playground-tasks-ticket-page-nav-ticket-row {
-        display: inline-flex;
         align-items: center;
-        gap: 4px;
-        min-width: 0;
-        width: fit-content;
-        border: 0;
-        border-radius: 4px;
-        background: transparent;
+        justify-content: flex-start;
+        gap: 6px;
+      }
+
+      .playground-tasks-ticket-page-back-link {
+        flex: 0 0 auto;
         color: rgba(255, 255, 255, 0.7);
-        font: inherit;
-        text-align: left;
-        padding: 0;
-        cursor: pointer;
-      }
-
-      .playground-tasks-ticket-page-nav-ticket-row:hover {
-        color: rgba(255, 255, 255, 0.94);
-      }
-
-      .playground-tasks-ticket-page-nav-ticket-row:focus-visible {
-        outline: 1px solid rgba(255, 255, 255, 0.42);
-        outline-offset: 3px;
-      }
-
-      .playground-tasks-ticket-page-nav-back {
-        width: 14px;
-        height: 14px;
-        flex: 0 0 14px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border: 0;
-        border-radius: 999px;
-        background: transparent;
-        color: currentColor;
-        padding: 0;
-        cursor: pointer;
-      }
-
-      .playground-tasks-ticket-page-nav-back:hover,
-      .playground-tasks-ticket-page-nav-ticket-row:hover .playground-tasks-ticket-page-nav-back,
-      .playground-tasks-ticket-page-nav-ticket-row:hover .playground-tasks-ticket-page-nav-ticket {
-        color: rgba(255, 255, 255, 0.94);
-      }
-
-      .playground-tasks-ticket-page-nav-ticket {
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 10px;
-        font-weight: 400;
-        line-height: 1;
       }
 
       .playground-tasks-ticket-screen-panel .playground-tasks-ticket-page-nav-title-input {
@@ -406,6 +357,13 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
         gap: 0;
       }
 
+      .playground-ticket-detail-content
+        .platform-instructions-editor.playground-tasks-detail-description {
+        margin-top: 0;
+        margin-bottom: 0;
+        padding-bottom: 3px;
+      }
+
       .playground-ticket-detail-content > .playground-tasks-detail-main {
         width: 100%;
         height: 100%;
@@ -415,6 +373,12 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
         .playground-ticket-detail-content
         .playground-environments-detail-scroll.playground-tasks-detail-scroll {
         padding-top: 0 !important;
+      }
+
+      .playground-content-body.is-tasks-page
+        .playground-environments-page.playground-tasks-ticket-screen:not(.playground-agents-page)
+        .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll {
+        padding-right: 50px !important;
       }
 
       .playground-ticket-detail-sidebar.playground-agents-detail-sidebar.playground-project-overview-sidebar {
@@ -442,10 +406,6 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
       .playground-ticket-detail-sidebar-section {
         overflow: visible;
         box-shadow: none;
-      }
-
-      .playground-ticket-detail-sidebar-section .platform-detail-sidebar__section-title {
-        color: rgba(255, 255, 255, 0.94);
       }
 
       .playground-ticket-detail-sidebar .is-centralized-sidebar-content {
@@ -540,6 +500,10 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
       .playground-tasks-ticket-screen-panel .playground-tasks-detail-navbar-ticket {
         color: rgba(255, 255, 255, 0.7);
         font-weight: 400;
+      }
+
+      .playground-tasks-ticket-attachments {
+        margin-top: 12px;
       }
 
       .playground-tasks-ticket-screen-panel .playground-tasks-attachments-environment-button,
@@ -1126,6 +1090,67 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
         width: 100%;
       }
 
+      .playground-content-body.is-tasks-page
+        .playground-environments-page.playground-tasks-project-workspace:not(.playground-agents-page)
+        .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-board {
+        padding-bottom: 24px;
+      }
+
+      .playground-tasks-backlog-header.is-backlog-list-header {
+        gap: 0;
+      }
+
+      .playground-tasks-backlog-header.is-board-list-header {
+        gap: 0;
+      }
+
+      .playground-tasks-backlog-header.is-backlog-list-header
+        .playground-tasks-backlog-heading,
+      .playground-tasks-backlog-header.is-board-list-header
+        .playground-tasks-backlog-heading {
+        font-weight: 400;
+      }
+
+      .playground-tasks-backlog-header.is-backlog-list-header
+        .playground-tasks-backlog-header-main,
+      .playground-tasks-backlog-header.is-board-list-header
+        .playground-tasks-backlog-header-main {
+        gap: 8px;
+      }
+
+      .playground-tasks-project-workspace
+        .playground-tasks-backlog-view
+        .playground-tasks-backlog-item {
+        border-color: rgba(255, 255, 255, 0.075);
+        background: rgba(255, 255, 255, 0.075);
+      }
+
+      .playground-tasks-backlog-header-actions {
+        min-width: 0;
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .playground-tasks-backlog-central-search.platform-search,
+      .playground-tasks-board-central-search.platform-search {
+        width: 300px;
+        min-width: 300px;
+        flex: 0 0 300px;
+      }
+
+      .playground-tasks-backlog-filter-shell.is-central-popup,
+      .playground-tasks-board-filter-shell.is-central-popup {
+        display: inline-flex;
+      }
+
+      .playground-tasks-backlog-filter-menu.is-central-popup,
+      .playground-tasks-board-filter-menu.is-central-popup {
+        width: 280px;
+      }
+
       .playground-projects-overview-title-block {
         padding-bottom: 12px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -1138,6 +1163,27 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
       .playground-projects-overview-surface.is-card-grid .playground-projects-overview-title-block {
         padding-bottom: 0;
         border-bottom: 0;
+      }
+
+      @media (max-width: 760px) {
+        .playground-tasks-backlog-header.is-backlog-list-header
+          .playground-tasks-backlog-header-row,
+        .playground-tasks-backlog-header.is-board-list-header
+          .playground-tasks-backlog-header-row {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .playground-tasks-backlog-header-actions {
+          width: 100%;
+        }
+
+        .playground-tasks-backlog-central-search.platform-search,
+        .playground-tasks-board-central-search.platform-search {
+          width: 100%;
+          min-width: 0;
+          flex: 1 1 auto;
+        }
       }
 
 `;

@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { GitBranchPlus } from "lucide-react";
+import { Bookmark, GitBranchPlus } from "lucide-react";
 import { AgentPublishControl } from "./agent-publish-control.js";
 
 afterEach(cleanup);
@@ -65,5 +65,22 @@ describe("AgentPublishControl", () => {
     fireEvent.click(screen.getByRole("menuitem", { name: "Save to new Version" }));
     expect(onOpenChange).toHaveBeenCalledWith(false);
     expect(onSaveVersion).toHaveBeenCalledTimes(1);
+  });
+
+  it("supports the shared agent save-changes presentation", () => {
+    render(
+      <AgentPublishControl
+        open={false}
+        actions={[]}
+        label="Save Changes"
+        leading={<Bookmark data-testid="save-changes-icon" />}
+        publishAriaLabel="Save agent changes"
+        onOpenChange={vi.fn()}
+        onPublish={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Save agent changes" }).textContent).toContain("Save Changes");
+    expect(screen.getByTestId("save-changes-icon")).not.toBeNull();
   });
 });

@@ -1712,9 +1712,10 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	              React.createElement("div", { className: "playground-project-overview-strategy-add-row playground-project-overview-rules-inline-title-row" },
 	                React.createElement("h2", { className: "playground-project-overview-strategy-add-title" }, "Rules"),
 	                canEditRules
-	                  ? React.createElement("button", {
+	                  ? React.createElement(PlatformSecondaryButton, {
 	                      type: "button",
-	                      className: "playground-files-control-button playground-project-teams-add-button playground-project-settings-add-rule-button",
+	                      size: "small",
+	                      className: "playground-project-settings-add-rule-button",
 	                      onClick: () => {
 	                        if (typeof setProjectRuleInputValue === "function") {
 	                          setProjectRuleInputValue("");
@@ -1878,7 +1879,11 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
                           }, reducedTeamName)
                         : React.createElement("span", { className: "playground-project-settings-source-button" }, reducedTeamName)
                     ),
-                    renderPlaygroundPermissionsPage(selectedRolePermissionSet, {
+                    React.createElement(PlatformPermissionsPage, {
+                      permissionSet: selectedRolePermissionSet,
+                      accessOptions: PLAYGROUND_PERMISSION_ACCESS_OPTIONS,
+                      ringDefinitions: PLAYGROUND_PERMISSION_RING_DEFINITIONS,
+                      actionDefinitions: PLAYGROUND_PERMISSION_ACTION_DEFINITIONS,
                       subjectType: "project_team_role",
                       animationKey: projectPermissionChartAnimationKey,
                       disabled: true,
@@ -1952,40 +1957,57 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	                    )
 	              );
 	            };
-	            const renderAddProjectTeamsMenu = () => {
-	              if (projectOverviewTeamMenuId !== "add-teams") {
-	                return null;
-	              }
-	              return React.createElement(PlatformPopupSurface, {
-	                  className: "playground-tasks-toolbar-popup-menu playground-project-teams-add-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-	                  onClick: (event) => event.stopPropagation(),
-	                },
-	                removedWorkspaceTeams.length
-	                  ? removedWorkspaceTeams.map((team) =>
-	                      React.createElement("button", {
-	                        key: team.id,
-	                        type: "button",
-	                        className: "tb-popup-row playground-project-team-menu-item",
-	                        onClick: () => handleAddProjectTeam(team),
-	                      },
-	                        React.createElement(UsersRound, { width: 14, height: 14, strokeWidth: 1.8 }),
-	                        React.createElement("span", null, team.name || "Untitled team")
-	                      )
-	                    )
-	                  : React.createElement("button", {
+	            const renderAddProjectTeamsMenuContent = () =>
+	              removedWorkspaceTeams.length
+	                ? removedWorkspaceTeams.map((team) =>
+	                    React.createElement("button", {
+	                      key: team.id,
 	                      type: "button",
+	                      role: "menuitem",
 	                      className: "tb-popup-row playground-project-team-menu-item",
-	                      disabled: true,
-	                    }, workspaceTeamsLoading ? "Loading teams..." : "All teams already have access")
-	              );
-	            };
+	                      onClick: () => handleAddProjectTeam(team),
+	                    },
+	                      React.createElement(UsersRound, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                      React.createElement("span", null, team.name || "Untitled team")
+	                    )
+	                  )
+	                : React.createElement("button", {
+	                    type: "button",
+	                    role: "menuitem",
+	                    className: "tb-popup-row playground-project-team-menu-item",
+	                    disabled: true,
+	                  }, workspaceTeamsLoading ? "Loading teams..." : "All teams already have access");
 
 	            const renderProjectTeamTable = () => {
+	              const isAddTeamsMenuOpen = projectOverviewTeamMenuId === "add-teams";
 	              const addTeamsControl = hasRealAccess
-	                ? React.createElement("div", { className: "playground-tasks-toolbar-popup-shell playground-project-teams-add-shell" + (projectOverviewTeamMenuId === "add-teams" ? " is-open" : "") },
-	                    React.createElement("button", {
+	                ? React.createElement(PlatformPopup, {
+	                    open: isAddTeamsMenuOpen,
+	                    variant: "minimal",
+	                    portal: true,
+	                    placement: "bottom-end",
+	                    portalOffset: 6,
+	                    rootClassName: "playground-project-teams-add-shell",
+	                    surfaceClassName: "playground-project-teams-add-menu",
+	                    surfaceProps: {
+	                      role: "menu",
+	                      "aria-label": "Add teams to project",
+	                      onClick: (event) => event.stopPropagation(),
+	                      onKeyDown: (event) => {
+	                        if (event.key === "Escape") {
+	                          event.preventDefault();
+	                          event.stopPropagation();
+	                          closeProjectTeamMenu();
+	                        }
+	                      },
+	                    },
+	                    animation: "down-in",
+	                    trigger: React.createElement(PlatformSecondaryButton, {
 	                      type: "button",
-	                      className: "playground-files-control-button playground-project-teams-add-button",
+	                      size: "small",
+	                      className: "playground-project-teams-add-button",
+	                      "aria-haspopup": "menu",
+	                      "aria-expanded": isAddTeamsMenuOpen ? "true" : "false",
 	                      onClick: (event) => {
 	                        event.stopPropagation();
 	                        if (!workspaceTeamsLoading) requestProjectOverviewWorkspaceTeams?.();
@@ -1995,8 +2017,9 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	                    },
 	                      React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
 	                      React.createElement("span", null, "Add Teams")
-	                    ),
-	                    renderAddProjectTeamsMenu()
+	                    )
+	                  },
+	                    renderAddProjectTeamsMenuContent()
 	                  )
 	                : null;
 	              const columns = [
@@ -2030,17 +2053,18 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	                },
 	              ];
 	              return React.createElement("section", { className: "playground-project-settings-access-section" },
-	                React.createElement("div", { className: "playground-project-teams-table-heading" },
-	                  React.createElement("h2", { className: "playground-project-teams-table-title" }, "Manage Project Access")
-	                ),
 	                React.createElement(PlatformDataTable, {
 	                  rows: projectPermissionTeams,
 	                  columns,
 	                  getRowId: (team) => String(team.id || ""),
 	                  ariaLabel: "Project team access",
 	                  className: "playground-project-access-platform-data-table",
+	                  variant: "minimalistic-ui",
 	                  sorting: { defaultValue: { id: "team", direction: "asc" } },
-	                  toolbar: addTeamsControl ? { trailing: addTeamsControl } : undefined,
+	                  toolbar: {
+	                    title: "Manage Project Access",
+	                    ...(addTeamsControl ? { trailing: addTeamsControl } : {}),
+	                  },
 	                  onRowActivate: openProjectOverviewPermissionDetail,
 	                  getRowActions: (team) => team.locked
 	                    ? []
@@ -2117,7 +2141,11 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	                  )
 	                ),
 	                isAllAgentsTeam
-	                  ? renderPlaygroundPermissionsPage(projectPermissionSet, {
+	                  ? React.createElement(PlatformPermissionsPage, {
+	                      permissionSet: projectPermissionSet,
+	                      accessOptions: PLAYGROUND_PERMISSION_ACCESS_OPTIONS,
+	                      ringDefinitions: PLAYGROUND_PERMISSION_RING_DEFINITIONS,
+	                      actionDefinitions: PLAYGROUND_PERMISSION_ACTION_DEFINITIONS,
 	                      subjectType: "project",
 	                      animationKey: projectPermissionChartAnimationKey,
 	                      onRingAccessChange: updateProjectPermissionRingAccess,

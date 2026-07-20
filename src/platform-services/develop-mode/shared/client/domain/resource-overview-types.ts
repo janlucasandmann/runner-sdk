@@ -60,6 +60,7 @@ export interface DevelopResourceOperationalMetrics {
   labels?: readonly string[];
   scopeKind?: string;
   period?: ResourceOverviewPeriod;
+  resources?: readonly unknown[];
   resourceCount?: number;
   resourceCounts?: Readonly<Record<string, number>>;
   series?: Partial<Record<DevelopResourceMetricKey, readonly number[]>>;

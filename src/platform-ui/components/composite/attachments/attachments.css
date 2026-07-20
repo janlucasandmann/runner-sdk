@@ -1,0 +1,300 @@
+.platform-attachments {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  flex: 0 0 auto;
+  align-self: stretch;
+  padding: 12px 24px;
+  overflow: hidden;
+}
+
+.platform-attachments__header {
+  min-width: 0;
+  min-height: 28px;
+  padding-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.platform-attachments__title {
+  min-width: 0;
+  margin: 0;
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.3;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.platform-attachments__computer-upload {
+  margin-left: auto;
+}
+
+button.platform-attachments__computer-upload.platform-button {
+  padding-right: 0 !important;
+}
+
+button.platform-attachments__computer-upload.platform-button.is-secondary,
+button.platform-attachments__computer-upload.platform-button.is-secondary:hover:not(:disabled),
+button.platform-attachments__computer-upload.platform-button.is-secondary.is-active {
+  background: transparent !important;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.platform-attachments__drop-target {
+  min-width: 0;
+  margin-top: 10px;
+  border-radius: 10px;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.platform-attachments__drop-target.is-empty {
+  min-height: 168px;
+  border: 0;
+}
+
+.platform-attachments__drop-target.is-dragging {
+  border-color: rgba(77, 163, 255, 0.72);
+  background: rgba(77, 163, 255, 0.075);
+  box-shadow: inset 0 0 0 1px rgba(77, 163, 255, 0.2);
+}
+
+.platform-attachments__empty {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 166px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 20px 16px;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.platform-attachments__empty:disabled,
+.platform-attachments__add-row:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.platform-attachments__empty-icon {
+  width: 16px;
+  height: 16px;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.platform-attachments__empty-title {
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 400;
+}
+
+.platform-attachments__empty-description {
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 10px;
+  line-height: 1.35;
+  font-weight: 400;
+}
+
+.platform-attachments__list {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.platform-attachments__add-row,
+.platform-attachments__item {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 56px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  transition: background-color 140ms ease;
+}
+
+.platform-attachments__add-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.platform-attachments__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.platform-attachments__add-row:hover:not(:disabled),
+.platform-attachments__item:hover,
+.platform-attachments__item:focus-within,
+.platform-attachments__item.is-active {
+  background: rgba(255, 255, 255, 0.0375);
+}
+
+.platform-attachments__add-row:focus-visible,
+.platform-attachments__item-main:focus-visible {
+  outline: 1px solid rgba(77, 163, 255, 0.72);
+  outline-offset: -1px;
+}
+
+.platform-attachments__add-icon,
+.platform-attachments__preview {
+  box-sizing: border-box;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 7px;
+  color: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.platform-attachments__add-icon {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+}
+
+.platform-attachments__add-icon > svg,
+.platform-attachments__preview > svg {
+  width: 16px;
+  height: 16px;
+}
+
+.platform-attachments__preview > img,
+.platform-attachments__image-surface,
+.platform-attachments__image-surface .platform-attachments__image {
+  width: 100%;
+  height: 100%;
+}
+
+.platform-attachments__preview > img {
+  box-sizing: border-box;
+  padding: 7px;
+  object-fit: contain;
+}
+
+.platform-attachments__image-surface {
+  display: block;
+  overflow: hidden;
+  border-radius: inherit;
+  background: transparent;
+}
+
+.platform-attachments__image-surface .platform-attachments__image {
+  display: block;
+  max-height: none !important;
+  object-fit: cover;
+}
+
+.platform-attachments__item-main {
+  min-width: 0;
+  min-height: 56px;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+button.platform-attachments__item-main {
+  cursor: pointer;
+}
+
+.platform-attachments__copy {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.platform-attachments__name {
+  min-width: 0;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  line-height: 1.3;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-attachments__metadata {
+  min-width: 0;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 10px;
+  line-height: 1.3;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-attachments__item-actions {
+  min-width: 0;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-right: 8px;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.platform-attachments__item:hover .platform-attachments__item-actions,
+.platform-attachments__item:focus-within .platform-attachments__item-actions {
+  opacity: 1;
+}
+
+.platform-attachments__status,
+.platform-attachments__error {
+  margin-top: 8px;
+  font-size: 10px;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.platform-attachments__status {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.platform-attachments__error {
+  color: #ff8f8f;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .platform-attachments__drop-target,
+  .platform-attachments__add-row,
+  .platform-attachments__item,
+  .platform-attachments__item-actions {
+    transition-duration: 1ms;
+  }
+}

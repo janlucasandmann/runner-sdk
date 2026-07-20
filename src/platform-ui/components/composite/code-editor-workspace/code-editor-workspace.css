@@ -54,6 +54,14 @@
   letter-spacing: 0;
 }
 
+.platform-code-editor-workspace__sidebar-actions {
+  min-width: 0;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .platform-code-editor-workspace__file-list {
   min-height: 0;
   flex: 1;
@@ -98,6 +106,15 @@
   width: 14px;
   height: 14px;
   flex: 0 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.platform-code-editor-workspace__file-spacer > svg {
+  width: 14px;
+  height: 14px;
 }
 
 .platform-code-editor-workspace__file-icon {

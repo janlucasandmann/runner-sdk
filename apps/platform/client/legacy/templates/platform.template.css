@@ -12533,7 +12533,7 @@
         }
   
         .playground-resources-page.is-develop-server-kind-page > .playground-environments-detail-scroll.playground-settings-detail-scroll.is-code-tab {
-          padding-bottom: 12px;
+          padding-bottom: 42px;
         }
   
         .playground-resources-page.is-develop-server-kind-page .playground-resources-detail-content,
@@ -14650,7 +14650,7 @@
           margin: 0 auto;
           display: flex;
           flex-direction: column;
-          gap: 24px;
+          gap: var(--resource-detail-section-gap, 24px);
         }
   
         .playground-resources-page.is-servers-view .playground-server-detail-content,
@@ -15499,6 +15499,11 @@
           padding-top: 0;
           border-top: 0;
         }
+
+        .playground-server-custom-domains-platform-table {
+          margin-block: 0;
+          padding-block: 0;
+        }
   
         .playground-server-custom-domain-section {
           --playground-project-overview-control-border: linear-gradient(
@@ -15522,8 +15527,14 @@
           margin-bottom: 24px;
         }
   
-        .playground-server-settings-tab .playground-server-danger-section {
-          margin-top: 24px;
+        .playground-server-settings-tab {
+          display: flex;
+          flex-direction: column;
+          gap: var(--resource-detail-section-gap, 42px);
+        }
+
+        .playground-server-settings-tab > * {
+          margin-block: 0;
         }
   
         .playground-server-custom-domain-section::before {
@@ -16616,28 +16627,6 @@
           letter-spacing: 0;
           line-height: 1;
           text-transform: none;
-        }
-  
-        .playground-servers-code-add-file-button {
-          min-height: 26px;
-          padding: 0 10px;
-          border-radius: 999px;
-          font-size: 12px;
-          line-height: 1;
-        }
-  
-        .playground-servers-code-add-file-shell {
-          position: relative;
-          flex: 0 0 auto;
-        }
-  
-        .playground-servers-code-add-file-menu {
-          right: 0;
-          left: auto;
-          top: calc(100% + 8px);
-          width: 154px;
-          min-width: 154px;
-          z-index: 60;
         }
   
         .playground-servers-code-file-list {
@@ -17890,6 +17879,7 @@
         }
   
         .playground-servers-logs-section-header.playground-plugins-section-header {
+          align-items: center;
           margin-top: 0;
           padding-bottom: 0;
           border-bottom: 0;
@@ -17897,6 +17887,16 @@
   
         .playground-servers-logs-section-header .playground-plugins-section-title {
           margin-top: 0;
+          font-size: 14px;
+          font-weight: 400;
+        }
+
+        .playground-server-settings-tab.is-function-settings-tab > .playground-tasks-detail-description {
+          margin-top: 0;
+        }
+
+        .playground-database-description-section.playground-agents-detail-instructions-section {
+          padding-bottom: 3px !important;
         }
   
         .playground-servers-deployments-surface.is-web-app-history .playground-plugins-section-header {
@@ -19618,7 +19618,10 @@
         }
   
         .playground-agents-creation-modal {
-          max-height: min(800px, calc(100dvh - 48px));
+          display: flex;
+          flex-direction: column;
+          height: min(75vh, calc(100dvh - 48px));
+          max-height: min(75vh, calc(100dvh - 48px));
         }
 
         .playground-agents-creation-modal .platform-modal-header.is-media {
@@ -19718,12 +19721,38 @@
         }
 
         .playground-agents-creation-modal-body.platform-modal-body {
-          min-height: 390px;
-          overflow-y: auto;
+          min-height: 0;
+          flex: 1 1 0;
+          display: block;
+          padding-top: 0;
+          overflow-x: hidden !important;
+          overflow-y: auto !important;
+          overscroll-behavior: contain;
+          touch-action: pan-y;
+          scrollbar-width: thin !important;
+          scrollbar-color: rgba(255, 255, 255, 0.24) transparent;
+        }
+
+        .playground-agents-creation-modal-body.platform-modal-body::-webkit-scrollbar {
+          display: block;
+          width: 6px;
+          height: 6px;
+        }
+
+        .playground-agents-creation-modal-body.platform-modal-body::-webkit-scrollbar-track {
+          background: transparent;
+        }
+
+        .playground-agents-creation-modal-body.platform-modal-body::-webkit-scrollbar-thumb {
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.24);
         }
 
         .playground-agents-creation-config-box {
           width: 100%;
+          height: auto;
+          min-height: 0;
+          flex: none;
           margin: 0;
           padding: 0;
           border: 0;
@@ -19738,13 +19767,25 @@
           padding-top: 0;
         }
 
-        .playground-agents-creation-instructions-section.platform-instructions-editor {
+        .playground-agents-creation-modal .playground-agents-creation-instructions-section.platform-instructions-editor {
           min-height: 220px;
+          flex: none;
           margin-bottom: 0;
+          display: block;
+          overflow: visible !important;
         }
 
-        .playground-agents-creation-instructions-section .platform-instructions-editor__body {
+        .playground-agents-creation-modal .playground-agents-creation-instructions-section
+          .platform-instructions-editor__header {
+          background: #1a1a1a !important;
+        }
+
+        .playground-agents-creation-modal .playground-agents-creation-instructions-section.platform-instructions-editor
+          .platform-instructions-editor__body.playground-tasks-detail-description-editor {
+          height: auto;
           min-height: 174px;
+          flex: none;
+          overflow: visible !important;
         }
 
         .playground-agents-creation-instructions-section .platform-instructions-editor__preview-scope,
@@ -19755,6 +19796,7 @@
   
         .playground-agents-creation-settings {
           width: 100%;
+          margin-top: 24px;
         }
 
         .playground-agents-creation-settings .playground-tasks-detail-fact:first-child {
@@ -19822,7 +19864,7 @@
           }
 
           .playground-agents-creation-modal-body.platform-modal-body {
-            min-height: min(390px, calc(100dvh - 280px));
+            min-height: 0;
           }
 
           .playground-computer-creation-modal-body.platform-modal-body {
@@ -29421,7 +29463,7 @@
         }
   
         .playground-agents-detail-overview-main.playground-project-overview-main {
-          gap: 20px;
+          gap: var(--resource-detail-section-gap, 20px);
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
         }
@@ -29933,7 +29975,17 @@
         .playground-computer-api-modal-body.playground-tasks-issue-modal-body {
           padding-top: 0;
         }
-  
+
+        .playground-agent-api-modal.platform-modal-surface {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .playground-agent-api-modal-body.platform-modal-body {
+          min-height: 0;
+          overflow-y: auto;
+        }
+
         .playground-computer-api-config-row {
           min-width: 0;
           display: flex;
@@ -29950,8 +30002,7 @@
           font-weight: 400;
         }
   
-        .playground-computer-api-agent-select-popup.playground-agents-model-select-popup,
-        .playground-agent-api-environment-select-popup.playground-agents-model-select-popup {
+        .playground-computer-api-agent-select-popup.playground-agents-model-select-popup {
           min-width: 0;
           flex: 1 1 auto;
           display: inline-flex;
@@ -29959,21 +30010,44 @@
           z-index: 80;
         }
   
-        .playground-computer-api-agent-select-popup.playground-agents-model-select-popup .playground-environments-runtime-value-button,
-        .playground-agent-api-environment-select-popup.playground-agents-model-select-popup .playground-environments-runtime-value-button {
+        .playground-computer-api-agent-select-popup.playground-agents-model-select-popup .playground-environments-runtime-value-button {
           width: min(320px, 100%);
         }
   
-        .playground-computer-api-agent-select-popup .playground-tasks-toolbar-popup-menu,
-        .playground-agent-api-environment-select-popup .playground-tasks-toolbar-popup-menu {
+        .playground-computer-api-agent-select-popup .playground-tasks-toolbar-popup-menu {
           right: 0;
           left: auto;
           width: min(320px, calc(100vw - 64px));
         }
   
-        .playground-computer-api-agent-select-popup .tb-popup-row,
-        .playground-agent-api-environment-select-popup .tb-popup-row {
+        .playground-computer-api-agent-select-popup .tb-popup-row {
           min-width: 0;
+        }
+
+        .playground-agent-api-environment-selector.platform-selector {
+          flex: 1 1 auto;
+          max-width: 320px;
+          margin-left: auto;
+        }
+
+        .playground-agent-api-environment-selector-trigger.platform-selector__trigger {
+          width: 100%;
+          justify-content: flex-end;
+          text-align: right;
+        }
+
+        .playground-agent-api-environment-selector-value {
+          min-width: 0;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .playground-agent-api-environment-selector-value span {
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
   
         .playground-computer-api-card.playground-server-invoke-card {
@@ -30454,15 +30528,26 @@
   	      }
   
         .playground-agents-detail-about-model-readonly {
+          appearance: none;
           min-width: 0;
+          padding: 0;
+          border: 0;
+          background: transparent;
           display: inline-flex;
           align-items: center;
           justify-content: flex-start;
           gap: 10px;
           color: rgba(255, 255, 255, 0.86);
+          cursor: default;
+          font-family: inherit;
           font-size: 12px;
           line-height: 1.35;
           font-weight: 400;
+          text-align: left;
+        }
+
+        .playground-agents-detail-about-model-readonly:disabled {
+          opacity: 0.42;
         }
   
         .playground-agents-detail-about-model-readonly-label {
@@ -30777,6 +30862,11 @@
           flex-direction: column;
           overflow: visible;
         }
+
+        .playground-agents-send-team-modal.platform-modal-surface:not(.playground-tasks-project-modal) {
+          display: flex;
+          flex-direction: column;
+        }
   
         .playground-agents-send-team-modal .playground-tasks-project-modal-top {
           gap: 12px;
@@ -30885,6 +30975,10 @@
   
         .playground-agents-send-team-actions {
           margin-top: 16px;
+        }
+
+        .playground-agents-send-team-modal > .playground-agents-send-team-actions.platform-modal-footer {
+          margin-top: 0;
         }
   
         .playground-agents-detail-summary .playground-environments-home-summary-kpis,

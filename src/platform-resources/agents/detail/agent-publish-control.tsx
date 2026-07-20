@@ -21,6 +21,7 @@ export interface AgentPublishControlProps {
   menuDisabled?: boolean;
   active?: boolean;
   label?: ReactNode;
+  leading?: ReactNode;
   publishAriaLabel?: string;
   menuAriaLabel?: string;
   className?: string;
@@ -36,6 +37,7 @@ export function AgentPublishControl({
   menuDisabled = disabled,
   active = false,
   label = "Save & Publish",
+  leading = <Rocket />,
   publishAriaLabel = "Save and publish agent changes",
   menuAriaLabel = "Version save options",
   className = "",
@@ -50,7 +52,7 @@ export function AgentPublishControl({
       onOpenChange={onOpenChange}
       onAction={onPublish}
       label={label}
-      leading={<Rocket />}
+      leading={leading}
       actionAriaLabel={publishAriaLabel}
       popupAriaLabel={menuAriaLabel}
       actionDisabled={disabled}

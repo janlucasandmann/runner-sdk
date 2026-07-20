@@ -246,23 +246,12 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
                     : null,
                   status: codeStatusMessage,
                   statusTone: codeStatusTone,
-                  actions: [
-                    {
-                      id: "revert",
-                      label: "Revert",
-                      variant: "secondary",
-                      onClick: handleRevertMetronomeCodeDraft,
-                      disabled: isActiveWorkflowBuiltIn || !isMetronomeCodeDirty,
-                    },
-                    {
-                      id: "save",
-                      label: "Save",
-                      icon: React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      variant: "primary",
-                      onClick: handleApplyMetronomeCodeDraft,
-                      disabled: isActiveWorkflowBuiltIn || !isMetronomeCodeDirty,
-                    },
-                  ],
+                  historyControls: {
+                    onUndo: handleMetronomeCodeUndo,
+                    onRedo: handleMetronomeCodeRedo,
+                    undoDisabled: isActiveWorkflowBuiltIn || metronomeCodeUndoStack.length === 0,
+                    redoDisabled: isActiveWorkflowBuiltIn || metronomeCodeRedoStack.length === 0,
+                  },
                 })
               )
             );

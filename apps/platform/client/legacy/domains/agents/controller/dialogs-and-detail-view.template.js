@@ -136,7 +136,7 @@
                       className: "tb-popup-row",
                       onClick: () => {
                         closeAgentListActionMenu();
-                        openAgentCopyComposer(agentListActionTarget);
+                        openAgentCopyModal(agentListActionTarget);
                       },
                       disabled: saveState.isSaving,
                     },
@@ -1370,7 +1370,7 @@
                     )
                   )
                 ),
-                alignment: "end",
+                alignment: "start",
                 fullWidth: true,
                 loading: ownerOptions.length === 0 && (workspaceTeamsLoading || ownerMenuIsLoading),
                 loadingContent: "Loading team members...",
@@ -1503,141 +1503,6 @@
               )
             );
   
-            const canShowAgentDetailHeaderPublish = Boolean(
-              !agentCreationSetupOpen
-              && draftAgent?.id
-              && draftAgent.id !== PLAYGROUND_AGENT_DRAFT_ID
-              && !draftAgent.isSystem
-              && !draftAgent.isDefault
-              && !isDefaultAgentConfigurationLocked
-            );
-            const isAgentVersionControlBusy = saveState.isSaving || agentVersionState.status === "loading";
-            const agentDetailVersions = readDraftAgentVersions();
-            const selectedAgentDetailVersion = getDraftAgentSelectedVersion() || getDraftAgentActiveVersion() || agentDetailVersions[0] || null;
-            const activeAgentDetailVersion = getDraftAgentActiveVersion();
-            const selectedAgentDetailVersionId = String(selectedAgentDetailVersion?.id || "").trim();
-            const activeAgentDetailVersionId = String(activeAgentDetailVersion?.id || "").trim();
-            const getAgentDetailVersionTitle = (version) => {
-              if (!version) return "No versions";
-              return String(version.label || ("Version " + (version.version || ""))).trim() || "Version";
-            };
-            const getAgentDetailVersionMeta = (version) => {
-              if (!version) return "";
-              const versionId = String(version.id || "").trim();
-              const status = versionId && versionId === activeAgentDetailVersionId
-                ? "Published"
-                : (String(version.status || "").toLowerCase() === "active" ? "Published" : "Saved");
-              const timestamp = String(version.publishedAt || version.updatedAt || version.createdAt || "").trim();
-              const formattedTimestamp = timestamp ? formatPlaygroundFileDate(timestamp) : "";
-              return status + (formattedTimestamp ? " · " + formattedTimestamp : "");
-            };
-  	          const renderAgentVersionSelector = () => {
-  	            const hasVersions = agentDetailVersions.length > 0;
-  	            const currentTitle = getAgentDetailVersionTitle(selectedAgentDetailVersion);
-  	            const selectorDisabled = isAgentVersionControlBusy;
-  	            const canCreateVersionFromSelector = Boolean(canShowAgentDetailHeaderPublish && !isAgentVersionControlBusy);
-  	            return React.createElement(PlatformButtonSelector, {
-  	                mode: "popup",
-  	                buttonVariant: "secondary",
-  	                buttonSize: "small",
-  	                open: agentVersionSelectorMenuOpen,
-  	                onOpenChange: (nextOpen) => {
-  	                  if (nextOpen) {
-  	                    setAgentPublishMenuOpen(false);
-  	                    setAgentVersionsHeaderMenuOpen(false);
-  	                  }
-  	                  setAgentVersionSelectorMenuOpen(nextOpen);
-  	                },
-  	                label: currentTitle,
-  	                leading: React.createElement(GitBranch, { className: "playground-agents-detail-version-selector-icon", strokeWidth: 1.8 }),
-  	                popupAriaLabel: "Choose agent version",
-  	                disabled: selectorDisabled,
-  	                active: agentVersionSelectorMenuOpen,
-  	                popupAlignment: "right",
-  	                popupRole: "menu",
-  	                popupWidth: 284,
-  	                popupMaxHeight: "min(340px, calc(100vh - 190px))",
-  	                className: "playground-agents-detail-version-selector-shell",
-  	                buttonClassName: "playground-agents-detail-version-selector-button",
-  	                popupClassName: "playground-agents-detail-publish-menu playground-agents-detail-version-selector-menu",
-  	              },
-  	              React.createElement(React.Fragment, null,
-  	                  React.createElement("div", { className: "playground-agents-detail-version-selector-list", role: "group", "aria-label": "Agent versions" },
-                      hasVersions
-                        ? agentDetailVersions.map((version, index) => {
-                            const versionId = String(version?.id || "").trim() || "version-" + index;
-                            const isSelected = versionId === selectedAgentDetailVersionId;
-                            return React.createElement("button", {
-                                key: versionId,
-                                type: "button",
-                                className: "tb-popup-row playground-agents-detail-version-selector-option" + (isSelected ? " is-selected" : ""),
-                                role: "menuitemradio",
-                                "aria-checked": isSelected ? "true" : "false",
-                                disabled: isAgentVersionControlBusy || isSelected,
-                                onClick: () => {
-                                  if (isAgentVersionControlBusy || isSelected) {
-                                    return;
-                                  }
-                                  setAgentVersionSelectorMenuOpen(false);
-                                  void restoreAgentVersion(versionId);
-                                },
-                              },
-                              React.createElement("span", { className: "playground-agents-detail-version-selector-option-check" },
-                                isSelected
-                                  ? React.createElement(Check, { width: 13, height: 13, strokeWidth: 2.2 })
-                                  : null
-                              ),
-                              React.createElement("span", { className: "playground-agents-detail-version-selector-option-copy" },
-                                React.createElement("span", { className: "playground-agents-detail-version-selector-option-title" }, getAgentDetailVersionTitle(version)),
-                                React.createElement("span", { className: "playground-agents-detail-version-selector-option-meta" }, getAgentDetailVersionMeta(version))
-                              )
-                            );
-                          })
-                        : React.createElement("div", { className: "playground-agents-detail-version-selector-empty" }, "No versions yet.")
-                    ),
-                    React.createElement("div", { className: "playground-agents-detail-version-selector-footer" },
-                      React.createElement("button", {
-                          type: "button",
-                          className: "tb-popup-row playground-agents-detail-version-selector-new-button",
-                          role: "menuitem",
-                          disabled: !canCreateVersionFromSelector,
-                          onClick: () => {
-                            if (!canCreateVersionFromSelector) {
-                              return;
-                            }
-                            setAgentVersionSelectorMenuOpen(false);
-                            openCreateAgentVersionModal({ force: true });
-                          },
-                        },
-                        React.createElement(GitBranchPlus, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.1 }),
-                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                          React.createElement("span", null, "New Version")
-                        )
-                      ),
-                      React.createElement("button", {
-                          type: "button",
-                          className: "tb-popup-row playground-agents-detail-version-selector-new-button",
-                          role: "menuitem",
-                          disabled: !canShowAgentVersions || isAgentVersionControlBusy,
-                          onClick: () => {
-                            if (!canShowAgentVersions || isAgentVersionControlBusy) {
-                              return;
-                            }
-                            setAgentVersionSelectorMenuOpen(false);
-                            setAgentPublishMenuOpen(false);
-                            setAgentVersionsHeaderMenuOpen(false);
-                            openAgentVersionChangesPage();
-                          },
-                        },
-                        React.createElement(History, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.1 }),
-                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                          React.createElement("span", null, "Version history")
-                        )
-  	                    )
-  	                  )
-  	                )
-  	              );
-  	          };
             const renderAgentSidebarToggleButton = () => React.createElement("button", {
                 type: "button",
                 className: "playground-project-overview-sidebar-toggle",
@@ -1731,13 +1596,15 @@
                 )
               )
             );
-            const agentDetailTabBarActions = renderAgentVersionSelector();
+            const agentDetailTabBarActions = null;
             const agentDetailSidebarToggle = renderAgentSidebarToggleButton();
   
             const renderAgentReadonlyModelValue = (modelMeta) => {
               const providerIcon = getPlaygroundAgentModelProviderIcon(modelMeta);
-              return React.createElement("span", {
+              return React.createElement("button", {
+                  type: "button",
                   className: "playground-agents-detail-about-model-readonly",
+                  disabled: true,
                   title: modelMeta?.label || "Select model",
                 },
                 providerIcon
@@ -2380,8 +2247,10 @@
                   React.createElement("button", {
                       type: "button",
                       className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action",
-                      onClick: openAgentSendToTeamModal,
-                      disabled: !draftAgent?.id || draftAgent.id === PLAYGROUND_AGENT_DRAFT_ID,
+                      onClick: () => openAgentSendToTeamModal(draftAgent),
+                      disabled: !draftAgent?.id
+                        || draftAgent.id === PLAYGROUND_AGENT_DRAFT_ID
+                        || isDefaultAgentConfigurationLocked,
                     },
                     React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
                       React.createElement(UsersRound, { width: 14, height: 14, strokeWidth: 1.85 })
@@ -2402,7 +2271,7 @@
                   React.createElement("button", {
                       type: "button",
                       className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action",
-                      onClick: openForkedAgentComposer,
+                      onClick: openCurrentAgentCopyModal,
                     },
                     React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
                       React.createElement(Split, { width: 14, height: 14, strokeWidth: 1.85 })
@@ -3160,34 +3029,30 @@
   	            if (saveState.isSaving || agentVersionState.status === "loading") {
   	              return;
   	            }
-  	            if (agentVersionModal) {
+              if (agentVersionModal || agentVersionSaveDialog) {
   	              return;
   	            }
   
-  		            if (key === "s" && event.shiftKey) {
-  		              openCreateAgentVersionModal();
-  		              return;
-  		            }
-  
-              if (key === "s") {
-                if (hasDraftAgentVersionChanges()) {
-                  void saveAndPublishCurrentAgentVersion();
-                }
-                return;
-              }
-  
-              if (key === "p" && !event.shiftKey && hasDraftAgentVersionChanges()) {
-                void saveAndPublishCurrentAgentVersion();
+              if (hasDraftAgentVersionChanges()) {
+                openAgentVersionSaveDialog({
+                  mode: event.shiftKey ? "new" : undefined,
+                });
               }
             }
   
             window.addEventListener("keydown", handleAgentVersionKeyboardShortcut, true);
             return () => window.removeEventListener("keydown", handleAgentVersionKeyboardShortcut, true);
-          }, [canShowAgentVersions, draftAgent, saveState.isSaving, agentVersionState.status, agentVersionModal]);
+          }, [
+            agentVersionModal,
+            agentVersionSaveDialog,
+            agentVersionState.status,
+            canShowAgentVersions,
+            draftAgent,
+            saveState.isSaving,
+          ]);
           const agentsTopNavActions = topNavActionsContainer
             && !shouldShowAgentsHome
             && !agentCreationSetupOpen
-            && !agentVersionsSidebarOpen
             ? createPortal(
                 React.createElement(React.Fragment, null,
                   !agentVersionChangesState

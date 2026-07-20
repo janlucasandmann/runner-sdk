@@ -171,113 +171,104 @@
             );
           }
   
-          function renderAgentVersionsSidebar() {
+          function renderAgentVersionsSidebar(options = {}) {
             if (!canShowAgentVersions || !agentVersionsSidebarOpen) {
               return null;
             }
             const versions = readDraftAgentVersions();
             const metadata = getAgentVersionMetadata();
             const activeVersion = getDraftAgentActiveVersion();
+            const selectedVersion = getDraftAgentSelectedVersion();
             const activeVersionId = String(activeVersion?.id || metadata.activeAgentVersionId || metadata.active_agent_version_id || "").trim();
             const selectedVersionId = String(
+              selectedVersion?.id
+              ||
               metadata.restoredFromAgentVersionId
               || metadata.restored_from_agent_version_id
               || activeVersionId
               || ""
             ).trim();
-            return React.createElement(PlaygroundVersionSidebar, {
+            const normalizedAgentId = String(draftAgent?.id || selectedAgentId || "").trim();
+            const versionsLoading = agentVersionsLoadState.agentId === normalizedAgentId
+              && agentVersionsLoadState.status === "loading";
+            const versionsError = agentVersionsLoadState.agentId === normalizedAgentId
+              && agentVersionsLoadState.status === "error"
+              ? agentVersionsLoadState.error
+              : "";
+            const mutationStateContent = agentVersionState.status === "loading"
+              ? React.createElement("div", { className: "platform-version-history-sidebar__state" },
+                  agentVersionState.message || "Saving agent version..."
+                )
+              : agentVersionState.status === "error" && agentVersionState.error
+                ? React.createElement("div", {
+                    className: "platform-version-history-sidebar__state is-error",
+                    role: "alert",
+                  }, agentVersionState.error)
+                : null;
+            return React.createElement(PlatformVersionHistorySidebar, {
               open: agentVersionsSidebarOpen,
-              title: "Publish Agent",
+              title: "Version history",
+              sectionTitle: "All Versions",
+              className: "playground-agent-versions-sidebar",
+              width: "var(--playground-thread-task-detail-width)",
+              portal: Boolean(options.portal),
+              portalTarget: options.portalTarget || null,
               versions,
               activeVersionId,
               selectedVersionId,
-              state: agentVersionState,
-              busy: agentVersionState.status === "loading",
-              openMenuId: openAgentVersionMenuId,
-              onOpenMenuIdChange: setOpenAgentVersionMenuId,
-              headerMenuOpen: agentVersionsHeaderMenuOpen,
-              headerMenuActions: getAgentVersionPopupActions({ includeVersionHistory: false }),
-              headerMenuDisabled: saveState.isSaving || agentVersionState.status === "loading",
-              onHeaderMenuOpenChange: setAgentVersionsHeaderMenuOpen,
-              onClose: closeAgentVersionsSidebar,
-              onSaveVersion: () => openCreateAgentVersionModal({ force: true }),
-              onRestoreVersion: (versionId) => void restoreAgentVersion(versionId),
+              loading: versionsLoading,
+              loadingMessage: "Loading versions",
+              error: versionsError || null,
+              emptyDescription: "Save changes to create this agent's first version.",
+              busy: saveState.isSaving || agentVersionState.status === "loading",
+              stateContent: mutationStateContent,
+              onClose: () => {
+                setAgentVersionChangesState(null);
+                closeAgentVersionsSidebar();
+              },
+              onSelectVersion: (versionId) => void restoreAgentVersion(versionId),
               onPublishVersion: (versionId) => void publishAgentVersion(versionId),
               canPublishVersion: (version) => canPublishAgentVersion(version),
-              onDeleteVersion: (versionId) => void deleteAgentVersion(versionId),
-              versionsSectionFooter: React.createElement("div", { className: "playground-metronome-publish-section-footer playground-agents-version-compare-footer" },
-                React.createElement(PlatformSecondaryButton, {
-                  size: "large",
-                  type: "button",
-                  className: "playground-metronome-secondary-button playground-metronome-publish-new-button playground-agents-version-compare-button",
-                  disabled: agentVersionState.status === "loading" || !versions.length,
-                  onClick: () => openAgentVersionChangesPage(),
-                },
-                  React.createElement(Code2, { width: 13, height: 13, strokeWidth: 1.8 }),
-                  React.createElement("span", null, "View Changes")
-                )
-              ),
-              getRowMenuItems: (version) => [
+              onViewChanges: () => openAgentVersionChangesPage(),
+              getVersionCreatedAt: (version) => {
+                const timestamp = version.createdAt || version.updatedAt || version.publishedAt;
+                return timestamp ? formatAgentVersionTimestamp(timestamp) : "-";
+              },
+              getVersionActions: (version) => [
                 {
                   id: "edit",
-                  label: "Edit version",
+                  label: "Edit description",
                   icon: SquarePen,
-                  onClick: () => openEditAgentVersionModal(version.id),
+                  onSelect: () => openEditAgentVersionModal(version.id),
                 },
                 {
                   id: "compare",
                   label: "View Changes",
                   icon: Code2,
-                  onClick: () => openAgentVersionChangesPage(version.id),
-                },
-                {
-                  id: "restore",
-                  label: "Restore version",
-                  icon: RotateCcw,
-                  onClick: () => void restoreAgentVersion(version.id),
+                  onSelect: () => openAgentVersionChangesPage(version.id),
                 },
                 {
                   id: "delete",
                   label: "Delete version",
                   icon: Trash2,
                   danger: true,
-                  onClick: () => void deleteAgentVersion(version.id),
+                  disabled: version.status === "active" || versions.length <= 1,
+                  onSelect: () => void deleteAgentVersion(version.id),
                 },
               ],
-              unpublishLabel: "Unpublish agent",
-              getVersionTitle: (version) => String(version.label || ("Version " + version.version)).trim(),
-              getVersionDescription: () => "",
-              getVersionMeta: (version) => {
-                const modelMeta = getPlaygroundAgentModelMeta(version.model || version.snapshot?.model || draftAgent?.model || "", resolvedAgentModelOptions);
-                const lifecycleLabel = getAgentVersionLifecycleLabel(version);
-                const timestamp = version.publishedAt || version.updatedAt || version.createdAt;
-                const actorLabel = getAgentVersionActorLabel(version.publishedAt ? version.publishedBy : (version.updatedBy || version.createdBy));
-                return lifecycleLabel
-                  + " "
-                  + formatAgentVersionTimestamp(timestamp)
-                  + (actorLabel ? " by " + actorLabel : "")
-                  + " · "
-                  + (modelMeta?.label || version.model || "Model");
-              },
             });
           }
   
           function renderAgentVersionsSidebarPortal() {
-            const sidebar = renderAgentVersionsSidebar();
-            if (!sidebar) {
-              return null;
+            if (!canShowAgentVersions || !agentVersionsSidebarOpen) return null;
+            if (agentVersionsDrawerContainer) {
+              return renderAgentVersionsSidebar({
+                portal: true,
+                portalTarget: agentVersionsDrawerContainer,
+              });
             }
-            if (agentVersionsDrawerContainer && typeof createPortal === "function") {
-              return createPortal(sidebar, agentVersionsDrawerContainer);
-            }
-            if (versionsDrawerPortalId) {
-              return null;
-            }
-            return React.createElement("aside", {
-                className: "playground-metronome-node-drawer playground-agent-versions-inline-drawer is-open",
-              },
-              sidebar
-            );
+            if (versionsDrawerPortalId) return null;
+            return renderAgentVersionsSidebar();
           }
   
           function renderAgentPublishAction() {
@@ -297,19 +288,70 @@
             const versionHasChanges = hasDraftAgentVersionChanges();
             const isPublishControlDisabled = Boolean(!draftAgent || isVersionControlBusy || !versionHasChanges);
             const isPublishMenuDisabled = isPublishControlDisabled;
-  	          const versionPopupActions = getAgentVersionPopupActions({ includeVersionHistory: false });
+            const versionPopupActions = getAgentVersionPopupActions();
   	          return React.createElement(AgentPublishControl, {
   	            open: agentPublishMenuOpen,
   	            actions: versionPopupActions,
-              active: agentVersionsSidebarOpen,
+              active: agentPublishMenuOpen,
               disabled: isPublishControlDisabled,
               menuDisabled: isPublishMenuDisabled,
+              label: "Save Changes",
+              leading: React.createElement(Bookmark, { strokeWidth: 1.8 }),
+              publishAriaLabel: "Save agent changes",
               onOpenChange: (nextOpen) => {
                 setAgentVersionSelectorMenuOpen(false);
                 setAgentVersionsHeaderMenuOpen(false);
                 setAgentPublishMenuOpen(nextOpen);
               },
-              onPublish: saveAndPublishCurrentAgentVersion,
+              onPublish: () => openAgentVersionSaveDialog(),
+            });
+          }
+
+          function renderAgentVersionSaveDialog() {
+            if (!agentVersionSaveDialog) {
+              return null;
+            }
+            const versionData = buildAgentVersionSaveDialogData();
+            const isBusy = saveState.isSaving || agentVersionState.status === "loading";
+            return React.createElement(PlatformVersionSaveDialog, {
+              open: true,
+              title: "Review changes",
+              currentVersion: versionData.currentVersion,
+              nextVersion: versionData.nextVersion,
+              currentDescription: versionData.currentDescription,
+              initialMode: agentVersionSaveDialog.initialMode || "new",
+              canSaveCurrent: versionData.canSaveCurrent,
+              instanceKey: agentVersionSaveDialog.key,
+              pending: isBusy,
+              error: agentVersionState.status === "error"
+                ? agentVersionState.error
+                : null,
+              changes: versionData.diffFiles.map((file) => ({
+                id: file.id,
+                label: file.label || file.filePath,
+                content: React.createElement(PlatformDiffViewer, {
+                  filePath: file.filePath,
+                  diffContent: file.diffContent || "",
+                  fileContent: file.fileContent || "",
+                  additions: file.additions,
+                  deletions: file.deletions,
+                  hideTopbar: true,
+                  embedded: true,
+                  defaultExpanded: true,
+                  maxHeight: 330,
+                }),
+              })),
+              emptyChanges: "No changes were found between the editor and the selected version.",
+              onClose: () => {
+                if (!isBusy) setAgentVersionSaveDialog(null);
+              },
+              onSubmit: async (details) => {
+                const savedAgent = await saveAndPublishCurrentAgentVersion(details);
+                if (!savedAgent) {
+                  throw new Error("The agent could not be saved and published. Review the validation details and try again.");
+                }
+                setAgentVersionSaveDialog(null);
+              },
             });
           }
   
@@ -373,8 +415,7 @@
               return null;
             }
             const isBusy = saveState.isSaving || agentVersionState.status === "loading";
-            const isEditMode = agentVersionModal.mode === "edit";
-            const trimmedVersionName = String(agentVersionNameDraft || "").trim();
+            const versionLabel = formatPlatformVersionLabel(agentVersionModal.version);
   
             function renderAgentVersionDescriptionField() {
               return React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-initial-setup-goal-editor playground-tasks-issue-description-editor playground-agents-version-description-editor" },
@@ -448,7 +489,7 @@
               as: "form",
               backdropClassName: "playground-tasks-project-issue-backdrop playground-agents-version-modal-backdrop",
               className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal playground-agents-version-modal",
-              ariaLabel: isEditMode ? "Edit agent version" : "New agent version",
+              ariaLabel: "Edit agent version",
               surfaceProps: {
                 onSubmit: (event) => {
                   event.preventDefault();
@@ -465,16 +506,16 @@
                 React.createElement("div", { className: "playground-tasks-project-modal-top" },
                   React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
                     React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
-                      React.createElement(isEditMode ? SquarePen : GitBranchPlus, { width: 18, height: 18, strokeWidth: 1.9 })
+                      React.createElement(SquarePen, { width: 18, height: 18, strokeWidth: 1.9 })
                     ),
                     React.createElement("input", {
                       type: "text",
                       className: "playground-tasks-project-modal-name-input playground-tasks-issue-modal-title-input",
-                      value: agentVersionNameDraft,
-                      placeholder: "Version name",
-                      autoFocus: true,
+                      value: versionLabel,
+                      "aria-label": "Version identifier",
+                      readOnly: true,
+                      tabIndex: -1,
                       disabled: isBusy,
-                      onChange: (event) => setAgentVersionNameDraft(event.target.value),
                     })
                   ),
                   React.createElement("button", {
@@ -502,8 +543,8 @@
                     size: "medium",
                     type: "submit",
                     className: "playground-environments-action-button is-primary",
-                    disabled: isBusy || !trimmedVersionName,
-                  }, isBusy ? (isEditMode ? "Saving..." : "Creating...") : (isEditMode ? "Save Version" : "Create Version"))
+                    disabled: isBusy,
+                  }, isBusy ? "Saving..." : "Save Version")
                 )
               )
             });
@@ -733,7 +774,7 @@
               },
               onCopy: (row) => {
                 const agent = resolveSourceAgent(row);
-                if (agent) openAgentCopyComposer(agent);
+                if (agent) openAgentCopyModal(agent);
               },
               onDelete: (rows) => {
                 const agentsToDelete = rows.map(resolveSourceAgent).filter(Boolean);
@@ -789,7 +830,7 @@
           if (embeddedInResources) {
             return React.createElement(React.Fragment, null,
               agentsTopNavActions,
-              shouldShowAgentsHome || agentCreationSetupOpen
+              shouldShowAgentsHome || (agentCreationSetupOpen && !agentCreationSetupDraft)
                 ? React.createElement("section", { className: "playground-environments-detail playground-plugins-detail playground-skills-page playground-resources-page playground-agents-overview-page is-develop-configure-page" },
                     renderModularAgentsOverviewPage()
                   )
@@ -810,6 +851,7 @@
                     )
                   ),
   	            renderAgentVersionsSidebarPortal(),
+              renderAgentVersionSaveDialog(),
   	            renderAgentVersionModal(),
   	            renderAgentListActionMenu(),
               renderAgentBulkActionMenu(),
@@ -1019,7 +1061,7 @@
                 )
               ),
               React.createElement("section", { className: "playground-environments-detail" },
-                shouldShowAgentsHome || agentCreationSetupOpen
+                shouldShowAgentsHome || (agentCreationSetupOpen && !agentCreationSetupDraft)
                   ? renderAgentsHome()
                   : (
                       isLoadingCurrentAgent && !draftAgent
@@ -1101,6 +1143,7 @@
             renderAgentAddToSquadModal(),
             renderAgentApiModal(),
   	          renderAgentVersionsSidebarPortal(),
+            renderAgentVersionSaveDialog(),
   	          renderAgentVersionModal(),
   	          renderAgentUpgradeModal()
           );

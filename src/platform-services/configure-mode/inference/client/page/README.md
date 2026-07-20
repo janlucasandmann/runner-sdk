@@ -11,6 +11,7 @@ This directory contains page composition and page-local interaction behavior for
 - [`detail/`](detail/) — This directory contains resource-detail composition and controls for the Inference service in Configure Mode. It remains subordinate to the service boundary and must not become a cross-service utility layer.
 - [`overview/`](overview/) — This directory contains overview models, analytics, tables, and page composition for the Inference service in Configure Mode. It remains subordinate to the service boundary and must not become a cross-service utility layer.
 - [`index.mjs`](index.mjs) — Public barrel or composition entry point.
+- [`inference-provider-options.ts`](inference-provider-options.ts) — Shared provider choices for endpoint creation and details.
 - [`inference-endpoint-model.test.ts`](inference-endpoint-model.test.ts) — Regression coverage for Inference Endpoint Model.
 - [`inference-endpoint-model.ts`](inference-endpoint-model.ts) — State and projection logic for Inference Endpoint Model.
 - [`local-runners.mjs`](local-runners.mjs) — Focused implementation of Local Runners.

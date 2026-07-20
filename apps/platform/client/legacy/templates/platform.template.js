@@ -13,16 +13,17 @@
         import { addEdge, Background, BaseEdge, Controls, EdgeLabelRenderer, getSimpleBezierPath, Handle, MarkerType, NodeResizer, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from "@xyflow/react";
         import { browserLocalPersistence, getApps, getAuth, GoogleAuthProvider, initializeApp, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOutFirebaseAuth } from "/api/platform/auth/browser-module.js";
   	      import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, KeyRound, LassoSelect, Layers, LayoutDashboard, LayoutGrid, LibraryBig, Lightbulb, Link2, List, ListFilter, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Underline, Undo2, Unlink, User, UserRound, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
-  	      import { RunnerClient } from "/dist/index.js";
-  	      import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
-  	      import { PlatformAnalyticsSection } from "/dist/platform-ui/components/composite/analytics/index.js";
+	      import { RunnerClient } from "/dist/index.js";
+	      import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
+	      import { PlatformAnalyticsSection } from "/dist/platform-ui/components/composite/analytics/index.js";
+        import { PlatformAttachments } from "/dist/platform-ui/components/composite/attachments/index.js";
         import { PlatformCodeEditorWorkspace } from "/dist/platform-ui/components/composite/code-editor-workspace/index.js";
   	      import { PlatformCodePreviewBox } from "/dist/platform-ui/components/composite/code-preview-box/index.js";
   	      import { PlatformDataTable } from "/dist/platform-ui/components/composite/data-table/index.js";
   	      import { PlatformDetailTabBar } from "/dist/platform-ui/components/composite/detail-tab-bar/index.js";
         import { PlatformDiffViewer } from "/dist/platform-ui/components/composite/diff-viewer/index.js";
   	      import { PlatformEmptyState } from "/dist/platform-ui/components/composite/empty-state/index.js";
-        import { PlatformVersionHistorySidebar, PlatformVersionLabel, PlatformVersionSaveDialog, formatPlatformVersionLabel } from "/dist/platform-ui/components/composite/versioning/index.js";
+        import { PlatformVersionHistorySidebar, PlatformVersionLabel, PlatformVersionSaveDialog, formatPlatformVersionLabel, normalizePlatformVersionNumber } from "/dist/platform-ui/components/composite/versioning/index.js";
   	      import { PlatformInstructionsEditor } from "/dist/platform-ui/components/composite/instructions-editor/index.js";
   	      import { PlatformLoadingState } from "/dist/platform-ui/components/composite/loading-state/index.js";
         import { PlatformSettingsSection, PlatformSettingsSectionList } from "/dist/platform-ui/components/composite/settings-section/index.js";
@@ -62,7 +63,7 @@
   	      import { PlatformApplicationBoundary } from "/dist/platform-runtime/platform-application-boundary.js";
   	      import { AgentPermissionMeters, AgentPermissionRingIcons, AgentPublishControl, AgentsOverviewAnalyticsRequestError, ComputersOverviewAnalyticsRequestError, createAgentsOverviewAnalytics, createComputersOverviewAnalytics, deleteComputerResource, fetchAgentsOverviewAnalytics, fetchComputersOverviewAnalytics, getAgentPermissionSummary, invalidateAgentsOverviewAnalytics, invalidateComputersOverviewAnalytics, normalizeComputerOverviewRows, readCachedAgentsOverviewAnalytics, readCachedComputersOverviewAnalytics, saveComputerResource } from "/dist/platform-shell/presentation/platform-resource-api.js";
   	      import { ApiKeysOverviewAnalyticsRequestError, createApiKeysOverviewAnalytics, createDevelopResourceOverviewRows, createDevelopVoiceAgentOverviewRows, deleteDevelopResource, fetchApiKeysOverviewAnalytics, invalidateApiKeysOverviewAnalytics, readCachedApiKeysOverviewAnalytics, saveDevelopResource } from "/dist/platform-shell/presentation/platform-develop-api.js";
-        import { AgentDetailPage, AgentPermissionsPage, AgentsOverviewPage, ComputerDetailPage, ComputersOverviewPage, ConfigureHomeOverviewPage, DevelopApiKeysOverviewPage, DevelopHomeOverviewPage, DevelopResourceOverviewRoute, DevelopVoiceAgentsOverviewPage, DevelopWebhooksOverviewPage, EvaluationsOverviewPage, FineTuningOverviewPage, GuardrailsOverviewPage, InferenceEndpointDetailPage, InferenceOverviewPage, MarketplaceOverviewPage, MetronomesOverviewPage, ModelsFeaturedSection, ModelsOverviewPage, NotificationsOverviewPage, OrganizationsOverviewPage, ProjectDetailPage, SkillsOverviewPage, TagDetailPage, TagsOverviewPage, TeamsOverviewPage, TicketDetailPage } from "/dist/platform-shell/presentation/platform-pages.js";
+        import { AgentDetailPage, AgentPermissionsPage, AgentsOverviewPage, ComputerDetailPage, ComputersOverviewPage, ConfigureHomeOverviewPage, DevelopApiKeysOverviewPage, DevelopHomeOverviewPage, DevelopResourceOverviewRoute, DevelopServerDetailPage, DevelopVoiceAgentsOverviewPage, DevelopWebhooksOverviewPage, EvaluationsOverviewPage, FineTuningOverviewPage, GuardrailsOverviewPage, InferenceEndpointDetailPage, InferenceOverviewPage, MarketplaceOverviewPage, MetronomesOverviewPage, ModelsFeaturedSection, ModelsOverviewPage, NotificationsOverviewPage, OrganizationsOverviewPage, ProjectDetailPage, SkillsOverviewPage, TagDetailPage, TagsOverviewPage, TeamsOverviewPage, TicketDetailPage } from "/dist/platform-shell/presentation/platform-pages.js";
   	      import { openGoogleDrivePicker } from "/dist/platform-integrations/google-drive/google-drive-picker.js";
   
   	      function getPlaygroundSafeIconComponent(Icon, fallbackIcon = Circle) {
@@ -5898,7 +5899,10 @@
             : {};
           const createdAt = String(version.createdAt || version.created_at || version.publishedAt || version.published_at || new Date().toISOString()).trim();
           const id = String(version.id || version.versionId || version.version_id || ("environment_version_" + (fallbackIndex + 1))).trim();
-          const versionNumber = Number(version.version || version.versionNumber || version.version_number || 0) || (fallbackIndex + 1);
+          const versionNumber = normalizePlatformVersionNumber(
+            version.version ?? version.versionNumber ?? version.version_number,
+            fallbackIndex
+          );
           const rawStatus = String(version.status || "").trim().toLowerCase();
           const status = rawStatus === "published"
             ? "active"
@@ -5922,42 +5926,101 @@
             Object.entries(rawRuntimes).filter(([, value]) => typeof value === "string" && value.trim())
           );
           const normalizedSnapshot = {
-            name: String(version.name || snapshot.name || "").trim(),
-  	          description: typeof snapshot.description === "string"
-  	            ? snapshot.description
-  	            : typeof version.agentDescription === "string"
-  	              ? version.agentDescription
-  	              : typeof version.agent_description === "string"
-  	                ? version.agent_description
-  	                : typeof version.description === "string"
-  	                  ? version.description
-  	                  : "",
+            name: String(
+              snapshot.name
+              || version.environmentName
+              || version.environment_name
+              || version.computerName
+              || version.computer_name
+              || version.resourceName
+              || version.resource_name
+              || ""
+            ).trim(),
+            description: typeof snapshot.description === "string"
+              ? snapshot.description
+              : typeof version.environmentDescription === "string"
+                ? version.environmentDescription
+                : typeof version.environment_description === "string"
+                  ? version.environment_description
+                  : typeof version.computerDescription === "string"
+                    ? version.computerDescription
+                    : typeof version.computer_description === "string"
+                      ? version.computer_description
+                      : "",
             runtimes,
             packageVersions: { ...runtimes },
             packages: normalizePlaygroundPackages(version.packages || snapshot.packages),
-            environmentVariables: normalizePlaygroundEnvironmentVariables(version.environmentVariables || snapshot.environmentVariables),
+            environmentVariables: normalizePlaygroundEnvironmentVariables(
+              version.environmentVariables
+              || version.environment_variables
+              || snapshot.environmentVariables
+              || snapshot.environment_variables
+            ),
             secrets: normalizePlaygroundEnvironmentVariables(version.secrets || snapshot.secrets),
             setupScripts: Array.isArray(version.setupScripts)
               ? version.setupScripts.map((value) => String(value || ""))
+              : Array.isArray(version.setup_scripts)
+                ? version.setup_scripts.map((value) => String(value || ""))
               : Array.isArray(snapshot.setupScripts)
                 ? snapshot.setupScripts.map((value) => String(value || ""))
+                : Array.isArray(snapshot.setup_scripts)
+                  ? snapshot.setup_scripts.map((value) => String(value || ""))
                 : [],
-            mcpServers: normalizePlaygroundMcpServers(version.mcpServers || snapshot.mcpServers),
+            mcpServers: normalizePlaygroundMcpServers(
+              version.mcpServers
+              || version.mcp_servers
+              || snapshot.mcpServers
+              || snapshot.mcp_servers
+            ),
             documentation: normalizePlaygroundDocumentationFiles(version.documentation || snapshot.documentation),
-            internetAccess: (Object.prototype.hasOwnProperty.call(version, "internetAccess") ? version.internetAccess : snapshot.internetAccess) !== false,
-            guiEnabled: Boolean(Object.prototype.hasOwnProperty.call(version, "guiEnabled") ? version.guiEnabled : snapshot.guiEnabled),
-            officeAppsEnabled: Boolean(Object.prototype.hasOwnProperty.call(version, "officeAppsEnabled") ? version.officeAppsEnabled : snapshot.officeAppsEnabled),
-            computeProfile: normalizePlaygroundEnvironmentComputeProfileId(version.computeProfile || snapshot.computeProfile)
+            internetAccess: (
+              Object.prototype.hasOwnProperty.call(version, "internetAccess")
+                ? version.internetAccess
+                : Object.prototype.hasOwnProperty.call(version, "internet_access")
+                  ? version.internet_access
+                  : Object.prototype.hasOwnProperty.call(snapshot, "internetAccess")
+                    ? snapshot.internetAccess
+                    : snapshot.internet_access
+            ) !== false,
+            guiEnabled: Boolean(
+              Object.prototype.hasOwnProperty.call(version, "guiEnabled")
+                ? version.guiEnabled
+                : Object.prototype.hasOwnProperty.call(snapshot, "guiEnabled")
+                  ? snapshot.guiEnabled
+                  : snapshot.metadata?.guiEnabled
+            ),
+            officeAppsEnabled: Boolean(
+              Object.prototype.hasOwnProperty.call(version, "officeAppsEnabled")
+                ? version.officeAppsEnabled
+                : Object.prototype.hasOwnProperty.call(snapshot, "officeAppsEnabled")
+                  ? snapshot.officeAppsEnabled
+                  : snapshot.metadata?.officeAppsEnabled
+            ),
+            computeProfile: normalizePlaygroundEnvironmentComputeProfileId(
+              version.computeProfile
+              || version.compute_profile
+              || snapshot.computeProfile
+              || snapshot.compute_profile
+              || snapshot.metadata?.computeProfile
+            )
               || PLAYGROUND_DEFAULT_CUSTOM_ENVIRONMENT_COMPUTE_PROFILE,
             dockerfileExtensions: typeof version.dockerfileExtensions === "string"
               ? version.dockerfileExtensions
+              : typeof version.dockerfile_extensions === "string"
+                ? version.dockerfile_extensions
               : typeof snapshot.dockerfileExtensions === "string"
                 ? snapshot.dockerfileExtensions
+                : typeof snapshot.dockerfile_extensions === "string"
+                  ? snapshot.dockerfile_extensions
                 : "",
             baseImage: typeof version.baseImage === "string"
               ? version.baseImage
+              : typeof version.base_image === "string"
+                ? version.base_image
               : typeof snapshot.baseImage === "string"
                 ? snapshot.baseImage
+                : typeof snapshot.base_image === "string"
+                  ? snapshot.base_image
                 : "",
             metadata: stripPlaygroundEnvironmentVersionMetadata(snapshot.metadata),
           };
@@ -5965,7 +6028,7 @@
           return {
             id,
             version: versionNumber,
-            label: String(version.label || version.name || ("Version " + versionNumber)).trim(),
+            label: String(version.label || ("Version " + versionNumber)).trim(),
             description: String(version.description || version.summary || "").trim(),
             status,
             lifecycleState,
@@ -6050,6 +6113,19 @@
           const runtimes = Object.fromEntries(
             Object.entries(normalizedEnvironment.runtimes || {}).filter(([, value]) => typeof value === "string" && value.trim())
           );
+          const secrets = normalizePlaygroundEnvironmentVariables(normalizedEnvironment.secrets)
+            .map((secret) => ({ key: secret.key, value: "" }));
+          const mcpServers = normalizePlaygroundMcpServers(normalizedEnvironment.mcpServers)
+            .map((server) => {
+              const {
+                bearerToken,
+                bearer_token,
+                bearerTokenEncrypted,
+                bearer_token_encrypted,
+                ...versionedServer
+              } = server;
+              return versionedServer;
+            });
           return {
             name: String(normalizedEnvironment.name || "").trim() || "Untitled Computer",
             description: typeof normalizedEnvironment.description === "string" ? normalizedEnvironment.description : "",
@@ -6057,11 +6133,11 @@
             packageVersions: { ...runtimes },
             packages: normalizePlaygroundPackages(normalizedEnvironment.packages),
             environmentVariables: normalizePlaygroundEnvironmentVariables(normalizedEnvironment.environmentVariables),
-            secrets: normalizePlaygroundEnvironmentVariables(normalizedEnvironment.secrets),
+            secrets,
             setupScripts: Array.isArray(normalizedEnvironment.setupScripts)
               ? normalizedEnvironment.setupScripts.map((value) => String(value || ""))
               : [],
-            mcpServers: normalizePlaygroundMcpServers(normalizedEnvironment.mcpServers),
+            mcpServers,
             documentation: normalizePlaygroundDocumentationFiles(normalizedEnvironment.documentation),
             internetAccess: normalizedEnvironment.internetAccess !== false,
             guiEnabled: normalizedEnvironment.guiEnabled === true,
@@ -6277,6 +6353,11 @@
             imageUrl: typeof server.imageUrl === "string" ? server.imageUrl : draft.imageUrl,
             status: ["draft", "deploying", "deployed", "failed", "inactive"].includes(server.status) ? server.status : draft.status,
             lastDeployedAt: typeof server.lastDeployedAt === "string" ? server.lastDeployedAt : draft.lastDeployedAt,
+            lastUsedAt: typeof server.lastUsedAt === "string"
+              ? server.lastUsedAt
+              : typeof server.last_used_at === "string"
+                ? server.last_used_at
+                : "",
             template: typeof server.template === "string" && ["blank", "ai_chat_app"].includes(server.template) ? server.template : draft.template,
             templateAgentId: typeof server.templateAgentId === "string" ? server.templateAgentId : draft.templateAgentId,
             templateEnvironmentId: typeof server.templateEnvironmentId === "string" ? server.templateEnvironmentId : draft.templateEnvironmentId,
@@ -6354,9 +6435,16 @@
             : {};
           const createdAt = String(version.createdAt || version.created_at || version.publishedAt || version.published_at || new Date().toISOString()).trim();
           const id = String(version.id || version.versionId || version.version_id || ("server_version_" + (fallbackIndex + 1))).trim();
-          const versionNumber = Number(version.version || version.versionNumber || version.version_number || 0) || (fallbackIndex + 1);
+          const versionNumber = normalizePlatformVersionNumber(
+            version.version ?? version.versionNumber ?? version.version_number,
+            fallbackIndex
+          );
           const rawStatus = String(version.status || "").trim().toLowerCase();
-          const status = ["active", "saved", "superseded", "unpublished"].includes(rawStatus) ? rawStatus : "saved";
+          const status = rawStatus === "published"
+            ? "active"
+            : ["active", "saved", "superseded", "unpublished"].includes(rawStatus)
+              ? rawStatus
+              : "saved";
           const rawLifecycleState = String(version.lifecycleState || version.lifecycle_state || "").trim().toLowerCase();
           const lifecycleState = ["published", "saved", "draft", "deprecated", "unpublished", "archived"].includes(rawLifecycleState)
             ? rawLifecycleState
@@ -6369,11 +6457,18 @@
                   : "saved";
           const normalizedKind = canonicalizePlaygroundServerKind(version.kind || snapshot.kind || "web_app");
           const normalizedSnapshot = {
-            name: String(version.name || snapshot.name || "").trim(),
+            name: String(
+              snapshot.name
+              || version.resourceName
+              || version.resource_name
+              || ""
+            ).trim(),
             description: typeof snapshot.description === "string"
               ? snapshot.description
-              : typeof version.description === "string"
-                ? version.description
+              : typeof version.resourceDescription === "string"
+                ? version.resourceDescription
+                : typeof version.resource_description === "string"
+                  ? version.resource_description
                 : "",
             kind: normalizedKind,
             sourceType: ["manual", "computer", "git"].includes(snapshot.sourceType || version.sourceType) ? (snapshot.sourceType || version.sourceType) : "manual",
@@ -7344,7 +7439,10 @@
             : {};
           const createdAt = String(version.createdAt || version.created_at || version.publishedAt || version.published_at || new Date().toISOString()).trim();
           const id = String(version.id || version.versionId || version.version_id || ("agent_version_" + (fallbackIndex + 1))).trim();
-          const versionNumber = Number(version.version || version.versionNumber || version.version_number || 0) || (fallbackIndex + 1);
+          const versionNumber = normalizePlatformVersionNumber(
+            version.version ?? version.versionNumber ?? version.version_number,
+            fallbackIndex
+          );
           const rawStatus = String(version.status || "").trim().toLowerCase();
           const status = ["active", "saved", "superseded", "unpublished"].includes(rawStatus) ? rawStatus : "saved";
           const lifecycleState = normalizePlaygroundAgentVersionLifecycleState(version, status);
@@ -7384,7 +7482,14 @@
               ? snapshot.teamSubagentIds
               : [];
           const normalizedSnapshot = {
-            name: String(version.name || snapshot.name || "").trim(),
+            name: String(
+              snapshot.name
+              || version.agentName
+              || version.agent_name
+              || version.resourceName
+              || version.resource_name
+              || ""
+            ).trim(),
             description: typeof snapshot.description === "string"
               ? snapshot.description
               : typeof version.agentDescription === "string"
@@ -7439,7 +7544,12 @@
           return {
             id,
             version: versionNumber,
-            label: String(version.label || version.name || ("Version " + versionNumber)).trim(),
+            label: String(
+              version.label
+              || version.versionLabel
+              || version.version_label
+              || ("Version " + versionNumber)
+            ).trim(),
             description: String(version.description || version.summary || "").trim(),
             status,
             lifecycleState,
@@ -7550,7 +7660,9 @@
         function createPlaygroundAgentVersion(agent, existingVersions = [], options = {}) {
           const now = new Date().toISOString();
           const normalizedExisting = normalizePlaygroundAgentVersions(existingVersions);
-          const nextVersion = normalizedExisting.reduce((maxVersion, version) => Math.max(maxVersion, Number(version.version || 0)), 0) + 1;
+          const nextVersion = normalizedExisting.length
+            ? normalizedExisting.reduce((maxVersion, version) => Math.max(maxVersion, Number(version.version || 0)), -1) + 1
+            : 0;
           const requestedStatus = String(options?.status || "saved").trim().toLowerCase();
           const status = requestedStatus === "active" ? "active" : "saved";
           const lifecycleState = status === "active" ? "published" : "saved";
@@ -7603,7 +7715,7 @@
             guardrailSetIds: snapshot.guardrailSetIds,
             permissionSet: snapshot.permissionSet,
             snapshot,
-          }, nextVersion - 1);
+          }, nextVersion);
         }
   
         function createPlaygroundAgentWithVersionList(agent, versions, preferredSelectedId = "") {
@@ -7651,9 +7763,20 @@
           const snapshot = normalizedVersion.snapshot || {};
           const baseMetadata = stripPlaygroundAgentVersionMetadata(baseAgent.metadata);
           const snapshotMetadata = stripPlaygroundAgentVersionMetadata(snapshot.metadata);
+          const snapshotName = String(snapshot.name || "").trim();
+          const versionLabel = String(normalizedVersion.label || "").trim();
+          const hasVersionLabelAsSnapshotName = Boolean(
+            snapshotName
+            && (
+              snapshotName === versionLabel
+              || /^Version\s+\d+$/i.test(snapshotName)
+            )
+          );
           const nextAgent = normalizePlaygroundAgentRecord({
             ...baseAgent,
-            name: snapshot.name || baseAgent.name,
+            name: hasVersionLabelAsSnapshotName
+              ? baseAgent.name
+              : snapshotName || baseAgent.name,
             description: typeof snapshot.description === "string" ? snapshot.description : baseAgent.description,
             model: snapshot.model || baseAgent.model,
             instructions: typeof snapshot.instructions === "string" ? snapshot.instructions : baseAgent.instructions,

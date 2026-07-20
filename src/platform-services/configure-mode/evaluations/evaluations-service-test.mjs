@@ -65,6 +65,8 @@ assert.equal(
   2,
 );
 assert.match(EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.view, /controlsLeading: React\.createElement\(PlatformSecondaryButton/);
+assert.match(EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.view, /React\.createElement\(PlatformEmptyState/);
+assert.match(EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.view, /title: "No evaluations yet"/);
 assert.doesNotMatch(EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.view, /primaryAction:\s*\{[\s\S]{0,300}Run Evaluation/);
 assert.doesNotMatch(EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.view, /pagination\s*:/);
 assert.match(EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.modal, /renderAgentEvaluationRunModal/);

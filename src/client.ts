@@ -51,6 +51,7 @@ import {
   RunnerEnvironmentVersion,
   RunnerEnvironmentVersionCompareResult,
   RunnerEnvironmentVersionCreateInput,
+  RunnerEnvironmentVersionSaveResult,
   RunnerEnvironmentVersionUpdateInput,
   RunnerEvaluationRun,
   RunnerEvaluationRunCreateInput,
@@ -87,6 +88,7 @@ import {
   RunnerServerVersion,
   RunnerServerVersionCompareResult,
   RunnerServerVersionCreateInput,
+  RunnerServerVersionSaveResult,
   RunnerServerVersionUpdateInput,
   RunnerThreadForkResult,
   RunnerThreadFileHistoryResult,
@@ -1124,6 +1126,68 @@ export class RunnerClient {
     return this.readObjectResponse<RunnerEnvironmentVersion>(payload, ["version", "environmentVersion", "environment_version", "computerVersion", "computer_version"]);
   }
 
+  async saveEnvironmentVersion(
+    options: RunnerApiRequestOptions & {
+      environmentId: string;
+      versionId?: string | null;
+      version: RunnerEnvironmentVersionCreateInput;
+    },
+  ): Promise<RunnerEnvironmentVersionSaveResult> {
+    const normalizedVersionId = String(options.versionId || "").trim();
+    const basePath = `/environments/${encodeURIComponent(options.environmentId)}/versions`;
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      normalizedVersionId
+        ? `${basePath}/${encodeURIComponent(normalizedVersionId)}/publish`
+        : basePath,
+    );
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify({
+        ...options.version,
+        ...(!normalizedVersionId ? { publish: true } : {}),
+      }),
+    });
+    const payloadRecord = payload && typeof payload === "object" && !Array.isArray(payload)
+      ? payload as Record<string, unknown>
+      : {};
+    const rawVersion = [
+      payloadRecord.version,
+      payloadRecord.environmentVersion,
+      payloadRecord.environment_version,
+      payloadRecord.computerVersion,
+      payloadRecord.computer_version,
+    ].find((candidate) => candidate && typeof candidate === "object" && !Array.isArray(candidate));
+    const version = rawVersion
+      ? rawVersion as RunnerEnvironmentVersion
+      : normalizedVersionId
+        ? {
+            id: normalizedVersionId,
+            version: 0,
+            description: options.version.description,
+            snapshot: options.version.snapshot,
+          }
+        : this.readObjectResponse<RunnerEnvironmentVersion>(payload, ["version", "environmentVersion", "environment_version", "computerVersion", "computer_version"]);
+    const rawEnvironment = [payloadRecord.environment, payloadRecord.computer]
+      .find((candidate) => candidate && typeof candidate === "object" && !Array.isArray(candidate));
+    const environment = rawEnvironment
+      ? rawEnvironment as Record<string, unknown>
+      : await this.publishEnvironmentVersion({
+          ...options,
+          versionId: version.id,
+          snapshot: options.version.snapshot,
+          description: options.version.description,
+        });
+    return {
+      environment,
+      version,
+      versions: this.readListResponse<RunnerEnvironmentVersion>(payload, ["versions", "environmentVersions", "environment_versions", "computerVersions", "computer_versions"]),
+    };
+  }
+
   async deleteEnvironmentVersion(
     options: RunnerApiRequestOptions & {
       environmentId: string;
@@ -1147,6 +1211,7 @@ export class RunnerClient {
       environmentId: string;
       versionId: string;
       snapshot?: RunnerEnvironmentVersionCreateInput["snapshot"];
+      description?: RunnerEnvironmentVersionCreateInput["description"];
     },
   ): Promise<Record<string, unknown>> {
     const url = this.buildApiUrl(
@@ -1158,7 +1223,10 @@ export class RunnerClient {
       headers: this.withJsonContentType(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
-      body: JSON.stringify(options.snapshot !== undefined ? { snapshot: options.snapshot } : {}),
+      body: JSON.stringify({
+        ...(options.snapshot !== undefined ? { snapshot: options.snapshot } : {}),
+        ...(options.description !== undefined ? { description: options.description } : {}),
+      }),
     });
     return this.readObjectResponse<Record<string, unknown>>(payload, ["environment", "computer"]);
   }
@@ -1298,6 +1366,65 @@ export class RunnerClient {
     return this.readObjectResponse<RunnerServerVersion>(payload, ["version", "serverVersion", "server_version"]);
   }
 
+  async saveServerVersion(
+    options: RunnerApiRequestOptions & {
+      serverId: string;
+      versionId?: string | null;
+      version: RunnerServerVersionCreateInput;
+    },
+  ): Promise<RunnerServerVersionSaveResult> {
+    const normalizedVersionId = String(options.versionId || "").trim();
+    const basePath = `/servers/${encodeURIComponent(options.serverId)}/versions`;
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      normalizedVersionId
+        ? `${basePath}/${encodeURIComponent(normalizedVersionId)}/publish`
+        : basePath,
+    );
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify({
+        ...options.version,
+        ...(!normalizedVersionId ? { publish: true } : {}),
+      }),
+    });
+    const payloadRecord = payload && typeof payload === "object" && !Array.isArray(payload)
+      ? payload as Record<string, unknown>
+      : {};
+    const rawVersion = [
+      payloadRecord.version,
+      payloadRecord.serverVersion,
+      payloadRecord.server_version,
+    ].find((candidate) => candidate && typeof candidate === "object" && !Array.isArray(candidate));
+    const version = rawVersion
+      ? rawVersion as RunnerServerVersion
+      : normalizedVersionId
+        ? {
+            id: normalizedVersionId,
+            version: 0,
+            description: options.version.description,
+            snapshot: options.version.snapshot,
+          }
+        : this.readObjectResponse<RunnerServerVersion>(payload, ["version", "serverVersion", "server_version"]);
+    const rawServer = payloadRecord.server;
+    const server = rawServer && typeof rawServer === "object" && !Array.isArray(rawServer)
+      ? rawServer as Record<string, unknown>
+      : await this.publishServerVersion({
+          ...options,
+          versionId: version.id,
+          snapshot: options.version.snapshot,
+          description: options.version.description,
+        });
+    return {
+      server,
+      version,
+      versions: this.readListResponse<RunnerServerVersion>(payload, ["versions", "serverVersions", "server_versions"]),
+    };
+  }
+
   async deleteServerVersion(
     options: RunnerApiRequestOptions & {
       serverId: string;
@@ -1321,6 +1448,7 @@ export class RunnerClient {
       serverId: string;
       versionId: string;
       snapshot?: RunnerServerVersionCreateInput["snapshot"];
+      description?: RunnerServerVersionCreateInput["description"];
     },
   ): Promise<Record<string, unknown>> {
     const url = this.buildApiUrl(
@@ -1332,7 +1460,10 @@ export class RunnerClient {
       headers: this.withJsonContentType(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
-      body: JSON.stringify(options.snapshot !== undefined ? { snapshot: options.snapshot } : {}),
+      body: JSON.stringify({
+        ...(options.snapshot !== undefined ? { snapshot: options.snapshot } : {}),
+        ...(options.description !== undefined ? { description: options.description } : {}),
+      }),
     });
     return this.readObjectResponse<Record<string, unknown>>(payload, ["server"]);
   }
@@ -1715,6 +1846,7 @@ export class RunnerClient {
       agentId: string;
       versionId: string;
       snapshot?: RunnerAgentVersionCreateInput["snapshot"];
+      description?: RunnerAgentVersionCreateInput["description"];
     },
   ): Promise<RunnerAgentRecord> {
     const url = this.buildApiUrl(
@@ -1726,7 +1858,10 @@ export class RunnerClient {
       headers: this.withJsonContentType(options.headers, options.organizationId),
       credentials: options.credentials,
       signal: options.signal,
-      body: JSON.stringify(options.snapshot !== undefined ? { snapshot: options.snapshot } : {}),
+      body: JSON.stringify({
+        ...(options.snapshot !== undefined ? { snapshot: options.snapshot } : {}),
+        ...(options.description !== undefined ? { description: options.description } : {}),
+      }),
     });
     return this.readObjectResponse<RunnerAgentRecord>(payload, ["agent"]);
   }

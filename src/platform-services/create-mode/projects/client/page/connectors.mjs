@@ -1072,6 +1072,69 @@ export const PROJECTS_PAGE_CONNECTORS_SCRIPT = `        function getProjectConne
         }
 
 ${CALENDAR_PROJECTS_PAGE_CONNECTOR_FRAGMENTS.attachmentRemoval}
+        function buildTaskAttachmentListItem(attachment, options = {}) {
+          const resolvedAttachment = buildResolvedTaskAttachmentRecord(attachment) || attachment;
+          const previewUrl = resolveTaskAttachmentPreviewUrl(resolvedAttachment);
+          const normalizedAttachmentMimeType = String(resolvedAttachment.mimeType || "").toLowerCase();
+          const isFolderAttachment = Boolean(
+            resolvedAttachment.isFolder
+            || resolvedAttachment.type === "directory"
+            || String(resolvedAttachment.previewKindOverride || "").toLowerCase() === "directory"
+            || normalizedAttachmentMimeType === "inode/directory"
+          );
+          const isImage = !isFolderAttachment
+            && (resolvedAttachment.type === "image" || normalizedAttachmentMimeType.startsWith("image/"));
+          const activeAttachmentId = typeof options.activeAttachmentId === "string"
+            ? options.activeAttachmentId
+            : previewedTaskAttachmentId;
+          const isRemovable = options.removable !== false;
+          const handlePreview = typeof options.onPreview === "function"
+            ? options.onPreview
+            : handleTaskAttachmentPreviewToggle;
+          const handleRemove = typeof options.onRemove === "function"
+            ? options.onRemove
+            : handleRemoveTaskAttachment;
+          const imageFetchHeaders = previewUrl
+            && !String(previewUrl).startsWith("blob:")
+            && !String(previewUrl).startsWith("data:")
+            ? requestHeaders
+            : undefined;
+          const metadataParts = [
+            Number(resolvedAttachment.size) > 0
+              ? formatPlaygroundFileSize(resolvedAttachment.size)
+              : "",
+            resolvedAttachment.uploadedAt
+              ? formatPlaygroundFileDate(resolvedAttachment.uploadedAt)
+              : "",
+          ].filter(Boolean);
+
+          return {
+            id: resolvedAttachment.id,
+            name: resolvedAttachment.filename || "Attachment",
+            metadata: metadataParts.join(" · "),
+            active: activeAttachmentId === resolvedAttachment.id,
+            preview: isImage && previewUrl
+              ? React.createElement(RunnerImagePreviewSurface, {
+                  src: previewUrl,
+                  alt: resolvedAttachment.filename,
+                  mimeType: resolvedAttachment.mimeType,
+                  className: "platform-attachments__image-surface",
+                  imageClassName: "platform-attachments__image",
+                  fetchHeaders: imageFetchHeaders,
+                  interactive: false,
+                  loadStrategy: "visible",
+                })
+              : React.createElement("img", {
+                  src: isFolderAttachment ? PLAYGROUND_FOLDER_ICON_URL : PLAYGROUND_TEXT_FILE_ICON_URL,
+                  alt: "",
+                  draggable: false,
+                }),
+            onActivate: () => handlePreview(resolvedAttachment),
+            onRemove: isRemovable ? () => handleRemove(resolvedAttachment.id) : undefined,
+            removeLabel: "Remove " + (resolvedAttachment.filename || "attachment"),
+          };
+        }
+
         function renderTaskAttachmentChip(attachment, options = {}) {
           const resolvedAttachment = buildResolvedTaskAttachmentRecord(attachment) || attachment;
           const previewUrl = resolveTaskAttachmentPreviewUrl(resolvedAttachment);

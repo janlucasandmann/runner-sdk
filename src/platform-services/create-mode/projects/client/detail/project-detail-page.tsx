@@ -1,4 +1,4 @@
-import { FolderOpen, LayoutGrid, Rocket, Settings2 } from "lucide-react";
+import { FolderOpen, House, Rocket, Settings2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { ResourceDetailPage } from "../../../../../platform-ui/pages/details/index.js";
 
@@ -22,7 +22,7 @@ export interface ProjectDetailPageProps {
 }
 
 const PROJECT_DETAIL_TABS = [
-  { id: "general", label: "General", icon: LayoutGrid },
+  { id: "general", label: "Home", icon: House },
   { id: "resources", label: "Resources", icon: FolderOpen },
   { id: "strategy", label: "Strategy", icon: Rocket },
   { id: "permissions", label: "Settings", icon: Settings2 },

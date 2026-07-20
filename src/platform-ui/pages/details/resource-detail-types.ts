@@ -13,6 +13,7 @@ export interface ResourceDetailPageProps<TTab extends string = string> {
   children: ReactNode;
   sidebar?: ReactNode;
   sidebarCollapsed?: boolean;
+  sidebarAutoCollapseTabs?: readonly TTab[];
   ariaLabel?: string;
   tabAriaLabel?: string;
   sidebarAriaLabel?: string;

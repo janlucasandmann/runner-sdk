@@ -95,6 +95,13 @@
     "./platform-ui/components/composite/analytics/styles.css": {
       "default": "./dist/platform-ui/components/composite/analytics/analytics.css"
     },
+    "./platform-ui/components/composite/attachments": {
+      "types": "./dist/platform-ui/components/composite/attachments/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/attachments/index.js"
+    },
+    "./platform-ui/components/composite/attachments/styles.css": {
+      "default": "./dist/platform-ui/components/composite/attachments/attachments.css"
+    },
     "./platform-ui/components/composite/code-editor-workspace": {
       "types": "./dist/platform-ui/components/composite/code-editor-workspace/index.d.ts",
       "default": "./dist/platform-ui/components/composite/code-editor-workspace/index.js"

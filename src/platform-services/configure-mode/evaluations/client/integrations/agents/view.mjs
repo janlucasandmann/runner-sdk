@@ -599,6 +599,11 @@ export const EVALUATIONS_AGENT_VIEW_SCRIPT = `          const agentEvaluationEnv
             );
           }
           function renderAgentEvaluationListSection() {
+            const emptyAgentEvaluationsState = React.createElement(PlatformEmptyState, {
+              icon: ChartColumnIncreasing,
+              title: "No evaluations yet",
+              description: "Run an evaluation to measure this agent's performance over time.",
+            });
             return React.createElement("section", {
                 className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-agents-detail-evaluations-section",
                 key: "evaluation",
@@ -650,7 +655,7 @@ export const EVALUATIONS_AGENT_VIEW_SCRIPT = `          const agentEvaluationEnv
                   ),
                 },
                 emptyState: agentDetailEvaluationFilterMode === "all"
-                  ? "No evaluations have been run for this agent yet."
+                  ? emptyAgentEvaluationsState
                   : "No evaluations match this status filter.",
                 noResultsState: "No matching evaluations for this agent.",
                 columns: [

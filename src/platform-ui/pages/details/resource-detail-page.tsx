@@ -15,6 +15,7 @@ export function ResourceDetailPage<TTab extends string = string>({
   children,
   sidebar,
   sidebarCollapsed = false,
+  sidebarAutoCollapseTabs = [],
   ariaLabel = "Resource details",
   tabAriaLabel = "Resource sections",
   sidebarAriaLabel = "Resource settings",
@@ -33,12 +34,16 @@ export function ResourceDetailPage<TTab extends string = string>({
     || (typeof activeTabDefinition?.label === "string" ? activeTabDefinition.label : `${ariaLabel} content`);
   const hasHeader = header !== undefined || title !== undefined || headerActions !== undefined;
   const hasSidebar = sidebar !== undefined && sidebar !== null;
-  const tabBarEndActions = tabBarActions || sidebarToggle ? (
+  const isSidebarAutoCollapsed = activeTab !== undefined
+    && sidebarAutoCollapseTabs.some((tab) => tab === activeTab);
+  const effectiveSidebarCollapsed = sidebarCollapsed || isSidebarAutoCollapsed;
+  const visibleSidebarToggle = isSidebarAutoCollapsed ? null : sidebarToggle;
+  const tabBarEndActions = tabBarActions || visibleSidebarToggle ? (
     <div className={`resource-detail-page__tab-bar-actions${tabBarActionsClassName ? ` ${tabBarActionsClassName}` : ""}`}>
       {tabBarActions}
-      {sidebarToggle ? (
+      {visibleSidebarToggle ? (
         <div className="resource-detail-page__sidebar-toggle">
-          {sidebarToggle}
+          {visibleSidebarToggle}
         </div>
       ) : null}
     </div>
@@ -46,7 +51,7 @@ export function ResourceDetailPage<TTab extends string = string>({
 
   return (
     <section
-      className={`resource-detail-page${hasTabs ? " has-tabs" : " is-tabless"}${hasSidebar ? " has-sidebar" : " is-sidebar-empty"}${sidebarCollapsed ? " is-sidebar-collapsed" : ""}${className ? ` ${className}` : ""}`}
+      className={`resource-detail-page${hasTabs ? " has-tabs" : " is-tabless"}${hasSidebar ? " has-sidebar" : " is-sidebar-empty"}${effectiveSidebarCollapsed ? " is-sidebar-collapsed" : ""}${isSidebarAutoCollapsed ? " is-sidebar-auto-collapsed" : ""}${className ? ` ${className}` : ""}`}
       aria-label={ariaLabel}
       data-resource-detail-page="true"
     >
@@ -83,7 +88,7 @@ export function ResourceDetailPage<TTab extends string = string>({
       {hasSidebar ? (
         <PlatformDetailSidebar
           ariaLabel={sidebarAriaLabel}
-          collapsed={sidebarCollapsed}
+          collapsed={effectiveSidebarCollapsed}
           className={sidebarClassName}
         >
           {sidebar}

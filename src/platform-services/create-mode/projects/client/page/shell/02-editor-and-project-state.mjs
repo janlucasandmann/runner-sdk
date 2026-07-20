@@ -1332,7 +1332,11 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
             if (!target) {
               return;
             }
-            if (target.closest(".playground-project-team-action-shell") || target.closest(".playground-project-teams-add-shell")) {
+            if (
+              target.closest(".playground-project-team-action-shell")
+              || target.closest(".playground-project-teams-add-shell")
+              || target.closest(".playground-project-teams-add-menu")
+            ) {
               return;
             }
             if (target.closest(".playground-project-overview-sidebar-milestone-menu-shell")) {

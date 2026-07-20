@@ -206,13 +206,10 @@
             applyAgentComposerMarkdownSelection(field, textareaRef, edit.value, edit.selectionStart, edit.selectionEnd);
           }
   
-          function openForkedAgentComposer() {
-            if (!draftAgent) {
-              openAgentComposer("single");
-              return;
-            }
-  
-            const normalizedCurrentAgent = normalizePlaygroundAgentRecord(draftAgent);
+          function buildSingleAgentCopyDraft(agent) {
+            const normalizedCurrentAgent = normalizePlaygroundAgentRecord(
+              agent || buildPlaygroundDefaultAgentDraft("single")
+            );
             const sanitizedMetadata = buildPlaygroundAgentPersistedMetadata({
               ...normalizedCurrentAgent,
               agentType: "single",
@@ -222,56 +219,64 @@
               isSystem: false,
               isDefault: false,
             });
-            openAgentComposer("single", {
-              draft: {
-                name: String(normalizedCurrentAgent.name || "").trim()
-                  ? String(normalizedCurrentAgent.name || "").trim() + " Copy"
-                  : "New Agent",
-                instructions: normalizedCurrentAgent.instructions || "",
-                model: normalizedCurrentAgent.model || buildPlaygroundDefaultAgentDraft("single").model,
-                binary: normalizedCurrentAgent.binary || "Claude Code CLI",
-                reasoningEffort: normalizedCurrentAgent.reasoningEffort || "medium",
-                enabledSkills: isPlaygroundTeamAgent(normalizedCurrentAgent)
-                  ? []
-                  : (Array.isArray(normalizedCurrentAgent.enabledSkills) ? [...normalizedCurrentAgent.enabledSkills] : []),
-                guardrailSetIds: normalizePlaygroundGuardrailSetIds(normalizedCurrentAgent.guardrailSetIds),
-                deepResearchModel: normalizedCurrentAgent.deepResearchModel || buildPlaygroundDefaultAgentDraft("single").deepResearchModel,
-                permissionSet: normalizePlaygroundPermissionSet(normalizedCurrentAgent.permissionSet, "agent"),
-                metadata: sanitizedMetadata,
-              },
-            });
+            return {
+              name: String(normalizedCurrentAgent.name || "").trim()
+                ? String(normalizedCurrentAgent.name || "").trim() + " Copy"
+                : "New Agent",
+              description: normalizedCurrentAgent.description || "",
+              instructions: normalizedCurrentAgent.instructions || "",
+              model: normalizedCurrentAgent.model || buildPlaygroundDefaultAgentDraft("single").model,
+              binary: normalizedCurrentAgent.binary || "Claude Code CLI",
+              reasoningEffort: normalizedCurrentAgent.reasoningEffort || "medium",
+              enabledSkills: isPlaygroundTeamAgent(normalizedCurrentAgent)
+                ? []
+                : (Array.isArray(normalizedCurrentAgent.enabledSkills) ? [...normalizedCurrentAgent.enabledSkills] : []),
+              guardrailSetIds: normalizePlaygroundGuardrailSetIds(normalizedCurrentAgent.guardrailSetIds),
+              deepResearchModel: normalizedCurrentAgent.deepResearchModel || buildPlaygroundDefaultAgentDraft("single").deepResearchModel,
+              permissionSet: normalizePlaygroundPermissionSet(normalizedCurrentAgent.permissionSet, "agent"),
+              metadata: sanitizedMetadata,
+            };
+          }
+
+          function openCurrentAgentCopyModal() {
+            openAgentCreationSetupOverlay(
+              buildSingleAgentCopyDraft(draftAgent || buildPlaygroundDefaultAgentDraft("single"))
+            );
           }
   
-          function openAgentCopyComposer(agent) {
+          function openAgentCopyModal(agent) {
             const normalizedAgent = normalizePlaygroundAgentRecord(agent);
             const isTeamCopy = normalizedAgent.agentType === "team" || isPlaygroundTeamAgent(normalizedAgent);
+            if (!isTeamCopy) {
+              openAgentDraftDetail("single", {
+                draft: buildSingleAgentCopyDraft(normalizedAgent),
+                preserveDraftName: true,
+              });
+              return;
+            }
             const nextName = String(normalizedAgent.name || "").trim()
               ? String(normalizedAgent.name || "").trim() + " Copy"
-              : (isTeamCopy ? "New Squad" : "New Agent");
+              : "New Squad";
             const sanitizedMetadata = buildPlaygroundAgentPersistedMetadata({
               ...normalizedAgent,
               name: nextName,
               isSystem: false,
               isDefault: false,
             });
-            openAgentComposer(isTeamCopy ? "team" : "single", {
+            openAgentComposer("team", {
               draft: {
                 name: nextName,
-                instructions: isTeamCopy ? "" : (normalizedAgent.instructions || ""),
-                model: normalizedAgent.model || buildPlaygroundDefaultAgentDraft(isTeamCopy ? "team" : "single").model,
+                instructions: "",
+                model: normalizedAgent.model || buildPlaygroundDefaultAgentDraft("team").model,
                 binary: normalizedAgent.binary || "Claude Code CLI",
                 reasoningEffort: normalizedAgent.reasoningEffort || "medium",
-                enabledSkills: isTeamCopy
-                  ? []
-                  : (Array.isArray(normalizedAgent.enabledSkills) ? [...normalizedAgent.enabledSkills] : []),
+                enabledSkills: [],
                 guardrailSetIds: normalizePlaygroundGuardrailSetIds(normalizedAgent.guardrailSetIds),
-                deepResearchModel: isTeamCopy
-                  ? null
-                  : (normalizedAgent.deepResearchModel || buildPlaygroundDefaultAgentDraft("single").deepResearchModel),
+                deepResearchModel: null,
                 permissionSet: normalizePlaygroundPermissionSet(normalizedAgent.permissionSet, "agent"),
-                teamOrchestratorAgentId: isTeamCopy ? normalizedAgent.teamOrchestratorAgentId : "",
-                teamSubagentIds: isTeamCopy ? [...dedupePlaygroundAgentIds(normalizedAgent.teamSubagentIds)] : [],
-                teamExecutionMode: isTeamCopy ? PLAYGROUND_AGENT_TEAM_EXECUTION_MODE : "",
+                teamOrchestratorAgentId: normalizedAgent.teamOrchestratorAgentId,
+                teamSubagentIds: [...dedupePlaygroundAgentIds(normalizedAgent.teamSubagentIds)],
+                teamExecutionMode: PLAYGROUND_AGENT_TEAM_EXECUTION_MODE,
                 metadata: sanitizedMetadata,
               },
             });
@@ -503,69 +508,6 @@
             };
           }
   
-          async function persistAgentDetailRecordImmediate(nextAgent, fallbackMessage = "Failed to save agent.") {
-            const previousAgent = draftAgent ? normalizePlaygroundAgentRecord(draftAgent) : null;
-            const normalizedNextAgent = normalizePlaygroundAgentRecord(nextAgent || previousAgent || buildPlaygroundDefaultAgentDraft());
-            if (!normalizedNextAgent?.id || normalizedNextAgent.id === PLAYGROUND_AGENT_DRAFT_ID) {
-              updateDraftAgent(normalizedNextAgent);
-              return normalizedNextAgent;
-            }
-            clearAgentAutosaveQueue();
-            setDraftAgent(normalizedNextAgent);
-            setAgentDetailsById((current) => ({
-              ...current,
-              [normalizedNextAgent.id]: normalizedNextAgent,
-            }));
-            setSaveState({
-              isSaving: true,
-              error: "",
-              message: "",
-            });
-            try {
-              const savedAgent = await persistAgentRecord(normalizedNextAgent);
-              const mergedSavedAgent = normalizePlaygroundAgentRecord({
-                ...normalizedNextAgent,
-                ...savedAgent,
-                metadata: {
-                  ...getAgentMetadataRecord(normalizedNextAgent),
-                  ...getAgentMetadataRecord(savedAgent),
-                },
-              });
-              editorDirtyRef.current = false;
-  	            setAgentDetailsById((current) => ({
-  	              ...current,
-  	              [mergedSavedAgent.id]: mergedSavedAgent,
-  	            }));
-  	            setAgentListMode(getPlaygroundAgentListMode(mergedSavedAgent));
-  	            setSelectedAgentId(mergedSavedAgent.id);
-  	            rememberAgentVersionBaseline(mergedSavedAgent, { force: true });
-  	            setDraftAgent(mergedSavedAgent);
-              setSaveState({
-                isSaving: false,
-                error: "",
-                message: "Saved",
-              });
-              if (onAgentMutated) {
-                await onAgentMutated();
-              }
-              return mergedSavedAgent;
-            } catch (error) {
-              if (previousAgent?.id) {
-                setAgentDetailsById((current) => ({
-                  ...current,
-                  [previousAgent.id]: previousAgent,
-                }));
-              }
-              setDraftAgent(previousAgent);
-              setSaveState({
-                isSaving: false,
-                error: error instanceof Error ? error.message : fallbackMessage,
-                message: "",
-              });
-              throw error;
-            }
-          }
-  
           function handleAgentOwnerPopoverOpenChange(nextOpen) {
             if (nextOpen) {
               if (!draftAgent) {
@@ -582,7 +524,7 @@
             }
             setAgentOwnerPopoverOpen(false);
             const nextAgent = applyAgentOwnerIdentity(draftAgent, ownerIdentity);
-            void persistAgentDetailRecordImmediate(nextAgent, "Failed to update agent owner.").catch(() => {});
+            updateDraftAgent(nextAgent);
           }
   
           function openAgentSendToTeamModal(agentRecord = null, options = {}) {
@@ -1405,47 +1347,6 @@
             }
           }
   
-          async function handleSaveAgent() {
-            if (!draftAgent) {
-              return;
-            }
-  
-            clearAgentAutosaveQueue();
-  
-            setSaveState({
-              isSaving: true,
-              error: "",
-              message: "",
-            });
-  
-            try {
-              const savedAgent = await persistAgentRecord(draftAgent);
-              editorDirtyRef.current = false;
-              setAgentDetailsById((current) => ({
-                ...current,
-                [savedAgent.id]: savedAgent,
-              }));
-              setAgentListMode(getPlaygroundAgentListMode(savedAgent));
-              setSelectedAgentId(savedAgent.id);
-              setDraftAgent(savedAgent);
-              rememberAgentVersionBaseline(savedAgent, { force: true });
-              setSaveState({
-                isSaving: false,
-                error: "",
-                message: "Saved",
-              });
-              if (onAgentMutated) {
-                await onAgentMutated();
-              }
-            } catch (error) {
-              setSaveState({
-                isSaving: false,
-                error: error instanceof Error ? error.message : "Failed to save agent.",
-                message: "",
-              });
-            }
-          }
-  
           async function handleAgentRenameSubmit(event) {
             event.preventDefault();
             if (!agentRenameState?.agentId) {
@@ -1826,35 +1727,295 @@
               return null;
             }
           }
-  
-          async function assertAgentVersionCommitIsCurrent(agentRecord, options = {}) {
-            if (options.skipConflictCheck) {
-              return;
-            }
-            const normalizedAgentId = String(agentRecord?.id || "").trim();
+
+          function getAgentVersionApiOptions(agentId) {
+            const normalizedAgentId = String(agentId || "").trim();
             if (!normalizedAgentId || normalizedAgentId === PLAYGROUND_AGENT_DRAFT_ID) {
-              return;
+              throw new Error("Missing agent id.");
             }
-            const latestAgent = await fetchLatestAgentVersionRecord(normalizedAgentId);
-            if (!latestAgent) {
-              return;
+            return {
+              backendUrl,
+              headers: requestHeaders,
+              credentials: "same-origin",
+              agentId: normalizedAgentId,
+            };
+          }
+
+          function normalizeAgentVersionApiList(rawItems) {
+            const items = Array.isArray(rawItems) ? rawItems : [];
+            const numericVersions = items
+              .map((version) => Number(version?.version ?? version?.versionNumber ?? version?.version_number))
+              .filter((version) => Number.isFinite(version) && version >= 0);
+            const displayOffset = numericVersions.length > 0 && Math.min(...numericVersions) >= 1 ? 1 : 0;
+            return normalizePlaygroundAgentVersions(items.map((version, index) => {
+              const rawVersion = Number(version?.version ?? version?.versionNumber ?? version?.version_number);
+              const displayVersion = Number.isFinite(rawVersion)
+                ? Math.max(0, Math.floor(rawVersion) - displayOffset)
+                : Math.max(0, index);
+              const rawLabel = String(version?.label || version?.name || "").trim();
+              const usesGeneratedLabel = !rawLabel || /^Version\s+\d+$/i.test(rawLabel);
+              const snapshotName = String(version?.snapshot?.name || "").trim();
+              return {
+                ...version,
+                version: displayVersion,
+                versionNumber: displayVersion,
+                version_number: displayVersion,
+                label: usesGeneratedLabel ? "Version " + displayVersion : rawLabel,
+                name: snapshotName,
+              };
+            }));
+          }
+
+          async function fetchAgentVersionsApi(agentId) {
+            return normalizeAgentVersionApiList(
+              await agentVersionApiClient.listAgentVersions(getAgentVersionApiOptions(agentId))
+            );
+          }
+
+          async function createAgentVersionApi(agentId, snapshot, details = {}) {
+            const version = await agentVersionApiClient.createAgentVersion({
+              ...getAgentVersionApiOptions(agentId),
+              version: {
+                description: String(details.description || "").trim().slice(0, 240),
+                snapshot,
+              },
+            });
+            return normalizePlaygroundAgentVersion(version);
+          }
+
+          async function updateAgentVersionApi(agentId, versionId, updates = {}) {
+            const normalizedVersionId = String(versionId || "").trim();
+            if (!normalizedVersionId) {
+              throw new Error("Missing agent version.");
             }
-            const localRevisionId = getAgentVersioningRevisionId(draftAgent) || getAgentVersioningRevisionId(selectedAgentSnapshot);
-            const latestRevisionId = getAgentVersioningRevisionId(latestAgent);
-            if (localRevisionId && latestRevisionId && localRevisionId !== latestRevisionId) {
-              throw new Error("This agent changed in another session. Reload before saving this version.");
+            const version = await agentVersionApiClient.updateAgentVersion({
+              ...getAgentVersionApiOptions(agentId),
+              versionId: normalizedVersionId,
+              version: updates,
+            });
+            return normalizePlaygroundAgentVersion(version);
+          }
+
+          async function publishAgentVersionApi(agentId, versionId, options = {}) {
+            const normalizedVersionId = String(versionId || "").trim();
+            if (!normalizedVersionId) {
+              throw new Error("Missing agent version.");
             }
-            if (localRevisionId || latestRevisionId) {
-              return;
+            return {
+              agent: normalizePlaygroundAgentRecord(await agentVersionApiClient.publishAgentVersion({
+                ...getAgentVersionApiOptions(agentId),
+                versionId: normalizedVersionId,
+                ...(Object.prototype.hasOwnProperty.call(options, "snapshot")
+                  ? { snapshot: options.snapshot }
+                  : {}),
+                ...(Object.prototype.hasOwnProperty.call(options, "description")
+                  ? { description: String(options.description || "").trim().slice(0, 240) }
+                  : {}),
+              })),
+            };
+          }
+
+          async function unpublishAgentVersionApi(agentId, versionId) {
+            const normalizedVersionId = String(versionId || "").trim();
+            if (!normalizedVersionId) {
+              throw new Error("Missing agent version.");
             }
-            const localUpdatedAt = String(draftAgent?.updatedAt || selectedAgentSnapshot?.updatedAt || "").trim();
-            const latestUpdatedAt = String(latestAgent?.updatedAt || "").trim();
-            if (localUpdatedAt && latestUpdatedAt && localUpdatedAt !== latestUpdatedAt) {
-              const localSignature = agentVersionController.getCurrentSnapshotSignature(draftAgent || selectedAgentSnapshot);
-              const latestSignature = agentVersionController.getCurrentSnapshotSignature(latestAgent);
-              if (localSignature !== latestSignature) {
-                throw new Error("This agent changed in another session. Reload before saving this version.");
+            return normalizePlaygroundAgentRecord(await agentVersionApiClient.unpublishAgentVersion({
+              ...getAgentVersionApiOptions(agentId),
+              versionId: normalizedVersionId,
+            }));
+          }
+
+          async function deleteAgentVersionApi(agentId, versionId) {
+            const normalizedVersionId = String(versionId || "").trim();
+            if (!normalizedVersionId) {
+              throw new Error("Missing agent version.");
+            }
+            await agentVersionApiClient.deleteAgentVersion({
+              ...getAgentVersionApiOptions(agentId),
+              versionId: normalizedVersionId,
+            });
+          }
+
+          function invalidateAgentVersionsCache(agentId) {
+            const normalizedAgentId = String(agentId || "").trim();
+            if (!normalizedAgentId) return;
+            for (const cacheKey of Array.from(agentVersionsLoadedRef.current)) {
+              if (String(cacheKey).endsWith("|" + normalizedAgentId)) {
+                agentVersionsLoadedRef.current.delete(cacheKey);
               }
+            }
+          }
+
+          function markAgentVersionsCacheLoaded(agentId) {
+            const normalizedAgentId = String(agentId || "").trim();
+            if (!normalizedAgentId) return;
+            agentVersionsLoadedRef.current.add([
+              String(backendUrl || "").trim(),
+              JSON.stringify(requestHeaders || {}),
+              normalizedAgentId,
+            ].join("|"));
+          }
+
+          function createAgentVersionSelectedResource(baseAgent, versions, preferredSelectedId = "") {
+            const hydratedAgent = createPlaygroundAgentWithVersionList(baseAgent, versions, preferredSelectedId);
+            const selectedVersion = readPlaygroundAgentVersions(hydratedAgent)
+              .find((version) => version.id === String(preferredSelectedId || "").trim())
+              || getDraftAgentSelectedVersion(hydratedAgent)
+              || null;
+            return selectedVersion
+              ? createPlaygroundAgentFromVersionSnapshot(
+                  hydratedAgent,
+                  selectedVersion,
+                  versions,
+                  selectedVersion.id
+                )
+              : hydratedAgent;
+          }
+
+          async function refreshAuthoritativeAgentVersions(agentId, options = {}) {
+            const normalizedAgentId = String(agentId || "").trim();
+            const fallbackAgent = normalizePlaygroundAgentRecord(
+              options.baseAgent
+              || draftAgent
+              || agentDetailsById[normalizedAgentId]
+              || selectedAgentSnapshot
+              || buildPlaygroundDefaultAgentDraft()
+            );
+            const [latestAgent, versions] = await Promise.all([
+              fetchLatestAgentVersionRecord(normalizedAgentId),
+              fetchAgentVersionsApi(normalizedAgentId),
+            ]);
+            const authoritativeBase = normalizePlaygroundAgentRecord(latestAgent || fallbackAgent);
+            const activeVersion = versions.find((version) => version.status === "active") || versions[0] || null;
+            const authoritativeAgent = createPlaygroundAgentWithVersionList(
+              authoritativeBase,
+              versions,
+              activeVersion?.id || ""
+            );
+            const preferredSelectedId = String(options.preferredSelectedId || activeVersion?.id || "").trim();
+            const selectedAgent = createAgentVersionSelectedResource(
+              authoritativeAgent,
+              versions,
+              preferredSelectedId
+            );
+
+            invalidateAgentVersionsCache(normalizedAgentId);
+            markAgentVersionsCacheLoaded(normalizedAgentId);
+            setAgentVersionsLoadState({
+              agentId: normalizedAgentId,
+              status: "success",
+              error: "",
+            });
+            setAgentDetailsById((current) => ({
+              ...current,
+              [normalizedAgentId]: authoritativeAgent,
+            }));
+            setAgentListMode(getPlaygroundAgentListMode(authoritativeAgent));
+            setSelectedAgentId(normalizedAgentId);
+            setDraftAgent(selectedAgent);
+            rememberAgentVersionBaseline(selectedAgent, { force: true });
+            return selectedAgent;
+          }
+
+          async function refreshAgentVersionsPreservingDraft(agentId, preferredSelectedId = "") {
+            const normalizedAgentId = String(agentId || "").trim();
+            const versions = await fetchAgentVersionsApi(normalizedAgentId);
+            invalidateAgentVersionsCache(normalizedAgentId);
+            markAgentVersionsCacheLoaded(normalizedAgentId);
+            setAgentVersionsLoadState({
+              agentId: normalizedAgentId,
+              status: "success",
+              error: "",
+            });
+            setAgentDetailsById((current) => {
+              const currentAgent = current[normalizedAgentId];
+              if (!currentAgent) return current;
+              return {
+                ...current,
+                [normalizedAgentId]: createPlaygroundAgentWithVersionList(
+                  currentAgent,
+                  versions,
+                  preferredSelectedId
+                ),
+              };
+            });
+            setDraftAgent((current) => {
+              if (!current || String(current.id || "").trim() !== normalizedAgentId) {
+                return current;
+              }
+              return createPlaygroundAgentWithVersionList(
+                current,
+                versions,
+                preferredSelectedId
+              );
+            });
+            return versions;
+          }
+
+          async function runAgentVersionApiMutation(options = {}) {
+            const normalizedAgentId = String(options.agentId || draftAgent?.id || "").trim();
+            if (!normalizedAgentId || normalizedAgentId === PLAYGROUND_AGENT_DRAFT_ID) {
+              return null;
+            }
+            clearAgentAutosaveQueue();
+            setAgentVersionState({
+              status: "loading",
+              message: options.loadingMessage || "Saving agent version...",
+              error: "",
+            });
+            setSaveState({
+              isSaving: true,
+              error: "",
+              message: "",
+            });
+            try {
+              const mutationResult = await options.mutate();
+              const selectedVersionId = typeof options.getSelectedVersionId === "function"
+                ? options.getSelectedVersionId(mutationResult)
+                : options.preferredSelectedId;
+              const refreshedAgent = await refreshAuthoritativeAgentVersions(normalizedAgentId, {
+                baseAgent: mutationResult?.agent || mutationResult?.resource || draftAgent,
+                preferredSelectedId: selectedVersionId || "",
+              });
+              editorDirtyRef.current = false;
+              agentVersionDraftTouchedRef.current = false;
+              setOpenAgentVersionMenuId("");
+              setSaveState({
+                isSaving: false,
+                error: "",
+                message: options.successMessage || "Saved",
+              });
+              setAgentVersionState({
+                status: "success",
+                message: options.successMessage || "Saved",
+                error: "",
+              });
+              if (onAgentMutated) {
+                await onAgentMutated();
+              }
+              window.setTimeout(() => {
+                setAgentVersionState((current) => current.status === "success"
+                  ? { status: "idle", message: "", error: "" }
+                  : current
+                );
+              }, 1800);
+              return refreshedAgent;
+            } catch (error) {
+              const errorMessage = error instanceof Error
+                ? error.message
+                : options.errorMessage || "Failed to save agent version.";
+              setSaveState({
+                isSaving: false,
+                error: errorMessage,
+                message: "",
+              });
+              setAgentVersionState({
+                status: "error",
+                message: "",
+                error: errorMessage,
+              });
+              return null;
             }
           }
   
@@ -2119,6 +2280,59 @@
               touched: agentVersionDraftTouchedRef.current,
             });
           }
+
+          function buildAgentVersionSaveDialogData() {
+            const versions = readDraftAgentVersions();
+            const selectedVersion = getDraftAgentSelectedVersion()
+              || getDraftAgentActiveVersion()
+              || versions[0]
+              || null;
+            const persistedAgent = selectedAgentSnapshot
+              || agentDetailsById[String(draftAgent?.id || "").trim()]
+              || draftAgent;
+            const baseSnapshot = selectedVersion?.snapshot
+              || buildPlaygroundAgentVersionSnapshot(persistedAgent);
+            const currentSnapshot = buildPlaygroundAgentVersionSnapshot(draftAgent);
+            const latestVersion = versions.reduce((highest, version) => {
+              const parsedVersion = Number(version?.version);
+              return Number.isFinite(parsedVersion)
+                ? Math.max(highest, parsedVersion)
+                : highest;
+            }, -1);
+            return {
+              canSaveCurrent: Boolean(selectedVersion),
+              currentVersion: selectedVersion
+                ? Number(selectedVersion.version)
+                : null,
+              nextVersion: latestVersion + 1,
+              currentDescription: String(selectedVersion?.description || "").trim(),
+              diffFiles: buildAgentVersionDiffFilesFromSnapshots(baseSnapshot, currentSnapshot),
+            };
+          }
+
+          function openAgentVersionSaveDialog(options = {}) {
+            if (
+              !draftAgent
+              || saveState.isSaving
+              || agentVersionState.status === "loading"
+              || !hasDraftAgentVersionChanges()
+            ) {
+              return false;
+            }
+            setAgentActionsPopoverOpen(false);
+            setAgentPublishMenuOpen(false);
+            setAgentVersionSelectorMenuOpen(false);
+            setAgentVersionsHeaderMenuOpen(false);
+            setAgentVersionState((current) => current.status === "loading"
+              ? current
+              : { status: "idle", message: "", error: "" }
+            );
+            setAgentVersionSaveDialog({
+              initialMode: options.mode === "current" ? "current" : "new",
+              key: Date.now().toString(36) + Math.random().toString(36).slice(2),
+            });
+            return true;
+          }
   
           const hasUnsavedAgentChanges = Boolean(
             !isHomeViewActive
@@ -2142,6 +2356,7 @@
                   active: true,
                   title: "Leave without saving?",
                   description: "Your changes to " + agentName + " have not been saved. If you leave now, they will be lost.",
+                  onDiscard: discardUnsavedAgentDraft,
                 }
               : null
             );
@@ -2171,119 +2386,20 @@
             return !hasChanges;
           }
   
-          function getAgentVersionPopupActions(options = {}) {
-            const includeVersionHistory = options.includeVersionHistory === true;
+          function getAgentVersionPopupActions() {
             const agentVersionHasChanges = hasDraftAgentVersionChanges();
-            const actions = [
-              {
-                id: "save-new-version",
-                label: "Save to new Version",
-                icon: GitBranchPlus,
-                shortcut: "⇧⌘S",
-                disabled: !agentVersionHasChanges,
-                onClick: () => openCreateAgentVersionModal(),
-              },
+            return [
               {
                 id: "revert",
-                label: "Revert to last saved Version",
+                label: "Revert Changes",
                 icon: Undo2,
                 disabled: !agentVersionHasChanges,
                 onClick: handleRevertDraft,
               },
             ];
-            if (includeVersionHistory) {
-              actions.push({
-                id: "version-history",
-                label: "Version history",
-                icon: History,
-                disabled: false,
-                onClick: () => {
-                  setAgentPublishMenuOpen(false);
-                  setAgentVersionsHeaderMenuOpen(false);
-                  openAgentVersionChangesPage();
-                },
-              });
-            }
-            return actions;
           }
   
-          async function commitVersionedAgentRecord(nextAgent, options = {}) {
-            const normalizedNextAgent = normalizePlaygroundAgentRecord(nextAgent);
-            const loadingMessage = options.loadingMessage || "Saving agent version...";
-            clearAgentAutosaveQueue();
-            setAgentVersionState({
-              status: "loading",
-              message: loadingMessage,
-              error: "",
-            });
-            setSaveState({
-              isSaving: true,
-              error: "",
-              message: "",
-            });
-  
-            try {
-              await assertAgentVersionCommitIsCurrent(normalizedNextAgent, options);
-              const versionedNextAgent = prepareAgentVersionedRecordForCommit(normalizedNextAgent, {
-                ...options,
-                actor: options.actor || getAgentVersionActor(),
-              });
-              const savedAgent = await persistAgentRecord(versionedNextAgent);
-              const savedHasVersionMetadata = readPlaygroundAgentVersions(savedAgent).length > 0
-                || Boolean(savedAgent?.metadata?.activeAgentVersionId || savedAgent?.metadata?.active_agent_version_id);
-              const mergedSavedAgent = normalizePlaygroundAgentRecord({
-                ...versionedNextAgent,
-                ...savedAgent,
-                metadata: savedHasVersionMetadata ? savedAgent.metadata : versionedNextAgent.metadata,
-                publishedAt: savedAgent?.publishedAt || versionedNextAgent.publishedAt || "",
-              });
-              editorDirtyRef.current = false;
-              setAgentDetailsById((current) => ({
-                ...current,
-                [mergedSavedAgent.id]: mergedSavedAgent,
-              }));
-              setAgentListMode(getPlaygroundAgentListMode(mergedSavedAgent));
-              setSelectedAgentId(mergedSavedAgent.id);
-              setDraftAgent(mergedSavedAgent);
-              rememberAgentVersionBaseline(mergedSavedAgent, { force: true });
-              setOpenAgentVersionMenuId("");
-              setSaveState({
-                isSaving: false,
-                error: "",
-                message: options.successMessage || "Saved",
-              });
-              setAgentVersionState({
-                status: "success",
-                message: options.successMessage || "Saved",
-                error: "",
-              });
-              if (onAgentMutated) {
-                await onAgentMutated();
-              }
-              window.setTimeout(() => {
-                setAgentVersionState((current) => current.status === "success"
-                  ? { status: "idle", message: "", error: "" }
-                  : current
-                );
-              }, 1800);
-              return mergedSavedAgent;
-            } catch (error) {
-              const errorMessage = error instanceof Error ? error.message : (options.errorMessage || "Failed to save agent version.");
-              setSaveState({
-                isSaving: false,
-                error: errorMessage,
-                message: "",
-              });
-              setAgentVersionState({
-                status: "error",
-                message: "",
-                error: errorMessage,
-              });
-              return null;
-            }
-          }
-  
-          function toggleAgentVersionsSidebar() {
+          function openAgentVersionsSidebar() {
             if (!canShowAgentVersions) {
               return;
             }
@@ -2298,7 +2414,15 @@
               message: "",
               error: "",
             });
-            setAgentVersionsSidebarOpen((current) => !current);
+            setAgentVersionsSidebarOpen(true);
+          }
+
+          function toggleAgentVersionsSidebar() {
+            if (agentVersionsSidebarOpen) {
+              closeAgentVersionsSidebar();
+              return;
+            }
+            openAgentVersionsSidebar();
           }
   
           function closeAgentVersionsSidebar() {
@@ -2326,12 +2450,11 @@
             setAgentVersionModal(null);
             setAgentVersionModalVisible(false);
             setAgentVersionModalClosing(false);
-            setAgentVersionNameDraft("");
             setAgentVersionDescriptionDraft("");
             setIsAgentVersionDescriptionEditing(false);
           }
-  
-          function openAgentVersionModal(nextModal, draft = {}) {
+
+          function openAgentVersionModal(nextModal, description = "") {
             if (!draftAgent || agentVersionState.status === "loading" || saveState.isSaving) {
               return;
             }
@@ -2344,8 +2467,7 @@
               message: "",
               error: "",
             });
-            setAgentVersionNameDraft(String(draft.name || "").trim());
-            setAgentVersionDescriptionDraft(String(draft.description || ""));
+            setAgentVersionDescriptionDraft(String(description || ""));
             setIsAgentVersionDescriptionEditing(false);
             setAgentVersionModal(nextModal);
             setAgentVersionModalClosing(false);
@@ -2357,26 +2479,7 @@
               });
             });
           }
-  
-          function openCreateAgentVersionModal(options = {}) {
-            if (!draftAgent || agentVersionState.status === "loading" || saveState.isSaving) {
-              return;
-            }
-            const forceNewVersion = Boolean(options.force);
-            if (!forceNewVersion && !hasDraftAgentVersionChanges()) {
-              return;
-            }
-            const versions = readDraftAgentVersions();
-            const nextVersion = versions.reduce((maxVersion, version) => Math.max(maxVersion, Number(version.version || 0)), 0) + 1;
-            openAgentVersionModal(
-              { mode: "create", force: forceNewVersion },
-              {
-                name: "Version " + nextVersion,
-                description: "",
-              }
-            );
-          }
-  
+
           function openEditAgentVersionModal(versionId) {
             if (!draftAgent || agentVersionState.status === "loading" || saveState.isSaving) {
               return;
@@ -2388,11 +2491,12 @@
               return;
             }
             openAgentVersionModal(
-              { mode: "edit", versionId: targetVersion.id },
               {
-                name: String(targetVersion.label || ("Version " + targetVersion.version)).trim(),
-                description: String(targetVersion.description || ""),
-              }
+                mode: "edit",
+                versionId: targetVersion.id,
+                version: targetVersion.version,
+              },
+              String(targetVersion.description || "")
             );
           }
   
@@ -2416,80 +2520,68 @@
             }, typeof PLAYGROUND_PLATFORM_MODAL_ANIMATION_MS === "number" ? PLAYGROUND_PLATFORM_MODAL_ANIMATION_MS : 75);
           }
   
-          async function saveAgentToNewVersion(options = {}) {
-            if (!draftAgent || agentVersionState.status === "loading") {
-              return null;
-            }
-            const forceNewVersion = Boolean(options.force);
-            if (!forceNewVersion && !hasDraftAgentVersionChanges()) {
-              return null;
-            }
-            const actor = getAgentVersionActor();
-            const result = agentVersionController.buildNewVersionResource(draftAgent, {
-              label: options.label,
-              description: options.description,
-              actor,
-            });
-            if (!result?.resource) {
-              return null;
-            }
-            return await commitVersionedAgentRecord(result.resource, {
-              operation: "save-new-version",
-              actor,
-              loadingMessage: "Saving new version...",
-              successMessage: "New version saved",
-              errorMessage: "Failed to save new version.",
-            });
-          }
-  
           async function updateAgentVersionDetails(versionId, versionDetails = {}) {
             if (!draftAgent || agentVersionState.status === "loading") {
               return null;
             }
-            const actor = getAgentVersionActor();
-            const result = agentVersionController.buildVersionMetadataResource(draftAgent, versionId, {
-              ...versionDetails,
-              actor,
-            });
-            if (!result?.resource) {
+            const agentId = String(draftAgent.id || "").trim();
+            const normalizedVersionId = String(versionId || "").trim();
+            if (!agentId || !normalizedVersionId) {
               return null;
             }
-            return await commitVersionedAgentRecord(result.resource, {
-              operation: "edit-version",
-              actor,
-              loadingMessage: "Saving version details...",
-              successMessage: "Version details saved",
-              errorMessage: "Failed to save version details.",
+            setAgentVersionState({
+              status: "loading",
+              message: "Saving version details...",
+              error: "",
             });
+            setSaveState({ isSaving: true, error: "", message: "" });
+            try {
+              const updatedVersion = await updateAgentVersionApi(agentId, normalizedVersionId, {
+                description: String(versionDetails.description || "").trim().slice(0, 240),
+              });
+              await refreshAgentVersionsPreservingDraft(agentId, normalizedVersionId);
+              setSaveState({ isSaving: false, error: "", message: "Version details saved" });
+              setAgentVersionState({
+                status: "success",
+                message: "Version details saved",
+                error: "",
+              });
+              if (onAgentMutated) {
+                await onAgentMutated();
+              }
+              return updatedVersion;
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : "Failed to save version details.";
+              setSaveState({ isSaving: false, error: errorMessage, message: "" });
+              setAgentVersionState({ status: "error", message: "", error: errorMessage });
+              return null;
+            }
           }
   
           async function commitAgentVersionModal() {
             if (!agentVersionModal || saveState.isSaving || agentVersionState.status === "loading") {
               return;
             }
-            const label = String(agentVersionNameDraft || "").trim() || "Version";
             const description = String(agentVersionDescriptionDraft || "").trim();
-            const savedAgent = agentVersionModal.mode === "edit"
-              ? await updateAgentVersionDetails(agentVersionModal.versionId, { label, description })
-              : await saveAgentToNewVersion({
-                  force: Boolean(agentVersionModal.force),
-                  label,
-                  description,
-                });
+            const savedAgent = await updateAgentVersionDetails(
+              agentVersionModal.versionId,
+              { description }
+            );
             if (savedAgent) {
               closeAgentVersionModal();
             }
           }
   
-          async function saveAndPublishCurrentAgentVersion() {
+          async function saveAndPublishCurrentAgentVersion(details = {}) {
             if (!draftAgent || saveState.isSaving || agentVersionState.status === "loading") {
-              return;
+              return null;
             }
             if (!hasDraftAgentVersionChanges()) {
-              return;
+              return null;
             }
             const selectedVersion = getDraftAgentSelectedVersion();
-            const actor = getAgentVersionActor();
+            const saveToCurrentVersion = details.mode === "current" && Boolean(selectedVersion);
+            const versionDescription = String(details.description || "").trim().slice(0, 240);
             const currentSnapshot = buildPlaygroundAgentVersionSnapshot(draftAgent);
             const validation = validateAgentVersionForPublish(
               draftAgent,
@@ -2503,36 +2595,42 @@
                 message: "",
                 error: validation.message || "Resolve validation issues before publishing.",
               });
-              return;
+              return null;
             }
-  
-            const publishResult = selectedVersion
-              ? agentVersionController.buildPublishSelectedResource(draftAgent, {
-                  actor,
-                  updateFromResource: true,
-                })
-              : (() => {
-                  const saveResult = agentVersionController.buildSaveCurrentResource(draftAgent, { status: "saved", actor });
-                  if (!saveResult?.resource) {
-                    return null;
-                  }
-                  return agentVersionController.buildPublishSelectedResource(saveResult.resource, {
-                    actor,
-                    updateFromResource: true,
-                  });
-                })();
-            if (!publishResult?.resource) {
-              return;
-            }
+            const agentId = String(draftAgent.id || "").trim();
             setAgentPublishMenuOpen(false);
             setAgentVersionSelectorMenuOpen(false);
             setAgentVersionsHeaderMenuOpen(false);
-            await commitVersionedAgentRecord(publishResult.resource, {
-              operation: "save-publish",
-              actor,
-              loadingMessage: "Saving & publishing agent...",
-              successMessage: "Saved & published",
-              errorMessage: "Failed to save and publish agent.",
+            return await runAgentVersionApiMutation({
+              agentId,
+              loadingMessage: "Saving agent changes...",
+              successMessage: "Changes saved",
+              errorMessage: "Failed to save agent changes.",
+              mutate: async () => {
+                let version = selectedVersion;
+                if (!saveToCurrentVersion) {
+                  version = await createAgentVersionApi(agentId, currentSnapshot, {
+                    description: versionDescription,
+                  });
+                } else if (selectedVersion.status !== "active") {
+                  version = await updateAgentVersionApi(agentId, selectedVersion.id, {
+                    description: versionDescription,
+                    snapshot: currentSnapshot,
+                  });
+                }
+                if (!version?.id) {
+                  throw new Error("Agent version could not be resolved.");
+                }
+                const published = await publishAgentVersionApi(agentId, version.id, {
+                  snapshot: currentSnapshot,
+                  description: versionDescription,
+                });
+                return {
+                  ...published,
+                  version,
+                };
+              },
+              getSelectedVersionId: (result) => result?.version?.id || selectedVersion?.id || "",
             });
           }
   
@@ -2544,13 +2642,13 @@
             if (!result?.resource) {
               return;
             }
-            await commitVersionedAgentRecord(result.resource, {
-              operation: "restore",
-              actor: getAgentVersionActor(),
-              loadingMessage: "Restoring agent version...",
-              successMessage: "Version restored",
-              errorMessage: "Failed to restore agent version.",
-            });
+            clearAgentAutosaveQueue();
+            editorDirtyRef.current = false;
+            agentVersionDraftTouchedRef.current = false;
+            setDraftAgent(result.resource);
+            rememberAgentVersionBaseline(result.resource, { force: true });
+            setAgentPublishMenuOpen(false);
+            setAgentVersionState({ status: "idle", message: "", error: "" });
           }
   
           async function publishAgentVersion(versionId) {
@@ -2560,13 +2658,17 @@
             const targetVersion = readDraftAgentVersions().find((version) => version.id === String(versionId || "").trim());
             const selectedVersion = getDraftAgentSelectedVersion();
             const hasChanges = hasDraftAgentVersionChanges();
-            const shouldRepublishCurrentEditor = Boolean(
+            const isChangedActiveVersion = Boolean(
               targetVersion
               && targetVersion.status === "active"
               && selectedVersion?.id === targetVersion.id
               && hasChanges
             );
-            if (hasChanges && !shouldRepublishCurrentEditor) {
+            if (isChangedActiveVersion) {
+              openAgentVersionSaveDialog({ mode: "current" });
+              return;
+            }
+            if (hasChanges) {
               setAgentVersionState({
                 status: "error",
                 message: "",
@@ -2586,20 +2688,14 @@
               });
               return;
             }
-            const actor = getAgentVersionActor();
-            const result = agentVersionController.buildPublishVersionResource(draftAgent, versionId, {
-              actor,
-              updateFromResource: shouldRepublishCurrentEditor,
-            });
-            if (!result?.resource) {
-              return;
-            }
-            await commitVersionedAgentRecord(result.resource, {
-              operation: "publish-version",
-              actor,
+            const agentId = String(draftAgent.id || "").trim();
+            await runAgentVersionApiMutation({
+              agentId,
               loadingMessage: "Publishing agent version...",
               successMessage: "Published",
               errorMessage: "Failed to publish agent version.",
+              mutate: () => publishAgentVersionApi(agentId, targetVersion.id),
+              preferredSelectedId: targetVersion.id,
             });
           }
   
@@ -2610,19 +2706,41 @@
             if (readDraftAgentVersions().length <= 1) {
               return;
             }
-            const result = agentVersionController.buildDeleteVersionResource(draftAgent, versionId);
-            if (!result?.resource) {
+            const normalizedVersionId = String(versionId || "").trim();
+            const targetVersion = readDraftAgentVersions().find((version) => version.id === normalizedVersionId);
+            if (!targetVersion) {
+              return;
+            }
+            if (targetVersion.status === "active") {
+              setAgentVersionState({
+                status: "error",
+                message: "",
+                error: "The published version cannot be deleted.",
+              });
+              return;
+            }
+            if (hasDraftAgentVersionChanges() && getDraftAgentSelectedVersion()?.id === normalizedVersionId) {
+              setAgentVersionState({
+                status: "error",
+                message: "",
+                error: "Revert or save the current changes before deleting this version.",
+              });
               return;
             }
             if (!window.confirm("Delete this agent version?")) {
               return;
             }
-            await commitVersionedAgentRecord(result.resource, {
-              operation: "delete-version",
-              actor: getAgentVersionActor(),
+            const activeVersion = getDraftAgentActiveVersion();
+            await runAgentVersionApiMutation({
+              agentId: draftAgent.id,
               loadingMessage: "Deleting agent version...",
               successMessage: "Version deleted",
               errorMessage: "Failed to delete agent version.",
+              mutate: async () => {
+                await deleteAgentVersionApi(draftAgent.id, normalizedVersionId);
+                return {};
+              },
+              preferredSelectedId: activeVersion?.id || "",
             });
           }
   
@@ -2630,20 +2748,22 @@
             if (!draftAgent || agentVersionState.status === "loading") {
               return;
             }
-            const actor = getAgentVersionActor();
-            const result = agentVersionController.buildUnpublishActiveResource(draftAgent, { actor });
-            if (!result?.resource) {
+            const activeVersion = getDraftAgentActiveVersion();
+            if (!activeVersion?.id) {
               return;
             }
             if (!window.confirm("Unpublish this agent? Version history will be kept.")) {
               return;
             }
-            await commitVersionedAgentRecord(result.resource, {
-              operation: "unpublish",
-              actor,
+            await runAgentVersionApiMutation({
+              agentId: draftAgent.id,
               loadingMessage: "Unpublishing agent...",
               successMessage: "Unpublished",
               errorMessage: "Failed to unpublish agent.",
+              mutate: async () => ({
+                agent: await unpublishAgentVersionApi(draftAgent.id, activeVersion.id),
+              }),
+              preferredSelectedId: activeVersion.id,
             });
           }
   
@@ -2660,13 +2780,12 @@
               if (!result?.resource) {
                 return;
               }
-              await commitVersionedAgentRecord(result.resource, {
-                operation: "revert",
-                actor: getAgentVersionActor(),
-                loadingMessage: "Reverting agent...",
-                successMessage: "Reverted",
-                errorMessage: "Failed to revert agent.",
-              });
+              editorDirtyRef.current = false;
+              agentVersionDraftTouchedRef.current = false;
+              setDraftAgent(result.resource);
+              rememberAgentVersionBaseline(result.resource, { force: true });
+              setAgentPublishMenuOpen(false);
+              setAgentVersionState({ status: "idle", message: "", error: "" });
               return;
             }
             const nextDraft = selectedAgentSnapshot ? normalizePlaygroundAgentRecord(selectedAgentSnapshot) : null;

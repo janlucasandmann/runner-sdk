@@ -112,7 +112,6 @@
   min-height: 164px;
   max-height: 330px;
   overflow: auto;
-  background: #000;
 }
 
 .platform-version-save-dialog__change-content .platform-diff-viewer,

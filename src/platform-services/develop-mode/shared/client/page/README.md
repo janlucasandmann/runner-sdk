@@ -4,11 +4,16 @@
 
 ## Purpose
 
-This directory contains page composition and page-local interaction behavior for the Shared service in Develop Mode. It remains subordinate to the service boundary and must not become a cross-service utility layer.
+This directory contains page composition and page-local interaction behavior
+shared by Develop Mode services. The source-backed web app and function pages
+use the detail shell here so their tab structure cannot diverge.
 
 ## Contents
 
 - [`index.ts`](index.ts) — Public barrel or composition entry point.
+- [`develop-server-detail-page.tsx`](develop-server-detail-page.tsx) — Shared detail shell for web apps and functions, including full-width Code-tab sidebar behavior.
+- [`develop-server-detail-page.css`](develop-server-detail-page.css) — Shared source-detail sizing and code-workspace layout.
+- [`develop-server-detail-page.test.tsx`](develop-server-detail-page.test.tsx) — Detail-shell tab and composition coverage.
 - [`resource-overview-page.tsx`](resource-overview-page.tsx) — Presentation composition for Resource Overview Page.
 
 ## Working in this directory

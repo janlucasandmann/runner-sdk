@@ -29,6 +29,16 @@ export const GUARDRAILS_AGENT_PAGE_ACTIONS_SCRIPT = `          function renderAg
                 });
           }
           function renderAgentGuardrailTable() {
+            const emptyGuardrailsState = React.createElement(PlatformEmptyState, {
+              icon: Shield,
+              title: "No guardrails yet",
+              description: "Add a guardrail to define the policies this agent must follow.",
+              primaryAction: {
+                label: "Add first Guardrail",
+                icon: Plus,
+                onClick: () => setAgentGuardrailImportPopoverOpen(true),
+              },
+            });
             return React.createElement(PlatformDataTable, {
               rows: filteredAgentGuardrailSets,
               getRowId: (set) => set.id,
@@ -78,7 +88,6 @@ export const GUARDRAILS_AGENT_PAGE_ACTIONS_SCRIPT = `          function renderAg
                       size: "small",
                       type: "button",
                       onClick: () => setAgentGuardrailImportPopoverOpen((current) => !current),
-                      disabled: Boolean(isDefaultAgentConfigurationLocked),
                       title: "Add guardrail",
                       "aria-label": "Add guardrail",
                       "aria-haspopup": "menu",
@@ -92,7 +101,7 @@ export const GUARDRAILS_AGENT_PAGE_ACTIONS_SCRIPT = `          function renderAg
                 ),
               },
               emptyState: agentGuardrailFilterMode === "all"
-                ? "No guardrails imported yet."
+                ? emptyGuardrailsState
                 : "No guardrails match this prompt filter.",
               noResultsState: "No matching guardrails on this agent.",
               columns: [
@@ -145,7 +154,6 @@ export const GUARDRAILS_AGENT_PAGE_ACTIONS_SCRIPT = `          function renderAg
                 label: "Remove guardrail",
                 icon: X,
                 danger: true,
-                disabled: Boolean(isDefaultAgentConfigurationLocked),
                 onSelect: () => toggleAgentGuardrailSet(set.id),
               }],
             });

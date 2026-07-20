@@ -163,11 +163,6 @@ export const PROJECT_OVERVIEW_CSS_03_FRAGMENT = String.raw`        position: rel
         z-index: 360;
       }
 
-      .playground-project-teams-add-shell.is-open {
-        z-index: 380;
-      }
-
-      .playground-project-teams-add-menu,
       .playground-project-team-action-menu {
         position: absolute;
         top: calc(100% + 8px);
@@ -186,6 +181,16 @@ export const PROJECT_OVERVIEW_CSS_03_FRAGMENT = String.raw`        position: rel
         backdrop-filter: blur(10px);
         overflow: hidden;
         z-index: 400;
+        transform-origin: top right;
+      }
+
+      .playground-project-teams-add-menu {
+        --platform-popup-padding: 6px;
+        min-width: 210px;
+        width: max-content;
+        max-width: min(280px, calc(100vw - 32px));
+        color: rgba(255, 255, 255, 0.94);
+        overflow: hidden;
         transform-origin: top right;
       }
 
@@ -308,8 +313,7 @@ export const PROJECT_OVERVIEW_CSS_03_FRAGMENT = String.raw`        position: rel
         z-index: 320;
       }
 
-      .playground-project-teams-table-shell .playground-project-team-action-shell.is-open .playground-project-team-action-menu,
-      .playground-project-teams-add-shell.is-open .playground-project-teams-add-menu {
+      .playground-project-teams-table-shell .playground-project-team-action-shell.is-open .playground-project-team-action-menu {
         z-index: 420;
       }
 

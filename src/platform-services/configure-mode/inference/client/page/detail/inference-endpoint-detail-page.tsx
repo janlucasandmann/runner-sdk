@@ -41,7 +41,6 @@ import { PlatformIconButton } from "../../../../../../platform-ui/components/ui/
 import { PlatformLabel } from "../../../../../../platform-ui/components/ui/label/index.js";
 import {
   PlatformSelector,
-  type PlatformSelectorOption,
 } from "../../../../../../platform-ui/components/ui/selector/index.js";
 import { ResourceDetailPage } from "../../../../../../platform-ui/pages/details/index.js";
 import {
@@ -53,6 +52,7 @@ import {
   type InferenceLocalRunnersSnapshot,
   type InferenceSettingsSnapshot,
 } from "../inference-endpoint-model.js";
+import { INFERENCE_PROVIDER_OPTIONS } from "../inference-provider-options.js";
 
 type InferenceEndpointDetailTab = "general" | "models" | "runtime";
 
@@ -101,18 +101,6 @@ const DETAIL_TABS = [
   { id: "models", label: "Models", icon: Boxes },
   { id: "runtime", label: "Runtime", icon: ServerCog },
 ] as const;
-
-const PROVIDER_OPTIONS: readonly PlatformSelectorOption<string>[] = [
-  {
-    value: "openai-compatible",
-    label: "OpenAI-Compatible",
-    description: "OpenAI-compatible chat and models APIs",
-  },
-  { value: "vllm", label: "vLLM", description: "High-throughput self-hosted inference" },
-  { value: "tgi", label: "Hugging Face TGI", description: "Text Generation Inference" },
-  { value: "ollama", label: "Ollama", description: "Local model runtime" },
-  { value: "custom", label: "Custom", description: "Custom compatible endpoint" },
-];
 
 function SidebarProperty({ label, value }: { label: ReactNode; value: ReactNode }) {
   return (
@@ -211,9 +199,9 @@ export function InferenceEndpointDetailPage({
   const modelRows = buildModelRows(endpoint);
   const bindingRows = buildBindingRows(endpoint);
   const providerValue = String(settings.providerType || endpoint.providerType || "openai-compatible");
-  const providerOptions = PROVIDER_OPTIONS.some((option) => option.value === providerValue)
-    ? PROVIDER_OPTIONS
-    : [...PROVIDER_OPTIONS, { value: providerValue, label: endpoint.providerLabel }];
+  const providerOptions = INFERENCE_PROVIDER_OPTIONS.some((option) => option.value === providerValue)
+    ? INFERENCE_PROVIDER_OPTIONS
+    : [...INFERENCE_PROVIDER_OPTIONS, { value: providerValue, label: endpoint.providerLabel }];
   const disabled = !canConfigure || endpoint.readOnly || saving;
 
   const modelColumns: PlatformDataTableColumn<InferenceModelRow>[] = [

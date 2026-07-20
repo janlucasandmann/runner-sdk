@@ -46,7 +46,15 @@ assert.match(GUARDRAILS_AGENT_PAGE_SCRIPT, /const agentGuardrailsSection/);
 assert.match(GUARDRAILS_AGENT_PAGE_SCRIPT, /variant: "minimalistic-ui"/);
 assert.match(GUARDRAILS_AGENT_PAGE_SCRIPT, /controlsLeading: React\.createElement\(PlatformPopup/);
 assert.match(GUARDRAILS_AGENT_PAGE_SCRIPT, /React\.createElement\(PlatformSecondaryButton/);
+assert.match(GUARDRAILS_AGENT_PAGE_SCRIPT, /React\.createElement\(PlatformEmptyState/);
+assert.match(GUARDRAILS_AGENT_PAGE_SCRIPT, /label: "Add first Guardrail"/);
 assert.match(GUARDRAILS_AGENT_PAGE_SCRIPT, /portal: true/);
+assert.match(GUARDRAILS_AGENT_PAGE_SCRIPT, /method: "PUT"[\s\S]*?guardrailSetIds: guardrailBundle\.guardrailSetIds/);
+assert.doesNotMatch(GUARDRAILS_AGENT_PAGE_SCRIPT, /persistAgentDetailRecordImmediate/);
+assert.doesNotMatch(GUARDRAILS_AGENT_PAGE_SCRIPT, /editorDirtyRef\.current = false/);
+assert.doesNotMatch(GUARDRAILS_AGENT_PAGE_SCRIPT, /rememberAgentVersionBaseline/);
+assert.doesNotMatch(GUARDRAILS_AGENT_PAGE_SCRIPT, /disabled: Boolean\(isDefaultAgentConfigurationLocked\)/);
+assert.doesNotMatch(GUARDRAILS_AGENT_PAGE_SCRIPT, /if \(isDefaultAgentConfigurationLocked\) \{\s*return;\s*\}/);
 assert.doesNotMatch(GUARDRAILS_AGENT_PAGE_SCRIPT, /function renderAgentGuardrailImportMenu\(\)/);
 assert.doesNotMatch(GUARDRAILS_AGENT_PAGE_SCRIPT, /trailing: React\.createElement\("div"[\s\S]{0,900}Add Guardrail/);
 assert.doesNotMatch(GUARDRAILS_AGENT_PAGE_SCRIPT, /pagination\s*:/);
@@ -145,6 +153,11 @@ assert.equal(result.call.args[2], "/agents/agent%201/guardrails");
 result = dispatch("PATCH", "/api/real/agents/agent_1/guardrails");
 assert.equal(result.call.adapter, "json");
 assert.equal(result.call.args[3], "PATCH");
+
+result = dispatch("PUT", "/api/real/agents/agent_default/guardrails");
+assert.equal(result.call.adapter, "json");
+assert.equal(result.call.args[2], "/agents/agent_default/guardrails");
+assert.equal(result.call.args[3], "PUT");
 
 result = dispatch("DELETE", "/api/real/agents/agent_1/guardrails/set%201");
 assert.equal(result.call.args[2], "/agents/agent_1/guardrails/set%201");

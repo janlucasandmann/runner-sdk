@@ -26,11 +26,12 @@ describe("ProjectDetailPage", () => {
     expect(container.querySelectorAll("[data-platform-detail-tab-bar='true']")).toHaveLength(1);
     expect(container.querySelectorAll("[data-platform-detail-sidebar='true']")).toHaveLength(1);
     expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual([
-      "General",
+      "Home",
       "Resources",
       "Strategy",
       "Settings",
     ]);
+    expect(screen.getByRole("tab", { name: "Home" }).querySelector(".lucide-house")).not.toBeNull();
 
     fireEvent.click(screen.getByRole("tab", { name: "Strategy" }));
     expect(onTabChange).toHaveBeenCalledWith("strategy");

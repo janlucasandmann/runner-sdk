@@ -768,6 +768,7 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                   : null
               )
           }
+          const taskDetailBackDestination = taskView === "board" ? "Board" : "Backlog";
 	          const taskDetailNavbar = React.createElement("div", {
                 className: "playground-content-nav playground-tasks-detail-navbar",
               },
@@ -775,16 +776,16 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
 	                  ? React.createElement("div", { className: "playground-tasks-ticket-page-nav-title" },
 	                      React.createElement("button", {
 	                        type: "button",
-	                        className: "playground-tasks-ticket-page-nav-ticket-row",
+	                        className: "playground-files-header-icon-button is-plain playground-tasks-ticket-page-back-link",
 	                        onClick: handleCloseTaskDetail,
-	                        title: "Back to project",
-	                        "aria-label": "Back to project",
-	                      },
-	                        React.createElement("span", { className: "playground-tasks-ticket-page-nav-back", "aria-hidden": "true" },
-	                          React.createElement(ChevronLeft, { width: 12, height: 12, strokeWidth: 1.9 })
-	                        ),
-	                        React.createElement("span", { className: "playground-tasks-ticket-page-nav-ticket" }, activeTicketNumber)
-	                      ),
+	                        title: "Back to " + taskDetailBackDestination,
+	                        "aria-label": "Back to " + taskDetailBackDestination,
+	                      }, React.createElement(ArrowLeft, {
+	                        width: 16,
+	                        height: 16,
+	                        strokeWidth: 1.8,
+	                        "aria-hidden": "true",
+	                      })),
 	                      React.createElement("input", {
 	                        type: "text",
 	                        className: "playground-content-title playground-tasks-detail-navbar-title-input playground-tasks-ticket-page-nav-title-input",
@@ -960,82 +961,29 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                   },
                 }),
                 isFullPageTaskDetail ? null : renderTaskDetailFactsSection(),
-                React.createElement("div", { className: "playground-tasks-attachments" },
-                  React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
-                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Attachments"),
-                    React.createElement("div", { className: "playground-tasks-attachments-actions" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-environments-action-button playground-tasks-attachments-environment-button",
-                      onClick: openTaskEnvironmentFilePicker,
-                      disabled: isTaskConfigLocked || taskAttachmentTransferState.isProcessing || !activeTaskEnvironmentId,
-                      title: activeTaskEnvironmentId
-                        ? "Add files from " + (activeTaskEnvironment?.name || "the selected computer")
-                        : "Select a computer first",
-                      }, "Upload from Computer")
-                    )
-                  ),
-                  React.createElement("input", {
-                    ref: taskAttachmentInputRef,
-                    type: "file",
-                    multiple: true,
-                    hidden: true,
-                    disabled: isTaskConfigLocked,
-                    onChange: (event) => void handleTaskAttachmentInputChange(event),
-                  }),
-                  React.createElement("div", { className: "playground-tasks-attachments-surface tb-runner-chat" },
-                    React.createElement("div", {
-                      className: "tb-popup-dropzone playground-tasks-attachments-dropzone" + (isTaskAttachmentDragging ? " dragging" : "") + (hasTaskAttachments ? " is-filled" : ""),
-                      onDragOver: (event) => {
-                        event.preventDefault();
-                        if (!activeTaskEnvironmentId || isTaskConfigLocked) {
-                          return;
-                        }
-                        setIsTaskAttachmentDragging(true);
-                      },
-                      onDragLeave: (event) => {
-                        if (event.currentTarget.contains(event.relatedTarget)) {
-                          return;
-                        }
-                        setIsTaskAttachmentDragging(false);
-                      },
-                      onDrop: (event) => void handleTaskAttachmentDrop(event),
-                    },
-                      hasTaskAttachments
-                        ? React.createElement(React.Fragment, null,
-                            React.createElement("div", { className: "playground-tasks-attachments-topline" },
-                              React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
-                              React.createElement("span", null, isTaskAttachmentDragging ? "Drop files here" : "Drop files to attach, or"),
-                              React.createElement("button", {
-                                type: "button",
-                                className: "playground-tasks-attachments-browse",
-                                disabled: isTaskConfigLocked,
-                                onClick: openTaskAttachmentPicker,
-                              }, "browse.")
-                            ),
-                            React.createElement("div", { className: "runner-attachments" },
-                              draftTask.attachments.map((attachment) => renderTaskAttachmentChip(attachment, { removable: !isTaskConfigLocked }))
-                            )
-                          )
-                        : React.createElement("button", {
-                            type: "button",
-                            className: "playground-tasks-attachments-empty-button",
-                            disabled: isTaskConfigLocked,
-                            onClick: openTaskAttachmentPicker,
-                          },
-                            React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
-                            React.createElement("span", { className: "tb-popup-dropzone-title" }, isTaskAttachmentDragging ? "Drop files here" : "Drag & drop files here"),
-                            React.createElement("span", { className: "tb-popup-dropzone-copy" }, "or click to browse")
-                          )
-                    )
-                  ),
-                  taskAttachmentTransferState.isProcessing
-                    ? React.createElement("div", { className: "playground-tasks-attachments-status" }, "Uploading attachments...")
+                React.createElement(PlatformAttachments, {
+                  className: "playground-tasks-ticket-attachments",
+                  items: draftTask.attachments.map((attachment) => buildTaskAttachmentListItem(attachment, {
+                    removable: !isTaskConfigLocked,
+                  })),
+                  inputRef: taskAttachmentInputRef,
+                  disabled: isTaskConfigLocked,
+                  processing: taskAttachmentTransferState.isProcessing,
+                  dragging: isTaskAttachmentDragging,
+                  uploadFromComputerDisabled: !activeTaskEnvironmentId,
+                  uploadFromComputerTitle: activeTaskEnvironmentId
+                    ? "Add files from " + (activeTaskEnvironment?.name || "the selected computer")
+                    : "Select a computer first",
+                  statusMessage: taskAttachmentTransferState.isProcessing
+                    ? "Uploading attachments..."
                     : null,
-                  taskAttachmentTransferState.error
-                    ? React.createElement("div", { className: "playground-environments-error" }, taskAttachmentTransferState.error)
-                    : null
-                ),
+                  errorMessage: taskAttachmentTransferState.error || null,
+                  onUploadFromComputer: openTaskEnvironmentFilePicker,
+                  onBrowse: openTaskAttachmentPicker,
+                  onInputChange: (event) => void handleTaskAttachmentInputChange(event),
+                  onDraggingChange: setIsTaskAttachmentDragging,
+                  onFilesDrop: (_files, event) => void handleTaskAttachmentDrop(event),
+                }),
                 React.createElement("div", { className: "playground-tasks-skills" },
                   React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
                     React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Skills"),

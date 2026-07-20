@@ -35,6 +35,8 @@ assert.match(DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.operationalMetrics, /loadDeve
 assert.match(DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.operationalMetrics, /publishOperationalMetricsSnapshot/);
 assert.match(DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.operationalMetrics, /voiceCalls: buildSeries\("voiceCalls"\)/);
 assert.match(DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.operationalMetrics, /payload\?\.data\?\.analytics\?\.resources/);
+assert.match(DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.operationalMetrics, /"kind=" \+ encodeURIComponent\(targetKind\)/);
+assert.match(DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.operationalMetrics, /resources: activeScopedResources/);
 assert.match(DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.operationalMetrics, /readResourceChartBuckets\(resource, "traffic", "traffic24h"\)/);
 assert.match(DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.operationalMetrics, /readResourceChartBuckets\(resource, "operations", "operations24h"\)/);
 assert.match(DEVELOP_HOME_RUNTIME_SCRIPT_FRAGMENTS.operationalMetrics, /entry\?\.bucket_start/);

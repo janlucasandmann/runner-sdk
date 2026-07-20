@@ -16,6 +16,10 @@ import {
   type InferenceEndpointRow,
   type InferenceLocalRunnersSnapshot,
 } from "../inference-endpoint-model.js";
+import {
+  CreateInferenceEndpointModal,
+  type CreateInferenceEndpointInput,
+} from "./create-inference-endpoint-modal.js";
 import { InferenceOverviewGuide } from "./inference-overview-guide.js";
 
 export interface InferenceOverviewPageProps {
@@ -23,8 +27,12 @@ export interface InferenceOverviewPageProps {
   localRunners: InferenceLocalRunnersSnapshot;
   controlsPortalId?: string;
   canConfigure?: boolean;
+  creatingEndpoint?: boolean;
+  createError?: string;
   onOpenEndpoint: (endpointId: string) => void;
-  onConfigureEndpoint: () => void;
+  onConfigureEndpoint: (
+    input: CreateInferenceEndpointInput,
+  ) => boolean | void | Promise<boolean | void>;
 }
 
 export function InferenceOverviewPage({
@@ -32,10 +40,13 @@ export function InferenceOverviewPage({
   localRunners,
   controlsPortalId,
   canConfigure = true,
+  creatingEndpoint = false,
+  createError = "",
   onOpenEndpoint,
   onConfigureEndpoint,
 }: InferenceOverviewPageProps) {
   const [kindFilter, setKindFilter] = useState("all");
+  const [createModalOpen, setCreateModalOpen] = useState(false);
   const rows = useMemo(
     () => buildInferenceEndpointRows(endpoints, localRunners),
     [endpoints, localRunners],
@@ -150,61 +161,72 @@ export function InferenceOverviewPage({
   };
 
   return (
-    <ResourceOverviewPage<InferenceEndpointRow>
-      heroContent={
-        <InferenceOverviewGuide
-          externalCount={externalCount}
-          localCount={localCount}
-          onConfigureExternal={onConfigureEndpoint}
-          onBrowseAll={browseAll}
-          onBrowseLocal={browseLocal}
-        />
-      }
-      showPeriodSelector={false}
-      controlsPortalId={controlsPortalId}
-      className="is-inference"
-      table={{
-        rows: filteredRows,
-        columns,
-        getRowId: (row) => row.id,
-        ariaLabel: "Inference endpoints",
-        className: "resource-overview-table is-inference",
-        sorting: { defaultValue: { id: "endpoint", direction: "asc" } },
-        pagination: false,
-        toolbar: {
-          title: "All Endpoints",
-          search: {
-            placeholder: "Search endpoints",
-            getSearchText: (row) => row.searchText,
+    <>
+      <ResourceOverviewPage<InferenceEndpointRow>
+        heroContent={
+          <InferenceOverviewGuide
+            externalCount={externalCount}
+            localCount={localCount}
+            onConfigureExternal={() => setCreateModalOpen(true)}
+            onBrowseAll={browseAll}
+            onBrowseLocal={browseLocal}
+          />
+        }
+        showPeriodSelector={false}
+        controlsPortalId={controlsPortalId}
+        className="is-inference"
+        table={{
+          rows: filteredRows,
+          columns,
+          getRowId: (row) => row.id,
+          ariaLabel: "Inference endpoints",
+          className: "resource-overview-table is-inference",
+          sorting: { defaultValue: { id: "endpoint", direction: "asc" } },
+          pagination: false,
+          toolbar: {
+            title: "All Endpoints",
+            search: {
+              placeholder: "Search endpoints",
+              getSearchText: (row) => row.searchText,
+            },
+            filters: [{
+              id: "runtime",
+              label: "Runtime",
+              value: kindFilter,
+              onChange: setKindFilter,
+              options: [
+                { id: "all", label: "All Endpoints" },
+                { id: "external", label: "External Endpoints" },
+                { id: "local", label: "Local Endpoints" },
+              ],
+            }],
+            primaryAction: {
+              label: "New Endpoint",
+              icon: Plus,
+              onClick: () => setCreateModalOpen(true),
+              disabled: !canConfigure,
+            },
           },
-          filters: [{
-            id: "runtime",
-            label: "Runtime",
-            value: kindFilter,
-            onChange: setKindFilter,
-            options: [
-              { id: "all", label: "All Endpoints" },
-              { id: "external", label: "External Endpoints" },
-              { id: "local", label: "Local Endpoints" },
-            ],
-          }],
-          primaryAction: {
-            label: "New Endpoint",
-            icon: Plus,
-            onClick: onConfigureEndpoint,
-            disabled: !canConfigure,
-          },
-        },
-        getRowActions,
-        onRowActivate: (row) => onOpenEndpoint(row.id),
-        getRowAriaLabel: (row) => row.name,
-        loading: localRunners.status === "loading" && rows.length === 0,
-        error: rows.length === 0 && localRunners.status === "error"
-          ? localRunners.error || "Inference endpoints could not be loaded."
-          : undefined,
-        emptyState: "No inference endpoints yet.",
-        noResultsState: "No endpoints match this view.",
-      }}
-    />
+          getRowActions,
+          onRowActivate: (row) => onOpenEndpoint(row.id),
+          getRowAriaLabel: (row) => row.name,
+          loading: localRunners.status === "loading" && rows.length === 0,
+          error: rows.length === 0 && localRunners.status === "error"
+            ? localRunners.error || "Inference endpoints could not be loaded."
+            : undefined,
+          emptyState: "No inference endpoints yet.",
+          noResultsState: "No endpoints match this view.",
+        }}
+      />
+
+      <CreateInferenceEndpointModal
+        open={createModalOpen}
+        submitting={creatingEndpoint}
+        error={createError}
+        existingEndpointCount={externalCount}
+        onClose={() => setCreateModalOpen(false)}
+        onSubmit={onConfigureEndpoint}
+      />
+    </>
   );
 }

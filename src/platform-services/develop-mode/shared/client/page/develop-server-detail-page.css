@@ -1,0 +1,231 @@
+.playground-source-server-detail-main .playground-server-detail-page {
+  width: min(100%, var(--playground-centered-page-max-width));
+  max-width: var(--playground-centered-page-max-width);
+  margin: 0 auto;
+}
+
+.playground-source-server-detail-main .playground-server-detail-content,
+.playground-source-server-detail-main .playground-server-settings-tab {
+  display: flex;
+  flex-direction: column;
+  gap: var(--resource-detail-section-gap);
+}
+
+.playground-source-server-detail-main .playground-server-settings-tab > * {
+  margin-block: 0;
+}
+
+.playground-source-server-detail-main .playground-server-custom-domains-platform-table {
+  margin-block: 0;
+  padding-block: 0;
+}
+
+.playground-source-server-detail-main .playground-server-detail-page__header-content,
+.playground-source-server-detail-main .playground-server-detail-profile-section,
+.playground-source-server-detail-main .playground-server-detail-title-row {
+  width: 100%;
+  min-width: 0;
+}
+
+.playground-source-server-detail-main .playground-server-detail-profile-section,
+.playground-source-server-detail-main .playground-server-detail-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.playground-source-server-detail-main
+.playground-server-detail-title-row
+.playground-server-function-title-input {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.96);
+  font-size: 18px;
+  line-height: 1.2;
+  font-weight: 400;
+  text-align: left;
+}
+
+.playground-source-server-detail-main .playground-server-detail-page.is-code-tab {
+  height: 100%;
+  min-height: 0;
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
+.playground-source-server-detail-main .playground-server-detail-page__content.is-code-tab {
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.playground-source-server-detail-main .playground-server-source-code-workspace {
+  min-height: 0;
+  height: 100%;
+  max-height: none;
+}
+
+.playground-source-server-detail-main .playground-server-source-code-workspace.is-dragging::after {
+  content: "Drop files to upload";
+  pointer-events: none;
+  position: absolute;
+  inset: 10px;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed rgba(102, 166, 255, 0.72);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.64);
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 12px;
+  font-weight: 500;
+  backdrop-filter: blur(10px);
+}
+
+.playground-source-server-detail-main
+.playground-server-detail-page
+> .playground-server-detail-sidebar.playground-project-overview-sidebar {
+  min-width: 0;
+  align-self: start;
+  top: 0;
+  margin-top: 0;
+}
+
+.playground-source-server-detail-main
+.playground-server-detail-sidebar
+.playground-project-overview-sidebar-row {
+  grid-template-columns: minmax(92px, 0.82fr) minmax(0, 1.38fr);
+}
+
+.playground-source-server-detail-main
+.playground-server-detail-sidebar
+.playground-project-overview-sidebar-row-value {
+  min-width: 0;
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.playground-source-server-detail-main .playground-server-detail-properties-card {
+  position: relative;
+  z-index: 2;
+}
+
+.playground-source-server-detail-main
+.playground-server-detail-sidebar-owner-row,
+.playground-source-server-detail-main
+.playground-server-detail-sidebar-owner-cell {
+  overflow: visible;
+}
+
+.playground-source-server-detail-main
+.playground-server-detail-sidebar-owner-cell
+.playground-database-owner-popup-shell {
+  max-width: 100%;
+}
+
+.playground-source-server-detail-main
+.playground-server-detail-sidebar-owner-cell
+.playground-database-owner-trigger {
+  max-width: 100%;
+}
+
+.playground-source-server-detail-main
+.playground-server-detail-sidebar-connections {
+  gap: 0;
+}
+
+.playground-source-server-detail-main
+.playground-server-detail-connections-card
+.playground-tasks-detail-facts {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.playground-source-server-detail-main
+.playground-server-detail-connections-card
+.playground-tasks-detail-facts::before {
+  content: none;
+  display: none;
+}
+
+.playground-source-server-detail-main
+.playground-server-detail-connections-card
+.playground-tasks-detail-facts-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.playground-source-server-detail-main
+.playground-server-detail-connections-card
+.playground-tasks-detail-fact {
+  grid-template-columns: minmax(92px, 0.82fr) minmax(0, 1.38fr);
+  min-height: 32px;
+  padding: 6px 0;
+}
+
+.playground-source-server-detail-main
+.playground-server-detail-connections-card
+.playground-tasks-detail-fact-label {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.playground-source-server-detail-main
+.playground-server-detail-connections-card
+.playground-tasks-detail-fact-control {
+  overflow: visible;
+}
+
+.playground-source-server-detail-main
+.playground-server-detail-connections-card
+.playground-tasks-detail-select-trigger,
+.playground-source-server-detail-main
+.playground-server-detail-connections-card
+.playground-tasks-detail-select-trigger:hover,
+.playground-source-server-detail-main
+.playground-server-detail-connections-card
+.playground-tasks-detail-select-trigger.is-active {
+  background: transparent !important;
+}
+
+.playground-source-server-detail-main
+.playground-server-detail-sidebar
+.playground-environments-editor-fact-value {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.72);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.playground-source-server-detail-main .playground-server-detail-sidebar-url-cell {
+  overflow: hidden;
+}
+
+.playground-source-server-detail-main .playground-server-detail-sidebar-url-value {
+  min-width: 0;
+}
+
+.playground-source-server-detail-main .playground-server-detail-sidebar-url-link {
+  min-width: 0;
+  overflow: hidden;
+  color: #4da3ff;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playground-source-server-detail-main .playground-server-detail-sidebar-url-link:hover {
+  color: #7ebcff;
+}

@@ -1,4 +1,5 @@
 export * from "./analytics/index.js";
+export * from "./attachments/index.js";
 export * from "./code-editor-workspace/index.js";
 export * from "./code-preview-box/index.js";
 export * from "./data-table/index.js";

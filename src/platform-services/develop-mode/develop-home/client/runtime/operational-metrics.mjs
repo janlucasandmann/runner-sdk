@@ -154,7 +154,9 @@ export const DEVELOP_HOME_OPERATIONAL_METRICS_SCRIPT = `        const loadDevelo
           try {
             const shouldLoadServerCatalog = targetKind !== "database";
             const shouldLoadDatabaseCatalog = !targetKind || targetKind === "database";
-            const serverOverviewAnalyticsPath = "/servers/analytics/overview?period=" + encodeURIComponent(requestedPeriod);
+            const serverOverviewAnalyticsPath = "/servers/analytics/overview?"
+              + (targetKind ? "kind=" + encodeURIComponent(targetKind) + "&" : "")
+              + "period=" + encodeURIComponent(requestedPeriod);
             const databaseOverviewAnalyticsPath = "/databases/analytics/overview?period=" + encodeURIComponent(requestedPeriod);
             const [
               { buckets, bucketByKey, bucketIndexByKey, bucketDurationMs, getBucketKey },
@@ -417,6 +419,7 @@ export const DEVELOP_HOME_OPERATIONAL_METRICS_SCRIPT = `        const loadDevelo
                 loadedAt: new Date().toISOString(),
                 scopeKind: targetKind || "",
                 period: requestedPeriod,
+                resources: activeScopedResources,
                 resourceCount: scopedResourceCount,
                 resourceCounts: {
                   webApps: activeServerKindCounts.web_app || 0,

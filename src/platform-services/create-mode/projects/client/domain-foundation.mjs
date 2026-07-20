@@ -3,7 +3,7 @@ import { PROJECT_TYPE_ALIASES, PROJECT_TYPE_REGISTRY } from "../catalog.mjs";
 export const PROJECTS_DOMAIN_FOUNDATION_SCRIPT = `
       const PLAYGROUND_TASK_BOARD_UNSCHEDULED_ID = "__playground_unscheduled_sprint__";
       const PLAYGROUND_PROJECT_VIEW_OPTIONS = [
-        { id: "overview", label: "Overview", icon: LayoutDashboard },
+        { id: "overview", label: "General", icon: LayoutDashboard },
         { id: "backlog", label: "Backlog", icon: ListTodo },
         { id: "board", label: "Board", icon: LayoutGrid },
         { id: "calendar", label: "Calendar", icon: Clock },

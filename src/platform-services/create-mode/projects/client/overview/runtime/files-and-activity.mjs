@@ -547,6 +547,18 @@ export const PROJECT_OVERVIEW_FILES_ACTIVITY_FRAGMENT = String.raw`
             const TaskTypeIcon = isSubtask ? Check : Bookmark;
             const isLaunchLocked = typeof isTaskThreadLaunchLocked === "function" ? isTaskThreadLaunchLocked(task) : false;
             const isRunDisabled = Boolean(saveState?.isSaving) || isLaunchLocked;
+            const openTaskDetail = () => {
+              if (!taskId) {
+                return;
+              }
+              if (typeof openProjectTaskDetailScreen === "function") {
+                openProjectTaskDetailScreen(taskId);
+                return;
+              }
+              if (typeof handleSelectTask === "function") {
+                handleSelectTask(taskId, { screen: true });
+              }
+            };
 
             return React.createElement("div", {
                 key: taskId || ticketNumber,
@@ -555,11 +567,11 @@ export const PROJECT_OVERVIEW_FILES_ACTIVITY_FRAGMENT = String.raw`
                 role: "button",
                 tabIndex: 0,
                 style: typeof getPlaygroundTaskColorStyle === "function" ? getPlaygroundTaskColorStyle(task?.taskColor) : undefined,
-                onClick: () => taskId && typeof handleSelectTask === "function" && handleSelectTask(taskId),
+                onClick: openTaskDetail,
                 onKeyDown: (event) => {
-                  if ((event.key === "Enter" || event.key === " ") && taskId && typeof handleSelectTask === "function") {
+                  if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault();
-                    handleSelectTask(taskId);
+                    openTaskDetail();
                   }
                 },
               },
@@ -601,8 +613,8 @@ export const PROJECT_OVERVIEW_FILES_ACTIVITY_FRAGMENT = String.raw`
                     event.stopPropagation();
                     if (taskId && typeof handleStartTaskThread === "function") {
                       void handleStartTaskThread(task);
-                    } else if (taskId && typeof handleSelectTask === "function") {
-                      handleSelectTask(taskId);
+                    } else {
+                      openTaskDetail();
                     }
                   },
                 },

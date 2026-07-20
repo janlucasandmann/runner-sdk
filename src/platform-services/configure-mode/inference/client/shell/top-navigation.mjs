@@ -18,7 +18,7 @@ export const INFERENCE_APP_TOP_NAVIGATION_SCRIPT = `        function renderInfer
           return renderAppHeader({
             className: "playground-settings-top-navbar",
             pathItems: isInferenceOverview
-              ? []
+              ? [{ label: "Inference" }]
               : [
                 {
                 label: "Inference",

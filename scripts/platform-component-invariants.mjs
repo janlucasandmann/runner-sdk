@@ -15,6 +15,7 @@ const primitiveComponents = [
 ];
 const compositeComponents = [
   "analytics",
+  "attachments",
   "code-editor-workspace",
   "code-preview-box",
   "data-table",
@@ -151,6 +152,10 @@ const canonicalExports = new Map([
   [
     "./platform-ui/components/composite/analytics",
     "./dist/platform-ui/components/composite/analytics/index.js",
+  ],
+  [
+    "./platform-ui/components/composite/attachments",
+    "./dist/platform-ui/components/composite/attachments/index.js",
   ],
   [
     "./platform-ui/components/composite/code-editor-workspace",

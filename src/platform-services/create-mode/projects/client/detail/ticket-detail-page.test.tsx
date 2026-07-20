@@ -7,7 +7,7 @@ import { TicketDetailPage } from "./ticket-detail-page.js";
 afterEach(cleanup);
 
 describe("TicketDetailPage", () => {
-  it("uses the shared tabless detail shell and canonical sidebar sections", () => {
+  it("uses the shared tabless detail shell and centralized sidebar cards", () => {
     const { container } = render(
       <TicketDetailPage
         header={<h1>Resolve customer issue</h1>}
@@ -24,14 +24,15 @@ describe("TicketDetailPage", () => {
     expect(container.querySelector("[data-resource-detail-page='true']")?.classList.contains("playground-agents-detail-overview-layout")).toBe(true);
     expect(container.querySelector("[data-platform-detail-tab-bar='true']")).toBeNull();
     expect(container.querySelectorAll("[data-platform-detail-sidebar='true']")).toHaveLength(1);
-    expect(container.querySelectorAll(".platform-detail-sidebar__section")).toHaveLength(2);
+    expect(container.querySelectorAll("[data-platform-ui-card-variant='sidebar']")).toHaveLength(2);
+    expect(container.querySelectorAll(".platform-detail-sidebar__section")).toHaveLength(0);
     expect(Array.from(container.querySelector("[data-resource-detail-page='true']")?.children || []).map((child) => child.className.split(" ")[0])).toEqual([
       "resource-detail-page__header",
       "resource-detail-page__content",
       "platform-detail-sidebar",
     ]);
-    expect(screen.getByText("Details")).not.toBeNull();
-    expect(screen.getByText("Threads")).not.toBeNull();
+    expect(screen.getByRole("heading", { name: "Details", level: 2 }).classList.contains("platform-ui-card__sidebar-title")).toBe(true);
+    expect(screen.getByRole("heading", { name: "Threads", level: 2 }).classList.contains("platform-ui-card__sidebar-title")).toBe(true);
     expect(screen.getByText("Ticket description")).not.toBeNull();
   });
 

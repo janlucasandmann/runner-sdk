@@ -1,5 +1,6 @@
           function handleRevertDraft() {
             clearEnvironmentAutosaveQueue();
+            setEnvironmentVersionSaveDialog(null);
             if (selectedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
               resetEditorAuxiliaryState();
               setDraftEnvironment(buildPlaygroundDefaultEnvironmentDraft());
@@ -12,13 +13,12 @@
               if (!result?.resource) {
                 return;
               }
-              void commitVersionedEnvironmentRecord(result.resource, {
-                operation: "revert",
-                actor: getEnvironmentVersionActor(),
-                loadingMessage: "Reverting computer...",
-                successMessage: "Reverted",
-                errorMessage: "Failed to revert computer.",
-              });
+              editorDirtyRef.current = false;
+              environmentVersionDraftTouchedRef.current = false;
+              setDraftEnvironment(result.resource);
+              rememberEnvironmentVersionBaseline(result.resource, { force: true });
+              setEnvironmentPublishMenuOpen(false);
+              setEnvironmentVersionState({ status: "idle", message: "", error: "" });
               return;
             }
   
@@ -40,6 +40,14 @@
               ? resourceTemplatePreviewServerFileContentById[normalizedServerId]
               : {};
             const contents = normalizePlaygroundServerVersionSourceFileContents(previewContents);
+            const draftPrefix = normalizedServerId + "|";
+            for (const [draftKey, draftValue] of serverSourceDraftContentsRef.current.entries()) {
+              if (!String(draftKey).startsWith(draftPrefix)) continue;
+              const draftPath = normalizeHistoryPath(String(draftKey).slice(draftPrefix.length));
+              if (draftPath) {
+                contents[draftPath] = String(draftValue || "");
+              }
+            }
             if (serverFileEditorState.status === "ready" && serverFileEditorState.path) {
               contents[normalizeHistoryPath(serverFileEditorState.path)] = String(serverFileEditorState.value || "");
             }
@@ -739,6 +747,9 @@
             if (!draftServer || serverVersionState.status === "loading") {
               return null;
             }
+            if (isAuthoritativelyVersionedServer(draftServer)) {
+              return updateAuthoritativeServerVersionDetails(versionId, versionDetails);
+            }
             const actor = getServerVersionActor();
             const result = serverVersionController.buildVersionMetadataResource(draftServer, versionId, {
               ...versionDetails,
@@ -896,6 +907,10 @@
           }
   
           async function handleRevertServerDraft() {
+            if (isAuthoritativelyVersionedServer(draftServer)) {
+              discardUnsavedServerDraft();
+              return;
+            }
             if (serverAutosaveTimerRef.current) {
               window.clearTimeout(serverAutosaveTimerRef.current);
               serverAutosaveTimerRef.current = null;

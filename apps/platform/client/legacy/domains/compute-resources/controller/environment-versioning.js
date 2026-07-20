@@ -5,6 +5,52 @@
             }
             environmentAutosaveQueuedRef.current = null;
           }
+
+          function discardUnsavedEnvironmentDraft() {
+            clearEnvironmentAutosaveQueue();
+            setEnvironmentVersionSaveDialog(null);
+            editorDirtyRef.current = false;
+            environmentVersionDraftTouchedRef.current = false;
+            const normalizedEnvironmentId = String(draftEnvironment?.id || "").trim();
+            if (!normalizedEnvironmentId || normalizedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
+              setDraftEnvironment(null);
+              return;
+            }
+            const selectedVersion = getDraftEnvironmentSelectedVersion();
+            if (selectedVersion) {
+              const result = environmentVersionController.buildRestoreVersionResource(
+                draftEnvironment,
+                selectedVersion.id
+              );
+              if (result?.resource) {
+                setDraftEnvironment(result.resource);
+                rememberEnvironmentVersionBaseline(result.resource, { force: true });
+                return;
+              }
+            }
+            const savedEnvironment = environmentDetailsById[normalizedEnvironmentId]
+              || orderedEnvironments.find(
+                (environment) => String(environment?.id || "").trim() === normalizedEnvironmentId
+              )
+              || null;
+            if (!savedEnvironment) {
+              return;
+            }
+            const normalizedSavedEnvironment = normalizePlaygroundEnvironmentRecord(savedEnvironment);
+            setDraftEnvironment(normalizedSavedEnvironment);
+            rememberEnvironmentVersionBaseline(normalizedSavedEnvironment, { force: true });
+          }
+
+          function requestEnvironmentNavigation(continuation) {
+            if (typeof continuation !== "function") {
+              return false;
+            }
+            if (typeof onNavigationRequest === "function") {
+              return onNavigationRequest(continuation);
+            }
+            continuation();
+            return true;
+          }
   
           async function saveDraftEnvironmentImmediate(options = {}) {
             if (!draftEnvironment) {
@@ -84,142 +130,6 @@
             });
           }
   
-          function getEnvironmentVersionActorLabel(actor) {
-            const normalizedActor = normalizePlaygroundVersionActor(actor);
-            if (!normalizedActor) {
-              return "";
-            }
-            return String(normalizedActor.name || normalizedActor.email || normalizedActor.id || "").trim();
-          }
-  
-          function getEnvironmentVersionLifecycleLabel(version) {
-            const lifecycleState = String(version?.lifecycleState || version?.lifecycle_state || "").trim().toLowerCase();
-            if (lifecycleState === "published" || String(version?.status || "").trim().toLowerCase() === "active") return "Published";
-            if (lifecycleState === "deprecated" || String(version?.status || "").trim().toLowerCase() === "superseded") return "Superseded";
-            if (lifecycleState === "unpublished" || String(version?.status || "").trim().toLowerCase() === "unpublished") return "Unpublished";
-            if (lifecycleState === "archived") return "Archived";
-            if (lifecycleState === "draft") return "Draft";
-            return "Saved";
-          }
-  
-          function getEnvironmentVersioningMetadata(environmentRecord) {
-            const metadata = getEnvironmentMetadataRecord(environmentRecord);
-            const versioning = metadata.runnerVersioning || metadata.runner_versioning || metadata.versioning || {};
-            return versioning && typeof versioning === "object" && !Array.isArray(versioning) ? versioning : {};
-          }
-  
-          function getEnvironmentVersioningRevisionId(environmentRecord) {
-            const versioning = getEnvironmentVersioningMetadata(environmentRecord);
-            return String(versioning.revisionId || versioning.revision_id || "").trim();
-          }
-  
-          function getEnvironmentVersioningRevisionNumber(environmentRecord) {
-            const versioning = getEnvironmentVersioningMetadata(environmentRecord);
-            return Number(versioning.revisionNumber || versioning.revision_number || 0) || 0;
-          }
-  
-          function buildEnvironmentVersioningMetadata(environmentRecord, options = {}) {
-            const now = new Date().toISOString();
-            const metadata = getEnvironmentMetadataRecord(environmentRecord);
-            const currentVersioning = getEnvironmentVersioningMetadata(environmentRecord);
-            const actor = normalizePlaygroundVersionActor(options.actor) || getEnvironmentVersionActor();
-            const operation = String(options.operation || "save-current").trim() || "save-current";
-            const activeVersion = getDraftEnvironmentActiveVersion(environmentRecord);
-            const selectedVersion = getDraftEnvironmentSelectedVersion(environmentRecord);
-            const previousRevisionId = String(
-              currentVersioning.revisionId
-              || currentVersioning.revision_id
-              || getEnvironmentVersioningRevisionId(draftEnvironment)
-              || getEnvironmentVersioningRevisionId(selectedEnvironmentSnapshot)
-              || ""
-            ).trim();
-            const nextRevisionNumber = Math.max(
-              getEnvironmentVersioningRevisionNumber(environmentRecord),
-              getEnvironmentVersioningRevisionNumber(draftEnvironment),
-              getEnvironmentVersioningRevisionNumber(selectedEnvironmentSnapshot)
-            ) + 1;
-            const nextRevisionId = createPlaygroundEnvironmentVersionRevisionId();
-            const isPublishOperation = operation.includes("publish") || (operation === "initialize" && Boolean(activeVersion));
-            const nextState = isPublishOperation
-              ? "published"
-              : operation.includes("unpublish")
-                ? "unpublished"
-                : "saved";
-            const nextVersioning = {
-              ...currentVersioning,
-              schemaVersion: 1,
-              schema_version: 1,
-              resourceType: "computer",
-              resource_type: "computer",
-              revisionId: nextRevisionId,
-              revision_id: nextRevisionId,
-              baseRevisionId: previousRevisionId,
-              base_revision_id: previousRevisionId,
-              revisionNumber: nextRevisionNumber,
-              revision_number: nextRevisionNumber,
-              state: nextState,
-              lastOperation: operation,
-              last_operation: operation,
-              activeVersionId: activeVersion?.id || "",
-              active_version_id: activeVersion?.id || "",
-              selectedVersionId: selectedVersion?.id || "",
-              selected_version_id: selectedVersion?.id || "",
-              updatedAt: now,
-              updated_at: now,
-              updatedBy: actor,
-              updated_by: actor,
-            };
-            if (operation.includes("save")) {
-              nextVersioning.lastSavedAt = now;
-              nextVersioning.last_saved_at = now;
-              nextVersioning.lastSavedBy = actor;
-              nextVersioning.last_saved_by = actor;
-            }
-            if (isPublishOperation) {
-              nextVersioning.lastPublishedAt = now;
-              nextVersioning.last_published_at = now;
-              nextVersioning.lastPublishedBy = actor;
-              nextVersioning.last_published_by = actor;
-            }
-            if (operation.includes("unpublish")) {
-              nextVersioning.lastUnpublishedAt = now;
-              nextVersioning.last_unpublished_at = now;
-              nextVersioning.lastUnpublishedBy = actor;
-              nextVersioning.last_unpublished_by = actor;
-            }
-            const nextMetadata = {
-              ...metadata,
-              runnerVersioning: nextVersioning,
-              runner_versioning: nextVersioning,
-            };
-            if (isPublishOperation && activeVersion) {
-              const deploymentId = activeVersion.deploymentId || activeVersion.deployment_id || createPlaygroundEnvironmentDeploymentId(activeVersion.id);
-              nextMetadata.activeComputerDeployment = {
-                id: deploymentId,
-                versionId: activeVersion.id,
-                version: activeVersion.version,
-                status: "published",
-                publishedAt: now,
-                publishedBy: actor,
-              };
-              nextMetadata.active_computer_deployment = nextMetadata.activeComputerDeployment;
-            }
-            if (operation.includes("unpublish")) {
-              delete nextMetadata.activeComputerDeployment;
-              delete nextMetadata.active_computer_deployment;
-            }
-            return nextMetadata;
-          }
-  
-          function prepareEnvironmentVersionedRecordForCommit(environmentRecord, options = {}) {
-            const normalizedEnvironment = normalizePlaygroundEnvironmentRecord(environmentRecord);
-            const nextMetadata = buildEnvironmentVersioningMetadata(normalizedEnvironment, options);
-            return normalizePlaygroundEnvironmentRecord({
-              ...normalizedEnvironment,
-              metadata: nextMetadata,
-            });
-          }
-  
           function normalizeEnvironmentVersionComparableList(value) {
             return (Array.isArray(value) ? value : [])
               .filter((entry) => entry !== null && entry !== undefined && String(typeof entry === "object" ? stringifyPlaygroundVersionComparableValue(entry) : entry).trim())
@@ -270,6 +180,429 @@
               dockerfileExtensions: normalizedSnapshot.dockerfileExtensions || "",
               baseImage: normalizedSnapshot.baseImage || "",
             };
+          }
+
+          async function fetchLatestEnvironmentVersionRecord(environmentId) {
+            const normalizedEnvironmentId = String(environmentId || "").trim();
+            if (!normalizedEnvironmentId || normalizedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
+              return null;
+            }
+            try {
+              const response = await fetch(backendUrl + "/environments/" + encodeURIComponent(normalizedEnvironmentId), {
+                method: "GET",
+                headers: requestHeaders,
+              });
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                return null;
+              }
+              return getPlaygroundEnvironmentResponseRecord(data);
+            } catch {
+              return null;
+            }
+          }
+
+          function getEnvironmentVersionApiOptions(environmentId) {
+            const normalizedEnvironmentId = String(environmentId || "").trim();
+            if (!normalizedEnvironmentId || normalizedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
+              throw new Error("Missing computer id.");
+            }
+            return {
+              backendUrl,
+              headers: requestHeaders,
+              credentials: "same-origin",
+              environmentId: normalizedEnvironmentId,
+            };
+          }
+
+          function normalizeEnvironmentVersionApiList(rawItems) {
+            const items = Array.isArray(rawItems) ? rawItems : [];
+            const numericVersions = items
+              .map((version) => Number(version?.version ?? version?.versionNumber ?? version?.version_number))
+              .filter((version) => Number.isFinite(version) && version >= 0);
+            const displayOffset = numericVersions.length > 0 && Math.min(...numericVersions) >= 1 ? 1 : 0;
+            return normalizePlaygroundEnvironmentVersions(items.map((version, index) => {
+              const rawVersion = Number(version?.version ?? version?.versionNumber ?? version?.version_number);
+              const displayVersion = Number.isFinite(rawVersion)
+                ? Math.max(0, Math.floor(rawVersion) - displayOffset)
+                : Math.max(0, index);
+              const rawLabel = String(version?.label || version?.name || "").trim();
+              const usesGeneratedLabel = !rawLabel || /^Version\s+\d+$/i.test(rawLabel);
+              const snapshotName = String(version?.snapshot?.name || "").trim();
+              return {
+                ...version,
+                version: displayVersion,
+                versionNumber: displayVersion,
+                version_number: displayVersion,
+                label: usesGeneratedLabel ? "Version " + displayVersion : rawLabel,
+                name: snapshotName,
+              };
+            }));
+          }
+
+          async function fetchEnvironmentVersionsApi(environmentId) {
+            return normalizeEnvironmentVersionApiList(
+              await environmentVersionApiClient.listEnvironmentVersions(
+                getEnvironmentVersionApiOptions(environmentId)
+              )
+            );
+          }
+
+          async function saveEnvironmentVersionApi(environmentId, versionId, snapshot, details = {}) {
+            const normalizedRequestedVersionId = String(versionId || "").trim();
+            const result = await environmentVersionApiClient.saveEnvironmentVersion({
+              ...getEnvironmentVersionApiOptions(environmentId),
+              versionId: normalizedRequestedVersionId || null,
+              version: {
+                description: String(details.description || "").trim().slice(0, 240),
+                snapshot,
+              },
+            });
+            const normalizedVersionId = String(result.version?.id || "").trim();
+            let versions = normalizeEnvironmentVersionApiList(result.versions);
+            if (versions.length === 0 && normalizedVersionId) {
+              const currentVersions = readDraftEnvironmentVersions();
+              const existingVersion = currentVersions.find(
+                (version) => version.id === normalizedVersionId
+              ) || null;
+              const nextVersionNumber = existingVersion
+                ? normalizePlatformVersionNumber(existingVersion.version)
+                : currentVersions.reduce(
+                    (highest, version) => Math.max(
+                      highest,
+                      normalizePlatformVersionNumber(version?.version)
+                    ),
+                    -1
+                  ) + 1;
+              const publishedAt = new Date().toISOString();
+              const publishedVersion = normalizePlaygroundEnvironmentVersion({
+                ...(existingVersion || {}),
+                ...result.version,
+                id: normalizedVersionId,
+                version: nextVersionNumber,
+                versionNumber: nextVersionNumber,
+                version_number: nextVersionNumber,
+                label: "Version " + nextVersionNumber,
+                description: String(details.description || "").trim().slice(0, 240),
+                status: "active",
+                lifecycleState: "published",
+                lifecycle_state: "published",
+                snapshot,
+                publishedAt,
+                published_at: publishedAt,
+                updatedAt: publishedAt,
+                updated_at: publishedAt,
+              }, nextVersionNumber);
+              versions = normalizePlaygroundEnvironmentVersions(
+                currentVersions
+                  .filter((version) => version.id !== normalizedVersionId)
+                  .map((version) => (
+                    version.status === "active"
+                      ? {
+                          ...version,
+                          status: "saved",
+                          lifecycleState: "saved",
+                          lifecycle_state: "saved",
+                          publishedAt: "",
+                          published_at: "",
+                        }
+                      : version
+                  ))
+                  .concat(publishedVersion)
+              );
+            }
+            return {
+              environment: normalizePlaygroundEnvironmentRecord(result.environment),
+              version: versions.find((version) => version.id === normalizedVersionId)
+                || normalizePlaygroundEnvironmentVersion(result.version),
+              versions,
+            };
+          }
+
+          async function updateEnvironmentVersionApi(environmentId, versionId, updates = {}) {
+            const normalizedVersionId = String(versionId || "").trim();
+            if (!normalizedVersionId) {
+              throw new Error("Missing computer version.");
+            }
+            const version = await environmentVersionApiClient.updateEnvironmentVersion({
+              ...getEnvironmentVersionApiOptions(environmentId),
+              versionId: normalizedVersionId,
+              version: updates,
+            });
+            return normalizePlaygroundEnvironmentVersion(version);
+          }
+
+          async function publishEnvironmentVersionApi(environmentId, versionId, options = {}) {
+            const normalizedVersionId = String(versionId || "").trim();
+            if (!normalizedVersionId) {
+              throw new Error("Missing computer version.");
+            }
+            return {
+              environment: normalizePlaygroundEnvironmentRecord(
+                await environmentVersionApiClient.publishEnvironmentVersion({
+                  ...getEnvironmentVersionApiOptions(environmentId),
+                  versionId: normalizedVersionId,
+                  ...(Object.prototype.hasOwnProperty.call(options, "snapshot")
+                    ? { snapshot: options.snapshot }
+                    : {}),
+                  ...(Object.prototype.hasOwnProperty.call(options, "description")
+                    ? { description: String(options.description || "").trim().slice(0, 240) }
+                    : {}),
+                })
+              ),
+            };
+          }
+
+          async function unpublishEnvironmentVersionApi(environmentId, versionId) {
+            const normalizedVersionId = String(versionId || "").trim();
+            if (!normalizedVersionId) {
+              throw new Error("Missing computer version.");
+            }
+            return normalizePlaygroundEnvironmentRecord(
+              await environmentVersionApiClient.unpublishEnvironmentVersion({
+                ...getEnvironmentVersionApiOptions(environmentId),
+                versionId: normalizedVersionId,
+              })
+            );
+          }
+
+          async function deleteEnvironmentVersionApi(environmentId, versionId) {
+            const normalizedVersionId = String(versionId || "").trim();
+            if (!normalizedVersionId) {
+              throw new Error("Missing computer version.");
+            }
+            await environmentVersionApiClient.deleteEnvironmentVersion({
+              ...getEnvironmentVersionApiOptions(environmentId),
+              versionId: normalizedVersionId,
+            });
+          }
+
+          function invalidateEnvironmentVersionsCache(environmentId) {
+            const normalizedEnvironmentId = String(environmentId || "").trim();
+            if (!normalizedEnvironmentId) return;
+            for (const cacheKey of Array.from(environmentVersionsLoadedRef.current)) {
+              if (String(cacheKey).endsWith("|" + normalizedEnvironmentId)) {
+                environmentVersionsLoadedRef.current.delete(cacheKey);
+              }
+            }
+          }
+
+          function markEnvironmentVersionsCacheLoaded(environmentId) {
+            const normalizedEnvironmentId = String(environmentId || "").trim();
+            if (!normalizedEnvironmentId) return;
+            environmentVersionsLoadedRef.current.add([
+              String(backendUrl || "").trim(),
+              JSON.stringify(requestHeaders || {}),
+              normalizedEnvironmentId,
+            ].join("|"));
+          }
+
+          function createEnvironmentVersionSelectedResource(baseEnvironment, versions, preferredSelectedId = "") {
+            const hydratedEnvironment = createPlaygroundEnvironmentWithVersionList(
+              baseEnvironment,
+              versions,
+              preferredSelectedId
+            );
+            const selectedVersion = readPlaygroundEnvironmentVersions(hydratedEnvironment)
+              .find((version) => version.id === String(preferredSelectedId || "").trim())
+              || getDraftEnvironmentSelectedVersion(hydratedEnvironment)
+              || null;
+            return selectedVersion
+              ? createPlaygroundEnvironmentFromVersionSnapshot(
+                  hydratedEnvironment,
+                  selectedVersion,
+                  versions,
+                  selectedVersion.id
+                )
+              : hydratedEnvironment;
+          }
+
+          function commitAuthoritativeEnvironmentVersionState(
+            environmentId,
+            baseEnvironment,
+            versions,
+            preferredSelectedId = ""
+          ) {
+            const normalizedEnvironmentId = String(environmentId || "").trim();
+            const normalizedVersions = normalizeEnvironmentVersionApiList(versions);
+            const authoritativeBase = normalizePlaygroundEnvironmentRecord(
+              baseEnvironment
+              || draftEnvironment
+              || environmentDetailsById[normalizedEnvironmentId]
+              || selectedEnvironmentSnapshot
+              || buildPlaygroundDefaultEnvironmentDraft()
+            );
+            const activeVersion = normalizedVersions.find((version) => version.status === "active")
+              || normalizedVersions[0]
+              || null;
+            const authoritativeEnvironment = createPlaygroundEnvironmentWithVersionList(
+              authoritativeBase,
+              normalizedVersions,
+              activeVersion?.id || ""
+            );
+            const normalizedPreferredSelectedId = String(
+              preferredSelectedId || activeVersion?.id || ""
+            ).trim();
+            const selectedEnvironment = createEnvironmentVersionSelectedResource(
+              authoritativeEnvironment,
+              normalizedVersions,
+              normalizedPreferredSelectedId
+            );
+
+            invalidateEnvironmentVersionsCache(normalizedEnvironmentId);
+            markEnvironmentVersionsCacheLoaded(normalizedEnvironmentId);
+            setEnvironmentVersionsLoadState({
+              environmentId: normalizedEnvironmentId,
+              status: "success",
+              error: "",
+            });
+            setEnvironmentDetailsById((current) => ({
+              ...current,
+              [normalizedEnvironmentId]: authoritativeEnvironment,
+            }));
+            setSelectedEnvironmentId(normalizedEnvironmentId);
+            setDraftEnvironment(selectedEnvironment);
+            rememberEnvironmentVersionBaseline(selectedEnvironment, { force: true });
+            return selectedEnvironment;
+          }
+
+          async function refreshAuthoritativeEnvironmentVersions(environmentId, options = {}) {
+            const normalizedEnvironmentId = String(environmentId || "").trim();
+            const fallbackEnvironment = normalizePlaygroundEnvironmentRecord(
+              options.baseEnvironment
+              || draftEnvironment
+              || environmentDetailsById[normalizedEnvironmentId]
+              || selectedEnvironmentSnapshot
+              || buildPlaygroundDefaultEnvironmentDraft()
+            );
+            const [latestEnvironment, versions] = await Promise.all([
+              fetchLatestEnvironmentVersionRecord(normalizedEnvironmentId),
+              fetchEnvironmentVersionsApi(normalizedEnvironmentId),
+            ]);
+            return commitAuthoritativeEnvironmentVersionState(
+              normalizedEnvironmentId,
+              latestEnvironment || fallbackEnvironment,
+              versions,
+              options.preferredSelectedId || ""
+            );
+          }
+
+          async function refreshEnvironmentVersionsPreservingDraft(environmentId, preferredSelectedId = "") {
+            const normalizedEnvironmentId = String(environmentId || "").trim();
+            const versions = await fetchEnvironmentVersionsApi(normalizedEnvironmentId);
+            invalidateEnvironmentVersionsCache(normalizedEnvironmentId);
+            markEnvironmentVersionsCacheLoaded(normalizedEnvironmentId);
+            setEnvironmentVersionsLoadState({
+              environmentId: normalizedEnvironmentId,
+              status: "success",
+              error: "",
+            });
+            setEnvironmentDetailsById((current) => {
+              const currentEnvironment = current[normalizedEnvironmentId];
+              if (!currentEnvironment) return current;
+              return {
+                ...current,
+                [normalizedEnvironmentId]: createPlaygroundEnvironmentWithVersionList(
+                  currentEnvironment,
+                  versions,
+                  preferredSelectedId
+                ),
+              };
+            });
+            setDraftEnvironment((current) => {
+              if (!current || String(current.id || "").trim() !== normalizedEnvironmentId) {
+                return current;
+              }
+              return createPlaygroundEnvironmentWithVersionList(
+                current,
+                versions,
+                preferredSelectedId
+              );
+            });
+            return versions;
+          }
+
+          async function runEnvironmentVersionApiMutation(options = {}) {
+            const normalizedEnvironmentId = String(
+              options.environmentId || draftEnvironment?.id || ""
+            ).trim();
+            if (!normalizedEnvironmentId || normalizedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
+              return null;
+            }
+            clearEnvironmentAutosaveQueue();
+            setEnvironmentVersionState({
+              status: "loading",
+              message: options.loadingMessage || "Saving computer version...",
+              error: "",
+            });
+            setSaveState({
+              isSaving: true,
+              error: "",
+              message: "",
+            });
+            try {
+              const mutationResult = await options.mutate();
+              const selectedVersionId = typeof options.getSelectedVersionId === "function"
+                ? options.getSelectedVersionId(mutationResult)
+                : options.preferredSelectedId;
+              const mutationVersions = Array.isArray(mutationResult?.versions)
+                ? mutationResult.versions
+                : null;
+              const refreshedEnvironment = mutationVersions
+                ? commitAuthoritativeEnvironmentVersionState(
+                    normalizedEnvironmentId,
+                    mutationResult?.environment
+                      || mutationResult?.resource
+                      || draftEnvironment,
+                    mutationVersions,
+                    selectedVersionId || ""
+                  )
+                : await refreshAuthoritativeEnvironmentVersions(
+                    normalizedEnvironmentId,
+                    {
+                      baseEnvironment: mutationResult?.environment
+                        || mutationResult?.resource
+                        || draftEnvironment,
+                      preferredSelectedId: selectedVersionId || "",
+                    }
+                  );
+              editorDirtyRef.current = false;
+              environmentVersionDraftTouchedRef.current = false;
+              setOpenEnvironmentVersionMenuId("");
+              setSaveState({
+                isSaving: false,
+                error: "",
+                message: "",
+              });
+              setEnvironmentVersionState({
+                status: "idle",
+                message: "",
+                error: "",
+              });
+              if (onEnvironmentMutated) {
+                void Promise.resolve()
+                  .then(() => onEnvironmentMutated())
+                  .catch((error) => {
+                    console.warn("[Computers] Background overview refresh failed", error);
+                  });
+              }
+              return refreshedEnvironment;
+            } catch (error) {
+              const errorMessage = error instanceof Error
+                ? error.message
+                : options.errorMessage || "Failed to save computer version.";
+              setSaveState({
+                isSaving: false,
+                error: errorMessage,
+                message: "",
+              });
+              setEnvironmentVersionState({
+                status: "error",
+                message: "",
+                error: errorMessage,
+              });
+              return null;
+            }
           }
   
           const environmentVersionController = createPlaygroundVersionController({
@@ -450,125 +783,20 @@
             return !hasChanges;
           }
   
-          function getEnvironmentVersionPopupActions(options = {}) {
-            const includeVersionHistory = options.includeVersionHistory === true;
+          function getEnvironmentVersionPopupActions() {
             const environmentVersionHasChanges = hasDraftEnvironmentVersionChanges();
-            const actions = [
-              {
-                id: "save-new-version",
-                label: "Save to new Version",
-                Icon: GitBranchPlus,
-                shortcut: "⇧⌘S",
-                disabled: !environmentVersionHasChanges,
-                onClick: () => openCreateEnvironmentVersionModal(),
-              },
+            return [
               {
                 id: "revert",
-                label: "Revert to last saved Version",
+                label: "Revert Changes",
                 Icon: Undo2,
                 disabled: !environmentVersionHasChanges,
                 onClick: handleRevertDraft,
               },
             ];
-            if (includeVersionHistory) {
-              actions.push({
-                id: "version-history",
-                label: "Version history",
-                Icon: History,
-                disabled: false,
-                onClick: () => {
-                  setEnvironmentPublishMenuOpen(false);
-                  setEnvironmentVersionSelectorMenuOpen(false);
-                  setEnvironmentVersionsHeaderMenuOpen(false);
-                  openEnvironmentVersionChangesPage();
-                },
-              });
-            }
-            return actions;
           }
   
-          async function commitVersionedEnvironmentRecord(nextEnvironment, options = {}) {
-            const normalizedNextEnvironment = normalizePlaygroundEnvironmentRecord(nextEnvironment);
-            const loadingMessage = options.loadingMessage || "Saving computer version...";
-            clearEnvironmentAutosaveQueue();
-            editorDirtyRef.current = false;
-            setEnvironmentVersionState({
-              status: "loading",
-              message: loadingMessage,
-              error: "",
-            });
-            setSaveState({
-              isSaving: true,
-              error: "",
-              message: "",
-            });
-  
-            try {
-              const versionedNextEnvironment = prepareEnvironmentVersionedRecordForCommit(normalizedNextEnvironment, {
-                ...options,
-                actor: options.actor || getEnvironmentVersionActor(),
-              });
-              const savedEnvironment = await persistEnvironmentRecord(versionedNextEnvironment);
-              const savedHasVersionMetadata = readPlaygroundEnvironmentVersions(savedEnvironment).length > 0
-                || Boolean(
-                  savedEnvironment?.metadata?.activeEnvironmentVersionId
-                  || savedEnvironment?.metadata?.active_environment_version_id
-                  || savedEnvironment?.metadata?.activeComputerVersionId
-                  || savedEnvironment?.metadata?.active_computer_version_id
-              );
-              const mergedSavedEnvironment = normalizePlaygroundEnvironmentRecord({
-                ...versionedNextEnvironment,
-                ...savedEnvironment,
-                metadata: savedHasVersionMetadata ? savedEnvironment.metadata : versionedNextEnvironment.metadata,
-                publishedAt: savedEnvironment?.publishedAt || versionedNextEnvironment.publishedAt || "",
-              });
-              setEnvironmentDetailsById((current) => ({
-                ...current,
-                [mergedSavedEnvironment.id]: mergedSavedEnvironment,
-              }));
-              setSelectedEnvironmentId(mergedSavedEnvironment.id);
-              setDraftEnvironment(mergedSavedEnvironment);
-              rememberEnvironmentVersionBaseline(mergedSavedEnvironment, { force: true });
-              setOpenEnvironmentVersionMenuId("");
-              setModifiedSecrets({});
-              setModifiedMcpTokens({});
-              setSaveState({
-                isSaving: false,
-                error: "",
-                message: "",
-              });
-              setEnvironmentVersionState({
-                status: "success",
-                message: options.successMessage || "Saved",
-                error: "",
-              });
-              if (onEnvironmentMutated) {
-                await onEnvironmentMutated();
-              }
-              window.setTimeout(() => {
-                setEnvironmentVersionState((current) => current.status === "success"
-                  ? { status: "idle", message: "", error: "" }
-                  : current
-                );
-              }, 1800);
-              return mergedSavedEnvironment;
-            } catch (error) {
-              const errorMessage = error instanceof Error ? error.message : (options.errorMessage || "Failed to save computer version.");
-              setSaveState({
-                isSaving: false,
-                error: errorMessage,
-                message: "",
-              });
-              setEnvironmentVersionState({
-                status: "error",
-                message: "",
-                error: errorMessage,
-              });
-              return null;
-            }
-          }
-  
-          function toggleEnvironmentVersionsSidebar() {
+          function openEnvironmentVersionsSidebar() {
             if (!draftEnvironment?.id || draftEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
               return;
             }
@@ -582,7 +810,15 @@
               message: "",
               error: "",
             });
-            setEnvironmentVersionsSidebarOpen((current) => !current);
+            setEnvironmentVersionsSidebarOpen(true);
+          }
+
+          function toggleEnvironmentVersionsSidebar() {
+            if (environmentVersionsSidebarOpen) {
+              closeEnvironmentVersionsSidebar();
+              return;
+            }
+            openEnvironmentVersionsSidebar();
           }
   
           function closeEnvironmentVersionsSidebar() {
@@ -611,7 +847,6 @@
             setEnvironmentVersionModal(null);
             setEnvironmentVersionModalVisible(false);
             setEnvironmentVersionModalClosing(false);
-            setEnvironmentVersionNameDraft("");
             setEnvironmentVersionDescriptionDraft("");
             setIsEnvironmentVersionDescriptionEditing(false);
           }
@@ -630,7 +865,6 @@
               message: "",
               error: "",
             });
-            setEnvironmentVersionNameDraft(String(draft.name || "").trim());
             setEnvironmentVersionDescriptionDraft(String(draft.description || ""));
             setIsEnvironmentVersionDescriptionEditing(false);
             setEnvironmentVersionModal(nextModal);
@@ -644,25 +878,107 @@
             });
           }
   
-          function openCreateEnvironmentVersionModal(options = {}) {
-            if (!draftEnvironment || environmentVersionState.status === "loading" || saveState.isSaving) {
-              return;
-            }
-            const forceNewVersion = Boolean(options.force);
-            if (!forceNewVersion && !hasDraftEnvironmentVersionChanges()) {
-              return;
-            }
+          function buildEnvironmentVersionSaveDialogData() {
             const versions = readDraftEnvironmentVersions();
-            const nextVersion = versions.reduce((maxVersion, version) => Math.max(maxVersion, Number(version.version || 0)), 0) + 1;
-            openEnvironmentVersionModal(
-              { mode: "create", force: forceNewVersion },
-              {
-                name: "Version " + nextVersion,
-                description: "",
-              }
-            );
+            const selectedVersion = getDraftEnvironmentSelectedVersion()
+              || getDraftEnvironmentActiveVersion()
+              || versions[0]
+              || null;
+            const persistedEnvironment = selectedEnvironmentSnapshot
+              || environmentDetailsById[String(draftEnvironment?.id || "").trim()]
+              || draftEnvironment;
+            const baseSnapshot = selectedVersion?.snapshot
+              || buildPlaygroundEnvironmentVersionSnapshot(persistedEnvironment);
+            const currentSnapshot = buildPlaygroundEnvironmentVersionSnapshot(draftEnvironment);
+            const latestVersion = versions.reduce((highest, version) => {
+              const parsedVersion = Number(version?.version);
+              return Number.isFinite(parsedVersion)
+                ? Math.max(highest, parsedVersion)
+                : highest;
+            }, -1);
+            return {
+              canSaveCurrent: Boolean(selectedVersion),
+              currentVersion: selectedVersion
+                ? Number(selectedVersion.version)
+                : null,
+              nextVersion: latestVersion + 1,
+              currentDescription: String(selectedVersion?.description || "").trim(),
+              diffFiles: buildEnvironmentVersionDiffFilesFromSnapshots(
+                baseSnapshot,
+                currentSnapshot
+              ),
+            };
           }
-  
+
+          function openEnvironmentVersionSaveDialog(options = {}) {
+            if (
+              !draftEnvironment
+              || saveState.isSaving
+              || environmentVersionState.status === "loading"
+              || !hasDraftEnvironmentVersionChanges()
+            ) {
+              return false;
+            }
+            setEnvironmentActionsPopoverOpen(false);
+            setEnvironmentPublishMenuOpen(false);
+            setEnvironmentVersionSelectorMenuOpen(false);
+            setEnvironmentVersionsHeaderMenuOpen(false);
+            setEnvironmentVersionState((current) => current.status === "loading"
+              ? current
+              : { status: "idle", message: "", error: "" }
+            );
+            setEnvironmentVersionSaveDialog({
+              initialMode: options.mode === "current" ? "current" : "new",
+              key: Date.now().toString(36) + Math.random().toString(36).slice(2),
+            });
+            return true;
+          }
+
+          const hasUnsavedEnvironmentChanges = Boolean(
+            resourceMode !== "servers"
+            && !isHomeViewActive
+            && draftEnvironment
+            && editorDirtyRef.current
+            && (
+              draftEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID
+                ? environmentVersionDraftTouchedRef.current
+                : hasDraftEnvironmentVersionChanges()
+            )
+          );
+
+          useEffect(() => {
+            if (
+              typeof onNavigationGuardChange !== "function"
+              || resourceMode === "servers"
+            ) {
+              return;
+            }
+            const environmentName = String(draftEnvironment?.name || "").trim() || "this computer";
+            onNavigationGuardChange(hasUnsavedEnvironmentChanges
+              ? {
+                  id: "computer-details-unsaved-changes",
+                  active: true,
+                  title: "Leave without saving?",
+                  description: "Your changes to " + environmentName + " have not been saved. If you leave now, they will be lost.",
+                  onDiscard: discardUnsavedEnvironmentDraft,
+                }
+              : null
+            );
+          }, [
+            draftEnvironment?.id,
+            draftEnvironment?.name,
+            hasUnsavedEnvironmentChanges,
+            onNavigationGuardChange,
+            resourceMode,
+          ]);
+
+          useEffect(() => {
+            if (typeof onNavigationGuardChange !== "function") {
+              return undefined;
+            }
+            return () => onNavigationGuardChange(null);
+          }, [onNavigationGuardChange]);
+
           function openEditEnvironmentVersionModal(versionId) {
             if (!draftEnvironment || environmentVersionState.status === "loading" || saveState.isSaving) {
               return;
@@ -674,9 +990,8 @@
               return;
             }
             openEnvironmentVersionModal(
-              { mode: "edit", versionId: targetVersion.id },
+              { mode: "edit", versionId: targetVersion.id, version: targetVersion.version },
               {
-                name: String(targetVersion.label || ("Version " + targetVersion.version)).trim(),
                 description: String(targetVersion.description || ""),
               }
             );
@@ -702,108 +1017,177 @@
             }, typeof PLAYGROUND_PLATFORM_MODAL_ANIMATION_MS === "number" ? PLAYGROUND_PLATFORM_MODAL_ANIMATION_MS : 75);
           }
   
-          async function saveEnvironmentToNewVersion(options = {}) {
-            if (!draftEnvironment || environmentVersionState.status === "loading") {
-              return null;
-            }
-            const forceNewVersion = Boolean(options.force);
-            if (!forceNewVersion && !hasDraftEnvironmentVersionChanges()) {
-              return null;
-            }
-            const actor = getEnvironmentVersionActor();
-            const result = environmentVersionController.buildNewVersionResource(draftEnvironment, {
-              label: options.label,
-              description: options.description,
-              actor,
-            });
-            if (!result?.resource) {
-              return null;
-            }
-            return await commitVersionedEnvironmentRecord(result.resource, {
-              operation: "save-new-version",
-              actor,
-              loadingMessage: "Saving new version...",
-              successMessage: "New version saved",
-              errorMessage: "Failed to save new version.",
-            });
-          }
-  
           async function updateEnvironmentVersionDetails(versionId, versionDetails = {}) {
             if (!draftEnvironment || environmentVersionState.status === "loading") {
               return null;
             }
-            const actor = getEnvironmentVersionActor();
-            const result = environmentVersionController.buildVersionMetadataResource(draftEnvironment, versionId, {
-              ...versionDetails,
-              actor,
-            });
-            if (!result?.resource) {
+            const environmentId = String(draftEnvironment.id || "").trim();
+            const normalizedVersionId = String(versionId || "").trim();
+            if (!environmentId || !normalizedVersionId) {
               return null;
             }
-            return await commitVersionedEnvironmentRecord(result.resource, {
-              operation: "edit-version",
-              actor,
-              loadingMessage: "Saving version details...",
-              successMessage: "Version details saved",
-              errorMessage: "Failed to save version details.",
+            setEnvironmentVersionState({
+              status: "loading",
+              message: "Saving version details...",
+              error: "",
             });
+            setSaveState({ isSaving: true, error: "", message: "" });
+            try {
+              const updatedVersion = await updateEnvironmentVersionApi(
+                environmentId,
+                normalizedVersionId,
+                {
+                  description: String(versionDetails.description || "").trim().slice(0, 240),
+                }
+              );
+              await refreshEnvironmentVersionsPreservingDraft(
+                environmentId,
+                normalizedVersionId
+              );
+              setSaveState({
+                isSaving: false,
+                error: "",
+                message: "Version details saved",
+              });
+              setEnvironmentVersionState({
+                status: "success",
+                message: "Version details saved",
+                error: "",
+              });
+              if (onEnvironmentMutated) {
+                await onEnvironmentMutated();
+              }
+              return updatedVersion;
+            } catch (error) {
+              const errorMessage = error instanceof Error
+                ? error.message
+                : "Failed to save version details.";
+              setSaveState({ isSaving: false, error: errorMessage, message: "" });
+              setEnvironmentVersionState({
+                status: "error",
+                message: "",
+                error: errorMessage,
+              });
+              return null;
+            }
           }
   
           async function commitEnvironmentVersionModal() {
             if (!environmentVersionModal || saveState.isSaving || environmentVersionState.status === "loading") {
               return;
             }
-            const label = String(environmentVersionNameDraft || "").trim() || "Version";
             const description = String(environmentVersionDescriptionDraft || "").trim();
-            const savedEnvironment = environmentVersionModal.mode === "edit"
-              ? await updateEnvironmentVersionDetails(environmentVersionModal.versionId, { label, description })
-              : await saveEnvironmentToNewVersion({
-                  force: Boolean(environmentVersionModal.force),
-                  label,
-                  description,
-                });
+            const savedEnvironment = await updateEnvironmentVersionDetails(
+              environmentVersionModal.versionId,
+              { description }
+            );
             if (savedEnvironment) {
               closeEnvironmentVersionModal();
             }
           }
-  
-          async function saveAndPublishCurrentEnvironmentVersion() {
+
+          function hasEnvironmentCredentialChanges(environmentRecord = draftEnvironment) {
+            if (
+              Object.keys(modifiedSecrets || {}).length > 0
+              || Object.keys(modifiedMcpTokens || {}).length > 0
+            ) {
+              return true;
+            }
+            const normalizedEnvironment = normalizePlaygroundEnvironmentRecord(
+              environmentRecord || {}
+            );
+            const currentSecretKeys = new Set(
+              (normalizedEnvironment.secrets || [])
+                .map((secret) => String(secret?.key || "").trim())
+                .filter(Boolean)
+            );
+            if (
+              Array.from(existingSecretKeys)
+                .some((secretKey) => !currentSecretKeys.has(secretKey))
+            ) {
+              return true;
+            }
+            if (
+              (normalizedEnvironment.secrets || []).some((secret) => {
+                const secretKey = String(secret?.key || "").trim();
+                const secretValue = String(secret?.value || "");
+                return Boolean(
+                  secretKey
+                  && !existingSecretKeys.has(secretKey)
+                  && secretValue
+                  && secretValue !== PLAYGROUND_MASKED_SECRET_VALUE
+                );
+              })
+            ) {
+              return true;
+            }
+            const currentMcpServerNames = new Set(
+              (normalizedEnvironment.mcpServers || [])
+                .map((server) => String(server?.name || "").trim())
+                .filter(Boolean)
+            );
+            if (
+              Array.from(existingMcpTokenServers)
+                .some((serverName) => !currentMcpServerNames.has(serverName))
+            ) {
+              return true;
+            }
+            return (normalizedEnvironment.mcpServers || []).some((server) => {
+              const serverName = String(server?.name || "").trim();
+              const bearerToken = String(server?.bearerToken || "");
+              return Boolean(
+                server?.type === "http"
+                && serverName
+                && !existingMcpTokenServers.has(serverName)
+                && bearerToken
+                && bearerToken !== PLAYGROUND_MASKED_SECRET_VALUE
+              );
+            });
+          }
+
+          async function saveAndPublishCurrentEnvironmentVersion(details = {}) {
             if (!draftEnvironment || saveState.isSaving || environmentVersionState.status === "loading") {
-              return;
+              return null;
             }
             if (!hasDraftEnvironmentVersionChanges()) {
-              return;
+              return null;
             }
             const selectedVersion = getDraftEnvironmentSelectedVersion();
-            const actor = getEnvironmentVersionActor();
-            const publishResult = selectedVersion
-              ? environmentVersionController.buildPublishSelectedResource(draftEnvironment, {
-                  actor,
-                  updateFromResource: true,
-                })
-              : (() => {
-                  const saveResult = environmentVersionController.buildSaveCurrentResource(draftEnvironment, { status: "saved", actor });
-                  if (!saveResult?.resource) {
-                    return null;
-                  }
-                  return environmentVersionController.buildPublishSelectedResource(saveResult.resource, {
-                    actor,
-                    updateFromResource: true,
-                  });
-                })();
-            if (!publishResult?.resource) {
-              return;
-            }
+            const saveToCurrentVersion = details.mode === "current" && Boolean(selectedVersion);
+            const versionDescription = String(details.description || "").trim().slice(0, 240);
+            const currentSnapshot = buildPlaygroundEnvironmentVersionSnapshot(draftEnvironment);
+            const environmentId = String(draftEnvironment.id || "").trim();
             setEnvironmentPublishMenuOpen(false);
             setEnvironmentVersionSelectorMenuOpen(false);
             setEnvironmentVersionsHeaderMenuOpen(false);
-            await commitVersionedEnvironmentRecord(publishResult.resource, {
-              operation: "save-publish",
-              actor,
-              loadingMessage: "Saving & publishing computer...",
-              successMessage: "Saved & published",
-              errorMessage: "Failed to save and publish computer.",
+            const savedEnvironment = await runEnvironmentVersionApiMutation({
+              environmentId,
+              loadingMessage: "Saving computer changes...",
+              errorMessage: "Failed to save computer changes.",
+              mutate: async () => {
+                const persistedEnvironment = hasEnvironmentCredentialChanges(draftEnvironment)
+                  ? await persistEnvironmentRecord(draftEnvironment)
+                  : null;
+                const result = await saveEnvironmentVersionApi(
+                  environmentId,
+                  saveToCurrentVersion ? selectedVersion.id : "",
+                  currentSnapshot,
+                  { description: versionDescription }
+                );
+                return {
+                  ...result,
+                  environment: result?.environment || persistedEnvironment,
+                };
+              },
+              getSelectedVersionId: (result) => (
+                result?.version?.id || selectedVersion?.id || ""
+              ),
             });
+            if (savedEnvironment) {
+              setModifiedSecrets({});
+              setModifiedMcpTokens({});
+            }
+            return savedEnvironment;
           }
   
           async function restoreEnvironmentVersion(versionId) {
@@ -814,13 +1198,13 @@
             if (!result?.resource) {
               return;
             }
-            await commitVersionedEnvironmentRecord(result.resource, {
-              operation: "restore",
-              actor: getEnvironmentVersionActor(),
-              loadingMessage: "Restoring computer version...",
-              successMessage: "Version restored",
-              errorMessage: "Failed to restore computer version.",
-            });
+            clearEnvironmentAutosaveQueue();
+            editorDirtyRef.current = false;
+            environmentVersionDraftTouchedRef.current = false;
+            setDraftEnvironment(result.resource);
+            rememberEnvironmentVersionBaseline(result.resource, { force: true });
+            setEnvironmentPublishMenuOpen(false);
+            setEnvironmentVersionState({ status: "idle", message: "", error: "" });
           }
   
           async function publishEnvironmentVersion(versionId) {
@@ -836,6 +1220,10 @@
               && selectedVersion?.id === targetVersion.id
               && hasChanges
             );
+            if (shouldRepublishCurrentEditor) {
+              openEnvironmentVersionSaveDialog({ mode: "current" });
+              return;
+            }
             if (hasChanges && !shouldRepublishCurrentEditor) {
               setEnvironmentVersionState({
                 status: "error",
@@ -847,20 +1235,16 @@
             if (!canPublishEnvironmentVersion(targetVersion)) {
               return;
             }
-            const actor = getEnvironmentVersionActor();
-            const result = environmentVersionController.buildPublishVersionResource(draftEnvironment, versionId, {
-              actor,
-              updateFromResource: shouldRepublishCurrentEditor,
-            });
-            if (!result?.resource) {
-              return;
-            }
-            await commitVersionedEnvironmentRecord(result.resource, {
-              operation: "publish-version",
-              actor,
+            await runEnvironmentVersionApiMutation({
+              environmentId: draftEnvironment.id,
               loadingMessage: "Publishing computer version...",
               successMessage: "Published",
               errorMessage: "Failed to publish computer version.",
+              mutate: () => publishEnvironmentVersionApi(
+                draftEnvironment.id,
+                targetVersion.id
+              ),
+              preferredSelectedId: targetVersion.id,
             });
           }
   
@@ -871,19 +1255,48 @@
             if (readDraftEnvironmentVersions().length <= 1) {
               return;
             }
-            const result = environmentVersionController.buildDeleteVersionResource(draftEnvironment, versionId);
-            if (!result?.resource) {
+            const normalizedVersionId = String(versionId || "").trim();
+            const targetVersion = readDraftEnvironmentVersions()
+              .find((version) => version.id === normalizedVersionId);
+            if (!targetVersion) {
+              return;
+            }
+            if (targetVersion.status === "active") {
+              setEnvironmentVersionState({
+                status: "error",
+                message: "",
+                error: "The published version cannot be deleted.",
+              });
+              return;
+            }
+            if (
+              hasDraftEnvironmentVersionChanges()
+              && getDraftEnvironmentSelectedVersion()?.id === normalizedVersionId
+            ) {
+              setEnvironmentVersionState({
+                status: "error",
+                message: "",
+                error: "Revert or save the current changes before deleting this version.",
+              });
               return;
             }
             if (!window.confirm("Delete this computer version?")) {
               return;
             }
-            await commitVersionedEnvironmentRecord(result.resource, {
-              operation: "delete-version",
-              actor: getEnvironmentVersionActor(),
+            const activeVersion = getDraftEnvironmentActiveVersion();
+            await runEnvironmentVersionApiMutation({
+              environmentId: draftEnvironment.id,
               loadingMessage: "Deleting computer version...",
               successMessage: "Version deleted",
               errorMessage: "Failed to delete computer version.",
+              mutate: async () => {
+                await deleteEnvironmentVersionApi(
+                  draftEnvironment.id,
+                  normalizedVersionId
+                );
+                return {};
+              },
+              preferredSelectedId: activeVersion?.id || "",
             });
           }
   
@@ -891,20 +1304,25 @@
             if (!draftEnvironment || environmentVersionState.status === "loading") {
               return;
             }
-            const actor = getEnvironmentVersionActor();
-            const result = environmentVersionController.buildUnpublishActiveResource(draftEnvironment, { actor });
-            if (!result?.resource) {
+            const activeVersion = getDraftEnvironmentActiveVersion();
+            if (!activeVersion?.id) {
               return;
             }
             if (!window.confirm("Unpublish this computer? Version history will be kept.")) {
               return;
             }
-            await commitVersionedEnvironmentRecord(result.resource, {
-              operation: "unpublish",
-              actor,
+            await runEnvironmentVersionApiMutation({
+              environmentId: draftEnvironment.id,
               loadingMessage: "Unpublishing computer...",
               successMessage: "Unpublished",
               errorMessage: "Failed to unpublish computer.",
+              mutate: async () => ({
+                environment: await unpublishEnvironmentVersionApi(
+                  draftEnvironment.id,
+                  activeVersion.id
+                ),
+              }),
+              preferredSelectedId: activeVersion.id,
             });
           }
   

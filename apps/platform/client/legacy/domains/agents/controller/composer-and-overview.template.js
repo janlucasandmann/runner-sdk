@@ -250,6 +250,7 @@
             requestAgentNavigation(() => {
               const normalizedKind = kind === "team" ? "team" : "single";
               const seedDraft = buildAgentComposerSeedDraft(normalizedKind, options?.draft || null);
+              const preserveDraftName = Boolean(options?.preserveDraftName);
               resetEditorAuxiliaryState();
               setAgentProfileAvatarBroken(false);
               setToolbarPopover("");
@@ -263,13 +264,18 @@
                 isSaving: false,
                 error: "",
               });
-              setDraftAgent(normalizedKind === "single" ? { ...seedDraft, name: "" } : seedDraft);
+              setDraftAgent(
+                normalizedKind === "single" && !preserveDraftName
+                  ? { ...seedDraft, name: "" }
+                  : seedDraft
+              );
               selectedAgentIdRef.current = PLAYGROUND_AGENT_DRAFT_ID;
               setSelectedAgentId(PLAYGROUND_AGENT_DRAFT_ID);
               setIsHomeViewActive(normalizedKind === "single");
               setAgentCreationInstructionRunRequest(null);
               setAgentCreationInstructionContext(null);
               if (normalizedKind === "single") {
+                setAgentCreationSetupDraft(null);
                 setAgentCreationSetupOpen(true);
                 setAgentCreationSetupError("");
                 setAgentCreationSetupSubmitting(false);
@@ -284,6 +290,27 @@
               setAgentAssistantOpen(true);
               setAgentAssistantCommandRequest(null);
             });
+          }
+
+          function openAgentCreationSetupOverlay(draftOverrides = null) {
+            if (!canCreateAgentOnCurrentPlan()) {
+              return;
+            }
+            const seedDraft = buildAgentComposerSeedDraft("single", draftOverrides);
+            setToolbarPopover("");
+            setSearchPopupQuery("");
+            setAgentListActionMenuState(null);
+            setAgentActionsPopoverOpen(false);
+            closeAgentModelPicker({ animate: false });
+            setAgentProfileAvatarBroken(false);
+            setAgentCreationSetupDraft(seedDraft);
+            setAgentCreationSetupOpen(true);
+            setAgentCreationSetupError("");
+            setAgentCreationSetupSubmitting(false);
+            setAgentCreationSetupResetToken((current) => current + 1);
+            setAgentCreationPermissionModalOpen(false);
+            setAgentCreationInstructionRunRequest(null);
+            setAgentCreationInstructionContext(null);
           }
   
           function openAgentComposer(kind = "single", options = {}) {
@@ -358,10 +385,16 @@
               window.clearTimeout(agentModelPickerCloseTimerRef.current);
               agentModelPickerCloseTimerRef.current = null;
             }
-            const normalizedTarget = target === "composer" ? "composer" : "detail";
+            const normalizedTarget = target === "composer"
+              ? "composer"
+              : target === "creation"
+                ? "creation"
+                : "detail";
             const activeModelId = normalizedTarget === "composer"
               ? (agentComposerDraft?.model || "claude-haiku-4-5")
-              : (draftAgent?.model || "claude-haiku-4-5");
+              : normalizedTarget === "creation"
+                ? ((agentCreationSetupDraft || draftAgent)?.model || "claude-haiku-4-5")
+                : (draftAgent?.model || "claude-haiku-4-5");
             setAgentModelPickerClosing(false);
             setAgentModelPickerState({
               target: normalizedTarget,
@@ -493,9 +526,12 @@
             }
   
             const isComposerTarget = agentModelPickerState.target === "composer";
+            const isCreationTarget = agentModelPickerState.target === "creation";
             const activeModelId = isComposerTarget
               ? (agentComposerDraft?.model || "claude-haiku-4-5")
-              : (draftAgent?.model || "claude-haiku-4-5");
+              : isCreationTarget
+                ? ((agentCreationSetupDraft || draftAgent)?.model || "claude-haiku-4-5")
+                : (draftAgent?.model || "claude-haiku-4-5");
             const pendingModelId = String(agentModelPickerState.pendingModelId || activeModelId || "").trim() || activeModelId;
             const normalizedSearchQuery = String(agentModelPickerState.searchQuery || "").trim().toLowerCase();
             const activeProviderFilters = Array.isArray(agentModelPickerState.providerFilters)
@@ -586,6 +622,8 @@
               }
               if (isComposerTarget) {
                 updateAgentComposerField("model", pendingModelId);
+              } else if (isCreationTarget) {
+                updateAgentCreationSetupField("model", pendingModelId);
               } else {
                 updateAgentField("model", pendingModelId);
               }
@@ -779,94 +817,84 @@
             const showTeamsLoading = workspaceTeamsLoading && !hasManageableTeams;
             const selectedTeam = availableAgentShareTeams.find((team) => team.id === agentSendTeamPickerValue) || null;
   
-            return renderPlaygroundPlatformModal({
-              open: agentSendTeamModalOpen,
-              visible: agentSendTeamModalVisible,
-              closing: agentSendTeamModalClosing,
+            return React.createElement(PlatformModal, {
+              open: agentSendTeamModalOpen && !agentSendTeamModalClosing,
+              visible: agentSendTeamModalVisible && !agentSendTeamModalClosing,
+              animationDurationMs: typeof PLAYGROUND_PLATFORM_MODAL_ANIMATION_MS === "number"
+                ? PLAYGROUND_PLATFORM_MODAL_ANIMATION_MS
+                : 60,
               onClose: () => closeAgentSendToTeamModal(),
               as: "form",
-              backdropClassName: "playground-tasks-project-issue-backdrop playground-agents-send-team-modal-backdrop",
-              className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal playground-agents-send-team-modal",
+              size: "medium",
+              title: targetAgentCount > 1 ? "Share " + targetAgentCount + " Agents with Team" : "Share with Team",
+              backdropClassName: "playground-agents-send-team-modal-backdrop",
+              className: "playground-agents-send-team-modal",
+              bodyClassName: "playground-agents-send-team-modal-body",
+              footerClassName: "playground-agents-send-team-actions",
+              closeButtonDisabled: isSharingAgentToTeam,
+              closeButtonLabel: "Close team selector",
               ariaLabel: "Share agent with team",
               surfaceProps: {
                 onSubmit: (event) => {
                   void handleAgentSendToTeamSubmit(event);
                 },
               },
+              footer: React.createElement(React.Fragment, null,
+                React.createElement(PlatformSecondaryButton, {
+                  size: "medium",
+                  type: "button",
+                  onClick: () => closeAgentSendToTeamModal(),
+                  disabled: isSharingAgentToTeam,
+                }, "Cancel"),
+                React.createElement(PlatformPrimaryButton, {
+                  size: "medium",
+                  type: "submit",
+                  disabled: isSharingAgentToTeam || !selectedTeam || selectedTeamAlreadyShared || targetAgentCount === 0,
+                }, isSharingAgentToTeam ? "Sharing..." : "Share")
+              ),
               children: React.createElement(React.Fragment, null,
-                React.createElement("div", { className: "playground-tasks-project-modal-top" },
-                  React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
-                    React.createElement("div", {
-                      className: "playground-content-title playground-tasks-project-modal-name-input",
-                      style: { display: "flex", alignItems: "center" },
-                    }, targetAgentCount > 1 ? "Share " + targetAgentCount + " Agents with Team" : "Share with Team"),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-settings-icon-button playground-tasks-project-modal-close",
-                      onClick: () => closeAgentSendToTeamModal(),
-                      disabled: isSharingAgentToTeam,
-                      title: "Close",
-                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-                  )
-                ),
-                React.createElement("div", { className: "playground-tasks-issue-modal-body playground-agents-send-team-modal-body" },
-                  showTeamsLoading
-                    ? React.createElement("div", { className: "playground-agents-send-team-empty" },
-                        React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
-                        React.createElement("span", null, "Loading teams...")
-                      )
-                    : workspaceTeamsRequiresPlan
-                      ? React.createElement("div", { className: "playground-agents-send-team-empty" }, "Teams are not available on this workspace plan.")
-                      : hasManageableTeams
-                        ? React.createElement("div", { className: "playground-agents-send-team-list", role: "radiogroup", "aria-label": "Teams" },
-                            availableAgentShareTeams.map((team) => {
-                              const isSelected = team.id === agentSendTeamPickerValue;
-                              const sharedCount = targetAgents.filter((agent) => getAgentSharedTeamIds(agent).includes(team.id)).length;
-                              const isShared = targetAgentCount > 0 && sharedCount === targetAgentCount;
-                              const teamMeta = targetAgentCount > 1
-                                ? (sharedCount > 0 ? sharedCount + "/" + targetAgentCount + " already shared" : team.roleLabel)
-                                : (isShared ? "Already shared" : team.roleLabel);
-                              return React.createElement("button", {
-                                  key: team.id,
-                                  type: "button",
-                                  className: "playground-agents-send-team-option" + (isSelected ? " is-selected" : "") + (isShared ? " is-shared" : ""),
-                                  onClick: () => setAgentSendTeamPickerValue(team.id),
-                                  disabled: isSharingAgentToTeam,
-                                  role: "radio",
-                                  "aria-checked": isSelected ? "true" : "false",
-                                },
-                                React.createElement("span", { className: "playground-agents-send-team-option-icon", "aria-hidden": "true" },
-                                  React.createElement(UsersRound, { width: 15, height: 15, strokeWidth: 1.85 })
-                                ),
-                                React.createElement("span", { className: "playground-agents-send-team-option-copy" },
-                                  React.createElement("span", { className: "playground-agents-send-team-option-title" }, team.name),
-                                  React.createElement("span", { className: "playground-agents-send-team-option-meta" }, teamMeta)
-                                ),
-                                isSelected
-                                  ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 })
-                                  : null
-                              );
-                            })
-                          )
-                        : React.createElement("div", { className: "playground-agents-send-team-empty" }, "No teams are available yet.")
-                ),
+                showTeamsLoading
+                  ? React.createElement("div", { className: "playground-agents-send-team-empty" },
+                      React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 }),
+                      React.createElement("span", null, "Loading teams...")
+                    )
+                  : workspaceTeamsRequiresPlan
+                    ? React.createElement("div", { className: "playground-agents-send-team-empty" }, "Teams are not available on this workspace plan.")
+                    : hasManageableTeams
+                      ? React.createElement("div", { className: "playground-agents-send-team-list", role: "radiogroup", "aria-label": "Teams" },
+                          availableAgentShareTeams.map((team) => {
+                            const isSelected = team.id === agentSendTeamPickerValue;
+                            const sharedCount = targetAgents.filter((agent) => getAgentSharedTeamIds(agent).includes(team.id)).length;
+                            const isShared = targetAgentCount > 0 && sharedCount === targetAgentCount;
+                            const teamMeta = targetAgentCount > 1
+                              ? (sharedCount > 0 ? sharedCount + "/" + targetAgentCount + " already shared" : team.roleLabel)
+                              : (isShared ? "Already shared" : team.roleLabel);
+                            return React.createElement("button", {
+                                key: team.id,
+                                type: "button",
+                                className: "playground-agents-send-team-option" + (isSelected ? " is-selected" : "") + (isShared ? " is-shared" : ""),
+                                onClick: () => setAgentSendTeamPickerValue(team.id),
+                                disabled: isSharingAgentToTeam,
+                                role: "radio",
+                                "aria-checked": isSelected ? "true" : "false",
+                              },
+                              React.createElement("span", { className: "playground-agents-send-team-option-icon", "aria-hidden": "true" },
+                                React.createElement(UsersRound, { width: 15, height: 15, strokeWidth: 1.85 })
+                              ),
+                              React.createElement("span", { className: "playground-agents-send-team-option-copy" },
+                                React.createElement("span", { className: "playground-agents-send-team-option-title" }, team.name),
+                                React.createElement("span", { className: "playground-agents-send-team-option-meta" }, teamMeta)
+                              ),
+                              isSelected
+                                ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 })
+                                : null
+                            );
+                          })
+                        )
+                      : React.createElement("div", { className: "playground-agents-send-team-empty" }, "No teams are available yet."),
                 agentSendTeamError
                   ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, agentSendTeamError)
-                  : null,
-                React.createElement("div", { className: "playground-tasks-project-modal-actions playground-agents-send-team-actions" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-environments-action-button",
-                    onClick: () => closeAgentSendToTeamModal(),
-                    disabled: isSharingAgentToTeam,
-                  }, "Cancel"),
-                  React.createElement(PlatformPrimaryButton, {
-                    size: "medium",
-                    type: "submit",
-                    className: "playground-environments-action-button is-primary",
-                    disabled: isSharingAgentToTeam || !selectedTeam || selectedTeamAlreadyShared || targetAgentCount === 0,
-                  }, isSharingAgentToTeam ? "Sharing..." : "Share")
-                )
+                  : null
               )
             });
           }
@@ -1070,110 +1098,85 @@
                   );
             const agentApiEnvironmentPopoverOpen = agentModelPopover === "api-environment";
             const agentApiEnvironmentLabel = selectedAgentApiEnvironment?.name || selectedAgentApiEnvironment?.label || effectiveAgentApiEnvironmentId || "Computer";
-            const agentApiEnvironmentSelector = React.createElement("div", {
-                className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-agents-model-select-popup playground-agent-api-environment-select-popup" + (agentApiEnvironmentPopoverOpen ? " is-open" : ""),
-                ref: agentApiEnvironmentPopoverOpen ? agentApiEnvironmentPopoverRef : null,
-              },
-              React.createElement("button", {
-                  type: "button",
-                  className: "playground-environments-runtime-value-button playground-agents-model-picker-trigger",
-                  onClick: () => setAgentModelPopover((current) => current === "api-environment" ? "" : "api-environment"),
-                  title: agentApiEnvironmentLabel,
-                  "aria-label": "Computer: " + agentApiEnvironmentLabel,
-                  "aria-expanded": agentApiEnvironmentPopoverOpen ? "true" : "false",
-                },
-                React.createElement("span", { className: "playground-agents-model-picker-trigger-copy" },
-                  React.createElement("span", { className: "playground-agents-model-provider-icon-shell", "aria-hidden": "true" },
-                    React.createElement(Monitor, { width: 14, height: 14, strokeWidth: 1.8 })
-                  ),
-                  React.createElement("span", { className: "playground-agents-model-picker-trigger-labels" },
-                    React.createElement("span", { className: "playground-environments-runtime-value-label" }, agentApiEnvironmentLabel)
-                  )
-                ),
-                React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
+            const agentApiEnvironmentOptions = orderedAgentApiEnvironments
+              .map((environment) => {
+                const environmentId = String(environment?.id || "").trim();
+                if (!environmentId) {
+                  return null;
+                }
+                return {
+                  value: environmentId,
+                  label: environment?.name || environmentId,
+                  leading: React.createElement(Monitor, { width: 14, height: 14, strokeWidth: 1.8 }),
+                };
+              })
+              .filter(Boolean);
+            const agentApiEnvironmentSelector = React.createElement(PlatformSelector, {
+              value: effectiveAgentApiEnvironmentId,
+              options: agentApiEnvironmentOptions,
+              open: agentApiEnvironmentPopoverOpen,
+              onOpenChange: (open) => setAgentModelPopover(open ? "api-environment" : ""),
+              onValueChange: (environmentId) => setAgentApiEnvironmentId(environmentId),
+              ariaLabel: "Computer",
+              label: React.createElement("span", { className: "playground-agent-api-environment-selector-value" },
+                React.createElement(Monitor, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                React.createElement("span", null, agentApiEnvironmentLabel)
               ),
-              agentApiEnvironmentPopoverOpen
-                ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                    orderedAgentApiEnvironments.length > 0
-                      ? orderedAgentApiEnvironments.map((environment) => {
-                          const environmentId = String(environment?.id || "").trim();
-                          const isSelected = environmentId === effectiveAgentApiEnvironmentId;
-                          return React.createElement("button", {
-                              key: environmentId,
-                              type: "button",
-                              className: "tb-popup-row tb-popup-row-select" + (isSelected ? " selected" : ""),
-                              onClick: () => {
-                                setAgentApiEnvironmentId(environmentId);
-                                setAgentModelPopover("");
-                              },
-                            },
-                            React.createElement("span", { className: "tb-popup-check-slot" },
-                              isSelected
-                                ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                : null
-                            ),
-                            React.createElement("span", null, environment?.name || environmentId)
-                          );
-                        })
-                      : React.createElement("div", { className: "tb-popup-row is-disabled" }, "No computers available")
-                  )
-                : null
-            );
+              alignment: "start",
+              popupAlignment: "right",
+              fullWidth: true,
+              emptyContent: "No computers available.",
+              className: "playground-agent-api-environment-selector",
+              triggerClassName: "playground-agent-api-environment-selector-trigger",
+              popupClassName: "playground-agent-api-environment-selector-popup",
+            });
   
-            return renderPlaygroundPlatformModal({
-              open: agentApiModalOpen,
-              visible: agentApiModalVisible,
-              closing: agentApiModalClosing,
+            return React.createElement(PlatformModal, {
+              open: agentApiModalOpen && !agentApiModalClosing,
+              visible: agentApiModalVisible && !agentApiModalClosing,
+              animationDurationMs: typeof PLAYGROUND_PLATFORM_MODAL_ANIMATION_MS === "number"
+                ? PLAYGROUND_PLATFORM_MODAL_ANIMATION_MS
+                : 60,
               onClose: () => closeAgentApiModal(),
-              backdropClassName: "playground-tasks-project-issue-backdrop playground-computer-api-modal-backdrop",
-              className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal playground-computer-api-modal playground-agent-api-modal",
+              closeOnEscape: !agentApiEnvironmentPopoverOpen,
+              size: "medium",
+              title: "Use via API",
+              backdropClassName: "playground-computer-api-modal-backdrop playground-agent-api-modal-backdrop",
+              className: "playground-computer-api-modal playground-agent-api-modal",
+              bodyClassName: "playground-computer-api-modal-body playground-agent-api-modal-body",
+              showFooter: false,
+              closeButtonLabel: "Close API examples",
               ariaLabel: "Use agent via API",
               children: React.createElement(React.Fragment, null,
-                React.createElement("div", { className: "playground-tasks-project-modal-top" },
-                  React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
-                    React.createElement("div", {
-                      className: "playground-content-title playground-tasks-project-modal-name-input",
-                      style: { display: "flex", alignItems: "center" },
-                    }, "Use via API"),
+                React.createElement("div", { className: "playground-computer-api-config-row" },
+                  React.createElement("div", { className: "playground-computer-api-config-label" }, "Computer"),
+                  agentApiEnvironmentSelector
+                ),
+                React.createElement("div", { className: "playground-server-invoke-card playground-computer-api-card" },
+                  React.createElement("div", { className: "playground-server-invoke-header playground-computer-api-header" },
+                    React.createElement("div", { className: "playground-server-invoke-tabs", role: "tablist", "aria-label": "Agent API examples" },
+                      snippetTabs.map((tab) =>
+                        React.createElement("button", {
+                          key: tab.id,
+                          type: "button",
+                          role: "tab",
+                          className: "playground-server-invoke-tab" + (agentApiSnippetTab === tab.id ? " is-active" : ""),
+                          "aria-selected": agentApiSnippetTab === tab.id ? "true" : "false",
+                          onClick: () => setAgentApiSnippetTab(tab.id),
+                        }, tab.label)
+                      )
+                    ),
                     React.createElement("button", {
                       type: "button",
-                      className: "playground-settings-icon-button playground-tasks-project-modal-close",
-                      onClick: () => closeAgentApiModal(),
-                      title: "Close",
-                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-                  )
-                ),
-                React.createElement("div", { className: "playground-tasks-issue-modal-body playground-computer-api-modal-body" },
-                  React.createElement("div", { className: "playground-computer-api-config-row" },
-                    React.createElement("div", { className: "playground-computer-api-config-label" }, "Computer"),
-                    agentApiEnvironmentSelector
+                      className: "playground-settings-icon-button playground-computer-api-copy-button",
+                      onClick: () => void copyAgentApiSnippet(agentApiSnippetTab, activeSnippet),
+                      title: "Copy code",
+                      "aria-label": "Copy code",
+                    }, copiedAgentApiSnippet === agentApiSnippetTab
+                      ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.9 })
+                      : React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.9 }))
                   ),
-                  React.createElement("div", { className: "playground-server-invoke-card playground-computer-api-card" },
-                    React.createElement("div", { className: "playground-server-invoke-header playground-computer-api-header" },
-                      React.createElement("div", { className: "playground-server-invoke-tabs", role: "tablist", "aria-label": "Agent API examples" },
-                        snippetTabs.map((tab) =>
-                          React.createElement("button", {
-                            key: tab.id,
-                            type: "button",
-                            role: "tab",
-                            className: "playground-server-invoke-tab" + (agentApiSnippetTab === tab.id ? " is-active" : ""),
-                            "aria-selected": agentApiSnippetTab === tab.id ? "true" : "false",
-                            onClick: () => setAgentApiSnippetTab(tab.id),
-                          }, tab.label)
-                        )
-                      ),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-settings-icon-button playground-computer-api-copy-button",
-                        onClick: () => void copyAgentApiSnippet(agentApiSnippetTab, activeSnippet),
-                        title: "Copy code",
-                        "aria-label": "Copy code",
-                      }, copiedAgentApiSnippet === agentApiSnippetTab
-                        ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.9 })
-                        : React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.9 }))
-                    ),
-                    agentApiCodePreview
-                  )
+                  agentApiCodePreview
                 )
               )
             });

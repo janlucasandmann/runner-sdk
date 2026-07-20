@@ -679,109 +679,84 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
           );
         }
 
-        function renderProjectTaskHeaderSearchControl({ placeholder = "Search tasks", ariaLabel = "Search project tasks" } = {}) {
-          return React.createElement("div", { className: "playground-plugins-search-shell playground-tasks-backlog-search-shell" },
-            React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-            React.createElement("input", {
-              type: "search",
-              value: searchQuery,
-              onChange: (event) => setSearchQuery(event.target.value),
-              className: "playground-plugins-search",
-              placeholder,
-              "aria-label": ariaLabel,
-            })
-          );
-        }
-
-        function renderProjectReleasePickerControl({
-          popover,
-          setPopover,
-          allLabel = "All Milestones",
-          allDescription = "Show every milestone.",
-        }) {
-          return React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-tasks-release-filter-shell" },
+        function renderProjectAppHeaderMilestoneSelector() {
+          const isBoardMilestoneSelector = taskView === "board";
+          return React.createElement(PlatformButtonSelector, {
+              mode: "popup",
+              buttonVariant: "secondary",
+              buttonSize: "small",
+              label: "Milestones",
+              leading: React.createElement(History, {
+                width: 14,
+                height: 14,
+                strokeWidth: 1.8,
+                "aria-hidden": "true",
+              }),
+              closeOnSelect: true,
+              popupAriaLabel: "Choose milestone",
+              popupAlignment: "right",
+              popupRole: "menu",
+              popupVariant: "minimal",
+              popupWidth: 300,
+              popupClassName: "playground-tasks-app-header-milestone-menu",
+            },
             React.createElement("button", {
               type: "button",
-              className: "playground-files-control-button" + (popover === "release" || selectedRelease ? " is-active" : ""),
-              onClick: () => setPopover((current) => current === "release" ? "" : "release"),
+              role: "menuitemradio",
+              "aria-checked": !selectedReleaseId ? "true" : "false",
+              className: "platform-data-table__menu-item",
+              onClick: () => handleSelectRelease(""),
             },
-              React.createElement(History, { width: 14, height: 14, strokeWidth: 1.8 }),
-              React.createElement("span", null, "Milestones")
+              React.createElement("span", { className: "platform-data-table__menu-icon" },
+                !selectedReleaseId
+                  ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 })
+                  : null
+              ),
+              React.createElement("span", { className: "platform-data-table__menu-copy" },
+                React.createElement("span", { className: "platform-data-table__menu-label" },
+                  isBoardMilestoneSelector ? "All Milestones" : "All Tickets"
+                ),
+                React.createElement("span", { className: "platform-data-table__menu-description" },
+                  isBoardMilestoneSelector
+                    ? "Show every milestone on the board."
+                    : "Show the full project backlog."
+                )
+              )
             ),
-            popover === "release"
-              ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in playground-tasks-release-picker-menu" },
-                  React.createElement("div", { className: "notification-menu-header" },
-                    React.createElement("h2", { className: "notification-menu-title" }, "Milestones")
-                  ),
-                  React.createElement("div", { className: "notification-menu-body playground-tasks-release-picker-body" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "notification-menu-item playground-tasks-release-picker-item" + (!selectedReleaseId ? " is-selected" : ""),
-                      onClick: () => {
-                        handleSelectRelease("");
-                        setPopover("");
-                      },
-                    },
-                      !selectedReleaseId
-                        ? React.createElement(Check, { className: "notification-menu-icon", strokeWidth: 1.8 })
-                        : React.createElement(History, { className: "notification-menu-icon", strokeWidth: 1.8 }),
-                      React.createElement("div", { className: "notification-menu-copy" },
-                        React.createElement("div", { className: "notification-menu-label" }, allLabel),
-                        React.createElement("div", { className: "notification-menu-text" }, allDescription)
-                      )
-                    ),
-                    sortedReleaseOptions.map((release) => {
-                      const isSelected = selectedReleaseId === release.id;
-                      return React.createElement("button", {
-                        key: release.id,
-                        type: "button",
-                        className: "notification-menu-item playground-tasks-release-picker-item" + (isSelected ? " is-selected" : ""),
-                        onClick: () => {
-                          handleSelectRelease(release.id);
-                          setPopover("");
-                        },
-                      },
-                        isSelected
-                          ? React.createElement(Check, { className: "notification-menu-icon", strokeWidth: 1.8 })
-                          : React.createElement(History, { className: "notification-menu-icon", strokeWidth: 1.8 }),
-                        React.createElement("div", { className: "notification-menu-copy" },
-                          React.createElement("div", { className: "notification-menu-label" }, release.name || "Untitled Milestone"),
-                          React.createElement("div", { className: "notification-menu-text" }, release.description || formatPlaygroundTaskReleaseDateRange(release))
-                        )
-                      );
-                    })
-                  ),
-                  React.createElement("div", { className: "notification-menu-footer playground-tasks-release-picker-footer" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "notification-menu-mark-read playground-tasks-release-picker-create",
-                      onClick: () => {
-                        setPopover("");
-                        openReleaseComposer();
-                      },
-                    },
-                      React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Add Milestone")
-                    )
+            sortedReleaseOptions.map((release) => {
+              const isSelected = selectedReleaseId === release.id;
+              return React.createElement("button", {
+                key: release.id,
+                type: "button",
+                role: "menuitemradio",
+                "aria-checked": isSelected ? "true" : "false",
+                className: "platform-data-table__menu-item",
+                onClick: () => handleSelectRelease(release.id),
+              },
+                React.createElement("span", { className: "platform-data-table__menu-icon" },
+                  isSelected
+                    ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 })
+                    : null
+                ),
+                React.createElement("span", { className: "platform-data-table__menu-copy" },
+                  React.createElement("span", { className: "platform-data-table__menu-label" }, release.name || "Untitled Milestone"),
+                  React.createElement("span", { className: "platform-data-table__menu-description" },
+                    release.description || formatPlaygroundTaskReleaseDateRange(release)
                   )
                 )
-              : null
-          );
-        }
-
-        function renderProjectWorkspaceActionButtons({ releaseControl = null, showStrategy = true } = {}) {
-          return React.createElement("div", { className: "playground-project-overview-summary-title-actions playground-tasks-backlog-project-actions" },
-            showStrategy
-              ? React.createElement(PlatformSecondaryButton, {
-                  type: "button",
-                  className: "playground-files-control-button playground-project-overview-summary-mission-button playground-project-overview-summary-strategy-button",
-                  onClick: openMissionControlStrategySidebar,
-                },
-                  React.createElement(FileText, { width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("span", { className: "playground-project-overview-summary-mission-label" }, "Strategy")
-                )
-              : null,
-            releaseControl
+              );
+            }),
+            React.createElement("button", {
+              type: "button",
+              role: "menuitem",
+              className: "platform-data-table__menu-item has-separator",
+              onClick: openReleaseComposer,
+            },
+              React.createElement("span", { className: "platform-data-table__menu-icon" },
+                React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 })
+              ),
+              React.createElement("span", { className: "platform-data-table__menu-label" }, "Add Milestone")
+            )
           );
         }
 
@@ -789,17 +764,12 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
           headerTitle,
           openTaskCount,
           headerAction = null,
-          secondaryActions = null,
-          primaryActions,
           toolbarRef,
           toolbarPopover,
           setToolbarPopover,
           filterMode,
           setFilterMode,
           activeFilterOption,
-          sortMode,
-          setSortMode,
-          activeSortOption,
           taskRoots,
           visibleTaskIds,
           childrenByParentId,
@@ -812,7 +782,7 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
           allowManualDrag = true,
           groupRootTasksByRelease = false,
         }) {
-          const isBacklogManualSort = allowManualDrag && sortMode === "default";
+          const isBacklogManualSort = allowManualDrag;
           const draggingBacklogTask = backlogDraggingTaskId ? tasksById[backlogDraggingTaskId] || null : null;
 
           function renderBacklogTaskTree(taskItems, parentTaskId = null, depth = 0) {
@@ -1206,94 +1176,78 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
 
           return React.createElement(React.Fragment, null,
             React.createElement("div", { className: "playground-tasks-backlog-view" },
-              React.createElement("div", { className: "playground-tasks-backlog-header" },
-                React.createElement("div", { className: "playground-tasks-backlog-header-row" },
-                  React.createElement("div", { className: "playground-tasks-backlog-header-main" },
-                    React.createElement("div", { className: "playground-tasks-backlog-heading" }, headerTitle)
-                  ),
-                  headerAction || null
-                ),
-                React.createElement("div", {
-                  className: "playground-tasks-backlog-header-row is-tertiary",
+              React.createElement("div", {
+                  className: "playground-tasks-backlog-header is-backlog-list-header",
                   ref: toolbarRef,
                 },
-                  React.createElement("div", { className: "playground-tasks-backlog-secondary-actions" },
-                    renderProjectTaskHeaderSearchControl({
-                      placeholder: "Search tasks",
-                      ariaLabel: "Search backlog tasks",
-                    }),
-                    React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-tasks-backlog-sort-shell" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-control-button is-bare is-backlog-sort" + (toolbarPopover === "sort" || sortMode !== "default" ? " is-active" : ""),
-                        onClick: () => setToolbarPopover((current) => current === "sort" ? "" : "sort"),
+                React.createElement("div", { className: "playground-tasks-backlog-header-row" },
+                  React.createElement("div", { className: "playground-tasks-backlog-header-main" },
+                    React.createElement("div", { className: "playground-tasks-backlog-heading" }, headerTitle),
+                    React.createElement(PlatformPopup, {
+                        open: toolbarPopover === "filter",
+                        rootClassName: "playground-tasks-backlog-filter-shell is-central-popup",
+                        surfaceClassName: "platform-data-table__floating-menu playground-tasks-backlog-filter-menu is-central-popup",
+                        surfaceProps: {
+                          role: "menu",
+                          "aria-label": "Filter backlog",
+                        },
+                        animation: "down-in",
+                        variant: "minimal",
+                        placement: "bottom-start",
+                        trigger: React.createElement("button", {
+                          type: "button",
+                          className: "platform-data-table__toolbar-button is-icon-only"
+                            + (toolbarPopover === "filter" || filterMode !== "open" && filterMode !== "all" ? " is-open" : ""),
+                          onClick: (event) => {
+                            event.stopPropagation();
+                            setToolbarPopover((current) => current === "filter" ? "" : "filter");
+                          },
+                          title: "Filter backlog",
+                          "aria-label": "Filter backlog",
+                          "aria-haspopup": "menu",
+                          "aria-expanded": toolbarPopover === "filter" ? "true" : "false",
+                        }, React.createElement(ListFilter, {
+                          width: 14,
+                          height: 14,
+                          strokeWidth: 1.8,
+                          "aria-hidden": "true",
+                        })),
                       },
-                        React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("span", null, "Sort")
-                      ),
-                      toolbarPopover === "sort"
-                        ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                            backlogSortOptions.map((option) =>
-                              React.createElement("button", {
-                                  key: option.id,
-                                  type: "button",
-                                  className: "tb-popup-row tb-popup-row-select" + (sortMode === option.id ? " selected" : ""),
-                                  onClick: () => {
-                                    setSortMode(option.id);
-                                    setToolbarPopover("");
-                                  },
-                                },
-                                  React.createElement("span", { className: "tb-popup-check-slot" },
-                                    sortMode === option.id
-                                      ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                      : null
-                                  ),
-                                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                    React.createElement("span", null, option.label)
-                                  )
-                                )
-                            )
+                      backlogFilterOptions.map((option) =>
+                        React.createElement("button", {
+                          key: option.id,
+                          type: "button",
+                          role: "menuitemradio",
+                          "aria-checked": filterMode === option.id ? "true" : "false",
+                          className: "platform-data-table__menu-item",
+                          onClick: () => {
+                            setFilterMode(option.id);
+                            setToolbarPopover("");
+                          },
+                        },
+                          React.createElement("span", { className: "platform-data-table__menu-icon" },
+                            filterMode === option.id
+                              ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 })
+                              : null
+                          ),
+                          React.createElement("span", { className: "platform-data-table__menu-copy" },
+                            React.createElement("span", { className: "platform-data-table__menu-label" }, option.label),
+                            React.createElement("span", { className: "platform-data-table__menu-description" }, option.description)
                           )
-                        : null
-                    ),
-                    React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-tasks-backlog-filter-shell" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-files-control-button is-bare is-backlog-filter" + (toolbarPopover === "filter" || filterMode !== "open" && filterMode !== "all" ? " is-active" : ""),
-                        onClick: () => setToolbarPopover((current) => current === "filter" ? "" : "filter"),
-                      },
-                        React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("span", null, "Filter")
-                      ),
-                      toolbarPopover === "filter"
-                        ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                            backlogFilterOptions.map((option) =>
-                              React.createElement("button", {
-                                  key: option.id,
-                                  type: "button",
-                                  className: "tb-popup-row tb-popup-row-select" + (filterMode === option.id ? " selected" : ""),
-                                  onClick: () => {
-                                    setFilterMode(option.id);
-                                    setToolbarPopover("");
-                                  },
-                                },
-                                  React.createElement("span", { className: "tb-popup-check-slot" },
-                                    filterMode === option.id
-                                      ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                      : null
-                                  ),
-                                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                    React.createElement("span", null, option.label),
-                                    React.createElement("span", null, option.description)
-                                  )
-                                )
-                            )
-                          )
-                        : null
-                    ),
-                    secondaryActions
+                        )
+                      )
+                    )
                   ),
-                  React.createElement("div", { className: "playground-tasks-backlog-tertiary-actions" }, primaryActions)
+                  React.createElement("div", { className: "playground-tasks-backlog-header-actions" },
+                    headerAction || null,
+                    React.createElement(PlatformSearch, {
+                      className: "playground-tasks-backlog-central-search",
+                      value: searchQuery,
+                      onChange: (event) => setSearchQuery(event.target.value),
+                      placeholder: "Search tasks",
+                      "aria-label": "Search backlog tasks",
+                    })
+                  )
                 )
               ),
               React.createElement("div", { className: "playground-tasks-backlog-list" },
@@ -1317,9 +1271,7 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
           const scopedBacklogTasks = isReleaseBacklogView ? projectReleaseTasks : tasks;
           const openScopedBacklogTaskCount = scopedBacklogTasks.filter((task) => task.status !== "done").length;
           const activeBacklogFilterValue = isReleaseBacklogView ? releaseBacklogFilterMode : backlogFilterMode;
-          const activeBacklogSortValue = isReleaseBacklogView ? releaseBacklogSortMode : backlogSortMode;
           const activeBacklogFilterOptionValue = isReleaseBacklogView ? activeReleaseBacklogFilterOption : activeBacklogFilterOption;
-          const activeBacklogSortOptionValue = isReleaseBacklogView ? activeReleaseBacklogSortOption : activeBacklogSortOption;
           const activeTaskRoots = isReleaseBacklogView ? releaseTaskRoots : backlogTaskRoots;
           const activeVisibleTaskIds = isReleaseBacklogView ? releaseVisibleTaskIds : backlogVisibleTaskIds;
           const activeChildrenByParentId = isReleaseBacklogView ? releaseTaskChildrenByParentId : taskChildrenByParentId;
@@ -1381,24 +1333,12 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
             headerTitle: backlogHeaderTitle,
             openTaskCount: openScopedBacklogTaskCount,
             headerAction: backlogHeaderAction,
-            primaryActions: renderProjectWorkspaceActionButtons({
-              showStrategy: false,
-              releaseControl: renderProjectReleasePickerControl({
-                popover: backlogToolbarPopover,
-                setPopover: setBacklogToolbarPopover,
-                allLabel: "All Tickets",
-                allDescription: "Show the full project backlog.",
-              }),
-            }),
             toolbarRef: backlogToolbarActionsRef,
             toolbarPopover: backlogToolbarPopover,
             setToolbarPopover: setBacklogToolbarPopover,
             filterMode: activeBacklogFilterValue,
             setFilterMode: isReleaseBacklogView ? setReleaseBacklogFilterMode : setBacklogFilterMode,
             activeFilterOption: activeBacklogFilterOptionValue,
-            sortMode: activeBacklogSortValue,
-            setSortMode: isReleaseBacklogView ? setReleaseBacklogSortMode : setBacklogSortMode,
-            activeSortOption: activeBacklogSortOptionValue,
             taskRoots: activeTaskRoots,
             visibleTaskIds: activeVisibleTaskIds,
             childrenByParentId: activeChildrenByParentId,

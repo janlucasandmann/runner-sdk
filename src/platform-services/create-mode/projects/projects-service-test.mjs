@@ -63,7 +63,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects overview runtime",
     source: PROJECT_OVERVIEW_SCRIPT,
-    expectedSha256: "e4bba8d30a32a98d70b2d4955092da3f7d18c054af7804d8d7b79918d326f013",
+    expectedSha256: "4ea1f66464155f8ef66f897963d164971f62221794e3dd4a5dd98ec7f3013e5d",
     fragmentGroups: [{
       baseUrl: projectsOverviewUrl,
       paths: PROJECT_OVERVIEW_SCRIPT_FRAGMENT_PATHS,
@@ -73,7 +73,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects overview styles",
     source: PROJECT_OVERVIEW_CSS,
-    expectedSha256: "656bc9fce832f0ac121a7f6f46dfefc0e3e5645beca0322b45b35dac2e91e24e",
+    expectedSha256: "a831faba65bbbf23d00a9d71363329d8611b0dd0a1b882c2da33aafaa33ecaac",
     fragmentGroups: [{
       baseUrl: projectsOverviewUrl,
       paths: PROJECT_OVERVIEW_CSS_FRAGMENT_PATHS,
@@ -93,7 +93,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects data runtime",
     source: PROJECTS_PAGE_DATA_SCRIPT,
-    expectedSha256: "816c67fb0aec0c799c9e8cb84f6d9e9946a698f37bf29a5c88c0d6325a12ebad",
+    expectedSha256: "d76aca6f82b69ac053ff7646a3bdc2f3b23c9f1f33a06af6d04a98890a124961",
     fragmentGroups: [{
       baseUrl: projectsPageUrl,
       paths: PROJECTS_PAGE_DATA_FRAGMENT_PATHS,
@@ -103,7 +103,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects shell runtime",
     source: PROJECTS_PAGE_SHELL_SCRIPT,
-    expectedSha256: "6072497467cf83d0f8871c68a9113db35bf7825e5ee7f8f3363f09c4173ed922",
+    expectedSha256: "27c735db36281eb4a50be09b44f57c704cc6997eefab79dda4ed4a52e8e8c4f8",
     fragmentGroups: [{
       baseUrl: projectsPageUrl,
       paths: PROJECTS_PAGE_SHELL_FRAGMENT_PATHS,
@@ -113,7 +113,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects views runtime",
     source: PROJECTS_PAGE_VIEWS_SCRIPT,
-    expectedSha256: "b5e383ecec791974a33d0874048b0b92e9954744da943c37379a851284367083",
+    expectedSha256: "f0cb12aa052a1588e0839157e1e97434ab5f2d7b6c3c3d14c5056fc9fcdf1ca7",
     fragmentGroups: [{
       baseUrl: projectsPageUrl,
       paths: PROJECTS_PAGE_VIEWS_FRAGMENT_PATHS,
@@ -123,7 +123,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects core styles",
     source: PROJECTS_CORE_CSS,
-    expectedSha256: "c813e57d55b8fcfe60340e55ba66fe70331471f4999b951fd3d6599cb212fe6d",
+    expectedSha256: "824fed116493859eccdda2d49986711e6e65c60f8216643f11427646f7dbf90d",
     fragmentGroups: [{
       baseUrl: projectsStylesUrl,
       paths: PROJECTS_CORE_CSS_FRAGMENT_PATHS,
@@ -133,6 +133,7 @@ await Promise.all([
 ]);
 
 assert.match(PROJECTS_DOMAIN_FOUNDATION_SCRIPT, /PLAYGROUND_TASK_BOARD_UNSCHEDULED_ID/);
+assert.match(PROJECTS_DOMAIN_FOUNDATION_SCRIPT, /\{ id: "overview", label: "General", icon: LayoutDashboard \}/);
 assert.match(PROJECTS_DOMAIN_RUNTIME_SCRIPT, /normalizePlaygroundProjectRecord/);
 assert.match(PROJECTS_INTEGRATIONS_RUNTIME_SCRIPT, /buildPlaygroundProjectLinkedFilePathIndex/);
 assert.match(PROJECTS_INTEGRATIONS_RUNTIME_SCRIPT, /createPlaygroundProjectTeamRolePermissionSet/);
@@ -140,7 +141,24 @@ assert.match(PROJECTS_PAGE_RUNTIME_SCRIPT, /function PlaygroundTasksPage/);
 assert.match(PROJECTS_PAGE_RUNTIME_SCRIPT, /function renderProjectOverviewView/);
 assert.match(PROJECT_OVERVIEW_CSS, /\.playground-environments-detail-scroll\.playground-tasks-project-workspace-scroll\.is-overview\s*\{\s*padding-top: 0 !important;/);
 assert.match(PROJECT_OVERVIEW_CSS, /\.playground-environments-detail-scroll\.playground-tasks-project-workspace-scroll\.is-overview \.playground-project-overview-summary-title\s*\{\s*margin-top: 42px;/);
+assert.match(PROJECT_OVERVIEW_CSS, /\.playground-project-overview-general-grid\s*\{\s*display: grid;\s*grid-template-columns: minmax\(0, 1fr\);\s*gap: 42px;/);
 assert.match(PROJECT_OVERVIEW_SCRIPT, /tabBarActions: activeProjectOverviewHomeTab === "general"/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /React\.createElement\(PlatformSecondaryButton, \{\s*type: "button",\s*size: "small",\s*className: "playground-project-settings-add-rule-button"/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /React\.createElement\(PlatformSecondaryButton, \{\s*type: "button",\s*size: "small",\s*className: "playground-project-teams-add-button"/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /React\.createElement\(PlatformPopup, \{\s*open: isAddTeamsMenuOpen,\s*variant: "minimal",\s*portal: true,\s*placement: "bottom-end"/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /isAllAgentsTeam\s*\? React\.createElement\(PlatformPermissionsPage, \{\s*permissionSet: projectPermissionSet/);
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /renderPlaygroundPermissionsPage/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /ariaLabel: "Project team access",\s*className: "playground-project-access-platform-data-table",\s*variant: "minimalistic-ui"/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /toolbar: \{\s*title: "Manage Project Access"/);
+assert.match(PROJECT_OVERVIEW_CSS, /\.playground-project-overview-plugins-list\s*\{[\s\S]*?border-top: 0;/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /function buildProjectOverviewActivityTasks\(items = buildProjectOverviewActivityItems\(\)\)/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /activityTasks\.map\(\(task\) => renderOverviewTaskRow\(task\)\)/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /className: "playground-project-overview-activity-list is-ticket-preview-list"/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /React\.createElement\(PlatformSecondaryButton, \{\s*type: "button",\s*size: "small",[\s\S]*?setTaskView\("backlog"\);[\s\S]*?\}, "View All"\)/);
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /playground-project-overview-activity-show-more/);
+assert.match(PROJECT_OVERVIEW_SCRIPT, /typeof openProjectTaskDetailScreen === "function"/);
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /renderProjectOverviewActivityParticipants\(activityItems\)/);
+assert.match(PROJECT_OVERVIEW_CSS, /\.playground-project-overview-activity-card\.is-main \.playground-project-overview-activity-list\s*\{\s*gap: 8px;/);
 assert.equal((PROJECT_OVERVIEW_SCRIPT.match(/React\.createElement\(PlatformUiCard, \{/g) || []).length, 3);
 assert.match(PROJECT_OVERVIEW_SCRIPT, /variant: "sidebar",\s*cardTitle: "Properties"/);
 assert.match(PROJECT_OVERVIEW_SCRIPT, /variant: "sidebar",\s*cardTitle: "Resources"/);
@@ -208,15 +226,33 @@ assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(TicketDetailPage
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(TicketDetailPage, \{\s*header: taskDetailNavbar,/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /details: renderTaskDetailFactsSection\(\{ contentOnly: true \}\)/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /threads: renderTaskDetailThreadsSection\(\{\s*contentOnly: true,/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /const taskDetailBackDestination = taskView === "board" \? "Board" : "Backlog";/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /className: "playground-files-header-icon-button is-plain playground-tasks-ticket-page-back-link",\s*onClick: handleCloseTaskDetail,\s*title: "Back to " \+ taskDetailBackDestination,\s*"aria-label": "Back to " \+ taskDetailBackDestination/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-ticket-page-back-link\s*\{\s*flex: 0 0 auto;\s*color: rgba\(255, 255, 255, 0\.7\);/);
+assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /playground-tasks-ticket-page-nav-ticket-row/);
+assert.match(PROJECTS_PAGE_DATA_SCRIPT, /const selectedTaskHeaderTicketNumber = selectedTaskId/);
+assert.match(PROJECTS_PAGE_DATA_SCRIPT, /ticketNumber: selectedTaskHeaderTicketNumber/);
+assert.match(PROJECTS_PAGE_DATA_SCRIPT, /extraActions: taskView === "backlog" \|\| taskView === "board"\s*\? renderProjectAppHeaderMilestoneSelector\(\)\s*: null/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(PlatformInstructionsEditor, \{\s*value: String\(draftTask\.description \|\| ""\),[\s\S]*?historyKey: "ticket-description:" \+ draftTask\.id/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(PlatformAttachments, \{\s*className: "playground-tasks-ticket-attachments"/);
 assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /onClick: \(\) => handleTaskDescriptionFormat\(action\.id\)/);
 assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /title: "Strategy Notes"[\s\S]*?stickyHeader: false/);
 assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /historyKey: "full-strategy:" \+ selectedProject\.id,\s*stickyHeader: false/);
 assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /renderMissionControlDocumentToolbarButton/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /const studioElement = React\.createElement\(PlatformModal, \{\s*open: missionControlSetupOpen && projectComposerOpen && !missionControlSetupClosing,/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /size: "large",\s*title: "Mission Control",\s*className: "playground-mission-control-modal"/);
+assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /const studioElement = renderPlaygroundPlatformModal/);
+assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /className: "playground-tasks-project-modal playground-mission-control-modal"/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(PlatformSearch/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(PlatformPopup/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(ListFilter/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /variant: "minimal"/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /function renderProjectAppHeaderMilestoneSelector\(\) \{\s*const isBoardMilestoneSelector = taskView === "board";\s*return React\.createElement\(PlatformButtonSelector, \{\s*mode: "popup",\s*buttonVariant: "secondary"[\s\S]*?label: "Milestones"[\s\S]*?popupVariant: "minimal"/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /className: "playground-tasks-backlog-header is-backlog-list-header"[\s\S]*?React\.createElement\(ListFilter,[\s\S]*?React\.createElement\(PlatformSearch, \{\s*className: "playground-tasks-backlog-central-search"/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /className: "playground-tasks-backlog-header is-board-list-header"[\s\S]*?React\.createElement\(ListFilter,[\s\S]*?React\.createElement\(PlatformSearch, \{\s*className: "playground-tasks-board-central-search"/);
+assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /playground-tasks-backlog-sort-shell/);
+assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /openScopedBoardTaskCount/);
+assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /renderProjectTaskHeaderSearchControl|renderProjectReleasePickerControl|renderProjectWorkspaceActionButtons/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(PlatformModal, \{/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /title: "New Project"/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /"All Projects"/);
@@ -227,16 +263,28 @@ assert.match(PROJECTS_STYLE_FRAGMENTS.connectorBrowser, /playground-tasks-connec
 assert.match(PROJECTS_CORE_CSS, /\.playground-ticket-detail-frame\s*\{/);
 assert.match(PROJECTS_CORE_CSS, /\.playground-ticket-detail-page\s*\{/);
 assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-ticket-screen-panel\s+\.playground-ticket-detail-content\s+\.playground-environments-detail-scroll\.playground-tasks-detail-scroll\s*\{\s*padding-top: 0 !important;/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-content-body\.is-tasks-page\s+\.playground-environments-page\.playground-tasks-ticket-screen:not\(\.playground-agents-page\)\s+\.playground-environments-detail-scroll\.playground-tasks-project-workspace-scroll\s*\{\s*padding-right: 50px !important;/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-ticket-detail-content\s+\.platform-instructions-editor\.playground-tasks-detail-description\s*\{\s*margin-top: 0;\s*margin-bottom: 0;\s*padding-bottom: 3px;/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-ticket-attachments\s*\{\s*margin-top: 12px;/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-content-body\.is-tasks-page\s+\.playground-environments-page\.playground-tasks-project-workspace:not\(\.playground-agents-page\)\s+\.playground-environments-detail-scroll\.playground-tasks-project-workspace-scroll\.is-board\s*\{\s*padding-bottom: 24px;/);
 assert.match(PROJECTS_CORE_CSS, /\.playground-ticket-detail-sidebar \.is-centralized-sidebar-content\s*\{/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-backlog-header\.is-backlog-list-header\s+\.playground-tasks-backlog-heading,\s*\.playground-tasks-backlog-header\.is-board-list-header\s+\.playground-tasks-backlog-heading\s*\{\s*font-weight: 400;/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-project-workspace\s+\.playground-tasks-backlog-view\s+\.playground-tasks-backlog-item\s*\{\s*border-color: rgba\(255, 255, 255, 0\.075\);\s*background: rgba\(255, 255, 255, 0\.075\);/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-backlog-central-search\.platform-search,\s*\.playground-tasks-board-central-search\.platform-search\s*\{\s*width: 300px;\s*min-width: 300px;\s*flex: 0 0 300px;/);
 
 const platformEntrySource = await readPlatformCompositionSource();
 assert.match(platformEntrySource, /React\.createElement\(PlatformSearch, \{\s*className: "playground-project-resources-central-search"/);
 assert.match(platformEntrySource, /React\.createElement\(PlatformButtonSelector, \{\s*mode: "popup",\s*buttonVariant: "secondary"[\s\S]*?popupVariant: "minimal"/);
 assert.match(platformEntrySource, /React\.createElement\(PlatformPopup, \{[\s\S]*?variant: "minimal",\s*placement: "bottom-start"/);
 assert.match(platformEntrySource, /import \{ PlatformUiCard \} from "\/dist\/platform-ui\/components\/composite\/ui-card\/index\.js";/);
+assert.match(platformEntrySource, /import \{ PlatformAttachments \} from "\/dist\/platform-ui\/components\/composite\/attachments\/index\.js";/);
 assert.match(platformEntrySource, /React\.createElement\(ListFilter, \{ width: 14/);
 assert.match(platformEntrySource, /playground-project-resources-toolbar-title-group/);
 assert.match(platformEntrySource, /renderSharedFilterControl\(\)[\s\S]*?renderSharedNewControl\(\),\s*renderSharedSearchControl\(\)/);
+assert.match(platformEntrySource, /const activeTicketNumber = String\(tasksHeaderState\.ticketNumber \|\| ""\)\.trim\(\)/);
+assert.match(platformEntrySource, /\{ label: activeTicketNumber \}/);
+assert.match(platformEntrySource, /label: projectTitle,\s*onClick: \(\) => setTasksProjectViewRequest/);
+assert.match(platformEntrySource, /\(activeProjectView === "backlog" \|\| activeProjectView === "board"\) && !isProjectTaskDetailView\s*\? tasksHeaderState\.extraActions \|\| null/);
 assert.match(platformEntrySource, /from "\.\.\/\.\.\/\.\.\/src\/platform-services\/create-mode\/projects\/index\.mjs"/);
 assert.doesNotMatch(platformEntrySource, /function PlaygroundTasksPage/);
 assert.doesNotMatch(platformEntrySource, /async function proxyProjectResourceIndexGet/);

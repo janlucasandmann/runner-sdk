@@ -1084,6 +1084,12 @@ export interface RunnerEnvironmentVersionUpdateInput {
   [key: string]: unknown;
 }
 
+export interface RunnerEnvironmentVersionSaveResult {
+  environment: Record<string, unknown>;
+  version: RunnerEnvironmentVersion;
+  versions: RunnerEnvironmentVersion[];
+}
+
 export interface RunnerEnvironmentVersionDiffFile {
   id?: string;
   filePath: string;
@@ -1178,6 +1184,12 @@ export interface RunnerServerVersionUpdateInput {
   snapshot?: RunnerServerVersionSnapshot;
   metadata?: Record<string, unknown> | null;
   [key: string]: unknown;
+}
+
+export interface RunnerServerVersionSaveResult {
+  server: Record<string, unknown>;
+  version: RunnerServerVersion;
+  versions: RunnerServerVersion[];
 }
 
 export interface RunnerServerVersionDiffFile {

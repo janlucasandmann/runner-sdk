@@ -126,6 +126,9 @@ for (const file of [
   "shared/client/domain/resource-overview-model.ts",
   "shared/client/domain/resource-overview-types.ts",
   "shared/client/page/index.ts",
+  "shared/client/page/develop-server-detail-page.css",
+  "shared/client/page/develop-server-detail-page.test.tsx",
+  "shared/client/page/develop-server-detail-page.tsx",
   "shared/client/page/resource-overview-page.tsx",
   "service-registry.tsx",
 ]) {
@@ -151,6 +154,34 @@ for (const filePath of sourceFiles) {
 }
 
 const platformEntrySource = await readPlatformCompositionSource();
+const developServerDetailSource = await fs.readFile(
+  path.join(
+    packageRoot,
+    "apps",
+    "platform",
+    "client",
+    "legacy",
+    "domains",
+    "compute-resources",
+    "controller",
+    "server-detail-view.js",
+  ),
+  "utf8",
+);
+const authoritativeServerVersioningSource = await fs.readFile(
+  path.join(
+    packageRoot,
+    "apps",
+    "platform",
+    "client",
+    "legacy",
+    "domains",
+    "compute-resources",
+    "controller",
+    "server-authoritative-versioning.js",
+  ),
+  "utf8",
+);
 const tagDetailPageSource = await fs.readFile(
   path.join(packageRoot, "src", "platform-resources", "tags", "detail", "tag-detail-page.tsx"),
   "utf8",
@@ -177,8 +208,84 @@ if (await pathExists(path.join(packageRoot, "img", "agent-backgrounds"))) {
 if (!platformEntrySource.includes("React.createElement(AgentPublishControl")) {
   failures.push("the platform application must consume the modular AgentPublishControl");
 }
+if (!developServerDetailSource.includes("React.createElement(DevelopServerDetailPage")) {
+  failures.push("web app and function details must consume the shared DevelopServerDetailPage");
+}
+for (const sharedSourceVersioningComponent of [
+  "React.createElement(PlatformVersionHistorySidebar",
+  "React.createElement(PlatformVersionSaveDialog",
+  "React.createElement(PlatformDiffViewer",
+]) {
+  if (!developServerDetailSource.includes(sharedSourceVersioningComponent)) {
+    failures.push(`source-backed Develop details must consume shared versioning UI: ${sharedSourceVersioningComponent}`);
+  }
+}
+if (!authoritativeServerVersioningSource.includes("function saveAndPublishCurrentServerVersion")) {
+  failures.push("source-backed Develop details must use authoritative resource version saves");
+}
 if (platformEntrySource.includes("renderAgentPublishControlTrigger")) {
   failures.push("the platform application must not own the AgentPublishControl trigger");
+}
+for (const sharedAgentVersioningComponent of [
+  "React.createElement(PlatformVersionHistorySidebar",
+  "React.createElement(PlatformVersionSaveDialog",
+  "React.createElement(PlatformDiffViewer",
+]) {
+  if (!platformEntrySource.includes(sharedAgentVersioningComponent)) {
+    failures.push(`agent details must consume shared versioning UI: ${sharedAgentVersioningComponent}`);
+  }
+}
+for (const authoritativeAgentVersionOperation of [
+  "fetchAgentVersionsApi",
+  "createAgentVersionApi",
+  "updateAgentVersionApi",
+  "publishAgentVersionApi",
+  "deleteAgentVersionApi",
+]) {
+  if (!platformEntrySource.includes("function " + authoritativeAgentVersionOperation)) {
+    failures.push(`agent details must use the authoritative version API: ${authoritativeAgentVersionOperation}`);
+  }
+}
+if (platformEntrySource.includes("function commitVersionedAgentRecord")) {
+  failures.push("agent details must not persist version history through legacy embedded agent metadata");
+}
+for (const retiredAgentVersionPath of [
+  "agentVersionNameDraft",
+  "openCreateAgentVersionModal",
+  "saveAgentToNewVersion",
+]) {
+  if (platformEntrySource.includes(retiredAgentVersionPath)) {
+    failures.push(`agent details must create versions through the shared review dialog: ${retiredAgentVersionPath}`);
+  }
+}
+if (!platformEntrySource.includes("formatPlatformVersionLabel(agentVersionModal.version)")) {
+  failures.push("agent version identifiers must use the shared immutable v<number> format");
+}
+const normalizeAgentVersionStart = platformEntrySource.indexOf("function normalizePlaygroundAgentVersion(rawVersion");
+const normalizeAgentVersionsStart = normalizeAgentVersionStart >= 0
+  ? platformEntrySource.indexOf("function normalizePlaygroundAgentVersions(value)", normalizeAgentVersionStart)
+  : -1;
+const normalizeAgentVersionSource = normalizeAgentVersionStart >= 0 && normalizeAgentVersionsStart > normalizeAgentVersionStart
+  ? platformEntrySource.slice(normalizeAgentVersionStart, normalizeAgentVersionsStart)
+  : "";
+if (!normalizeAgentVersionSource.includes("snapshot.name")) {
+  failures.push("agent version snapshots must preserve the agent resource name");
+}
+if (
+  normalizeAgentVersionSource.includes("version.name || snapshot.name")
+  || normalizeAgentVersionSource.includes("version.name || snapshot?.name")
+) {
+  failures.push("agent version labels must never override the agent resource name");
+}
+const restoreAgentVersionStart = platformEntrySource.indexOf("async function restoreAgentVersion(versionId)");
+const publishAgentVersionStart = restoreAgentVersionStart >= 0
+  ? platformEntrySource.indexOf("async function publishAgentVersion(versionId)", restoreAgentVersionStart)
+  : -1;
+const restoreAgentVersionSource = restoreAgentVersionStart >= 0 && publishAgentVersionStart > restoreAgentVersionStart
+  ? platformEntrySource.slice(restoreAgentVersionStart, publishAgentVersionStart)
+  : "";
+if (!restoreAgentVersionSource.includes("setDraftAgent(result.resource)")) {
+  failures.push("selecting an agent version must remain local until the user explicitly saves");
 }
 if (
   !platformEntrySource.includes("React.createElement(PlatformPermissionsPage")
@@ -325,14 +432,66 @@ if (!computerDetailControllerSource.includes("React.createElement(PlatformSettin
 if (!computerDetailControllerSource.includes("React.createElement(PlatformSelector")) {
   failures.push("computer runtime versions must use PlatformSelector");
 }
-if (!computerDetailControllerSource.includes("React.createElement(PlatformButtonSelector")) {
-  failures.push("computer version selection must use PlatformButtonSelector");
-}
 if (!computerDetailControllerSource.includes("React.createElement(AgentPublishControl")) {
   failures.push("computer publishing must reuse the shared agent publish control");
 }
 if (!computerDetailControllerSource.includes("environmentDetailTopNavActions")) {
   failures.push("computer publishing must render through the shared app-header action portal");
+}
+for (const sharedComputerVersioningComponent of [
+  "React.createElement(PlatformVersionHistorySidebar",
+  "React.createElement(PlatformVersionSaveDialog",
+  "React.createElement(PlatformDiffViewer",
+]) {
+  if (!computerDetailControllerSource.includes(sharedComputerVersioningComponent)) {
+    failures.push(`computer details must consume shared versioning UI: ${sharedComputerVersioningComponent}`);
+  }
+}
+const computerVersioningControllerSource = await fs.readFile(
+  path.join(packageRoot, "apps", "platform", "client", "legacy", "domains", "compute-resources", "controller", "environment-versioning.js"),
+  "utf8",
+);
+for (const authoritativeComputerVersionOperation of [
+  "fetchEnvironmentVersionsApi",
+  "saveEnvironmentVersionApi",
+  "updateEnvironmentVersionApi",
+  "publishEnvironmentVersionApi",
+  "deleteEnvironmentVersionApi",
+]) {
+  if (!computerVersioningControllerSource.includes("function " + authoritativeComputerVersionOperation)) {
+    failures.push(`computer details must use the authoritative version API: ${authoritativeComputerVersionOperation}`);
+  }
+}
+for (const retiredComputerVersionPath of [
+  "commitVersionedEnvironmentRecord",
+  "environmentVersionNameDraft",
+  "openCreateEnvironmentVersionModal",
+  "saveEnvironmentToNewVersion",
+]) {
+  if (computerVersioningControllerSource.includes(retiredComputerVersionPath)) {
+    failures.push(`computer details must create versions through the shared review dialog: ${retiredComputerVersionPath}`);
+  }
+}
+const computerVersionSaveFlow = computerVersioningControllerSource.match(
+  /async function saveAndPublishCurrentEnvironmentVersion\(details = \{\}\) \{[\s\S]*?\n\s*async function restoreEnvironmentVersion/,
+)?.[0] || "";
+if (!computerVersionSaveFlow.includes("await saveEnvironmentVersionApi(")) {
+  failures.push("computer version saves must use the single save-and-publish API operation");
+}
+if (
+  computerVersionSaveFlow.includes("createEnvironmentVersionApi(")
+  || computerVersionSaveFlow.includes("publishEnvironmentVersionApi(")
+) {
+  failures.push("computer version saves must not chain separate create and publish requests");
+}
+if (!computerVersionSaveFlow.includes("hasEnvironmentCredentialChanges(draftEnvironment)")) {
+  failures.push("computer version saves must only use the secure resource update path for credential changes");
+}
+if (!/function normalizePlaygroundEnvironmentVersion\(rawVersion, fallbackIndex = 0\) \{[\s\S]{0,1000}?normalizePlatformVersionNumber\(/.test(platformEntrySource)) {
+  failures.push("computer version normalization must preserve canonical v0 through the shared version-number helper");
+}
+if (!computerDetailControllerSource.includes("formatPlatformVersionLabel(environmentVersionModal.version)")) {
+  failures.push("computer version descriptions must keep the immutable vN identifier");
 }
 if (computerDetailControllerSource.includes("\"Dockerfile Extension\"")) {
   failures.push("computer advanced settings must not render the retired Dockerfile Extension section");

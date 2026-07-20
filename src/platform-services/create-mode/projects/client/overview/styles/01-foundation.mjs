@@ -33,7 +33,7 @@ export const PROJECT_OVERVIEW_CSS_01_FRAGMENT = String.raw`
         min-width: 0;
         display: flex;
         flex-direction: column;
-        gap: 20px;
+        gap: var(--resource-detail-section-gap, 20px);
       }
 
       .playground-project-overview-sidebar {
@@ -1009,7 +1009,7 @@ export const PROJECT_OVERVIEW_CSS_01_FRAGMENT = String.raw`
       .playground-project-overview-general-grid {
         display: grid;
         grid-template-columns: minmax(0, 1fr);
-        gap: 24px;
+        gap: 42px;
         width: 100%;
       }
 

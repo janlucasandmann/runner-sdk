@@ -72,6 +72,17 @@
   overflow: hidden;
 }
 
+.resource-overview-page.is-inference {
+  height: auto;
+  min-height: 100%;
+  overflow: visible;
+}
+
+.resource-overview-page.is-inference .resource-overview-page__table-section {
+  flex: 0 0 auto;
+  overflow: visible;
+}
+
 .resource-overview-table.is-agents .agents-overview-tab-bar {
   width: auto;
   max-width: 100%;

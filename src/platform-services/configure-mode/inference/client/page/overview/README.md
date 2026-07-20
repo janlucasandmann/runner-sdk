@@ -8,6 +8,7 @@ This directory contains overview models, analytics, tables, and page composition
 
 ## Contents
 
+- [`create-inference-endpoint-modal.tsx`](create-inference-endpoint-modal.tsx) — Central-modal-based endpoint creation form.
 - [`index.ts`](index.ts) — Public barrel or composition entry point.
 - [`inference-overview-guide.tsx`](inference-overview-guide.tsx) — Focused implementation of Inference Overview Guide.
 - [`inference-overview-page.test.tsx`](inference-overview-page.test.tsx) — Regression coverage for Inference Overview Page.

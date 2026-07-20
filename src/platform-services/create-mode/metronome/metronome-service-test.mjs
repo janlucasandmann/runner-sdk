@@ -47,7 +47,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Metronome controller runtime",
     source: METRONOME_PAGE_CONTROLLER_SCRIPT,
-    expectedSha256: "965201911d1c89709b46256b673cbc4c6fe46cf02a4b6c9cb3afea3288804d2f",
+    expectedSha256: "f59be632121fb524e738f22458955f5425d9304e34e25cbe26f3e29a3f291a6e",
     fragmentGroups: [{
       baseUrl: metronomePageUrl,
       paths: METRONOME_PAGE_CONTROLLER_FRAGMENT_PATHS,
@@ -173,6 +173,11 @@ assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /const shouldGenerateMetronomePython
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /React\.createElement\(PlatformCodeEditorWorkspace, \{/);
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /ariaLabel: "Metronome code editor"/);
 assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /variant: "full-screen"/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /historyControls: \{\s*onUndo: handleMetronomeCodeUndo,\s*onRedo: handleMetronomeCodeRedo/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /const \[metronomeCodeUndoStack, setMetronomeCodeUndoStack\] = useState\(\[\]\)/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /const \[metronomeCodeRedoStack, setMetronomeCodeRedoStack\] = useState\(\[\]\)/);
+assert.doesNotMatch(METRONOME_PAGE_RUNTIME_SCRIPT, /id: "revert",\s*label: "Revert"/);
+assert.doesNotMatch(METRONOME_PAGE_RUNTIME_SCRIPT, /id: "save",\s*label: "Save"/);
 assert.match(METRONOME_STYLE_FRAGMENTS.editor, /\.playground-metronome-code-view\.is-full-screen-workspace,[\s\S]*?max-width:\s*none/);
 assert.doesNotMatch(METRONOME_PAGE_RUNTIME_SCRIPT, /playground-metronome-code-header/);
 assert.doesNotMatch(METRONOME_PAGE_RUNTIME_SCRIPT, /renderMetronomeCodeFileRow/);

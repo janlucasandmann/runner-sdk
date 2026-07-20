@@ -4,9 +4,9 @@
 
 ## Purpose
 
-`PlatformEmptyState` provides the canonical icon, title, and supporting-description composition for empty tables, charts, and other data surfaces.
+`PlatformEmptyState` provides the canonical icon, title, supporting-description, and optional primary-action composition for empty tables, charts, and other data surfaces.
 
-Pass an icon component and context-specific copy. The surrounding table, chart, or page remains responsible for sizing and placement.
+Pass an icon component and context-specific copy. Use `primaryAction` when the empty state has one clear recovery or creation action. The surrounding table, chart, or page remains responsible for sizing and placement.
 
 Import the component from `platform-ui/components/composite/empty-state`, and load `platform-ui/components/composite/empty-state/styles.css` once in standalone hosts.
 

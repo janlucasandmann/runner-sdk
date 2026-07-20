@@ -169,6 +169,27 @@ export const PROJECT_OVERVIEW_ACTIVITY_ANALYTICS_FRAGMENT = String.raw`
               .sort((left, right) => (right.time || 0) - (left.time || 0));
           }
 
+          function buildProjectOverviewActivityTasks(items = buildProjectOverviewActivityItems()) {
+            const seenTaskIds = new Set();
+            return (Array.isArray(items) ? items : [])
+              .map((item) => {
+                const taskId = String(item?.taskId || item?.task?.id || "").trim();
+                const task = item?.task || (taskId ? normalizedOverviewTasksById[taskId] || null : null);
+                return {
+                  id: String(task?.id || taskId).trim(),
+                  task,
+                };
+              })
+              .filter((entry) => {
+                if (!entry.id || !entry.task || seenTaskIds.has(entry.id)) {
+                  return false;
+                }
+                seenTaskIds.add(entry.id);
+                return true;
+              })
+              .map((entry) => entry.task);
+          }
+
           function renderProjectOverviewActivityAvatar(item, className = "playground-project-overview-activity-avatar") {
             const actorId = String(item?.actorId || item?.task?.assigneeAgentId || "").trim();
             if (actorId && typeof renderTaskActorAvatar === "function") {
@@ -290,65 +311,27 @@ export const PROJECT_OVERVIEW_ACTIVITY_ANALYTICS_FRAGMENT = String.raw`
 
           function renderProjectOverviewActivitySection() {
             const allActivityItems = buildProjectOverviewActivityItems();
-            const visibleActivityCount = Math.max(5, Number(projectOverviewVisibleActivityCount) || 5);
-            const activityItems = allActivityItems.slice(0, visibleActivityCount);
-            const hasMoreActivityItems = activityItems.length < allActivityItems.length;
-            const hasLessActivityItems = visibleActivityCount > 5;
+            const allActivityTasks = buildProjectOverviewActivityTasks(allActivityItems);
+            const activityTasks = allActivityTasks.slice(0, 5);
             return React.createElement("section", { className: "playground-project-overview-activity-card is-main" },
               React.createElement("div", { className: "playground-project-overview-activity-header" },
                 React.createElement("h2", { className: "playground-project-overview-activity-title" }, "Activity"),
-                renderProjectOverviewActivityParticipants(activityItems)
+                React.createElement(PlatformSecondaryButton, {
+                  type: "button",
+                  size: "small",
+                  onClick: () => {
+                    if (typeof setTaskView === "function") {
+                      setTaskView("backlog");
+                    }
+                  },
+                }, "View All")
               ),
-              activityItems.length > 0
-                ? React.createElement(React.Fragment, null,
-                    React.createElement("div", { className: "playground-project-overview-activity-list" },
-                      activityItems.map((item) =>
-                        React.createElement("div", { key: item.id, className: "playground-project-overview-activity-row" },
-                          renderProjectOverviewActivityAvatar(item),
-                          React.createElement("div", { className: "playground-project-overview-activity-copy" },
-                            React.createElement("span", { className: "playground-project-overview-activity-actor" }, item.actor),
-                            React.createElement("span", null, " " + item.verb + " "),
-                            item.taskId && typeof handleSelectTask === "function"
-                              ? React.createElement("button", {
-                                  type: "button",
-                                  className: "playground-project-overview-activity-object is-clickable",
-                                  onClick: (event) => {
-                                    event.stopPropagation();
-                                    handleSelectTask(item.taskId);
-                                  },
-                                }, item.object)
-                              : React.createElement("span", { className: "playground-project-overview-activity-object" }, item.object),
-                            item.timeLabel
-                              ? React.createElement("span", { className: "playground-project-overview-activity-time" }, " · " + item.timeLabel)
-                              : null
-                          ),
-                          renderProjectOverviewActivityPermissionRing(item)
-                        )
-                      )
-                    ),
-                    hasMoreActivityItems || hasLessActivityItems
-                      ? React.createElement("div", { className: "playground-project-overview-activity-actions" },
-                          hasLessActivityItems
-                            ? React.createElement("button", {
-                                type: "button",
-                                className: "playground-project-overview-activity-show-more",
-                                onClick: () => setProjectOverviewVisibleActivityCount(5),
-                              }, "Show less")
-                            : null,
-                          hasMoreActivityItems
-                            ? React.createElement("button", {
-                                type: "button",
-                                className: "playground-project-overview-activity-show-more",
-                                onClick: () => setProjectOverviewVisibleActivityCount((current) =>
-                                  Math.min(allActivityItems.length, Math.max(5, Number(current) || 5) + 10)
-                                ),
-                              }, "Show more")
-                            : null
-                        )
-                      : null
+              activityTasks.length > 0
+                ? React.createElement("div", { className: "playground-project-overview-activity-list is-ticket-preview-list" },
+                    activityTasks.map((task) => renderOverviewTaskRow(task))
                   )
                 : React.createElement("div", { className: "playground-project-overview-activity-empty" },
-                    "Project activity will appear here once agents create tasks, run threads, or update files."
+                    "Ticket activity will appear here once work begins on this project."
                   )
             );
           }

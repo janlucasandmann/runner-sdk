@@ -84,6 +84,8 @@ export const INFERENCE_PAGE_VIEW_SCRIPT = `                const inferenceRuntim
                       localRunners: settingsLocalRunnersState,
                       controlsPortalId: "playground-inference-overview-controls",
                       canConfigure: settingsCanConfigureBusinessFeatures,
+                      creatingEndpoint: settingsPlatformConfigSaving,
+                      createError: settingsPlatformConfigError,
                       onOpenEndpoint: (endpointId) => openInferencePage(endpointId),
                       onConfigureEndpoint: handleSettingsInferenceCreateEndpoint,
                     });

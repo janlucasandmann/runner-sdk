@@ -69,7 +69,6 @@
           const agentVersionModalCloseTimerRef = useRef(null);
           const agentVersionModalFrameRef = useRef(null);
           const agentDetailSidebarCollapsedBeforeVersionsRef = useRef(null);
-          const agentInitialVersionSeededRef = useRef(new Set());
           const agentVersionBaselineRef = useRef({ key: "", signature: "" });
           const agentVersionDraftTouchedRef = useRef(false);
           const agentVersionsLoadedRef = useRef(new Set());
@@ -80,8 +79,7 @@
           const agentBulkActionMenuCloseTimerRef = useRef(null);
           const agentApiModalCloseTimerRef = useRef(null);
           const agentApiModalFrameRef = useRef(null);
-  ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.refs}        const agentApiEnvironmentPopoverRef = useRef(null);
-          const agentWorkspaceTeamsRequestedRef = useRef(false);
+  ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.refs}        const agentWorkspaceTeamsRequestedRef = useRef(false);
           const agentWorkspaceTeamMembersRequestedRef = useRef(new Set());
           const agentOwnerProfileLookupKeyRef = useRef("");
           const agentOwnerCandidateProfileLookupKeyRef = useRef("");
@@ -136,6 +134,7 @@
           const [loadingAgentId, setLoadingAgentId] = useState("");
           const [loadingAgentAnalyticsId, setLoadingAgentAnalyticsId] = useState("");
           const [isHomeViewActive, setIsHomeViewActive] = useState(() => !String(focusedAgentId || "").trim());
+          const AGENT_THREAD_FETCH_LIMIT = 20;
           const [agentsHomeThreadRecords, setAgentsHomeThreadRecords] = useState([]);
           const [agentsHomeThreadsLoading, setAgentsHomeThreadsLoading] = useState(false);
           const [agentsHomeThreadsError, setAgentsHomeThreadsError] = useState("");
@@ -238,6 +237,7 @@
           const [agentVersionSelectorMenuOpen, setAgentVersionSelectorMenuOpen] = useState(false);
           const [agentVersionsHeaderMenuOpen, setAgentVersionsHeaderMenuOpen] = useState(false);
           const [agentCreationSetupOpen, setAgentCreationSetupOpen] = useState(false);
+          const [agentCreationSetupDraft, setAgentCreationSetupDraft] = useState(null);
           const [agentCreationSetupError, setAgentCreationSetupError] = useState("");
           const [agentCreationSetupSubmitting, setAgentCreationSetupSubmitting] = useState(false);
           const [agentCreationSetupResetToken, setAgentCreationSetupResetToken] = useState(0);
@@ -250,10 +250,16 @@
             message: "",
             error: "",
           });
+          const [agentVersionsLoadState, setAgentVersionsLoadState] = useState({
+            agentId: "",
+            status: "idle",
+            error: "",
+          });
+          const agentVersionApiClient = useMemo(() => new RunnerClient(), []);
+          const [agentVersionSaveDialog, setAgentVersionSaveDialog] = useState(null);
           const [agentVersionModal, setAgentVersionModal] = useState(null);
           const [agentVersionModalVisible, setAgentVersionModalVisible] = useState(false);
           const [agentVersionModalClosing, setAgentVersionModalClosing] = useState(false);
-          const [agentVersionNameDraft, setAgentVersionNameDraft] = useState("");
           const [agentVersionDescriptionDraft, setAgentVersionDescriptionDraft] = useState("");
           const [isAgentVersionDescriptionEditing, setIsAgentVersionDescriptionEditing] = useState(false);
           const [agentVersionChangesState, setAgentVersionChangesState] = useState(null);
@@ -1491,6 +1497,8 @@
             return () => window.cancelAnimationFrame(frame);
           }, [versionsDrawerPortalId]);
   
+          const agentVersionsRequestHeadersKey = JSON.stringify(requestHeaders || {});
+
           useEffect(() => {
             if (typeof onVersionsSidebarOpenChange !== "function") {
               return undefined;
@@ -1518,51 +1526,51 @@
           }, [agentVersionsSidebarOpen, agentDetailSidebarCollapsed]);
   
           useEffect(() => {
-            const needsVersionSurface = agentVersionsSidebarOpen
+            const needsVersionSurface = canLoadAgentVersions
+              || agentVersionsSidebarOpen
               || agentPublishMenuOpen
               || agentVersionSelectorMenuOpen
               || agentVersionsHeaderMenuOpen
               || Boolean(agentVersionChangesState)
+              || Boolean(agentVersionSaveDialog)
               || Boolean(agentVersionModal)
               || Boolean(openAgentVersionMenuId);
             const normalizedAgentId = String(draftAgent?.id || selectedAgentId || "").trim();
+            const versionLoadKey = [
+              String(backendUrl || "").trim(),
+              agentVersionsRequestHeadersKey,
+              normalizedAgentId,
+            ].join("|");
             if (
               !needsVersionSurface
               || !canLoadAgentVersions
               || !backendUrl
               || !normalizedAgentId
               || normalizedAgentId === PLAYGROUND_AGENT_DRAFT_ID
-              || agentVersionsLoadedRef.current.has(normalizedAgentId)
+              || agentVersionsLoadedRef.current.has(versionLoadKey)
             ) {
               return undefined;
             }
-            const baseAgent = normalizePlaygroundAgentRecord(
-              draftAgent?.id === normalizedAgentId
-                ? draftAgent
-                : agentDetailsById[normalizedAgentId]
-            );
+            const baseAgent = normalizePlaygroundAgentRecord(draftAgent);
             if (!baseAgent?.id || baseAgent.isSystem || baseAgent.isDefault) {
               return undefined;
             }
-            agentVersionsLoadedRef.current.add(normalizedAgentId);
+            agentVersionsLoadedRef.current.add(versionLoadKey);
+            setAgentVersionsLoadState({
+              agentId: normalizedAgentId,
+              status: "loading",
+              error: "",
+            });
             let cancelled = false;
-            void fetch(backendUrl + "/agents/" + encodeURIComponent(normalizedAgentId) + "/versions", {
-              method: "GET",
-              headers: requestHeaders,
-            })
-              .then(async (versionsResponse) => {
-                const versionsData = await versionsResponse.json().catch(() => ({}));
-                if (!versionsResponse.ok) {
-                  throw new Error(versionsData?.message || versionsData?.error || "Failed to load agent versions.");
-                }
-                const versionItems = Array.isArray(versionsData?.data)
-                  ? versionsData.data
-                  : Array.isArray(versionsData?.versions)
-                    ? versionsData.versions
-                    : Array.isArray(versionsData?.items)
-                      ? versionsData.items
-                      : [];
-                if (cancelled || versionItems.length === 0) return;
+            void fetchAgentVersionsApi(normalizedAgentId)
+              .then((versionItems) => {
+                if (cancelled) return;
+                setAgentVersionsLoadState({
+                  agentId: normalizedAgentId,
+                  status: "success",
+                  error: "",
+                });
+                if (versionItems.length === 0) return;
                 const agentWithVersions = createPlaygroundAgentWithVersionList(baseAgent, versionItems);
                 setAgentDetailsById((current) => ({
                   ...current,
@@ -1570,15 +1578,22 @@
                 }));
                 setDraftAgent((current) => {
                   if (!current || String(current.id || "").trim() !== normalizedAgentId) return current;
-                  return editorDirtyRef.current ? current : agentWithVersions;
+                  return editorDirtyRef.current
+                    ? createPlaygroundAgentWithVersionList(current, versionItems)
+                    : agentWithVersions;
                 });
                 if (!editorDirtyRef.current && selectedAgentIdRef.current === normalizedAgentId) {
                   rememberAgentVersionBaseline(agentWithVersions);
                 }
               })
               .catch((error) => {
-                agentVersionsLoadedRef.current.delete(normalizedAgentId);
+                agentVersionsLoadedRef.current.delete(versionLoadKey);
                 if (!cancelled) {
+                  setAgentVersionsLoadState({
+                    agentId: normalizedAgentId,
+                    status: "error",
+                    error: error instanceof Error ? error.message : "Failed to load agent versions.",
+                  });
                   console.warn("[agents] Failed to load authoritative agent versions", error);
                 }
               });
@@ -1586,18 +1601,10 @@
               cancelled = true;
             };
           }, [
-            agentDetailsById,
-            agentPublishMenuOpen,
-            agentVersionChangesState,
-            agentVersionModal,
-            agentVersionSelectorMenuOpen,
-            agentVersionsHeaderMenuOpen,
-            agentVersionsSidebarOpen,
             backendUrl,
             canLoadAgentVersions,
-            draftAgent,
-            openAgentVersionMenuId,
-            requestHeaders,
+            draftAgent?.id,
+            agentVersionsRequestHeadersKey,
             selectedAgentId,
           ]);
   
@@ -1605,12 +1612,51 @@
             if (!embeddedInResources || typeof onResourcesHeaderChange !== "function") {
               return;
             }
-            onResourcesHeaderChange(
-              isHomeViewActive || agentCreationSetupOpen
-                ? { mode: "overview", title: "", resourceType: "agent", resourceId: "" }
-                : { mode: "detail", title: selectedResourcesDetailTitle, resourceType: "agent", resourceId: selectedAgentId }
+            const detailVersions = readDraftAgentVersions();
+            const selectedDetailVersion = getDraftAgentSelectedVersion()
+              || getDraftAgentActiveVersion()
+              || detailVersions[0]
+              || null;
+            const selectedVersionNumber = selectedDetailVersion
+              ? Number(selectedDetailVersion.version)
+              : null;
+            const latestVersionNumber = detailVersions.reduce(
+              (highest, version) => Math.max(highest, Number(version?.version) || 0),
+              -1
             );
-          }, [agentCreationSetupOpen, embeddedInResources, isHomeViewActive, onResourcesHeaderChange, selectedAgentId, selectedResourcesDetailTitle]);
+            onResourcesHeaderChange(
+              isHomeViewActive || (agentCreationSetupOpen && !agentCreationSetupDraft)
+                ? { mode: "overview", title: "", resourceType: "agent", resourceId: "" }
+                : {
+                    mode: "detail",
+                    title: selectedResourcesDetailTitle,
+                    resourceType: "agent",
+                    resourceId: selectedAgentId,
+                    versionNumber: Number.isFinite(selectedVersionNumber) ? selectedVersionNumber : null,
+                    versionIsLatest: Number.isFinite(selectedVersionNumber)
+                      && selectedVersionNumber === latestVersionNumber,
+                    versionBusy: saveState.isSaving || agentVersionState.status === "loading",
+                    onVersionClick: () => {
+                      if (canLoadAgentVersions) {
+                        openAgentVersionsSidebar();
+                      }
+                    },
+                  }
+            );
+          }, [
+            agentCreationSetupOpen,
+            agentCreationSetupDraft,
+            agentVersionState.status,
+            agentVersionsSidebarOpen,
+            canLoadAgentVersions,
+            draftAgent,
+            embeddedInResources,
+            isHomeViewActive,
+            onResourcesHeaderChange,
+            saveState.isSaving,
+            selectedAgentId,
+            selectedResourcesDetailTitle,
+          ]);
   
           useEffect(() => {
             if (!embeddedInResources) {
@@ -1638,6 +1684,7 @@
             setAgentVoicePopoverOpen(false);
             finishCloseAgentModelPicker();
             setAgentVersionsSidebarOpen(false);
+            setAgentVersionSaveDialog(null);
             finishCloseAgentVersionModal();
             setAgentVersionChangesState(null);
             setOpenAgentVersionMenuId("");
@@ -1645,6 +1692,11 @@
             setAgentVersionState({
               status: "idle",
               message: "",
+              error: "",
+            });
+            setAgentVersionsLoadState({
+              agentId: "",
+              status: "idle",
               error: "",
             });
             setAgentCreationSetupError("");
@@ -1668,6 +1720,7 @@
   
           function discardUnsavedAgentDraft() {
             clearAgentAutosaveQueue();
+            setAgentVersionSaveDialog(null);
             editorDirtyRef.current = false;
             agentVersionDraftTouchedRef.current = false;
             const normalizedDraftAgentId = String(draftAgent?.id || "").trim();
@@ -1956,6 +2009,27 @@
               [field]: value,
             }));
           }
+
+          function updateAgentCreationSetupDraft(updater) {
+            if (!agentCreationSetupDraft) {
+              updateDraftAgent(updater);
+              return;
+            }
+            setAgentCreationSetupDraft((current) => {
+              const base = normalizePlaygroundAgentRecord(
+                current || buildPlaygroundDefaultAgentDraft("single")
+              );
+              return typeof updater === "function" ? updater(base) : updater;
+            });
+            setAgentCreationSetupError("");
+          }
+
+          function updateAgentCreationSetupField(field, value) {
+            updateAgentCreationSetupDraft((current) => ({
+              ...current,
+              [field]: value,
+            }));
+          }
   
           function updateAgentVoiceSelection(voiceId) {
             if (isPlaygroundDefaultAgentConfigurationLocked(draftAgent)) {
@@ -2012,103 +2086,54 @@
               return nextProfile;
             });
           }
-  
-          function buildAgentProfilePhotoDraft(agent, nextPhotoUrl) {
-            const normalizedAgent = normalizePlaygroundAgentRecord(agent || selectedAgentSnapshot || buildPlaygroundDefaultAgentDraft());
-            const nextMetadata = normalizedAgent?.metadata && typeof normalizedAgent.metadata === "object" && !Array.isArray(normalizedAgent.metadata)
-              ? { ...normalizedAgent.metadata }
-              : {};
-            const nextProfile = getPlaygroundAgentProfileMetadata(nextMetadata) || {};
-  
-            if (nextPhotoUrl) {
-              nextProfile.photoURL = nextPhotoUrl;
-            } else {
-              delete nextProfile.photoURL;
-              delete nextProfile.photoUrl;
-            }
-  
-            if (Object.keys(nextProfile).length > 0) {
-              nextMetadata.profile = nextProfile;
-            } else {
-              delete nextMetadata.profile;
-            }
-  
-            return {
-              ...normalizedAgent,
-              metadata: Object.keys(nextMetadata).length > 0 ? nextMetadata : null,
-            };
+
+          function updateAgentCreationSetupProfilePhotoUrl(nextPhotoUrl) {
+            updateAgentCreationSetupDraft((current) => {
+              const nextMetadata = current?.metadata && typeof current.metadata === "object" && !Array.isArray(current.metadata)
+                ? { ...current.metadata }
+                : {};
+              const nextProfile = {
+                ...(getPlaygroundAgentProfileMetadata(nextMetadata) || {}),
+              };
+              if (nextPhotoUrl) {
+                nextProfile.photoURL = nextPhotoUrl;
+              } else {
+                delete nextProfile.photoURL;
+                delete nextProfile.photoUrl;
+              }
+              if (Object.keys(nextProfile).length > 0) {
+                nextMetadata.profile = nextProfile;
+              } else {
+                delete nextMetadata.profile;
+              }
+              return {
+                ...current,
+                metadata: Object.keys(nextMetadata).length > 0 ? nextMetadata : null,
+              };
+            });
           }
   
-          async function persistAgentProfilePhotoSelection(nextPhotoUrl) {
+          function applyAgentProfilePhotoSelection(nextPhotoUrl) {
             if (!draftAgent) {
               return;
             }
-  
-            const nextAgent = buildAgentProfilePhotoDraft(draftAgent, nextPhotoUrl);
             setAgentProfileAvatarBroken(false);
             setAgentProfileAvatarPickerOpen(false);
-  
-            if (!nextAgent?.id || nextAgent.id === PLAYGROUND_AGENT_DRAFT_ID) {
-              updateAgentProfilePhotoUrl(nextPhotoUrl);
-              return;
-            }
-  
-            setDraftAgent(nextAgent);
-            setAgentDetailsById((current) => ({
-              ...current,
-              [nextAgent.id]: nextAgent,
-            }));
-            setSaveState({
-              isSaving: true,
-              error: "",
-              message: "",
-            });
-  
-            try {
-              const savedAgent = await persistAgentRecord(nextAgent);
-              editorDirtyRef.current = false;
-              setAgentDetailsById((current) => ({
-                ...current,
-                [savedAgent.id]: savedAgent,
-              }));
-              setAgentListMode(getPlaygroundAgentListMode(savedAgent));
-              setSelectedAgentId(savedAgent.id);
-              setDraftAgent(savedAgent);
-              rememberAgentVersionBaseline(savedAgent, { force: true });
-              setSaveState({
-                isSaving: false,
-                error: "",
-                message: "Saved",
-              });
-              if (onAgentMutated) {
-                await onAgentMutated();
-              }
-            } catch (error) {
-              setAgentDetailsById((current) => ({
-                ...current,
-                [draftAgent.id]: draftAgent,
-              }));
-              setDraftAgent(draftAgent);
-              setSaveState({
-                isSaving: false,
-                error: error instanceof Error ? error.message : "Failed to save agent.",
-                message: "",
-              });
-            }
+            updateAgentProfilePhotoUrl(nextPhotoUrl);
           }
   
           function handleAgentProfilePhotoSelection(nextPhotoUrl) {
             if (!canEditAgentProfilePhoto || !nextPhotoUrl) {
               return;
             }
-            void persistAgentProfilePhotoSelection(nextPhotoUrl);
+            applyAgentProfilePhotoSelection(nextPhotoUrl);
           }
   
           function handleAgentProfilePhotoRemove() {
             if (!canEditAgentProfilePhoto) {
               return;
             }
-            void persistAgentProfilePhotoSelection("");
+            applyAgentProfilePhotoSelection("");
           }
   
           function toggleToolbarPopover(nextValue) {
@@ -2387,14 +2412,32 @@
                 throw new Error("Agent response was empty.");
               }
   
-  	            setAgentDetailsById((current) => ({
-  	              ...current,
-  	              [agentId]: normalized,
-  	            }));
-  	            if (selectedAgentIdRef.current === agentId && !editorDirtyRef.current) {
-  	              rememberAgentVersionBaseline(normalized);
-  	              setDraftAgent(normalized);
-  	            }
+              setAgentDetailsById((current) => {
+                  const currentVersions = readPlaygroundAgentVersions(current[agentId]);
+                  return {
+                    ...current,
+                    [agentId]: currentVersions.length > 0
+                      ? createPlaygroundAgentWithVersionList(normalized, currentVersions)
+                      : normalized,
+                  };
+                });
+              if (selectedAgentIdRef.current === agentId && !editorDirtyRef.current) {
+                  setDraftAgent((current) => {
+                    const currentVersions = readPlaygroundAgentVersions(current);
+                    const currentSelectedVersion = currentVersions.length > 0
+                      ? getDraftAgentSelectedVersion(current)
+                      : null;
+                    const nextAgent = currentVersions.length > 0
+                      ? createAgentVersionSelectedResource(
+                          normalized,
+                          currentVersions,
+                          currentSelectedVersion?.id || ""
+                        )
+                      : normalized;
+                    rememberAgentVersionBaseline(nextAgent);
+                    return nextAgent;
+                  });
+              }
             } catch (error) {
               if (selectedAgentIdRef.current === agentId) {
                 setSaveState((current) => ({
@@ -2461,7 +2504,11 @@
           const loadAgentsHomeThreads = useCallback(async (options = {}) => {
             const force = Boolean(options?.force);
             if (!force && agentsHomeThreadRecords.length > 0) {
-              return agentsHomeThreadRecords;
+              const cachedThreads = agentsHomeThreadRecords.slice(0, AGENT_THREAD_FETCH_LIMIT);
+              if (cachedThreads.length !== agentsHomeThreadRecords.length) {
+                setAgentsHomeThreadRecords(cachedThreads);
+              }
+              return cachedThreads;
             }
   
             const areThreadRecordListsEquivalent = (currentRecords, nextRecords) => {
@@ -2499,7 +2546,7 @@
             setAgentsHomeThreadsLoading((current) => current ? current : true);
             setAgentsHomeThreadsError((current) => current ? "" : current);
             try {
-              const response = await fetch(backendUrl + "/threads?limit=240", {
+              const response = await fetch(backendUrl + "/threads?limit=" + AGENT_THREAD_FETCH_LIMIT, {
                 method: "GET",
                 headers: requestHeaders,
               });
@@ -2507,7 +2554,13 @@
               if (!response.ok) {
                 throw new Error(data?.message || data?.error || "Failed to load threads.");
               }
-              const items = Array.isArray(data?.data) ? data.data : Array.isArray(data?.threads) ? data.threads : [];
+              const items = (
+                Array.isArray(data?.data)
+                  ? data.data
+                  : Array.isArray(data?.threads)
+                    ? data.threads
+                    : []
+              ).slice(0, AGENT_THREAD_FETCH_LIMIT);
               setAgentsHomeThreadRecords((current) => (
                 areThreadRecordListsEquivalent(current, items) ? current : items
               ));
@@ -2647,6 +2700,7 @@
             setAgentsHomeActiveCreationCommand("");
             setAgentsHomeCreationCommandRequest(null);
             setAgentCreationSetupOpen(false);
+            setAgentCreationSetupDraft(null);
             setAgentCreationSetupError("");
             setAgentCreationSetupSubmitting(false);
             setAgentCreationInstructionRunRequest(null);
@@ -2946,7 +3000,9 @@
           }
   
           async function persistAgentCreationSetupDraft() {
-            const setupDraft = normalizePlaygroundAgentRecord(draftAgent || buildPlaygroundDefaultAgentDraft("single"));
+            const setupDraft = normalizePlaygroundAgentRecord(
+              agentCreationSetupDraft || draftAgent || buildPlaygroundDefaultAgentDraft("single")
+            );
             const nextName = String(setupDraft.name || "").trim().replace(/\s+/g, " ") || "New Agent";
             const creationDraft = normalizePlaygroundAgentRecord({
               ...setupDraft,
@@ -3000,6 +3056,7 @@
               try {
                 const savedAgent = await persistAgentCreationSetupDraft();
                 setAgentCreationSetupOpen(false);
+                setAgentCreationSetupDraft(null);
                 setAgentCreationSetupSubmitting(false);
                 setAgentCreationPermissionModalOpen(false);
                 setAgentAssistantOpen(false);
@@ -3042,7 +3099,9 @@
               return null;
             }
 
-            const setupDraft = normalizePlaygroundAgentRecord(draftAgent || buildPlaygroundDefaultAgentDraft("single"));
+            const setupDraft = normalizePlaygroundAgentRecord(
+              agentCreationSetupDraft || draftAgent || buildPlaygroundDefaultAgentDraft("single")
+            );
             const selectedSetupModel = getPlaygroundAgentModelMeta((setupDraft.model || "claude-haiku-4-5"), resolvedAgentModelOptions);
             const setupPermissionSet = normalizePlaygroundPermissionSet(setupDraft.permissionSet, "agent");
             const setupPermissionSummary = getAgentPermissionSummary(setupPermissionSet);
@@ -3109,7 +3168,11 @@
                             key: option.id,
                             type: "button",
                             className: "playground-agents-avatar-picker-option" + (avatarPhotoUrl === option.url ? " is-selected" : ""),
-                            onClick: () => handleAgentProfilePhotoSelection(option.url),
+                            onClick: () => {
+                              setAgentProfileAvatarBroken(false);
+                              setAgentProfileAvatarPickerOpen(false);
+                              updateAgentCreationSetupProfilePhotoUrl(option.url);
+                            },
                             disabled: isSubmitting,
                             title: option.label,
                             "aria-label": option.label,
@@ -3137,7 +3200,7 @@
                     title: setupDraft.name || "Agent name",
                     disabled: isSubmitting,
                     onKeyDown: (event) => event.stopPropagation(),
-                    onChange: (event) => updateAgentField("name", event.target.value),
+                    onChange: (event) => updateAgentCreationSetupField("name", event.target.value),
                   })
                 )
               )
@@ -3170,7 +3233,7 @@
   
             const renderSetupInstructionsSection = () => React.createElement(PlatformInstructionsEditor, {
               value: setupDraft.instructions || "",
-              onChange: (value) => updateAgentField("instructions", value),
+              onChange: (value) => updateAgentCreationSetupField("instructions", value),
               title: "Instructions",
               placeholder: "Add agent instructions here.",
               ariaLabel: "Agent instructions",
@@ -3187,6 +3250,7 @@
               headerVariant: "media",
               headerMedia: setupProfileSection,
               size: "medium",
+              maxHeight: "75vh",
               as: "form",
               className: "playground-agents-creation-modal",
               bodyClassName: "playground-agents-creation-modal-body",
@@ -3198,7 +3262,16 @@
               closeOnEscape: !isSubmitting && !hasNestedCreationModal,
               onClose: () => {
                 if (!isSubmitting) {
-                  performShowAgentsHome();
+                  if (agentCreationSetupDraft) {
+                    setAgentCreationSetupOpen(false);
+                    setAgentCreationSetupDraft(null);
+                    setAgentCreationSetupError("");
+                    setAgentCreationPermissionModalOpen(false);
+                    closeAgentModelPicker({ animate: false });
+                    setAgentProfileAvatarPickerOpen(false);
+                  } else {
+                    performShowAgentsHome();
+                  }
                   if (creationOnly && typeof onCreationRequestClose === "function") {
                     onCreationRequestClose({ reason: "cancelled" });
                   }
@@ -3229,7 +3302,7 @@
                   renderSetupFactRow("Model",
                     renderPlaygroundAgentModelButton(
                       selectedSetupModel,
-                      () => openAgentModelPicker("detail"),
+                      () => openAgentModelPicker("creation"),
                       isSubmitting
                     )
                   ),
@@ -3270,11 +3343,11 @@
             },
               React.createElement("div", { className: "playground-agents-permissions-card" },
                 React.createElement(AgentPermissionsPage, {
-                  permissionSet: draftAgent?.permissionSet,
+                  permissionSet: (agentCreationSetupDraft || draftAgent)?.permissionSet,
                   showOverview: false,
                   showEffectiveAccess: true,
                   onPermissionSetChange: (permissionSet) => {
-                    updateDraftAgent((current) => ({ ...current, permissionSet }));
+                    updateAgentCreationSetupDraft((current) => ({ ...current, permissionSet }));
                   },
                 })
               )
@@ -3560,50 +3633,6 @@
               void flushQueuedAgentAutosave();
             }, 700);
           }, [draftAgent]);
-  
-          useEffect(() => {
-            if (
-              !draftAgent?.id
-              || draftAgent.id === PLAYGROUND_AGENT_DRAFT_ID
-              || draftAgent.isSystem
-              || draftAgent.isDefault
-              || agentCreationSetupOpen
-              || loadingAgentId === draftAgent.id
-              || saveState.isSaving
-              || agentVersionState.status === "loading"
-            ) {
-              return;
-            }
-            if (readPlaygroundAgentVersions(draftAgent).length > 0) {
-              return;
-            }
-            const seedKey = String(draftAgent.id || "").trim();
-            if (!seedKey || agentInitialVersionSeededRef.current.has(seedKey)) {
-              return;
-            }
-            agentInitialVersionSeededRef.current.add(seedKey);
-            const initialVersion = createPlaygroundAgentVersion(draftAgent, [], { status: "active", actor: getAgentVersionActor() });
-            const nextAgent = createPlaygroundAgentWithVersionList(draftAgent, [initialVersion], initialVersion.id);
-            setDraftAgent(nextAgent);
-            setAgentDetailsById((current) => ({
-              ...current,
-              [nextAgent.id]: nextAgent,
-            }));
-            void commitVersionedAgentRecord(nextAgent, {
-              operation: "initialize",
-              actor: getAgentVersionActor(),
-              skipConflictCheck: true,
-              loadingMessage: "Initializing agent version...",
-              successMessage: "Version initialized",
-              errorMessage: "Failed to initialize agent version.",
-            });
-          }, [
-            agentCreationSetupOpen,
-            agentVersionState.status,
-            draftAgent,
-            loadingAgentId,
-            saveState.isSaving,
-          ]);
   
           useEffect(() => {
             return () => {
@@ -3935,33 +3964,6 @@
               cancelled = true;
             };
           }, [agentApiEditorModule, agentApiEditorModuleError, agentApiModalOpen]);
-  
-          useEffect(() => {
-            if (agentModelPopover !== "api-environment") {
-              return undefined;
-            }
-  
-            function handleAgentApiEnvironmentPointerDown(event) {
-              const target = event?.target instanceof Node ? event.target : null;
-              if (!target || !agentApiEnvironmentPopoverRef.current || agentApiEnvironmentPopoverRef.current.contains(target)) {
-                return;
-              }
-              setAgentModelPopover("");
-            }
-  
-            function handleAgentApiEnvironmentEscape(event) {
-              if (event.key === "Escape") {
-                setAgentModelPopover("");
-              }
-            }
-  
-            document.addEventListener("mousedown", handleAgentApiEnvironmentPointerDown);
-            window.addEventListener("keydown", handleAgentApiEnvironmentEscape);
-            return () => {
-              document.removeEventListener("mousedown", handleAgentApiEnvironmentPointerDown);
-              window.removeEventListener("keydown", handleAgentApiEnvironmentEscape);
-            };
-          }, [agentModelPopover]);
   
           useEffect(() => {
             if (!agentVoicePopoverOpen) {
@@ -4357,7 +4359,8 @@
                   ...signalRecord,
                 };
               });
-              return didFind ? nextItems : [signalRecord, ...currentItems];
+              return (didFind ? nextItems : [signalRecord, ...currentItems])
+                .slice(0, AGENT_THREAD_FETCH_LIMIT);
             });
           }, [backendUrl, currentUserEmail, currentUserId, loadAgentsHomeThreads, requestHeaders, threadMutationSignal]);
   

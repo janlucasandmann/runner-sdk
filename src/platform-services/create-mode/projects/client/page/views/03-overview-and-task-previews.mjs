@@ -30,9 +30,6 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
 
         function renderBoardView() {
           const boardTasks = boardVisibleTasks;
-          const scopedBoardTasks = (selectedRelease ? projectReleaseTasks : tasks)
-            .filter((task) => !isPlaygroundSubtaskRecord(task));
-          const openScopedBoardTaskCount = scopedBoardTasks.filter((task) => getTaskBoardStatus(task) !== "done").length;
           const draggingBoardTask = boardDraggingTaskId ? tasksById[boardDraggingTaskId] || null : null;
           const hasSelectedReleaseSection = Boolean(selectedReleaseId && selectedRelease);
 
@@ -48,66 +45,74 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
 
           function renderBoardToolbar() {
             return React.createElement("div", {
-                className: "playground-tasks-backlog-header",
+                className: "playground-tasks-backlog-header is-board-list-header",
                 ref: boardToolbarActionsRef,
               },
               React.createElement("div", { className: "playground-tasks-backlog-header-row" },
                 React.createElement("div", { className: "playground-tasks-backlog-header-main" },
                   React.createElement("div", { className: "playground-tasks-backlog-heading" }, "Board"),
-                  React.createElement("span", { className: "playground-tasks-board-release-box-count playground-tasks-backlog-heading-count playground-tasks-backlog-open-count" }, String(openScopedBoardTaskCount))
-                )
-              ),
-              React.createElement("div", { className: "playground-tasks-backlog-header-row is-tertiary" },
-                React.createElement("div", { className: "playground-tasks-backlog-secondary-actions" },
-                  renderProjectTaskHeaderSearchControl({
-                    placeholder: "Search tasks",
-                    ariaLabel: "Search board tasks",
-                  }),
-                  React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-tasks-board-filter-shell" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-files-control-button is-bare is-backlog-filter is-board-filter" + (boardToolbarPopover === "filter" || boardFilterMode !== "all" ? " is-active" : ""),
-                      onClick: () => setBoardToolbarPopover((current) => current === "filter" ? "" : "filter"),
+                  React.createElement(PlatformPopup, {
+                      open: boardToolbarPopover === "filter",
+                      rootClassName: "playground-tasks-board-filter-shell is-central-popup",
+                      surfaceClassName: "platform-data-table__floating-menu playground-tasks-board-filter-menu is-central-popup",
+                      surfaceProps: {
+                        role: "menu",
+                        "aria-label": "Filter board",
+                      },
+                      animation: "down-in",
+                      variant: "minimal",
+                      placement: "bottom-start",
+                      trigger: React.createElement("button", {
+                        type: "button",
+                        className: "platform-data-table__toolbar-button is-icon-only"
+                          + (boardToolbarPopover === "filter" || boardFilterMode !== "all" ? " is-open" : ""),
+                        onClick: (event) => {
+                          event.stopPropagation();
+                          setBoardToolbarPopover((current) => current === "filter" ? "" : "filter");
+                        },
+                        title: "Filter board",
+                        "aria-label": "Filter board",
+                        "aria-haspopup": "menu",
+                        "aria-expanded": boardToolbarPopover === "filter" ? "true" : "false",
+                      }, React.createElement(ListFilter, {
+                        width: 14,
+                        height: 14,
+                        strokeWidth: 1.8,
+                        "aria-hidden": "true",
+                      })),
                     },
-                      React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Filter")
-                    ),
-                    boardToolbarPopover === "filter"
-                      ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                          boardFilterOptions.map((option) =>
-                            React.createElement("button", {
-                                key: option.id,
-                                type: "button",
-                                className: "tb-popup-row tb-popup-row-select" + (boardFilterMode === option.id ? " selected" : ""),
-                                onClick: () => {
-                                  setBoardFilterMode(option.id);
-                                  setBoardToolbarPopover("");
-                                },
-                              },
-                                React.createElement("span", { className: "tb-popup-check-slot" },
-                                  boardFilterMode === option.id
-                                    ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                                    : null
-                                ),
-                                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                  React.createElement("span", null, option.label),
-                                  React.createElement("span", null, option.description)
-                                )
-                              )
-                          )
+                    boardFilterOptions.map((option) =>
+                      React.createElement("button", {
+                        key: option.id,
+                        type: "button",
+                        role: "menuitemradio",
+                        "aria-checked": boardFilterMode === option.id ? "true" : "false",
+                        className: "platform-data-table__menu-item",
+                        onClick: () => {
+                          setBoardFilterMode(option.id);
+                          setBoardToolbarPopover("");
+                        },
+                      },
+                        React.createElement("span", { className: "platform-data-table__menu-icon" },
+                          boardFilterMode === option.id
+                            ? React.createElement(Check, { width: 14, height: 14, strokeWidth: 1.8 })
+                            : null
+                        ),
+                        React.createElement("span", { className: "platform-data-table__menu-copy" },
+                          React.createElement("span", { className: "platform-data-table__menu-label" }, option.label),
+                          React.createElement("span", { className: "platform-data-table__menu-description" }, option.description)
                         )
-                      : null
+                      )
+                    )
                   )
                 ),
-                React.createElement("div", { className: "playground-tasks-backlog-tertiary-actions" },
-                  renderProjectWorkspaceActionButtons({
-                    showStrategy: false,
-                    releaseControl: renderProjectReleasePickerControl({
-                      popover: boardToolbarPopover,
-                      setPopover: setBoardToolbarPopover,
-                      allLabel: "All Milestones",
-                      allDescription: "Show every milestone on the board.",
-                    }),
+                React.createElement("div", { className: "playground-tasks-backlog-header-actions" },
+                  React.createElement(PlatformSearch, {
+                    className: "playground-tasks-board-central-search",
+                    value: searchQuery,
+                    onChange: (event) => setSearchQuery(event.target.value),
+                    placeholder: "Search tasks",
+                    "aria-label": "Search board tasks",
                   })
                 )
               )
@@ -693,17 +698,26 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
             );
           }
 
-          const studioElement = renderPlaygroundPlatformModal({
-            open: missionControlSetupOpen && projectComposerOpen,
+          const studioElement = React.createElement(PlatformModal, {
+            open: missionControlSetupOpen && projectComposerOpen && !missionControlSetupClosing,
             visible: missionControlSetupVisible,
             closing: missionControlSetupClosing,
             onClose: () => closeMissionControlSetupModal(),
             closeOnEscape: false,
-            size: "full",
-            backdropClassName: "playground-tasks-project-modal-backdrop playground-mission-control-modal-backdrop",
-            className: "playground-tasks-project-modal playground-mission-control-modal",
+            animationDurationMs: missionControlSetupAnimationMs,
+            size: "large",
+            title: "Mission Control",
+            className: "playground-mission-control-modal",
             ariaLabel: "Mission Control",
-            children: React.createElement("div", { className: "playground-mission-control-modal-body" },
+            showFooter: false,
+            bodyProps: {
+              style: {
+                maxHeight: "calc(100dvh - 96px)",
+                overflow: "auto",
+              },
+            },
+          },
+            React.createElement("div", { className: "playground-mission-control-modal-body" },
               React.createElement("div", { className: "playground-mission-control-modal-context" },
                 renderMissionControlGoalEditor(),
                 renderMissionControlOutcomesEditor(),
@@ -714,8 +728,8 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
               React.createElement("div", { className: "playground-mission-control-modal-composer" },
                 renderMissionControlSetupView()
               )
-            ),
-          });
+            )
+          );
           return React.createElement(React.Fragment, null,
             studioElement,
             renderSharedProjectOverviewOutcomeEditorModal({

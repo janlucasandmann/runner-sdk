@@ -463,6 +463,8 @@ export const METRONOME_CONTROLLER_02_FRAGMENT = String.raw`                }
               resetActiveMetronomeVisitBaseline(savedWorkflow, nextNodes, nextEdges);
               setIsMetronomeCodeDirty(false);
               setMetronomeCodeFilesDraft([]);
+              setMetronomeCodeUndoStack([]);
+              setMetronomeCodeRedoStack([]);
               setMetronomeCodeRunState({ status: "idle", message: "" });
               replaceMetronomeWorkflowInEditableState(nextWorkflow.id, savedWorkflow);
               if (savedWorkflow.id && savedWorkflow.id !== activeWorkflowId) {
@@ -863,27 +865,62 @@ export const METRONOME_CONTROLLER_02_FRAGMENT = String.raw`                }
             if (normalizedPath) setActiveMetronomeCodeFilePath(normalizedPath);
           }, []);
 
+          const cloneMetronomeCodeFiles = (files) => (Array.isArray(files) ? files : [])
+            .map((file) => ({ ...file }));
+          const areMetronomeCodeFilesEqual = (leftFiles, rightFiles) => {
+            const left = Array.isArray(leftFiles) ? leftFiles : [];
+            const right = Array.isArray(rightFiles) ? rightFiles : [];
+            if (left.length !== right.length) return false;
+            const rightByPath = new Map(right.map((file) => [String(file?.path || ""), String(file?.value || "")]));
+            return left.every((file) => (
+              rightByPath.get(String(file?.path || "")) === String(file?.value || "")
+            ));
+          };
+
           const handleMetronomeCodeFileChange = useCallback((nextCode) => {
             if (isActiveWorkflowBuiltIn) return;
             const activePath = String(activeMetronomeCodeFile?.path || activeMetronomeCodeFilePath || "main.py");
-            setMetronomeCodeFilesDraft((current) => {
-              const baseFiles = current.length ? current : generatedMetronomePythonFiles.map((file) => ({ ...file, originalValue: file.value }));
-              return baseFiles.map((file) => file.path === activePath
-                ? { ...file, value: String(nextCode || "") }
-                : file
-              );
-            });
+            const baseFiles = metronomeCodeFiles.length
+              ? cloneMetronomeCodeFiles(metronomeCodeFiles)
+              : generatedMetronomePythonFiles.map((file) => ({ ...file, originalValue: file.value }));
+            const normalizedNextCode = String(nextCode || "");
+            const activeFile = baseFiles.find((file) => file.path === activePath);
+            if (String(activeFile?.value || "") === normalizedNextCode) return;
+            setMetronomeCodeUndoStack((current) => [...current, cloneMetronomeCodeFiles(baseFiles)].slice(-100));
+            setMetronomeCodeRedoStack([]);
+            setMetronomeCodeFilesDraft(baseFiles.map((file) => file.path === activePath
+              ? { ...file, value: normalizedNextCode }
+              : file
+            ));
             setIsMetronomeCodeDirty(true);
             setMetronomeCodeRunState({ status: "idle", message: "" });
-          }, [isActiveWorkflowBuiltIn, activeMetronomeCodeFile, activeMetronomeCodeFilePath, generatedMetronomePythonFiles]);
+          }, [isActiveWorkflowBuiltIn, activeMetronomeCodeFile, activeMetronomeCodeFilePath, generatedMetronomePythonFiles, metronomeCodeFiles]);
 
-          const handleRevertMetronomeCodeDraft = useCallback(() => {
-            if (isActiveWorkflowBuiltIn) return;
-            setMetronomeCodeFilesDraft(generatedMetronomePythonFiles.map((file) => ({ ...file, originalValue: file.value })));
-            setActiveMetronomeCodeFilePath("main.py");
-            setIsMetronomeCodeDirty(false);
-            setMetronomeCodeRunState({ status: "idle", message: "Reverted to the visual workflow." });
-          }, [isActiveWorkflowBuiltIn, generatedMetronomePythonFiles]);
+          const handleMetronomeCodeUndo = useCallback(() => {
+            if (isActiveWorkflowBuiltIn || metronomeCodeUndoStack.length === 0) return;
+            const previousFiles = cloneMetronomeCodeFiles(metronomeCodeUndoStack[metronomeCodeUndoStack.length - 1]);
+            setMetronomeCodeUndoStack((current) => current.slice(0, -1));
+            setMetronomeCodeRedoStack((current) => [
+              ...current,
+              cloneMetronomeCodeFiles(metronomeCodeFiles),
+            ].slice(-100));
+            setMetronomeCodeFilesDraft(previousFiles);
+            setIsMetronomeCodeDirty(!areMetronomeCodeFilesEqual(previousFiles, generatedMetronomePythonFiles));
+            setMetronomeCodeRunState({ status: "idle", message: "" });
+          }, [generatedMetronomePythonFiles, isActiveWorkflowBuiltIn, metronomeCodeFiles, metronomeCodeUndoStack]);
+
+          const handleMetronomeCodeRedo = useCallback(() => {
+            if (isActiveWorkflowBuiltIn || metronomeCodeRedoStack.length === 0) return;
+            const nextFiles = cloneMetronomeCodeFiles(metronomeCodeRedoStack[metronomeCodeRedoStack.length - 1]);
+            setMetronomeCodeRedoStack((current) => current.slice(0, -1));
+            setMetronomeCodeUndoStack((current) => [
+              ...current,
+              cloneMetronomeCodeFiles(metronomeCodeFiles),
+            ].slice(-100));
+            setMetronomeCodeFilesDraft(nextFiles);
+            setIsMetronomeCodeDirty(!areMetronomeCodeFilesEqual(nextFiles, generatedMetronomePythonFiles));
+            setMetronomeCodeRunState({ status: "idle", message: "" });
+          }, [generatedMetronomePythonFiles, isActiveWorkflowBuiltIn, metronomeCodeFiles, metronomeCodeRedoStack]);
 
           const applyMetronomeCodeDraftToGraph = useCallback((options = {}) => {
             if (isActiveWorkflowBuiltIn) {
@@ -905,6 +942,8 @@ export const METRONOME_CONTROLLER_02_FRAGMENT = String.raw`                }
             const nextName = String(parsed.name || activeWorkflow.name || "Untitled Metronome").trim() || "Untitled Metronome";
             setMetronomeWorkflowNameDraft(nextName);
             setIsMetronomeCodeDirty(false);
+            setMetronomeCodeUndoStack([]);
+            setMetronomeCodeRedoStack([]);
             const nextFiles = generateMetronomePythonSdkFiles({ ...activeWorkflow, name: nextName }, nextNodes, nextEdges)
               .map((file) => ({ ...file, originalValue: file.value }));
             setMetronomeCodeFilesDraft(nextFiles);
@@ -914,14 +953,6 @@ export const METRONOME_CONTROLLER_02_FRAGMENT = String.raw`                }
             }
             return { name: nextName, nodes: nextNodes, edges: nextEdges };
           }, [isActiveWorkflowBuiltIn, activeWorkflow, activeWorkflowId, activeMetronomeEditorWorkflow?.name, metronomeCodeFiles, pushGraphHistory, setNodes, setEdges]);
-
-          const handleApplyMetronomeCodeDraft = useCallback(() => {
-            try {
-              applyMetronomeCodeDraftToGraph();
-            } catch (error) {
-              setMetronomeCodeRunState({ status: "error", message: error?.message || "Could not apply code to the visual editor." });
-            }
-          }, [applyMetronomeCodeDraftToGraph]);
 
           const setMetronomeEditorModeFromNav = useCallback((nextMode) => {
             const normalizedMode = nextMode === "runs" ? "runs" : nextMode === "code" ? "code" : "edit";

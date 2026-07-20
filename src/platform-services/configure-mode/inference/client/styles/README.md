@@ -8,6 +8,7 @@ This directory contains ordered, owner-scoped style modules for the Inference se
 
 ## Contents
 
+- [`create-modal.mjs`](create-modal.mjs) — Inference endpoint creation modal styles.
 - [`endpoint.mjs`](endpoint.mjs) — Focused implementation of Endpoint.
 - [`index.mjs`](index.mjs) — Public barrel or composition entry point.
 - [`local-runners.mjs`](local-runners.mjs) — Focused implementation of Local Runners.

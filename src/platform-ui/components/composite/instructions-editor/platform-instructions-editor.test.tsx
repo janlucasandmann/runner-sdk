@@ -80,7 +80,10 @@ describe("PlatformInstructionsEditor", () => {
     );
 
     expect(css).toMatch(
-      /\.platform-instructions-editor\.is-minimalistic-ui,[\s\S]*padding:\s*0;[\s\S]*border-radius:\s*0;[\s\S]*background:\s*transparent;/,
+      /\.platform-instructions-editor\s*\{[\s\S]*border:\s*1px solid rgba\(255,\s*255,\s*255,\s*0\.075\);[\s\S]*border-radius:\s*15px;[\s\S]*background:\s*rgba\(255,\s*255,\s*255,\s*0\.075\);/,
+    );
+    expect(css).toMatch(
+      /\.platform-instructions-editor\.is-minimalistic-ui,[\s\S]*padding:\s*0;[\s\S]*border:\s*none;[\s\S]*border-radius:\s*0;[\s\S]*background:\s*transparent;/,
     );
     expect(css).toMatch(
       /\.platform-instructions-editor\.is-minimalistic-ui \.platform-instructions-editor__body\s*\{[\s\S]*width:\s*100%;[\s\S]*margin-left:\s*0;[\s\S]*border:\s*none;/,

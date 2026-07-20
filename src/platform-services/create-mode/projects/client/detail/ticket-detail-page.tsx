@@ -1,7 +1,5 @@
 import type { ReactNode } from "react";
-import {
-  PlatformDetailSidebarSection,
-} from "../../../../../platform-ui/components/composite/detail-sidebar/index.js";
+import { PlatformUiCard } from "../../../../../platform-ui/components/composite/ui-card/index.js";
 import { ResourceDetailPage } from "../../../../../platform-ui/pages/details/index.js";
 
 export interface TicketDetailPageProps {
@@ -44,19 +42,23 @@ export function TicketDetailPage({
         sidebarCollapsed={sidebarCollapsed}
         sidebar={(
           <>
-            <PlatformDetailSidebarSection
-              title="Details"
-              actions={detailsActions}
+            <PlatformUiCard
+              as="section"
+              variant="sidebar"
+              cardTitle="Details"
+              headerActions={detailsActions}
               className="playground-ticket-detail-sidebar-section playground-ticket-detail-sidebar-details"
             >
               {details}
-            </PlatformDetailSidebarSection>
-            <PlatformDetailSidebarSection
-              title="Threads"
+            </PlatformUiCard>
+            <PlatformUiCard
+              as="section"
+              variant="sidebar"
+              cardTitle="Threads"
               className="playground-ticket-detail-sidebar-section playground-ticket-detail-sidebar-threads"
             >
               {threads}
-            </PlatformDetailSidebarSection>
+            </PlatformUiCard>
           </>
         )}
         ariaLabel={ariaLabel}

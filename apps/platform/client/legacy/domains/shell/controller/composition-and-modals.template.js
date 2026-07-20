@@ -734,11 +734,48 @@
                 ? "Computers"
                 : "Agents";
             const isConfigureResourcesPage = !activeDevelopServerPageItem;
+            const isVersionedDevelopResource = activeResourcesView === "servers"
+              && ["web_app", "function"].includes(String(activeResourcesServerKind || ""));
             const returnToResourcesOverview = () => openResourcesView(activeResourcesView, {
               forceOverview: true,
               preserveSidebarMode: true,
               serverKind: activeResourcesServerKind,
             });
+            const resourcesDetailPathItem = {
+              label: resourcesHeaderState.title || "Resource",
+              trailing: (
+                (
+                  activeResourcesView === "agents"
+                  || activeResourcesView === "computers"
+                  || isVersionedDevelopResource
+                )
+                && resourcesHeaderState.versionNumber !== null
+                && resourcesHeaderState.versionNumber !== undefined
+              )
+                ? React.createElement(PlatformVersionLabel, {
+                    version: resourcesHeaderState.versionNumber,
+                    qualifier: resourcesHeaderState.versionIsLatest ? "Latest" : null,
+                    className: "agent-breadcrumb-version-label",
+                    disabled: Boolean(resourcesHeaderState.versionBusy),
+                    "aria-label": "Open " + (
+                      activeResourcesView === "computers"
+                        ? "computer"
+                        : activeResourcesView === "agents"
+                          ? "agent"
+                          : activeResourcesServerKind === "function"
+                            ? "function"
+                            : "web app"
+                    ) + " version history",
+                    onClick: (event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      if (typeof resourcesHeaderState.onVersionClick === "function") {
+                        resourcesHeaderState.onVersionClick();
+                      }
+                    },
+                  })
+                : null,
+            };
             const resourcesPathItems = activeDevelopServerPageItem
               ? (
                   isResourcesDetailView
@@ -748,7 +785,7 @@
                           label: resourcesOverviewTitle,
                           onClick: returnToResourcesOverview,
                         },
-                        { label: resourcesHeaderState.title || "Resource" },
+                        resourcesDetailPathItem,
                       ]
                     : [{ label: "Develop" }, { label: resourcesOverviewTitle }]
                 )
@@ -760,7 +797,7 @@
                           label: resourcesOverviewTitle,
                           onClick: returnToResourcesOverview,
                         },
-                        { label: resourcesHeaderState.title || "Resource" },
+                        resourcesDetailPathItem,
                       ]
                     : [
                         ...(isConfigureResourcesPage ? [{ label: "Configure" }] : []),
@@ -774,7 +811,7 @@
               includeSearchDivider: activeResourcesView === "agents"
                 || activeResourcesView === "computers"
                 || (activeResourcesView === "servers" && Boolean(activeResourcesServerKind)),
-              hideCommonActions: isResourcesVersionsDrawerOpen,
+              hideCommonActions: false,
               extraActions: React.createElement(React.Fragment, null,
                 !isResourcesDetailView
                   ? React.createElement("div", {
@@ -1731,6 +1768,12 @@
               : tasksHeaderState.view === "backlog"
                 ? "backlog"
                 : "overview";
+            const activeTicketNumber = String(tasksHeaderState.ticketNumber || "").trim();
+            const isProjectTaskDetailView = Boolean(
+              isProjectDetailView
+              && tasksHeaderState.detailMode === "task"
+              && activeTicketNumber
+            );
             const activeProjectsHomeScope = tasksProjectsHomeScope === "created"
               ? "created"
               : tasksProjectsHomeScope === "shared"
@@ -1747,7 +1790,18 @@
                       label: "Projects",
                       onClick: () => setTasksProjectBackRequestToken((current) => current + 1),
                     },
-                    { label: projectTitle },
+                    ...(isProjectTaskDetailView
+                      ? [
+                          {
+                            label: projectTitle,
+                            onClick: () => setTasksProjectViewRequest({
+                              view: activeProjectView,
+                              token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                            }),
+                          },
+                          { label: activeTicketNumber },
+                        ]
+                      : [{ label: projectTitle }]),
                   ]
                 : [{ label: "Create" }, { label: "Projects" }],
               center: isProjectDetailView
@@ -1778,19 +1832,24 @@
                     ariaLabel: "Project scope",
                   }),
               extraActions: isProjectDetailView
-                ? React.createElement(PlatformPrimaryButton, {
-                    type: "button",
-                    className: "playground-files-control-button is-backlog-sort playground-tasks-nav-issue-button",
-                    "aria-label": "New issue",
-                    title: "New issue",
-                    onClick: (event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      openTopNavIssueComposer();
+                ? React.createElement(React.Fragment, null,
+                    (activeProjectView === "backlog" || activeProjectView === "board") && !isProjectTaskDetailView
+                      ? tasksHeaderState.extraActions || null
+                      : null,
+                    React.createElement(PlatformPrimaryButton, {
+                      type: "button",
+                      className: "playground-files-control-button is-backlog-sort playground-tasks-nav-issue-button",
+                      "aria-label": "New issue",
+                      title: "New issue",
+                      onClick: (event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        openTopNavIssueComposer();
+                      },
                     },
-                  },
-                    React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
-                    React.createElement("span", null, "New Issue")
+                      React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                      React.createElement("span", null, "New Issue")
+                    )
                   )
                 : React.createElement(PlatformPrimaryButton, {
                     type: "button",
@@ -2170,6 +2229,8 @@
                   onDevelopAnalyticsMenuOpenChange: setDevelopAnalyticsMenuOpen,
                   onOpenSettingsUsage: () => openSettingsModal("costs-overview"),
                   onOpenSettingsApi: () => openSettingsModal("api"),
+                  onNavigationGuardChange: registerPlatformNavigationGuard,
+                  onNavigationRequest: requestPlatformNavigation,
                 })
               : hasDemoAccess
                 ? renderDemoFeaturePage("environments")
@@ -2751,7 +2812,7 @@
   	                            : renderAuthGate()
   	                      : activePage === "inference"
   	                        ? hasRealAccess
-  	                          ? renderSettingsSurface({ section: "inference" })
+                              ? renderSettingsSurface({ section: "inference", hideHeader: true })
   	                          : hasDemoAccess
   	                            ? renderDemoFeaturePage("resources")
   	                            : renderAuthGate()

@@ -15,7 +15,8 @@ import { readPlatformCompositionSource } from "../../../../apps/platform/testing
 assert.match(INFERENCE_PAGE_CSS, /\.playground-settings-inference-endpoint-card/);
 assert.match(INFERENCE_PAGE_CSS, /\.playground-settings-runtime-grid/);
 assert.match(INFERENCE_PAGE_CSS, /\.playground-settings-local-runners-card/);
-assert.equal(Object.keys(INFERENCE_STYLE_FRAGMENTS).length, 3);
+assert.match(INFERENCE_PAGE_CSS, /\.inference-create-endpoint-modal/);
+assert.equal(Object.keys(INFERENCE_STYLE_FRAGMENTS).length, 4);
 
 assert.match(INFERENCE_DOMAIN_SCRIPT_FRAGMENTS.constants, /SETTINGS_DEFAULT_INFERENCE_SETTINGS/);
 assert.match(INFERENCE_DOMAIN_SCRIPT_FRAGMENTS.settings, /function normalizeDemoSettingsInferenceSettings/);
@@ -81,11 +82,17 @@ assert.match(INFERENCE_APP_SCRIPT_FRAGMENTS.runtimeLifecycle, /handleSettingsCre
 assert.match(INFERENCE_APP_SCRIPT_FRAGMENTS.navigation, /function openInferencePage/);
 assert.match(INFERENCE_APP_SCRIPT_FRAGMENTS.loadLifecycle, /activePage === "inference"/);
 assert.match(INFERENCE_APP_SCRIPT_FRAGMENTS.handlers, /handleSettingsInferenceConnectionTest/);
+assert.match(INFERENCE_APP_SCRIPT_FRAGMENTS.handlers, /endpointInputValue/);
+assert.match(INFERENCE_APP_SCRIPT_FRAGMENTS.handlers, /apiKey: apiKey \|\| undefined/);
 assert.match(INFERENCE_APP_SCRIPT_FRAGMENTS.cleanup, /settingsInferenceAutosaveTimerRef\.current/);
 assert.match(INFERENCE_APP_SCRIPT_FRAGMENTS.historyCapture, /page: "inference"/);
 assert.match(INFERENCE_APP_SCRIPT_FRAGMENTS.historyCapture, /endpointId: settingsInferenceSelectedEndpointId/);
 assert.match(INFERENCE_APP_SCRIPT_FRAGMENTS.historyRestore, /entry\.page === "inference"/);
 assert.match(INFERENCE_APP_SCRIPT_FRAGMENTS.topNavigation, /label: "Inference"/);
+assert.match(
+  INFERENCE_APP_SCRIPT_FRAGMENTS.topNavigation,
+  /isInferenceOverview\s*\?\s*\[\{ label: "Inference" \}\]/,
+);
 assert.match(INFERENCE_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-inference-overview-controls/);
 assert.match(INFERENCE_APP_SCRIPT_FRAGMENTS.configureHomeEntry, /Configure Inference/);
 assert.match(INFERENCE_APP_SCRIPT_FRAGMENTS.sidebarEntry, /id: "inference"/);
@@ -140,6 +147,7 @@ assert.match(platformEntrySource, /\$\{INFERENCE_APP_SCRIPT_FRAGMENTS\.handlers\
 assert.match(platformEntrySource, /inferencePageCaseScript: INFERENCE_PAGE_CASE_SCRIPT/);
 assert.match(platformEntrySource, /InferenceOverviewPage/);
 assert.match(platformEntrySource, /InferenceEndpointDetailPage/);
+assert.match(platformEntrySource, /renderSettingsSurface\(\{ section: "inference", hideHeader: true \}\)/);
 assert.match(platformEntrySource, /configureInfrastructureEntries:[^\n]*INFERENCE_APP_SCRIPT_FRAGMENTS\.sidebarEntry/);
 assert.doesNotMatch(platformEntrySource, /function normalizeDemoSettingsInferenceSettings\(/);
 assert.doesNotMatch(platformEntrySource, /function normalizeSettingsLocalRunnerListPayload\(/);
@@ -150,6 +158,7 @@ assert.doesNotMatch(platformEntrySource, /case "inference":/);
 assert.doesNotMatch(billingCatalogSource, /POST \/api\/real\/billing\/inference\/test/);
 assert.match(overviewPageSource, /ResourceOverviewPage/);
 assert.match(overviewPageSource, /InferenceOverviewGuide/);
+assert.match(overviewPageSource, /CreateInferenceEndpointModal/);
 assert.match(overviewPageSource, /pagination: false/);
 assert.match(detailPageSource, /ResourceDetailPage/);
 assert.match(detailPageSource, /PlatformSettingsSection/);

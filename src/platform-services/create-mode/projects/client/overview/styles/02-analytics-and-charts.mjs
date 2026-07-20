@@ -717,7 +717,7 @@ export const PROJECT_OVERVIEW_CSS_02_FRAGMENT = String.raw`        .playground-p
       }
 
       .playground-project-overview-activity-card.is-main .playground-project-overview-activity-list {
-        gap: 0;
+        gap: 8px;
       }
 
       .playground-project-overview-activity-card.is-main .playground-project-overview-activity-row {
@@ -790,55 +790,6 @@ export const PROJECT_OVERVIEW_CSS_02_FRAGMENT = String.raw`        .playground-p
         line-height: 1;
         font-weight: 600;
         color: rgba(255, 255, 255, 0.82);
-      }
-
-      .playground-project-overview-activity-show-more {
-        position: relative;
-        isolation: isolate;
-        align-self: flex-start;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 30px;
-        padding: 0 14px;
-        border: 0;
-        border-radius: 999px;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.86);
-        font: inherit;
-        font-size: 12px;
-        font-weight: 400;
-        line-height: 1;
-        cursor: pointer;
-      }
-
-      .playground-project-overview-activity-show-more::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        z-index: -1;
-        border-radius: inherit;
-        padding: 1px;
-        background:
-          linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04)),
-          rgba(255, 255, 255, 0.06);
-        -webkit-mask:
-          linear-gradient(#000 0 0) content-box,
-          linear-gradient(#000 0 0);
-        -webkit-mask-composite: xor;
-        mask-composite: exclude;
-      }
-
-      .playground-project-overview-activity-show-more:hover {
-        color: rgba(255, 255, 255, 0.96);
-      }
-
-      .playground-project-overview-activity-actions {
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-        gap: 8px;
-        margin-top: 4px;
       }
 
       .playground-project-overview-latest-update-card {
@@ -1215,7 +1166,7 @@ export const PROJECT_OVERVIEW_CSS_02_FRAGMENT = String.raw`        .playground-p
         gap: 0;
         width: 100%;
         margin-top: 4px;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        border-top: 0;
       }
 
       .playground-project-overview-plugins-list .playground-project-overview-integration-row {

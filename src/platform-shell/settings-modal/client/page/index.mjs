@@ -11,6 +11,7 @@ export function createSettingsModalPageScript(options = {}) {
 
   return String.raw`        function renderSettingsSurface(options = {}) {
           const isEmbeddedSettingsPage = options.embedded === true;
+          const hideSettingsHeader = options.hideHeader === true;
           const isOrganizationBillingSurface = options.organizationBilling === true;
           const requestedSettingsSection = options.section || settingsSection;
           const normalizedSettingsSection = requestedSettingsSection === "password" || requestedSettingsSection === "delete"
@@ -2706,7 +2707,7 @@ ${apiKeysLegacySettingsCase}            case "design":
 
 	          return React.createElement("div", { className: "playground-settings-page" + (isEmbeddedSettingsPage ? " is-embedded" : "") },
 	            React.createElement("div", { className: settingsScrollClassName },
-	              isEmbeddedSettingsPage ? null : settingsHeader,
+	              isEmbeddedSettingsPage || hideSettingsHeader ? null : settingsHeader,
 	              normalizeSettingsDetailNodes(detailContent)
 	            )
 	          );

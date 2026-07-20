@@ -16,6 +16,15 @@ Navigation does not belong to this shell. Breadcrumbs, app-header paths, and bac
 
 Resource-specific pages under `platform-resources/<resource>/detail` define their tab set and supply the content and sidebar controls. Use `tabBarActions` for resource-specific controls and `sidebarToggle` for the sidebar visibility control; the shell always renders the sidebar toggle last.
 
+Use `sidebarAutoCollapseTabs` when selected tabs need the full content width.
+The shell temporarily collapses the sidebar and hides its toggle on those tabs
+without overwriting the caller's sidebar preference, then restores that
+preference when the active tab changes.
+
+The active tab content uses the shared `--resource-detail-section-gap` token,
+which is `42px` by default. Resource sections should rely on that stack spacing
+instead of adding their own outer block margins.
+
 ## Working in this directory
 
 Keep changes inside this directory's stated ownership boundary and use the parent's public entry point instead of importing sibling internals. Update this guide when responsibilities, entry points, or verification commands change. Place focused tests beside the behavior they protect and promote reusable, domain-neutral presentation to `src/platform-ui`.

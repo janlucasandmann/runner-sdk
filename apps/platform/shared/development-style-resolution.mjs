@@ -10,6 +10,7 @@ import { resolveLegacyBrowserSourcePath } from "./legacy-source-resolution.mjs";
 export const PLATFORM_PAGE_STYLE_SOURCE_PATHS = Object.freeze([
   "src/platform-ui/components/composite/popup/popup.css",
   "src/platform-ui/components/ui/selector/selector.css",
+  "src/platform-ui/components/composite/attachments/attachments.css",
   "src/platform-ui/components/composite/data-table/data-table.css",
   "src/platform-ui/components/composite/analytics/analytics.css",
   "src/platform-ui/components/composite/empty-state/empty-state.css",
@@ -29,6 +30,7 @@ export const PLATFORM_PAGE_STYLE_SOURCE_PATHS = Object.freeze([
   "src/platform-ui/components/composite/settings-section/settings-section.css",
   "src/platform-ui/components/ui/version-label/version-label.css",
   "src/platform-ui/pages/details/resource-detail.css",
+  "src/platform-services/develop-mode/shared/client/page/develop-server-detail-page.css",
   "src/platform-ui/pages/permissions/permission-page.css",
   "src/platform-resources/agents/detail/agent-publish-control.css",
 ]);

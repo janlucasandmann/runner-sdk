@@ -166,6 +166,8 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
           useEffect(() => {
             if (shouldGenerateMetronomePythonFiles && !isMetronomeCodeDirty) {
               setMetronomeCodeFilesDraft(generatedMetronomePythonFiles.map((file) => ({ ...file, originalValue: file.value })));
+              setMetronomeCodeUndoStack([]);
+              setMetronomeCodeRedoStack([]);
             }
           }, [shouldGenerateMetronomePythonFiles, generatedMetronomePythonFiles, isMetronomeCodeDirty]);
           const metronomeCodeFiles = isMetronomeCodeDirty
@@ -314,6 +316,8 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
             setEdges(persistedEdges);
             setMetronomeWorkflowNameDraft(String(activeWorkflow?.name || ""));
             setMetronomeCodeFilesDraft([]);
+            setMetronomeCodeUndoStack([]);
+            setMetronomeCodeRedoStack([]);
             setActiveMetronomeCodeFilePath("main.py");
             setIsMetronomeCodeDirty(false);
             setMetronomeCodeRunState({ status: "idle", message: "" });

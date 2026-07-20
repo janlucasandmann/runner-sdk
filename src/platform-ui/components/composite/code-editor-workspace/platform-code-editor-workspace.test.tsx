@@ -34,38 +34,50 @@ describe("PlatformCodeEditorWorkspace", () => {
     expect(onFileSelect).toHaveBeenCalledWith("requirements.txt");
   });
 
-  it("renders footer actions through the shared button primitives", () => {
-    const onRevert = vi.fn();
-    const onSave = vi.fn();
+  it("renders history controls through the shared icon-button primitive", () => {
+    const onUndo = vi.fn();
+    const onRedo = vi.fn();
     render(
       <PlatformCodeEditorWorkspace
         files={[]}
         status="Ready"
-        actions={[
-          {
-            id: "revert",
-            label: "Revert",
-            onClick: onRevert,
-          },
-          {
-            id: "save",
-            label: "Save",
-            variant: "primary",
-            onClick: onSave,
-          },
-        ]}
+        historyControls={{
+          onUndo,
+          onRedo,
+          redoDisabled: true,
+        }}
       />,
     );
 
-    const revertButton = screen.getByRole("button", { name: "Revert" });
-    const saveButton = screen.getByRole("button", { name: "Save" });
-    expect(revertButton.getAttribute("data-platform-button-variant")).toBe("secondary");
-    expect(saveButton.getAttribute("data-platform-button-variant")).toBe("primary");
+    const undoButton = screen.getByRole("button", { name: "Undo" });
+    const redoButton = screen.getByRole("button", { name: "Redo" });
+    expect(undoButton.classList.contains("platform-icon-button")).toBe(true);
+    expect((redoButton as HTMLButtonElement).disabled).toBe(true);
 
-    fireEvent.click(revertButton);
-    fireEvent.click(saveButton);
-    expect(onRevert).toHaveBeenCalledTimes(1);
-    expect(onSave).toHaveBeenCalledTimes(1);
+    fireEvent.click(undoButton);
+    expect(onUndo).toHaveBeenCalledTimes(1);
+    expect(onRedo).not.toHaveBeenCalled();
+  });
+
+  it("supports sidebar actions and nested file disclosures", () => {
+    render(
+      <PlatformCodeEditorWorkspace
+        files={[
+          {
+            id: "src",
+            label: "src",
+            leading: <span>Open</span>,
+            depth: 2,
+          },
+        ]}
+        sidebarActions={<button type="button">Add file</button>}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Add file" })).not.toBeNull();
+    const file = screen.getByRole("button", { name: "src" });
+    expect(file.style.paddingInlineStart).toBe("46px");
+    expect(screen.getByText("Open")).not.toBeNull();
   });
 
   it("can omit the footer for embedded editor surfaces", () => {
