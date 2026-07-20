@@ -2056,7 +2056,7 @@
                       });
                     },
                     onAgentMutated: async () => {
-                      await refreshAgents();
+                      await refreshAgents({ force: true });
                     },
                     onStartThreadWithAgent: (agentId) => {
                       requestPlatformNavigation(() => {
@@ -3237,7 +3237,7 @@
                                 if (options?.threadRecord?.id) {
                                   upsertRealThreadRecord(options.threadRecord);
                                 }
-                                openThreadActionMenu(event, normalizedThreadId, options?.threadRecord || null);
+                                openThreadActionMenu(event, normalizedThreadId, options?.threadRecord || null, options);
                               },
                               onThreadStarted: (threadId, options = {}) => {
                                 const normalizedThreadId = String(threadId || "").trim();
@@ -3865,7 +3865,7 @@
                                   if (options?.threadRecord?.id) {
                                     upsertRealThreadRecord(options.threadRecord);
                                   }
-                                  openThreadActionMenu(event, normalizedThreadId, options?.threadRecord || null);
+                                  openThreadActionMenu(event, normalizedThreadId, options?.threadRecord || null, options);
                                 },
                                 onThreadStarted: (threadId, options = {}) => {
                                   const normalizedThreadId = String(threadId || "").trim();

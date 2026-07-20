@@ -12,6 +12,9 @@ import {
   type RunnerChatNotionDatabase,
 } from "./workspace-files.js";
 
+const WORKSPACE_ENVIRONMENT_REQUIRED_MESSAGE =
+  "Select an environment to browse workspace files.";
+
 export interface RunnerFileBrowserLoadOptions {
   inline?: boolean;
 }
@@ -111,6 +114,14 @@ export function useRunnerFileBrowserSourceLoaders({
   const { github, googleDrive, notion, oneDrive, workspace } = sourceState;
   const { setWorkspaceUnavailable } = sourceState;
   const mapGithubRootItemRef = useRef(mapGithubRootItem);
+  const workspaceEnvironmentIdentityRef = useRef(workspaceEnvironmentId);
+  const workspaceEnvironmentGenerationRef = useRef(0);
+  const workspaceStateEnvironmentIdRef = useRef(workspaceEnvironmentId);
+
+  if (workspaceEnvironmentIdentityRef.current !== workspaceEnvironmentId) {
+    workspaceEnvironmentIdentityRef.current = workspaceEnvironmentId;
+    workspaceEnvironmentGenerationRef.current += 1;
+  }
 
   useEffect(() => {
     mapGithubRootItemRef.current = mapGithubRootItem;
@@ -118,6 +129,8 @@ export function useRunnerFileBrowserSourceLoaders({
 
   const loadWorkspaceFolder = useCallback(
     async (folderId: string | null, options?: RunnerFileBrowserLoadOptions) => {
+      const requestEnvironmentGeneration =
+        workspaceEnvironmentGenerationRef.current;
       const normalizedFolderId = normalizeRunnerWorkspaceFolderPath(folderId) || "root";
       const requestUrl = buildEnvironmentFileListUrl(
         backendUrl,
@@ -126,7 +139,7 @@ export function useRunnerFileBrowserSourceLoaders({
         1,
       );
       if (!requestUrl || typeof fetchImpl !== "function") {
-        setWorkspaceUnavailable("Select an environment to browse workspace files.");
+        setWorkspaceUnavailable(WORKSPACE_ENVIRONMENT_REQUIRED_MESSAGE);
         return;
       }
 
@@ -170,6 +183,13 @@ export function useRunnerFileBrowserSourceLoaders({
           );
         }
 
+        if (
+          workspaceEnvironmentGenerationRef.current !==
+          requestEnvironmentGeneration
+        ) {
+          return;
+        }
+
         const nextItems = normalizeEnvironmentWorkspaceItems(payload);
         workspace.setItems((current) =>
           mergeDriveFolderItems(current, normalizedFolderId, nextItems),
@@ -183,6 +203,12 @@ export function useRunnerFileBrowserSourceLoaders({
         }));
         if (!inline) workspace.setError(null);
       } catch (error) {
+        if (
+          workspaceEnvironmentGenerationRef.current !==
+          requestEnvironmentGeneration
+        ) {
+          return;
+        }
         const message = readErrorMessage(error, "Failed to load workspace files.");
         workspace.setFolderErrorsById((current) => ({
           ...current,
@@ -193,7 +219,12 @@ export function useRunnerFileBrowserSourceLoaders({
           workspace.setError(message);
         }
       } finally {
-        finishFolderLoading(workspaceActions, normalizedFolderId, inline);
+        if (
+          workspaceEnvironmentGenerationRef.current ===
+          requestEnvironmentGeneration
+        ) {
+          finishFolderLoading(workspaceActions, normalizedFolderId, inline);
+        }
       }
     },
     [
@@ -323,18 +354,47 @@ export function useRunnerFileBrowserSourceLoaders({
   );
 
   useEffect(() => {
+    if (!open || currentSource !== "workspace") {
+      workspaceStateEnvironmentIdRef.current = workspaceEnvironmentId;
+      return;
+    }
+    if (
+      workspaceStateEnvironmentIdRef.current === workspaceEnvironmentId
+    ) {
+      return;
+    }
+    workspaceStateEnvironmentIdRef.current = workspaceEnvironmentId;
+    setWorkspaceUnavailable(
+      workspaceEnvironmentId
+        ? null
+        : WORKSPACE_ENVIRONMENT_REQUIRED_MESSAGE,
+    );
+  }, [
+    currentSource,
+    open,
+    setWorkspaceUnavailable,
+    workspaceEnvironmentId,
+  ]);
+
+  useEffect(() => {
     if (!open || currentSource !== "workspace") return;
     if (!hasApiKey) {
-      setWorkspaceUnavailable(null);
+      if (workspace.error !== null) {
+        setWorkspaceUnavailable(null);
+      }
       return;
     }
     if (!workspaceEnvironmentId) {
-      setWorkspaceUnavailable("Select an environment to browse workspace files.");
+      if (workspace.error !== WORKSPACE_ENVIRONMENT_REQUIRED_MESSAGE) {
+        setWorkspaceUnavailable(WORKSPACE_ENVIRONMENT_REQUIRED_MESSAGE);
+      }
       return;
     }
     const folderId = currentFolderId || "root";
     if (
-      workspace.error ||
+      (workspace.error &&
+        workspace.error !== WORKSPACE_ENVIRONMENT_REQUIRED_MESSAGE) ||
+      workspace.loading ||
       workspace.loadedFolderIds.includes(folderId) ||
       workspace.loadingFolderIds.includes(folderId)
     ) {
@@ -350,6 +410,7 @@ export function useRunnerFileBrowserSourceLoaders({
     setWorkspaceUnavailable,
     workspace.error,
     workspace.loadedFolderIds,
+    workspace.loading,
     workspace.loadingFolderIds,
     workspaceEnvironmentId,
   ]);

@@ -11,7 +11,8 @@
 
 .platform-home-page__inner {
   box-sizing: border-box;
-  width: min(100%, 1440px);
+  width: min(100%, var(--platform-page-content-max-width, 87.5rem));
+  max-width: var(--platform-page-content-max-width, 87.5rem);
   min-height: 100%;
   margin: 0 auto;
   padding: 42px 72px 72px;

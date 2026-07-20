@@ -2234,6 +2234,13 @@
                   : null,
                 depth: Number(row?.level || 0),
                 disabled: !entry.isFolder && !canOpenSourceFile,
+                openInTab: canOpenSourceFile,
+                dirty: canOpenSourceFile
+                  && serverSourceDraftContentsRef.current.has(
+                    String(draftServer?.id || selectedServerId || "").trim()
+                      + "|"
+                      + normalizeHistoryPath(entry.path || "")
+                  ),
                 ariaLabel: entry.name || normalizedPath || "Untitled",
               };
             });
@@ -2316,6 +2323,7 @@
               });
             };
             const sourceServerCodeSidebarActions = React.createElement(PlatformButtonSelector, {
+                className: "playground-server-code-add-file-selector",
                 mode: "popup",
                 label: "Add File",
                 leading: React.createElement(Plus, { width: 13, height: 13, strokeWidth: 1.8 }),
@@ -2386,16 +2394,15 @@
                 className: "playground-server-source-code-workspace" + (isServerFileDragging ? " is-dragging" : ""),
                 ariaLabel: serverKindLabel + " code editor",
                 variant: isFunctionServer ? "default" : "full-screen",
-                files: isLoadingCurrentServerFiles ? [] : sourceServerCodeWorkspaceFiles,
+                files: sourceServerCodeWorkspaceFiles,
                 activeFileId: normalizeHistoryPath(serverFileEditorState.path || ""),
                 onFileSelect: handleSourceServerCodeWorkspaceFileSelect,
-                sidebarTitle: "Files",
                 sidebarActions: sourceServerCodeSidebarActions,
-                emptyFiles: isLoadingCurrentServerFiles
-                  ? React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
-                  : draftServer.id && draftServer.id !== PLAYGROUND_SERVER_DRAFT_ID
-                    ? "No source files yet."
-                    : "Create this " + serverKindLabel.toLowerCase() + " first.",
+                isLoadingFiles: isLoadingCurrentServerFiles,
+                loadingFilesMessage: "Loading files...",
+                emptyFiles: draftServer.id && draftServer.id !== PLAYGROUND_SERVER_DRAFT_ID
+                  ? "No source files yet."
+                  : "Create this " + serverKindLabel.toLowerCase() + " first.",
                 editor: renderServerCodeEditorBody(),
                 status: sourceServerCodeStatus,
                 statusTone: sourceServerCodeStatusTone,

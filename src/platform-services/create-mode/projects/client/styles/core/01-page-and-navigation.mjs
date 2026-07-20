@@ -222,10 +222,10 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
       }
 
       .playground-project-workspace-inner.playground-tasks-ticket-screen-inner {
-        width: 100%;
-        max-width: none;
-        margin-left: 0;
-        margin-right: 0;
+        width: min(100%, var(--platform-page-content-max-width, 87.5rem));
+        max-width: var(--platform-page-content-max-width, 87.5rem);
+        margin-left: auto;
+        margin-right: auto;
       }
 
       .playground-tasks-ticket-screen-panel .playground-tasks-detail-shell {
@@ -454,38 +454,17 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
       }
 
       .playground-tasks-ticket-thread-run-row {
-        margin-top: auto;
-      }
-
-      .playground-tasks-ticket-control-button {
+        display: flex;
         width: 100%;
-        min-height: 34px;
-        border: 0;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.08);
-        color: rgba(255, 255, 255, 0.94);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        padding: 7px 12px;
-        font-size: 12px;
-        line-height: 1.2;
-        font-weight: 500;
-        cursor: pointer;
+        flex-direction: column;
       }
 
-      .playground-tasks-ticket-control-button:hover:not(:disabled) {
-        background: rgba(255, 255, 255, 0.12);
-      }
-
-      .playground-tasks-ticket-control-button:disabled {
-        cursor: default;
-        opacity: 0.48;
-      }
-
-      .playground-tasks-ticket-control-button.is-danger {
-        color: rgba(255, 111, 132, 0.95);
+      .playground-tasks-ticket-thread-divider {
+        width: 100%;
+        height: 1px;
+        flex: 0 0 1px;
+        margin: 12px 0;
+        background: rgba(255, 255, 255, 0.1);
       }
 
       .playground-tasks-ticket-screen-sidebar .playground-plugins-section-header {

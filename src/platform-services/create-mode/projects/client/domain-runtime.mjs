@@ -9,15 +9,18 @@ import {
 } from "../../../legacy-browser-source.mjs";
 import { PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT } from "./domain-runtime/01-project-and-task-model.mjs";
 import { PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT } from "./domain-runtime/02-task-data-and-calendar.mjs";
+import { PROJECTS_DOMAIN_RUNTIME_03_FRAGMENT } from "./domain-runtime/03-thread-status.mjs";
 
 export const PROJECTS_DOMAIN_RUNTIME_FRAGMENT_PATHS = Object.freeze([
   "domain-runtime/01-project-and-task-model.mjs",
   "domain-runtime/02-task-data-and-calendar.mjs",
+  "domain-runtime/03-thread-status.mjs",
 ]);
 
 const projectsDomainRuntimeTemplate = joinLegacyBrowserSourceFragments([
   PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT,
   PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT,
+  PROJECTS_DOMAIN_RUNTIME_03_FRAGMENT,
 ]);
 
 export const PROJECTS_DOMAIN_RUNTIME_SCRIPT =

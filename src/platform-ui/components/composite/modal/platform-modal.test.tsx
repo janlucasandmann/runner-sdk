@@ -8,7 +8,10 @@ import {
   PlatformModal,
   PlatformModalBackdrop,
   PlatformModalBody,
+  PlatformModalContent,
   PlatformModalFooter,
+  PlatformModalSidebar,
+  PlatformModalSplitLayout,
   PlatformModalSurface,
 } from "./platform-modal.js";
 
@@ -244,6 +247,42 @@ describe("PlatformModal", () => {
     expect(dialog.querySelectorAll("[data-platform-modal-part='footer']")).toHaveLength(1);
     expect(dialog.querySelector(".platform-modal-body.custom-body")?.textContent).toBe("Body slot");
     expect(dialog.querySelector(".platform-modal-footer.custom-footer")?.textContent).toBe("Footer slot");
+  });
+
+  it("provides matched sidebar and content panes for split workflows", () => {
+    render(
+      <PlatformModal
+        open
+        visible
+        portal={false}
+        title="Browse files"
+        showHeader={false}
+        showFooter={false}
+        onClose={() => {}}
+      >
+        <PlatformModalSplitLayout>
+          <PlatformModalSidebar title="Browse files">
+            Sidebar navigation
+          </PlatformModalSidebar>
+          <PlatformModalContent
+            header={<span>Workspace</span>}
+            footer={<button type="button">Attach</button>}
+          >
+            File list
+          </PlatformModalContent>
+        </PlatformModalSplitLayout>
+      </PlatformModal>,
+    );
+
+    const dialog = screen.getByRole("dialog", { name: "Browse files" });
+    const sidebar = dialog.querySelector("[data-platform-modal-part='sidebar']");
+    const content = dialog.querySelector("[data-platform-modal-part='content']");
+    expect(sidebar?.textContent).toContain("Sidebar navigation");
+    expect(content?.textContent).toContain("File list");
+    expect(
+      dialog.querySelectorAll("[data-platform-modal-pane-part='header']"),
+    ).toHaveLength(2);
+    expect(screen.getByRole("button", { name: "Attach" })).toBeTruthy();
   });
 
   it("renders an accessible search header and focuses its input when opened", async () => {

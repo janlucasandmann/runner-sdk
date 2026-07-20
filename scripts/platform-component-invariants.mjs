@@ -6,6 +6,7 @@ const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "
 const componentRoot = path.join(packageRoot, "src", "platform-ui", "components");
 const primitiveComponents = [
   "button",
+  "checkbox",
   "icon-button",
   "label",
   "search",
@@ -137,6 +138,10 @@ for (const filePath of runtimeFiles) {
 const packageJson = JSON.parse(await fs.readFile(path.join(packageRoot, "package.json"), "utf8"));
 const canonicalExports = new Map([
   ["./platform-ui/components/ui/button", "./dist/platform-ui/components/ui/button/index.js"],
+  [
+    "./platform-ui/components/ui/checkbox",
+    "./dist/platform-ui/components/ui/checkbox/index.js",
+  ],
   [
     "./platform-ui/components/ui/icon-button",
     "./dist/platform-ui/components/ui/icon-button/index.js",

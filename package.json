@@ -42,6 +42,13 @@
     "./platform-ui/components/ui/button/styles.css": {
       "default": "./dist/platform-ui/components/ui/button/button.css"
     },
+    "./platform-ui/components/ui/checkbox": {
+      "types": "./dist/platform-ui/components/ui/checkbox/index.d.ts",
+      "default": "./dist/platform-ui/components/ui/checkbox/index.js"
+    },
+    "./platform-ui/components/ui/checkbox/styles.css": {
+      "default": "./dist/platform-ui/components/ui/checkbox/checkbox.css"
+    },
     "./platform-ui/components/ui/icon-button": {
       "types": "./dist/platform-ui/components/ui/icon-button/index.d.ts",
       "default": "./dist/platform-ui/components/ui/icon-button/index.js"
@@ -147,6 +154,13 @@
     },
     "./platform-ui/components/composite/empty-state/styles.css": {
       "default": "./dist/platform-ui/components/composite/empty-state/empty-state.css"
+    },
+    "./platform-ui/components/composite/file-explorer": {
+      "types": "./dist/platform-ui/components/composite/file-explorer/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/file-explorer/index.js"
+    },
+    "./platform-ui/components/composite/file-explorer/styles.css": {
+      "default": "./dist/platform-ui/components/composite/file-explorer/file-explorer.css"
     },
     "./platform-ui/components/composite/floating-sidebar": {
       "types": "./dist/platform-ui/components/composite/floating-sidebar/index.d.ts",
@@ -413,6 +427,7 @@
     "platform-component-invariants": "node ./scripts/platform-component-invariants.mjs",
     "platform-table-test": "npm run platform-table-invariants && vitest run src/platform-ui/components/composite/data-table",
     "platform-button-test": "vitest run src/platform-ui/components/ui/button",
+    "platform-checkbox-test": "vitest run src/platform-ui/components/ui/checkbox",
     "platform-icon-button-test": "vitest run src/platform-ui/components/ui/icon-button",
     "platform-search-test": "vitest run src/platform-ui/components/ui/search",
     "platform-selector-test": "vitest run src/platform-ui/components/ui/selector",

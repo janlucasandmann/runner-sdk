@@ -957,7 +957,7 @@ ${metronomeSidebarCss}
       .sidebar-thread-popup {
         position: fixed;
         z-index: 121;
-        width: 220px;
+        width: 240px;
       }
 
       .sidebar-thread-popup.is-agent-list-action-menu {
@@ -1006,17 +1006,17 @@ ${metronomeSidebarCss}
       }
 
       .sidebar-thread-popup-row-icon {
-        width: 14px;
-        height: 14px;
+        width: var(--platform-popup-icon-size, 13px);
+        height: var(--platform-popup-icon-size, 13px);
         flex-shrink: 0;
       }
 
       .sidebar-thread-popup-row-label {
         min-width: 0;
         flex: 1;
-        font-size: 14px;
-        font-weight: 500;
-        line-height: 1.2;
+        font-size: inherit;
+        font-weight: 400;
+        line-height: inherit;
       }
 
       @keyframes playground-agent-list-action-menu-fade-out {

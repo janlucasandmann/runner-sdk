@@ -126,6 +126,25 @@ export interface PlatformModalHeaderProps extends Omit<HTMLAttributes<HTMLDivEle
   closeButtonDisabled?: boolean;
 }
 
+export interface PlatformModalSplitLayoutProps extends HTMLAttributes<HTMLDivElement> {}
+
+export interface PlatformModalSidebarProps
+  extends Omit<HTMLAttributes<HTMLElement>, "title"> {
+  title: ReactNode;
+  headerActions?: ReactNode;
+  headerClassName?: string;
+  titleClassName?: string;
+  bodyClassName?: string;
+}
+
+export interface PlatformModalContentProps extends HTMLAttributes<HTMLElement> {
+  header?: ReactNode;
+  footer?: ReactNode;
+  headerClassName?: string;
+  bodyClassName?: string;
+  footerClassName?: string;
+}
+
 const FOCUSABLE_SELECTOR = [
   "a[href]",
   "area[href]",
@@ -787,5 +806,97 @@ export function PlatformModalFooter({ className = "", ...props }: HTMLAttributes
       data-platform-modal-part="footer"
       className={joinClassNames("platform-modal-footer", className)}
     />
+  );
+}
+
+export function PlatformModalSplitLayout({
+  className = "",
+  ...props
+}: PlatformModalSplitLayoutProps) {
+  return (
+    <div
+      {...props}
+      data-platform-modal-layout="split"
+      className={joinClassNames("platform-modal-split-layout", className)}
+    />
+  );
+}
+
+export function PlatformModalSidebar({
+  title,
+  headerActions,
+  headerClassName = "",
+  titleClassName = "",
+  bodyClassName = "",
+  className = "",
+  children,
+  ...props
+}: PlatformModalSidebarProps) {
+  return (
+    <aside
+      {...props}
+      data-platform-modal-part="sidebar"
+      className={joinClassNames("platform-modal-sidebar", className)}
+    >
+      <div
+        className={joinClassNames("platform-modal-sidebar__header", headerClassName)}
+        data-platform-modal-pane-part="header"
+      >
+        <div
+          className={joinClassNames("platform-modal-sidebar__title", titleClassName)}
+        >
+          {title}
+        </div>
+        {headerActions != null ? (
+          <div className="platform-modal-sidebar__header-actions">{headerActions}</div>
+        ) : null}
+      </div>
+      <div
+        className={joinClassNames("platform-modal-sidebar__body", bodyClassName)}
+        data-platform-modal-pane-part="body"
+      >
+        {children}
+      </div>
+    </aside>
+  );
+}
+
+export function PlatformModalContent({
+  header,
+  footer,
+  headerClassName = "",
+  bodyClassName = "",
+  footerClassName = "",
+  className = "",
+  children,
+  ...props
+}: PlatformModalContentProps) {
+  return (
+    <section
+      {...props}
+      data-platform-modal-part="content"
+      className={joinClassNames("platform-modal-content", className)}
+    >
+      <div
+        className={joinClassNames("platform-modal-content__header", headerClassName)}
+        data-platform-modal-pane-part="header"
+      >
+        {header}
+      </div>
+      <div
+        className={joinClassNames("platform-modal-content__body", bodyClassName)}
+        data-platform-modal-pane-part="body"
+      >
+        {children}
+      </div>
+      {footer != null ? (
+        <div
+          className={joinClassNames("platform-modal-content__footer", footerClassName)}
+          data-platform-modal-pane-part="footer"
+        >
+          {footer}
+        </div>
+      ) : null}
+    </section>
   );
 }

@@ -474,7 +474,8 @@
         .playground-content-shell {
           --playground-content-nav-height: 50px;
           --playground-thread-task-detail-width: min(42vw, 520px);
-          --playground-centered-page-max-width: 87.5rem;
+          --platform-page-content-max-width: 87.5rem;
+          --playground-centered-page-max-width: var(--platform-page-content-max-width);
           --playground-thread-content-max-width: 56rem;
           position: relative;
           height: 100%;

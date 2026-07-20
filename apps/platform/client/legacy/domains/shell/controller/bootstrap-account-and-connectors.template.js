@@ -247,6 +247,13 @@
           const [isThreadsLoading, setIsThreadsLoading] = useState(false);
           const [realThreadsHasMore, setRealThreadsHasMore] = useState(false);
           const [realAgents, setRealAgents] = useState([]);
+          const realAgentsRef = useRef([]);
+          const realAgentsScopeKeyRef = useRef("");
+          const activeAgentRequestScopeKeyRef = useRef("");
+          const agentRefreshInFlightRef = useRef({
+            scopeKey: "",
+            promise: null,
+          });
           const [realEnvironments, setRealEnvironments] = useState([]);
           const realEnvironmentsRef = useRef([]);
           const [realServers, setRealServers] = useState([]);
@@ -270,6 +277,9 @@
           useEffect(() => {
             realThreadsRef.current = realThreads;
           }, [realThreads]);
+          useEffect(() => {
+            realAgentsRef.current = realAgents;
+          }, [realAgents]);
           useEffect(() => {
             realEnvironmentsRef.current = realEnvironments;
           }, [realEnvironments]);
@@ -543,6 +553,14 @@
               .map((key) => key + ":" + String(requestHeaders[key] || ""))
               .join("|")
           ), [requestHeaders]);
+          const activeAgentRequestScopeKey = useMemo(() => (
+            buildPlaygroundAgentListScopeKey({
+              backendUrl: proxyBackendBase,
+              headers: authRequestHeaders,
+              identity: hasSessionAuth ? String(sessionState.userId || "").trim() : "",
+            })
+          ), [authRequestHeaders, hasSessionAuth, proxyBackendBase, sessionState.userId]);
+          activeAgentRequestScopeKeyRef.current = activeAgentRequestScopeKey;
           const shouldLoadGuardrailSets = activePage === "guardrails";
   ${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.workspaceLifecycle}        useEffect(() => {
             if (!shouldLoadGuardrailSets) {
@@ -1186,6 +1204,8 @@
             setRealThreads([]);
             setRealThreadsHasMore(false);
             setRealAgents([]);
+            realAgentsRef.current = [];
+            realAgentsScopeKeyRef.current = "";
             setRealEnvironments([]);
             setRealServers([]);
             setCurrentThreadId("");

@@ -34,6 +34,8 @@ export const ORGANIZATIONS_WORKSPACE_LIFECYCLE_SCRIPT = `	        useEffect(() =
 		          setMetronomeRunTraceState({ key: "", status: "idle", run: null, error: "" });
 		          metronomeSidebarRunsLoadKeyRef.current = "";
 		          setRealAgents([]);
+		          realAgentsRef.current = [];
+		          realAgentsScopeKeyRef.current = "";
 	          setRealEnvironments([]);
 	          setRealProjects([]);
 	          setSettingsTriggers([]);

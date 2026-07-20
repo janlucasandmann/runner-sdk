@@ -224,6 +224,7 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
                   id: normalizedPath,
                   label: normalizedPath,
                   icon: React.createElement(Icon, { width: 15, height: 15, strokeWidth: 1.8 }),
+                  dirty: String(file?.value || "") !== String(file?.originalValue ?? file?.value ?? ""),
                 };
               })
               .filter(Boolean);

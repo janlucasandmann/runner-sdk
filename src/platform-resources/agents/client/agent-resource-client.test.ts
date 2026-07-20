@@ -5,7 +5,9 @@ import { createAgentResourceRepository } from "./agent-resource-client.js";
 describe("agent resource repository", () => {
   it("unwraps list responses and encodes delete identifiers", async () => {
     const get = vi.fn().mockResolvedValue({
-      agents: [{ id: "agent-1" }],
+      payload: {
+        resources: [{ agentId: "agent-1" }],
+      },
     });
     const remove = vi.fn().mockResolvedValue({ deleted: true });
     const repository = createAgentResourceRepository({
@@ -13,7 +15,7 @@ describe("agent resource repository", () => {
       delete: remove,
     });
 
-    await expect(repository.list()).resolves.toEqual([{ id: "agent-1" }]);
+    await expect(repository.list()).resolves.toEqual([{ id: "agent-1", agentId: "agent-1" }]);
     await repository.delete("agent / 1");
 
     expect(get).toHaveBeenCalledWith("/agents", { signal: undefined });

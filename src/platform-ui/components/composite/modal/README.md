@@ -18,6 +18,12 @@ Set `headerVariant="media"` and provide `headerMedia` when a workflow needs a vi
 
 The high-level modal always owns three structural slots: header, body, and footer. Children become body content and the optional `footer` prop becomes footer content. Existing explicit `PlatformModalBody` and `PlatformModalFooter` children are recognized without adding nested slots. Set `showHeader`, `showBody`, or `showFooter` to `false` when a flow intentionally omits that part; an omitted visual header retains the title as the accessible dialog name.
 
+Split workflows use `PlatformModalSplitLayout`, `PlatformModalSidebar`, and
+`PlatformModalContent`. The sidebar and content primitives own matching 49px
+header rows with identical horizontal and vertical padding. Put the dialog
+title in the sidebar and the active workflow controls in the content header;
+the required `PlatformModal` title remains the accessible dialog name.
+
 The structured surface itself has no padding. The body owns 24px padding, while the header and footer each own 12px vertical and 24px horizontal padding. Empty body and footer slots collapse visually. Low-level `PlatformModalSurface` usage retains 24px compatibility padding unless it opts into the structured layout.
 
 Opening is synchronous with the render that sets `open=true`; callers must not stage a separate `visible` frame. The browser handles the 60ms transition through `@starting-style`, beginning at 75% scale, so ordinary React rerenders cannot restart the animation. The same duration controls retained rendering during close.

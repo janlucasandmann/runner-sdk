@@ -5295,7 +5295,9 @@ export function RunnerChat({
         ? notionRootLabel
       : currentFileBrowserSource === "one-drive"
         ? oneDriveRootLabel
-        : selectedEnvironment?.name || workspaceRootLabel;
+        : selectedEnvironment?.name
+          ? `${selectedEnvironment.name} Computer`
+          : workspaceRootLabel;
   const fileBrowserItems =
     currentFileBrowserSource === "google-drive"
       ? googleDriveItems
@@ -7287,20 +7289,20 @@ export function RunnerChat({
                             </button>
                           </div>
                           <div className="tb-popup-panel-section tb-popup-panel-section-attach-header">
-                            <div className="platform-switch" role="group" aria-label="Attachment source">
-                              <button type="button" className="platform-switch__option is-active" onClick={handleUploadNewFilesClick}>
-                                Upload New
-                              </button>
-                              <button
-                                type="button"
-                                className="platform-switch__option"
-                                onClick={() => {
+                            <PlatformSwitch
+                              className="tb-popup-attachment-source-switch"
+                              ariaLabel="Attachment source"
+                              value="upload"
+                              options={[
+                                { value: "upload", label: "Upload New" },
+                                { value: "workspace", label: "From Workspace" },
+                              ]}
+                              onValueChange={(nextSource) => {
+                                if (nextSource === "workspace") {
                                   openFileBrowserModal("workspace");
-                                }}
-                              >
-                                From Workspace
-                              </button>
-                            </div>
+                                }
+                              }}
+                            />
                           </div>
                           <div className="tb-popup-panel-section tb-popup-panel-section-attach-body tb-popup-panel-section-divider tb-popup-panel-section-divider-spaced">
                             <button
@@ -7692,6 +7694,7 @@ export function RunnerChat({
             <RunnerFileBrowserItem
               key={buildGithubEffectiveRootItem(item).id}
               allItems={fileBrowserItems}
+              backendUrl={normalizedBackendUrl}
               branchLoadingRepoFullNames={githubBranchLoadingRepoFullNames}
               branchesByRepoFullName={githubBranchesByRepoFullName}
               buildEffectiveGithubRootItem={buildGithubEffectiveRootItem}
@@ -7715,6 +7718,7 @@ export function RunnerChat({
               selectedItemIds={selectedFileBrowserIds}
               source={currentFileBrowserSource}
               workspaceFolderErrorsById={workspaceFolderErrorsById}
+              workspaceEnvironmentId={selectedEnvironmentId || ""}
               workspaceLoadingFolderIds={loadingWorkspaceFolderIds}
             />
           )}
@@ -7731,6 +7735,7 @@ export function RunnerChat({
         selectedItemLabel={selectedFileBrowserLabel}
         isAttaching={isFileBrowserAttaching}
         onAttach={handleFileBrowserAttach}
+        onPreviewClose={() => setFileBrowserPreviewId(null)}
         onClose={closeFileBrowserModal}
         onApiKeyPromptClose={closeFileBrowserApiKeyPrompt}
       />

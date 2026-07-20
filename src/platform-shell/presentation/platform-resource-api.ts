@@ -12,6 +12,12 @@ export {
   readCachedAgentsOverviewAnalytics,
 } from "../../platform-resources/agents/overview/agents-overview-analytics-client.js";
 export {
+  buildPlatformAgentListScopeKey,
+  normalizePlatformAgentListRecords,
+  readCachedPlatformAgentList,
+  writeCachedPlatformAgentList,
+} from "../../platform-resources/agents/client/agent-list-cache.js";
+export {
   ComputersOverviewAnalyticsRequestError,
   fetchComputersOverviewAnalytics,
   invalidateComputersOverviewAnalytics,

@@ -47,14 +47,56 @@
           useEffect(() => {
             if (!hasRealAccess) {
               setRealAgents([]);
+              realAgentsRef.current = [];
+              realAgentsScopeKeyRef.current = "";
               return;
             }
             const delayMs = activePage === "resources" && resourcesView === "servers" && resourcesServerKind === "database"
               ? 5000
               : 0;
-            const timer = window.setTimeout(() => void refreshAgents(), delayMs);
-            return () => window.clearTimeout(timer);
-          }, [activePage, hasRealAccess, refreshAgents, resourcesServerKind, resourcesView]);
+            const shouldRecoverTicketAgents = (
+              activePage === "tasks"
+              || activePage === "calendar"
+              || Boolean(threadTaskOpenRequest)
+            );
+            const retryDelays = shouldRecoverTicketAgents
+              ? [delayMs, 1500, 5000]
+              : [delayMs];
+            let cancelled = false;
+            let timer = null;
+            let attemptIndex = 0;
+
+            const scheduleNextAgentRefresh = () => {
+              const nextDelay = retryDelays[attemptIndex];
+              timer = window.setTimeout(async () => {
+                const nextAgents = await refreshAgents();
+                if (cancelled) return;
+                attemptIndex += 1;
+                if (
+                  shouldRecoverTicketAgents
+                  && nextAgents.length === 0
+                  && attemptIndex < retryDelays.length
+                ) {
+                  scheduleNextAgentRefresh();
+                }
+              }, nextDelay);
+            };
+
+            scheduleNextAgentRefresh();
+            return () => {
+              cancelled = true;
+              if (timer !== null) {
+                window.clearTimeout(timer);
+              }
+            };
+          }, [
+            activePage,
+            hasRealAccess,
+            refreshAgents,
+            resourcesServerKind,
+            resourcesView,
+            threadTaskOpenRequest,
+          ]);
   
           useEffect(() => {
             if (!hasRealAccess) {

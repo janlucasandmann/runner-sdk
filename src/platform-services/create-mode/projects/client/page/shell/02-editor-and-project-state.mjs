@@ -1187,6 +1187,12 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
 	          return Array.from(new Set(ids));
 	        }, [draftTask?.lastStartedThreadId, draftTask?.linkedThreadIds]);
 	        const selectedTaskThreadIdsKey = useMemo(() => selectedTaskThreadIds.join("|"), [selectedTaskThreadIds]);
+	        const taskDetailThreadSummaryKey = useMemo(() => (
+	          (Array.isArray(taskDetailThreadRecords) ? taskDetailThreadRecords : [])
+	            .map((thread) => String(thread?.id || "").trim() + ":" + String(thread?.status || "").trim().toLowerCase())
+	            .filter(Boolean)
+	            .join("|")
+	        ), [taskDetailThreadRecords]);
 	        const selectedTaskThreads = useMemo(() => {
           const normalizedTaskId = String(draftTask?.id || selectedTaskId || "").trim();
           if (!normalizedTaskId) {
@@ -1199,9 +1205,9 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
           const matchedById = new Map();
 
           normalizeThreadList([
-            ...(Array.isArray(taskDetailThreadRecords) ? taskDetailThreadRecords : []),
-            ...(Array.isArray(projectOverviewThreads) ? projectOverviewThreads : []),
             ...(Array.isArray(selectedProjectRecentThreads) ? selectedProjectRecentThreads : []),
+            ...(Array.isArray(projectOverviewThreads) ? projectOverviewThreads : []),
+            ...(Array.isArray(taskDetailThreadRecords) ? taskDetailThreadRecords : []),
           ]).forEach((thread) => {
             const threadId = String(thread?.id || "").trim();
             if (!threadId) {

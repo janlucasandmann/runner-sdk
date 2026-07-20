@@ -10,6 +10,7 @@ import { resolveLegacyBrowserSourcePath } from "./legacy-source-resolution.mjs";
 export const PLATFORM_PAGE_STYLE_SOURCE_PATHS = Object.freeze([
   "src/platform-ui/components/composite/popup/popup.css",
   "src/platform-ui/components/ui/selector/selector.css",
+  "src/platform-ui/components/ui/checkbox/checkbox.css",
   "src/platform-ui/components/composite/attachments/attachments.css",
   "src/platform-ui/components/composite/data-table/data-table.css",
   "src/platform-ui/components/composite/analytics/analytics.css",

@@ -58,6 +58,7 @@
                 const next = { ...current };
                 nextServers.forEach((server) => {
                   if (!server?.id) return;
+                  if (authoritativeServerDetailIdsRef.current.has(server.id)) return;
                   next[server.id] = normalizePlaygroundServerRecord({
                     ...(next[server.id] || {}),
                     ...server,
@@ -149,17 +150,24 @@
               return templatePreviewServer;
             }
 
+            const activeRequest = serverDetailsRequestRef.current.get(serverId) || {
+              promise: null,
+              requestId: 0,
+            };
+            if (options?.force !== true && activeRequest.promise) {
+              return activeRequest.promise.catch(() => null);
+            }
+            const requestId = activeRequest.requestId + 1;
             setLoadingServerId(serverId);
-            try {
+            const request = (async () => {
               const data = await fetchPlaygroundCachedDatabaseResourceJson(
                 backendUrl + "/servers/" + encodeURIComponent(serverId),
                 requestHeaders,
                 {
                   scopeKey: databaseListScopeKey + "|server-details",
-                  ttlMs: PLAYGROUND_DATABASE_DETAIL_CACHE_TTL_MS,
+                  ttlMs: 0,
                   force: options?.force === true,
-                  staleWhileRevalidate: true,
-                  priority: "low",
+                  priority: "high",
                 }
               );
 
@@ -167,17 +175,44 @@
               if (!normalized) {
                 throw new Error("Server response was empty.");
               }
-
-              setServerDetailsById((current) => ({
-                ...current,
-                [serverId]: normalized,
-              }));
-              if (selectedServerIdRef.current === serverId && !serverEditorDirtyRef.current) {
-                setDraftServer(normalized);
+              if (serverDetailsRequestRef.current.get(serverId)?.requestId !== requestId) {
+                return normalized;
               }
+
+              authoritativeServerDetailIdsRef.current.add(serverId);
+              setServerDetailsById((current) => {
+                const merged = mergeAuthoritativeServerRecordWithLoadedVersions(
+                  current[serverId],
+                  normalized
+                );
+                return {
+                  ...current,
+                  [serverId]: merged,
+                };
+              });
+              if (selectedServerIdRef.current === serverId && !serverEditorDirtyRef.current) {
+                setDraftServer((current) => (
+                  mergeAuthoritativeServerRecordWithLoadedVersions(current, normalized)
+                ));
+              }
+              setServerSaveState((current) => ({
+                ...current,
+                error: "",
+              }));
               return normalized;
+            })();
+            serverDetailsRequestRef.current.set(serverId, {
+              promise: request,
+              requestId,
+            });
+
+            try {
+              return await request;
             } catch (error) {
-              if (selectedServerIdRef.current === serverId) {
+              if (
+                selectedServerIdRef.current === serverId
+                && serverDetailsRequestRef.current.get(serverId)?.requestId === requestId
+              ) {
                 setServerSaveState((current) => ({
                   ...current,
                   error: error instanceof Error ? error.message : "Failed to load server.",
@@ -185,7 +220,13 @@
               }
               return null;
             } finally {
-              setLoadingServerId((current) => current === serverId ? "" : current);
+              if (serverDetailsRequestRef.current.get(serverId)?.requestId === requestId) {
+                serverDetailsRequestRef.current.set(serverId, {
+                  promise: null,
+                  requestId,
+                });
+                setLoadingServerId((current) => current === serverId ? "" : current);
+              }
             }
           }, [backendUrl, databaseListScopeKey, requestHeaders, resourceTemplatePreviewServerRecordById]);
 
@@ -389,7 +430,7 @@
                     force,
                     persist: true,
                     staleWhileRevalidate: !force,
-                    priority: "high",
+                    priority: "low",
                   }
                 );
                 const overviewResources = Array.isArray(overviewData?.analytics?.resources)
@@ -1016,6 +1057,8 @@
               const response = await fetch(buildPlaygroundServerBindingsUrl(backendUrl, normalizedServerId), {
                 method: "GET",
                 headers: requestHeaders,
+                cache: "no-store",
+                priority: "high",
               });
               const data = await response.json().catch(() => ({}));
               if (!response.ok) {
@@ -1025,6 +1068,7 @@
               const bindings = Array.isArray(data?.bindings)
                 ? data.bindings.map(normalizePlaygroundServerBindingRecord).filter(Boolean)
                 : [];
+              authoritativeServerBindingIdsRef.current.add(normalizedServerId);
               setServerBindingsById((current) => ({
                 ...current,
                 [normalizedServerId]: bindings,
@@ -1086,6 +1130,8 @@
               const response = await fetch(buildPlaygroundServerContextUrl(backendUrl, normalizedServerId), {
                 method: "GET",
                 headers: requestHeaders,
+                cache: "no-store",
+                priority: "high",
               });
               const data = await response.json().catch(() => ({}));
               if (!response.ok) {
@@ -1101,10 +1147,12 @@
                 ...current,
                 [normalizedServerId]: context,
               }));
-              setServerBindingsById((current) => ({
-                ...current,
-                [normalizedServerId]: Array.isArray(context.bindings) ? context.bindings : [],
-              }));
+              if (!authoritativeServerBindingIdsRef.current.has(normalizedServerId)) {
+                setServerBindingsById((current) => ({
+                  ...current,
+                  [normalizedServerId]: Array.isArray(context.bindings) ? context.bindings : [],
+                }));
+              }
               return context;
             } catch (error) {
               setServerRuntimeState((current) => ({
@@ -1907,6 +1955,7 @@
             setServerDetailsById((current) => {
               const next = { ...current };
               metricServers.forEach((server) => {
+                if (authoritativeServerDetailIdsRef.current.has(server.id)) return;
                 next[server.id] = normalizePlaygroundServerRecord({
                   ...(next[server.id] || {}),
                   ...server,
@@ -2303,19 +2352,14 @@
             setServerDetailsCollapsed(false);
             setDraftServer(seedServer ? normalizePlaygroundServerRecord(seedServer) : null);
             const seedServerKind = canonicalizePlaygroundServerKind(seedServer?.kind);
-            if (["function", "web_app", "auth", "agent_runtime", "secrets", "payments"].includes(seedServerKind)) {
-              void loadServerAnalytics(selectedServerId, { period: serverDetailChartTimescale })
-                .finally(() => loadServerDetails(selectedServerId));
-            } else {
-              void loadServerDetails(selectedServerId);
-            }
+            void loadServerDetails(selectedServerId);
             if (!["auth", "agent_runtime", "voice_agent", "secrets", "payments", "function", "web_app"].includes(seedServerKind)) {
               void loadServerFiles(selectedServerId);
             }
-            if (!["function", "web_app", "auth", "agent_runtime", "secrets", "payments"].includes(seedServerKind)) {
+            if (!["auth", "agent_runtime", "secrets", "payments"].includes(seedServerKind)) {
               void loadServerBindings(selectedServerId);
             }
-          }, [loadServerAnalytics, loadServerBindings, loadServerDetails, loadServerFiles, orderedServers, resourceMode, selectedServerId, serverDetailChartTimescale, serverDetailsById]);
+          }, [loadServerBindings, loadServerDetails, loadServerFiles, orderedServers, resourceMode, selectedServerId, serverDetailsById]);
 
           useEffect(() => {
             if (

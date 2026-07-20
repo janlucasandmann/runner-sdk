@@ -1130,6 +1130,7 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
           setTaskParentPickerState(null);
           setMissionControlStrategyOpen(false);
           setProjectTaskDetailScreenOpen(Boolean(options?.screen));
+          selectedTaskIdRef.current = normalizedTaskId;
           setSelectedTaskId(normalizedTaskId);
         }
 

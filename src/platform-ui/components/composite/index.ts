@@ -7,6 +7,7 @@ export * from "./detail-sidebar/index.js";
 export * from "./detail-tab-bar/index.js";
 export * from "./diff-viewer/index.js";
 export * from "./empty-state/index.js";
+export * from "./file-explorer/index.js";
 export * from "./floating-sidebar/index.js";
 export * from "./instructions-editor/index.js";
 export * from "./loading-state/index.js";

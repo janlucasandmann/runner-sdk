@@ -7,12 +7,18 @@
 `PlatformCodeEditorWorkspace` is the canonical multi-file editing surface. It owns:
 
 - the file navigation rail and active-file presentation;
+- a VS Code-style tab strip with persistent open files, keyboard navigation, close controls, and dirty-state markers;
+- a two-line Explorer header with actions above full-width file search;
+- file filtering through the shared `PlatformSearch` primitive;
+- centered file-loading feedback through the shared `PlatformLoadingState`;
 - nested-file disclosure and optional sidebar actions;
 - the editor content region and empty states;
 - the status footer;
 - Undo and Redo controls rendered through the shared icon-button primitive.
 
 The caller remains responsible for file data, editor implementation, draft state, and persistence.
+Set `openInTab={false}` on navigational file rows such as folders. File rows can expose
+`dirty`, `closable`, `tabLabel`, and `tabIcon` metadata for the editor tab strip.
 Use `variant="full-screen"` when the workspace should occupy the complete width and height exposed by its content container.
 
 ```tsx

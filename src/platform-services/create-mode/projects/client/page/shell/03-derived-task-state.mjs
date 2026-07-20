@@ -1,80 +1,226 @@
 export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarPopover("");
           setTaskDetailThreadSearchQuery("");
+          setTaskDetailThreadRecords([]);
+          setTaskDetailThreadsState({
+            status: selectedTaskId ? "loading" : "idle",
+            error: "",
+          });
           setTaskCommentMode("");
         }, [selectedTaskId]);
         useEffect(() => {
-	          const normalizedTaskId = String(draftTask?.id || "").trim();
-	          if (!normalizedTaskId) {
-	            taskDetailThreadRecordsLoadKeyRef.current = "";
-	            setTaskDetailThreadRecords([]);
-	            setTaskDetailThreadsState({
+          const normalizedTaskId = String(draftTask?.id || "").trim();
+          if (!normalizedTaskId) {
+            setTaskDetailThreadRecords([]);
+            setTaskDetailThreadsState({
               status: "idle",
               error: "",
-	            });
-	            return undefined;
-	          }
-	          const loadKey = [
-	            backendUrl,
-	            requestHeadersKey,
-	            selectedProjectId,
-	            normalizedTaskId,
-	            selectedTaskThreadIdsKey,
-	          ].join("|");
-	          if (taskDetailThreadRecordsLoadKeyRef.current === loadKey) {
-	            return undefined;
-	          }
-	          taskDetailThreadRecordsLoadKeyRef.current = loadKey;
+            });
+            return undefined;
+          }
 
-	          let cancelled = false;
-          setTaskDetailThreadsState({
-            status: "loading",
-            error: "",
-          });
+          const linkedThreadIds = selectedTaskThreadIds
+            .map((threadId) => String(threadId || "").trim())
+            .filter(Boolean);
+          if (linkedThreadIds.length === 0) {
+            setTaskDetailThreadRecords([]);
+            setTaskDetailThreadsState((current) => (
+              current.status === "ready" && !current.error
+                ? current
+                : { status: "ready", error: "" }
+            ));
+            return undefined;
+          }
 
-          void (async () => {
+          const threadRecordsById = new Map(
+            (Array.isArray(taskDetailThreadRecords) ? taskDetailThreadRecords : [])
+              .map((thread) => [String(thread?.id || "").trim(), thread])
+              .filter(([threadId]) => Boolean(threadId))
+          );
+          const summariesLoaded = linkedThreadIds.every((threadId) => threadRecordsById.has(threadId));
+          if (!summariesLoaded) {
+            setTaskDetailThreadsState((current) => (
+              current.status === "loading" && !current.error
+                ? current
+                : { status: "loading", error: "" }
+            ));
+            return undefined;
+          }
+
+          setTaskDetailThreadsState((current) => (
+            current.status === "ready" && !current.error
+              ? current
+              : { status: "ready", error: "" }
+          ));
+
+          const activeThreadIds = linkedThreadIds.filter((threadId) => (
+            isPlaygroundTaskThreadStatusActive(threadRecordsById.get(threadId)?.status)
+          ));
+          if (activeThreadIds.length === 0) {
+            return undefined;
+          }
+
+          const statusFailureCounts = new Map();
+          const abortController = new AbortController();
+          let cancelled = false;
+          let statusPollTimeoutId = 0;
+
+          async function fetchTaskThreadStatus(threadId) {
             try {
-              const response = await fetch(backendUrl + "/threads?limit=240", {
-                method: "GET",
-                headers: requestHeaders,
-              });
+              const response = await fetch(
+                backendUrl + "/threads/" + encodeURIComponent(threadId) + "/status",
+                {
+                  method: "GET",
+                  headers: requestHeaders,
+                  cache: "no-store",
+                  signal: abortController.signal,
+                }
+              );
               const data = await response.json().catch(() => ({}));
+              if (response.status === 404) {
+                return {
+                  threadId,
+                  snapshot: normalizePlaygroundTaskThreadStatusSnapshot({
+                    threadId,
+                    status: "unavailable",
+                  }, threadId),
+                  retryable: false,
+                };
+              }
               if (!response.ok) {
-                throw new Error(data?.message || data?.error || "Failed to load task threads.");
+                return {
+                  threadId,
+                  snapshot: null,
+                  retryable: response.status === 408 || response.status === 429 || response.status >= 500,
+                };
               }
-              const items = Array.isArray(data?.data)
-                ? data.data
-                : Array.isArray(data?.threads)
-                  ? data.threads
-                  : [];
-              if (!cancelled) {
-                setTaskDetailThreadRecords(normalizeThreadList(items));
-                setTaskDetailThreadsState({
-                  status: "ready",
-                  error: "",
-                });
-              }
+              return {
+                threadId,
+                snapshot: normalizePlaygroundTaskThreadStatusSnapshot(data, threadId),
+                retryable: false,
+              };
             } catch (error) {
-              if (!cancelled) {
-                setTaskDetailThreadRecords([]);
-                setTaskDetailThreadsState({
-                  status: "error",
-                  error: error instanceof Error ? error.message : "Failed to load task threads.",
-                });
+              if (error?.name === "AbortError") {
+                return {
+                  threadId,
+                  snapshot: null,
+                  retryable: false,
+                };
+              }
+              return {
+                threadId,
+                snapshot: null,
+                retryable: true,
+              };
+            }
+          }
+
+          async function fetchTaskThreadStatusBatch(threadIds) {
+            const results = new Array(threadIds.length);
+            let nextIndex = 0;
+            const workerCount = Math.min(4, threadIds.length);
+            async function runWorker() {
+              while (!cancelled) {
+                const index = nextIndex;
+                nextIndex += 1;
+                if (index >= threadIds.length) {
+                  return;
+                }
+                results[index] = await fetchTaskThreadStatus(threadIds[index]);
               }
             }
-          })();
+            await Promise.all(Array.from({ length: workerCount }, () => runWorker()));
+            return results.filter(Boolean);
+          }
+
+          async function refreshTaskThreadStatuses(threadIds) {
+            const normalizedThreadIds = Array.from(new Set(
+              threadIds.map((threadId) => String(threadId || "").trim()).filter(Boolean)
+            ));
+            if (cancelled || normalizedThreadIds.length === 0) {
+              return;
+            }
+
+            const results = await fetchTaskThreadStatusBatch(normalizedThreadIds);
+            if (cancelled) {
+              return;
+            }
+
+            const snapshots = results
+              .map((result) => result.snapshot)
+              .filter(Boolean);
+            if (snapshots.length > 0) {
+              setTaskDetailThreadRecords((current) => mergePlaygroundTaskThreadStatusSnapshots(
+                current,
+                snapshots,
+                {
+                  taskId: normalizedTaskId,
+                  projectId: String(draftTask?.projectId || selectedProjectId || "").trim(),
+                  ticketNumber: String(draftTask?.ticketNumber || "").trim(),
+                  taskTitle: String(draftTask?.title || "Untitled Task").trim(),
+                }
+              ));
+              setTaskDetailThreadsState((current) => (
+                current.status === "ready" && !current.error
+                  ? current
+                  : {
+                      status: "ready",
+                      error: "",
+                    }
+              ));
+            }
+
+            const nextThreadIds = [];
+            results.forEach((result) => {
+              if (result.snapshot) {
+                statusFailureCounts.delete(result.threadId);
+                if (isPlaygroundTaskThreadStatusActive(result.snapshot.status)) {
+                  nextThreadIds.push(result.threadId);
+                }
+                return;
+              }
+              if (!result.retryable) {
+                statusFailureCounts.delete(result.threadId);
+                return;
+              }
+              const nextFailureCount = (statusFailureCounts.get(result.threadId) || 0) + 1;
+              statusFailureCounts.set(result.threadId, nextFailureCount);
+              if (nextFailureCount <= 3) {
+                nextThreadIds.push(result.threadId);
+              }
+            });
+
+            if (nextThreadIds.length > 0 && !cancelled) {
+              const retryOnly = nextThreadIds.every((threadId) => statusFailureCounts.has(threadId));
+              const retryAttempt = retryOnly
+                ? Math.max(...nextThreadIds.map((threadId) => statusFailureCounts.get(threadId) || 1))
+                : 1;
+              const delayMs = retryOnly
+                ? Math.min(15000, 3000 * Math.pow(2, retryAttempt - 1))
+                : 5000;
+              statusPollTimeoutId = window.setTimeout(
+                () => void refreshTaskThreadStatuses(nextThreadIds),
+                delayMs
+              );
+            }
+          }
+
+          void refreshTaskThreadStatuses(activeThreadIds);
 
           return () => {
             cancelled = true;
+            abortController.abort();
+            if (statusPollTimeoutId) {
+              window.clearTimeout(statusPollTimeoutId);
+            }
           };
         }, [
-	          backendUrl,
-	          draftTask?.id,
-	          requestHeaders,
-	          requestHeadersKey,
-	          selectedProjectId,
-	          selectedTaskThreadIdsKey,
-	        ]);
+          backendUrl,
+          draftTask?.id,
+          requestHeadersKey,
+          selectedProjectId,
+          selectedTaskThreadIdsKey,
+          taskDetailThreadSummaryKey,
+        ]);
         function resolveTaskAttachmentApiUrl(rawUrl, attachmentId = "") {
           const normalizedUrl = typeof rawUrl === "string" ? rawUrl.trim() : "";
           let normalizedBackendUrl = String(backendUrl || "").trim();

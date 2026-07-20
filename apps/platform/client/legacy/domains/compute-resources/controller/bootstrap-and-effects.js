@@ -152,6 +152,9 @@
             requestId: 0,
             scopeKey: "",
           });
+          const serverDetailsRequestRef = useRef(new Map());
+          const authoritativeServerDetailIdsRef = useRef(new Set());
+          const authoritativeServerBindingIdsRef = useRef(new Set());
           const databaseListScopeKeyRef = useRef(databaseListScopeKey);
           const databaseListInitialLoadScopeRef = useRef("");
           const databaseRequestHeadersRef = useRef(requestHeaders);
@@ -452,7 +455,11 @@
             status: "idle",
             error: "",
           });
-          const serverVersionApiClient = useMemo(() => new RunnerClient(), []);
+          const serverVersionApiClient = useMemo(() => new RunnerClient((url, init = {}) => fetch(url, {
+            ...init,
+            cache: "no-store",
+            priority: "high",
+          })), []);
           const [serverVersionSaveDialog, setServerVersionSaveDialog] = useState(null);
           const [serverVersionReviewSnapshot, setServerVersionReviewSnapshot] = useState(null);
           const [serverVersionModal, setServerVersionModal] = useState(null);
@@ -1685,7 +1692,14 @@
           useEffect(() => {
             selectedServerIdRef.current = selectedServerId;
           }, [selectedServerId]);
-  
+
+          useEffect(() => {
+            serverDetailsRequestRef.current.clear();
+            authoritativeServerDetailIdsRef.current.clear();
+            authoritativeServerBindingIdsRef.current.clear();
+            setLoadingServerId("");
+          }, [databaseListScopeKey]);
+
           useEffect(() => {
             selectedDatabaseIdRef.current = selectedDatabaseId;
           }, [selectedDatabaseId]);

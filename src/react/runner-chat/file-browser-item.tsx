@@ -1,35 +1,27 @@
 import type { MouseEvent } from "react";
+import {
+  PlatformFileExplorerFileIcon,
+  PlatformFileExplorerThumbnail,
+  type PlatformFileExplorerFileKind,
+} from "../../platform-ui/components/composite/file-explorer/index.js";
+import { PlatformCheckbox } from "../../platform-ui/components/ui/checkbox/index.js";
 import type { RunnerChatOption } from "./agent-options.js";
 import { getBrowserFileType } from "./attachment-utils.js";
 import type { RunnerFileBrowserSource } from "./file-browser-source.js";
 import {
-  IconCheck,
   IconChevronDown,
   IconChevronRight,
   IconLoader2,
-  IconMusic,
   IconNotion,
-  IconVideo,
 } from "./icons.js";
 import {
+  buildEnvironmentFileDownloadUrl,
+  buildEnvironmentFileThumbnailUrl,
   fileItemsForParent,
   formatBrowserFileDate,
   formatBrowserFileSize,
   type RunnerChatFileNode,
 } from "./workspace-files.js";
-
-const RUNNER_FOLDER_ICON_URL = new URL(
-  "../../platform-ui/components/thread-components/assets/folder.png",
-  import.meta.url,
-).toString();
-const RUNNER_TEXT_FILE_ICON_URL = new URL(
-  "../../platform-ui/components/thread-components/assets/txtfile.png",
-  import.meta.url,
-).toString();
-const RUNNER_IMAGE_FILE_ICON_URL = new URL(
-  "../../platform-ui/components/thread-components/assets/imgicon.webp",
-  import.meta.url,
-).toString();
 
 export function renderRunnerBrowserFileIcon(
   file: RunnerChatFileNode,
@@ -37,12 +29,9 @@ export function renderRunnerBrowserFileIcon(
 ) {
   if (file.isFolder) {
     return (
-      <img
-        src={RUNNER_FOLDER_ICON_URL}
-        alt=""
-        aria-hidden="true"
-        draggable={false}
-        className={`${className} tb-file-browser-icon-asset`}
+      <PlatformFileExplorerFileIcon
+        kind="folder"
+        className={`${className} tb-file-browser-item-icon-folder`}
       />
     );
   }
@@ -55,44 +44,18 @@ export function renderRunnerBrowserFileIcon(
   }
 
   const fileType = getBrowserFileType(file.mimeType, file.name);
-  if (fileType === "image") {
-    return (
-      <img
-        src={RUNNER_IMAGE_FILE_ICON_URL}
-        alt=""
-        aria-hidden="true"
-        draggable={false}
-        className={`${className} tb-file-browser-icon-asset`}
-      />
-    );
-  }
-  if (fileType === "video") {
-    return (
-      <IconVideo
-        className={`${className} tb-file-browser-item-icon-video`}
-      />
-    );
-  }
-  if (fileType === "audio") {
-    return (
-      <IconMusic
-        className={`${className} tb-file-browser-item-icon-audio`}
-      />
-    );
-  }
+
   return (
-    <img
-      src={RUNNER_TEXT_FILE_ICON_URL}
-      alt=""
-      aria-hidden="true"
-      draggable={false}
-      className={`${className} tb-file-browser-icon-asset`}
+    <PlatformFileExplorerFileIcon
+      kind={fileType as PlatformFileExplorerFileKind}
+      className={`${className} tb-file-browser-item-icon-${fileType}`}
     />
   );
 }
 
 export interface RunnerFileBrowserItemProps {
   allItems: RunnerChatFileNode[];
+  backendUrl: string;
   branchLoadingRepoFullNames: string[];
   branchesByRepoFullName: Record<string, RunnerChatOption[]>;
   buildEffectiveGithubRootItem: (
@@ -124,6 +87,7 @@ export interface RunnerFileBrowserItemProps {
   selectedItemIds: string[];
   source: RunnerFileBrowserSource;
   workspaceFolderErrorsById: Record<string, string>;
+  workspaceEnvironmentId: string;
   workspaceLoadingFolderIds: string[];
 }
 
@@ -132,6 +96,7 @@ export function RunnerFileBrowserItem(
 ) {
   const {
     allItems,
+    backendUrl,
     branchLoadingRepoFullNames,
     branchesByRepoFullName,
     buildEffectiveGithubRootItem,
@@ -152,6 +117,7 @@ export function RunnerFileBrowserItem(
     selectedItemIds,
     source,
     workspaceFolderErrorsById,
+    workspaceEnvironmentId,
     workspaceLoadingFolderIds,
   } = props;
   const isGithubRepoRootRow =
@@ -215,6 +181,31 @@ export function RunnerFileBrowserItem(
           ...githubBranchOptions,
         ]
       : githubBranchOptions;
+  const effectiveItemType = getBrowserFileType(
+    effectiveItem.mimeType,
+    effectiveItem.name,
+  );
+  const workspaceThumbnailUrl =
+    source === "workspace" && effectiveItemType === "image"
+      ? buildEnvironmentFileThumbnailUrl(
+          backendUrl,
+          workspaceEnvironmentId,
+          effectiveItem.path,
+          64,
+        )
+      : null;
+  const imageThumbnailUrl =
+    effectiveItemType === "image"
+      ? String(effectiveItem.previewUrl || workspaceThumbnailUrl || "").trim()
+      : "";
+  const imageThumbnailFallbackUrl =
+    source === "workspace" && effectiveItemType === "image"
+      ? buildEnvironmentFileDownloadUrl(
+          backendUrl,
+          workspaceEnvironmentId,
+          effectiveItem.path,
+        )
+      : null;
 
   return (
     <div>
@@ -248,38 +239,44 @@ export function RunnerFileBrowserItem(
             )}
           </button>
         ) : (
-          <button
-            type="button"
-            className={`tb-file-browser-check ${isSelected ? "selected" : ""}`}
+          <PlatformCheckbox
+            checked={isSelected}
+            className="tb-file-browser-check"
             aria-label={isSelected ? "Deselect file" : "Select file"}
             onClick={(event) => {
               event.stopPropagation();
               onItemClick(effectiveItem);
             }}
-          >
-            {isSelected ? (
-              <IconCheck className="tb-file-browser-check-icon" />
-            ) : null}
-          </button>
+          />
         )}
         {showGithubFolderCheckbox ? (
-          <button
-            type="button"
-            className={`tb-file-browser-check ${isSelected ? "selected" : ""}`}
+          <PlatformCheckbox
+            checked={isSelected}
+            className="tb-file-browser-check"
             aria-label={isSelected ? "Deselect folder" : "Select folder"}
             onClick={(event) => {
               event.stopPropagation();
               onToggleGithubSelection(effectiveItemId);
             }}
-          >
-            {isSelected ? (
-              <IconCheck className="tb-file-browser-check-icon" />
-            ) : null}
-          </button>
+          />
         ) : null}
-        {renderRunnerBrowserFileIcon(
-          effectiveItem,
-          "tb-file-browser-item-icon",
+        {effectiveItemType === "image" ? (
+          <PlatformFileExplorerThumbnail
+            src={imageThumbnailUrl}
+            fallbackSrc={imageThumbnailFallbackUrl}
+            alt={effectiveItem.name}
+            className="tb-file-browser-item-thumbnail"
+            draggable={false}
+            fallback={renderRunnerBrowserFileIcon(
+              effectiveItem,
+              "tb-file-browser-item-icon",
+            )}
+          />
+        ) : (
+          renderRunnerBrowserFileIcon(
+            effectiveItem,
+            "tb-file-browser-item-icon",
+          )
         )}
         <span className="tb-file-browser-item-name">
           {effectiveItem.name}

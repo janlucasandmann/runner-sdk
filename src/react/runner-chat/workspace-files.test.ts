@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildEnvironmentFileListUrl,
+  buildEnvironmentFileThumbnailUrl,
   buildWorkspaceSelectionStorageKey,
   childFolderPath,
   fileItemsForParent,
@@ -71,6 +72,19 @@ describe("workspace file normalization", () => {
       "https://api.example.com/environments/computer%20a/files?depth=2&path=src%2Fcomponents",
     );
     expect(buildEnvironmentFileListUrl("", "computer a")).toBeNull();
+  });
+
+  it("builds the same bounded image thumbnail URL used by the Files service", () => {
+    expect(buildEnvironmentFileThumbnailUrl(
+      "https://api.example.com/",
+      "computer a",
+      "/assets/Product photo.png",
+      500,
+    )).toBe(
+      "https://api.example.com/environments/computer%20a/files/thumbnail/assets/Product%20photo.png?w=256&h=256",
+    );
+    expect(buildEnvironmentFileThumbnailUrl("", "computer a", "/image.png")).toBeNull();
+    expect(buildEnvironmentFileThumbnailUrl("https://api.example.com", "", "/image.png")).toBeNull();
   });
 
   it("scopes persisted workspace selections to the app and backend", () => {

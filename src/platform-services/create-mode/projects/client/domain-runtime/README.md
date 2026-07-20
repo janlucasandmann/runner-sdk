@@ -10,6 +10,7 @@ This directory contains domain runtime behavior for the owning feature for the P
 
 - [`01-project-and-task-model.mjs`](01-project-and-task-model.mjs) — State and projection logic for 01 Project And Task Model.
 - [`02-task-data-and-calendar.mjs`](02-task-data-and-calendar.mjs) — Focused implementation of 02 Task Data And Calendar.
+- [`03-thread-status.mjs`](03-thread-status.mjs) — Authoritative ticket-thread status normalization and record reconciliation.
 
 ## Working in this directory
 

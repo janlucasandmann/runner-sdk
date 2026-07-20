@@ -1,6 +1,7 @@
 import type {
   PlatformApiClient,
 } from "../../../platform-runtime/platform-api-client.js";
+import { normalizePlatformAgentListRecords } from "./agent-list-cache.js";
 
 export interface AgentResourceRepository {
   list(signal?: AbortSignal): Promise<unknown[]>;
@@ -14,17 +15,7 @@ function asRecord(value: unknown): Record<string, unknown> {
 }
 
 function unwrapAgentList(value: unknown): unknown[] {
-  if (Array.isArray(value)) return value;
-  const record = asRecord(value);
-  for (const candidate of [
-    record.agents,
-    record.resources,
-    record.items,
-    record.data,
-  ]) {
-    if (Array.isArray(candidate)) return candidate;
-  }
-  return [];
+  return normalizePlatformAgentListRecords(value);
 }
 
 export function createAgentResourceRepository(

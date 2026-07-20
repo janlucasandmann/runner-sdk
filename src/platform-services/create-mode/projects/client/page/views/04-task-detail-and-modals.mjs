@@ -120,12 +120,16 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
           }
 
           function getTaskDetailThreadStatusPresentation(thread) {
-            const status = resolveThreadDisplayStatus(thread?.status, thread?.completedAt || thread?.finishedAt || thread?.endedAt);
+            const status = resolvePlaygroundTaskThreadStatus(
+              thread?.status,
+              thread?.completedAt || thread?.finishedAt || thread?.endedAt,
+              thread?.updatedAt
+            );
             const normalizedStatus = String(status || "").trim().toLowerCase();
             if (isPendingPermissionThreadDisplayStatus(normalizedStatus)) {
               return { label: "Permission", className: "is-permission", icon: Loader2 };
             }
-            if (isRunningThreadDisplayStatus(normalizedStatus)) {
+            if (isPlaygroundTaskThreadStatusActive(normalizedStatus)) {
               return { label: "Running", className: "is-running", icon: Loader2 };
             }
             if (isCompletedThreadStatus(normalizedStatus)) {
@@ -137,9 +141,9 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
             return {
               label: normalizedStatus
                 ? normalizedStatus.replace(/[_-]+/g, " ").replace(/\\b\\w/g, (character) => character.toUpperCase())
-                : "Thread",
-              className: "is-running",
-              icon: Loader2,
+                : "Status unavailable",
+              className: "is-neutral",
+              icon: History,
             };
           }
 
@@ -182,25 +186,6 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
             const { safeThread, displayThreadTitle } = getSidebarThreadTitleParts(thread);
             const threadId = String(safeThread?.id || thread?.id || "").trim();
             const statusPresentation = getTaskDetailThreadStatusPresentation(safeThread);
-            const threadActor = getPlaygroundThreadActorInfo(safeThread, agentsById, "No agent");
-            const taskPreview = getThreadTaskPreview(safeThread);
-            const normalizedRunKind = String(taskPreview?.runKind || "").trim().toLowerCase();
-            const runKindLabel = taskPreview?.reviewRequest === true
-              ? "Review Changes"
-              : normalizedRunKind === "review"
-                ? "Review"
-                : "Implementation";
-            const timestamp = resolveThreadSortTimestamp(safeThread);
-            const timeLabel = (typeof formatThreadSearchTimestamp === "function"
-              ? formatThreadSearchTimestamp(timestamp)
-              : "")
-              || formatRelativeThreadTime(timestamp)
-              || "Recently updated";
-            const metaLabel = [
-              threadActor?.name || "No agent",
-              runKindLabel,
-              timeLabel,
-            ].filter(Boolean).join(" · ");
 
             return React.createElement("div", {
                 key: threadId || displayThreadTitle,
@@ -223,27 +208,27 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                 }, React.createElement(statusPresentation.icon, { strokeWidth: 2 })),
                 React.createElement("span", { className: "playground-tasks-detail-thread-title", title: displayThreadTitle || safeThread.title || "" },
                   displayThreadTitle || safeThread.title || "Untitled thread"
-                ),
-                React.createElement("div", { className: "playground-tasks-detail-thread-meta", title: metaLabel }, metaLabel)
+                )
               ),
               React.createElement("div", { className: "playground-tasks-detail-thread-actions" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-tasks-detail-thread-action",
-                  onClick: (event) => {
-                    event.stopPropagation();
-                    openTaskDetailThread(safeThread, "changes");
-                  },
-                  title: "Open changes",
-                  "aria-label": "Open changes",
-                }, React.createElement(History, { width: 15, height: 15, strokeWidth: 1.8 })),
                 typeof onThreadOptionsOpen === "function"
                   ? React.createElement("button", {
                       type: "button",
                       className: "playground-tasks-detail-thread-action",
                       onClick: (event) => {
                         event.stopPropagation();
-                        onThreadOptionsOpen(event, threadId, { threadRecord: safeThread });
+                        onThreadOptionsOpen(event, threadId, {
+                          threadRecord: safeThread,
+                          menuActions: [{
+                            id: "restart-ticket-thread",
+                            label: "Restart Thread",
+                            icon: RefreshCw,
+                            disabled: saveState.isSaving || isTaskThreadLaunchLocked(draftTask),
+                            onSelect: () => void handleStartTaskThread(draftTask, {
+                              successMessage: "Thread restarted",
+                            }),
+                          }],
+                        });
                       },
                       title: "Thread actions",
                       "aria-label": "Thread actions",
@@ -364,8 +349,14 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                 : null,
               options.showRunThreadAction
                 ? React.createElement("div", { className: "playground-tasks-ticket-thread-run-row" },
-                    React.createElement("button", {
+                    React.createElement("div", {
+                      className: "playground-tasks-ticket-thread-divider",
+                      "aria-hidden": "true",
+                    }),
+                    React.createElement(PlatformSecondaryButton, {
                       type: "button",
+                      size: "small",
+                      fullWidth: true,
                       className: "playground-tasks-ticket-control-button",
                       disabled: saveState.isSaving || taskStartDisabled,
                       onClick: () => void handleStartTaskThread(draftTask),

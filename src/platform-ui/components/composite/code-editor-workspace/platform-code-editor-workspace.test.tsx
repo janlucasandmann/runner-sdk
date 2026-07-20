@@ -75,9 +75,141 @@ describe("PlatformCodeEditorWorkspace", () => {
     );
 
     expect(screen.getByRole("button", { name: "Add file" })).not.toBeNull();
+    expect(screen.getByText("Explorer")).not.toBeNull();
+    expect(screen.getByRole("searchbox", { name: "Search code files" })).not.toBeNull();
     const file = screen.getByRole("button", { name: "src" });
     expect(file.style.paddingInlineStart).toBe("46px");
     expect(screen.getByText("Open")).not.toBeNull();
+  });
+
+  it("filters code files through the shared search primitive", () => {
+    render(
+      <PlatformCodeEditorWorkspace
+        files={[
+          { id: "src/main.ts", label: "main.ts" },
+          { id: "README.md", label: "README.md" },
+        ]}
+      />,
+    );
+
+    fireEvent.change(screen.getByRole("searchbox", { name: "Search code files" }), {
+      target: { value: "main" },
+    });
+
+    expect(screen.getByRole("button", { name: "main.ts" })).not.toBeNull();
+    expect(screen.queryByRole("button", { name: "README.md" })).toBeNull();
+  });
+
+  it("opens explorer files as persistent editor tabs and keeps folders explorer-only", () => {
+    const onFileSelect = vi.fn();
+    render(
+      <PlatformCodeEditorWorkspace
+        files={[
+          { id: "src", label: "src", openInTab: false },
+          { id: "main.ts", label: "main.ts" },
+          { id: "styles.css", label: "styles.css" },
+        ]}
+        activeFileId="main.ts"
+        onFileSelect={onFileSelect}
+        editor={<textarea aria-label="Source code" />}
+      />,
+    );
+
+    expect(screen.getByRole("tab", { name: "main.ts" })).not.toBeNull();
+    expect(screen.queryByRole("tab", { name: "src" })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "styles.css" }));
+    expect(screen.getByRole("tab", { name: "main.ts" })).not.toBeNull();
+    expect(screen.getByRole("tab", { name: "styles.css" })).not.toBeNull();
+    expect(onFileSelect).toHaveBeenLastCalledWith("styles.css");
+
+    fireEvent.click(screen.getByRole("button", { name: "src" }));
+    expect(screen.queryByRole("tab", { name: "src" })).toBeNull();
+    expect(onFileSelect).toHaveBeenLastCalledWith("src");
+  });
+
+  it("moves to the adjacent file after closing the active tab", () => {
+    const onFileSelect = vi.fn();
+    const { rerender } = render(
+      <PlatformCodeEditorWorkspace
+        files={[
+          { id: "main.ts", label: "main.ts" },
+          { id: "styles.css", label: "styles.css" },
+        ]}
+        activeFileId="main.ts"
+        onFileSelect={onFileSelect}
+        editor={<textarea aria-label="Source code" />}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "styles.css" }));
+    rerender(
+      <PlatformCodeEditorWorkspace
+        files={[
+          { id: "main.ts", label: "main.ts" },
+          { id: "styles.css", label: "styles.css" },
+        ]}
+        activeFileId="styles.css"
+        onFileSelect={onFileSelect}
+        editor={<textarea aria-label="Source code" />}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Close styles.css" }));
+    expect(screen.queryByRole("tab", { name: "styles.css" })).toBeNull();
+    expect(onFileSelect).toHaveBeenLastCalledWith("main.ts");
+  });
+
+  it("supports VS Code-style keyboard navigation, middle-click close, and dirty markers", () => {
+    const onFileSelect = vi.fn();
+    const { container } = render(
+      <PlatformCodeEditorWorkspace
+        files={[
+          { id: "main.ts", label: "main.ts", dirty: true },
+          { id: "styles.css", label: "styles.css" },
+        ]}
+        defaultOpenFileIds={["styles.css"]}
+        activeFileId="main.ts"
+        onFileSelect={onFileSelect}
+        editor={<textarea aria-label="Source code" />}
+      />,
+    );
+
+    const mainTab = screen.getByRole("tab", { name: "main.ts" });
+    fireEvent.keyDown(mainTab, { key: "ArrowRight" });
+    expect(onFileSelect).toHaveBeenLastCalledWith("styles.css");
+    expect(
+      container.querySelector(".platform-code-editor-tab-bar__item.is-dirty"),
+    ).not.toBeNull();
+
+    const stylesTabItem = screen
+      .getByRole("tab", { name: "styles.css" })
+      .closest(".platform-code-editor-tab-bar__item");
+    expect(stylesTabItem).not.toBeNull();
+    fireEvent(
+      stylesTabItem as Element,
+      new MouseEvent("auxclick", { bubbles: true, button: 1 }),
+    );
+    expect(screen.queryByRole("tab", { name: "styles.css" })).toBeNull();
+  });
+
+  it("centers the shared loading indicator while files are loading", () => {
+    render(
+      <PlatformCodeEditorWorkspace
+        files={[{ id: "main.ts", label: "main.ts" }]}
+        isLoadingFiles
+        loadingFilesMessage="Loading source files..."
+      />,
+    );
+
+    expect(
+      screen.getByRole("status", { name: "Loading source files..." }),
+    ).not.toBeNull();
+    expect(screen.queryByRole("button", { name: "main.ts" })).toBeNull();
+    expect(
+      (screen.getByRole("searchbox", { name: "Search code files" }) as HTMLInputElement)
+        .disabled,
+    ).toBe(true);
   });
 
   it("can omit the footer for embedded editor surfaces", () => {

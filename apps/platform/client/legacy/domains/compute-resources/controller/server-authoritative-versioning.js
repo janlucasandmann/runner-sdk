@@ -3,7 +3,7 @@
             return kind === "web_app" || kind === "function";
           }
 
-          function getServerVersionApiOptions(serverId) {
+          function getServerVersionApiOptions(serverId, options = {}) {
             const normalizedServerId = String(serverId || "").trim();
             if (!normalizedServerId || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
               throw new Error("Missing resource id.");
@@ -13,6 +13,7 @@
               headers: requestHeaders,
               credentials: "same-origin",
               serverId: normalizedServerId,
+              signal: options?.signal,
             };
           }
 
@@ -57,10 +58,10 @@
             }
           }
 
-          async function fetchServerVersionsApi(serverId) {
+          async function fetchServerVersionsApi(serverId, options = {}) {
             return normalizeServerVersionApiList(
               await serverVersionApiClient.listServerVersions(
-                getServerVersionApiOptions(serverId)
+                getServerVersionApiOptions(serverId, options)
               )
             );
           }
@@ -285,6 +286,46 @@
                   selectedVersion.id
                 )
               : hydratedServer;
+          }
+
+          function preserveAuthoritativeServerOperationalState(candidateServer, authoritativeServer) {
+            const candidate = normalizePlaygroundServerRecord(candidateServer);
+            const authoritative = normalizePlaygroundServerRecord(authoritativeServer);
+            return normalizePlaygroundServerRecord({
+              ...candidate,
+              serviceUrl: authoritative.serviceUrl,
+              customDomain: authoritative.customDomain,
+              cloudRunServiceName: authoritative.cloudRunServiceName,
+              imageUrl: authoritative.imageUrl,
+              status: authoritative.status,
+              lastDeployedAt: authoritative.lastDeployedAt,
+              updatedAt: authoritative.updatedAt || candidate.updatedAt,
+            });
+          }
+
+          function mergeAuthoritativeServerRecordWithLoadedVersions(currentServer, authoritativeServer) {
+            const authoritative = normalizePlaygroundServerRecord(authoritativeServer);
+            const current = currentServer
+              && String(currentServer.id || "").trim() === String(authoritative.id || "").trim()
+              ? normalizePlaygroundServerRecord(currentServer)
+              : null;
+            const versions = current ? readPlaygroundServerVersions(current) : [];
+            if (versions.length === 0) {
+              return authoritative;
+            }
+            const selectedVersionId = String(
+              getDraftServerSelectedVersion(current)?.id
+              || getDraftServerActiveVersion(current)?.id
+              || ""
+            ).trim();
+            return preserveAuthoritativeServerOperationalState(
+              createServerVersionSelectedResource(
+                authoritative,
+                versions,
+                selectedVersionId
+              ),
+              authoritative
+            );
           }
 
           function syncSelectedServerVersionSource(snapshot) {
@@ -783,7 +824,7 @@
             ) {
               return undefined;
             }
-            const baseServer = normalizePlaygroundServerRecord(draftServer);
+            const initialServer = normalizePlaygroundServerRecord(draftServer);
             serverVersionsLoadedRef.current.add(versionLoadKey);
             setServerVersionsLoadState({
               serverId: normalizedServerId,
@@ -791,7 +832,10 @@
               error: "",
             });
             let cancelled = false;
-            void fetchServerVersionsApi(normalizedServerId)
+            const abortController = new AbortController();
+            void fetchServerVersionsApi(normalizedServerId, {
+              signal: abortController.signal,
+            })
               .then((versions) => {
                 if (cancelled) return;
                 setServerVersionsLoadState({
@@ -803,15 +847,20 @@
                 const activeVersion = versions.find((version) => version.status === "active")
                   || versions[0]
                   || null;
-                const serverWithVersions = createPlaygroundServerWithVersionList(
-                  baseServer,
-                  versions,
-                  activeVersion?.id || ""
-                );
-                setServerDetailsById((current) => ({
-                  ...current,
-                  [normalizedServerId]: serverWithVersions,
-                }));
+                setServerDetailsById((current) => {
+                  const latestServer = current[normalizedServerId] || initialServer;
+                  return {
+                    ...current,
+                    [normalizedServerId]: preserveAuthoritativeServerOperationalState(
+                      createPlaygroundServerWithVersionList(
+                        latestServer,
+                        versions,
+                        activeVersion?.id || ""
+                      ),
+                      latestServer
+                    ),
+                  };
+                });
                 setDraftServer((current) => {
                   if (!current || String(current.id || "").trim() !== normalizedServerId) {
                     return current;
@@ -823,10 +872,13 @@
                       getDraftServerSelectedVersion(current)?.id || activeVersion?.id || ""
                     );
                   }
-                  const selectedServer = createServerVersionSelectedResource(
-                    baseServer,
-                    versions,
-                    activeVersion?.id || ""
+                  const selectedServer = preserveAuthoritativeServerOperationalState(
+                    createServerVersionSelectedResource(
+                      current,
+                      versions,
+                      activeVersion?.id || ""
+                    ),
+                    current
                   );
                   rememberServerVersionBaseline(selectedServer, { force: true });
                   if (activeVersion?.snapshot) syncSelectedServerVersionSource(activeVersion.snapshot);
@@ -848,6 +900,7 @@
               });
             return () => {
               cancelled = true;
+              abortController.abort();
             };
           }, [
             backendUrl,

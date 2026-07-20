@@ -1,0 +1,196 @@
+.platform-file-explorer-modal.platform-modal-surface {
+  --platform-modal-sidebar-width: 224px;
+  --platform-modal-pane-header-height: 57px;
+  width: min(980px, calc(100vw - 48px));
+  max-width: 980px;
+  height: min(620px, calc(100dvh - 48px));
+  max-height: 620px;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  background: transparent !important;
+}
+
+.platform-file-explorer-modal.platform-modal-surface.has-preview {
+  width: min(1300px, calc(100vw - 48px));
+  max-width: 1300px;
+}
+
+.platform-file-explorer-modal__body.platform-modal-body {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+}
+
+.platform-file-explorer__sidebar .platform-modal-sidebar__header,
+.platform-file-explorer__content-header {
+  padding: 12px;
+}
+
+.platform-file-explorer__sidebar .platform-modal-sidebar__header {
+  border-bottom: 0;
+}
+
+.platform-file-explorer__sidebar {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.platform-file-explorer__sidebar-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.platform-file-explorer__sidebar-header-content {
+  width: 100%;
+  flex: 1 1 auto;
+  overflow: visible;
+}
+
+.platform-file-explorer__sidebar-header-content .platform-search {
+  width: 100% !important;
+  min-width: 0;
+  margin-left: 0;
+}
+
+.platform-file-explorer__content-header {
+  justify-content: space-between;
+  border-bottom: 0;
+}
+
+.platform-file-explorer__content,
+.platform-file-explorer__content-header,
+.platform-file-explorer__content-body,
+.platform-file-explorer__content-footer {
+  background: #1a1a1a;
+}
+
+.platform-file-explorer__content-header-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+}
+
+.platform-file-explorer__close {
+  margin-left: auto;
+}
+
+.platform-file-explorer__content-body {
+  padding: 12px;
+  padding-top: 0;
+  align-items: stretch;
+}
+
+.platform-file-explorer__main {
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.platform-file-explorer__preview {
+  box-sizing: border-box;
+  width: 320px;
+  min-width: 0;
+  min-height: 0;
+  flex: 0 0 320px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  background: #1a1a1a;
+}
+
+.platform-file-explorer__preview-header {
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--platform-modal-pane-header-height, 57px);
+  min-height: var(--platform-modal-pane-header-height, 57px);
+  padding: 12px;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.platform-file-explorer__preview-title {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-file-explorer__preview-close {
+  margin-left: auto;
+}
+
+.platform-file-explorer__preview-body {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.platform-file-explorer__content-footer {
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.platform-file-explorer__content-footer:empty {
+  display: none;
+}
+
+.platform-file-explorer__thumbnail {
+  box-sizing: border-box;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  padding: 5px;
+  border-radius: 4px;
+  object-fit: cover;
+  background: transparent;
+}
+
+.platform-file-explorer__file-icon {
+  display: block;
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.platform-file-explorer__file-icon.is-asset {
+  object-fit: contain;
+}
+
+.platform-file-explorer__file-icon.is-image {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+@media (max-width: 760px) {
+  .platform-file-explorer-modal.platform-modal-surface {
+    --platform-modal-sidebar-width: min(180px, 38vw);
+    width: calc(100vw - 24px);
+    height: calc(100dvh - 24px);
+    max-height: none;
+  }
+
+  .platform-file-explorer {
+    position: relative;
+  }
+
+  .platform-file-explorer__preview {
+    position: absolute;
+    z-index: 2;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(320px, calc(100% - var(--platform-modal-sidebar-width)));
+    flex-basis: auto;
+    box-shadow: -12px 0 30px rgba(0, 0, 0, 0.3);
+  }
+}

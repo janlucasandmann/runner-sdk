@@ -6,6 +6,11 @@
 
 This directory owns reusable page-level layouts for overview, detail, home, and permission experiences.
 
+Canonical home, overview, and detail shells share the
+`--platform-page-content-max-width` layout token. The platform defines it as
+`87.5rem`; standalone consumers receive the same value as a CSS fallback and
+can override the token at their application shell.
+
 ## Contents
 
 - [`details/`](details/) — This directory owns the shared Details page contract and presentation used by resource and service domains.

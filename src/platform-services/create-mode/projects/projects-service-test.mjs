@@ -53,7 +53,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects domain runtime",
     source: PROJECTS_DOMAIN_RUNTIME_SCRIPT,
-    expectedSha256: "a5e3b3cd6171e52b552e9d67f10344da90ac03d92487578b251a26351384fa1a",
+    expectedSha256: "fd217e92594b28faabceebc183542678dfcf640d7d00f9352041f9f10dd49678",
     fragmentGroups: [{
       baseUrl: projectsClientUrl,
       paths: PROJECTS_DOMAIN_RUNTIME_FRAGMENT_PATHS,
@@ -73,7 +73,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects overview styles",
     source: PROJECT_OVERVIEW_CSS,
-    expectedSha256: "a831faba65bbbf23d00a9d71363329d8611b0dd0a1b882c2da33aafaa33ecaac",
+    expectedSha256: "bd12e0a49190e62c399bde10e21878acfa89e06b81a215719fff709dc17cbe0d",
     fragmentGroups: [{
       baseUrl: projectsOverviewUrl,
       paths: PROJECT_OVERVIEW_CSS_FRAGMENT_PATHS,
@@ -83,7 +83,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects actions runtime",
     source: PROJECTS_PAGE_ACTIONS_SCRIPT,
-    expectedSha256: "357a98a4345c49c9d41a3691bb0a8eed3b4e8bdb0c30f6d14dd3538bfd7f7dea",
+    expectedSha256: "2df562a6c09552bf518c8aa2a80746a3eec8c8a867e9ce64e851dd83301d0462",
     fragmentGroups: [{
       baseUrl: projectsPageUrl,
       paths: PROJECTS_PAGE_ACTIONS_FRAGMENT_PATHS,
@@ -93,7 +93,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects data runtime",
     source: PROJECTS_PAGE_DATA_SCRIPT,
-    expectedSha256: "d76aca6f82b69ac053ff7646a3bdc2f3b23c9f1f33a06af6d04a98890a124961",
+    expectedSha256: "afd5fb67c6455e9359e2f871891097bf749511ac271767bf3b8eaa5387c4120c",
     fragmentGroups: [{
       baseUrl: projectsPageUrl,
       paths: PROJECTS_PAGE_DATA_FRAGMENT_PATHS,
@@ -103,7 +103,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects shell runtime",
     source: PROJECTS_PAGE_SHELL_SCRIPT,
-    expectedSha256: "27c735db36281eb4a50be09b44f57c704cc6997eefab79dda4ed4a52e8e8c4f8",
+    expectedSha256: "5364e656874b154af1fef7b4dbf860d8e21ad6be9a8495e9769dc98e08d1c12a",
     fragmentGroups: [{
       baseUrl: projectsPageUrl,
       paths: PROJECTS_PAGE_SHELL_FRAGMENT_PATHS,
@@ -113,7 +113,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects views runtime",
     source: PROJECTS_PAGE_VIEWS_SCRIPT,
-    expectedSha256: "f0cb12aa052a1588e0839157e1e97434ab5f2d7b6c3c3d14c5056fc9fcdf1ca7",
+    expectedSha256: "666a5a4bec1c74c4dc7b243ba1102347c547363c4bf15ce9f7410c1dc8f4ea68",
     fragmentGroups: [{
       baseUrl: projectsPageUrl,
       paths: PROJECTS_PAGE_VIEWS_FRAGMENT_PATHS,
@@ -123,7 +123,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects core styles",
     source: PROJECTS_CORE_CSS,
-    expectedSha256: "824fed116493859eccdda2d49986711e6e65c60f8216643f11427646f7dbf90d",
+    expectedSha256: "0900d1d8f9e73ce584155ec82e850e15ed243e225f7c12f489a61dffd152f8e6",
     fragmentGroups: [{
       baseUrl: projectsStylesUrl,
       paths: PROJECTS_CORE_CSS_FRAGMENT_PATHS,
@@ -135,10 +135,15 @@ await Promise.all([
 assert.match(PROJECTS_DOMAIN_FOUNDATION_SCRIPT, /PLAYGROUND_TASK_BOARD_UNSCHEDULED_ID/);
 assert.match(PROJECTS_DOMAIN_FOUNDATION_SCRIPT, /\{ id: "overview", label: "General", icon: LayoutDashboard \}/);
 assert.match(PROJECTS_DOMAIN_RUNTIME_SCRIPT, /normalizePlaygroundProjectRecord/);
+assert.match(PROJECTS_DOMAIN_RUNTIME_SCRIPT, /function normalizePlaygroundTaskThreadStatusSnapshot/);
+assert.match(PROJECTS_DOMAIN_RUNTIME_SCRIPT, /function getPlaygroundTaskThreadSummaryRecords/);
+assert.match(PROJECTS_DOMAIN_RUNTIME_SCRIPT, /function mergePlaygroundTaskThreadStatusSnapshots/);
 assert.match(PROJECTS_INTEGRATIONS_RUNTIME_SCRIPT, /buildPlaygroundProjectLinkedFilePathIndex/);
 assert.match(PROJECTS_INTEGRATIONS_RUNTIME_SCRIPT, /createPlaygroundProjectTeamRolePermissionSet/);
 assert.match(PROJECTS_PAGE_RUNTIME_SCRIPT, /function PlaygroundTasksPage/);
 assert.match(PROJECTS_PAGE_RUNTIME_SCRIPT, /function renderProjectOverviewView/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-project-workspace-inner\.playground-tasks-ticket-screen-inner\s*\{[^}]*max-width: var\(--platform-page-content-max-width, 87\.5rem\);/);
+assert.doesNotMatch(PROJECTS_CORE_CSS, /\.playground-project-workspace-inner\.playground-tasks-ticket-screen-inner\s*\{[^}]*max-width: none;/);
 assert.match(PROJECT_OVERVIEW_CSS, /\.playground-environments-detail-scroll\.playground-tasks-project-workspace-scroll\.is-overview\s*\{\s*padding-top: 0 !important;/);
 assert.match(PROJECT_OVERVIEW_CSS, /\.playground-environments-detail-scroll\.playground-tasks-project-workspace-scroll\.is-overview \.playground-project-overview-summary-title\s*\{\s*margin-top: 42px;/);
 assert.match(PROJECT_OVERVIEW_CSS, /\.playground-project-overview-general-grid\s*\{\s*display: grid;\s*grid-template-columns: minmax\(0, 1fr\);\s*gap: 42px;/);
@@ -223,6 +228,14 @@ assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /message: "Loading project\.\.\.",\s*ce
 assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /playground-tasks-loading-copy" \}, "Loading project/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(PlatformInstructionsEditor, \{\s*value: missionControlDocumentDraft[\s\S]*?historyKey: "full-strategy:" \+ selectedProject\.id/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(TicketDetailPage, \{/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(PlatformSecondaryButton, \{\s*type: "button",\s*size: "small",\s*fullWidth: true,\s*className: "playground-tasks-ticket-control-button"/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /className: "playground-tasks-ticket-thread-divider"/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /className: "is-neutral",\s*icon: History/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /label: "Restart Thread",\s*icon: RefreshCw/);
+assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /playground-tasks-detail-thread-meta/);
+assert.match(PROJECTS_PAGE_DATA_SCRIPT, /"\/tasks\/" \+ encodeURIComponent\(taskId\) \+ "\?threadDetails=summary"/);
+assert.match(PROJECTS_PAGE_SHELL_SCRIPT, /"\/threads\/" \+ encodeURIComponent\(threadId\) \+ "\/status"/);
+assert.doesNotMatch(PROJECTS_PAGE_SHELL_SCRIPT, /const normalizedTaskId = String\(draftTask\?\.id[\s\S]{0,2500}\/threads\?limit=240/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(TicketDetailPage, \{\s*header: taskDetailNavbar,/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /details: renderTaskDetailFactsSection\(\{ contentOnly: true \}\)/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /threads: renderTaskDetailThreadsSection\(\{\s*contentOnly: true,/);
@@ -268,6 +281,8 @@ assert.match(PROJECTS_CORE_CSS, /\.playground-ticket-detail-content\s+\.platform
 assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-ticket-attachments\s*\{\s*margin-top: 12px;/);
 assert.match(PROJECTS_CORE_CSS, /\.playground-content-body\.is-tasks-page\s+\.playground-environments-page\.playground-tasks-project-workspace:not\(\.playground-agents-page\)\s+\.playground-environments-detail-scroll\.playground-tasks-project-workspace-scroll\.is-board\s*\{\s*padding-bottom: 24px;/);
 assert.match(PROJECTS_CORE_CSS, /\.playground-ticket-detail-sidebar \.is-centralized-sidebar-content\s*\{/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-ticket-thread-divider\s*\{\s*width: 100%;\s*height: 1px;\s*flex: 0 0 1px;\s*margin: 12px 0;/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-detail-thread-row\s*\{\s*width: calc\(100% \+ 16px\);[\s\S]*?margin-right: -8px;\s*padding: 10px 8px;\s*border: 0;/);
 assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-backlog-header\.is-backlog-list-header\s+\.playground-tasks-backlog-heading,\s*\.playground-tasks-backlog-header\.is-board-list-header\s+\.playground-tasks-backlog-heading\s*\{\s*font-weight: 400;/);
 assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-project-workspace\s+\.playground-tasks-backlog-view\s+\.playground-tasks-backlog-item\s*\{\s*border-color: rgba\(255, 255, 255, 0\.075\);\s*background: rgba\(255, 255, 255, 0\.075\);/);
 assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-backlog-central-search\.platform-search,\s*\.playground-tasks-board-central-search\.platform-search\s*\{\s*width: 300px;\s*min-width: 300px;\s*flex: 0 0 300px;/);
@@ -359,6 +374,11 @@ assert.equal(result.call, undefined);
 result = dispatch("GET", "/api/real/tasks/releases/release_1");
 assert.equal(result.call.adapter, "cloud");
 assert.equal(result.call.args[1], "/tasks/releases/release_1");
+await new Promise((resolve) => setImmediate(resolve));
+
+result = dispatch("GET", "/api/real/tasks/task_1?threadDetails=summary");
+assert.equal(result.call.adapter, "cloud");
+assert.equal(result.call.args[1], "/tasks/task_1?threadDetails=summary");
 await new Promise((resolve) => setImmediate(resolve));
 
 result = dispatch("POST", "/api/real/tasks/task_1/start-thread");

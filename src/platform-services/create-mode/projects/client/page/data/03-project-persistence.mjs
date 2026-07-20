@@ -340,21 +340,42 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
             return null;
           }
 
-          const response = await fetch(backendUrl + "/tasks/" + encodeURIComponent(taskId), {
-            method: "GET",
-            headers: requestHeaders,
-          });
-          const data = await response.json().catch(() => ({}));
-          if (!response.ok) {
-            throw new Error(data?.message || data?.error || "Failed to load task details.");
-          }
+          try {
+            const response = await fetch(
+              backendUrl + "/tasks/" + encodeURIComponent(taskId) + "?threadDetails=summary",
+              {
+                method: "GET",
+                headers: requestHeaders,
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load task details.");
+            }
 
-          const refreshedTask = getPlaygroundTaskResponseRecord(data);
-          if (!refreshedTask?.id) {
-            throw new Error("Task details are unavailable.");
-          }
+            const refreshedTask = getPlaygroundTaskResponseRecord(data);
+            if (!refreshedTask?.id) {
+              throw new Error("Task details are unavailable.");
+            }
 
-          return applyRefreshedTaskDetails(refreshedTask);
+            if (selectedTaskIdRef.current === String(taskId || "").trim()) {
+              setTaskDetailThreadRecords(getPlaygroundTaskThreadSummaryRecords(data, refreshedTask));
+              setTaskDetailThreadsState({
+                status: "ready",
+                error: "",
+              });
+            }
+
+            return applyRefreshedTaskDetails(refreshedTask);
+          } catch (error) {
+            if (selectedTaskIdRef.current === String(taskId || "").trim()) {
+              setTaskDetailThreadsState({
+                status: "error",
+                error: error instanceof Error ? error.message : "Failed to load ticket threads.",
+              });
+            }
+            throw error;
+          }
         }
 
         useEffect(() => {

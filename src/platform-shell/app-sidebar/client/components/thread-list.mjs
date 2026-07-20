@@ -196,12 +196,18 @@ export function createAppSidebarThreadListScript(options = {}) {
           const isDeleting = threadMutationState.action === "delete" && threadMutationState.threadId === threadActionTarget.id;
           const isPinMutating = threadMutationState.action === "pin" && threadMutationState.threadId === threadActionTarget.id;
           const isProjectMutating = threadMutationState.action === "project" && threadMutationState.threadId === threadActionTarget.id;
+          const contextualActions = Array.isArray(threadActionMenuState.menuActions)
+            ? threadActionMenuState.menuActions
+            : [];
 
           return React.createElement(PlatformPopupDismissLayer, {
               className: "sidebar-thread-popup-scrim",
               onClick: closeThreadActionMenu,
             },
               React.createElement(PlatformPopupSurface, {
+                mode: "fixed",
+                variant: "minimal",
+                animation: "down-in",
                 className: "sidebar-thread-popup",
                 style: {
                   top: threadActionMenuState.top + "px",
@@ -209,10 +215,27 @@ export function createAppSidebarThreadListScript(options = {}) {
                 },
                 onClick: (event) => event.stopPropagation(),
               },
-                React.createElement("div", { className: "sidebar-thread-popup-title" }, "Thread"),
+                contextualActions.map((action) => {
+                  const ActionIcon = action?.icon || RefreshCw;
+                  return React.createElement("button", {
+                    key: action?.id || action?.label || "thread-action",
+                    type: "button",
+                    className: "tb-popup-row sidebar-thread-popup-row",
+                    onClick: () => {
+                      closeThreadActionMenu();
+                      if (typeof action?.onSelect === "function") {
+                        action.onSelect(threadActionTarget);
+                      }
+                    },
+                    disabled: Boolean(action?.disabled) || isDeleting || isPinMutating || isProjectMutating,
+                  },
+                    React.createElement(ActionIcon, { className: "sidebar-thread-popup-row-icon", strokeWidth: 1.75 }),
+                    React.createElement("span", { className: "sidebar-thread-popup-row-label" }, action?.label || "Thread action")
+                  );
+                }),
                 React.createElement("button", {
                   type: "button",
-                  className: "sidebar-thread-popup-row",
+                  className: "tb-popup-row sidebar-thread-popup-row",
                   onClick: () => openThreadRenameDialog(threadActionTarget),
                   disabled: isDeleting || isPinMutating || isProjectMutating,
                 },
@@ -221,7 +244,7 @@ export function createAppSidebarThreadListScript(options = {}) {
                 ),
                 React.createElement("button", {
                   type: "button",
-                  className: "sidebar-thread-popup-row",
+                  className: "tb-popup-row sidebar-thread-popup-row",
                   onClick: () => handleOpenThreadProjectAction(threadActionTarget),
                   disabled: isDeleting || isPinMutating || isProjectMutating,
                 },
@@ -234,7 +257,7 @@ export function createAppSidebarThreadListScript(options = {}) {
                 ),
                 React.createElement("button", {
                   type: "button",
-                  className: "sidebar-thread-popup-row",
+                  className: "tb-popup-row sidebar-thread-popup-row",
                   onClick: () => {
                     void handleThreadPinToggle(threadActionTarget.id);
                   },
@@ -245,7 +268,7 @@ export function createAppSidebarThreadListScript(options = {}) {
                 ),
                 React.createElement("button", {
                   type: "button",
-                  className: "sidebar-thread-popup-row is-danger",
+                  className: "tb-popup-row sidebar-thread-popup-row is-danger",
                   onClick: () => {
                     void handleThreadDelete(threadActionTarget.id);
                   },

@@ -349,7 +349,6 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
 	        const projectWorkspaceAutoLoadKeyRef = useRef("");
 \${CALENDAR_PROJECTS_PAGE_SHELL_FRAGMENTS.loadRefs}
 	        const projectCustomSkillsLoadKeyRef = useRef("");
-	        const taskDetailThreadRecordsLoadKeyRef = useRef("");
 	        const taskDetailAutoLoadKeyRef = useRef("");
 	        const reportedProjectScopeIdRef = useRef("");
 	        const projectLocalNameOverridesRef = useRef(new Map());

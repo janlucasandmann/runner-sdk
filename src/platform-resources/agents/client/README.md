@@ -8,6 +8,8 @@ This directory contains browser-side public composition and integration for the 
 
 ## Contents
 
+- [`agent-list-cache.test.ts`](agent-list-cache.test.ts) — Regression coverage for scoped Agent list normalization and caching.
+- [`agent-list-cache.ts`](agent-list-cache.ts) — Organization- and account-scoped Agent list normalization and stale-while-revalidate cache.
 - [`agent-resource-client.test.ts`](agent-resource-client.test.ts) — Regression coverage for Agent Resource Client.
 - [`agent-resource-client.ts`](agent-resource-client.ts) — Boundary adapter for Agent Resource Client.
 - [`index.ts`](index.ts) — Public barrel or composition entry point.

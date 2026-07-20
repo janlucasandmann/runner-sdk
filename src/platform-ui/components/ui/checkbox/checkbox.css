@@ -1,0 +1,67 @@
+.platform-checkbox {
+  position: relative;
+  box-sizing: border-box;
+  width: 14px;
+  height: 14px;
+  min-width: 14px;
+  min-height: 14px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+  background: transparent;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  flex: 0 0 auto;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+.platform-checkbox::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.92);
+  opacity: 0;
+  transform: scale(0.6);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.platform-checkbox:hover,
+.platform-checkbox.is-selected {
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.platform-checkbox.is-selected::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.platform-checkbox.is-partial::after {
+  inset: 5px 3px;
+  border-radius: 999px;
+  opacity: 1;
+  transform: scale(1);
+}
+
+.platform-checkbox:focus-visible {
+  outline: 1px solid rgba(126, 255, 255, 0.8);
+  outline-offset: 2px;
+}
+
+.platform-checkbox:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .platform-checkbox,
+  .platform-checkbox::after {
+    transition-duration: 1ms;
+  }
+}

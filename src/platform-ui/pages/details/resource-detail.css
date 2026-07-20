@@ -1,8 +1,10 @@
 .resource-detail-page {
   --resource-detail-section-gap: 42px;
   box-sizing: border-box;
-  width: 100%;
+  width: min(100%, var(--platform-page-content-max-width, 87.5rem));
+  max-width: var(--platform-page-content-max-width, 87.5rem);
   min-width: 0;
+  margin-inline: auto;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
   column-gap: 42px;

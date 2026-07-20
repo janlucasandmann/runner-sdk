@@ -2296,45 +2296,105 @@
             triggerPlatformSessionRecovery,
           ]);
   
-          const refreshAgents = useCallback(async function refreshAgents() {
+          const refreshAgents = useCallback(async function refreshAgents(options = {}) {
             if (!hasRealAccess) {
               setRealAgents([]);
+              realAgentsRef.current = [];
+              realAgentsScopeKeyRef.current = "";
               return [];
             }
-  
-            try {
-              const response = await fetch(proxyBackendBase + "/agents?limit=200", {
-                method: "GET",
-                headers: authRequestHeaders,
-              });
-  
-              const text = await response.text();
-              let parsed = {};
+
+            const scopeKey = activeAgentRequestScopeKey;
+            const cached = readCachedPlaygroundAgentList(scopeKey);
+            if (
+              cached
+              && activeAgentRequestScopeKeyRef.current === scopeKey
+              && (
+                realAgentsScopeKeyRef.current !== scopeKey
+                || realAgentsRef.current.length === 0
+              )
+            ) {
+              realAgentsScopeKeyRef.current = scopeKey;
+              realAgentsRef.current = cached.agents;
+              setRealAgents(cached.agents);
+            }
+            if (cached?.isFresh && options?.force !== true) {
+              return cached.agents;
+            }
+
+            const inFlight = agentRefreshInFlightRef.current;
+            if (inFlight?.scopeKey === scopeKey && inFlight?.promise) {
+              return inFlight.promise;
+            }
+
+            const request = (async () => {
               try {
-                parsed = text ? JSON.parse(text) : {};
+                const response = await fetch(proxyBackendBase + "/agents?limit=100", {
+                  method: "GET",
+                  headers: authRequestHeaders,
+                  cache: "no-store",
+                });
+
+                const text = await response.text();
+                let parsed = {};
+                try {
+                  parsed = text ? JSON.parse(text) : {};
+                } catch {
+                  parsed = {};
+                }
+
+                if (isUnauthorizedStatus(response.status)) {
+                  if (activeAgentRequestScopeKeyRef.current === scopeKey) {
+                    setRealAgents([]);
+                    realAgentsRef.current = [];
+                    realAgentsScopeKeyRef.current = "";
+                    triggerPlatformSessionRecovery();
+                  }
+                  return [];
+                }
+
+                if (!response.ok) {
+                  return realAgentsScopeKeyRef.current === scopeKey
+                    ? realAgentsRef.current
+                    : cached?.agents || [];
+                }
+
+                const nextAgents = parsePlaygroundAgentListResponse(parsed);
+                writeCachedPlaygroundAgentList(scopeKey, nextAgents);
+                if (activeAgentRequestScopeKeyRef.current === scopeKey) {
+                  realAgentsScopeKeyRef.current = scopeKey;
+                  realAgentsRef.current = nextAgents;
+                  setRealAgents(nextAgents);
+                }
+                return nextAgents;
               } catch {
-                parsed = {};
+                return realAgentsScopeKeyRef.current === scopeKey
+                  ? realAgentsRef.current
+                  : cached?.agents || [];
               }
-  
-              if (isUnauthorizedStatus(response.status)) {
-                setRealAgents([]);
-                triggerPlatformSessionRecovery();
-                return [];
+            })();
+
+            agentRefreshInFlightRef.current = {
+              scopeKey,
+              promise: request,
+            };
+            try {
+              return await request;
+            } finally {
+              if (agentRefreshInFlightRef.current?.promise === request) {
+                agentRefreshInFlightRef.current = {
+                  scopeKey: "",
+                  promise: null,
+                };
               }
-  
-              if (!response.ok) {
-                setRealAgents([]);
-                return [];
-              }
-  
-              const nextAgents = parsePlaygroundAgentListResponse(parsed);
-              setRealAgents(nextAgents);
-              return nextAgents;
-            } catch {
-              setRealAgents([]);
-              return [];
             }
-          }, [authRequestHeaders, hasRealAccess, proxyBackendBase, triggerPlatformSessionRecovery]);
+          }, [
+            activeAgentRequestScopeKey,
+            authRequestHeaders,
+            hasRealAccess,
+            proxyBackendBase,
+            triggerPlatformSessionRecovery,
+          ]);
   
           const refreshServers = useCallback(async function refreshServers() {
             if (!hasRealAccess) {
@@ -2429,13 +2489,16 @@
           }
   
   ${METRONOME_APP_SCRIPT_FRAGMENTS.runMenuControls}
-          function openThreadActionMenu(event, threadId, threadRecord = null) {
+          function openThreadActionMenu(event, threadId, threadRecord = null, options = {}) {
             event.preventDefault();
             event.stopPropagation();
   
             const rect = event.currentTarget.getBoundingClientRect();
-            const menuWidth = 220;
-            const menuHeight = 214;
+            const menuWidth = 240;
+            const menuActions = Array.isArray(options?.menuActions)
+              ? options.menuActions.filter(Boolean)
+              : [];
+            const menuHeight = 182 + (menuActions.length * 40);
             const openUpward = rect.bottom + menuHeight > window.innerHeight - 12 && rect.top - menuHeight >= 12;
             const top = openUpward
               ? Math.max(12, rect.top - menuHeight - 8)
@@ -2453,6 +2516,7 @@
               top,
               left,
               threadRecord: threadRecord && typeof threadRecord === "object" ? threadRecord : null,
+              menuActions,
             });
           }
   

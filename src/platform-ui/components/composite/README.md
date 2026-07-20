@@ -15,6 +15,7 @@ Components that assemble multiple controls, behaviors, or presentation regions i
 - `detail-tab-bar`: accessible, keyboard-navigable resource-detail tabs.
 - `diff-viewer`: reusable unified and split file diffs for version reviews, previews, and change history.
 - `empty-state`: shared icon, title, and supporting-copy composition for empty data surfaces.
+- `file-explorer`: split-pane file selection, preview composition, and resilient image thumbnails.
 - `floating-sidebar`: right-side application panels with standardized headers, dismissal, sizing, portals, and slide transitions.
 - `instructions-editor`: shared Markdown instructions editing, history, formatting, and preview rendering.
 - `loading-state`: shared animated dot loader and concise status-copy composition.

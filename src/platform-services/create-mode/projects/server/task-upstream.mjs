@@ -34,13 +34,14 @@ export function createTaskUpstreamGateway({
   async function fetchAiosTaskApi(req, upstreamPath, init = {}) {
     const requestUrl = new URL(req.url || "/", "http://localhost");
     const normalizedPath = upstreamPath.startsWith("/") ? upstreamPath : `/${upstreamPath}`;
-    const cloudResponse = await fetchAiosCloud(req, normalizedPath, init);
+    const requestPath = `${normalizedPath}${requestUrl.search}`;
+    const cloudResponse = await fetchAiosCloud(req, requestPath, init);
 
     if (cloudResponse.status !== 404) {
       return cloudResponse;
     }
 
-    return fetchAiosApi(req, `/api${normalizedPath}${requestUrl.search}`, init);
+    return fetchAiosApi(req, `/api${requestPath}`, init);
   }
 
   async function proxyUpstreamTaskJsonRequest(req, res, upstreamPath, method) {

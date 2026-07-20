@@ -653,14 +653,15 @@ export const PROJECTS_CORE_CSS_02_FRAGMENT = `      .playground-projects-overvie
       }
 
       .playground-tasks-detail-thread-row {
-        width: 100%;
+        width: calc(100% + 16px);
         min-width: 0;
+        box-sizing: border-box;
         display: flex;
         align-items: center;
         gap: 10px;
-        padding: 10px 0;
+        margin-right: -8px;
+        padding: 10px 8px;
         border: 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
         background: transparent;
         color: inherit;
         text-align: left;
@@ -676,9 +677,8 @@ export const PROJECTS_CORE_CSS_02_FRAGMENT = `      .playground-projects-overvie
         flex: 1 1 auto;
         display: grid;
         grid-template-columns: 18px minmax(0, 1fr);
-        grid-template-rows: auto auto;
+        grid-template-rows: auto;
         column-gap: 8px;
-        row-gap: 3px;
         align-items: center;
       }
 
@@ -687,7 +687,7 @@ export const PROJECTS_CORE_CSS_02_FRAGMENT = `      .playground-projects-overvie
         height: 18px;
         flex: 0 0 18px;
         grid-column: 1;
-        grid-row: 1 / span 2;
+        grid-row: 1;
         align-self: center;
         display: inline-flex;
         align-items: center;
@@ -734,19 +734,6 @@ export const PROJECTS_CORE_CSS_02_FRAGMENT = `      .playground-projects-overvie
         line-height: 1.35;
         font-weight: 500;
         color: rgba(255, 255, 255, 0.94);
-      }
-
-      .playground-tasks-detail-thread-meta {
-        min-width: 0;
-        grid-column: 2;
-        grid-row: 2;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        font-size: 11px;
-        line-height: 1.35;
-        font-weight: 400;
-        color: rgba(255, 255, 255, 0.5);
       }
 
       .playground-tasks-detail-thread-status {

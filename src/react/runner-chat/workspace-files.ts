@@ -181,6 +181,32 @@ export function buildEnvironmentFileDownloadUrl(
   return buildRunnerPreviewDownloadUrl(backendUrl, environmentId, filePath);
 }
 
+export function buildEnvironmentFileThumbnailUrl(
+  backendUrl: string,
+  environmentId: string,
+  filePath?: string,
+  size = 64,
+): string | null {
+  const normalizedBackendUrl = sanitizeBackendUrl(backendUrl);
+  const normalizedEnvironmentId = String(environmentId || "").trim();
+  const encodedPath = normalizeRunnerWorkspaceFolderPath(filePath)
+    .split("/")
+    .filter(Boolean)
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
+  if (!normalizedBackendUrl || !normalizedEnvironmentId || !encodedPath) {
+    return null;
+  }
+  const normalizedSize = Math.max(
+    16,
+    Math.min(256, Number.parseInt(String(size || 64), 10) || 64),
+  );
+  return (
+    `${normalizedBackendUrl}/environments/${encodeURIComponent(normalizedEnvironmentId)}`
+    + `/files/thumbnail/${encodedPath}?w=${normalizedSize}&h=${normalizedSize}`
+  );
+}
+
 export function normalizeRunnerWorkspaceFolderPath(folderPath?: string | null): string {
   return String(folderPath || "").trim().replace(/^\/+/, "").replace(/\/+$/, "");
 }

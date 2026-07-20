@@ -88,6 +88,7 @@ export function useRunnerFileBrowserSourceState(): RunnerFileBrowserSourceStateC
     setWorkspaceLoadedFolderIds([]);
     setWorkspaceLoadingFolderIds([]);
     setWorkspaceFolderErrorsById({});
+    setWorkspaceLoading(false);
     setWorkspaceError(null);
   }, []);
   const resetGoogleDrive = useCallback(() => {

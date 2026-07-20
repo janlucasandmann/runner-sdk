@@ -72,6 +72,22 @@ const agentBootstrapSource = await fs.readFile(
   path.join(domainsRoot, "agents/controller/bootstrap-and-lifecycle.template.js"),
   "utf8",
 );
+const shellBootstrapSource = await fs.readFile(
+  path.join(domainsRoot, "shell/controller/bootstrap-account-and-connectors.template.js"),
+  "utf8",
+);
+const shellDataLifecycleSource = await fs.readFile(
+  path.join(domainsRoot, "shell/controller/data-lifecycle-and-navigation.template.js"),
+  "utf8",
+);
+const shellApplicationLifecycleSource = await fs.readFile(
+  path.join(domainsRoot, "shell/controller/application-lifecycle-and-history.template.js"),
+  "utf8",
+);
+const platformTemplateSource = await fs.readFile(
+  path.join(domainsRoot, "../templates/platform.template.js"),
+  "utf8",
+);
 const platformTemplateCss = await fs.readFile(
   path.join(domainsRoot, "../templates/platform.template.css"),
   "utf8",
@@ -136,6 +152,41 @@ assert.match(
   platformTemplateCss,
   /\.playground-agents-detail-about-model-readonly:disabled\s*\{[\s\S]*?opacity:\s*0\.42;/,
   "The disabled default-agent model control must use the sidebar disabled appearance.",
+);
+assert.match(
+  shellBootstrapSource,
+  /const realAgentsRef = useRef\(\[\]\);[\s\S]*?const agentRefreshInFlightRef = useRef\(/,
+  "The shell must retain the current agent list and deduplicate concurrent refreshes.",
+);
+assert.match(
+  shellBootstrapSource,
+  /buildPlaygroundAgentListScopeKey\(\{[\s\S]*?identity:[\s\S]*?sessionState\.userId/,
+  "Agent list caches must include the authenticated user identity.",
+);
+assert.match(
+  shellDataLifecycleSource,
+  /const inFlight = agentRefreshInFlightRef\.current;[\s\S]*?return inFlight\.promise;/,
+  "Concurrent agent list requests must share one in-flight request.",
+);
+assert.match(
+  shellDataLifecycleSource,
+  /if \(!response\.ok\) \{[\s\S]*?realAgentsRef\.current[\s\S]*?cached\?\.agents \|\| \[\]/,
+  "Transient agent list failures must preserve the last valid scoped list.",
+);
+assert.doesNotMatch(
+  shellDataLifecycleSource.match(/if \(!response\.ok\) \{[\s\S]*?\n\s*\}/)?.[0] || "",
+  /setRealAgents\(\[\]\)/,
+  "Transient agent list failures must not clear ticket assignees.",
+);
+assert.match(
+  shellApplicationLifecycleSource,
+  /activePage === "tasks"[\s\S]*?activePage === "calendar"[\s\S]*?Boolean\(threadTaskOpenRequest\)[\s\S]*?retryDelays/,
+  "Ticket pages and the ticket drawer must recover an initially empty agent list.",
+);
+assert.match(
+  platformTemplateSource,
+  /normalizePlatformAgentListRecords\(data\)\.map\(normalizePlaygroundAgentRecord\)/,
+  "The legacy shell must consume the typed Agent list normalization boundary.",
 );
 
 const agentApiModalSource = agentComposerSource.match(

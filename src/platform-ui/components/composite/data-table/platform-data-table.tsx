@@ -48,6 +48,7 @@ import {
 import { useAnimatedHeight } from "./use-animated-height.js";
 import { DotLoader } from "../../ui/dot-loader/index.js";
 import { PlatformPrimaryButton } from "../../ui/button/platform-button.js";
+import { PlatformCheckbox } from "../../ui/checkbox/platform-checkbox.js";
 import { PlatformSearch } from "../../ui/search/platform-search.js";
 import { PlatformPopupSurface } from "../popup/platform-popup.js";
 import type {
@@ -544,15 +545,12 @@ export function PlatformDataTable<TData>({
     label: string,
     onClick: () => void,
     disabled = false,
-  ) => createElement("button", {
-    type: "button",
+  ) => createElement(PlatformCheckbox, {
     className: joinClassNames(
       "platform-data-table__checkbox",
-      selected && "is-selected",
-      partial && "is-partial",
     ),
-    role: "checkbox",
-    "aria-checked": partial ? "mixed" : selected ? "true" : "false",
+    checked: selected,
+    indeterminate: partial,
     "aria-label": label,
     disabled,
     onClick: (event: ReactMouseEvent) => {
