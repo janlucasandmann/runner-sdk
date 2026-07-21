@@ -1,9 +1,14 @@
+// @vitest-environment jsdom
+
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { RunnerFileBrowserItem } from "./file-browser-item.js";
 import type { RunnerChatFileNode } from "./workspace-files.js";
 
 describe("RunnerFileBrowserItem", () => {
+  afterEach(() => cleanup());
+
   it("renders an expanded hierarchy without parent-owned recursion", () => {
     const folder: RunnerChatFileNode = {
       id: "/workspace",
@@ -32,6 +37,8 @@ describe("RunnerFileBrowserItem", () => {
         onBranchChange={vi.fn()}
         onEnsureBranchesLoaded={vi.fn()}
         onItemClick={vi.fn()}
+        onOpenItem={vi.fn()}
+        onToggleSelection={vi.fn()}
         onToggleFolder={vi.fn()}
         onToggleGithubSelection={vi.fn()}
         oneDriveLoadingFolderIds={[]}
@@ -73,6 +80,8 @@ describe("RunnerFileBrowserItem", () => {
         onBranchChange={vi.fn()}
         onEnsureBranchesLoaded={vi.fn()}
         onItemClick={vi.fn()}
+        onOpenItem={vi.fn()}
+        onToggleSelection={vi.fn()}
         onToggleFolder={vi.fn()}
         onToggleGithubSelection={vi.fn()}
         oneDriveLoadingFolderIds={[]}
@@ -117,6 +126,8 @@ describe("RunnerFileBrowserItem", () => {
       onBranchChange: vi.fn(),
       onEnsureBranchesLoaded: vi.fn(),
       onItemClick: vi.fn(),
+      onOpenItem: vi.fn(),
+      onToggleSelection: vi.fn(),
       onToggleFolder: vi.fn(),
       onToggleGithubSelection: vi.fn(),
       oneDriveLoadingFolderIds: [],
@@ -130,9 +141,7 @@ describe("RunnerFileBrowserItem", () => {
       workspaceLoadingFolderIds: [],
     };
 
-    const folderHtml = renderToStaticMarkup(
-      <RunnerFileBrowserItem {...baseProps} item={folder} />,
-    );
+    const folderHtml = renderToStaticMarkup(<RunnerFileBrowserItem {...baseProps} item={folder} />);
     const documentHtml = renderToStaticMarkup(
       <RunnerFileBrowserItem {...baseProps} item={document} />,
     );
@@ -146,5 +155,99 @@ describe("RunnerFileBrowserItem", () => {
     expect(folderHtml).toContain("<img");
     expect(documentHtml).toContain("<img");
     expect(documentHtml).not.toContain("platform-file-explorer__thumbnail");
+  });
+
+  it("selects from the checkbox without opening the preview", () => {
+    const file: RunnerChatFileNode = {
+      id: "notes.txt",
+      name: "notes.txt",
+      isFolder: false,
+      mimeType: "text/plain",
+    };
+    const onItemClick = vi.fn();
+    const onToggleSelection = vi.fn();
+    render(
+      <RunnerFileBrowserItem
+        allItems={[file]}
+        backendUrl="https://api.example.com"
+        branchLoadingRepoFullNames={[]}
+        branchesByRepoFullName={{}}
+        buildEffectiveGithubRootItem={(item) => item}
+        expandedFolderIds={[]}
+        githubLoadingFolderIds={[]}
+        googleDriveLoadingFolderIds={[]}
+        item={file}
+        onBranchChange={vi.fn()}
+        onEnsureBranchesLoaded={vi.fn()}
+        onItemClick={onItemClick}
+        onOpenItem={vi.fn()}
+        onToggleSelection={onToggleSelection}
+        onToggleFolder={vi.fn()}
+        onToggleGithubSelection={vi.fn()}
+        oneDriveLoadingFolderIds={[]}
+        previewItemId={null}
+        resolveSelectedGithubBranch={() => "main"}
+        searchQuery=""
+        selectedItemIds={[]}
+        source="workspace"
+        workspaceFolderErrorsById={{}}
+        workspaceEnvironmentId="computer_1"
+        workspaceLoadingFolderIds={[]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("checkbox", { name: "Select file" }));
+
+    expect(onToggleSelection).toHaveBeenCalledWith(file);
+    expect(onItemClick).not.toHaveBeenCalled();
+  });
+
+  it("opens the selected item from the minimal action menu", () => {
+    const file: RunnerChatFileNode = {
+      id: "notes.txt",
+      name: "notes.txt",
+      isFolder: false,
+      mimeType: "text/plain",
+    };
+    const onOpenItem = vi.fn();
+    render(
+      <RunnerFileBrowserItem
+        allItems={[file]}
+        backendUrl="https://api.example.com"
+        branchLoadingRepoFullNames={[]}
+        branchesByRepoFullName={{}}
+        buildEffectiveGithubRootItem={(item) => item}
+        expandedFolderIds={[]}
+        githubLoadingFolderIds={[]}
+        googleDriveLoadingFolderIds={[]}
+        item={file}
+        onBranchChange={vi.fn()}
+        onEnsureBranchesLoaded={vi.fn()}
+        onItemClick={vi.fn()}
+        onOpenItem={onOpenItem}
+        onRenameItem={vi.fn()}
+        onDeleteItem={vi.fn()}
+        onToggleSelection={vi.fn()}
+        onToggleFolder={vi.fn()}
+        onToggleGithubSelection={vi.fn()}
+        oneDriveLoadingFolderIds={[]}
+        previewItemId={null}
+        resolveSelectedGithubBranch={() => "main"}
+        searchQuery=""
+        selectedItemIds={[]}
+        source="workspace"
+        workspaceFolderErrorsById={{}}
+        workspaceEnvironmentId="computer_1"
+        workspaceLoadingFolderIds={[]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Actions for notes.txt" }));
+    expect(screen.getByRole("menu").classList.contains("is-minimal")).toBe(true);
+    expect(screen.getByRole("menuitem", { name: "Rename" })).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: "Delete" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("menuitem", { name: "Open" }));
+
+    expect(onOpenItem).toHaveBeenCalledWith(file);
   });
 });

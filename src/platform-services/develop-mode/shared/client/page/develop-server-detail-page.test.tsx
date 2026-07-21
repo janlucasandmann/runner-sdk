@@ -69,4 +69,46 @@ describe("DevelopServerDetailPage", () => {
     expect(screen.getByRole("complementary", { hidden: true }).getAttribute("data-collapsed")).toBe("true");
     expect(screen.queryByRole("button", { name: "Toggle properties" })).toBeNull();
   });
+
+  it("supports database tabs that auto-collapse the sidebar on Data", () => {
+    const tabs = [
+      { id: "data", label: "Data" },
+      { id: "usage", label: "Usage" },
+      { id: "settings", label: "Settings" },
+    ] as const;
+    const onTabChange = vi.fn();
+    const { container, rerender } = render(
+      <DevelopServerDetailPage
+        tabs={tabs}
+        activeTab="data"
+        onTabChange={onTabChange}
+        sidebar={<div>Database owner</div>}
+        sidebarToggle={<button type="button">Toggle database properties</button>}
+        sidebarAutoCollapseTabs={["data"]}
+        contentClassName="is-database-data-tab"
+      >
+        <div>Database records</div>
+      </DevelopServerDetailPage>,
+    );
+
+    expect(screen.getByRole("complementary", { hidden: true }).getAttribute("data-collapsed")).toBe("true");
+    expect(screen.queryByRole("button", { name: "Toggle database properties" })).toBeNull();
+    expect(container.querySelector(".resource-detail-page__content")?.classList.contains("is-database-data-tab")).toBe(true);
+
+    rerender(
+      <DevelopServerDetailPage
+        tabs={tabs}
+        activeTab="usage"
+        onTabChange={onTabChange}
+        sidebar={<div>Database owner</div>}
+        sidebarToggle={<button type="button">Toggle database properties</button>}
+        sidebarAutoCollapseTabs={["data"]}
+      >
+        <div>Database usage</div>
+      </DevelopServerDetailPage>,
+    );
+
+    expect(screen.getByRole("complementary").getAttribute("data-collapsed")).toBe("false");
+    expect(screen.getByRole("button", { name: "Toggle database properties" })).not.toBeNull();
+  });
 });

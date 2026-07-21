@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { TicketDetailPage } from "./ticket-detail-page.js";
 
 afterEach(cleanup);
@@ -36,19 +36,54 @@ describe("TicketDetailPage", () => {
     expect(screen.getByText("Ticket description")).not.toBeNull();
   });
 
-  it("adds the optional attachment preview outside the shared detail grid", () => {
+  it("opens attachments in the shared full-height sidebar and collapses ticket details", () => {
+    const handlePreviewClose = vi.fn();
     const { container } = render(
       <TicketDetailPage
         header={<h1>Ticket</h1>}
         details={<div>Details</div>}
         threads={<div>Threads</div>}
         preview={<div>document.pdf</div>}
+        previewTitle="document.pdf"
+        previewHeaderActions={<button type="button">Attachment actions</button>}
+        onPreviewClose={handlePreviewClose}
       >
         <div>Description</div>
       </TicketDetailPage>,
     );
 
     expect(container.querySelector("[data-ticket-detail-page='true']")?.classList.contains("has-preview")).toBe(true);
-    expect(screen.getByRole("complementary", { name: "Attachment preview" })).not.toBeNull();
+    expect(container.querySelector("[data-platform-floating-sidebar='true']")).not.toBeNull();
+    expect(container.querySelector("[data-resource-detail-page='true']")?.classList.contains("is-sidebar-collapsed")).toBe(true);
+    expect(container.querySelector(".platform-floating-sidebar__title")?.textContent).toBe("document.pdf");
+    expect(screen.getByRole("button", { name: "Attachment actions", hidden: true })).not.toBeNull();
+
+    const closeButton = container.querySelector<HTMLButtonElement>("button[aria-label='Close attachment preview']");
+    expect(closeButton).not.toBeNull();
+    fireEvent.click(closeButton!);
+    expect(handlePreviewClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("portals the attachment sidebar into the platform content shell", () => {
+    const portalTarget = document.createElement("div");
+    document.body.append(portalTarget);
+    const { container, unmount } = render(
+      <TicketDetailPage
+        header={<h1>Ticket</h1>}
+        details={<div>Details</div>}
+        threads={<div>Threads</div>}
+        preview={<div>report.csv</div>}
+        previewTitle="report.csv"
+        previewPortalTarget={portalTarget}
+      >
+        <div>Description</div>
+      </TicketDetailPage>,
+    );
+
+    expect(container.querySelector("[data-platform-floating-sidebar='true']")).toBeNull();
+    expect(portalTarget.querySelector("[data-platform-floating-sidebar='true']")).not.toBeNull();
+
+    unmount();
+    portalTarget.remove();
   });
 });

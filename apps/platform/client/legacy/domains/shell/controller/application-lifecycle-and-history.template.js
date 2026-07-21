@@ -1465,6 +1465,7 @@
             }
   
   ${MODELS_APP_SCRIPT_FRAGMENTS.historyRestore}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.historyRestore}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.historyRestore}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.historyRestore}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.historyRestore}${API_KEYS_APP_SCRIPT_FRAGMENTS.historyRestore}${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.historyRestore}
+  ${SECURITY_APP_SCRIPT_FRAGMENTS.historyRestore}
   ${INFERENCE_APP_SCRIPT_FRAGMENTS.historyRestore}
   ${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.historyRestore}
             setActivePage(entry.page || "thread");
@@ -1572,7 +1573,7 @@
   ${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.selectedTitle}          if (activePage === "models") {
               return "Models";
             }
-  ${MARKETPLACE_APP_SCRIPT_FRAGMENTS.selectedTitle}${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.selectedTitle}${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.selectedTitle}${API_KEYS_APP_SCRIPT_FRAGMENTS.selectedTitle}          if (isResourcesPage) {
+  ${MARKETPLACE_APP_SCRIPT_FRAGMENTS.selectedTitle}${ORGANIZATIONS_APP_SCRIPT_FRAGMENTS.selectedTitle}${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.selectedTitle}${API_KEYS_APP_SCRIPT_FRAGMENTS.selectedTitle}${SECURITY_APP_SCRIPT_FRAGMENTS.selectedTitle}          if (isResourcesPage) {
               return "Resources";
             }
             if (activePage === "tasks") {

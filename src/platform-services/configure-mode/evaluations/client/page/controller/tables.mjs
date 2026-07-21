@@ -5,7 +5,6 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
           const latestRun = run
             ? normalizePlaygroundEvaluationRun(run)
             : normalizedSetRuns[0] || null;
-          const runsForChart = run ? [latestRun] : normalizedSetRuns.slice().reverse();
           const runPassRate = latestRun && latestRun.totalCount ? Math.round((latestRun.passedCount / latestRun.totalCount) * 100) + "%" : "-";
           const setAnalytics = normalizedSetRuns.reduce((state, item) => {
             const cases = Array.isArray(item.cases) ? item.cases : [];
@@ -37,43 +36,74 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
                 { id: "runs", label: "Runs", value: String(normalizedSetRuns.length) },
                 { id: "cost", label: "Cost (USD)", value: formatPlaygroundEvaluationCostUsd(setAnalytics.costUsd) },
               ];
-          const handleDownload = () => {
-            if (typeof document === "undefined") return;
-            const canvas = document.querySelector(".playground-evaluations-progress-combo-canvas");
-            if (!canvas || typeof canvas.toDataURL !== "function") return;
-            const link = document.createElement("a");
-            link.href = canvas.toDataURL("image/png");
-            link.download = "evaluation-analytics.png";
-            link.click();
+          const now = Date.now();
+          const timeframeWindow = evaluationAnalyticsTimeframe === "day"
+            ? 24 * 60 * 60 * 1000
+            : evaluationAnalyticsTimeframe === "week"
+              ? 7 * 24 * 60 * 60 * 1000
+              : 30 * 24 * 60 * 60 * 1000;
+          const chartRuns = normalizedSetRuns
+            .slice()
+            .reverse()
+            .filter((item) => {
+              if (run) return true;
+              const timestamp = Date.parse(String(item.completedAt || item.updatedAt || item.createdAt || ""));
+              return !Number.isFinite(timestamp) || now - timestamp <= timeframeWindow;
+            });
+          const runCases = Array.isArray(latestRun?.cases) ? latestRun.cases : [];
+          const labels = run
+            ? runCases.map((_caseItem, index) => "Case " + (index + 1))
+            : chartRuns.map((item, index) => String(item.label || ("Run " + (index + 1))));
+          const scoreValues = run
+            ? runCases.map((caseItem) => Math.round(Math.max(0, Math.min(1, Number(caseItem.score || 0))) * 100))
+            : chartRuns.map((item) => Math.round(Math.max(0, Math.min(1, Number(item.averageScore || 0))) * 100));
+          const passRateValues = run
+            ? runCases.map((caseItem, index) => {
+                const completedCases = runCases.slice(0, index + 1).filter((candidate) => !isPlaygroundEvaluationCaseActive(candidate));
+                const passedCases = completedCases.filter((candidate) => Number(candidate.score || 0) >= normalizePlaygroundEvaluationPassThreshold(latestRun?.passThreshold));
+                return completedCases.length ? Math.round((passedCases.length / completedCases.length) * 100) : 0;
+              })
+            : chartRuns.map((item) => item.totalCount ? Math.round((Number(item.passedCount || 0) / item.totalCount) * 100) : 0);
+          const analytics = {
+            ariaLabel: run ? "Evaluation run analytics" : "Evaluation analytics",
+            metrics: values.map((item, index) => ({
+              ...item,
+              color: ["#8fc4ff", "#7657ff", "#7effff", "#9ff6ce"][index] || "#fff",
+            })),
+            labels,
+            series: [
+              {
+                id: "score",
+                label: run ? "Case score" : "Average score",
+                values: scoreValues,
+                color: "#8fc4ff",
+                valueKind: "percent",
+              },
+              {
+                id: "pass-rate",
+                label: "Pass rate",
+                values: passRateValues,
+                color: "#4da3ff",
+                valueKind: "percent",
+              },
+            ],
           };
-          return React.createElement("section", { className: "playground-project-overview-progress-combo-card playground-agents-detail-progress-combo-card playground-evaluations-analytics-card" },
-            React.createElement("div", { className: "playground-project-overview-progress-combo-topbar" },
-              React.createElement("h2", { className: "playground-project-overview-progress-combo-title" }, "Analytics"),
-              React.createElement("div", { className: "playground-project-overview-progress-combo-actions" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-project-overview-progress-combo-download",
-                  onClick: handleDownload,
-                  title: "Download chart",
-                  "aria-label": "Download evaluation analytics chart",
-                }, React.createElement(Download, { width: 15, height: 15, strokeWidth: 1.8 }))
-              )
-            ),
-            React.createElement("div", { className: "playground-project-overview-progress-combo-metrics" },
-              values.map((item) =>
-                React.createElement("div", { key: item.id, className: "playground-project-overview-progress-combo-metric" },
-                  React.createElement("div", { className: "playground-project-overview-progress-combo-metric-label" },
-                    React.createElement("span", { className: "playground-project-overview-progress-combo-metric-dot is-" + item.id, "aria-hidden": "true" }),
-                    React.createElement("span", null, item.label)
-                  ),
-                  React.createElement("div", { className: "playground-project-overview-progress-combo-metric-value" }, item.value)
-                )
-              )
-            ),
-            React.createElement("div", { className: "playground-project-overview-progress-combo-chart" },
-              React.createElement(PlaygroundEvaluationPerformanceChart, { runs: runsForChart, run: run || null })
-            )
-          );
+          return React.createElement(PlatformAnalyticsSection, {
+            variant: "framed",
+            title: "Analytics",
+            analytics,
+            className: "playground-evaluations-analytics-card",
+            timeframe: run ? undefined : {
+              value: evaluationAnalyticsTimeframe,
+              options: [
+                { value: "day", label: "24H" },
+                { value: "week", label: "7D" },
+                { value: "month", label: "30D" },
+              ],
+              onValueChange: setEvaluationAnalyticsTimeframe,
+              ariaLabel: "Evaluation analytics time frame",
+            },
+          });
         }
 
         function renderRunAgentCell(run, set) {
@@ -841,4 +871,3 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
         }
 
 `;
-

@@ -1,5 +1,6 @@
 import type { ResourceOverviewPeriod } from "../../../../../platform-ui/pages/overview/index.js";
 import type { DevelopResourceOperationalMetrics } from "../../../shared/client/domain/index.js";
+import type { DevelopResourceIdentity } from "../../../shared/client/domain/index.js";
 
 export interface DevelopVoiceAgentOverviewRow {
   id: string;
@@ -12,6 +13,8 @@ export interface DevelopVoiceAgentOverviewRow {
   instructions: string;
   phoneNumber: string;
   phoneStatus: string;
+  creator: DevelopResourceIdentity;
+  owner: DevelopResourceIdentity;
   enabled: boolean;
   webEnabled: boolean;
   phoneEnabled: boolean;

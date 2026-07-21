@@ -1,4 +1,5 @@
 import { createApiKeysService } from "../../../src/platform-services/develop-mode/api-keys/index.mjs";
+import { createSecurityService } from "../../../src/platform-services/develop-mode/security/index.mjs";
 import { createCalendarService } from "../../../src/platform-services/create-mode/calendar/index.mjs";
 import { createConfigureHomeService } from "../../../src/platform-services/configure-mode/configure-home/index.mjs";
 import { createEvaluationsService } from "../../../src/platform-services/configure-mode/evaluations/index.mjs";
@@ -147,6 +148,10 @@ export function createPlatformServices({
       readRequestBody,
       sendJson,
       withProxyOrganizationHeader,
+    }),
+    securityService: createSecurityService({
+      proxyUpstreamGet,
+      proxyUpstreamJsonRequest,
     }),
     systemSkillSourceService: createSystemSkillSourceService({
       root: playgroundSystemSkillsRoot,

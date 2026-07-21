@@ -106,6 +106,9 @@ import {
   API_KEYS_STYLE_FRAGMENTS,
 } from "../../../../src/platform-services/develop-mode/api-keys/index.mjs";
 import {
+  SECURITY_APP_SCRIPT_FRAGMENTS,
+} from "../../../../src/platform-services/develop-mode/security/index.mjs";
+import {
   PLATFORM_UI_PRIMITIVES_CSS,
   PLATFORM_UI_PRIMITIVES_SCRIPT,
 } from "./platform-ui-primitives.mjs";
@@ -199,6 +202,7 @@ export function createLegacyPlatformApplicationBindings({
     configureGovernanceEntries: EVALUATIONS_APP_SCRIPT_FRAGMENTS.sidebarEntry + FINE_TUNING_APP_SCRIPT_FRAGMENTS.sidebarEntry + GUARDRAILS_APP_SCRIPT_FRAGMENTS.sidebarEntry,
     configureInfrastructureEntries: MODELS_APP_SCRIPT_FRAGMENTS.sidebarEntry + MARKETPLACE_APP_SCRIPT_FRAGMENTS.sidebarEntry + INFERENCE_APP_SCRIPT_FRAGMENTS.sidebarEntry,
     developPrimaryEntries: DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.sidebarEntry + API_KEYS_APP_SCRIPT_FRAGMENTS.sidebarEntry,
+    developAgentServiceEntries: SECURITY_APP_SCRIPT_FRAGMENTS.sidebarEntry,
     createPrimaryEntries: IMAGINE_APP_SCRIPT_FRAGMENTS.sidebarEntry,
   });
 
@@ -301,6 +305,7 @@ export function createLegacyPlatformApplicationBindings({
     SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS,
     SETTINGS_MODAL_CSS,
     SETTINGS_MODAL_PAGE_SCRIPT,
+    SECURITY_APP_SCRIPT_FRAGMENTS,
     SKILLS_PAGE_SCRIPT,
     TEAMS_APP_SCRIPT_FRAGMENTS,
     TEAMS_DOMAIN_SCRIPT_FRAGMENTS,

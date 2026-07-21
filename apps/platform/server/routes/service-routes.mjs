@@ -1,6 +1,6 @@
 /** Ordered service compatibility routes. */
 export function createServiceRoutes(bindings) {
-    const { apiKeysService, calendarService, configureHomeService, filesService, guardrailsService, imagineService, inferenceService, marketplaceService, metronomeService, organizationsService, platformDocumentAssets, projectsService, systemSkillSourceService, teamsService, } = bindings;
+    const { apiKeysService, calendarService, configureHomeService, filesService, guardrailsService, imagineService, inferenceService, marketplaceService, metronomeService, organizationsService, platformDocumentAssets, projectsService, securityService, systemSkillSourceService, teamsService, } = bindings;
     return function handleServiceRoutes(req, res, url) {
         if (platformDocumentAssets.handleRequest(req, res, url)) {
             return true;
@@ -42,6 +42,9 @@ export function createServiceRoutes(bindings) {
             return true;
         }
         if (metronomeService.handleRequest(req, res, url)) {
+            return true;
+        }
+        if (securityService.handleRequest(req, res, url)) {
             return true;
         }
         return false;

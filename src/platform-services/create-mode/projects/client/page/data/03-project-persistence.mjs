@@ -834,31 +834,6 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
         }, [taskDetailPopover]);
 
         useEffect(() => {
-          if (!taskDetailSelectPopover) return undefined;
-
-          function handleTaskDetailSelectPopoverPointerDown(event) {
-            const target = event?.target instanceof Node ? event.target : null;
-            if (!target || !taskDetailSelectPopoverRef.current || taskDetailSelectPopoverRef.current.contains(target)) {
-              return;
-            }
-            setTaskDetailSelectPopover("");
-          }
-
-          function handleTaskDetailSelectPopoverEscape(event) {
-            if (event.key === "Escape") {
-              setTaskDetailSelectPopover("");
-            }
-          }
-
-          document.addEventListener("mousedown", handleTaskDetailSelectPopoverPointerDown);
-          window.addEventListener("keydown", handleTaskDetailSelectPopoverEscape);
-          return () => {
-            document.removeEventListener("mousedown", handleTaskDetailSelectPopoverPointerDown);
-            window.removeEventListener("keydown", handleTaskDetailSelectPopoverEscape);
-          };
-        }, [taskDetailSelectPopover]);
-
-        useEffect(() => {
           if (taskDetailPopover) {
             setTaskDetailSelectPopover("");
             setBacklogTaskContextMenu(null);

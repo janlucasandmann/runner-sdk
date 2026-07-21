@@ -38,12 +38,28 @@ assert.equal(
 );
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.foundation, /createPlaygroundEvaluationId/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versions, /normalizePlaygroundEvaluationVersion/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versions, /stripPlaygroundEvaluationAccessMetadata/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versions, /"teamRolePermissionSets", "team_role_permission_sets"/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.persistence, /stripPlaygroundEvaluationVersionMetadata\(normalizedSet\.metadata\)/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.execution, /startPlaygroundEvaluationCaseThread/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.threadCases, /handleGenerateEvaluationCasesFromThreads/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /renderRunsTable/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /renderEvaluationAccessSettings/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /React\.createElement\(PlatformRolePermissionsPage/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /subjectType: "evaluation_team_role"/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /resourceType: "evaluation"/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /renderEvaluationOwnerSelector/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /name: "All Agents"/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /readOnly: selectedRole\.id === "owner"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs, /renderEvaluationRenameModal/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /React\.createElement\(EvaluationsOverviewPage/);
 assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /React\.createElement\(PlatformDataTable/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /React\.createElement\(EvaluationDetailPage/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /renderSidebarRow\("pass-threshold"/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /renderEvaluationAccessSettings\(\)/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /renderEvaluationOwnerSelector\(activeSet\)/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /React\.createElement\(PlatformAnalyticsSection/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.caseDetail, /React\.createElement\(PlatformInstructionsEditor/);
 
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.state, /evaluationSets/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.navigation, /function openEvaluationsPage/);
@@ -73,6 +89,10 @@ assert.match(EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.modal, /renderAgentEvaluationRun
 assert.match(EVALUATIONS_AGENT_STYLE_FRAGMENTS.page, /playground-agents-detail-evaluations-section/);
 
 const platformEntrySource = await readPlatformCompositionSource();
+const evaluationRuntimeSource = await fs.readFile(
+  new URL("./server/runtime.mjs", import.meta.url),
+  "utf8",
+);
 
 assert.match(platformEntrySource, /from "\.\.\/\.\.\/\.\.\/src\/platform-services\/configure-mode\/evaluations\/index\.mjs"/);
 assert.match(platformEntrySource, /const evaluationsService = createEvaluationsService\(/);
@@ -87,6 +107,10 @@ assert.doesNotMatch(platformEntrySource, /function openEvaluationsPage\(/);
 assert.doesNotMatch(platformEntrySource, /function renderEvaluationsPage\(/);
 assert.doesNotMatch(platformEntrySource, /function renderEvaluationsPageNav\(/);
 assert.doesNotMatch(platformEntrySource, /const playgroundEvaluationsRuntime/);
+assert.match(evaluationRuntimeSource, /async function resolveEvaluationGuardrailTarget/);
+assert.match(evaluationRuntimeSource, /guardrail: record\.targetGuardrail \|\| null/);
+assert.match(evaluationRuntimeSource, /buildProxyPromptAdaptationsFromGuardrails\(explicitGuardrails\)/);
+assert.match(evaluationRuntimeSource, /targetGuardrail = await resolveEvaluationGuardrailTarget/);
 
 const evaluationSet = normalizeEvaluationSet({
   id: "evaluation_1",
@@ -108,11 +132,15 @@ assert.equal(evaluationSet.dataRows[0]?.runCount, 2);
 const evaluationRun = createEvaluationRun(evaluationSet, {
   id: "run_1",
   label: "Baseline",
+  targetGuardrailId: "guardrail_1",
+  targetGuardrailVersionId: "guardrail_version_1",
 });
 assert.equal(evaluationRun.id, "run_1");
 assert.equal(evaluationRun.evaluationSetId, "evaluation_1");
 assert.equal(evaluationRun.cases.length, 2);
 assert.equal(evaluationRun.status, "running");
+assert.equal(evaluationRun.targetGuardrailId, "guardrail_1");
+assert.equal(evaluationRun.targetGuardrailVersionId, "guardrail_version_1");
 
 const parsedScore = parseEvaluatorResult(
   '{"score":0.9,"reason":"Resolved correctly","passed":true,"confidence":0.8}',

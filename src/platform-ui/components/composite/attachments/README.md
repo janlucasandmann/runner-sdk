@@ -6,8 +6,8 @@
 
 `PlatformAttachments` is the canonical attachment card for resource detail
 pages. It owns the shared card surface, upload actions, hidden file input,
-drag-and-drop behavior, empty state, add-file row, attachment list, and removal
-controls.
+drag-and-drop behavior, empty state, add-file row, attachment list, and shared
+rename/delete controls.
 
 Callers provide normalized rows and domain callbacks. Preview retrieval,
 authorization headers, persistence, and resource-specific upload targets remain
@@ -18,7 +18,7 @@ outside this component.
   items={attachments}
   onFilesDrop={(files) => upload(files)}
   onInputChange={(event) => upload(Array.from(event.target.files ?? []))}
-  onUploadFromComputer={openComputerPicker}
+  onUploadFromComputer={openWorkspacePicker}
 />
 ```
 

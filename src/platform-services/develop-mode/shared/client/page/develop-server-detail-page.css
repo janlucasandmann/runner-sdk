@@ -109,6 +109,21 @@
   text-align: right;
 }
 
+.playground-develop-resource-identity-value,
+.playground-server-detail-sidebar-identity-cell .resource-overview-identity {
+  width: 100%;
+  min-width: 0;
+  justify-content: flex-end;
+}
+
+.playground-develop-resource-identity-value .playground-team-table-title,
+.playground-server-detail-sidebar-identity-cell .resource-overview-identity__title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .playground-source-server-detail-main .playground-server-detail-properties-card {
   position: relative;
   z-index: 2;
@@ -123,14 +138,37 @@
 
 .playground-source-server-detail-main
 .playground-server-detail-sidebar-owner-cell
-.playground-database-owner-popup-shell {
+.playground-server-owner-selector {
+  width: 100%;
   max-width: 100%;
 }
 
 .playground-source-server-detail-main
 .playground-server-detail-sidebar-owner-cell
-.playground-database-owner-trigger {
+.playground-server-owner-selector-trigger {
+  width: 100%;
   max-width: 100%;
+}
+
+.playground-source-server-detail-main
+.playground-server-detail-page:is(.is-function-server-detail, .is-web-app-server-detail)
+.playground-server-detail-sidebar-owner-cell
+.playground-server-owner-selector-trigger {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.playground-source-server-detail-main
+.playground-server-detail-connections-card
+> .platform-ui-card__sidebar-header {
+  margin-bottom: 18px;
+}
+
+.playground-source-server-detail-main
+.playground-server-detail-page.is-web-app-server-detail
+.playground-server-settings-tab.is-web-app-settings-tab
+.playground-environments-connections-title {
+  margin-bottom: 18px;
 }
 
 .playground-source-server-detail-main
@@ -187,14 +225,20 @@
 
 .playground-source-server-detail-main
 .playground-server-detail-connections-card
-.playground-tasks-detail-select-trigger,
+.playground-server-detail-selector-trigger,
 .playground-source-server-detail-main
 .playground-server-detail-connections-card
-.playground-tasks-detail-select-trigger:hover,
+.playground-server-detail-selector-trigger:hover,
 .playground-source-server-detail-main
 .playground-server-detail-connections-card
-.playground-tasks-detail-select-trigger.is-active {
+.playground-server-detail-selector-trigger:focus-visible {
   background: transparent !important;
+}
+
+.playground-source-server-detail-main
+.playground-server-detail-connections-card
+.playground-server-detail-selector {
+  width: 100%;
 }
 
 .playground-source-server-detail-main
@@ -207,6 +251,447 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   text-align: right;
+}
+
+.playground-database-detail-main .playground-server-detail-page {
+  width: min(100%, var(--playground-centered-page-max-width));
+  max-width: var(--playground-centered-page-max-width);
+  margin: 0 auto;
+}
+
+.playground-database-detail-main .playground-server-detail-page.is-database-data-tab {
+  height: 100%;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.playground-database-detail-main
+.playground-server-detail-page__content.is-database-data-tab {
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.playground-database-detail-main
+.playground-server-detail-page
+> .playground-server-detail-sidebar.playground-project-overview-sidebar {
+  min-width: 0;
+  align-self: start;
+  top: 0;
+  margin-top: 0;
+}
+
+.playground-database-detail-main
+.playground-server-detail-sidebar
+.playground-project-overview-sidebar-row {
+  grid-template-columns: minmax(92px, 0.82fr) minmax(0, 1.38fr);
+}
+
+.playground-database-detail-main
+.playground-server-detail-sidebar
+.playground-project-overview-sidebar-row-value {
+  min-width: 0;
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.playground-database-detail-main .playground-server-detail-properties-card {
+  position: relative;
+  z-index: 2;
+}
+
+.playground-database-detail-main
+.playground-server-detail-sidebar-owner-row,
+.playground-database-detail-main
+.playground-server-detail-sidebar-owner-cell {
+  overflow: visible;
+}
+
+.playground-database-detail-main
+.playground-server-detail-sidebar-owner-cell
+.playground-server-owner-selector,
+.playground-database-detail-main
+.playground-server-detail-sidebar-owner-cell
+.playground-server-owner-selector-trigger {
+  width: 100%;
+  max-width: 100%;
+}
+
+.playground-database-detail-main
+.playground-server-detail-sidebar-owner-cell
+.playground-server-owner-selector-trigger {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.playground-database-detail-main
+.playground-server-detail-sidebar
+.playground-environments-editor-fact-value {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.72);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.playground-managed-data-detail-main .playground-server-detail-page {
+  width: min(100%, var(--playground-centered-page-max-width));
+  max-width: var(--playground-centered-page-max-width);
+  margin: 0 auto;
+}
+
+.playground-managed-data-detail-main .playground-server-detail-content,
+.playground-managed-data-detail-main .playground-server-settings-tab {
+  display: flex;
+  flex-direction: column;
+  gap: var(--resource-detail-section-gap);
+}
+
+.playground-managed-data-detail-main .playground-server-settings-tab > * {
+  margin-block: 0;
+}
+
+.playground-managed-data-detail-main .playground-server-detail-page__header-content,
+.playground-managed-data-detail-main .playground-server-detail-profile-section,
+.playground-managed-data-detail-main .playground-server-detail-title-row {
+  width: 100%;
+  min-width: 0;
+}
+
+.playground-managed-data-detail-main .playground-server-detail-profile-section,
+.playground-managed-data-detail-main .playground-server-detail-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.playground-managed-data-detail-main
+.playground-server-detail-title-row
+.playground-server-function-title-input {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.96);
+  font-size: 18px;
+  line-height: 1.2;
+  font-weight: 400;
+  text-align: left;
+}
+
+.playground-managed-data-detail-main .playground-server-detail-page.is-managed-data-list-tab {
+  height: 100%;
+  min-height: 0;
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
+.playground-managed-data-detail-main
+.playground-server-detail-page__content.is-managed-data-list-tab {
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.playground-managed-data-detail-main
+.playground-server-detail-page
+> .playground-server-detail-sidebar.playground-project-overview-sidebar {
+  min-width: 0;
+  align-self: start;
+  top: 0;
+  margin-top: 0;
+}
+
+.playground-managed-data-detail-main
+.playground-server-detail-sidebar
+.playground-project-overview-sidebar-row {
+  grid-template-columns: minmax(92px, 0.82fr) minmax(0, 1.38fr);
+}
+
+.playground-managed-data-detail-main
+.playground-server-detail-sidebar
+.playground-project-overview-sidebar-row-value {
+  min-width: 0;
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.playground-managed-data-detail-main .playground-server-detail-properties-card {
+  position: relative;
+  z-index: 2;
+}
+
+.playground-managed-data-detail-main
+.playground-server-detail-sidebar-owner-row,
+.playground-managed-data-detail-main
+.playground-server-detail-sidebar-owner-cell {
+  overflow: visible;
+}
+
+.playground-managed-data-detail-main
+.playground-server-detail-sidebar-owner-cell
+.playground-server-owner-selector,
+.playground-managed-data-detail-main
+.playground-server-detail-sidebar-owner-cell
+.playground-server-owner-selector-trigger {
+  width: 100%;
+  max-width: 100%;
+}
+
+.playground-managed-data-detail-main
+.playground-server-detail-sidebar-owner-cell
+.playground-server-owner-selector-trigger {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.playground-managed-data-detail-main
+.playground-server-detail-sidebar
+.playground-environments-editor-fact-value {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.72);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.playground-managed-data-detail-main .playground-managed-data-list-surface,
+.playground-managed-data-detail-main .playground-managed-data-list-table {
+  flex: 1 1 0;
+  min-height: 0;
+  height: 100%;
+}
+
+.playground-managed-data-detail-main .playground-managed-data-list-surface {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 3px 3px;
+  overflow: hidden;
+}
+
+.playground-managed-data-detail-main
+.playground-managed-data-list-table
+> .platform-data-table__toolbar {
+  padding-right: 9px;
+  padding-left: 9px;
+}
+
+.playground-managed-data-detail-main
+.playground-managed-data-list-table.is-minimalistic-ui
+> .platform-data-table__surface {
+  flex: 1 1 0;
+  min-height: 0;
+  height: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: #000;
+  overflow: hidden;
+}
+
+.playground-managed-data-detail-main
+.playground-managed-data-list-table.is-fill-layout
+.platform-data-table__table,
+.playground-managed-data-detail-main
+.playground-managed-data-list-table.is-fill-layout
+.platform-data-table__scroll,
+.playground-managed-data-detail-main
+.playground-managed-data-list-table.is-fill-layout
+.platform-data-table__body.has-state,
+.playground-managed-data-detail-main
+.playground-managed-data-list-table.is-fill-layout
+.platform-data-table__state-row {
+  flex: 1 1 0;
+  min-height: 0;
+  height: 100%;
+}
+
+.playground-voice-agent-detail-main {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  padding: 42px 42px 10px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.playground-voice-agent-detail-main::-webkit-scrollbar {
+  display: none;
+}
+
+.playground-voice-agent-detail-main .playground-voice-agent-detail-title {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.96);
+  font-size: 18px;
+  line-height: 1.2;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playground-voice-agent-detail-main .playground-server-detail-content,
+.playground-voice-agent-detail-main .playground-voice-agent-settings-tab {
+  display: flex;
+  flex-direction: column;
+  gap: var(--resource-detail-section-gap);
+}
+
+.playground-voice-agent-detail-main .playground-voice-agent-settings-tab > * {
+  margin-block: 0;
+}
+
+.playground-voice-agent-configuration-card,
+.playground-voice-agent-phone-card,
+.playground-voice-agent-session-card {
+  padding: 18px;
+}
+
+.playground-voice-agent-detail-section-header {
+  min-width: 0;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.playground-voice-agent-detail-section-header h2,
+.playground-voice-agent-detail-section-header p {
+  margin: 0;
+  letter-spacing: 0;
+}
+
+.playground-voice-agent-detail-section-header h2 {
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.playground-voice-agent-detail-section-header p {
+  max-width: 620px;
+  margin-top: 5px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+  line-height: 1.45;
+  font-weight: 400;
+}
+
+.playground-voice-agent-configuration-grid {
+  display: flex;
+  flex-direction: column;
+}
+
+.playground-voice-agent-configuration-row {
+  min-width: 0;
+  min-height: 42px;
+  padding: 6px 0;
+  display: grid;
+  grid-template-columns: minmax(120px, 0.72fr) minmax(0, 1.28fr);
+  align-items: center;
+  gap: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.playground-voice-agent-configuration-row:first-child {
+  border-top: 0;
+}
+
+.playground-voice-agent-configuration-row .platform-selector {
+  width: 100%;
+  min-width: 0;
+}
+
+.playground-voice-agent-configuration-row .platform-selector__trigger {
+  width: 100%;
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.playground-voice-agent-configuration-row .playground-settings-input {
+  width: 100%;
+  min-width: 0;
+  color: rgba(255, 255, 255, 0.78);
+  text-align: right;
+}
+
+.playground-voice-agent-phone-actions,
+.playground-voice-agent-session-actions,
+.playground-voice-agent-detail-sidebar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.playground-voice-agent-phone-actions {
+  justify-content: space-between;
+}
+
+.playground-voice-agent-phone-number {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.playground-voice-agent-detail-sidebar-actions {
+  align-items: stretch;
+  flex-direction: column;
+}
+
+.playground-voice-agent-detail-sidebar-actions .platform-button {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.playground-voice-agent-detail-properties-card .playground-project-overview-sidebar-row-value {
+  min-width: 0;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.72);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playground-voice-agent-detail-properties-card
+.playground-project-overview-sidebar-row-value:has(.resource-overview-identity) {
+  overflow: visible;
+}
+
+.playground-voice-agent-detail-properties-card .playground-project-overview-sidebar-row-value .is-id {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .playground-voice-agent-detail-main {
+    padding: 18px 12px 10px;
+  }
+
+  .playground-voice-agent-configuration-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .playground-voice-agent-configuration-row .platform-selector__trigger,
+  .playground-voice-agent-configuration-row .playground-settings-input {
+    justify-content: flex-start;
+    text-align: left;
+  }
 }
 
 .playground-source-server-detail-main .playground-server-detail-sidebar-url-cell {

@@ -14,6 +14,7 @@ const fragments = createAppSidebarScriptFragments({
   configureGovernanceEntries: "              { id: \"governance-test\", label: \"Governance Test\" },\n",
   configureInfrastructureEntries: "              { id: \"infrastructure-test\", label: \"Infrastructure Test\" },\n",
   developPrimaryEntries: "              { id: \"develop-test\", label: \"Develop Test\" },\n",
+  developAgentServiceEntries: "              { id: \"security-agents-test\", label: \"Security Agents\" },\n",
   createPrimaryEntries: "              { id: \"create-test\", label: \"Create Test\" },\n",
 });
 
@@ -51,6 +52,10 @@ assert.match(
   /id: "tags"[\s\S]*label: "Tags and Plugins"[\s\S]*toolsView === "tags" \|\| toolsView === "plugins"/,
 );
 assert.doesNotMatch(fragments.navigationItems, /id: "plugins"/);
+assert.match(
+  fragments.navigationItems,
+  /id: "develop-agent-services-label"[\s\S]*label: "Agent Services"[\s\S]*\.\.\.agentDevelopServerPageItems[\s\S]*id: "security-agents-test"[\s\S]*label: "Security Agents"/,
+);
 assert.match(fragments.navigationItems, /function handleSidebarNavigationItemClick\(item\)/);
 assert.match(fragments.navigationItems, /requestPlatformNavigation\(item\?\.onClick\)/);
 assert.doesNotMatch(fragments.navigationItems, /if \(item\.active\)/);

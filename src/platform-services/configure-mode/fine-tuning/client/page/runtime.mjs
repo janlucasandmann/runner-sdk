@@ -14,7 +14,6 @@ import {
   FINE_TUNING_PAGE_CONTROLLER_VIEW_SCRIPT,
 } from "./controller/index.mjs";
 import { FINE_TUNING_PAGE_ENTRY_SCRIPT } from "./entry.mjs";
-import { FINE_TUNING_PAGE_PERFORMANCE_CHART_SCRIPT } from "./performance-chart.mjs";
 
 export { PLAYGROUND_FINE_TUNING_CSS } from "../styles/page.mjs";
 
@@ -22,7 +21,6 @@ export const FINE_TUNING_PAGE_SCRIPT_FRAGMENTS = Object.freeze({
   foundation: FINE_TUNING_PAGE_FOUNDATION_SCRIPT,
   jobs: FINE_TUNING_PAGE_JOBS_SCRIPT,
   evaluations: FINE_TUNING_PAGE_EVALUATIONS_SCRIPT,
-  performanceChart: FINE_TUNING_PAGE_PERFORMANCE_CHART_SCRIPT,
   setup: FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT,
   editor: FINE_TUNING_PAGE_CONTROLLER_EDITOR_SCRIPT,
   verification: FINE_TUNING_PAGE_CONTROLLER_VERIFICATION_SCRIPT,
@@ -37,4 +35,3 @@ export const FINE_TUNING_PAGE_SCRIPT_FRAGMENTS = Object.freeze({
 export const PLAYGROUND_FINE_TUNING_SCRIPT = Object.values(
   FINE_TUNING_PAGE_SCRIPT_FRAGMENTS,
 ).join("");
-

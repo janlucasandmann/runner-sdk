@@ -164,6 +164,52 @@ export const GUARDRAILS_PAGE_EDITOR_SCRIPT = `          function applyGuardrailV
             });
           }
 
+          function renderGuardrailVersionSaveDialog() {
+            if (!guardrailVersionSaveDialog) {
+              return null;
+            }
+            const versionData = buildGuardrailVersionSaveDialogData();
+            const isBusy = guardrailVersionState.status === "loading";
+            return React.createElement(PlatformVersionSaveDialog, {
+              open: true,
+              title: "Review changes",
+              currentVersion: versionData.currentVersion,
+              nextVersion: versionData.nextVersion,
+              currentDescription: versionData.currentDescription,
+              initialMode: guardrailVersionSaveDialog.initialMode || "new",
+              canSaveCurrent: versionData.canSaveCurrent,
+              instanceKey: guardrailVersionSaveDialog.key,
+              pending: isBusy,
+              error: guardrailVersionState.status === "error"
+                ? guardrailVersionState.error
+                : null,
+              changes: versionData.diffFiles.map((file) => ({
+                id: file.id,
+                label: file.label || file.filePath,
+                content: React.createElement(PlatformDiffViewer, {
+                  filePath: file.filePath,
+                  diffContent: file.diffContent || "",
+                  fileContent: file.fileContent || "",
+                  additions: file.additions,
+                  deletions: file.deletions,
+                  hideTopbar: true,
+                  embedded: true,
+                  defaultExpanded: true,
+                  maxHeight: 330,
+                }),
+              })),
+              emptyChanges: "No changes were found between the editor and the selected version.",
+              onClose: closeGuardrailVersionSaveDialog,
+              onSubmit: async (details) => {
+                const savedSet = await saveAndPublishCurrentGuardrailVersion(details);
+                if (!savedSet) {
+                  throw new Error("The guardrail could not be saved and published. Review the details and try again.");
+                }
+                setGuardrailVersionSaveDialog(null);
+              },
+            });
+          }
+
           function handleGuardrailsKeyboardShortcuts(event) {
             if (!isGuardrailsDetailPage || selectedGuardrailSetReadonly || event.defaultPrevented) {
               return;
@@ -171,18 +217,18 @@ export const GUARDRAILS_PAGE_EDITOR_SCRIPT = `          function applyGuardrailV
             const isCommand = event.metaKey || event.ctrlKey;
             if (!isCommand) return;
             const key = String(event.key || "").toLowerCase();
-            if (key === "s") {
-              event.preventDefault();
-              if (event.shiftKey) {
-                openCreateGuardrailVersionModal();
-              } else {
-                saveCurrentGuardrailVersion();
-              }
-            } else if (key === "p" && !event.shiftKey) {
-              event.preventDefault();
-              if (canPublishSelectedGuardrailVersion()) {
-                publishCurrentGuardrailVersion();
-              }
+            if (key !== "s" && key !== "p") {
+              return;
+            }
+            event.preventDefault();
+            event.stopPropagation();
+            if (guardrailVersionModal || guardrailVersionSaveDialog || guardrailVersionState.status === "loading") {
+              return;
+            }
+            if (hasSelectedGuardrailVersionChanges()) {
+              openGuardrailVersionSaveDialog({
+                mode: event.shiftKey ? "new" : undefined,
+              });
             }
           }
 

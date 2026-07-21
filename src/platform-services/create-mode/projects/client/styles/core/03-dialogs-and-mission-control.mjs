@@ -1,7 +1,45 @@
 export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
-	      }
+		      }
 
-	      .playground-database-access-table-section,
+		      .playground-new-issue-modal__body.platform-modal-body {
+		        min-height: 0;
+		        display: flex;
+		        flex-direction: column;
+		        gap: 20px;
+		        overflow: auto;
+		      }
+
+		      .playground-new-issue-modal__title-input {
+		        width: 100%;
+		        min-width: 0;
+		      }
+
+		      .playground-new-issue-modal .playground-tasks-issue-description-editor {
+		        margin: 0;
+		        padding: 0;
+		      }
+
+		      .playground-new-issue-modal .playground-tasks-issue-details-section {
+		        padding: 0;
+		        border: 0;
+		        border-radius: 0;
+		        background: transparent;
+		        -webkit-backdrop-filter: none;
+		        backdrop-filter: none;
+		      }
+
+		      .playground-new-issue-modal .playground-tasks-issue-modal-computer-picker {
+		        width: 100%;
+		        min-width: 0;
+		        flex: 0 1 auto;
+		      }
+
+		      .playground-new-issue-modal .playground-tasks-issue-modal-computer-picker .playground-tasks-detail-select-shell {
+		        width: 100%;
+		        max-width: 100%;
+		      }
+
+		      .playground-database-access-table-section,
 	      .playground-database-access-table,
 	      .playground-database-access-table .playground-project-overview-thread-list,
 	      .playground-database-access-table .playground-project-overview-threads-table-row,
@@ -969,6 +1007,33 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
         z-index: 1;
       }
 
+      .playground-tasks-comment-modal-body {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding-top: 0;
+      }
+
+      .playground-tasks-comment-modal-instructions {
+        width: 100%;
+        min-height: 180px;
+        margin: 0;
+      }
+
+      .playground-tasks-comment-modal-instructions .platform-instructions-editor__title {
+        font-size: 14px;
+      }
+
+      .playground-tasks-comment-modal-instructions .platform-instructions-editor__body,
+      .playground-tasks-comment-modal-instructions .platform-instructions-editor__preview,
+      .playground-tasks-comment-modal-instructions .platform-instructions-editor__input {
+        min-height: 140px;
+      }
+
+      .playground-tasks-comment-modal .playground-tasks-comment-feedback {
+        padding: 0;
+      }
+
       .playground-tasks-detail-facts .playground-tasks-detail-section-title {
         margin-bottom: 6px;
       }
@@ -1022,6 +1087,77 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
         display: flex;
         flex-direction: column;
         gap: 4px;
+      }
+
+      .playground-tasks-detail-fact-control .playground-tasks-detail-central-selector {
+        width: 100%;
+        max-width: 100%;
+        justify-content: flex-end;
+      }
+
+      .playground-tasks-detail-central-selector .playground-tasks-detail-central-selector-trigger {
+        width: 100%;
+        min-height: 30px;
+        justify-content: flex-end;
+        gap: 6px;
+        color: rgba(255, 255, 255, 0.86);
+        text-align: right;
+      }
+
+      .playground-tasks-detail-central-selector.is-empty .playground-tasks-detail-central-selector-trigger {
+        color: rgba(255, 255, 255, 0.62);
+      }
+
+      .playground-tasks-detail-central-selector .platform-selector__value {
+        justify-content: flex-end;
+      }
+
+      .playground-tasks-detail-creator-value .playground-tasks-detail-select-trigger-label {
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 12px;
+        font-weight: 400;
+      }
+
+      .playground-tasks-detail-central-selector-popup {
+        width: min(280px, calc(100vw - 48px));
+      }
+
+      .playground-tasks-detail-assignee-mode-switch.platform-switch {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .playground-tasks-detail-assignee-mode-switch .platform-switch__option {
+        flex: 1 1 0;
+      }
+
+      .playground-tasks-schedule-selector-popup {
+        width: min(320px, calc(100vw - 48px));
+      }
+
+      .playground-tasks-schedule-panel.is-centralized-selector-content {
+        position: relative;
+        inset: auto;
+        width: 100%;
+        max-width: none;
+        overflow: visible;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+        animation: none;
+        transform: none;
+      }
+
+      .playground-tasks-schedule-type-switch.platform-switch {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .playground-tasks-schedule-type-switch .platform-switch__option {
+        flex: 1 1 0;
       }
 
       .playground-skills-detail-page .playground-tasks-detail-facts-body {

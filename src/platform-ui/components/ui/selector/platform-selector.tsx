@@ -46,6 +46,11 @@ export interface PlatformSelectorProps<TValue extends string = string>
   loading?: boolean;
   loadingContent?: ReactNode;
   emptyContent?: ReactNode;
+  popupHeader?: ReactNode;
+  popupHeaderClassName?: string;
+  popupContent?: ReactNode;
+  popupContentClassName?: string;
+  popupAriaLabel?: string;
   popupWidth?: CSSProperties["width"];
   popupMaxWidth?: CSSProperties["maxWidth"];
   popupMaxHeight?: CSSProperties["maxHeight"];
@@ -88,6 +93,11 @@ export const PlatformSelector = forwardRef(function PlatformSelector<
   loading = false,
   loadingContent = "Loading options...",
   emptyContent = "No options available.",
+  popupHeader = null,
+  popupHeaderClassName = "",
+  popupContent = null,
+  popupContentClassName = "",
+  popupAriaLabel,
   popupWidth,
   popupMaxWidth,
   popupMaxHeight = "min(320px, calc(100vh - 32px))",
@@ -104,6 +114,7 @@ export const PlatformSelector = forwardRef(function PlatformSelector<
   const controlled = open !== undefined;
   const resolvedOpen = controlled ? Boolean(open) : internalOpen;
   const listboxId = `platform-selector-${useId().replace(/:/g, "")}`;
+  const hasCustomPopupContent = popupContent != null;
   const selectedOption = useMemo(
     () => options.find((option) => option.value === value) || null,
     [options, value],
@@ -184,7 +195,7 @@ export const PlatformSelector = forwardRef(function PlatformSelector<
   }, [commitOpen, resolvedOpen]);
 
   useEffect(() => {
-    if (!resolvedOpen || loading) return undefined;
+    if (!resolvedOpen || loading || hasCustomPopupContent) return undefined;
     const timeout = window.setTimeout(() => {
       const selectedButton = Array.from(
         popupRef.current?.querySelectorAll<HTMLButtonElement>("[data-platform-selector-option]") || [],
@@ -195,7 +206,7 @@ export const PlatformSelector = forwardRef(function PlatformSelector<
       (selectedButton && !selectedButton.disabled ? selectedButton : firstButton)?.focus();
     }, 0);
     return () => window.clearTimeout(timeout);
-  }, [loading, resolvedOpen, value]);
+  }, [hasCustomPopupContent, loading, resolvedOpen, value]);
 
   useEffect(() => {
     if (disabled && resolvedOpen) commitOpen(false);
@@ -222,12 +233,16 @@ export const PlatformSelector = forwardRef(function PlatformSelector<
       surfaceRef={popupRef}
       surfaceClassName={joinPlatformSelectorClassNames(
         "platform-selector__popup",
+        Boolean(popupHeader) && "has-popup-header",
+        hasCustomPopupContent && "has-custom-content",
         popupClassName,
       )}
       surfaceProps={{
-        id: listboxId,
-        role: "listbox",
-        "aria-label": `${ariaLabel} options`,
+        id: hasCustomPopupContent ? listboxId : undefined,
+        role: hasCustomPopupContent ? "dialog" : undefined,
+        "aria-label": hasCustomPopupContent
+          ? (popupAriaLabel || `${ariaLabel} options`)
+          : undefined,
         width: popupWidth,
         maxWidth: popupMaxWidth,
         maxHeight: popupMaxHeight,
@@ -247,7 +262,7 @@ export const PlatformSelector = forwardRef(function PlatformSelector<
           )}
           disabled={disabled}
           aria-label={ariaLabel}
-          aria-haspopup="listbox"
+          aria-haspopup={hasCustomPopupContent ? "dialog" : "listbox"}
           aria-controls={resolvedOpen ? listboxId : undefined}
           aria-expanded={resolvedOpen}
           onClick={() => commitOpen(!resolvedOpen)}
@@ -268,50 +283,74 @@ export const PlatformSelector = forwardRef(function PlatformSelector<
         </button>
       }
     >
-      {loading ? (
-        <div className="platform-selector__state" role="status">{loadingContent}</div>
-      ) : options.length ? (
-        options.map((option) => {
-          const selected = option.value === value;
-          return (
-            <button
-              key={option.value}
-              type="button"
-              role="option"
-              aria-selected={selected}
-              aria-label={option.ariaLabel}
-              title={option.title}
-              disabled={option.disabled}
-              className={joinPlatformSelectorClassNames(
-                "platform-selector__option",
-                "tb-popup-row",
-                Boolean(option.leading) && "has-leading",
-                selected && "is-selected selected",
-                optionClassName,
-              )}
-              data-platform-selector-option={option.value}
-              onClick={() => selectOption(option)}
-              onKeyDown={handleOptionKeyDown}
-            >
-              {option.leading ? (
-                <span className="platform-selector__option-leading" aria-hidden="true">
-                  {option.leading}
-                </span>
-              ) : null}
-              <span className="platform-selector__option-copy">
-                <span className="platform-selector__option-label">{option.label}</span>
-                {option.description ? (
-                  <span className="platform-selector__option-description">{option.description}</span>
-                ) : null}
-              </span>
-              <span className="platform-selector__option-check" aria-hidden="true">
-                {selected ? <Check width={13} height={13} strokeWidth={1.8} /> : null}
-              </span>
-            </button>
-          );
-        })
+      {popupHeader ? (
+        <div className={joinPlatformSelectorClassNames(
+          "platform-selector__popup-header",
+          popupHeaderClassName,
+        )}>
+          {popupHeader}
+        </div>
+      ) : null}
+      {hasCustomPopupContent ? (
+        <div className={joinPlatformSelectorClassNames(
+          "platform-selector__custom-content",
+          popupContentClassName,
+        )}>
+          {popupContent}
+        </div>
       ) : (
-        <div className="platform-selector__state is-empty">{emptyContent}</div>
+        <fieldset
+          id={listboxId}
+          role="listbox"
+          aria-label={`${ariaLabel} options`}
+          className="platform-selector__listbox"
+        >
+          {loading ? (
+            <div className="platform-selector__state" role="status">{loadingContent}</div>
+          ) : options.length ? (
+            options.map((option) => {
+              const selected = option.value === value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="option"
+                  aria-selected={selected}
+                  aria-label={option.ariaLabel}
+                  title={option.title}
+                  disabled={option.disabled}
+                  className={joinPlatformSelectorClassNames(
+                    "platform-selector__option",
+                    "tb-popup-row",
+                    Boolean(option.leading) && "has-leading",
+                    selected && "is-selected selected",
+                    optionClassName,
+                  )}
+                  data-platform-selector-option={option.value}
+                  onClick={() => selectOption(option)}
+                  onKeyDown={handleOptionKeyDown}
+                >
+                  {option.leading ? (
+                    <span className="platform-selector__option-leading" aria-hidden="true">
+                      {option.leading}
+                    </span>
+                  ) : null}
+                  <span className="platform-selector__option-copy">
+                    <span className="platform-selector__option-label">{option.label}</span>
+                    {option.description ? (
+                      <span className="platform-selector__option-description">{option.description}</span>
+                    ) : null}
+                  </span>
+                  <span className="platform-selector__option-check" aria-hidden="true">
+                    {selected ? <Check width={13} height={13} strokeWidth={1.8} /> : null}
+                  </span>
+                </button>
+              );
+            })
+          ) : (
+            <div className="platform-selector__state is-empty">{emptyContent}</div>
+          )}
+        </fieldset>
       )}
     </PlatformPopup>
   );

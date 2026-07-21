@@ -35,6 +35,8 @@ assert.match(CALENDAR_PROJECTS_PAGE_DATA_FRAGMENTS.loading, /async function load
 assert.match(CALENDAR_PROJECTS_PAGE_DATA_FRAGMENTS.persistence, /async function persistScheduleDraft/);
 assert.match(CALENDAR_PROJECTS_PAGE_ACTION_FRAGMENTS.scheduleDialog, /function handleTaskScheduleDialogSave/);
 assert.match(CALENDAR_PROJECTS_PAGE_CONNECTOR_FRAGMENTS.scheduleDialogView, /function renderTaskScheduleDialog/);
+assert.match(CALENDAR_PROJECTS_PAGE_CONNECTOR_FRAGMENTS.scheduleDialogView, /\{ embedded = false \} = \{\}/);
+assert.match(CALENDAR_PROJECTS_PAGE_CONNECTOR_FRAGMENTS.scheduleDialogView, /className: "playground-tasks-schedule-type-switch"/);
 assert.match(CALENDAR_PROJECTS_PAGE_VIEW_FRAGMENTS.calendar, /function renderScheduleDetailPanel/);
 assert.match(CALENDAR_PROJECTS_PAGE_VIEW_FRAGMENTS.calendar, /function renderCalendarView/);
 assert.match(CALENDAR_PROJECTS_PAGE_VIEW_FRAGMENTS.calendar, /toolbar: !isStandaloneCalendarMode/);

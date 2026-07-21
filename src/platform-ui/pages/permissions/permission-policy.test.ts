@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  PLATFORM_PERMISSION_ACTION_DEFINITIONS,
+  type PlatformPermissionSubjectType,
+} from "./permission-catalog.js";
+import { shouldShowPlatformPermissionAction } from "./permission-model.js";
+import {
   createPlatformDefaultPermissionSet,
+  getPlatformPermissionActionAccessByDefinition,
   getPlatformPermissionActionExplicitAccessByDefinition,
   getPlatformPermissionRingAccessById,
   normalizePlatformPermissionSet,
@@ -8,6 +14,10 @@ import {
   updatePlatformPermissionActionRing,
   updatePlatformPermissionRingAccess,
 } from "./permission-policy.js";
+import {
+  createPlatformRolePermissionSet,
+  normalizePlatformRolePermissionSet,
+} from "./permission-presets.js";
 
 describe("permission policy", () => {
   it("normalizes legacy string policies without mutating the source", () => {
@@ -49,5 +59,219 @@ describe("permission policy", () => {
       ringId: "ring_2",
       access: "no_access",
     });
+  });
+
+  it.each(["guardrail", "guardrail_team_role"])(
+    "shows only concrete guardrail capabilities for %s subjects",
+    (subjectType) => {
+      const visibleActionIds = PLATFORM_PERMISSION_ACTION_DEFINITIONS
+        .filter((action) => shouldShowPlatformPermissionAction(action, subjectType))
+        .map((action) => action.id);
+
+      expect(visibleActionIds).toEqual([
+        "guardrail_view",
+        "guardrail_use",
+        "guardrail_evaluate",
+        "guardrail_edit",
+        "guardrail_prompts_manage",
+        "guardrail_versions_manage",
+        "guardrail_publish",
+        "guardrail_access_manage",
+        "guardrail_delete",
+      ]);
+      expect(visibleActionIds).not.toContain("workspace_read");
+      expect(visibleActionIds).not.toContain("send_email");
+    },
+  );
+
+  it.each([
+    ["team", [
+      "team_workspace_view",
+      "team_member_invite",
+      "team_member_remove",
+      "team_role_update",
+      "team_shared_resource_manage",
+      "team_permission_request_review",
+      "team_settings_update",
+      "team_role_permissions_manage",
+      "team_delete",
+    ]],
+    ["organization_role", [
+      "organization_workspace_view",
+      "organization_member_invite",
+      "organization_member_remove",
+      "organization_role_update",
+      "organization_resource_manage",
+      "organization_team_manage",
+      "organization_billing_manage",
+      "organization_settings_update",
+      "organization_permissions_manage",
+      "organization_owner_transfer",
+      "organization_delete",
+    ]],
+    ["project", [
+      "project_view",
+      "project_threads_view",
+      "project_resources_view",
+      "project_rules_view",
+      "project_threads_create",
+      "project_issues_manage",
+      "project_strategy_manage",
+      "project_resources_manage",
+      "project_rules_edit",
+      "project_automations_run",
+      "project_access_manage",
+      "project_delete",
+    ]],
+    ["evaluation", [
+      "evaluation_view",
+      "evaluation_runs_view",
+      "evaluation_run",
+      "evaluation_cases_manage",
+      "evaluation_settings_manage",
+      "evaluation_versions_manage",
+      "evaluation_publish",
+      "evaluation_access_manage",
+      "evaluation_delete",
+    ]],
+    ["database", [
+      "database_schema_read",
+      "database_data_read",
+      "database_query",
+      "database_export",
+      "database_document_create",
+      "database_document_update",
+      "database_connections_manage",
+      "database_document_delete",
+      "database_schema_manage",
+      "database_access_manage",
+      "database_owner_transfer",
+      "database_delete",
+    ]],
+    ["server", [
+      "server_source_read",
+      "server_invoke",
+      "server_logs_read",
+      "server_source_write",
+      "server_connection_manage",
+      "server_deploy",
+      "server_access_manage",
+      "server_owner_transfer",
+      "server_delete",
+    ]],
+  ])("shows only %s resource capabilities", (subjectType, expectedActionIds) => {
+    const visibleActionIds = PLATFORM_PERMISSION_ACTION_DEFINITIONS
+      .filter((action) => shouldShowPlatformPermissionAction(action, String(subjectType)))
+      .map((action) => action.id);
+
+    expect(visibleActionIds).toEqual(expectedActionIds);
+    expect(Object.keys(createPlatformDefaultPermissionSet(subjectType as PlatformPermissionSubjectType).actions || {})).toEqual(expectedActionIds);
+    expect(visibleActionIds).not.toContain("workspace_read");
+    expect(visibleActionIds).not.toContain("send_email");
+  });
+
+  it.each(["web_app", "function", "auth", "secrets", "payments", "agent_runtime"])(
+    "uses a dedicated persisted action namespace for %s resources",
+    (subjectType) => {
+      const visibleActionIds = PLATFORM_PERMISSION_ACTION_DEFINITIONS
+        .filter((action) => shouldShowPlatformPermissionAction(action, subjectType))
+        .map((action) => action.id);
+
+      expect(visibleActionIds).toEqual([
+        `${subjectType}_view`,
+        `${subjectType}_invoke`,
+        `${subjectType}_activity_view`,
+        `${subjectType}_manage`,
+        `${subjectType}_connections_manage`,
+        `${subjectType}_publish`,
+        `${subjectType}_owner_transfer`,
+        `${subjectType}_access_manage`,
+        `${subjectType}_delete`,
+      ]);
+      expect(visibleActionIds).not.toContain("server_invoke");
+    },
+  );
+
+  it("migrates legacy server action policies into a managed resource namespace", () => {
+    const normalized = normalizePlatformPermissionSet({
+      subjectType: "server",
+      actions: {
+        server_invoke: { ringId: "ring_2", access: "no_access" },
+        server_source_write: { ringId: "ring_3", access: "ask_for_permission" },
+      },
+    }, "secrets");
+
+    expect(normalized.subjectType).toBe("secrets");
+    expect(normalized.actions?.secrets_invoke).toEqual({ ringId: "ring_2", access: "no_access" });
+    expect(normalized.actions?.secrets_manage).toEqual({ ringId: "ring_3", access: "ask_for_permission" });
+    expect(normalized.actions?.server_invoke).toBeUndefined();
+  });
+
+  it("uses an explicitly requested resource subject and prunes stale cross-resource actions", () => {
+    const normalized = normalizePlatformPermissionSet({
+      subjectType: "agent",
+      actions: {
+        workspace_read: { ringId: "ring_1", access: "full_access" },
+        project_view: { ringId: "ring_1", access: "read_only" },
+      },
+    }, "project");
+
+    expect(normalized.subjectType).toBe("project");
+    expect(normalized.actions?.project_view).toEqual({ ringId: "ring_1", access: "read_only" });
+    expect(normalized.actions?.workspace_read).toBeUndefined();
+  });
+
+  it("fails closed when a resource policy is evaluated or updated with an unrelated action", () => {
+    const project = createPlatformDefaultPermissionSet("project");
+    const afterAccessUpdate = updatePlatformPermissionActionAccess(
+      project,
+      "send_email",
+      "full_access",
+      "project",
+    );
+    const afterRingUpdate = updatePlatformPermissionActionRing(
+      project,
+      "database_delete",
+      "ring_1",
+      "project",
+    );
+
+    expect(getPlatformPermissionActionAccessByDefinition(project, "send_email")).toBe("no_access");
+    expect(afterAccessUpdate.actions?.send_email).toBeUndefined();
+    expect(afterRingUpdate.actions?.database_delete).toBeUndefined();
+  });
+
+  it("provides conservative resource-specific defaults for non-admin roles", () => {
+    const projectContributor = createPlatformRolePermissionSet("project_team_role", "contributor");
+    const databaseContributor = createPlatformRolePermissionSet("database", "contributor");
+    const authMember = createPlatformRolePermissionSet("auth", "member");
+    const evaluationOwner = createPlatformRolePermissionSet("evaluation_team_role", "owner");
+    const evaluationContributor = createPlatformRolePermissionSet("evaluation_team_role", "contributor");
+    const evaluationMember = createPlatformRolePermissionSet("evaluation_team_role", "member");
+    const billingRole = createPlatformRolePermissionSet("organization_role", "billing");
+
+    expect(getPlatformPermissionActionAccessByDefinition(projectContributor, "project_delete")).toBe("no_access");
+    expect(getPlatformPermissionActionAccessByDefinition(databaseContributor, "database_connections_manage")).toBe("ask_for_permission");
+    expect(getPlatformPermissionActionAccessByDefinition(databaseContributor, "database_owner_transfer")).toBe("no_access");
+    expect(getPlatformPermissionActionAccessByDefinition(authMember, "auth_invoke")).toBe("full_access");
+    expect(getPlatformPermissionActionAccessByDefinition(evaluationOwner, "evaluation_delete")).toBe("full_access");
+    expect(getPlatformPermissionActionAccessByDefinition(evaluationContributor, "evaluation_cases_manage")).toBe("full_access");
+    expect(getPlatformPermissionActionAccessByDefinition(evaluationContributor, "evaluation_access_manage")).toBe("no_access");
+    expect(getPlatformPermissionActionAccessByDefinition(evaluationMember, "evaluation_run")).toBe("full_access");
+    expect(getPlatformPermissionActionAccessByDefinition(evaluationMember, "evaluation_settings_manage")).toBe("no_access");
+    expect(getPlatformPermissionActionAccessByDefinition(billingRole, "organization_billing_manage")).toBe("full_access");
+    expect(getPlatformPermissionActionAccessByDefinition(billingRole, "organization_delete")).toBe("no_access");
+  });
+
+  it("merges new resource entitlements into saved role policies without replacing configured values", () => {
+    const normalized = normalizePlatformRolePermissionSet({
+      subjectType: "project_team_role",
+      rings: { ring_2: { defaultAccess: "read_only" } },
+      actions: { project_rules_edit: { ringId: "ring_2", access: "full_access" } },
+    }, "project_team_role", "member");
+
+    expect(getPlatformPermissionRingAccessById(normalized, "ring_2")).toBe("read_only");
+    expect(getPlatformPermissionActionAccessByDefinition(normalized, "project_rules_edit")).toBe("full_access");
+    expect(getPlatformPermissionActionAccessByDefinition(normalized, "project_delete")).toBe("no_access");
   });
 });

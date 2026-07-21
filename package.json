@@ -109,6 +109,13 @@
     "./platform-ui/components/composite/attachments/styles.css": {
       "default": "./dist/platform-ui/components/composite/attachments/attachments.css"
     },
+    "./platform-ui/components/composite/subtasks": {
+      "types": "./dist/platform-ui/components/composite/subtasks/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/subtasks/index.js"
+    },
+    "./platform-ui/components/composite/subtasks/styles.css": {
+      "default": "./dist/platform-ui/components/composite/subtasks/subtasks.css"
+    },
     "./platform-ui/components/composite/code-editor-workspace": {
       "types": "./dist/platform-ui/components/composite/code-editor-workspace/index.d.ts",
       "default": "./dist/platform-ui/components/composite/code-editor-workspace/index.js"
@@ -401,6 +408,7 @@
     "configure-home-service-test": "node ./src/platform-services/configure-mode/configure-home/configure-home-service-test.mjs && vitest run src/platform-services/configure-mode/configure-home/client/page",
     "develop-home-service-test": "node ./src/platform-services/develop-mode/develop-home/develop-home-service-test.mjs && vitest run src/platform-services/develop-mode/develop-home/client/page",
     "api-keys-service-test": "node ./src/platform-services/develop-mode/api-keys/api-keys-service-test.mjs",
+    "security-service-test": "node ./src/platform-services/develop-mode/security/security-service-test.mjs && vitest run src/platform-services/develop-mode/security/client/api src/platform-services/develop-mode/security/client/domain",
     "evaluations-service-test": "node ./src/platform-services/configure-mode/evaluations/evaluations-service-test.mjs",
     "files-service-test": "node ./src/platform-services/create-mode/files/files-service-test.mjs",
     "fine-tuning-service-test": "node ./src/platform-services/configure-mode/fine-tuning/fine-tuning-service-test.mjs",

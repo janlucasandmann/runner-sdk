@@ -1,18 +1,13 @@
-import {
-  useEffect,
-  useState,
-  type ImgHTMLAttributes,
-  type ReactNode,
-} from "react";
 import { X } from "lucide-react";
+import { type ImgHTMLAttributes, type ReactNode, useEffect, useState } from "react";
 
 import { PlatformIconButton } from "../../ui/icon-button/index.js";
 import {
   PlatformModal,
   PlatformModalContent,
+  type PlatformModalProps,
   PlatformModalSidebar,
   PlatformModalSplitLayout,
-  type PlatformModalProps,
 } from "../modal/index.js";
 
 export interface PlatformFileExplorerModalProps
@@ -24,6 +19,7 @@ export interface PlatformFileExplorerModalProps
   sidebarHeader?: ReactNode;
   sidebar: ReactNode;
   contentHeader: ReactNode;
+  contentNavigation?: ReactNode;
   children: ReactNode;
   preview?: ReactNode;
   previewTitle?: ReactNode;
@@ -32,6 +28,7 @@ export interface PlatformFileExplorerModalProps
   sidebarBodyClassName?: string;
   contentClassName?: string;
   contentHeaderClassName?: string;
+  contentNavigationClassName?: string;
   contentBodyClassName?: string;
   contentFooterClassName?: string;
   mainClassName?: string;
@@ -64,6 +61,7 @@ export function PlatformFileExplorerModal({
   sidebarHeader,
   sidebar,
   contentHeader,
+  contentNavigation,
   children,
   preview,
   previewTitle = "Preview",
@@ -72,6 +70,7 @@ export function PlatformFileExplorerModal({
   sidebarBodyClassName = "",
   contentClassName = "",
   contentHeaderClassName = "",
+  contentNavigationClassName = "",
   contentBodyClassName = "",
   contentFooterClassName = "",
   mainClassName = "",
@@ -86,6 +85,8 @@ export function PlatformFileExplorerModal({
   size = "full",
   ...modalProps
 }: PlatformFileExplorerModalProps) {
+  const showSidebarHeader = sidebarHeader !== null;
+
   return (
     <PlatformModal
       {...modalProps}
@@ -94,6 +95,7 @@ export function PlatformFileExplorerModal({
       className={joinClassNames(
         "platform-file-explorer-modal",
         preview != null && "has-preview",
+        contentNavigation == null && "has-no-navigation",
         className,
       )}
       bodyClassName="platform-file-explorer-modal__body"
@@ -102,16 +104,31 @@ export function PlatformFileExplorerModal({
       closeButtonLabel={closeButtonLabel}
       onClose={onClose}
     >
-      <PlatformModalSplitLayout className="platform-file-explorer">
+      <PlatformModalSplitLayout
+        className="platform-file-explorer"
+        onPointerDownCapture={(event) => {
+          if (preview == null || !onPreviewClose) return;
+          const target = event.target;
+          if (!(target instanceof Element)) return;
+          if (
+            target.closest(
+              ".platform-file-explorer__preview, .platform-file-explorer__content-header, [data-platform-file-preview-anchor='true']",
+            )
+          ) {
+            return;
+          }
+          onPreviewClose();
+        }}
+      >
         <PlatformModalSidebar
-          title={sidebarHeader ?? title}
+          title={sidebarHeader === undefined ? title : sidebarHeader}
           className={joinClassNames(
             "platform-file-explorer__sidebar",
+            !showSidebarHeader && "has-no-header",
             sidebarClassName,
           )}
           titleClassName={joinClassNames(
-            sidebarHeader != null
-              && "platform-file-explorer__sidebar-header-content",
+            sidebarHeader != null && "platform-file-explorer__sidebar-header-content",
           )}
           bodyClassName={joinClassNames(
             "platform-file-explorer__sidebar-body",
@@ -121,10 +138,7 @@ export function PlatformFileExplorerModal({
           {sidebar}
         </PlatformModalSidebar>
         <PlatformModalContent
-          className={joinClassNames(
-            "platform-file-explorer__content",
-            contentClassName,
-          )}
+          className={joinClassNames("platform-file-explorer__content", contentClassName)}
           headerClassName={joinClassNames(
             "platform-file-explorer__content-header",
             contentHeaderClassName,
@@ -137,39 +151,41 @@ export function PlatformFileExplorerModal({
             "platform-file-explorer__content-footer",
             contentFooterClassName,
           )}
-          header={(
-            <>
-              <div className="platform-file-explorer__content-header-copy">
-                {contentHeader}
+          header={
+            <div className="platform-file-explorer__content-header-layout">
+              <div className="platform-file-explorer__content-header-row">
+                <div className="platform-file-explorer__content-header-copy">{contentHeader}</div>
+                <PlatformIconButton
+                  type="button"
+                  size="compact"
+                  className="platform-file-explorer__close"
+                  aria-label={closeButtonLabel}
+                  onClick={() => onClose("close-button")}
+                >
+                  <X aria-hidden="true" strokeWidth={2} />
+                </PlatformIconButton>
               </div>
-              <PlatformIconButton
-                type="button"
-                size="compact"
-                className="platform-file-explorer__close"
-                aria-label={closeButtonLabel}
-                onClick={() => onClose("close-button")}
-              >
-                <X aria-hidden="true" strokeWidth={2} />
-              </PlatformIconButton>
-            </>
-          )}
+              {contentNavigation != null ? (
+                <div
+                  className={joinClassNames(
+                    "platform-file-explorer__content-navigation",
+                    contentNavigationClassName,
+                  )}
+                >
+                  {contentNavigation}
+                </div>
+              ) : null}
+            </div>
+          }
           footer={footer}
         >
-          <div
-            className={joinClassNames(
-              "platform-file-explorer__main",
-              mainClassName,
-            )}
-          >
+          <div className={joinClassNames("platform-file-explorer__main", mainClassName)}>
             {children}
           </div>
         </PlatformModalContent>
         {preview != null ? (
           <aside
-            className={joinClassNames(
-              "platform-file-explorer__preview",
-              previewClassName,
-            )}
+            className={joinClassNames("platform-file-explorer__preview", previewClassName)}
             data-platform-modal-part="preview"
           >
             <div
@@ -179,9 +195,7 @@ export function PlatformFileExplorerModal({
               )}
               data-platform-modal-pane-part="header"
             >
-              <div className="platform-file-explorer__preview-title">
-                {previewTitle}
-              </div>
+              <div className="platform-file-explorer__preview-title">{previewTitle}</div>
               <PlatformIconButton
                 type="button"
                 size="compact"
@@ -246,10 +260,7 @@ export function PlatformFileExplorerThumbnail({
       {...props}
       src={effectiveSource}
       alt={alt}
-      className={joinClassNames(
-        "platform-file-explorer__thumbnail",
-        className,
-      )}
+      className={joinClassNames("platform-file-explorer__thumbnail", className)}
       loading={props.loading ?? "lazy"}
       decoding={props.decoding ?? "async"}
       onError={(event) => {

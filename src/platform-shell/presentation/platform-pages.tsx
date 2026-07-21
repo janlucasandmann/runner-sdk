@@ -102,6 +102,13 @@ export const GuardrailsOverviewPage = lazyNamed(
     ),
   "GuardrailsOverviewPage",
 );
+export const GuardrailDetailPage = lazyNamed(
+  () =>
+    import(
+      "../../platform-services/configure-mode/guardrails/client/page/detail/guardrail-detail-page.js"
+    ),
+  "GuardrailDetailPage",
+);
 export const EvaluationsOverviewPage = lazyNamed(
   () =>
     import(
@@ -109,12 +116,26 @@ export const EvaluationsOverviewPage = lazyNamed(
     ),
   "EvaluationsOverviewPage",
 );
+export const EvaluationDetailPage = lazyNamed(
+  () =>
+    import(
+      "../../platform-services/configure-mode/evaluations/client/page/detail/evaluation-detail-page.js"
+    ),
+  "EvaluationDetailPage",
+);
 export const FineTuningOverviewPage = lazyNamed(
   () =>
     import(
       "../../platform-services/configure-mode/fine-tuning/client/page/overview/fine-tuning-overview-page.js"
     ),
   "FineTuningOverviewPage",
+);
+export const FineTuningDetailPage = lazyNamed(
+  () =>
+    import(
+      "../../platform-services/configure-mode/fine-tuning/client/page/detail/fine-tuning-detail-page.js"
+    ),
+  "FineTuningDetailPage",
 );
 export const TagDetailPage = lazyNamed(
   () => import("../../platform-resources/tags/detail/tag-detail-page.js"),
@@ -178,4 +199,11 @@ export const DevelopServerDetailPage = lazyNamed(
 export const DevelopVoiceAgentsOverviewPage = lazyNamed(
   () => import("../../platform-services/develop-mode/voice-agents/client/page/overview-page.js"),
   "DevelopVoiceAgentsOverviewPage",
+);
+export const DevelopSecurityWorkspacePage = lazyNamed(
+  () =>
+    import(
+      "../../platform-services/develop-mode/security/client/page/develop-security-workspace-page.js"
+    ),
+  "DevelopSecurityWorkspacePage",
 );

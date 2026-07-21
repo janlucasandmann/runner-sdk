@@ -11,8 +11,8 @@ export const API_KEYS_SCOPE_PRESETS_SCRIPT = `      const SETTINGS_API_KEY_SCOPE
         },
         read: {
           label: "Read Only",
-          description: "View projects, threads, and billing data.",
-          permissions: ["projects:read", "threads:read", "billing:read"],
+          description: "View projects, threads, repository security, and billing data.",
+          permissions: ["projects:read", "threads:read", "security:read", "billing:read"],
         },
       };
 `;

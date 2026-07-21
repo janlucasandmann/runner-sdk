@@ -22,11 +22,14 @@ assert.doesNotThrow(() => new Function(PLAYGROUND_FINE_TUNING_SCRIPT));
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.foundation, /createPlaygroundFineTuningId/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.jobs, /normalizePlaygroundFineTuningJob/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.evaluations, /normalizePlaygroundFineTuningEvaluationSet/);
-assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.performanceChart, /PlaygroundFineTuningPerformanceChart/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.verification, /startFineTuningVerificationRuns/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /renderCreateModal/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.overview, /React\.createElement\(FineTuningOverviewPage/);
 assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.overview, /React\.createElement\(PlatformDataTable/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /React\.createElement\(FineTuningDetailPage/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /React\.createElement\(PlatformAnalyticsSection/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /variant: "minimalistic-ui"/);
+assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /PlaygroundFineTuningPerformanceChart/);
 assert.equal(
   Object.values(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS).join(""),
   PLAYGROUND_FINE_TUNING_SCRIPT,

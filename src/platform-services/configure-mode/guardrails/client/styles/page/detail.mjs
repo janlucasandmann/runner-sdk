@@ -194,7 +194,7 @@ export const GUARDRAILS_PAGE_DETAIL_CSS = `      .playground-guardrails-editor {
       .playground-guardrails-editor {
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: 24px;
         padding: 0;
         border-left: 0;
         overflow: visible;
@@ -260,7 +260,6 @@ export const GUARDRAILS_PAGE_DETAIL_CSS = `      .playground-guardrails-editor {
 
       .playground-guardrails-title-input:disabled,
       .playground-guardrails-prompt-title-input:read-only,
-      .playground-guardrails-prompt-body-input:read-only,
       .playground-guardrails-description-input:read-only {
         opacity: 1;
         cursor: default;
@@ -283,27 +282,26 @@ export const GUARDRAILS_PAGE_DETAIL_CSS = `      .playground-guardrails-editor {
       }
 
       .playground-guardrails-prompt-title-input {
-        width: 100%;
+        flex: 1 1 auto;
+        width: auto;
         min-width: 0;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.05);
-        color: rgba(255, 255, 255, 0.94);
+        height: auto;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: #fff;
         font: inherit;
         font-size: 12px;
-        line-height: 1.45;
+        font-weight: 400;
+        line-height: 1.4;
         outline: none;
         box-sizing: border-box;
       }
 
-      .playground-guardrails-prompt-title-input {
-        height: 34px;
-        padding: 0 11px;
-      }
-
       .playground-guardrails-prompt-title-input:focus {
-        border-color: rgba(255, 255, 255, 0.18);
-        background: rgba(255, 255, 255, 0.07);
+        border: 0;
+        background: transparent;
       }
 
       .playground-guardrails-inline-action {
@@ -325,8 +323,57 @@ export const GUARDRAILS_PAGE_DETAIL_CSS = `      .playground-guardrails-editor {
       }
 
       .playground-guardrails-description-section.playground-agents-detail-instructions-section {
+        padding-bottom: 3px;
         margin-top: 0;
         margin-bottom: 0;
+      }
+
+      .playground-guardrails-evaluation-section,
+      .playground-guardrails-access-settings,
+      .playground-guardrails-access-detail {
+        min-width: 0;
+        width: 100%;
+      }
+
+      .playground-guardrails-evaluation-run-form {
+        display: grid;
+        gap: 16px;
+      }
+
+      .playground-guardrails-evaluation-field {
+        display: grid;
+        gap: 8px;
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 12px;
+        font-weight: 400;
+      }
+
+      .playground-guardrails-evaluation-field > input {
+        box-sizing: border-box;
+        width: 100%;
+        min-height: 34px;
+        padding: 7px 10px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 8px;
+        outline: none;
+        background: rgba(255, 255, 255, 0.06);
+        color: #fff;
+        font: inherit;
+      }
+
+      .playground-guardrails-evaluation-field > input:focus {
+        border-color: rgba(77, 163, 255, 0.72);
+      }
+
+      .playground-guardrails-evaluation-error {
+        color: #f98787;
+        font-size: 12px;
+      }
+
+      .playground-guardrails-access-detail .platform-permissions-page,
+      .playground-guardrails-access-detail .platform-role-permissions-page {
+        margin-top: 12px;
       }
 
       .playground-guardrails-description-section .playground-tasks-detail-section-header {
@@ -356,72 +403,27 @@ export const GUARDRAILS_PAGE_DETAIL_CSS = `      .playground-guardrails-editor {
       }
 
       .playground-guardrails-prompt-row.playground-tasks-backlog-item {
-        min-height: 70px;
+        display: block;
+        min-height: 0;
         cursor: default;
       }
 
-      .playground-guardrails-prompt-row .playground-tasks-backlog-item-content {
-        width: 100%;
-        align-items: flex-start;
-      }
-
-      .playground-guardrails-prompt-row .playground-tasks-backlog-leading {
-        align-items: flex-start;
-      }
-
-      .playground-guardrails-prompt-row .playground-tasks-backlog-main {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 6px;
-      }
-
-      .playground-guardrails-prompt-row .playground-tasks-backlog-meta {
-        flex: 0 0 auto;
-        display: inline-flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 8px;
-        min-height: 28px;
-      }
-
-      .playground-guardrails-prompt-row .playground-guardrails-prompt-title-input,
-      .playground-guardrails-prompt-body-input {
+      .playground-guardrails-prompt-card-header {
         width: 100%;
         min-width: 0;
-        padding: 0;
-        border: 0;
-        border-radius: 0;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.92);
-        font-family: inherit;
-        outline: none;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding-bottom: 12px;
+        margin-bottom: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         box-sizing: border-box;
       }
 
-      .playground-guardrails-prompt-row .playground-guardrails-prompt-title-input {
-        height: auto;
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 12px;
-        font-weight: 400;
-        line-height: 1;
-      }
-
-      .playground-guardrails-prompt-body-input {
-        min-height: 38px;
-        resize: none;
-        color: rgba(255, 255, 255, 0.94);
-        font-size: 12px;
-        line-height: 1.45;
-      }
-
-      .playground-guardrails-prompt-row .playground-guardrails-prompt-title-input:focus,
-      .playground-guardrails-prompt-body-input:focus {
-        border: 0;
-        background: transparent;
-      }
-
-      .playground-guardrails-prompt-title-input {
-        flex: 1 1 auto;
+      .playground-guardrails-prompt-editor {
+        width: 100%;
+        min-width: 0;
+        margin: 6px 0 0;
       }
 
       .playground-guardrails-empty,
@@ -465,6 +467,185 @@ export const GUARDRAILS_PAGE_DETAIL_CSS = `      .playground-guardrails-editor {
 
       .playground-guardrails-empty-button {
         margin-top: 2px;
+      }
+
+      .playground-guardrails-detail-page-host .playground-guardrails-browser-body.is-detail-page {
+        width: 100%;
+        max-width: none;
+        padding: 42px 44px 56px;
+        overflow: auto;
+        box-sizing: border-box;
+      }
+
+      .playground-guardrails-detail-overview-layout {
+        --platform-page-content-max-width: 87.5rem;
+      }
+
+      .playground-guardrails-detail-page-header {
+        min-height: 32px;
+      }
+
+      .playground-guardrails-detail-header-copy {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 0;
+      }
+
+      .playground-guardrails-detail-header-copy .playground-guardrails-title-input {
+        min-width: 0;
+        flex: 1 1 auto;
+        color: #fff;
+        font-size: 18px;
+        line-height: 1.3;
+        font-weight: 500;
+      }
+
+      .playground-guardrails-detail-overview-main {
+        min-width: 0;
+      }
+
+      .playground-guardrails-prompts-section {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .playground-guardrails-detail-sidebar-card {
+        min-width: 0;
+      }
+
+      .playground-guardrails-detail-sidebar-list {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .playground-guardrails-detail-sidebar-row {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        font-size: 12px;
+        line-height: 1.35;
+        font-weight: 400;
+      }
+
+      .playground-guardrails-detail-sidebar-label {
+        min-width: 0;
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .playground-guardrails-detail-sidebar-value {
+        min-width: 0;
+        color: rgba(255, 255, 255, 0.92);
+        text-align: right;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-guardrails-detail-sidebar-row.is-owner .playground-guardrails-detail-sidebar-value {
+        flex: 1 1 auto;
+        overflow: visible;
+      }
+
+      .playground-guardrails-detail-owner-selector {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .playground-guardrails-detail-owner-trigger.platform-selector__trigger {
+        width: 100%;
+        min-width: 0;
+        min-height: 24px;
+        justify-content: flex-end;
+        gap: 6px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+      }
+
+      .playground-guardrails-detail-owner-trigger.platform-selector__trigger:hover,
+      .playground-guardrails-detail-owner-trigger.platform-selector__trigger:focus-visible {
+        background: transparent;
+      }
+
+      .playground-guardrails-detail-owner-value {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 7px;
+      }
+
+      .playground-guardrails-detail-owner-avatar.playground-team-member-avatar {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 18px;
+      }
+
+      .playground-guardrails-detail-owner-name {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-guardrails-detail-creator {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .playground-guardrails-detail-creator .playground-guardrails-creator-avatar.is-system {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 18px;
+        border-radius: 999px;
+        overflow: hidden;
+      }
+
+      .playground-guardrails-detail-creator .playground-guardrails-creator-avatar.is-system img {
+        width: 100%;
+        height: 100%;
+        border-radius: inherit;
+        object-fit: cover;
+      }
+
+      .playground-guardrails-detail-creator-name {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-guardrails-detail-sidebar-actions {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .playground-guardrails-detail-sidebar-action {
+        width: 100%;
+        min-width: 0;
+        justify-content: flex-start;
+        padding-left: 0;
+        padding-right: 0;
+      }
+
+      @media (max-width: 760px) {
+        .playground-guardrails-detail-page-host .playground-guardrails-browser-body.is-detail-page {
+          padding: 16px;
+        }
       }
 
 `;

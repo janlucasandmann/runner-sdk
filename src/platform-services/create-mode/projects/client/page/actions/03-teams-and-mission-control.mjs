@@ -261,7 +261,11 @@ export const PROJECTS_ACTIONS_03_FRAGMENT = `            leadUserId: normalizedP
 	                return sets;
 	              }
 	              if (rolePermissionSets[role.id]) {
-	                sets[role.id] = normalizePlaygroundPermissionSet(rolePermissionSets[role.id], "project_team_role");
+	                sets[role.id] = normalizePlaygroundRolePermissionSet(
+	                  rolePermissionSets[role.id],
+	                  "project_team_role",
+	                  role.id
+	                );
 	              }
 	              return sets;
 	            }, {});
@@ -294,11 +298,11 @@ export const PROJECTS_ACTIONS_03_FRAGMENT = `            leadUserId: normalizedP
 	              rolePermissionSets[role.id] = createPlaygroundProjectTeamRolePermissionSet(role.id);
 	              return rolePermissionSets;
 	            }
-	            rolePermissionSets[role.id] = normalizePlaygroundPermissionSet(
+	            rolePermissionSets[role.id] = normalizePlaygroundRolePermissionSet(
 	              currentRolePermissionSets[role.id]
-	                || legacyPermissionSet
-	                || createPlaygroundProjectTeamRolePermissionSet(role.id),
-	              "project_team_role"
+	                || legacyPermissionSet,
+	              "project_team_role",
+	              role.id
 	            );
 	            return rolePermissionSets;
 	          }, {});
@@ -307,9 +311,10 @@ export const PROJECTS_ACTIONS_03_FRAGMENT = `            leadUserId: normalizedP
 	        function getProjectTeamRolePermissionSet(project, teamId, roleId) {
 	          const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
 	          const rolePermissionSets = getProjectTeamRolePermissionSets(project, teamId);
-	          return normalizePlaygroundPermissionSet(
-	            rolePermissionSets[normalizedRoleId] || createPlaygroundProjectTeamRolePermissionSet(normalizedRoleId),
-	            "project_team_role"
+	          return normalizePlaygroundRolePermissionSet(
+	            rolePermissionSets[normalizedRoleId],
+	            "project_team_role",
+	            normalizedRoleId
 	          );
 	        }
 

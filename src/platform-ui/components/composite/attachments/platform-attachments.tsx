@@ -12,6 +12,7 @@ import { FileText, Plus, Upload, X } from "lucide-react";
 import { PlatformIconButton } from "../../ui/icon-button/index.js";
 import { PlatformSecondaryButton } from "../../ui/button/index.js";
 import { PlatformUiCard } from "../ui-card/index.js";
+import { PlatformAttachmentActionMenu } from "./platform-attachment-action-menu.js";
 
 export interface PlatformAttachmentItem {
   id: string;
@@ -22,6 +23,7 @@ export interface PlatformAttachmentItem {
   active?: boolean;
   disabled?: boolean;
   onActivate?: () => void;
+  onRename?: (nextName: string) => void | Promise<void>;
   onRemove?: () => void;
   removeLabel?: string;
 }
@@ -83,7 +85,7 @@ export function PlatformAttachments({
   disabled = false,
   processing = false,
   dragging,
-  uploadFromComputerLabel = "From Computer Agents",
+  uploadFromComputerLabel = "From Workspace",
   uploadFromComputerTitle,
   uploadFromComputerDisabled = false,
   addLabel = "Add a new file",
@@ -266,9 +268,15 @@ export function PlatformAttachments({
                   ) : (
                     <div className="platform-attachments__item-main">{itemContent}</div>
                   )}
-                  {item.trailing || item.onRemove ? (
+                  {item.trailing || item.onRename || item.onRemove ? (
                     <div className="platform-attachments__item-actions">
                       {item.trailing}
+                      <PlatformAttachmentActionMenu
+                        name={item.name}
+                        onRename={item.onRename}
+                        onDelete={item.onRemove}
+                        disabled={interactionDisabled || item.disabled}
+                      />
                       {item.onRemove ? (
                         <PlatformIconButton
                           size="compact"

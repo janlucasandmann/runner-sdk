@@ -295,6 +295,7 @@ const serviceTestCommands = new Map([
   ["app-header", "npm run app-header-service-test"],
   ["app-sidebar", "npm run app-sidebar-service-test"],
   ["api-keys", "npm run api-keys-service-test"],
+  ["security", "npm run security-service-test"],
   ["calendar", "npm run calendar-service-test"],
   ["configure-home", "npm run configure-home-service-test"],
   ["develop-home", "npm run develop-home-service-test"],

@@ -29,7 +29,8 @@
                   ttlMs: PLAYGROUND_DATABASE_LIST_CACHE_TTL_MS,
                   force: options?.force === true,
                   persist: true,
-                  staleWhileRevalidate: true,
+                  // Catalog consumers need the revalidated payload so React receives fresh rows.
+                  staleWhileRevalidate: false,
                   priority: "high",
                 }
               );
@@ -37,6 +38,7 @@
               if (serverListRequestRef.current.requestId !== requestId) {
                 return nextServers;
               }
+              authoritativeServerListScopesRef.current.add(requestScopeKey);
               setServers((current) => {
                 const currentById = new Map(current.map((server) => [server?.id, server]));
                 return nextServers.map((server) => {
@@ -97,8 +99,7 @@
               if (serverListRequestRef.current.requestId !== requestId) {
                 return [];
               }
-              setHasLoadedServers(true);
-              setLoadedServerListScope(requestScopeKey);
+              authoritativeServerListScopesRef.current.delete(requestScopeKey);
               setServerSaveState((current) => ({
                 ...current,
                 error: error instanceof Error ? error.message : "Failed to load servers.",
@@ -1951,6 +1952,13 @@
             const metricScopeKey = databaseListScopeKey
               + "|servers|"
               + normalizedEmbeddedServerKind;
+            const authoritativeCatalogReady = authoritativeServerListScopesRef.current.has(metricScopeKey)
+              || (hasLoadedServers && loadedServerListScope === metricScopeKey);
+            if (authoritativeCatalogReady || metricServers.length === 0) {
+              return;
+            }
+
+            // Analytics can make the first paint useful, but only /servers owns catalog readiness.
             setServers(metricServers);
             setServerDetailsById((current) => {
               const next = { ...current };
@@ -1963,13 +1971,13 @@
               });
               return next;
             });
-            setHasLoadedServers(true);
-            setLoadedServerListScope(metricScopeKey);
           }, [
             databaseListScopeKey,
             developServerOperationalMetrics?.resources,
             developServerOperationalMetrics?.scopeKind,
             embeddedInResources,
+            hasLoadedServers,
+            loadedServerListScope,
             normalizedEmbeddedServerKind,
             resourceMode,
           ]);
@@ -2747,7 +2755,7 @@
 
           useEffect(() => {
             if (
-              databaseDetailTab !== "settings"
+              databaseDetailTab === "data"
               || workspaceTeamsLoading
               || workspaceTeamsRequiresPlan
               || (Array.isArray(workspaceTeams) && workspaceTeams.length > 0)
@@ -2777,27 +2785,6 @@
               void loadDatabaseOwnerTeamMembers(teamId);
             });
           }, [databaseOwnerPopoverOpen, databaseOwnerTeamMembersById, draftDatabase]);
-
-          useEffect(() => {
-            if (!databaseOwnerPopoverOpen) return undefined;
-
-            function handleDatabaseOwnerPopoverPointerDown(event) {
-              const target = event?.target instanceof Node ? event.target : null;
-              if (!target || databaseOwnerPopoverRef.current?.contains(target)) return;
-              setDatabaseOwnerPopoverOpen(false);
-            }
-
-            function handleDatabaseOwnerPopoverEscape(event) {
-              if (event.key === "Escape") setDatabaseOwnerPopoverOpen(false);
-            }
-
-            document.addEventListener("mousedown", handleDatabaseOwnerPopoverPointerDown);
-            window.addEventListener("keydown", handleDatabaseOwnerPopoverEscape);
-            return () => {
-              document.removeEventListener("mousedown", handleDatabaseOwnerPopoverPointerDown);
-              window.removeEventListener("keydown", handleDatabaseOwnerPopoverEscape);
-            };
-          }, [databaseOwnerPopoverOpen]);
 
           useEffect(() => {
             if (!databaseTeamMenuId) {
@@ -2845,24 +2832,6 @@
               window.removeEventListener("keydown", handleServerAccessPopupEscape);
             };
           }, [serverTeamMenuId]);
-
-          useEffect(() => {
-            if (!serverOwnerPopoverOpen) return undefined;
-            function handleServerOwnerPointerDown(event) {
-              const target = event?.target instanceof Node ? event.target : null;
-              if (!target || serverOwnerPopoverRef.current?.contains(target)) return;
-              setServerOwnerPopoverOpen(false);
-            }
-            function handleServerOwnerEscape(event) {
-              if (event.key === "Escape") setServerOwnerPopoverOpen(false);
-            }
-            document.addEventListener("mousedown", handleServerOwnerPointerDown);
-            window.addEventListener("keydown", handleServerOwnerEscape);
-            return () => {
-              document.removeEventListener("mousedown", handleServerOwnerPointerDown);
-              window.removeEventListener("keydown", handleServerOwnerEscape);
-            };
-          }, [serverOwnerPopoverOpen]);
 
           useEffect(() => {
             if (!serverOwnerPopoverOpen || !draftServer?.id) return;
@@ -3467,31 +3436,6 @@
               window.removeEventListener("keydown", handleServerSourceFileMenuEscape);
             };
           }, [serverSourceFileMenuPath]);
-
-          useEffect(() => {
-            if (!serverDetailSelectPopover) return undefined;
-
-            function handleServerDetailSelectPopoverPointerDown(event) {
-              const target = event?.target instanceof Node ? event.target : null;
-              if (!target || !serverDetailSelectPopoverRef.current || serverDetailSelectPopoverRef.current.contains(target)) {
-                return;
-              }
-              setServerDetailSelectPopover("");
-            }
-
-            function handleServerDetailSelectPopoverEscape(event) {
-              if (event.key === "Escape") {
-                setServerDetailSelectPopover("");
-              }
-            }
-
-            document.addEventListener("mousedown", handleServerDetailSelectPopoverPointerDown);
-            window.addEventListener("keydown", handleServerDetailSelectPopoverEscape);
-            return () => {
-              document.removeEventListener("mousedown", handleServerDetailSelectPopoverPointerDown);
-              window.removeEventListener("keydown", handleServerDetailSelectPopoverEscape);
-            };
-          }, [serverDetailSelectPopover]);
 
           useEffect(() => {
             if (!databaseActionsPopoverOpen) return undefined;

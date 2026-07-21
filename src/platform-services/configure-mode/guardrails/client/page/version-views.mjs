@@ -58,11 +58,10 @@ export const GUARDRAILS_PAGE_VERSION_VIEWS_SCRIPT = `          const GUARDRAIL_V
             setGuardrailPublishMenuOpen(false);
             setGuardrailVersionsHeaderMenuOpen(false);
             finishCloseGuardrailVersionModal();
-            setGuardrailVersionChangesState(null);
             setOpenGuardrailVersionMenuId("");
           }
 
-          function renderGuardrailVersionsSidebar() {
+          function renderGuardrailVersionsSidebar(options = {}) {
             if (!isGuardrailsDetailPage || selectedGuardrailSetReadonly || !guardrailVersionsSidebarOpen) {
               return null;
             }
@@ -76,174 +75,116 @@ export const GUARDRAILS_PAGE_VERSION_VIEWS_SCRIPT = `          const GUARDRAIL_V
               || activeVersionId
               || ""
             ).trim();
-            return React.createElement(PlaygroundVersionSidebar, {
-              className: "playground-guardrails-versions-sidebar",
+            const normalizedSetId = String(selectedGuardrailSet?.id || "").trim();
+            const versionsLoaded = Boolean(
+              normalizedSetId && guardrailDetailsLoadedRef.current.has(normalizedSetId)
+            );
+            const versionsError = !versionsLoaded && guardrailsBackendSyncState.status === "error"
+              ? guardrailsBackendSyncState.error
+              : "";
+            const mutationStateContent = guardrailVersionState.status === "loading"
+              ? React.createElement("div", { className: "platform-version-history-sidebar__state" },
+                  guardrailVersionState.message || "Saving guardrail version..."
+                )
+              : guardrailVersionState.status === "error" && guardrailVersionState.error
+                ? React.createElement("div", {
+                    className: "platform-version-history-sidebar__state is-error",
+                    role: "alert",
+                  }, guardrailVersionState.error)
+                : null;
+            return React.createElement(PlatformVersionHistorySidebar, {
               open: guardrailVersionsSidebarOpen,
-              title: "Publish Guardrail",
+              title: "Version history",
+              sectionTitle: "All Versions",
+              className: "playground-guardrails-versions-sidebar",
+              width: "var(--playground-thread-task-detail-width)",
+              portal: Boolean(options.portal),
+              portalTarget: options.portalTarget || null,
               versions,
               activeVersionId,
               selectedVersionId,
-              state: guardrailVersionState,
+              loading: !versionsLoaded && !versionsError,
+              loadingMessage: "Loading versions",
+              error: versionsError || null,
+              emptyDescription: "Save changes to create this guardrail's first version.",
               busy: guardrailVersionState.status === "loading",
-              openMenuId: openGuardrailVersionMenuId,
-              onOpenMenuIdChange: setOpenGuardrailVersionMenuId,
-              headerMenuOpen: guardrailVersionsHeaderMenuOpen,
-              headerMenuActions: getGuardrailVersionPopupActions({ includeVersionHistory: false }),
-              headerMenuDisabled: guardrailVersionState.status === "loading",
-              onHeaderMenuOpenChange: setGuardrailVersionsHeaderMenuOpen,
-              onClose: closeGuardrailVersionsSidebar,
-              onSaveVersion: () => openCreateGuardrailVersionModal({ force: true }),
-              onRestoreVersion: (versionId) => restoreGuardrailVersion(versionId),
-              onPublishVersion: (versionId) => publishGuardrailVersion(versionId),
+              stateContent: mutationStateContent,
+              onClose: () => {
+                setGuardrailVersionChangesState(null);
+                closeGuardrailVersionsSidebar();
+              },
+              onSelectVersion: (versionId) => void restoreGuardrailVersion(versionId),
+              onPublishVersion: (versionId) => void publishGuardrailVersion(versionId),
               canPublishVersion: (version) => canPublishGuardrailVersion(version),
-              onDeleteVersion: (versionId) => deleteGuardrailVersion(versionId),
-              versionsSectionFooter: React.createElement("div", { className: "playground-metronome-publish-section-footer playground-agents-version-compare-footer" },
-                React.createElement(PlatformSecondaryButton, {
-                  size: "large",
-                  type: "button",
-                  className: "playground-metronome-secondary-button playground-metronome-publish-new-button playground-agents-version-compare-button",
-                  disabled: guardrailVersionState.status === "loading" || !versions.length,
-                  onClick: () => openGuardrailVersionChangesPage(),
-                },
-                  React.createElement(Code2, { width: 13, height: 13, strokeWidth: 1.8 }),
-                  React.createElement("span", null, "View Changes")
-                )
-              ),
-              getRowMenuItems: (version) => [
+              onViewChanges: () => openGuardrailVersionChangesPage(),
+              getVersionCreatedAt: (version) => {
+                const timestamp = version.createdAt || version.updatedAt || version.publishedAt;
+                return timestamp ? formatGuardrailVersionTimestamp(timestamp) : "-";
+              },
+              getVersionActions: (version) => [
                 {
                   id: "edit",
-                  label: "Edit version",
+                  label: "Edit description",
                   icon: SquarePen,
-                  onClick: () => openEditGuardrailVersionModal(version.id),
+                  onSelect: () => openEditGuardrailVersionModal(version.id),
                 },
                 {
                   id: "compare",
                   label: "View Changes",
                   icon: Code2,
-                  onClick: () => openGuardrailVersionChangesPage(version.id),
-                },
-                {
-                  id: "restore",
-                  label: "Restore version",
-                  icon: RotateCcw,
-                  onClick: () => restoreGuardrailVersion(version.id),
+                  onSelect: () => openGuardrailVersionChangesPage(version.id),
                 },
                 {
                   id: "delete",
                   label: "Delete version",
                   icon: Trash2,
                   danger: true,
-                  onClick: () => deleteGuardrailVersion(version.id),
+                  disabled: version.status === "active" || versions.length <= 1,
+                  onSelect: () => void deleteGuardrailVersion(version.id),
                 },
               ],
-              unpublishLabel: "Unpublish guardrail set",
-              getVersionTitle: (version) => String(version.label || ("Version " + version.version)).trim(),
-              getVersionDescription: () => "",
-              getVersionMeta: (version) => {
-                const lifecycleLabel = version.status === "active"
-                  ? "Published"
-                  : version.status === "superseded"
-                    ? "Superseded"
-                    : version.status === "unpublished"
-                      ? "Unpublished"
-                      : "Saved";
-                return lifecycleLabel + " " + formatGuardrailVersionTimestamp(version.publishedAt || version.updatedAt || version.createdAt);
-              },
             });
           }
 
           function renderGuardrailVersionsSidebarPortal() {
-            const sidebar = renderGuardrailVersionsSidebar();
-            if (!sidebar) {
-              return null;
-            }
             const drawerContainer = typeof document !== "undefined"
               ? document.getElementById("playground-agent-versions-drawer-root")
               : null;
-            if (drawerContainer && typeof createPortal === "function") {
-              return createPortal(sidebar, drawerContainer);
+            if (drawerContainer) {
+              return renderGuardrailVersionsSidebar({
+                portal: true,
+                portalTarget: drawerContainer,
+              });
             }
-            return React.createElement("aside", {
-                className: "playground-metronome-node-drawer playground-agent-versions-inline-drawer is-open",
-              },
-              sidebar
-            );
+            return renderGuardrailVersionsSidebar();
           }
 
           function renderGuardrailPublishSplitButton() {
             const isBusy = guardrailVersionState.status === "loading";
+            const normalizedSetId = String(selectedGuardrailSet?.id || "").trim();
+            const versionsLoaded = Boolean(
+              normalizedSetId && guardrailDetailsLoadedRef.current.has(normalizedSetId)
+            );
+            const versionHasChanges = hasSelectedGuardrailVersionChanges();
+            const isPublishControlDisabled = Boolean(isBusy || !versionsLoaded || !versionHasChanges);
             const actions = getGuardrailVersionPopupActions();
-            return renderPlaygroundPlatformPopup({
+            return React.createElement(PlatformVersionPublishControl, {
               open: guardrailPublishMenuOpen,
-              shellRef: guardrailPublishMenuRef,
-              shellClassName: "playground-agents-detail-publish-split-shell playground-guardrails-publish-split-shell",
-              menuClassName: "playground-agents-detail-publish-menu playground-guardrails-publish-menu",
-              trigger: React.createElement("div", {
-                  className: "playground-metronome-create-button playground-metronome-publish-button playground-guardrails-publish-button playground-agents-detail-publish-split-control"
-                    + (guardrailVersionsSidebarOpen ? " is-active" : "")
-                    + (isBusy ? " is-disabled" : ""),
-                },
-                React.createElement("button", {
-                    type: "button",
-                    className: "playground-agents-detail-publish-main",
-                    title: "Open guardrail versions",
-                    "aria-label": "Open guardrail versions",
-                    "aria-expanded": guardrailVersionsSidebarOpen ? "true" : "false",
-                    disabled: isBusy,
-                    onClick: () => {
-                      setGuardrailPublishMenuOpen(false);
-                      setGuardrailVersionsHeaderMenuOpen(false);
-                      setGuardrailVersionsSidebarOpen(true);
-                    },
-                  },
-                  React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("span", null, "Publish")
-                ),
-                React.createElement("span", { className: "playground-agents-detail-publish-divider", "aria-hidden": "true" }),
-                React.createElement("button", {
-                    type: "button",
-                    className: "playground-agents-detail-publish-chevron",
-                    title: "Version save options",
-                    "aria-label": "Version save options",
-                    "aria-haspopup": "menu",
-                    "aria-expanded": guardrailPublishMenuOpen ? "true" : "false",
-                    disabled: isBusy,
-                    onClick: (event) => {
-                      event.stopPropagation();
-                      setGuardrailPublishMenuOpen((current) => !current);
-                    },
-                  },
-                  React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
-                )
-              ),
-              menuProps: {
-                role: "menu",
-                onClick: (event) => event.stopPropagation(),
+              actions,
+              rootRef: guardrailPublishMenuRef,
+              active: guardrailPublishMenuOpen,
+              disabled: isPublishControlDisabled,
+              menuDisabled: isPublishControlDisabled,
+              label: "Save Changes",
+              leading: React.createElement(Bookmark, { strokeWidth: 1.8 }),
+              publishAriaLabel: "Save guardrail changes",
+              className: "playground-guardrails-publish-control",
+              popupClassName: "playground-guardrails-publish-menu",
+              onOpenChange: (nextOpen) => {
+                setGuardrailVersionsHeaderMenuOpen(false);
+                setGuardrailPublishMenuOpen(nextOpen);
               },
-              children: React.createElement(React.Fragment, null,
-                actions.map((action) => React.createElement("button", {
-                    key: action.id,
-                    type: "button",
-                    className: "tb-popup-row",
-                    role: "menuitem",
-                    disabled: isBusy || action.disabled,
-                    onClick: () => {
-                      setGuardrailPublishMenuOpen(false);
-                      action.onClick();
-                    },
-                  },
-                  React.createElement(getPlaygroundSafeIconComponent(action.Icon, Circle), { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
-                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                    React.createElement("span", null, action.label)
-                  ),
-                  action.shortcut
-                    ? React.createElement("span", {
-                        className: "playground-agents-detail-publish-menu-shortcut",
-                        "aria-hidden": "true",
-                      }, action.shortcut)
-                    : null
-                ))
-              )
+              onPublish: () => openGuardrailVersionSaveDialog(),
             });
           }
 

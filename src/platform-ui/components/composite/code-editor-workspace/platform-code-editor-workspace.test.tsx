@@ -59,8 +59,8 @@ describe("PlatformCodeEditorWorkspace", () => {
     expect(onRedo).not.toHaveBeenCalled();
   });
 
-  it("supports sidebar actions and nested file disclosures", () => {
-    render(
+  it("places editor actions in the tab bar and keeps nested file disclosures", () => {
+    const { container } = render(
       <PlatformCodeEditorWorkspace
         files={[
           {
@@ -70,15 +70,19 @@ describe("PlatformCodeEditorWorkspace", () => {
             depth: 2,
           },
         ]}
-        sidebarActions={<button type="button">Add file</button>}
+        tabBarActions={<button type="button">Add file</button>}
       />,
     );
 
-    expect(screen.getByRole("button", { name: "Add file" })).not.toBeNull();
-    expect(screen.getByText("Explorer")).not.toBeNull();
+    const addFileButton = screen.getByRole("button", { name: "Add file" });
+    expect(
+      addFileButton.closest(".platform-code-editor-tab-bar__actions"),
+    ).not.toBeNull();
+    expect(container.querySelector(".platform-code-editor-workspace__sidebar-heading")).toBeNull();
+    expect(screen.queryByText("Explorer")).toBeNull();
     expect(screen.getByRole("searchbox", { name: "Search code files" })).not.toBeNull();
     const file = screen.getByRole("button", { name: "src" });
-    expect(file.style.paddingInlineStart).toBe("46px");
+    expect(file.style.paddingInlineStart).toBe("");
     expect(screen.getByText("Open")).not.toBeNull();
   });
 
@@ -98,6 +102,49 @@ describe("PlatformCodeEditorWorkspace", () => {
 
     expect(screen.getByRole("button", { name: "main.ts" })).not.toBeNull();
     expect(screen.queryByRole("button", { name: "README.md" })).toBeNull();
+  });
+
+  it("uses shared checkboxes and minimal popup actions for single and multi-file operations", () => {
+    const onFileRename = vi.fn();
+    const onFilesDelete = vi.fn();
+    render(
+      <PlatformCodeEditorWorkspace
+        files={[
+          { id: "main.ts", label: "main.ts", ariaLabel: "main.ts" },
+          { id: "styles.css", label: "styles.css", ariaLabel: "styles.css" },
+        ]}
+        onFileRename={onFileRename}
+        onFilesDelete={onFilesDelete}
+      />,
+    );
+
+    const mainFileButton = screen.getByRole("button", { name: "main.ts" });
+    fireEvent.contextMenu(mainFileButton, { clientX: 120, clientY: 80 });
+
+    const singleFileMenu = screen.getByRole("menu");
+    const menuAnchor = document.body.querySelector(
+      ".platform-code-editor-workspace__file-menu-anchor",
+    ) as HTMLElement | null;
+    expect(menuAnchor).not.toBeNull();
+    expect(screen.getByRole("region", { name: "Code editor" }).contains(menuAnchor)).toBe(false);
+    expect(menuAnchor?.style.left).toBe("120px");
+    expect(menuAnchor?.style.top).toBe("80px");
+    expect(singleFileMenu.classList.contains("is-minimal")).toBe(true);
+    expect(screen.getByRole("menuitem", { name: "Rename" })).not.toBeNull();
+    expect(screen.getByRole("menuitem", { name: "Delete" })).not.toBeNull();
+    fireEvent.click(screen.getByRole("menuitem", { name: "Rename" }));
+    expect(onFileRename).toHaveBeenCalledWith(expect.objectContaining({ id: "main.ts" }));
+
+    fireEvent.click(screen.getByRole("checkbox", { name: "Select main.ts" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Select styles.css" }));
+    fireEvent.click(screen.getByRole("button", { name: "Open actions for main.ts" }));
+
+    expect(screen.queryByRole("menuitem", { name: "Rename" })).toBeNull();
+    fireEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
+    expect(onFilesDelete).toHaveBeenCalledWith([
+      expect.objectContaining({ id: "main.ts" }),
+      expect.objectContaining({ id: "styles.css" }),
+    ]);
   });
 
   it("opens explorer files as persistent editor tabs and keeps folders explorer-only", () => {

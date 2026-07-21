@@ -1,6 +1,5 @@
-export const PROJECTS_ACTIONS_05_FRAGMENT = `            ticketNumber: normalizedTicketNumber,
-            label: "Subtask to " + normalizedTicketNumber,
-            token: Date.now(),
+export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
+            parentTaskId: parentTask.id,
           });
         }
 

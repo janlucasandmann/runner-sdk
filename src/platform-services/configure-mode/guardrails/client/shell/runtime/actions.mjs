@@ -16,6 +16,7 @@ export const GUARDRAILS_APP_ACTIONS_SCRIPT = `        function clearGuardrailVer
           setGuardrailSetActionMenuId("");
           setGuardrailDetailActionsMenuOpen(false);
           setGuardrailVersionChangesState(null);
+          setGuardrailVersionSaveDialog(null);
           setOpenGuardrailVersionMenuId("");
           if (options.closeModal === false) {
             return;
@@ -88,8 +89,20 @@ export const GUARDRAILS_APP_ACTIONS_SCRIPT = `        function clearGuardrailVer
             setGuardrailsBackendSyncState({ status: "error", error: error?.message || String(error) });
           }
         }
-        function renderGuardrailActionMenuItems(setId) {
+        function renderGuardrailActionMenuItems(setId, options = {}) {
+          const targetSet = allGuardrailSets.find((set) => String(set?.id || "") === String(setId || "")) || null;
           return React.createElement(React.Fragment, null,
+            options.includeMetadata
+              ? React.createElement("div", { className: "playground-agents-detail-action-menu-meta" },
+                  React.createElement("div", { className: "playground-agents-detail-action-menu-meta-row" },
+                    React.createElement("span", { className: "playground-agents-detail-action-menu-meta-label" }, "ID"),
+                    React.createElement("span", {
+                      className: "playground-agents-detail-action-menu-meta-value",
+                      title: targetSet?.id || "",
+                    }, targetSet?.id || "Unknown")
+                  )
+                )
+              : null,
             React.createElement("button", {
               type: "button",
               className: "tb-popup-row",

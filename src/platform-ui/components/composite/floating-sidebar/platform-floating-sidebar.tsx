@@ -157,6 +157,7 @@ export function PlatformFloatingSidebar({
       aria-labelledby={ariaLabel ? undefined : titleId}
       aria-hidden={visible ? undefined : true}
       inert={visible ? undefined : true}
+      onClick={(event) => event.stopPropagation()}
       style={{
         ...style,
         width: width ?? style?.width,

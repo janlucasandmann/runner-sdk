@@ -933,10 +933,6 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
           resizeTaskDescriptionTextarea(taskDescriptionTextareaRef.current);
         }, [draftTask?.description, draftTask?.id]);
 
-        useLayoutEffect(() => {
-          resizeTaskCommentTextarea(taskCommentTextareaRef.current);
-        }, [draftTask?.id, isCalendarScheduleDetailMode, selectedScheduleId, taskCommentInputValue]);
-
         useEffect(() => {
           setTaskCommentComposerOpen(false);
         }, [draftTask?.id]);

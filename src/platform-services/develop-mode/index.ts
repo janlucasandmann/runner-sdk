@@ -20,6 +20,7 @@ export {
 export * from "./functions/index.js";
 export * from "./payments/index.js";
 export * from "./secrets/index.js";
+export * from "./security/index.js";
 export * from "./service-registry.js";
 export * from "./shared/index.js";
 export * from "./voice-agents/index.js";

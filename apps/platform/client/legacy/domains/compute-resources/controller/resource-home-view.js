@@ -336,10 +336,11 @@
   	            if (normalizedEmbeddedServerKind === "voice_agent") {
   	              const voiceRows = createDevelopVoiceAgentOverviewRows(
   	                voiceAgentRecords,
-  	                voiceAgentDraftsById,
-  	                voiceAgentsState,
-  	                voiceAgentSessionResultsById
-  	              );
+	                voiceAgentDraftsById,
+	                voiceAgentsState,
+	                voiceAgentSessionResultsById,
+	                getCurrentDevelopResourceIdentityInput()
+	              );
   	              return React.createElement(DevelopVoiceAgentsOverviewPage, {
   	                rows: voiceRows,
   	                period: canonicalPeriod,
@@ -391,9 +392,14 @@
   	              resource,
   	            ]));
   	            const resolveSourceResource = (row) => sourceByRowId.get(row.id) || null;
-  	            const isCatalogLoading = normalizedEmbeddedServerKind === "database"
-  	              ? (!hasLoadedDatabases || databaseListLoading)
-  	              : (!hasLoadedServers || serverListLoading);
+	            const expectedServerCatalogScope = databaseListScopeKey
+	              + "|servers|"
+	              + normalizedEmbeddedServerKind;
+	            const isCurrentServerCatalogLoaded = hasLoadedServers
+	              && loadedServerListScope === expectedServerCatalogScope;
+	            const isCatalogLoading = normalizedEmbeddedServerKind === "database"
+	              ? (!hasLoadedDatabases || databaseListLoading)
+	              : (!isCurrentServerCatalogLoaded || serverListLoading);
   	            const deleteOverviewRows = async (rows) => {
   	              const targets = rows.map((row) => ({ row, resource: resolveSourceResource(row) })).filter((entry) => entry.resource);
   	              if (!targets.length) return;
@@ -414,9 +420,12 @@
   	              controlsPortalId: "playground-resource-overview-controls",
   	              operationalMetrics: metricsMatchCurrentResource ? developServerOperationalMetrics : null,
   	              analyticsLoading: Boolean(developServerOperationalMetricsLoading || !metricsMatchCurrentResource),
-  	              analyticsError: metricsMatchCurrentResource ? developServerOperationalMetricsError : "",
-  	              loading: overviewRows.length === 0 && isCatalogLoading,
-  	              mutating: Boolean(serverSaveState.isSaving || databaseSaveState.isSaving),
+	              analyticsError: metricsMatchCurrentResource ? developServerOperationalMetricsError : "",
+	              loading: overviewRows.length === 0 && isCatalogLoading,
+	              error: overviewRows.length === 0 && !serverListLoading && serverSaveState.error
+	                ? serverSaveState.error
+	                : null,
+	              mutating: Boolean(serverSaveState.isSaving || databaseSaveState.isSaving),
   	              onOpen: (row) => row.resourceType === "database" ? handleDatabaseSelect(row.sourceId) : handleServerSelect(row.sourceId),
   	              onCreate: () => handleCreateServer(normalizedEmbeddedServerKind),
   	              onRename: (row) => {

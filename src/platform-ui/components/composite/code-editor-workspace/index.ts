@@ -1,5 +1,6 @@
 export {
   type PlatformCodeEditorFile,
+  type PlatformCodeEditorFileSelectionChange,
   type PlatformCodeEditorHistoryControls,
   type PlatformCodeEditorStatusTone,
   PlatformCodeEditorWorkspace,

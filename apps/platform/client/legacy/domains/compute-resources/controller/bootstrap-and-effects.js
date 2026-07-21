@@ -74,7 +74,6 @@
           const editorDirtyRef = useRef(false);
           const environmentDetailMainRef = useRef(null);
           const serverDetailMainRef = useRef(null);
-          const serverDetailSelectPopoverRef = useRef(null);
           const serverDescriptionTextareaRef = useRef(null);
           const databaseDescriptionTextareaRef = useRef(null);
           const serverSecretDescriptionTextareaRef = useRef(null);
@@ -119,9 +118,7 @@
           const environmentBulkActionMenuCloseTimerRef = useRef(null);
           const environmentRenameInputRef = useRef(null);
           const databaseActionsPopoverRef = useRef(null);
-          const serverOwnerPopoverRef = useRef(null);
           const serverOwnerTransferModalCloseTimerRef = useRef(null);
-          const databaseOwnerPopoverRef = useRef(null);
           const databaseOwnerTransferModalCloseTimerRef = useRef(null);
           const databaseOwnerTransferModalFrameRef = useRef(null);
           const databaseExportMenuRef = useRef(null);
@@ -152,6 +149,7 @@
             requestId: 0,
             scopeKey: "",
           });
+          const authoritativeServerListScopesRef = useRef(new Set());
           const serverDetailsRequestRef = useRef(new Map());
           const authoritativeServerDetailIdsRef = useRef(new Set());
           const authoritativeServerBindingIdsRef = useRef(new Set());
@@ -318,6 +316,7 @@
           const [databaseDescriptionHistory, setDatabaseDescriptionHistory] = useState({ past: [], future: [] });
           const [environmentDetailsCollapsed, setEnvironmentDetailsCollapsed] = useState(false);
           const [serverDetailsCollapsed, setServerDetailsCollapsed] = useState(false);
+          const [databaseDetailsCollapsed, setDatabaseDetailsCollapsed] = useState(false);
           const [environmentRuntimePopover, setEnvironmentRuntimePopover] = useState("");
           const [environmentsHomeResourceCommandRequest, setEnvironmentsHomeResourceCommandRequest] = useState(null);
           const [environmentsHomeActiveResourceCommand, setEnvironmentsHomeActiveResourceCommand] = useState("");
@@ -375,11 +374,7 @@
   	        const [databasePermissionTeamId, setDatabasePermissionTeamId] = useState("");
   	        const [databasePermissionRoleId, setDatabasePermissionRoleId] = useState("member");
   	        const [databaseTeamMenuId, setDatabaseTeamMenuId] = useState("");
-  	        const [databaseAccessSearchQuery, setDatabaseAccessSearchQuery] = useState("");
-  	        const [databaseAccessFilter, setDatabaseAccessFilter] = useState("all");
-  	        const [databaseAccessSort, setDatabaseAccessSort] = useState("name");
-  	        const [databaseAccessSortDirection, setDatabaseAccessSortDirection] = useState("asc");
-  	        const [selectedDatabaseAccessTeamIds, setSelectedDatabaseAccessTeamIds] = useState(() => new Set());
+	        const [selectedDatabaseAccessTeamIds, setSelectedDatabaseAccessTeamIds] = useState(() => new Set());
   	        const [databaseOwnerPopoverOpen, setDatabaseOwnerPopoverOpen] = useState(false);
   	        const [databaseOwnerTeamMembersById, setDatabaseOwnerTeamMembersById] = useState({});
   	        const [databaseOwnerTransferTarget, setDatabaseOwnerTransferTarget] = useState(null);
@@ -593,6 +588,7 @@
             error: "",
           });
           const [serverAuthSearchQuery, setServerAuthSearchQuery] = useState("");
+          const [serverAuthProviderFilter, setServerAuthProviderFilter] = useState("all");
           const [serverSecretsState, setServerSecretsState] = useState({
             error: "",
           });
@@ -614,13 +610,6 @@
             displayName: "",
             error: "",
             isSaving: false,
-          });
-          const [serverAuthAnalyticsVisibility, setServerAuthAnalyticsVisibility] = useState({
-            users: true,
-            verified: true,
-            signins: true,
-            email: true,
-            external: true,
           });
           const [serverAnalyticsVisibility, setServerAnalyticsVisibility] = useState({
             requests: true,
@@ -1057,11 +1046,29 @@
   
           const filteredServerAuthUsers = useMemo(() => {
             const query = String(serverAuthSearchQuery || "").trim().toLowerCase();
-            if (!query) {
-              return currentServerAuthUsers;
-            }
-            return currentServerAuthUsers.filter((user) => getPlaygroundAuthUserSearchText(user).includes(query));
-          }, [currentServerAuthUsers, serverAuthSearchQuery]);
+            const providerFilter = String(serverAuthProviderFilter || "all").trim().toLowerCase();
+            return currentServerAuthUsers.filter((user) => {
+              if (query && !getPlaygroundAuthUserSearchText(user).includes(query)) {
+                return false;
+              }
+              if (providerFilter === "all") {
+                return true;
+              }
+              const providerIds = Array.isArray(user?.providers)
+                ? user.providers.map((providerId) => String(providerId || "").trim().toLowerCase()).filter(Boolean)
+                : [];
+              if (!providerIds.length && user?.email) {
+                providerIds.push("password");
+              }
+              if (providerFilter === "email") {
+                return providerIds.some((providerId) => providerId === "password" || providerId === "email");
+              }
+              if (providerFilter === "phone") {
+                return providerIds.some((providerId) => providerId === "phone" || providerId === "phone.com");
+              }
+              return providerIds.some((providerId) => providerId === providerFilter || providerId === providerFilter + ".com");
+            });
+          }, [currentServerAuthUsers, serverAuthProviderFilter, serverAuthSearchQuery]);
   
           const filteredServerSecrets = useMemo(() => {
             const query = String(serverSecretsSearchQuery || "").trim().toLowerCase();
@@ -1694,6 +1701,7 @@
           }, [selectedServerId]);
 
           useEffect(() => {
+            authoritativeServerListScopesRef.current.clear();
             serverDetailsRequestRef.current.clear();
             authoritativeServerDetailIdsRef.current.clear();
             authoritativeServerBindingIdsRef.current.clear();
@@ -1857,13 +1865,6 @@
               error: "",
               isSaving: false,
             });
-            setServerAuthAnalyticsVisibility({
-              users: true,
-              verified: true,
-              signins: true,
-              email: true,
-              external: true,
-  	          });
   	          setAuthDetailTab("users");
   	          setSecretsDetailTab("secrets");
   		          setAgentRuntimeDetailTab("usage");
@@ -2337,11 +2338,7 @@
             setDatabasePermissionTeamId("");
   	      setDatabasePermissionRoleId("member");
             setDatabaseTeamMenuId("");
-  	      setDatabaseAccessSort("name");
-  	      setDatabaseAccessSortDirection("asc");
-  	      setDatabaseAccessSearchQuery("");
-  	      setDatabaseAccessFilter("all");
-  	      setSelectedDatabaseAccessTeamIds(new Set());
+	      setSelectedDatabaseAccessTeamIds(new Set());
             setDatabaseTeamAccessState({
               teamId: "",
               action: "",

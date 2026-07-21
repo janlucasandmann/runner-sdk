@@ -21,6 +21,7 @@ export interface PlatformCodeEditorTabBarProps {
   activeTabId?: string;
   onTabSelect?: (tabId: string) => void;
   onTabClose?: (tabId: string) => void;
+  endActions?: ReactNode;
   ariaLabel?: string;
   className?: string;
 }
@@ -45,6 +46,7 @@ export function PlatformCodeEditorTabBar({
   activeTabId = "",
   onTabSelect,
   onTabClose,
+  endActions = null,
   ariaLabel = "Open files",
   className = "",
 }: PlatformCodeEditorTabBarProps) {
@@ -95,66 +97,73 @@ export function PlatformCodeEditorTabBar({
   return (
     <div
       className={joinClassNames("platform-code-editor-tab-bar", className)}
-      role="tablist"
-      aria-label={ariaLabel}
-      aria-orientation="horizontal"
       data-platform-code-editor-tab-bar="true"
     >
-      {tabs.map((tab) => {
-        const isActive = tab.id === activeTabId;
-        const isClosable = tab.closable !== false;
-        const accessibleLabel = getTabAccessibleLabel(tab);
-        const tabId = `platform-code-editor-tab-${generatedId}-${tab.id}`;
-        return (
-          <div
-            key={tab.id}
-            className={joinClassNames(
-              "platform-code-editor-tab-bar__item",
-              isActive && "is-active",
-              tab.dirty && "is-dirty",
-            )}
-            onAuxClick={(event) => handleTabAuxClick(event, tab)}
-          >
-            <button
-              ref={(node) => {
-                if (node) tabRefs.current.set(tab.id, node);
-                else tabRefs.current.delete(tab.id);
-              }}
-              id={tabId}
-              type="button"
-              role="tab"
-              className="platform-code-editor-tab-bar__tab"
-              aria-label={accessibleLabel}
-              aria-selected={isActive}
-              tabIndex={tab.id === keyboardTabId ? 0 : -1}
-              onClick={() => onTabSelect?.(tab.id)}
-              onKeyDown={(event) => handleTabKeyDown(event, tab.id)}
+      <div
+        className="platform-code-editor-tab-bar__list"
+        role="tablist"
+        aria-label={ariaLabel}
+        aria-orientation="horizontal"
+      >
+        {tabs.map((tab) => {
+          const isActive = tab.id === activeTabId;
+          const isClosable = tab.closable !== false;
+          const accessibleLabel = getTabAccessibleLabel(tab);
+          const tabId = `platform-code-editor-tab-${generatedId}-${tab.id}`;
+          return (
+            <div
+              key={tab.id}
+              className={joinClassNames(
+                "platform-code-editor-tab-bar__item",
+                isActive && "is-active",
+                tab.dirty && "is-dirty",
+              )}
+              onAuxClick={(event) => handleTabAuxClick(event, tab)}
             >
-              {tab.icon ? (
-                <span className="platform-code-editor-tab-bar__icon" aria-hidden="true">
-                  {tab.icon}
-                </span>
-              ) : null}
-              <span className="platform-code-editor-tab-bar__label">{tab.label}</span>
-            </button>
-            {isClosable ? (
               <button
-                type="button"
-                className="platform-code-editor-tab-bar__close"
-                aria-label={`Close ${accessibleLabel}`}
-                title={`Close ${accessibleLabel}`}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onTabClose?.(tab.id);
+                ref={(node) => {
+                  if (node) tabRefs.current.set(tab.id, node);
+                  else tabRefs.current.delete(tab.id);
                 }}
+                id={tabId}
+                type="button"
+                role="tab"
+                className="platform-code-editor-tab-bar__tab"
+                aria-label={accessibleLabel}
+                aria-selected={isActive}
+                tabIndex={tab.id === keyboardTabId ? 0 : -1}
+                onClick={() => onTabSelect?.(tab.id)}
+                onKeyDown={(event) => handleTabKeyDown(event, tab.id)}
               >
-                <span className="platform-code-editor-tab-bar__dirty-dot" aria-hidden="true" />
-                <X className="platform-code-editor-tab-bar__close-icon" aria-hidden="true" />
+                {tab.icon ? (
+                  <span className="platform-code-editor-tab-bar__icon" aria-hidden="true">
+                    {tab.icon}
+                  </span>
+                ) : null}
+                <span className="platform-code-editor-tab-bar__label">{tab.label}</span>
               </button>
-            ) : null}
-          </div>
-        );
-      })}
+              {isClosable ? (
+                <button
+                  type="button"
+                  className="platform-code-editor-tab-bar__close"
+                  aria-label={`Close ${accessibleLabel}`}
+                  title={`Close ${accessibleLabel}`}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onTabClose?.(tab.id);
+                  }}
+                >
+                  <span className="platform-code-editor-tab-bar__dirty-dot" aria-hidden="true" />
+                  <X className="platform-code-editor-tab-bar__close-icon" aria-hidden="true" />
+                </button>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+      {endActions ? (
+        <div className="platform-code-editor-tab-bar__actions">{endActions}</div>
+      ) : null}
     </div>
   );
 }

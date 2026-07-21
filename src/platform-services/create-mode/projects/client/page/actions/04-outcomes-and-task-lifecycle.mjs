@@ -1108,15 +1108,18 @@ export const PROJECTS_ACTIONS_04_FRAGMENT = `          updateMissionControlStrat
           }
         }
 
-        function openBacklogSubtaskComposer(ticketNumber) {
-          const normalizedTicketNumber = normalizePlaygroundTaskTicketNumber(ticketNumber);
-          if (!normalizedTicketNumber || !selectedProjectId) {
-            return;
+        function openProjectSubtaskIssueComposer(parentTaskId) {
+          const normalizedParentTaskId = normalizePlaygroundParentTaskId(parentTaskId);
+          if (!normalizedParentTaskId || !selectedProjectId) {
+            return false;
           }
-          setTaskView("backlog");
+          const parentTask = tasks.find((task) => task?.id === normalizedParentTaskId);
+          if (!parentTask?.id || isPlaygroundSubtaskRecord(parentTask)) {
+            return false;
+          }
           setTaskDetailPopover("");
           setTaskSkillsPopoverOpen(false);
           setTaskParentPickerState(null);
           setMissionControlStrategyOpen(false);
-          setBacklogComposerSubtaskCommandRequest({
+          return openProjectIssueComposer({
 `;

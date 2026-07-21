@@ -12,18 +12,20 @@
         import Chart from "chart.js/auto";
         import { addEdge, Background, BaseEdge, Controls, EdgeLabelRenderer, getSimpleBezierPath, Handle, MarkerType, NodeResizer, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from "@xyflow/react";
         import { browserLocalPersistence, getApps, getAuth, GoogleAuthProvider, initializeApp, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOutFirebaseAuth } from "/api/platform/auth/browser-module.js";
-  	      import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, KeyRound, LassoSelect, Layers, LayoutDashboard, LayoutGrid, LibraryBig, Lightbulb, Link2, List, ListFilter, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Underline, Undo2, Unlink, User, UserRound, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
+        import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, KeyRound, LassoSelect, Layers, LayoutDashboard, LayoutGrid, LibraryBig, Lightbulb, Link2, List, ListFilter, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Underline, Undo2, Unlink, User, UserRound, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
 	      import { RunnerClient } from "/dist/index.js";
 	      import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
 	      import { PlatformAnalyticsSection } from "/dist/platform-ui/components/composite/analytics/index.js";
-        import { PlatformAttachments } from "/dist/platform-ui/components/composite/attachments/index.js";
+        import { PlatformAttachmentActionMenu, PlatformAttachments } from "/dist/platform-ui/components/composite/attachments/index.js";
+        import { PlatformFileExplorerBrowserModal, PlatformFileExplorerModal } from "/dist/platform-ui/components/composite/file-explorer/index.js";
+        import { PlatformSubtasks } from "/dist/platform-ui/components/composite/subtasks/index.js";
         import { PlatformCodeEditorWorkspace } from "/dist/platform-ui/components/composite/code-editor-workspace/index.js";
   	      import { PlatformCodePreviewBox } from "/dist/platform-ui/components/composite/code-preview-box/index.js";
   	      import { PlatformDataTable } from "/dist/platform-ui/components/composite/data-table/index.js";
   	      import { PlatformDetailTabBar } from "/dist/platform-ui/components/composite/detail-tab-bar/index.js";
         import { PlatformDiffViewer } from "/dist/platform-ui/components/composite/diff-viewer/index.js";
   	      import { PlatformEmptyState } from "/dist/platform-ui/components/composite/empty-state/index.js";
-        import { PlatformVersionHistorySidebar, PlatformVersionLabel, PlatformVersionSaveDialog, formatPlatformVersionLabel, normalizePlatformVersionNumber } from "/dist/platform-ui/components/composite/versioning/index.js";
+        import { PlatformVersionHistorySidebar, PlatformVersionLabel, PlatformVersionPublishControl, PlatformVersionSaveDialog, formatPlatformVersionLabel, normalizePlatformVersionNumber } from "/dist/platform-ui/components/composite/versioning/index.js";
   	      import { PlatformInstructionsEditor } from "/dist/platform-ui/components/composite/instructions-editor/index.js";
   	      import { PlatformLoadingState } from "/dist/platform-ui/components/composite/loading-state/index.js";
         import { PlatformSettingsSection, PlatformSettingsSectionList } from "/dist/platform-ui/components/composite/settings-section/index.js";
@@ -50,6 +52,8 @@
   	        createPlatformDefaultPermissionRings as createPlaygroundDefaultPermissionRings,
   	        createPlatformDefaultPermissionSet as createPlaygroundDefaultPermissionSet,
   	        createPlatformFullAccessPermissionSet as createPlaygroundFullAccessPermissionSet,
+	        createPlatformRolePermissionSet as createPlaygroundRolePermissionSet,
+	        normalizePlatformRolePermissionSet as normalizePlaygroundRolePermissionSet,
   	        getPlatformPermissionAccessLabel as getPlaygroundPermissionAccessLabel,
   	        getPlatformPermissionActionDefinitionById as getPlaygroundPermissionActionDefinition,
   	        getPlatformPermissionActionExplicitAccessByDefinition as getPlaygroundPermissionActionExplicitAccess,
@@ -62,8 +66,8 @@
   	      } from "/dist/platform-ui/pages/permissions/index.js";
   	      import { PlatformApplicationBoundary } from "/dist/platform-runtime/platform-application-boundary.js";
         import { AgentPermissionMeters, AgentPermissionRingIcons, AgentPublishControl, AgentsOverviewAnalyticsRequestError, ComputersOverviewAnalyticsRequestError, buildPlatformAgentListScopeKey as buildPlaygroundAgentListScopeKey, createAgentsOverviewAnalytics, createComputersOverviewAnalytics, deleteComputerResource, fetchAgentsOverviewAnalytics, fetchComputersOverviewAnalytics, getAgentPermissionSummary, invalidateAgentsOverviewAnalytics, invalidateComputersOverviewAnalytics, normalizeComputerOverviewRows, normalizePlatformAgentListRecords, readCachedAgentsOverviewAnalytics, readCachedComputersOverviewAnalytics, readCachedPlatformAgentList as readCachedPlaygroundAgentList, saveComputerResource, writeCachedPlatformAgentList as writeCachedPlaygroundAgentList } from "/dist/platform-shell/presentation/platform-resource-api.js";
-  	      import { ApiKeysOverviewAnalyticsRequestError, createApiKeysOverviewAnalytics, createDevelopResourceOverviewRows, createDevelopVoiceAgentOverviewRows, deleteDevelopResource, fetchApiKeysOverviewAnalytics, invalidateApiKeysOverviewAnalytics, readCachedApiKeysOverviewAnalytics, saveDevelopResource } from "/dist/platform-shell/presentation/platform-develop-api.js";
-        import { AgentDetailPage, AgentPermissionsPage, AgentsOverviewPage, ComputerDetailPage, ComputersOverviewPage, ConfigureHomeOverviewPage, DevelopApiKeysOverviewPage, DevelopHomeOverviewPage, DevelopResourceOverviewRoute, DevelopServerDetailPage, DevelopVoiceAgentsOverviewPage, DevelopWebhooksOverviewPage, EvaluationsOverviewPage, FineTuningOverviewPage, GuardrailsOverviewPage, InferenceEndpointDetailPage, InferenceOverviewPage, MarketplaceOverviewPage, MetronomesOverviewPage, ModelsFeaturedSection, ModelsOverviewPage, NotificationsOverviewPage, OrganizationsOverviewPage, ProjectDetailPage, SkillsOverviewPage, TagDetailPage, TagsOverviewPage, TeamsOverviewPage, TicketDetailPage } from "/dist/platform-shell/presentation/platform-pages.js";
+	      import { ApiKeysOverviewAnalyticsRequestError, createApiKeysOverviewAnalytics, createDevelopResourceOverviewRows, createDevelopVoiceAgentOverviewRows, deleteDevelopResource, fetchApiKeysOverviewAnalytics, getDevelopResourceCreatorIdentity, getDevelopResourceOwnerIdentity, initializeDevelopResourceIdentityMetadata, invalidateApiKeysOverviewAnalytics, readCachedApiKeysOverviewAnalytics, saveDevelopResource } from "/dist/platform-shell/presentation/platform-develop-api.js";
+        import { AgentDetailPage, AgentPermissionsPage, AgentsOverviewPage, ComputerDetailPage, ComputersOverviewPage, ConfigureHomeOverviewPage, DevelopApiKeysOverviewPage, DevelopHomeOverviewPage, DevelopResourceOverviewRoute, DevelopSecurityWorkspacePage, DevelopServerDetailPage, DevelopVoiceAgentsOverviewPage, DevelopWebhooksOverviewPage, EvaluationDetailPage, EvaluationsOverviewPage, FineTuningDetailPage, FineTuningOverviewPage, GuardrailDetailPage, GuardrailsOverviewPage, InferenceEndpointDetailPage, InferenceOverviewPage, MarketplaceOverviewPage, MetronomesOverviewPage, ModelsFeaturedSection, ModelsOverviewPage, NotificationsOverviewPage, OrganizationsOverviewPage, ProjectDetailPage, SkillsOverviewPage, TagDetailPage, TagsOverviewPage, TeamsOverviewPage, TicketDetailPage } from "/dist/platform-shell/presentation/platform-pages.js";
   	      import { openGoogleDrivePicker } from "/dist/platform-integrations/google-drive/google-drive-picker.js";
   
   	      function getPlaygroundSafeIconComponent(Icon, fallbackIcon = Circle) {
@@ -5527,173 +5531,17 @@
   __PLATFORM_COMPATIBILITY_BINDING_093__
         function createPlaygroundTeamRolePermissionSet(roleId) {
           const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
-          if (normalizedRoleId === "owner") {
-            return createPlaygroundFullAccessPermissionSet("team_role");
-          }
-          const permissionSet = createPlaygroundDefaultPermissionSet("team_role");
-          const applyRingAccess = (ringId, access) => {
-            permissionSet.rings[ringId] = {
-              ...(permissionSet.rings[ringId] || {}),
-              defaultAccess: normalizePlaygroundPermissionAccess(access, "ask_for_permission"),
-            };
-          };
-          const applyActionAccess = (actionId, ringId, access) => {
-            permissionSet.actions[actionId] = {
-              ...(permissionSet.actions[actionId] || {}),
-              ringId: normalizePlaygroundPermissionRingId(ringId, "ring_1"),
-              access: normalizePlaygroundPermissionAccess(access, "ask_for_permission"),
-            };
-          };
-  
-          if (normalizedRoleId === "admin") {
-            PLAYGROUND_PERMISSION_RING_IDS.forEach((ringId) => applyRingAccess(ringId, "full_access"));
-            [
-              "team_member_invite",
-              "team_member_remove",
-              "team_role_update",
-              "team_shared_resource_manage",
-              "team_permission_request_review",
-              "team_settings_update",
-              "team_workspace_view",
-            ].forEach((actionId) => {
-              const actionDefinition = getPlaygroundPermissionActionDefinition(actionId);
-              applyActionAccess(actionId, actionDefinition?.ringId || "ring_2", "full_access");
-            });
-            return permissionSet;
-          }
-  
-          if (normalizedRoleId === "contributor") {
-            applyRingAccess("ring_1", "full_access");
-            applyRingAccess("ring_2", "ask_for_permission");
-            applyRingAccess("ring_3", "ask_for_permission");
-            applyActionAccess("team_workspace_view", "ring_1", "full_access");
-            applyActionAccess("shared_resource_write", "ring_2", "ask_for_permission");
-            applyActionAccess("team_shared_resource_manage", "ring_2", "ask_for_permission");
-            applyActionAccess("team_member_invite", "ring_2", "no_access");
-            applyActionAccess("team_member_remove", "ring_2", "no_access");
-            applyActionAccess("team_role_update", "ring_2", "no_access");
-            applyActionAccess("team_permission_request_review", "ring_2", "no_access");
-            applyActionAccess("team_settings_update", "ring_3", "no_access");
-            return permissionSet;
-          }
-  
-          applyRingAccess("ring_1", "read_only");
-          applyRingAccess("ring_2", "ask_for_permission");
-          applyRingAccess("ring_3", "no_access");
-          applyActionAccess("team_workspace_view", "ring_1", "read_only");
-          applyActionAccess("shared_resource_write", "ring_2", "ask_for_permission");
-          applyActionAccess("team_shared_resource_manage", "ring_2", "ask_for_permission");
-          applyActionAccess("team_member_invite", "ring_2", "no_access");
-          applyActionAccess("team_member_remove", "ring_2", "no_access");
-          applyActionAccess("team_role_update", "ring_2", "no_access");
-          applyActionAccess("team_permission_request_review", "ring_2", "no_access");
-          applyActionAccess("team_settings_update", "ring_3", "no_access");
-          return permissionSet;
+          return createPlaygroundRolePermissionSet("team_role", normalizedRoleId);
         }
   
         function createPlaygroundDatabaseTeamRolePermissionSet(roleId) {
           const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
-          if (normalizedRoleId === "owner") {
-            return createPlaygroundFullAccessPermissionSet("database");
-          }
-          const permissionSet = createPlaygroundDefaultPermissionSet("database");
-          const applyRingAccess = (ringId, access) => {
-            permissionSet.rings[ringId] = {
-              ...(permissionSet.rings[ringId] || {}),
-              defaultAccess: normalizePlaygroundPermissionAccess(access, "ask_for_permission"),
-            };
-          };
-          const applyActionAccess = (actionId, access) => {
-            const actionDefinition = getPlaygroundPermissionActionDefinition(actionId);
-            permissionSet.actions[actionId] = {
-              ...(permissionSet.actions[actionId] || {}),
-              ringId: actionDefinition?.ringId || "ring_1",
-              access: normalizePlaygroundPermissionAccess(access, "ask_for_permission"),
-            };
-          };
-  
-          if (normalizedRoleId === "admin") {
-            PLAYGROUND_PERMISSION_RING_IDS.forEach((ringId) => applyRingAccess(ringId, "full_access"));
-            PLAYGROUND_PERMISSION_ACTION_DEFINITIONS
-              .filter((action) => action.subjectTypes?.includes("database"))
-              .forEach((action) => applyActionAccess(action.id, "full_access"));
-            return permissionSet;
-          }
-  
-          if (normalizedRoleId === "contributor") {
-            applyRingAccess("ring_1", "full_access");
-            applyRingAccess("ring_2", "full_access");
-            applyRingAccess("ring_3", "ask_for_permission");
-            ["database_schema_read", "database_data_read", "database_query", "database_export", "database_document_create", "database_document_update"]
-              .forEach((actionId) => applyActionAccess(actionId, "full_access"));
-            applyActionAccess("database_document_delete", "ask_for_permission");
-            applyActionAccess("database_schema_manage", "ask_for_permission");
-            applyActionAccess("database_access_manage", "no_access");
-            return permissionSet;
-          }
-  
-          applyRingAccess("ring_1", "read_only");
-          applyRingAccess("ring_2", "ask_for_permission");
-          applyRingAccess("ring_3", "no_access");
-          ["database_schema_read", "database_data_read", "database_query"]
-            .forEach((actionId) => applyActionAccess(actionId, "read_only"));
-          applyActionAccess("database_export", "ask_for_permission");
-          ["database_document_create", "database_document_update"]
-            .forEach((actionId) => applyActionAccess(actionId, "ask_for_permission"));
-          ["database_document_delete", "database_schema_manage", "database_access_manage"]
-            .forEach((actionId) => applyActionAccess(actionId, "no_access"));
-          return permissionSet;
+          return createPlaygroundRolePermissionSet("database", normalizedRoleId);
         }
   
-        function createPlaygroundServerTeamRolePermissionSet(roleId) {
+        function createPlaygroundServerTeamRolePermissionSet(roleId, subjectType = "server") {
           const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
-          if (normalizedRoleId === "owner") {
-            return createPlaygroundFullAccessPermissionSet("server");
-          }
-          const permissionSet = createPlaygroundDefaultPermissionSet("server");
-          const applyRingAccess = (ringId, access) => {
-            permissionSet.rings[ringId] = {
-              ...(permissionSet.rings[ringId] || {}),
-              defaultAccess: normalizePlaygroundPermissionAccess(access, "ask_for_permission"),
-            };
-          };
-          const applyActionAccess = (actionId, access) => {
-            const actionDefinition = getPlaygroundPermissionActionDefinition(actionId);
-            permissionSet.actions[actionId] = {
-              ...(permissionSet.actions[actionId] || {}),
-              ringId: actionDefinition?.ringId || "ring_1",
-              access: normalizePlaygroundPermissionAccess(access, "ask_for_permission"),
-            };
-          };
-  
-          if (normalizedRoleId === "admin") {
-            PLAYGROUND_PERMISSION_RING_IDS.forEach((ringId) => applyRingAccess(ringId, "full_access"));
-            PLAYGROUND_PERMISSION_ACTION_DEFINITIONS
-              .filter((action) => action.subjectTypes?.includes("server"))
-              .forEach((action) => applyActionAccess(action.id, "full_access"));
-            return permissionSet;
-          }
-  
-          if (normalizedRoleId === "contributor") {
-            applyRingAccess("ring_1", "full_access");
-            applyRingAccess("ring_2", "full_access");
-            applyRingAccess("ring_3", "ask_for_permission");
-            ["server_source_read", "server_invoke", "server_logs_read", "server_source_write", "server_connection_manage"]
-              .forEach((actionId) => applyActionAccess(actionId, "full_access"));
-            applyActionAccess("server_deploy", "ask_for_permission");
-            applyActionAccess("server_access_manage", "no_access");
-            applyActionAccess("server_delete", "no_access");
-            return permissionSet;
-          }
-  
-          applyRingAccess("ring_1", "read_only");
-          applyRingAccess("ring_2", "ask_for_permission");
-          applyRingAccess("ring_3", "no_access");
-          ["server_source_read", "server_logs_read"].forEach((actionId) => applyActionAccess(actionId, "read_only"));
-          applyActionAccess("server_invoke", "full_access");
-          ["server_source_write", "server_connection_manage"].forEach((actionId) => applyActionAccess(actionId, "ask_for_permission"));
-          ["server_deploy", "server_access_manage", "server_delete"].forEach((actionId) => applyActionAccess(actionId, "no_access"));
-          return permissionSet;
+          return createPlaygroundRolePermissionSet(subjectType, normalizedRoleId);
         }
   
         function normalizePlaygroundTeamRolePermissionSets(value) {
@@ -5703,9 +5551,10 @@
               rolePermissionSets[role.id] = createPlaygroundTeamRolePermissionSet(role.id);
               return rolePermissionSets;
             }
-            rolePermissionSets[role.id] = normalizePlaygroundPermissionSet(
-              inputSets[role.id] || createPlaygroundTeamRolePermissionSet(role.id),
-              "team_role"
+            rolePermissionSets[role.id] = normalizePlaygroundRolePermissionSet(
+              inputSets[role.id],
+              "team_role",
+              role.id
             );
             return rolePermissionSets;
           }, {});

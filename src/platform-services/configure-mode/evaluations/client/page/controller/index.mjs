@@ -1,4 +1,5 @@
 export { EVALUATIONS_PAGE_CONTROLLER_ACTIONS_SCRIPT } from "./actions.mjs";
+export { EVALUATIONS_PAGE_CONTROLLER_ACCESS_SCRIPT } from "./access.mjs";
 export { EVALUATIONS_PAGE_CONTROLLER_CASE_DETAIL_SCRIPT } from "./case-detail.mjs";
 export { EVALUATIONS_PAGE_CONTROLLER_CHARTS_SCRIPT } from "./charts.mjs";
 export { EVALUATIONS_PAGE_CONTROLLER_DIALOGS_SCRIPT } from "./dialogs.mjs";
@@ -9,4 +10,3 @@ export { EVALUATIONS_PAGE_CONTROLLER_THREAD_CASES_SCRIPT } from "./thread-cases.
 export { EVALUATIONS_PAGE_CONTROLLER_VERSION_DIALOGS_SCRIPT } from "./version-dialogs.mjs";
 export { EVALUATIONS_PAGE_CONTROLLER_VERSIONS_SCRIPT } from "./versions.mjs";
 export { EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT } from "./views.mjs";
-

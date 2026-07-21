@@ -107,6 +107,16 @@ export const EVALUATIONS_PAGE_PERSISTENCE_SCRIPT = String.raw`      function rea
             target_agent_version_number: normalizedRun.targetAgentVersionNumber,
             targetAgentVersionLabel: normalizedRun.targetAgentVersionLabel,
             target_agent_version_label: normalizedRun.targetAgentVersionLabel,
+            targetGuardrailId: normalizedRun.targetGuardrailId,
+            target_guardrail_id: normalizedRun.targetGuardrailId,
+            targetGuardrailName: normalizedRun.targetGuardrailName,
+            target_guardrail_name: normalizedRun.targetGuardrailName,
+            targetGuardrailVersionId: normalizedRun.targetGuardrailVersionId,
+            target_guardrail_version_id: normalizedRun.targetGuardrailVersionId,
+            targetGuardrailVersionNumber: normalizedRun.targetGuardrailVersionNumber,
+            target_guardrail_version_number: normalizedRun.targetGuardrailVersionNumber,
+            targetGuardrailVersionLabel: normalizedRun.targetGuardrailVersionLabel,
+            target_guardrail_version_label: normalizedRun.targetGuardrailVersionLabel,
             run: normalizedRun,
           },
           run: normalizedRun,
@@ -131,4 +141,3 @@ export const EVALUATIONS_PAGE_PERSISTENCE_SCRIPT = String.raw`      function rea
       }
 
 `;
-

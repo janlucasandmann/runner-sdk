@@ -28,6 +28,61 @@ export const GUARDRAILS_PAGE_VERSION_ACTIONS_SCRIPT = `          function getGua
             });
           }
 
+          function buildGuardrailVersionSaveDialogData() {
+            const versions = readSelectedGuardrailVersions();
+            const selectedVersion = getSelectedGuardrailVersion()
+              || getSelectedGuardrailActiveVersion()
+              || versions[0]
+              || null;
+            const baseSnapshot = selectedVersion?.snapshot
+              || buildPlaygroundGuardrailVersionSnapshot(selectedGuardrailSet);
+            const currentSnapshot = buildPlaygroundGuardrailVersionSnapshot(selectedGuardrailSet);
+            const latestVersion = versions.reduce((highest, version) => {
+              const parsedVersion = Number(version?.version);
+              return Number.isFinite(parsedVersion)
+                ? Math.max(highest, parsedVersion)
+                : highest;
+            }, 0);
+            return {
+              canSaveCurrent: Boolean(selectedVersion),
+              currentVersion: selectedVersion ? Number(selectedVersion.version) : null,
+              nextVersion: latestVersion + 1,
+              currentDescription: String(selectedVersion?.description || "").trim(),
+              diffFiles: buildPlaygroundGuardrailVersionDiffFilesFromSnapshots(baseSnapshot, currentSnapshot),
+            };
+          }
+
+          function openGuardrailVersionSaveDialog(options = {}) {
+            const normalizedSetId = String(selectedGuardrailSet?.id || "").trim();
+            if (
+              !normalizedSetId
+              || selectedGuardrailSetReadonly
+              || guardrailVersionState.status === "loading"
+              || !guardrailDetailsLoadedRef.current.has(normalizedSetId)
+              || !hasSelectedGuardrailVersionChanges()
+            ) {
+              return false;
+            }
+            setGuardrailDetailActionsMenuOpen(false);
+            setGuardrailPublishMenuOpen(false);
+            setGuardrailVersionsHeaderMenuOpen(false);
+            setGuardrailVersionState((current) => current.status === "loading"
+              ? current
+              : { status: "idle", message: "", error: "" }
+            );
+            setGuardrailVersionSaveDialog({
+              initialMode: options.mode === "current" ? "current" : "new",
+              key: Date.now().toString(36) + Math.random().toString(36).slice(2),
+            });
+            return true;
+          }
+
+          function closeGuardrailVersionSaveDialog() {
+            if (guardrailVersionState.status !== "loading") {
+              setGuardrailVersionSaveDialog(null);
+            }
+          }
+
           function canPublishSelectedGuardrailVersion() {
             const selectedVersion = getSelectedGuardrailVersion();
             if (!selectedVersion) return false;
@@ -51,59 +106,17 @@ export const GUARDRAILS_PAGE_VERSION_ACTIONS_SCRIPT = `          function getGua
             return canPublishSelectedGuardrailVersion() ? "publish" : "save";
           }
 
-          function getGuardrailVersionPopupActions(options = {}) {
-            const includeVersionHistory = options.includeVersionHistory !== false;
-            const primaryActionKind = getGuardrailVersionPrimaryActionKind();
+          function getGuardrailVersionPopupActions() {
             const hasChanges = hasSelectedGuardrailVersionChanges();
-            const canPublish = canPublishSelectedGuardrailVersion();
-            const actions = [
-              primaryActionKind === "publish"
-                ? {
-                    id: "publish",
-                    label: "Publish",
-                    Icon: Rocket,
-                    shortcut: "⌘P",
-                    disabled: !canPublish,
-                    onClick: publishCurrentGuardrailVersion,
-                  }
-                : {
-                    id: "save",
-                    label: "Save",
-                    Icon: Save,
-                    shortcut: "⌘S",
-                    disabled: !hasChanges,
-                    onClick: saveCurrentGuardrailVersion,
-                  },
-              {
-                id: "save-new-version",
-                label: "Save to new Version",
-                Icon: GitBranchPlus,
-                shortcut: "⇧⌘S",
-                disabled: !hasChanges,
-                onClick: () => openCreateGuardrailVersionModal(),
-              },
+            return [
               {
                 id: "revert",
-                label: "Revert to last saved Version",
-                Icon: Undo2,
+                label: "Revert Changes",
+                icon: Undo2,
                 disabled: !hasChanges,
                 onClick: handleRevertGuardrailDraft,
               },
             ];
-            if (includeVersionHistory) {
-              actions.push({
-                id: "version-history",
-                label: "Version history",
-                Icon: History,
-                disabled: false,
-                onClick: () => {
-                  setGuardrailPublishMenuOpen(false);
-                  setGuardrailVersionsHeaderMenuOpen(false);
-                  openGuardrailVersionChangesPage();
-                },
-              });
-            }
-            return actions;
           }
 
           function buildGuardrailSetForRepublish() {
@@ -143,6 +156,113 @@ export const GUARDRAILS_PAGE_VERSION_ACTIONS_SCRIPT = `          function getGua
             } catch (error) {
               setGuardrailVersionState({ status: "error", message: "", error: error?.message || String(error) });
               return nextSet;
+            }
+          }
+
+          async function saveAndPublishCurrentGuardrailVersion(details = {}) {
+            if (!selectedGuardrailSet || selectedGuardrailSetReadonly || guardrailVersionState.status === "loading") {
+              return null;
+            }
+            if (!hasSelectedGuardrailVersionChanges()) {
+              return null;
+            }
+            const selectedVersion = getSelectedGuardrailVersion();
+            const saveToCurrentVersion = details.mode === "current" && Boolean(selectedVersion);
+            const versionDescription = String(details.description || "").trim().slice(0, 240);
+            const sourceSet = normalizePlaygroundGuardrailSet({
+              ...selectedGuardrailSet,
+              updatedAt: new Date().toISOString(),
+            });
+            const currentSnapshot = buildPlaygroundGuardrailVersionSnapshot(sourceSet);
+            setGuardrailPublishMenuOpen(false);
+            setGuardrailVersionsHeaderMenuOpen(false);
+            setGuardrailVersionState({
+              status: "loading",
+              message: "Saving guardrail changes...",
+              error: "",
+            });
+            try {
+              await persistGuardrailSetToBackend(sourceSet);
+              let version = selectedVersion;
+              if (!saveToCurrentVersion) {
+                const versionPayload = await requestGuardrailBackendJson(
+                  "/guardrails/" + encodeURIComponent(sourceSet.id) + "/versions",
+                  {
+                    method: "POST",
+                    body: JSON.stringify({
+                      description: versionDescription,
+                      snapshot: currentSnapshot,
+                      metadata: buildPlaygroundGuardrailBackendMetadata(sourceSet),
+                    }),
+                  },
+                  "Failed to create guardrail version."
+                );
+                const createdVersionPayload = versionPayload?.version || versionPayload?.data || versionPayload;
+                const createdVersionId = String(
+                  createdVersionPayload?.id
+                  || createdVersionPayload?.versionId
+                  || createdVersionPayload?.version_id
+                  || ""
+                ).trim();
+                if (!createdVersionId) {
+                  throw new Error("Created guardrail version did not include an ID.");
+                }
+                version = normalizePlaygroundGuardrailVersion(createdVersionPayload);
+              } else if (selectedVersion?.status !== "active") {
+                const versionPayload = await requestGuardrailBackendJson(
+                  "/guardrails/" + encodeURIComponent(sourceSet.id) + "/versions/" + encodeURIComponent(selectedVersion.id),
+                  {
+                    method: "PATCH",
+                    body: JSON.stringify({
+                      label: selectedVersion.label,
+                      name: selectedVersion.label,
+                      description: versionDescription,
+                      snapshot: currentSnapshot,
+                      metadata: buildPlaygroundGuardrailBackendMetadata(sourceSet),
+                    }),
+                  },
+                  "Failed to update guardrail version."
+                );
+                const updatedVersionPayload = versionPayload?.version || versionPayload?.data || versionPayload;
+                const updatedVersionId = String(
+                  updatedVersionPayload?.id
+                  || updatedVersionPayload?.versionId
+                  || updatedVersionPayload?.version_id
+                  || ""
+                ).trim();
+                version = normalizePlaygroundGuardrailVersion(updatedVersionId
+                  ? updatedVersionPayload
+                  : {
+                      ...selectedVersion,
+                      description: versionDescription,
+                      snapshot: currentSnapshot,
+                    }
+                );
+              }
+              if (!version?.id) {
+                throw new Error("Guardrail version could not be resolved.");
+              }
+              await requestGuardrailBackendJson(
+                "/guardrails/" + encodeURIComponent(sourceSet.id) + "/versions/" + encodeURIComponent(version.id) + "/publish",
+                {
+                  method: "POST",
+                  body: JSON.stringify({
+                    snapshot: currentSnapshot,
+                    description: versionDescription,
+                  }),
+                },
+                "Failed to publish guardrail version."
+              );
+              const updatedSet = await reloadBackendGuardrailSet(sourceSet.id, {
+                select: false,
+                rememberBaseline: true,
+              });
+              setGuardrailVersionState({ status: "idle", message: "", error: "" });
+              return updatedSet || sourceSet;
+            } catch (error) {
+              const errorMessage = error?.message || String(error);
+              setGuardrailVersionState({ status: "error", message: "", error: errorMessage });
+              return null;
             }
           }
 

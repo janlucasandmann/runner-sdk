@@ -48,6 +48,10 @@ import {
   isUserLikeRecord,
   parseEvaluatorResult,
 } from "./domain/scoring.mjs";
+import {
+  buildProxyPromptAdaptationsFromGuardrails,
+  normalizeProxyGuardrailSets,
+} from "../../guardrails/server/enrichment.mjs";
 
 export function createPlaygroundEvaluationsRuntime(deps = {}) {
   const {
@@ -188,6 +192,16 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
         target_agent_version_number: normalizedRun.targetAgentVersionNumber,
         targetAgentVersionLabel: normalizedRun.targetAgentVersionLabel,
         target_agent_version_label: normalizedRun.targetAgentVersionLabel,
+        targetGuardrailId: normalizedRun.targetGuardrailId,
+        target_guardrail_id: normalizedRun.targetGuardrailId,
+        targetGuardrailName: normalizedRun.targetGuardrailName,
+        target_guardrail_name: normalizedRun.targetGuardrailName,
+        targetGuardrailVersionId: normalizedRun.targetGuardrailVersionId,
+        target_guardrail_version_id: normalizedRun.targetGuardrailVersionId,
+        targetGuardrailVersionNumber: normalizedRun.targetGuardrailVersionNumber,
+        target_guardrail_version_number: normalizedRun.targetGuardrailVersionNumber,
+        targetGuardrailVersionLabel: normalizedRun.targetGuardrailVersionLabel,
+        target_guardrail_version_label: normalizedRun.targetGuardrailVersionLabel,
         run: normalizedRun,
       },
       run: normalizedRun,
@@ -224,8 +238,90 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
     }
   }
 
-  async function createHiddenThread(record, { title, agentId, environmentId, projectId, metadata }) {
+  function unwrapGuardrailRecord(payload) {
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
+    return payload.guardrail || payload.version || payload.data?.guardrail || payload.data?.version || payload.data || payload;
+  }
+
+  async function resolveEvaluationGuardrailTarget(record, runOptions = {}) {
+    const guardrailId = normalizeString(
+      runOptions.targetGuardrailId
+      || runOptions.target_guardrail_id
+      || runOptions.guardrailId
+      || runOptions.guardrail_id
+    );
+    if (!guardrailId) return null;
+    const versionId = normalizeString(
+      runOptions.targetGuardrailVersionId
+      || runOptions.target_guardrail_version_id
+      || runOptions.guardrailVersionId
+      || runOptions.guardrail_version_id
+    );
+    const providedSnapshot = runOptions.targetGuardrailSnapshot && typeof runOptions.targetGuardrailSnapshot === "object"
+      ? runOptions.targetGuardrailSnapshot
+      : runOptions.target_guardrail_snapshot && typeof runOptions.target_guardrail_snapshot === "object"
+        ? runOptions.target_guardrail_snapshot
+        : null;
+    let guardrailRecord = null;
+    try {
+      const payload = await requestBackendJson(
+        record,
+        `/guardrails/${encodeURIComponent(guardrailId)}`,
+        { method: "GET" },
+        "Failed to load the target guardrail."
+      );
+      guardrailRecord = unwrapGuardrailRecord(payload);
+    } catch (error) {
+      if (!providedSnapshot) throw error;
+    }
+    let versionRecord = null;
+    if (versionId) {
+      try {
+        const payload = await requestBackendJson(
+          record,
+          `/guardrails/${encodeURIComponent(guardrailId)}/versions/${encodeURIComponent(versionId)}`,
+          { method: "GET" },
+          "Failed to load the target guardrail version."
+        );
+        versionRecord = unwrapGuardrailRecord(payload);
+      } catch (error) {
+        if (!providedSnapshot) throw error;
+      }
+    }
+    const versionSnapshot = versionRecord?.snapshot && typeof versionRecord.snapshot === "object"
+      ? versionRecord.snapshot
+      : null;
+    const source = {
+      ...(guardrailRecord && typeof guardrailRecord === "object" ? guardrailRecord : {}),
+      ...(providedSnapshot || {}),
+      ...(versionSnapshot || {}),
+      id: guardrailId,
+      name: normalizeString(
+        runOptions.targetGuardrailName
+        || runOptions.target_guardrail_name
+        || versionSnapshot?.name
+        || providedSnapshot?.name
+        || guardrailRecord?.name
+      ) || "Guardrail",
+      prompts: versionSnapshot?.prompts || providedSnapshot?.prompts || guardrailRecord?.prompts || [],
+    };
+    const normalized = normalizeProxyGuardrailSets([source])[0] || null;
+    if (!normalized) {
+      throw createRuntimeError("The target guardrail has no enforceable prompts.", 400);
+    }
+    return normalized;
+  }
+
+  async function createHiddenThread(record, { title, agentId, environmentId, projectId, metadata, guardrail = null }) {
     const { requestContext, upstreamUrl, apiKey, body } = record;
+    const explicitGuardrails = guardrail ? [guardrail] : [];
+    const explicitPromptAdaptations = buildProxyPromptAdaptationsFromGuardrails(explicitGuardrails);
+    const guardrailMetadata = guardrail ? {
+      version: 1,
+      guardrailSetIds: [guardrail.id],
+      guardrails: explicitGuardrails,
+      promptAdaptations: explicitPromptAdaptations,
+    } : null;
     const payload = {
       title,
       appId: "runner-web-sdk-demo",
@@ -240,7 +336,26 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       } : {}),
       hidden: true,
       sidebarHidden: true,
-      metadata,
+      ...(guardrail ? {
+        guardrailSetIds: [guardrail.id],
+        guardrail_set_ids: [guardrail.id],
+        guardrails: explicitGuardrails,
+        promptAdaptations: explicitPromptAdaptations,
+        prompt_adaptations: explicitPromptAdaptations,
+        invisiblePromptAdaptations: explicitPromptAdaptations,
+        invisible_prompt_adaptations: explicitPromptAdaptations,
+      } : {}),
+      metadata: {
+        ...(metadata || {}),
+        ...(guardrail ? {
+          guardrailSetIds: [guardrail.id],
+          guardrail_set_ids: [guardrail.id],
+          guardrails: explicitGuardrails,
+          promptAdaptations: explicitPromptAdaptations,
+          invisiblePromptAdaptations: explicitPromptAdaptations,
+          runnerGuardrails: guardrailMetadata,
+        } : {}),
+      },
     };
     const enrichedPayload = typeof enrichThreadPayloadWithAgentGuardrails === "function"
       ? await enrichThreadPayloadWithAgentGuardrails(requestContext, upstreamUrl, apiKey, payload)
@@ -628,6 +743,11 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
         targetAgentVersionNumber: run.targetAgentVersionNumber || 0,
         targetAgentVersionLabel: run.targetAgentVersionLabel || "",
         targetAgentVersionRevisionId: run.targetAgentVersionRevisionId || "",
+        targetGuardrailId: run.targetGuardrailId || "",
+        targetGuardrailName: run.targetGuardrailName || "",
+        targetGuardrailVersionId: run.targetGuardrailVersionId || "",
+        targetGuardrailVersionNumber: run.targetGuardrailVersionNumber || 0,
+        targetGuardrailVersionLabel: run.targetGuardrailVersionLabel || "",
       },
       runnerPlayground: {
         type: kind === "evaluator" ? "evaluation_evaluator" : "evaluation_case",
@@ -646,6 +766,11 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
         targetAgentVersionNumber: run.targetAgentVersionNumber || 0,
         targetAgentVersionLabel: run.targetAgentVersionLabel || "",
         targetAgentVersionRevisionId: run.targetAgentVersionRevisionId || "",
+        targetGuardrailId: run.targetGuardrailId || "",
+        targetGuardrailName: run.targetGuardrailName || "",
+        targetGuardrailVersionId: run.targetGuardrailVersionId || "",
+        targetGuardrailVersionNumber: run.targetGuardrailVersionNumber || 0,
+        targetGuardrailVersionLabel: run.targetGuardrailVersionLabel || "",
       },
     };
   }
@@ -669,6 +794,7 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       environmentId: run.environmentId,
       projectId: run.projectId,
       metadata: buildCaseMetadata({ evaluationSet, run, caseRun, row, kind: "case" }),
+      guardrail: record.targetGuardrail || null,
     });
     patchRunCase(run.id, caseRun.id, {
       threadId: caseThread.id,
@@ -981,6 +1107,12 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       if (run.evaluator.type === "agent" && !run.evaluator.agentId) {
         return sendJson(res, 400, { error: "Select an evaluator agent before running this evaluation." });
       }
+      const targetGuardrail = await resolveEvaluationGuardrailTarget({
+        requestContext,
+        upstreamUrl,
+        apiKey,
+        body,
+      }, runOptions);
       const record = {
         run,
         evaluationSet: {
@@ -995,6 +1127,7 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
         upstreamUrl,
         apiKey,
         body,
+        targetGuardrail,
       };
       storeRun(record);
       setTimeout(() => {
@@ -1085,4 +1218,3 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
     handleRequest,
   };
 }
-

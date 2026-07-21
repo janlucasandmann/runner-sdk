@@ -1,24 +1,16 @@
-import type { ReactNode } from "react";
+import { type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
-  PlatformModal,
-} from "../../platform-ui/components/composite/modal/index.js";
-import {
-  PlatformFileExplorerModal,
+  PlatformFileExplorerBrowserModal,
+  type PlatformFileExplorerSourceGroup,
 } from "../../platform-ui/components/composite/file-explorer/index.js";
-import {
-  PlatformLoadingState,
-} from "../../platform-ui/components/composite/loading-state/index.js";
+import { PlatformModal } from "../../platform-ui/components/composite/modal/index.js";
 import {
   PlatformPrimaryButton,
   PlatformSecondaryButton,
 } from "../../platform-ui/components/ui/button/index.js";
+import { getBrowserFileType } from "./attachment-utils.js";
 import {
-  PlatformSearch,
-} from "../../platform-ui/components/ui/search/index.js";
-import {
-  IconChevronLeft,
-  IconChevronRight,
   IconFolderPlus,
   IconGithub,
   IconGoogleDrive,
@@ -32,9 +24,6 @@ import {
   formatBrowserFileSize,
   type RunnerChatFileNode,
 } from "./workspace-files.js";
-import {
-  getBrowserFileType,
-} from "./attachment-utils.js";
 
 export type RunnerFileBrowserSource =
   | "workspace"
@@ -162,21 +151,167 @@ export function RunnerFileBrowserDialog({
   onClose,
   onApiKeyPromptClose,
 }: RunnerFileBrowserDialogProps) {
-  if (typeof document === "undefined") {
-    return null;
-  }
+  if (typeof document === "undefined") return null;
 
   const selectedConnection = source === "workspace" ? null : connections[source];
   const sourceLabel = source === "workspace" ? "Workspace" : SOURCE_LABELS[source];
   const actionVerb = source === "notion" ? "Use" : "Attach";
   const defaultSelectionLabel = source === "notion" ? "Database" : "Files";
+  const filterContextKey = `${source}:${selectedEnvironmentId || ""}:${path
+    .map((entry) => `${entry.id || "root"}:${entry.name}`)
+    .join("/")}`;
+  const sourceGroups: PlatformFileExplorerSourceGroup[] = [
+    {
+      id: "computers",
+      label: "Computers",
+      items: environments.map((environment) => ({
+        id: environment.id,
+        label: environment.name,
+        active: source === "workspace" && selectedEnvironmentId === environment.id,
+        onSelect: () => onEnvironmentSelect(environment.id),
+      })),
+    },
+    {
+      id: "integrations",
+      label: "Integrations",
+      items: (["google-drive", "notion", "one-drive", "github"] as const).map(
+        (integrationSource) => ({
+          id: integrationSource,
+          label: SOURCE_LABELS[integrationSource],
+          icon: (
+            <RunnerFileBrowserSourceIcon
+              source={integrationSource}
+              className="tb-file-browser-source-brand-icon"
+            />
+          ),
+          note: connections[integrationSource].connected ? undefined : "Connect",
+          active: source === integrationSource,
+          onSelect: () => onSourceChange(integrationSource),
+        }),
+      ),
+    },
+  ];
+  const customContent = authSource ? (
+    <div className="tb-file-browser-auth-screen">
+      <div className="tb-file-browser-auth-card">
+        <div className="tb-file-browser-auth-icon-wrap">
+          <RunnerFileBrowserSourceIcon source={authSource} className="tb-file-browser-auth-icon" />
+        </div>
+        <h3 className="tb-file-browser-auth-title">Connect to {SOURCE_LABELS[authSource]}</h3>
+        <p className="tb-file-browser-auth-copy">{getFileBrowserAuthCopy(authSource)}</p>
+        <PlatformPrimaryButton type="button" onClick={connections[authSource].onConnect}>
+          Connect {SOURCE_LABELS[authSource]}
+        </PlatformPrimaryButton>
+      </div>
+    </div>
+  ) : showGoogleDrivePickerPrompt ? (
+    <div className="tb-file-browser-empty-state">
+      <div className="tb-file-browser-auth-icon-wrap">
+        <IconGoogleDrive className="tb-file-browser-auth-icon" />
+      </div>
+      <h3 className="tb-file-browser-auth-title">Select files to share</h3>
+      <p className="tb-file-browser-auth-copy">
+        Choose which files and folders from your Google Drive you want to access in Testbase.
+      </p>
+      <button
+        type="button"
+        className="tb-file-browser-auth-button"
+        onClick={onManageGoogleDriveAccess}
+        disabled={isGoogleDrivePickerLoading}
+      >
+        {isGoogleDrivePickerLoading ? "Opening picker..." : "Select Files from Google Drive"}
+      </button>
+    </div>
+  ) : undefined;
+  const preview = previewItem ? (
+    <div className="tb-file-browser-preview">
+      <div className="tb-file-browser-preview-header">
+        <div className="tb-file-browser-preview-art">
+          {isPreviewLoading ? (
+            <IconLoader2 className="tb-file-browser-preview-loader" />
+          ) : previewContent && previewKind === "image" ? (
+            <img
+              src={previewContent}
+              alt={previewItem.name}
+              className="tb-file-browser-preview-image"
+            />
+          ) : previewContent && previewKind === "video" ? (
+            // biome-ignore lint/a11y/useMediaCaption: Workspace files do not provide caption tracks alongside arbitrary video previews.
+            <video
+              src={previewContent}
+              className="tb-file-browser-preview-video"
+              controls
+              playsInline
+              preload="metadata"
+            />
+          ) : previewContent && previewKind === "text" ? (
+            <pre className="tb-file-browser-preview-text">{previewContent}</pre>
+          ) : (
+            renderPreviewIcon(previewItem)
+          )}
+        </div>
+        <h3 className="tb-file-browser-preview-name">{previewItem.name}</h3>
+        <p className="tb-file-browser-preview-subtitle">
+          {previewItem.isFolder ? "Folder" : formatBrowserFileSize(previewItem.size)}
+        </p>
+      </div>
+      <div className="tb-file-browser-preview-info">
+        <div className="tb-file-browser-preview-info-title">Information</div>
+        <div className="tb-file-browser-preview-info-row">
+          <span>Modified</span>
+          <span>{formatBrowserFileDate(previewItem.modifiedTime)}</span>
+        </div>
+        <div className="tb-file-browser-preview-info-row">
+          <span>Created</span>
+          <span>{formatBrowserFileDate(previewItem.createdTime)}</span>
+        </div>
+        <div className="tb-file-browser-preview-info-row">
+          <span>Type</span>
+          <span>
+            {previewItem.isFolder
+              ? "folder"
+              : getBrowserFileType(previewItem.mimeType, previewItem.name)}
+          </span>
+        </div>
+      </div>
+    </div>
+  ) : undefined;
+  const toolbarActions = (
+    <>
+      {source === "google-drive" && googleDriveItemCount > 0 && onManageGoogleDriveAccess ? (
+        <button
+          type="button"
+          className="tb-file-browser-toolbar-button"
+          onClick={onManageGoogleDriveAccess}
+          disabled={isGoogleDrivePickerLoading}
+          title="Manage file access"
+        >
+          {isGoogleDrivePickerLoading ? (
+            <IconLoader2 className="tb-file-browser-toolbar-icon tb-file-browser-folder-chevron-spin" />
+          ) : (
+            <IconFolderPlus className="tb-file-browser-toolbar-icon" />
+          )}
+        </button>
+      ) : null}
+      {selectedConnection?.onDisconnect ? (
+        <button
+          type="button"
+          className="tb-file-browser-toolbar-button"
+          onClick={selectedConnection.onDisconnect}
+          title={`Disconnect ${sourceLabel}`}
+        >
+          <IconLogout className="tb-file-browser-toolbar-icon" />
+        </button>
+      ) : null}
+    </>
+  );
 
   return (
     <>
       {open
         ? createPortal(
             <div className="tb-runner-chat">
-              <PlatformFileExplorerModal
+              <PlatformFileExplorerBrowserModal
                 open
                 visible
                 portal={false}
@@ -186,309 +321,74 @@ export function RunnerFileBrowserDialog({
                 className="tb-file-browser-modal"
                 onClose={onClose}
                 closeButtonLabel="Close file browser"
-                sidebarHeader={(
-                  <PlatformSearch
-                    className="tb-file-browser-search"
-                    placeholder="Search Files"
-                    value={searchQuery}
-                    onChange={(event) => onSearchQueryChange(event.target.value)}
-                  />
-                )}
-                sidebar={(
-                  <>
-                    {environments.length > 0 ? (
-                      <div className="tb-file-browser-sidebar-section tb-file-browser-sidebar-section-environments">
-                        <div className="tb-file-browser-sidebar-title">Computers</div>
-                        <div className="tb-file-browser-sidebar-list tb-file-browser-sidebar-list-environments">
-                          {environments.map((environment) => (
-                            <button
-                              key={environment.id}
-                              type="button"
-                              className={`tb-file-browser-source-row ${
-                                source === "workspace" && selectedEnvironmentId === environment.id
-                                  ? "active"
-                                  : ""
-                              }`}
-                              onClick={() => onEnvironmentSelect(environment.id)}
-                            >
-                              <span className="tb-file-browser-source-label">{environment.name}</span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    ) : null}
-
-                    <div className="tb-file-browser-sidebar-section">
-                      <div className="tb-file-browser-sidebar-title">Integrations</div>
-                      <div className="tb-file-browser-sidebar-list">
-                        {(["google-drive", "notion", "one-drive", "github"] as const).map(
-                          (integrationSource) => (
-                            <button
-                              key={integrationSource}
-                              type="button"
-                              className={`tb-file-browser-source-row ${
-                                source === integrationSource ? "active" : ""
-                              }`}
-                              onClick={() => onSourceChange(integrationSource)}
-                            >
-                              <RunnerFileBrowserSourceIcon
-                                source={integrationSource}
-                                className="tb-file-browser-source-brand-icon"
-                              />
-                              <span className="tb-file-browser-source-label">
-                                {SOURCE_LABELS[integrationSource]}
-                              </span>
-                              {!connections[integrationSource].connected ? (
-                                <span className="tb-file-browser-source-note">Connect</span>
-                              ) : null}
-                            </button>
-                          ),
-                        )}
-                      </div>
-                    </div>
-                  </>
-                )}
-                contentHeader={(
-                  <div className="tb-file-browser-header">
-                    <button
-                      type="button"
-                      className="tb-file-browser-nav-button"
-                      onClick={onBack}
-                      disabled={historyIndex <= 0}
-                    >
-                      <IconChevronLeft className="tb-file-browser-nav-icon" />
-                    </button>
-                    <button
-                      type="button"
-                      className="tb-file-browser-nav-button"
-                      onClick={onForward}
-                      disabled={historyIndex >= historyLength - 1}
-                    >
-                      <IconChevronRight className="tb-file-browser-nav-icon" />
-                    </button>
-                    {source !== "workspace" ? (
-                      <div className="tb-file-browser-header-icon">
-                        <RunnerFileBrowserSourceIcon
-                          source={source}
-                          className="tb-file-browser-source-brand-icon"
-                        />
-                      </div>
-                    ) : null}
-                    <div className="tb-file-browser-breadcrumbs">
-                      {path.map((crumb, index) => (
-                        <span
-                          key={crumb.id || crumb.name}
-                          className="tb-file-browser-breadcrumb-chip"
-                        >
-                          {index > 0 ? (
-                            <span className="tb-file-browser-breadcrumb-sep">/</span>
-                          ) : null}
-                          <button
-                            type="button"
-                            className={`tb-file-browser-breadcrumb ${
-                              index === path.length - 1 ? "active" : ""
-                            }`}
-                            onClick={() => onBreadcrumbSelect(index)}
-                          >
-                            {crumb.name}
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                    {source === "google-drive"
-                    && googleDriveItemCount > 0
-                    && onManageGoogleDriveAccess ? (
-                      <button
-                        type="button"
-                        className="tb-file-browser-toolbar-button"
-                        onClick={onManageGoogleDriveAccess}
-                        disabled={isGoogleDrivePickerLoading}
-                        title="Manage file access"
-                      >
-                        {isGoogleDrivePickerLoading ? (
-                          <IconLoader2 className="tb-file-browser-toolbar-icon tb-file-browser-folder-chevron-spin" />
-                        ) : (
-                          <IconFolderPlus className="tb-file-browser-toolbar-icon" />
-                        )}
-                      </button>
-                    ) : null}
-                    {selectedConnection?.onDisconnect ? (
-                      <button
-                        type="button"
-                        className="tb-file-browser-toolbar-button"
-                        onClick={selectedConnection.onDisconnect}
-                        title={`Disconnect ${sourceLabel}`}
-                      >
-                        <IconLogout className="tb-file-browser-toolbar-icon" />
-                      </button>
-                    ) : null}
-                  </div>
-                )}
-                mainClassName="tb-file-browser-main"
-                preview={previewItem ? (
-                  <div className="tb-file-browser-preview">
-                    <div className="tb-file-browser-preview-header">
-                      <div className="tb-file-browser-preview-art">
-                        {isPreviewLoading ? (
-                          <IconLoader2 className="tb-file-browser-preview-loader" />
-                        ) : previewContent && previewKind === "image" ? (
-                          <img
-                            src={previewContent}
-                            alt={previewItem.name}
-                            className="tb-file-browser-preview-image"
-                          />
-                        ) : previewContent && previewKind === "video" ? (
-                          // biome-ignore lint/a11y/useMediaCaption: Workspace files do not provide caption tracks alongside arbitrary video previews.
-                          <video
-                            src={previewContent}
-                            className="tb-file-browser-preview-video"
-                            controls
-                            playsInline
-                            preload="metadata"
-                          />
-                        ) : previewContent && previewKind === "text" ? (
-                          <pre className="tb-file-browser-preview-text">{previewContent}</pre>
-                        ) : (
-                          renderPreviewIcon(previewItem)
-                        )}
-                      </div>
-                      <h3 className="tb-file-browser-preview-name">{previewItem.name}</h3>
-                      <p className="tb-file-browser-preview-subtitle">
-                        {previewItem.isFolder
-                          ? "Folder"
-                          : formatBrowserFileSize(previewItem.size)}
-                      </p>
-                    </div>
-                    <div className="tb-file-browser-preview-info">
-                      <div className="tb-file-browser-preview-info-title">Information</div>
-                      <div className="tb-file-browser-preview-info-row">
-                        <span>Modified</span>
-                        <span>{formatBrowserFileDate(previewItem.modifiedTime)}</span>
-                      </div>
-                      <div className="tb-file-browser-preview-info-row">
-                        <span>Created</span>
-                        <span>{formatBrowserFileDate(previewItem.createdTime)}</span>
-                      </div>
-                      <div className="tb-file-browser-preview-info-row">
-                        <span>Type</span>
-                        <span>
-                          {previewItem.isFolder
-                            ? "folder"
-                            : getBrowserFileType(previewItem.mimeType, previewItem.name)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ) : undefined}
-                previewTitle="Preview"
-                onPreviewClose={onPreviewClose}
-                contentFooterClassName="tb-file-browser-footer"
-                footer={(
-                  <>
-                    <PlatformSecondaryButton
-                      type="button"
-                      className="tb-file-browser-footer-button tb-file-browser-footer-button-secondary"
-                      onClick={onClose}
-                    >
-                      Cancel
-                    </PlatformSecondaryButton>
-                    <PlatformPrimaryButton
-                      type="button"
-                      className="tb-file-browser-footer-button tb-file-browser-footer-button-primary"
-                      onClick={() => void onAttach()}
-                      disabled={selectedItemCount === 0 || isAttaching}
-                    >
-                      <span className="tb-file-browser-footer-button-content">
-                        {isAttaching ? (
-                          <span className="runner-spinner tb-file-browser-footer-button-spinner" />
-                        ) : null}
-                        <span className="tb-file-browser-footer-button-label">
-                          {isAttaching
-                            ? "Attaching Files..."
-                            : `${actionVerb} ${
-                                selectedItemCount > 0
-                                  ? selectedItemLabel
-                                  : defaultSelectionLabel
-                              }`}
-                        </span>
-                      </span>
-                    </PlatformPrimaryButton>
-                  </>
-                )}
-              >
-                {authSource ? (
-                  <div className="tb-file-browser-auth-screen">
-                    <div className="tb-file-browser-auth-card">
-                      <div className="tb-file-browser-auth-icon-wrap">
-                        <RunnerFileBrowserSourceIcon
-                          source={authSource}
-                          className="tb-file-browser-auth-icon"
-                        />
-                      </div>
-                      <h3 className="tb-file-browser-auth-title">
-                        Connect to {SOURCE_LABELS[authSource]}
-                      </h3>
-                      <p className="tb-file-browser-auth-copy">
-                        {getFileBrowserAuthCopy(authSource)}
-                      </p>
-                      <button
-                        type="button"
-                        className="tb-file-browser-auth-button"
-                        onClick={connections[authSource].onConnect}
-                      >
-                        Connect {SOURCE_LABELS[authSource]}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="tb-file-browser-list">
-                    {loading ? (
-                      <PlatformLoadingState
-                        centered
-                        className="tb-file-browser-loading-state"
-                        message={`Loading ${sourceLabel} ${
-                          source === "notion" ? "databases" : "files"
-                        }...`}
-                      />
-                    ) : error ? (
-                      <div className="tb-file-browser-empty">{error}</div>
-                    ) : showGoogleDrivePickerPrompt ? (
-                      <div className="tb-file-browser-empty-state">
-                        <div className="tb-file-browser-auth-icon-wrap">
-                          <IconGoogleDrive className="tb-file-browser-auth-icon" />
-                        </div>
-                        <h3 className="tb-file-browser-auth-title">Select files to share</h3>
-                        <p className="tb-file-browser-auth-copy">
-                          Choose which files and folders from your Google Drive you want to
-                          access in Testbase.
-                        </p>
-                        <button
-                          type="button"
-                          className="tb-file-browser-auth-button"
-                          onClick={onManageGoogleDriveAccess}
-                          disabled={isGoogleDrivePickerLoading}
-                        >
-                          {isGoogleDrivePickerLoading
-                            ? "Opening picker..."
-                            : "Select Files from Google Drive"}
-                        </button>
-                      </div>
-                    ) : items.length === 0 ? (
-                      <div className="tb-file-browser-empty">
-                        {searchQuery
-                          ? "No files match your search"
+                sourceGroups={sourceGroups}
+                breadcrumbs={path.map((crumb, index) => ({
+                  id: `${crumb.id || "root"}:${index}`,
+                  label: crumb.name,
+                  onSelect: () => onBreadcrumbSelect(index),
+                }))}
+                searchQuery={searchQuery}
+                onSearchQueryChange={onSearchQueryChange}
+                searchPlaceholder={source === "notion" ? "Search Databases" : "Search Files"}
+                onBack={onBack}
+                onForward={onForward}
+                canGoBack={historyIndex > 0}
+                canGoForward={historyIndex < historyLength - 1}
+                headerIcon={
+                  source === "workspace" ? undefined : (
+                    <RunnerFileBrowserSourceIcon
+                      source={source}
+                      className="tb-file-browser-source-brand-icon"
+                    />
+                  )
+                }
+                headerActions={toolbarActions}
+                filterContextKey={filterContextKey}
+                items={items}
+                renderItem={renderItem}
+                getItemKind={(item) => {
+                  if (item.isFolder) return "folder";
+                  const kind = getBrowserFileType(item.mimeType, item.name);
+                  if (kind === "image" || kind === "pdf") return kind;
+                  return "file";
+                }}
+                getItemTimestamp={(item) => item.modifiedTime || item.createdTime}
+                loading={loading}
+                loadingMessage={`Loading ${sourceLabel} ${source === "notion" ? "databases" : "files"}...`}
+                error={error}
+                emptyMessage={({ activeFilter, hasSearchQuery }) =>
+                  hasSearchQuery
+                    ? "No files match your search"
+                    : activeFilter === "recent"
+                      ? "No recently changed files"
+                      : activeFilter === "images"
+                        ? "No images in this folder"
+                        : activeFilter === "pdfs"
+                          ? "No PDFs in this folder"
                           : source === "notion"
                             ? "No Notion databases found"
-                            : "This folder is empty"}
-                      </div>
-                    ) : (
-                      <div className="tb-file-browser-list-inner">
-                        {items.map((item) => renderItem(item))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </PlatformFileExplorerModal>
+                            : "This folder is empty"
+                }
+                content={customContent}
+                preview={preview}
+                previewTitle="Preview"
+                onPreviewClose={onPreviewClose}
+                confirmLabel={
+                  <span className="tb-file-browser-footer-button-content">
+                    {isAttaching ? (
+                      <span className="runner-spinner tb-file-browser-footer-button-spinner" />
+                    ) : null}
+                    <span className="tb-file-browser-footer-button-label">
+                      {isAttaching
+                        ? "Attaching Files..."
+                        : `${actionVerb} ${selectedItemCount > 0 ? selectedItemLabel : defaultSelectionLabel}`}
+                    </span>
+                  </span>
+                }
+                confirmDisabled={selectedItemCount === 0 || isAttaching}
+                onCancel={onClose}
+                onConfirm={onAttach}
+              />
             </div>,
             document.body,
           )

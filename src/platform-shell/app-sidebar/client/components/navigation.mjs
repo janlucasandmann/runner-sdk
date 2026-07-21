@@ -3,6 +3,7 @@ export function createAppSidebarNavigationScript(options = {}) {
   const configureGovernanceEntries = String(options.configureGovernanceEntries || "");
   const configureInfrastructureEntries = String(options.configureInfrastructureEntries || "");
   const developPrimaryEntries = String(options.developPrimaryEntries || "");
+  const developAgentServiceEntries = String(options.developAgentServiceEntries || "");
   const createPrimaryEntries = String(options.createPrimaryEntries || "");
   return `        function getSidebarNavigationItems() {
           if (sidebarWorkspaceMode === "configure") {
@@ -73,12 +74,12 @@ ${developPrimaryEntries}              {
               },
               ...mainDevelopServerPageItems.map((item) => buildDevelopServerSidebarItem(item)),
               {
-                id: "develop-agents-label",
+                id: "develop-agent-services-label",
                 type: "subcategory",
-                label: "Agents",
+                label: "Agent Services",
               },
               ...agentDevelopServerPageItems.map((item) => buildDevelopServerSidebarItem(item)),
-            ];
+${developAgentServiceEntries}            ];
           }
 
           return [

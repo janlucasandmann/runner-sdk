@@ -1,19 +1,73 @@
 export const GUARDRAILS_APP_TOP_NAVIGATION_SCRIPT = `        function renderGuardrailsPageNav() {
           const activeGuardrailSet = (Array.isArray(allGuardrailSets) ? allGuardrailSets : [])
             .find((set) => set?.id === selectedGuardrailSetId);
-          const guardrailsPathItems = [{ label: "Configure" }, { label: "Guardrails" }];
+          const activeGuardrailVersions = activeGuardrailSet
+            ? readPlaygroundGuardrailVersions(activeGuardrailSet)
+            : [];
+          const selectedGuardrailVersion = activeGuardrailSet
+            ? (
+                playgroundGuardrailVersionController.getSelectedVersion(activeGuardrailSet)
+                || playgroundGuardrailVersionController.getActiveVersion(activeGuardrailSet)
+                || activeGuardrailVersions[0]
+                || null
+              )
+            : null;
+          const latestGuardrailVersionNumber = activeGuardrailVersions.reduce((latestVersion, version) => {
+            const versionNumber = Number(version?.version);
+            return Number.isFinite(versionNumber)
+              ? Math.max(latestVersion, versionNumber)
+              : latestVersion;
+          }, -1);
+          const guardrailsPathItems = [
+            { label: "Configure" },
+            {
+              label: "Guardrails",
+              onClick: guardrailsPageMode === "detail" ? openGuardrailsOverviewPage : undefined,
+            },
+          ];
           if (guardrailsPageMode === "detail" && activeGuardrailSet?.name) {
-            guardrailsPathItems.push({ label: activeGuardrailSet.name });
+            guardrailsPathItems.push({
+              label: activeGuardrailSet.name,
+              trailing: selectedGuardrailVersion && !isPlaygroundDefaultGuardrailSet(activeGuardrailSet)
+                ? React.createElement(PlatformVersionLabel, {
+                    version: selectedGuardrailVersion.version,
+                    qualifier: Number(selectedGuardrailVersion.version) === latestGuardrailVersionNumber
+                      ? "Latest"
+                      : null,
+                    className: "agent-breadcrumb-version-label playground-guardrail-breadcrumb-version-label",
+                    disabled: guardrailVersionState.status === "loading",
+                    "aria-label": "Open guardrail version history",
+                    onClick: (event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      setGuardrailDetailActionsMenuOpen(false);
+                      setGuardrailPublishMenuOpen(false);
+                      setGuardrailVersionsHeaderMenuOpen(false);
+                      setGuardrailVersionsSidebarOpen(true);
+                    },
+                  })
+                : null,
+            });
           }
           const isGuardrailsOverview = guardrailsPageMode !== "detail";
+          const isGuardrailVersionHistoryOpen = Boolean(
+            guardrailsPageMode === "detail"
+            && activeGuardrailSet
+            && !isPlaygroundDefaultGuardrailSet(activeGuardrailSet)
+            && guardrailVersionsSidebarOpen
+          );
           const canShowGuardrailDetailActions = Boolean(
             guardrailsPageMode === "detail"
             && activeGuardrailSet
             && !isPlaygroundDefaultGuardrailSet(activeGuardrailSet)
-            && !isResourcesVersionsDrawerOpen
+            && !isGuardrailVersionHistoryOpen
           );
           const guardrailDetailTopNavActions = canShowGuardrailDetailActions
             ? React.createElement("span", { className: "playground-guardrails-detail-topnav-actions" },
+                React.createElement("span", {
+                  id: "playground-guardrails-detail-publish-controls",
+                  className: "playground-guardrails-detail-publish-controls",
+                }),
                 renderPlaygroundPlatformPopup({
                   open: guardrailDetailActionsMenuOpen,
                   shellRef: guardrailDetailActionsMenuRef,
@@ -35,7 +89,7 @@ export const GUARDRAILS_APP_TOP_NAVIGATION_SCRIPT = `        function renderGuar
                     role: "menu",
                     onClick: (event) => event.stopPropagation(),
                   },
-                  children: renderGuardrailActionMenuItems(activeGuardrailSet.id),
+                  children: renderGuardrailActionMenuItems(activeGuardrailSet.id, { includeMetadata: true }),
                 })
               )
             : null;
@@ -49,7 +103,7 @@ export const GUARDRAILS_APP_TOP_NAVIGATION_SCRIPT = `        function renderGuar
                 })
               : guardrailDetailTopNavActions,
             includeSearchDivider: isGuardrailsOverview || canShowGuardrailDetailActions,
-            hideCommonActions: isResourcesVersionsDrawerOpen,
+            hideCommonActions: isGuardrailVersionHistoryOpen,
           });
         }
 

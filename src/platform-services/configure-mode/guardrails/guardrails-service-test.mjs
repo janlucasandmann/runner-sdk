@@ -29,16 +29,65 @@ assert.match(GUARDRAILS_DOMAIN_RUNTIME_SCRIPT, /const playgroundGuardrailVersion
 assert.match(GUARDRAILS_DOMAIN_FRAGMENTS.runtime, /function buildPlaygroundGuardrailBackendPayload/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.controller, /function renderGuardrailsPage/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.versionActions, /publishCurrentGuardrailVersion/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.versionActions, /saveAndPublishCurrentGuardrailVersion/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.versionViews, /renderGuardrailVersionsSidebar/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.versionViews, /React\.createElement\(PlatformVersionHistorySidebar/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.versionViews, /React\.createElement\(PlatformVersionPublishControl/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /Manage Guardrail Access/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /name: "All Agents"/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /id: "all_agents"/);
+assert.doesNotMatch(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /name: "Default Access"/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /React\.createElement\(PlatformPermissionsPage/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /React\.createElement\(PlatformRolePermissionsPage/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /const updateGuardrailOwner =/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /\/teams\/.*\/members\?includeProfiles=1/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /const renderGuardrailShareTeamModal =/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /resourceType: "guardrail"/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /\/resource-shares/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.evaluation, /targetGuardrailId/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.evaluation, /Run Guardrail Evaluation/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.table, /function renderGuardrailsTable/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.table, /React\.createElement\(GuardrailsOverviewPage/);
 assert.doesNotMatch(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.table, /React\.createElement\(PlatformDataTable/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /React\.createElement\(GuardrailDetailPage/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /activeTab: guardrailDetailTab/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /sidebarToggle: guardrailDetailSidebarToggle/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /sidebarCollapsed: guardrailDetailSidebarCollapsed/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /React\.createElement\(PlatformInstructionsEditor/);
+assert.match(
+  GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view,
+  /className: "playground-guardrails-prompt-card-header"[\s\S]*React\.createElement\(PlatformInstructionsEditor, \{[\s\S]*variant: "minimalistic-ui"[\s\S]*historyKey: "guardrail-prompt:"/,
+);
+assert.doesNotMatch(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /playground-guardrails-prompt-body-input/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /ariaLabel: "Choose guardrail owner"/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /onClick: openGuardrailShareTeamModal[\s\S]*Share with Team/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /renderGuardrailShareTeamModal\(\)/);
+assert.doesNotMatch(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /renderGuardrailDetailSidebarRow\(\s*"id"/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.editor, /React\.createElement\(PlatformVersionSaveDialog/);
+assert.match(
+  GUARDRAILS_PAGE_CSS,
+  /\.playground-guardrails-detail-page-host \.playground-guardrails-browser-body\.is-detail-page\s*\{[^}]*padding: 42px 44px 56px;/,
+);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT, /function renderGuardrailVersionChangesPage/);
 assert.match(GUARDRAILS_APP_STATE_SCRIPT, /guardrailsBackendLoadRef/);
+assert.match(GUARDRAILS_APP_STATE_SCRIPT, /guardrailDetailSidebarCollapsedBeforeVersionsRef/);
+assert.match(GUARDRAILS_APP_STATE_SCRIPT, /guardrailDetailSidebarCollapsed/);
 assert.match(GUARDRAILS_APP_RUNTIME_SCRIPT, /async function loadBackendGuardrailSets/);
+assert.match(
+  GUARDRAILS_APP_RUNTIME_SCRIPT,
+  /guardrailVersionsSidebarOpen[\s\S]*guardrailDetailSidebarCollapsedBeforeVersionsRef[\s\S]*setGuardrailDetailSidebarCollapsed/,
+);
 assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.navigation, /function openGuardrailsPage/);
 assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /function renderGuardrailsPageNav/);
 assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-guardrails-overview-controls/);
+assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-guardrails-detail-publish-controls/);
+assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /React\.createElement\(PlatformVersionLabel/);
+assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /isGuardrailVersionHistoryOpen/);
+assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /includeMetadata: true/);
+assert.doesNotMatch(GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation, /isResourcesVersionsDrawerOpen/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.evaluation, /resolvedEnvironmentId \|\| defaultShellEnvironmentId/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.evaluation, /String\(proxyBackendBase \|\| ""\)/);
+assert.doesNotMatch(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.evaluation, /String\(backendUrl \|\| ""\)/);
 assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.historyCapture, /guardrailId: selectedGuardrailSetId/);
 assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.sidebarEntry, /label: "Guardrails"/);
 assert.match(GUARDRAILS_AGENT_DOMAIN_SCRIPT, /function buildPlaygroundAgentGuardrailBundle/);
@@ -140,6 +189,25 @@ assert.equal(result.call.args[2], "/guardrails");
 
 result = dispatch("GET", "/api/real/guardrail-sets/set%201/versions");
 assert.equal(result.call.args[2], "/guardrails/set%201/versions");
+
+result = dispatch("POST", "/api/real/guardrails/set_1/versions");
+assert.equal(result.call.adapter, "json");
+assert.equal(result.call.args[2], "/guardrails/set_1/versions");
+assert.equal(result.call.args[3], "POST");
+
+result = dispatch("PATCH", "/api/real/guardrails/set_1/versions/version_1");
+assert.equal(result.call.args[2], "/guardrails/set_1/versions/version_1");
+assert.equal(result.call.args[3], "PATCH");
+
+for (const action of ["publish", "restore", "unpublish"]) {
+  result = dispatch("POST", `/api/real/guardrails/set_1/versions/version_1/${action}`);
+  assert.equal(result.call.args[2], `/guardrails/set_1/versions/version_1/${action}`);
+  assert.equal(result.call.args[3], "POST");
+}
+
+result = dispatch("DELETE", "/api/real/guardrails/set_1/versions/version_1");
+assert.equal(result.call.args[2], "/guardrails/set_1/versions/version_1");
+assert.equal(result.call.args[3], "DELETE");
 
 result = dispatch("PUT", "/api/real/guardrails/set_1");
 assert.equal(result.call.adapter, "json");

@@ -1,122 +1,47 @@
 export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
-            const isOpen = taskDetailSelectPopover === popoverId;
-            return React.createElement("div", {
-                className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-detail-select-shell" + (isOpen ? " is-open" : ""),
-                ref: isOpen ? taskDetailSelectPopoverRef : null,
+            const normalizedPopoverId = String(popoverId || "").trim();
+            const hasControlledOpenState = typeof open === "boolean";
+            const isOpen = hasControlledOpenState ? open : taskDetailSelectPopover === popoverId;
+            const selectorOptions = Array.isArray(options) ? options.filter((option) => option?.value) : [];
+            return React.createElement(PlatformSelector, {
+              value: String(value || ""),
+              options: selectorOptions,
+              onValueChange: (_nextValue, option) => {
+                if (typeof option?.onSelect === "function") {
+                  option.onSelect();
+                }
               },
-              React.createElement("button", {
-                type: "button",
-                className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger" + (isEmpty ? " is-empty" : "") + (isOpen ? " is-active" : ""),
-                disabled,
-                onClick: () => {
-                  if (disabled) return;
-                  toggleTaskDetailSelectPopover(popoverId);
-                },
-                title: valueLabel,
-                "aria-expanded": isOpen ? "true" : "false",
+              ariaLabel: "Select ticket " + normalizedPopoverId.replace(/-/g, " "),
+              label: buttonContent || React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, valueLabel),
+              placeholder: valueLabel,
+              disabled,
+              open: isOpen,
+              onOpenChange: (nextOpen) => {
+                setTaskDetailPopover("");
+                setTaskSkillsPopoverOpen(false);
+                if (nextOpen && normalizedPopoverId === "assignee") {
+                  setTaskDetailAssigneePopupMode(defaultTaskAssigneePopupMode);
+                }
+                if (typeof onOpenChange === "function") {
+                  onOpenChange(nextOpen);
+                  return;
+                }
+                setTaskDetailSelectPopover(nextOpen ? normalizedPopoverId : "");
               },
-                buttonContent || React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, valueLabel),
-                React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", strokeWidth: 1.8 })
-              ),
-              isOpen
-                ? React.createElement(PlatformPopupSurface, {
-                    className: ("tb-popup-menu playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in " + menuClassName).trim(),
-                  }, children)
-                : null
-            );
-          }
-
-          function renderTaskDetailAssigneeRow(actor) {
-            const mode = getPlaygroundTaskAssigneePopupMode(actor);
-            const actorLabel = getTaskAssigneeName(actor.id, actor.name || "Unknown");
-            const actorDescription = mode === "humans"
-              ? "Human"
-              : mode === "teams"
-                ? "Agent squad"
-                : "Agent";
-            return React.createElement("button", {
-                key: actor.id,
-                type: "button",
-                className: "tb-popup-row tb-popup-row-select tb-popup-row-agent" + (resolvedTaskAssigneeId === actor.id ? " selected" : ""),
-                onClick: () => {
-                  updateDraftField("assigneeAgentId", actor.id, { autosave: true });
-                  setTaskDetailSelectPopover("");
-                },
-              },
-              renderTaskActorAvatar(actor.id, "playground-tasks-detail-person-menu-avatar"),
-              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                React.createElement("span", null, actorLabel),
-                React.createElement("span", null, actorDescription)
-              ),
-              React.createElement("span", { className: "tb-popup-check-slot" },
-                resolvedTaskAssigneeId === actor.id
-                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                  : null
-              )
-            );
-          }
-
-          function renderTaskDetailReviewerRow(actor) {
-            const mode = getPlaygroundTaskAssigneePopupMode(actor);
-            const actorLabel = getTaskAssigneeName(actor.id, actor.name || "Reviewer");
-            const actorDescription = mode === "humans"
-              ? "Human reviewer"
-              : mode === "teams"
-                ? "Agent squad reviewer"
-                : "Agent reviewer";
-            return React.createElement("button", {
-                key: actor.id,
-                type: "button",
-                className: "tb-popup-row tb-popup-row-select tb-popup-row-agent" + (draftTask.reviewRequired && resolvedTaskReviewerId === actor.id ? " selected" : ""),
-                onClick: () => {
-                  updateDraftTask((current) => ({
-                    ...current,
-                    reviewRequired: true,
-                    reviewerAgentId: actor.id,
-                  }), { autosave: true });
-                  setTaskDetailSelectPopover("");
-                },
-              },
-              renderTaskActorAvatar(actor.id, "playground-tasks-detail-person-menu-avatar"),
-              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                React.createElement("span", null, actorLabel),
-                React.createElement("span", null, actorDescription)
-              ),
-              React.createElement("span", { className: "tb-popup-check-slot" },
-                draftTask.reviewRequired && resolvedTaskReviewerId === actor.id
-                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                  : null
-              )
-            );
-          }
-
-          function renderTaskDetailReviewerNoneRow() {
-            return React.createElement("button", {
-                key: "__none__",
-                type: "button",
-                className: "tb-popup-row tb-popup-row-select tb-popup-row-agent" + (!draftTask.reviewRequired ? " selected" : ""),
-                onClick: () => {
-                  updateDraftTask((current) => ({
-                    ...current,
-                    reviewRequired: false,
-                    reviewerAgentId: null,
-                  }), { autosave: true });
-                  setTaskDetailSelectPopover("");
-                },
-              },
-              React.createElement("span", { className: "playground-tasks-detail-person-menu-avatar", "aria-hidden": "true" },
-                React.createElement("span", { className: "playground-tasks-detail-person-menu-avatar-fallback" }, "No")
-              ),
-              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                React.createElement("span", null, "No review"),
-                React.createElement("span", null, "Move directly to Finished when work is done.")
-              ),
-              React.createElement("span", { className: "tb-popup-check-slot" },
-                !draftTask.reviewRequired
-                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                  : null
-              )
-            );
+              alignment: "end",
+              popupAlignment: "right",
+              fullWidth: true,
+              emptyContent,
+              popupHeader,
+              popupContent,
+              popupAriaLabel: popupAriaLabel || undefined,
+              popupWidth,
+              popupMaxWidth: "calc(100vw - 48px)",
+              popupMaxHeight,
+              className: "playground-tasks-detail-central-selector" + (isEmpty ? " is-empty" : ""),
+              triggerClassName: "playground-tasks-detail-central-selector-trigger",
+              popupClassName: ("playground-tasks-detail-central-selector-popup " + popupClassName).trim(),
+            });
           }
 
           function getTaskDetailThreadStatusPresentation(thread) {
@@ -376,62 +301,62 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
             );
           }
 
-          function renderTaskCommentDock() {
-            return React.createElement("div", { className: "playground-tasks-comment-dock" },
+          function renderTaskCommentDialog() {
+            const commentSubmission = getTaskCommentSubmissionDraft(taskCommentInputValue);
+            return React.createElement(PlatformModal, {
+              open: taskCommentComposerOpen,
+              title: commentSubmission.isReview ? "Request Changes" : "Add Comment",
+              showHeader: false,
+              size: "medium",
+              as: "form",
+              className: "playground-tasks-comment-modal",
+              bodyClassName: "playground-tasks-comment-modal-body",
+              footerClassName: "playground-tasks-comment-modal-footer",
+              closeButtonDisabled: saveState.isSaving,
+              onClose: () => closeTaskCommentComposer(),
+              surfaceProps: {
+                onSubmit: (event) => {
+                  event.preventDefault();
+                  void handleAddTaskComment();
+                },
+              },
+              footer: React.createElement(React.Fragment, null,
+                React.createElement(PlatformSecondaryButton, {
+                  type: "button",
+                  size: "medium",
+                  disabled: saveState.isSaving,
+                  onClick: closeTaskCommentComposer,
+                }, "Cancel"),
+                React.createElement(PlatformPrimaryButton, {
+                  type: "submit",
+                  size: "medium",
+                  disabled: saveState.isSaving || !commentSubmission.body,
+                }, saveState.isSaving
+                  ? "Adding..."
+                  : (commentSubmission.isReview ? "Request Changes" : "Add Comment"))
+              ),
+            },
+              React.createElement(PlatformInstructionsEditor, {
+                value: taskCommentInputValue,
+                onChange: (nextValue) => {
+                  if (/^\\/review(?:\\s+|$)/i.test(String(nextValue || "").trimStart())) {
+                    setTaskCommentMode("review");
+                    setTaskCommentInputValue(String(nextValue || "").trimStart().replace(/^\\/review(?:\\s+|$)/i, ""));
+                  } else {
+                    setTaskCommentInputValue(nextValue);
+                  }
+                },
+                title: commentSubmission.isReview ? "Request Changes" : "Add Comment",
+                placeholder: commentSubmission.isReview ? "Request changes" : "Add a comment",
+                ariaLabel: commentSubmission.isReview ? "Change request" : "Comment",
+                historyKey: "ticket-comment:" + String(draftTask?.id || ""),
+                stickyHeader: false,
+                variant: "minimalistic-ui",
+                className: "playground-tasks-comment-modal-instructions",
+              }),
               saveState.error
                 ? React.createElement("div", { className: "playground-environments-error playground-tasks-comment-feedback" }, saveState.error)
-                : saveState.isSaving
-                  ? React.createElement("div", { className: "playground-environments-muted playground-tasks-comment-feedback" }, "Saving changes...")
-                  : saveState.message
-                    ? React.createElement("div", { className: "playground-environments-success playground-tasks-comment-feedback" }, saveState.message)
-                    : editorDirtyRef.current
-                      ? React.createElement("div", { className: "playground-environments-muted playground-tasks-comment-feedback" }, "Unsaved task changes")
-                      : null,
-              React.createElement("div", { className: "playground-tasks-comment-runner" },
-                React.createElement("div", { className: "playground-tasks-comment-bar" + (getTaskCommentSubmissionDraft(taskCommentInputValue).isReview ? " is-review-mode" : "") },
-                  getTaskCommentSubmissionDraft(taskCommentInputValue).isReview
-                    ? React.createElement("span", { className: "playground-tasks-comment-mode-token" }, "/review")
-                    : null,
-                  React.createElement("textarea", {
-                    ref: taskCommentTextareaRef,
-                    rows: 1,
-                    className: "playground-tasks-comment-input",
-                    placeholder: getTaskCommentSubmissionDraft(taskCommentInputValue).isReview ? "Request changes" : "Add a comment",
-                    value: taskCommentInputValue,
-                    onChange: (event) => {
-                      const nextValue = event.target.value;
-                      if (/^\\/review(?:\\s+|$)/i.test(String(nextValue || "").trimStart())) {
-                        setTaskCommentMode("review");
-                        setTaskCommentInputValue(String(nextValue || "").trimStart().replace(/^\\/review(?:\\s+|$)/i, ""));
-                      } else {
-                        setTaskCommentInputValue(nextValue);
-                      }
-                      resizeTaskCommentTextarea(event.currentTarget);
-                    },
-                    onKeyDown: (event) => {
-                      if (event.key === "Backspace" && taskCommentMode === "review" && String(taskCommentInputValue || "").length === 0) {
-                        event.preventDefault();
-                        setTaskCommentMode("");
-                        return;
-                      }
-                      if (event.key === "Enter" && !event.shiftKey) {
-                        event.preventDefault();
-                        handleAddTaskComment();
-                      }
-                    },
-                  }),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-tasks-comment-send-button",
-                    onClick: handleAddTaskComment,
-                    disabled: saveState.isSaving || !getTaskCommentSubmissionDraft(taskCommentInputValue).body,
-                    "aria-label": "Send comment",
-                    title: "Send comment",
-                  },
-                    React.createElement(ArrowUp, { className: "playground-tasks-comment-send-icon", strokeWidth: 1.9 })
-                  )
-                )
-              )
+                : null
             );
           }
 
@@ -440,7 +365,7 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
             return React.createElement("div", {
                   className: "playground-tasks-detail-facts"
                     + (contentOnly ? " is-centralized-sidebar-content" : "")
-                    + ((taskDetailSelectPopover || taskSkillsPopoverOpen || taskScheduleDialogState) ? " is-popover-open" : ""),
+                    + ((taskDetailSelectPopover || taskScheduleDialogState) ? " is-popover-open" : ""),
                 },
                 contentOnly ? null : React.createElement("div", { className: "playground-tasks-detail-facts-header" },
                   React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Details"),
@@ -461,6 +386,7 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                     React.createElement("div", { className: "playground-tasks-type-control" },
                       renderTaskDetailSelectControl({
                         popoverId: "type",
+                        value: activeTaskType,
                         valueLabel: activeTaskType === "subtask" && draftTaskParentTicketNumber
                           ? ("Subtask to " + draftTaskParentTicketNumber)
                           : activeTaskTypeLabel,
@@ -478,14 +404,12 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                                 )
                               : React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, activeTaskTypeLabel)
                           ),
-                        children: PLAYGROUND_TASK_TYPE_OPTIONS.map((option) =>
-                          renderTaskDetailSelectOptionRow({
-                            key: option.id,
+                        options: PLAYGROUND_TASK_TYPE_OPTIONS.map((option) =>
+                          createTaskDetailSelectorOption({
+                            value: option.id,
                             label: option.label,
-                            selected: activeTaskType === option.id,
-                            onClick: () => {
+                            onSelect: () => {
                               handleTaskTypeSelection(option.id);
-                              setTaskDetailSelectPopover("");
                             },
                           })
                         ),
@@ -494,10 +418,17 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                   )
                 ),
                 React.createElement("div", { className: "playground-tasks-detail-fact" },
+                  React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Creator"),
+                  React.createElement("div", { className: "playground-tasks-detail-fact-control" },
+                    renderTaskCreatorValue(draftTask)
+                  )
+                ),
+                React.createElement("div", { className: "playground-tasks-detail-fact" },
                   React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Priority"),
                   React.createElement("div", { className: "playground-tasks-detail-fact-control" },
                     renderTaskDetailSelectControl({
                       popoverId: "priority",
+                      value: draftTask.priority,
                       valueLabel: activeTaskPriorityPresentation.label,
                       disabled: isTaskConfigLocked,
                       buttonContent: React.createElement(React.Fragment, null,
@@ -508,14 +439,13 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                           React.createElement("span", { className: "playground-tasks-priority-value-text playground-tasks-detail-select-trigger-label" }, activeTaskPriorityPresentation.label)
                         )
                       ),
-                      children: PLAYGROUND_TASK_PRIORITY_OPTIONS.map((option) =>
-                        renderTaskDetailSelectOptionRow({
-                          key: option.id,
+                      options: PLAYGROUND_TASK_PRIORITY_OPTIONS.map((option) =>
+                        createTaskDetailSelectorOption({
+                          value: option.id,
                           label: getPlaygroundTaskPriorityPresentation(option.id).label,
-                          selected: draftTask.priority === option.id,
-                          onClick: () => {
+                          leading: renderPlaygroundTaskPriorityGlyph(option.id),
+                          onSelect: () => {
                             updateDraftField("priority", option.id, { autosave: true });
-                            setTaskDetailSelectPopover("");
                           },
                         })
                       ),
@@ -527,6 +457,7 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                   React.createElement("div", { className: "playground-tasks-detail-fact-control" },
                     renderTaskDetailSelectControl({
                       popoverId: "color",
+                      value: getPlaygroundTaskColorId(draftTask.taskColor),
                       valueLabel: activeTaskColorPresentation.label,
                       disabled: isTaskConfigLocked,
                       buttonContent: React.createElement("span", {
@@ -536,9 +467,9 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                           React.createElement("span", { className: "playground-tasks-detail-color-swatch", "aria-hidden": "true" }),
                           React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, activeTaskColorPresentation.label)
                         ),
-                      children: PLAYGROUND_TASK_COLOR_OPTIONS.map((option) =>
-                        renderTaskDetailSelectOptionRow({
-                          key: option.id,
+                      options: PLAYGROUND_TASK_COLOR_OPTIONS.map((option) =>
+                        createTaskDetailSelectorOption({
+                          value: option.id,
                           label: React.createElement("span", {
                               className: "playground-tasks-detail-select-popup-label-slot",
                               style: getPlaygroundTaskColorStyle(option.id),
@@ -546,10 +477,8 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                               React.createElement("span", { className: "playground-tasks-detail-color-swatch", "aria-hidden": "true" }),
                               React.createElement("span", null, option.label)
                             ),
-                          selected: getPlaygroundTaskColorId(draftTask.taskColor) === option.id,
-                          onClick: () => {
+                          onSelect: () => {
                             updateDraftField("taskColor", option.id, { autosave: true });
-                            setTaskDetailSelectPopover("");
                           },
                         })
                       ),
@@ -561,30 +490,27 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                   React.createElement("div", { className: "playground-tasks-detail-fact-control" },
                     renderTaskDetailSelectControl({
                       popoverId: "release",
+                      value: activeTaskReleaseId || "__none__",
                       valueLabel: activeReleaseLabel,
                       isEmpty: !activeTaskReleaseId,
-                      children: [
-                        renderTaskDetailSelectOptionRow({
-                          key: "__none__",
+                      options: [
+                        createTaskDetailSelectorOption({
+                          value: "__none__",
                           label: "None",
-                          selected: !activeTaskReleaseId,
-                          onClick: () => {
+                          onSelect: () => {
                             updateDraftField("releaseId", null, { autosave: true });
-                            setTaskDetailSelectPopover("");
                           },
                         }),
                         ...releases
                           .slice()
                           .sort((left, right) => String(left.name || "").localeCompare(String(right.name || "")))
                           .map((release) =>
-                            renderTaskDetailSelectOptionRow({
-                              key: release.id,
+                            createTaskDetailSelectorOption({
+                              value: release.id,
                               label: release.name || "Untitled Milestone",
                               description: release.description || formatPlaygroundTaskReleaseDateRange(release),
-                              selected: activeTaskReleaseId === release.id,
-                              onClick: () => {
+                              onSelect: () => {
                                 updateDraftField("releaseId", release.id, { autosave: true });
-                                setTaskDetailSelectPopover("");
                               },
                             })
                           ),
@@ -595,48 +521,38 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                 React.createElement("div", { className: "playground-tasks-detail-fact" },
                   React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Assignee"),
                   React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                    React.createElement("div", {
-                        className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-tasks-detail-select-shell playground-tasks-detail-assignee-shell" + (taskDetailSelectPopover === "assignee" ? " is-open" : ""),
-                        ref: taskDetailSelectPopover === "assignee" ? taskDetailSelectPopoverRef : null,
-                      },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger" + (!resolvedTaskAssigneeId ? " is-empty" : "") + (taskDetailSelectPopover === "assignee" ? " is-active" : ""),
-                        disabled: isTaskConfigLocked,
-                        onClick: () => {
-                          if (isTaskConfigLocked) return;
-                          toggleTaskDetailSelectPopover("assignee");
-                        },
-                        title: activeAssigneeLabel,
-                        "aria-expanded": taskDetailSelectPopover === "assignee" ? "true" : "false",
-                      },
-                        renderTaskDetailPersonValue(resolvedTaskAssigneeId, activeAssigneeLabel),
-                        React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", strokeWidth: 1.8 })
-                      ),
-                      taskDetailSelectPopover === "assignee"
-                        ? React.createElement(PlatformPopupSurface, { className: "tb-popup-menu-inline tb-popup-menu-inline-agent playground-tasks-toolbar-popup-menu-animate-down-in" },
-                            React.createElement("div", { className: "tb-popup-menu-title" }, "Assignee"),
-                            React.createElement("div", { className: "tb-popup-panel-section tb-popup-panel-section-attach-header" },
-                              React.createElement(PlatformSwitch, {
-                                ariaLabel: "Assignee type",
-                                value: taskDetailAssigneePopupMode,
-                                options: taskDetailAvailableAssigneePopupModes.map((mode) => ({
-                                  value: mode,
-                                  label: mode === "teams" ? "Squads" : mode === "humans" ? "Humans" : "Agents",
-                                })),
-                                onValueChange: setTaskDetailAssigneePopupMode,
-                              })
-                            ),
-                            React.createElement("div", { className: "tb-popup-menu-inline-body tb-popup-menu-inline-body-agent" },
-                              filteredTaskDetailAssignableActors.length > 0
-                                ? filteredTaskDetailAssignableActors.map((actor) => renderTaskDetailAssigneeRow(actor))
-                                : React.createElement("div", { className: "tb-popup-menu-inline-empty" },
-                                    React.createElement("div", { className: "tb-popup-empty-state" }, "No assignees yet.")
-                                  )
-                            )
-                          )
-                        : null
-                    )
+                    renderTaskDetailSelectControl({
+                      popoverId: "assignee",
+                      value: resolvedTaskAssigneeId,
+                      valueLabel: activeAssigneeLabel,
+                      disabled: isTaskConfigLocked,
+                      isEmpty: !resolvedTaskAssigneeId,
+                      buttonContent: renderTaskDetailPersonValue(resolvedTaskAssigneeId, activeAssigneeLabel),
+                      popupClassName: "playground-tasks-detail-assignee-selector-popup",
+                      popupHeader: taskDetailAvailableAssigneePopupModes.length > 1
+                        ? React.createElement(PlatformSwitch, {
+                            className: "playground-tasks-detail-assignee-mode-switch",
+                            ariaLabel: "Assignee type",
+                            value: taskDetailAssigneePopupMode,
+                            options: taskDetailAvailableAssigneePopupModes.map((mode) => ({
+                              value: mode,
+                              label: mode === "teams" ? "Squads" : mode === "humans" ? "Humans" : "Agents",
+                            })),
+                            onValueChange: setTaskDetailAssigneePopupMode,
+                          })
+                        : null,
+                      emptyContent: "No assignees yet.",
+                      options: filteredTaskDetailAssignableActors.map((actor) => {
+                        const mode = getPlaygroundTaskAssigneePopupMode(actor);
+                        return createTaskDetailSelectorOption({
+                          value: actor.id,
+                          label: getTaskAssigneeName(actor.id, actor.name || "Unknown"),
+                          description: mode === "humans" ? "Human" : mode === "teams" ? "Agent squad" : "Agent",
+                          leading: renderTaskActorAvatar(actor.id, "playground-tasks-detail-person-menu-avatar"),
+                          onSelect: () => updateDraftField("assigneeAgentId", actor.id, { autosave: true }),
+                        });
+                      }),
+                    })
                   )
                 ),
                 React.createElement("div", { className: "playground-tasks-detail-fact" },
@@ -644,13 +560,39 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                   React.createElement("div", { className: "playground-tasks-detail-fact-control" },
                     renderTaskDetailSelectControl({
                       popoverId: "reviewer",
+                      value: draftTask.reviewRequired && resolvedTaskReviewerId ? resolvedTaskReviewerId : "__none__",
                       valueLabel: activeReviewerLabel,
                       disabled: isTaskConfigLocked,
                       isEmpty: !draftTask.reviewRequired,
                       buttonContent: renderTaskDetailPersonValue(resolvedTaskReviewerId, activeReviewerLabel),
-                      children: [
-                        renderTaskDetailReviewerNoneRow(),
-                        ...assignableActors.map((actor) => renderTaskDetailReviewerRow(actor)),
+                      options: [
+                        createTaskDetailSelectorOption({
+                          value: "__none__",
+                          label: "No review",
+                          description: "Move directly to Finished when work is done.",
+                          leading: React.createElement("span", { className: "playground-tasks-detail-person-menu-avatar", "aria-hidden": "true" },
+                            React.createElement("span", { className: "playground-tasks-detail-person-menu-avatar-fallback" }, "No")
+                          ),
+                          onSelect: () => updateDraftTask((current) => ({
+                            ...current,
+                            reviewRequired: false,
+                            reviewerAgentId: null,
+                          }), { autosave: true }),
+                        }),
+                        ...assignableActors.map((actor) => {
+                          const mode = getPlaygroundTaskAssigneePopupMode(actor);
+                          return createTaskDetailSelectorOption({
+                            value: actor.id,
+                            label: getTaskAssigneeName(actor.id, actor.name || "Reviewer"),
+                            description: mode === "humans" ? "Human reviewer" : mode === "teams" ? "Agent squad reviewer" : "Agent reviewer",
+                            leading: renderTaskActorAvatar(actor.id, "playground-tasks-detail-person-menu-avatar"),
+                            onSelect: () => updateDraftTask((current) => ({
+                              ...current,
+                              reviewRequired: true,
+                              reviewerAgentId: actor.id,
+                            }), { autosave: true }),
+                          });
+                        }),
                       ],
                     })
                   )
@@ -660,29 +602,26 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                   React.createElement("div", { className: "playground-tasks-detail-fact-control" },
                     renderTaskDetailSelectControl({
                       popoverId: "environment",
+                      value: draftTask.environmentId || "__project_default__",
                       valueLabel: activeEnvironmentLabel,
                       disabled: isTaskConfigLocked,
                       isEmpty: false,
-                      menuClassName: "playground-tasks-toolbar-popup-menu-environment",
-                      children: [
-                        renderTaskDetailSelectOptionRow({
-                          key: "__project_default__",
+                      popupClassName: "playground-tasks-detail-environment-selector-popup",
+                      options: [
+                        createTaskDetailSelectorOption({
+                          value: "__project_default__",
                           label: "Project Default",
                           description: projectDefaultEnvironment?.name || "Uses the project's default environment",
-                          selected: !draftTask.environmentId,
-                          onClick: () => {
+                          onSelect: () => {
                             handleTaskEnvironmentSelectionChange("");
-                            setTaskDetailSelectPopover("");
                           },
                         }),
                         ...availableBacklogEnvironments.map((environment) =>
-                          renderTaskDetailSelectOptionRow({
-                            key: environment.id,
+                          createTaskDetailSelectorOption({
+                            value: environment.id,
                             label: environment.name + (environment.isDefault ? " (Default)" : ""),
-                            selected: draftTask.environmentId === environment.id,
-                            onClick: () => {
+                            onSelect: () => {
                               handleTaskEnvironmentSelectionChange(environment.id);
-                              setTaskDetailSelectPopover("");
                             },
                           })
                         ),
@@ -695,16 +634,16 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                   React.createElement("div", { className: "playground-tasks-detail-fact-control" },
                     renderTaskDetailSelectControl({
                       popoverId: "blocked-by",
+                      value: blockedByTaskId || "__none__",
                       valueLabel: activeBlockedByLabel,
                       disabled: isTaskConfigLocked,
                       isEmpty: !blockedByTaskId,
-                      menuClassName: "playground-tasks-toolbar-popup-menu-wide",
-                      children: [
-                        renderTaskDetailSelectOptionRow({
-                          key: "__none__",
+                      popupClassName: "playground-tasks-detail-blocked-by-selector-popup",
+                      options: [
+                        createTaskDetailSelectorOption({
+                          value: "__none__",
                           label: "None",
-                          selected: !blockedByTaskId,
-                          onClick: () => {
+                          onSelect: () => {
                             updateDraftTask((current) => ({
                               ...current,
                               dependencyIds: [],
@@ -713,16 +652,14 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                                 ? (current.completedAt || new Date().toISOString())
                                 : null,
                             }), { autosave: true });
-                            setTaskDetailSelectPopover("");
                           },
                         }),
                         ...dependencyCandidates.map((task) => {
                           const taskTicketNumber = taskTicketNumbersById[task.id] || task.ticketNumber || "000";
-                          return renderTaskDetailSelectOptionRow({
-                            key: task.id,
+                          return createTaskDetailSelectorOption({
+                            value: task.id,
                             label: taskTicketNumber + " - " + (task.title || "Untitled Task"),
-                            selected: blockedByTaskId === task.id,
-                            onClick: () => {
+                            onSelect: () => {
                               updateDraftTask((current) => ({
                                 ...current,
                                 dependencyIds: [task.id],
@@ -731,7 +668,6 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                                   ? (current.completedAt || new Date().toISOString())
                                   : null,
                               }), { autosave: true });
-                              setTaskDetailSelectPopover("");
                             },
                           });
                         }),
@@ -742,24 +678,39 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                 React.createElement("div", { className: "playground-tasks-detail-fact" },
                 React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Schedule"),
                   React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                    React.createElement("div", { className: "playground-tasks-schedule-anchor" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger" + (taskScheduleSummary ? "" : " is-empty") + (taskScheduleDialogState ? " is-active" : ""),
-                        disabled: isTaskConfigLocked,
-                        onClick: openTaskScheduleDialog,
+                    renderTaskDetailSelectControl({
+                      popoverId: "schedule",
+                      value: taskScheduleSummary || "__none__",
+                      valueLabel: taskScheduleSummary || "None",
+                      disabled: isTaskConfigLocked,
+                      isEmpty: !taskScheduleSummary,
+                      open: Boolean(taskScheduleDialogState) && taskScheduleDialogPhase !== "exit",
+                      onOpenChange: (nextOpen) => {
+                        if (nextOpen) {
+                          if (!taskScheduleDialogState) {
+                            openTaskScheduleDialog();
+                          }
+                          return;
+                        }
+                        if (taskScheduleDialogState) {
+                          closeTaskScheduleDialog();
+                        }
                       },
-                        React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, taskScheduleSummary || "None"),
-                        React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", strokeWidth: 1.8 })
-                      ),
-                      renderTaskScheduleDialog()
-                    )
+                      popupContent: renderTaskScheduleDialog({ embedded: true }),
+                      popupAriaLabel: "Edit ticket schedule",
+                      popupClassName: "playground-tasks-schedule-selector-popup",
+                      popupWidth: "min(320px, calc(100vw - 48px))",
+                      popupMaxHeight: "min(520px, calc(100vh - 96px))",
+                    })
                   )
                 ))
                   : null
               )
           }
           const taskDetailBackDestination = taskView === "board" ? "Board" : "Backlog";
+	          const isTicketDetailSidebarEffectivelyCollapsed = Boolean(
+	            ticketDetailSidebarCollapsed || (isFullPageTaskDetail && previewedTaskAttachment)
+	          );
 	          const taskDetailNavbar = React.createElement("div", {
                 className: "playground-content-nav playground-tasks-detail-navbar",
               },
@@ -852,45 +803,62 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
 	                  className: "playground-content-nav-right playground-tasks-detail-navbar-actions",
 	                  ref: taskDetailActionsRef,
 		                },
-				                  isFullPageTaskDetail
-				                    ? React.createElement("div", { className: "playground-tasks-ticket-page-actions" },
-				                        React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell" },
-				                          React.createElement("button", {
-				                            type: "button",
-				                            className: "playground-files-header-icon-button is-plain" + (taskDetailPopover === "menu" ? " is-active" : ""),
-				                            onClick: () => setTaskDetailPopover((current) => current === "menu" ? "" : "menu"),
-				                            title: "Task actions",
-				                            "aria-label": "Task actions",
-				                          }, React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })),
-				                          taskDetailPopover === "menu"
-				                            ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-				                                React.createElement("button", {
-				                                  type: "button",
-				                                  className: "tb-popup-row playground-tasks-detail-menu-item-danger",
-				                                  disabled: saveState.isSaving,
-				                                  onClick: () => {
-				                                    setTaskDetailPopover("");
-				                                    void handleDeleteTask(draftTask.id);
-				                                  },
-				                                },
-				                                  React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-				                                  React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-				                                    React.createElement("span", null, "Delete"),
-				                                    React.createElement("span", null, "Remove this ticket from the project.")
-				                                  )
-				                                )
-				                              )
-				                            : null
-				                        ),
-				                        React.createElement("button", {
+			                  isFullPageTaskDetail
+			                    ? React.createElement("div", { className: "playground-tasks-ticket-page-actions" },
+			                        React.createElement(PlatformPopup, {
+			                            open: taskDetailPopover === "menu",
+			                            rootClassName: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell",
+			                            surfaceClassName: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide",
+			                            surfaceProps: {
+			                              role: "menu",
+			                              "aria-label": "Task actions",
+			                            },
+			                            animation: "down-in",
+			                            variant: "minimal",
+			                            placement: "bottom-end",
+			                            trigger: React.createElement("button", {
+			                              type: "button",
+			                              className: "playground-files-header-icon-button is-plain" + (taskDetailPopover === "menu" ? " is-active" : ""),
+			                              onClick: () => setTaskDetailPopover((current) => current === "menu" ? "" : "menu"),
+			                              title: "Task actions",
+			                              "aria-label": "Task actions",
+			                              "aria-haspopup": "menu",
+			                              "aria-expanded": taskDetailPopover === "menu" ? "true" : "false",
+			                            }, React.createElement(EllipsisVertical, { width: 16, height: 16, strokeWidth: 1.8 })),
+			                          },
+			                          React.createElement("button", {
+			                            type: "button",
+			                            role: "menuitem",
+			                            className: "tb-popup-row playground-tasks-detail-menu-item-danger",
+			                            disabled: saveState.isSaving,
+			                            onClick: () => {
+			                              setTaskDetailPopover("");
+			                              void handleDeleteTask(draftTask.id);
+			                            },
+			                          },
+			                            React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+			                            React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+			                              React.createElement("span", null, "Delete"),
+			                              React.createElement("span", null, "Remove this ticket from the project.")
+			                            )
+			                          )
+			                        ),
+			                        React.createElement("button", {
 				                          type: "button",
 				                          className: "playground-files-header-icon-button is-plain playground-tasks-ticket-sidebar-toggle-button",
-				                          onClick: () => setTicketDetailSidebarCollapsed((current) => !current),
-				                          title: ticketDetailSidebarCollapsed ? "Open sidebar" : "Close sidebar",
-				                          "aria-label": ticketDetailSidebarCollapsed ? "Open sidebar" : "Close sidebar",
-				                          "aria-pressed": ticketDetailSidebarCollapsed ? "true" : "false",
+				                          onClick: () => {
+				                            if (previewedTaskAttachment) {
+				                              setPreviewedTaskAttachmentId("");
+				                              setTicketDetailSidebarCollapsed(false);
+				                              return;
+				                            }
+				                            setTicketDetailSidebarCollapsed((current) => !current);
+				                          },
+				                          title: isTicketDetailSidebarEffectivelyCollapsed ? "Open sidebar" : "Close sidebar",
+				                          "aria-label": isTicketDetailSidebarEffectivelyCollapsed ? "Open sidebar" : "Close sidebar",
+				                          "aria-pressed": isTicketDetailSidebarEffectivelyCollapsed ? "true" : "false",
 				                        },
-				                          ticketDetailSidebarCollapsed
+				                          isTicketDetailSidebarEffectivelyCollapsed
 				                            ? React.createElement(PanelLeftOpen, { width: 16, height: 16, strokeWidth: 1.8 })
 				                            : React.createElement(PanelLeftClose, { width: 16, height: 16, strokeWidth: 1.8 })
 				                        )
@@ -975,111 +943,10 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                   onDraggingChange: setIsTaskAttachmentDragging,
                   onFilesDrop: (_files, event) => void handleTaskAttachmentDrop(event),
                 }),
-                React.createElement("div", { className: "playground-tasks-skills" },
-                  React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
-                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Skills"),
-                    React.createElement("div", {
-                      className: "playground-tasks-skills-popup-shell tb-runner-chat",
-                      ref: taskSkillsActionsRef,
-                    },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-environments-action-button playground-tasks-skills-manage-button" + (taskSkillsPopoverOpen ? " is-active" : ""),
-                        disabled: isTaskConfigLocked,
-                        onClick: () => {
-                          setTaskDetailPopover("");
-                          setTaskSkillsPopoverOpen((current) => !current);
-                        },
-                      }, "Manage Skills"),
-                      taskSkillsPopoverOpen
-                        ? React.createElement(PlatformPopupSurface, { className: "tb-popup-menu-skills", animation: "up-in" },
-                            React.createElement("div", { className: "tb-popup-attach-topbar" },
-                              React.createElement("button", {
-                                type: "button",
-                                className: "tb-popup-attach-topbar-button tb-popup-attach-topbar-button-close",
-                                onClick: () => setTaskSkillsPopoverOpen(false),
-                                "aria-label": "Close skills popup",
-                              }, React.createElement(X, { className: "tb-popup-attach-topbar-icon", strokeWidth: 1.75 })),
-                              React.createElement("div", { className: "tb-popup-attach-topbar-title" }, "Skills"),
-                              React.createElement("button", {
-                                type: "button",
-                                className: "tb-popup-attach-topbar-button tb-popup-attach-topbar-button-confirm",
-                                onClick: () => setTaskSkillsPopoverOpen(false),
-                                "aria-label": "Done",
-                              }, React.createElement(Check, { className: "tb-popup-attach-topbar-icon", strokeWidth: 2 }))
-                            ),
-                            React.createElement("div", { className: "tb-popup-panel-section tb-popup-panel-section-attach-header" },
-                              React.createElement(PlatformSwitch, {
-                                ariaLabel: "Skill source",
-                                value: taskSkillsTab,
-                                options: [
-                                  { value: "system", label: "System" },
-                                  { value: "custom", label: "Custom" },
-                                ],
-                                onValueChange: setTaskSkillsTab,
-                              })
-                            ),
-                            React.createElement("div", { className: "tb-popup-panel-section tb-popup-panel-section-divider tb-popup-panel-section-divider-spaced tb-popup-panel-section-skills-body" },
-                              (taskSkillsTab === "system" ? taskSystemSkillItems : taskCustomSkillItems).map((skill) => {
-                                const isEnabled = getEffectivePlaygroundTaskEnabledSkillIds(draftTask).includes(skill.id);
-                                return React.createElement("button", {
-                                    key: skill.id,
-                                    type: "button",
-                                    className: "tb-popup-row tb-popup-row-skill" + (isEnabled ? " selected" : ""),
-                                    disabled: isTaskConfigLocked,
-                                    onClick: () => toggleTaskSkill(skill.id),
-                                  },
-                                    renderTaskSkillIcon(skill, "tb-popup-icon"),
-                                    React.createElement("span", { className: "tb-popup-label" }, skill.name),
-                                    React.createElement("span", { className: "tb-popup-check-slot" },
-                                      isEnabled
-                                        ? React.createElement(Check, { className: "tb-popup-check", strokeWidth: 1.75 })
-                                        : null
-                                    )
-                                  );
-                              }),
-                              taskSkillsTab === "custom" && projectCustomSkillsLoading
-                                ? React.createElement("div", { className: "tb-popup-loading-row" },
-                                    React.createElement("span", { className: "tb-popup-loading-spinner", "aria-hidden": "true" }),
-                                    React.createElement("span", { className: "tb-popup-loading-label" }, "Loading custom skills...")
-                                  )
-                                : null,
-                              taskSkillsTab === "custom" && !projectCustomSkillsLoading && taskCustomSkillItems.length === 0
-                                ? React.createElement("div", { className: "tb-popup-empty-state" }, "No custom skills yet.")
-                                : null
-                            )
-                          )
-                        : null
-                    )
-                  ),
-                  taskSkillEntries.length > 0
-                    ? React.createElement("div", { className: "playground-tasks-skills-list" },
-                        taskSkillEntries.map((skill) =>
-                          React.createElement("div", {
-                            key: skill.id,
-                            className: "playground-tasks-skill-pill",
-                            title: skill.name,
-                          },
-                            renderTaskSkillIcon(skill, "playground-tasks-skill-pill-icon"),
-                            React.createElement("span", { className: "playground-tasks-skill-pill-label" }, skill.name),
-                            React.createElement("button", {
-                              type: "button",
-                              className: "playground-tasks-skill-pill-remove",
-                              disabled: isTaskConfigLocked,
-                              onClick: (event) => {
-                                event.stopPropagation();
-                                removeTaskSkill(skill.id);
-                              },
-                              "aria-label": "Remove " + skill.name,
-                              title: "Remove " + skill.name,
-                            }, React.createElement(X, { width: 12, height: 12, strokeWidth: 1.9 }))
-                          )
-                        )
-                      )
-                    : React.createElement("div", { className: "playground-tasks-secondary-copy" }, "No skills selected.")
-                ),
                 React.createElement("div", { className: "playground-tasks-connectors" },
-                  React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Connectors"),
+                  React.createElement("div", { className: "playground-tasks-connectors-header" },
+                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Connectors")
+                  ),
                   React.createElement("div", { className: "playground-tasks-connectors-list" },
                     taskConnectorEntries.map((connector) =>
                       React.createElement("div", {
@@ -1102,56 +969,36 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                     )
                   )
                 ),
-                React.createElement("div", { className: "playground-tasks-subtasks" },
-                  React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
-                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Subtasks"),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-tasks-subtasks-add-button",
-                      onClick: () => openBacklogSubtaskComposer(activeTicketNumber),
-                      title: "Add subtask",
-                      "aria-label": "Add subtask",
-                    }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }))
-                  ),
-                  draftTaskSubtasks.length > 0
-                    ? React.createElement("div", { className: "playground-tasks-subtasks-list" },
-                        draftTaskSubtasks.map((subtask) => {
-                          const subtaskTicketNumber = taskTicketNumbersById[subtask.id] || subtask.ticketNumber || "000";
-                          return React.createElement("button", {
-                              key: subtask.id,
-                              type: "button",
-                              className: "playground-tasks-subtask-row",
-                              onClick: () => handleSelectTask(subtask.id, { screen: projectTaskDetailScreenOpen }),
-                            },
-                              React.createElement("div", { className: "playground-tasks-subtask-main" },
-                                React.createElement("span", { className: "playground-tasks-subtask-ticket" }, subtaskTicketNumber),
-                                React.createElement("span", { className: "playground-tasks-subtask-title" }, subtask.title || "Untitled Subtask")
-                              ),
-                              React.createElement("span", { className: "playground-tasks-subtask-meta" }, getPlaygroundTaskStatusLabel(subtask.status))
-                            );
-                        })
-                      )
-                    : React.createElement("div", { className: "playground-tasks-secondary-copy" }, "No subtasks yet.")
-                ),
+                React.createElement(PlatformSubtasks, {
+                  className: "playground-tasks-ticket-subtasks",
+                  disabled: isTaskConfigLocked,
+                  onAdd: () => openProjectSubtaskIssueComposer(draftTask.id),
+                  items: draftTaskSubtasks.map((subtask) => ({
+                    id: subtask.id,
+                    title: subtask.title || "Untitled Subtask",
+                    metadata: taskTicketNumbersById[subtask.id] || subtask.ticketNumber || "000",
+                    status: getPlaygroundTaskStatusLabel(subtask.status),
+                    statusVariant: subtask.status === "done"
+                      ? "green"
+                      : (subtask.status === "blocked"
+                          ? "red"
+                          : (["in_progress", "in_review"].includes(subtask.status) ? "blue" : "gray")),
+                    onActivate: () => handleSelectTask(subtask.id, { screen: projectTaskDetailScreenOpen }),
+                  })),
+                }),
                 React.createElement("div", { className: "playground-tasks-comments" },
                   React.createElement("div", { className: "playground-tasks-attachments-toolbar playground-tasks-comments-toolbar" },
                     React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Comments"),
-                    React.createElement("button", {
-                          type: "button",
-                          className: "playground-tasks-subtasks-add-button playground-tasks-comments-add-button" + (taskCommentComposerOpen ? " is-active" : ""),
-                          onClick: () => {
-                            setTaskCommentComposerOpen((current) => {
-                              const nextValue = !current;
-                              if (nextValue && typeof window !== "undefined") {
-                                window.setTimeout(focusTaskCommentTextarea, 0);
-                              }
-                              return nextValue;
-                            });
-                          },
-                          title: taskCommentComposerOpen ? "Close comment" : "Add comment",
-                          "aria-label": taskCommentComposerOpen ? "Close comment" : "Add comment",
-                          "aria-expanded": taskCommentComposerOpen ? "true" : "false",
-                        }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }))
+                    React.createElement(PlatformSecondaryButton, {
+                      type: "button",
+                      size: "small",
+                      className: "playground-tasks-comments-add-button",
+                      disabled: isTaskConfigLocked,
+                      onClick: () => openTaskCommentComposer(),
+                    },
+                      React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9, "aria-hidden": "true" }),
+                      React.createElement("span", null, "Comment")
+                    )
                   ),
                   taskComments.length > 0
                     ? React.createElement("div", { className: "playground-tasks-comments-list" },
@@ -1175,11 +1022,9 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                       )
                     )
                     : React.createElement("div", { className: "playground-tasks-secondary-copy playground-tasks-comment-empty" }, "No comments yet.")
-                  ,
-                  taskCommentComposerOpen ? renderTaskCommentDock() : null
                 )
                 ),
-                null
+                renderTaskCommentDialog()
               )
             );
             const taskDetailPreview = previewedTaskAttachment
@@ -1192,9 +1037,16 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                     requestHeaders,
                     inline: true,
                     onClose: () => setPreviewedTaskAttachmentId(""),
+                    showHeaderCopy: false,
+                    showCloseButton: false,
                     showResizeHandle: false,
                   })
                 )
+              : null;
+            const taskAttachmentPreviewPortalTarget = isFullPageTaskDetail
+              && attachmentPreviewPortalId
+              && typeof document !== "undefined"
+              ? document.getElementById(attachmentPreviewPortalId)
               : null;
 
             if (isFullPageTaskDetail) {
@@ -1215,8 +1067,18 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                     showRunThreadAction: true,
                   }),
                   preview: taskDetailPreview,
+                  previewTitle: previewedTaskAttachment?.filename || "Attachment preview",
+                  previewHeaderActions: previewedTaskAttachment && !isTaskConfigLocked
+                    ? React.createElement(PlatformAttachmentActionMenu, {
+                        name: previewedTaskAttachment.filename || "Attachment",
+                        onRename: (nextName) => handleRenameTaskAttachment(previewedTaskAttachment.id, nextName),
+                        onDelete: () => handleRemoveTaskAttachment(previewedTaskAttachment.id),
+                      })
+                    : null,
+                  previewPortalTarget: taskAttachmentPreviewPortalTarget,
+                  onPreviewClose: () => setPreviewedTaskAttachmentId(""),
                   sidebarCollapsed: ticketDetailSidebarCollapsed,
-                  sidebarPopoverOpen: Boolean(taskDetailSelectPopover || taskSkillsPopoverOpen || taskScheduleDialogState),
+                  sidebarPopoverOpen: Boolean(taskDetailSelectPopover || taskScheduleDialogState),
                 },
                 taskDetailMain
               );

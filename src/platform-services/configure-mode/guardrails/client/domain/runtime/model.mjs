@@ -81,6 +81,50 @@ export const GUARDRAILS_MODEL_SCRIPT = `      function createPlaygroundGuardrail
             metadata.creator_avatar_url = creatorIdentity.avatarUrl;
           }
         }
+        const sourceOwner = source.owner && typeof source.owner === "object" && !Array.isArray(source.owner)
+          ? source.owner
+          : {};
+        const metadataOwner = metadata.owner && typeof metadata.owner === "object" && !Array.isArray(metadata.owner)
+          ? metadata.owner
+          : {};
+        const ownerIdentity = {
+          id: String(sourceOwner.id || metadataOwner.id || source.ownerId || source.owner_id || metadata.ownerId || metadata.owner_id || "").trim(),
+          userId: String(sourceOwner.userId || sourceOwner.user_id || metadataOwner.userId || metadataOwner.user_id || source.ownerUserId || source.owner_user_id || metadata.ownerUserId || metadata.owner_user_id || "").trim(),
+          name: String(sourceOwner.name || sourceOwner.displayName || sourceOwner.display_name || metadataOwner.name || metadataOwner.displayName || metadataOwner.display_name || source.ownerName || source.owner_name || metadata.ownerName || metadata.owner_name || "").trim(),
+          email: String(sourceOwner.email || sourceOwner.mail || metadataOwner.email || metadataOwner.mail || source.ownerEmail || source.owner_email || metadata.ownerEmail || metadata.owner_email || "").trim(),
+          avatarUrl: String(sourceOwner.avatarUrl || sourceOwner.avatar_url || sourceOwner.photoUrl || sourceOwner.photoURL || sourceOwner.imageUrl || sourceOwner.imageURL || metadataOwner.avatarUrl || metadataOwner.avatar_url || metadataOwner.photoUrl || metadataOwner.photoURL || metadataOwner.imageUrl || metadataOwner.imageURL || source.ownerAvatarUrl || source.owner_avatar_url || metadata.ownerAvatarUrl || metadata.owner_avatar_url || "").trim(),
+        };
+        if (ownerIdentity.id || ownerIdentity.userId || ownerIdentity.name || ownerIdentity.email || ownerIdentity.avatarUrl) {
+          metadata.owner = {
+            ...metadataOwner,
+            type: "user",
+            ...(ownerIdentity.id ? { id: ownerIdentity.id } : {}),
+            ...(ownerIdentity.userId ? { userId: ownerIdentity.userId, user_id: ownerIdentity.userId } : {}),
+            ...(ownerIdentity.name ? { name: ownerIdentity.name, displayName: ownerIdentity.name, display_name: ownerIdentity.name } : {}),
+            ...(ownerIdentity.email ? { email: ownerIdentity.email } : {}),
+            ...(ownerIdentity.avatarUrl ? { avatarUrl: ownerIdentity.avatarUrl, avatar_url: ownerIdentity.avatarUrl, photoUrl: ownerIdentity.avatarUrl, photoURL: ownerIdentity.avatarUrl } : {}),
+          };
+          if (ownerIdentity.id) {
+            metadata.ownerId = ownerIdentity.id;
+            metadata.owner_id = ownerIdentity.id;
+          }
+          if (ownerIdentity.userId) {
+            metadata.ownerUserId = ownerIdentity.userId;
+            metadata.owner_user_id = ownerIdentity.userId;
+          }
+          if (ownerIdentity.name) {
+            metadata.ownerName = ownerIdentity.name;
+            metadata.owner_name = ownerIdentity.name;
+          }
+          if (ownerIdentity.email) {
+            metadata.ownerEmail = ownerIdentity.email;
+            metadata.owner_email = ownerIdentity.email;
+          }
+          if (ownerIdentity.avatarUrl) {
+            metadata.ownerAvatarUrl = ownerIdentity.avatarUrl;
+            metadata.owner_avatar_url = ownerIdentity.avatarUrl;
+          }
+        }
         const rawName = typeof source.name === "string"
           ? source.name
           : typeof source.title === "string"

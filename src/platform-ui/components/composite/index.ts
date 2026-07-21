@@ -15,6 +15,7 @@ export * from "./modal/index.js";
 export * from "./page-hero/index.js";
 export * from "./popup/index.js";
 export * from "./settings-section/index.js";
+export * from "./subtasks/index.js";
 export * from "./ui-card/index.js";
 export * from "./version-history-sidebar/index.js";
 export * from "./versioning/index.js";

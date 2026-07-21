@@ -20,6 +20,25 @@ export const EVALUATIONS_PAGE_VERSIONS_SCRIPT = String.raw`      function stripP
         return source;
       }
 
+      function stripPlaygroundEvaluationAccessMetadata(metadata) {
+        const source = metadata && typeof metadata === "object" && !Array.isArray(metadata)
+          ? { ...metadata }
+          : {};
+        [
+          "owner",
+          "ownerId", "owner_id",
+          "ownerUserId", "owner_user_id",
+          "ownerName", "owner_name",
+          "ownerEmail", "owner_email",
+          "ownerAvatarUrl", "owner_avatar_url",
+          "teamAccessIds", "team_access_ids",
+          "teamAccessShareIds", "team_access_share_ids",
+          "teamRolePermissionSets", "team_role_permission_sets",
+          "permissionSet", "permission_set",
+        ].forEach((key) => delete source[key]);
+        return source;
+      }
+
       function createPlaygroundEvaluationVersionId() {
         return "evaluation_version_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
       }
@@ -41,7 +60,9 @@ export const EVALUATIONS_PAGE_VERSIONS_SCRIPT = String.raw`      function stripP
           runs: (Array.isArray(normalizedSet.runs) ? normalizedSet.runs : [])
             .map((run, index) => normalizePlaygroundEvaluationRun(run, index)),
           creator: normalizePlaygroundEvaluationPersonIdentity(normalizedSet.creator || normalizedSet.createdBy || {}),
-          metadata: stripPlaygroundEvaluationVersionMetadata(normalizedSet.metadata),
+          metadata: stripPlaygroundEvaluationAccessMetadata(
+            stripPlaygroundEvaluationVersionMetadata(normalizedSet.metadata)
+          ),
         };
       }
 
@@ -88,7 +109,9 @@ export const EVALUATIONS_PAGE_VERSIONS_SCRIPT = String.raw`      function stripP
               : []
           ).map((run, index) => normalizePlaygroundEvaluationRun(run, index)),
           creator: normalizePlaygroundEvaluationPersonIdentity(snapshot.creator || snapshot.createdBy || version.creator || version.createdBy || {}),
-          metadata: stripPlaygroundEvaluationVersionMetadata(snapshot.metadata),
+          metadata: stripPlaygroundEvaluationAccessMetadata(
+            stripPlaygroundEvaluationVersionMetadata(snapshot.metadata)
+          ),
         };
         return {
           id,
@@ -199,7 +222,9 @@ export const EVALUATIONS_PAGE_VERSIONS_SCRIPT = String.raw`      function stripP
         const normalizedVersion = normalizePlaygroundEvaluationVersion(version || {});
         const snapshot = normalizedVersion.snapshot || {};
         const baseMetadata = stripPlaygroundEvaluationVersionMetadata(baseSet.metadata);
-        const snapshotMetadata = stripPlaygroundEvaluationVersionMetadata(snapshot.metadata);
+        const snapshotMetadata = stripPlaygroundEvaluationAccessMetadata(
+          stripPlaygroundEvaluationVersionMetadata(snapshot.metadata)
+        );
         const nextSet = normalizePlaygroundEvaluationSet({
           ...baseSet,
           name: snapshot.name || baseSet.name,
@@ -464,4 +489,3 @@ export const EVALUATIONS_PAGE_VERSIONS_SCRIPT = String.raw`      function stripP
       }
 
 `;
-

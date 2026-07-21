@@ -192,6 +192,7 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
           }
 
           const normalizedIssueType = normalizePlaygroundTaskType(issueComposerDraft.taskType);
+          const issueComposerTitle = normalizedIssueType === "subtask" ? "Create Subtask" : "Create Issue";
           const selectedDependencyId = normalizePlaygroundIdList(issueComposerDraft.dependencyIds)[0] || "";
           const parentTicketCandidates = tasks
             .filter((task) => task?.id && !isPlaygroundSubtaskRecord(task))
@@ -275,6 +276,21 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
                   ? availableBacklogEnvironments.map((environment) => renderIssueComposerEnvironmentOptionRow(environment))
                   : React.createElement("div", { className: "tb-popup-empty-state" }, "No environments available."),
               })
+            );
+          }
+
+          function renderIssueComposerTitleField() {
+            return renderIssueComposerField("Title",
+              React.createElement("input", {
+                type: "text",
+                className: "playground-environments-input playground-new-issue-modal__title-input",
+                value: issueComposerDraft.title || "",
+                placeholder: "Issue title",
+                "aria-label": "Issue title",
+                autoComplete: "off",
+                onChange: (event) => updateIssueComposerField("title", event.target.value),
+              }),
+              { full: true }
             );
           }
 
@@ -516,6 +532,7 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
               ),
               !issueComposerDetailsCollapsed
                 ? React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                    renderIssueComposerDetailFact("Computer", renderIssueComposerComputerSelector()),
                     renderIssueComposerDetailFact("Type",
                       React.createElement("div", { className: "playground-tasks-type-control" },
                         renderIssueComposerDetailSelectControl({
@@ -782,66 +799,45 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
             );
           }
 
-          return renderPlaygroundPlatformModal({
-            open: issueComposerOpen,
-            visible: issueComposerVisible,
-            closing: issueComposerClosing,
-            onClose: () => closeProjectIssueComposer(),
-            as: "form",
-            backdropClassName: "playground-tasks-project-issue-backdrop",
-            className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal",
-            ariaLabel: "New issue",
-            surfaceProps: {
-              onSubmit: (event) => void handleSaveProjectIssue(event),
-            },
-            children: React.createElement(React.Fragment, null,
-              React.createElement("div", { className: "playground-tasks-project-modal-top" },
-	                React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
-	                  React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
-	                    React.createElement(Bookmark, { width: 18, height: 18, strokeWidth: 1.9 })
-	                  ),
-	                  React.createElement("input", {
-	                    type: "text",
-	                    className: "playground-tasks-project-modal-name-input playground-tasks-issue-modal-title-input",
-	                    value: issueComposerDraft.title || "",
-	                    placeholder: "Issue title",
-	                    autoFocus: true,
-	                    onChange: (event) => updateIssueComposerField("title", event.target.value),
-	                  })
-	                ),
-	                renderIssueComposerComputerSelector(),
-	                React.createElement("button", {
-	                  type: "button",
-	                  className: "playground-settings-icon-button playground-tasks-project-modal-close",
-                  onClick: () => closeProjectIssueComposer(),
-                  title: "Close",
-                  disabled: issueComposerSaveState.isSaving,
-	                }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-		              ),
-		              React.createElement("div", { className: "playground-tasks-issue-modal-body" },
-		                renderIssueComposerDescriptionField(),
-		                renderIssueComposerDetailsSection(),
-	                issueComposerSaveState.error
-                  ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, issueComposerSaveState.error)
-                  : null
-              ),
-              React.createElement("div", { className: "playground-tasks-project-modal-actions" },
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-environments-action-button",
-                  onClick: () => closeProjectIssueComposer(),
-                  disabled: issueComposerSaveState.isSaving,
-                }, "Cancel"),
-                React.createElement(PlatformPrimaryButton, {
-                  size: "medium",
-                  type: "submit",
-                  className: "playground-environments-action-button is-primary",
-                  disabled: issueComposerSaveState.isSaving || !String(issueComposerDraft.title || "").trim(),
-                }, issueComposerSaveState.isSaving ? "Creating..." : "Create Issue")
-              )
-            )
-          });
-        }
+	          return React.createElement(PlatformModal, {
+	            open: issueComposerOpen,
+	            visible: issueComposerVisible,
+	            closing: issueComposerClosing,
+	            animationDurationMs: issueComposerAnimationMs,
+	            onClose: () => closeProjectIssueComposer(),
+	            as: "form",
+	            size: "medium",
+	            title: issueComposerTitle,
+	            className: "playground-new-issue-modal",
+	            bodyClassName: "playground-new-issue-modal__body",
+	            footerClassName: "playground-new-issue-modal__footer",
+	            closeButtonLabel: "Close new issue",
+	            closeButtonDisabled: issueComposerSaveState.isSaving,
+	            surfaceProps: {
+	              onSubmit: (event) => void handleSaveProjectIssue(event),
+	            },
+	            footer: React.createElement(React.Fragment, null,
+	              React.createElement(PlatformSecondaryButton, {
+	                type: "button",
+	                size: "medium",
+	                onClick: () => closeProjectIssueComposer(),
+	                disabled: issueComposerSaveState.isSaving,
+	              }, "Cancel"),
+	              React.createElement(PlatformPrimaryButton, {
+	                size: "medium",
+	                type: "submit",
+	                disabled: issueComposerSaveState.isSaving || !String(issueComposerDraft.title || "").trim(),
+	              }, issueComposerSaveState.isSaving ? "Creating..." : issueComposerTitle)
+	            ),
+	          },
+	            renderIssueComposerTitleField(),
+	            renderIssueComposerDescriptionField(),
+	            renderIssueComposerDetailsSection(),
+	            issueComposerSaveState.error
+	              ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, issueComposerSaveState.error)
+	              : null
+	          );
+	        }
 
         function renderProjectComposerDialog(options = {}) {
           const embedded = options?.embedded === true;

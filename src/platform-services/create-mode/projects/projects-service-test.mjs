@@ -37,6 +37,7 @@ import {
   PROJECTS_PAGE_VIEWS_FRAGMENT_PATHS,
   PROJECTS_PAGE_VIEWS_SCRIPT,
 } from "./client/page/views.mjs";
+import { PROJECTS_VIEWS_04_FRAGMENT } from "./client/page/views/04-task-detail-and-modals.mjs";
 import {
   PROJECTS_CORE_CSS,
   PROJECTS_CORE_CSS_FRAGMENT_PATHS,
@@ -53,7 +54,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects domain runtime",
     source: PROJECTS_DOMAIN_RUNTIME_SCRIPT,
-    expectedSha256: "fd217e92594b28faabceebc183542678dfcf640d7d00f9352041f9f10dd49678",
+    expectedSha256: "7df9de5f6c7a247fd06fd2126c4bbc79d4cb056976a1bce79d3aae653ef6c397",
     fragmentGroups: [{
       baseUrl: projectsClientUrl,
       paths: PROJECTS_DOMAIN_RUNTIME_FRAGMENT_PATHS,
@@ -63,7 +64,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects overview runtime",
     source: PROJECT_OVERVIEW_SCRIPT,
-    expectedSha256: "4ea1f66464155f8ef66f897963d164971f62221794e3dd4a5dd98ec7f3013e5d",
+    expectedSha256: "48cd081ce23f8575cd8d1abb5d34291bf5010169ffd00801993c3f3f9350e21e",
     fragmentGroups: [{
       baseUrl: projectsOverviewUrl,
       paths: PROJECT_OVERVIEW_SCRIPT_FRAGMENT_PATHS,
@@ -83,7 +84,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects actions runtime",
     source: PROJECTS_PAGE_ACTIONS_SCRIPT,
-    expectedSha256: "2df562a6c09552bf518c8aa2a80746a3eec8c8a867e9ce64e851dd83301d0462",
+    expectedSha256: "5c81905fb799a865384078fc47957f33a1431ffcee25c6efbd947b437c3e6ac9",
     fragmentGroups: [{
       baseUrl: projectsPageUrl,
       paths: PROJECTS_PAGE_ACTIONS_FRAGMENT_PATHS,
@@ -93,7 +94,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects data runtime",
     source: PROJECTS_PAGE_DATA_SCRIPT,
-    expectedSha256: "afd5fb67c6455e9359e2f871891097bf749511ac271767bf3b8eaa5387c4120c",
+    expectedSha256: "ea950411a706140c017628d075c4a824012ac65e13b6b8f45a564d8533e2515e",
     fragmentGroups: [{
       baseUrl: projectsPageUrl,
       paths: PROJECTS_PAGE_DATA_FRAGMENT_PATHS,
@@ -103,7 +104,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects shell runtime",
     source: PROJECTS_PAGE_SHELL_SCRIPT,
-    expectedSha256: "5364e656874b154af1fef7b4dbf860d8e21ad6be9a8495e9769dc98e08d1c12a",
+    expectedSha256: "c70c4aa6317133c022b42ad31ed9ab1426f26ff5c46ed5c6f350a1f224f430a6",
     fragmentGroups: [{
       baseUrl: projectsPageUrl,
       paths: PROJECTS_PAGE_SHELL_FRAGMENT_PATHS,
@@ -113,7 +114,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects views runtime",
     source: PROJECTS_PAGE_VIEWS_SCRIPT,
-    expectedSha256: "666a5a4bec1c74c4dc7b243ba1102347c547363c4bf15ce9f7410c1dc8f4ea68",
+    expectedSha256: "496805a6c1a5cf6a9ffaf092fa27e2ee3f71496c288adefab562cb767062d8a8",
     fragmentGroups: [{
       baseUrl: projectsPageUrl,
       paths: PROJECTS_PAGE_VIEWS_FRAGMENT_PATHS,
@@ -123,7 +124,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects core styles",
     source: PROJECTS_CORE_CSS,
-    expectedSha256: "0900d1d8f9e73ce584155ec82e850e15ed243e225f7c12f489a61dffd152f8e6",
+    expectedSha256: "6919cde10130d84913bb1475c41f5671f470cb3c1baeae4dd4bf0cc9bd8c002f",
     fragmentGroups: [{
       baseUrl: projectsStylesUrl,
       paths: PROJECTS_CORE_CSS_FRAGMENT_PATHS,
@@ -142,6 +143,15 @@ assert.match(PROJECTS_INTEGRATIONS_RUNTIME_SCRIPT, /buildPlaygroundProjectLinked
 assert.match(PROJECTS_INTEGRATIONS_RUNTIME_SCRIPT, /createPlaygroundProjectTeamRolePermissionSet/);
 assert.match(PROJECTS_PAGE_RUNTIME_SCRIPT, /function PlaygroundTasksPage/);
 assert.match(PROJECTS_PAGE_RUNTIME_SCRIPT, /function renderProjectOverviewView/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /function renderTaskDetailSelectControl\([\s\S]*?return React\.createElement\(PlatformSelector, \{/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /popupHeader: taskDetailAvailableAssigneePopupModes\.length > 1[\s\S]*?React\.createElement\(PlatformSwitch/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /popoverId: "schedule"[\s\S]*?popupContent: renderTaskScheduleDialog\(\{ embedded: true \}\)/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /popupAriaLabel: "Edit ticket schedule"/);
+assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /function renderTaskDetailSelectOptionRow/);
+assert.doesNotMatch(PROJECTS_PAGE_DATA_SCRIPT, /handleTaskDetailSelectPopoverPointerDown/);
+assert.doesNotMatch(PROJECTS_PAGE_SHELL_SCRIPT, /taskDetailSelectPopoverRef/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-detail-fact-control \.playground-tasks-detail-central-selector\s*\{\s*width: 100%;/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-schedule-type-switch\.platform-switch\s*\{\s*width: 100%;/);
 assert.match(PROJECTS_CORE_CSS, /\.playground-project-workspace-inner\.playground-tasks-ticket-screen-inner\s*\{[^}]*max-width: var\(--platform-page-content-max-width, 87\.5rem\);/);
 assert.doesNotMatch(PROJECTS_CORE_CSS, /\.playground-project-workspace-inner\.playground-tasks-ticket-screen-inner\s*\{[^}]*max-width: none;/);
 assert.match(PROJECT_OVERVIEW_CSS, /\.playground-environments-detail-scroll\.playground-tasks-project-workspace-scroll\.is-overview\s*\{\s*padding-top: 0 !important;/);
@@ -239,6 +249,12 @@ assert.doesNotMatch(PROJECTS_PAGE_SHELL_SCRIPT, /const normalizedTaskId = String
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(TicketDetailPage, \{\s*header: taskDetailNavbar,/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /details: renderTaskDetailFactsSection\(\{ contentOnly: true \}\)/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /threads: renderTaskDetailThreadsSection\(\{\s*contentOnly: true,/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /showHeaderCopy: false,\s*showCloseButton: false,\s*showResizeHandle: false/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /previewTitle: previewedTaskAttachment\?\.filename \|\| "Attachment preview",\s*previewHeaderActions: previewedTaskAttachment && !isTaskConfigLocked\s*\? React\.createElement\(PlatformAttachmentActionMenu, \{[\s\S]*?onRename: \(nextName\) => handleRenameTaskAttachment\(previewedTaskAttachment\.id, nextName\),\s*onDelete: \(\) => handleRemoveTaskAttachment\(previewedTaskAttachment\.id\)/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /previewPortalTarget: taskAttachmentPreviewPortalTarget,\s*onPreviewClose: \(\) => setPreviewedTaskAttachmentId\(""\)/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /const isTicketDetailSidebarEffectivelyCollapsed = Boolean\(\s*ticketDetailSidebarCollapsed \|\| \(isFullPageTaskDetail && previewedTaskAttachment\)/);
+assert.match(PROJECTS_PAGE_SHELL_SCRIPT, /attachmentPreviewPortalId = ""/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /const taskAttachmentPreviewPortalTarget = isFullPageTaskDetail[\s\S]*?document\.getElementById\(attachmentPreviewPortalId\)/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /const taskDetailBackDestination = taskView === "board" \? "Board" : "Backlog";/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /className: "playground-files-header-icon-button is-plain playground-tasks-ticket-page-back-link",\s*onClick: handleCloseTaskDetail,\s*title: "Back to " \+ taskDetailBackDestination,\s*"aria-label": "Back to " \+ taskDetailBackDestination/);
 assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-ticket-page-back-link\s*\{\s*flex: 0 0 auto;\s*color: rgba\(255, 255, 255, 0\.7\);/);
@@ -248,6 +264,42 @@ assert.match(PROJECTS_PAGE_DATA_SCRIPT, /ticketNumber: selectedTaskHeaderTicketN
 assert.match(PROJECTS_PAGE_DATA_SCRIPT, /extraActions: taskView === "backlog" \|\| taskView === "board"\s*\? renderProjectAppHeaderMilestoneSelector\(\)\s*: null/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(PlatformInstructionsEditor, \{\s*value: String\(draftTask\.description \|\| ""\),[\s\S]*?historyKey: "ticket-description:" \+ draftTask\.id/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(PlatformAttachments, \{\s*className: "playground-tasks-ticket-attachments"/);
+assert.match(PROJECTS_PAGE_RUNTIME_SCRIPT, /function handleRenameTaskAttachment\(attachmentId, nextName\)/);
+assert.match(PROJECTS_PAGE_RUNTIME_SCRIPT, /onRename: isRemovable\s*\? \(nextName\) => handleRenameTaskAttachment\(resolvedAttachment\.id, nextName\)/);
+assert.match(PROJECTS_PAGE_RUNTIME_SCRIPT, /React\.createElement\(PlatformFileExplorerBrowserModal, \{\s*open: true,\s*visible: true,\s*portal: false,\s*size: "full",\s*title: "Attach files"/);
+assert.match(PROJECTS_PAGE_RUNTIME_SCRIPT, /sourceGroups,\s*breadcrumbs: \[\{/);
+assert.match(PROJECTS_PAGE_RUNTIME_SCRIPT, /searchQuery: taskEnvironmentFilePickerSearch,\s*onSearchQueryChange: setTaskEnvironmentFilePickerSearch/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(PlatformSubtasks, \{\s*className: "playground-tasks-ticket-subtasks",[\s\S]*?onAdd: \(\) => openProjectSubtaskIssueComposer\(draftTask\.id\)/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /function renderTaskCommentDialog\(\)[\s\S]*?React\.createElement\(PlatformModal, \{[\s\S]*?title: commentSubmission\.isReview \? "Request Changes" : "Add Comment"/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /function renderTaskCommentDialog\(\)[\s\S]*?showHeader: false,[\s\S]*?size: "medium"[\s\S]*?React\.createElement\(PlatformInstructionsEditor, \{[\s\S]*?title: commentSubmission\.isReview \? "Request Changes" : "Add Comment"[\s\S]*?variant: "minimalistic-ui"/);
+assert.doesNotMatch(PROJECTS_VIEWS_04_FRAGMENT, /playground-tasks-comment-modal-input|taskCommentTextareaRef/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(PlatformSecondaryButton, \{\s*type: "button",\s*size: "small",\s*className: "playground-tasks-comments-add-button"/);
+assert.doesNotMatch(PROJECTS_VIEWS_04_FRAGMENT, /taskCommentComposerOpen \? renderTaskCommentDock\(\) : null/);
+assert.match(PROJECTS_PAGE_ACTIONS_SCRIPT, /function openProjectSubtaskIssueComposer\(parentTaskId\)[\s\S]*?return openProjectIssueComposer\(\{\s*taskType: "subtask",\s*parentTaskId: parentTask\.id,/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /function renderProjectIssueComposerDialog\(\)[\s\S]*?const issueComposerTitle = normalizedIssueType === "subtask" \? "Create Subtask" : "Create Issue";[\s\S]*?return React\.createElement\(PlatformModal, \{\s*open: issueComposerOpen,\s*visible: issueComposerVisible,\s*closing: issueComposerClosing,[\s\S]*?size: "medium",\s*title: issueComposerTitle,/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /function renderIssueComposerTitleField\(\)[\s\S]*?className: "playground-environments-input playground-new-issue-modal__title-input"[\s\S]*?renderIssueComposerDetailFact\("Computer", renderIssueComposerComputerSelector\(\)\)/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /footer: React\.createElement\(React\.Fragment,[\s\S]*?React\.createElement\(PlatformSecondaryButton,[\s\S]*?React\.createElement\(PlatformPrimaryButton,[\s\S]*?renderIssueComposerTitleField\(\),\s*renderIssueComposerDescriptionField\(\),\s*renderIssueComposerDetailsSection\(\)/);
+assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /title: issueComposerTitle,\s*headerVariant: "search"/);
+assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /function renderProjectIssueComposerDialog\(\)[\s\S]*?return renderPlaygroundPlatformModal\(/);
+assert.doesNotMatch(PROJECTS_CORE_CSS, /\.playground-new-issue-modal\.platform-modal-surface\s*\{/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-new-issue-modal__body\.platform-modal-body\s*\{[\s\S]*?display: flex;[\s\S]*?overflow: auto;/);
+assert.match(PROJECTS_PAGE_SHELL_SCRIPT, /const normalizedDraft = normalizePlaygroundTaskRecord\(syncPlaygroundTaskRecordMetadata\([\s\S]*?return \{\s*\.\.\.normalizedDraft,\s*title: "",\s*\};/);
+assert.match(PROJECTS_PAGE_ACTIONS_SCRIPT, /function openTaskCommentComposer\(options = \{\}\)[\s\S]*?function activateTaskReviewCommentMode\(\) \{\s*openTaskCommentComposer\(\{ review: true \}\);/);
+assert.match(PROJECTS_PAGE_ACTIONS_SCRIPT, /function handleTaskSurfaceClick\(event\)[\s\S]*?target\.closest\([^\n]*\.platform-modal-backdrop/);
+assert.match(PROJECTS_DOMAIN_RUNTIME_SCRIPT, /const authorUserId = readPlaygroundTaskCommentIdentityString\(comment, \["authorUserId", "author_user_id", "createdByUserId"/);
+assert.match(PROJECTS_DOMAIN_RUNTIME_SCRIPT, /const createdAt = typeof comment\.createdAt[\s\S]*?: typeof comment\.updatedAt[\s\S]*?: "";/);
+assert.match(PROJECTS_DOMAIN_RUNTIME_SCRIPT, /const creatorAgentId = \[[\s\S]*?task\.createdByAgentId[\s\S]*?const creatorUserId = \[[\s\S]*?task\.createdByUserId/);
+assert.match(PROJECTS_DOMAIN_RUNTIME_SCRIPT, /createdByUserId: creatorUserId,\s*creator,/);
+assert.match(PROJECTS_PAGE_ACTIONS_SCRIPT, /function getTaskCommentDisplayName\(comment\)[\s\S]*?isTaskCommentByCurrentUser\(comment\)[\s\S]*?getTaskCommentWorkspaceMember\(comment\)/);
+assert.match(PROJECTS_PAGE_ACTIONS_SCRIPT, /function renderTaskCommentAvatar\(comment, className\)[\s\S]*?React\.createElement\(AccountAvatar, \{/);
+assert.match(PROJECTS_PAGE_ACTIONS_SCRIPT, /function getTaskCreatorIdentity\(task\)[\s\S]*?function renderTaskCreatorValue\(task\)[\s\S]*?React\.createElement\(AccountAvatar, \{/);
+assert.match(PROJECTS_PAGE_ACTIONS_SCRIPT, /isCurrentUser\s*\? String\(currentUserName \|\| creator\.name \|\| "User"\)/);
+assert.match(PROJECTS_PAGE_ACTIONS_SCRIPT, /metadata: currentUserAvatarUrl\s*\? \{ authorAvatarUrl: currentUserAvatarUrl \}/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /const taskComments = normalizePlaygroundTaskCommentList\(draftTask\.comments\)[\s\S]*?return normalizedRightTimestamp - normalizedLeftTimestamp;/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /className: "playground-tasks-detail-fact-label" \}, "Creator"\)[\s\S]*?renderTaskCreatorValue\(draftTask\)/);
+assert.match(PROJECTS_PAGE_SHELL_SCRIPT, /function buildProjectIssueComposerDraft\(options = \{\}\)[\s\S]*?parentTaskId: requestedParentTaskId,[\s\S]*?function openProjectIssueComposer\(options = \{\}\)/);
+assert.doesNotMatch(PROJECTS_VIEWS_04_FRAGMENT, /className: "playground-tasks-skills"/);
+assert.doesNotMatch(PROJECTS_VIEWS_04_FRAGMENT, /"Manage Skills"/);
 assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /onClick: \(\) => handleTaskDescriptionFormat\(action\.id\)/);
 assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /title: "Strategy Notes"[\s\S]*?stickyHeader: false/);
 assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /historyKey: "full-strategy:" \+ selectedProject\.id,\s*stickyHeader: false/);
@@ -274,15 +326,28 @@ assert.match(PROJECTS_STYLES, /playground-project-overview/);
 assert.match(PROJECTS_STYLE_FRAGMENTS.core, /playground-tasks-page/);
 assert.match(PROJECTS_STYLE_FRAGMENTS.connectorBrowser, /playground-tasks-connector-browser-portal/);
 assert.match(PROJECTS_CORE_CSS, /\.playground-ticket-detail-frame\s*\{/);
+assert.doesNotMatch(PROJECTS_CORE_CSS, /\.playground-ticket-detail-frame\.has-preview\s*\{/);
 assert.match(PROJECTS_CORE_CSS, /\.playground-ticket-detail-page\s*\{/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-ticket-detail-attachment-sidebar-body\s*\{[\s\S]*?padding: 0;\s*overflow: hidden;/);
 assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-ticket-screen-panel\s+\.playground-ticket-detail-content\s+\.playground-environments-detail-scroll\.playground-tasks-detail-scroll\s*\{\s*padding-top: 0 !important;/);
 assert.match(PROJECTS_CORE_CSS, /\.playground-content-body\.is-tasks-page\s+\.playground-environments-page\.playground-tasks-ticket-screen:not\(\.playground-agents-page\)\s+\.playground-environments-detail-scroll\.playground-tasks-project-workspace-scroll\s*\{\s*padding-right: 50px !important;/);
 assert.match(PROJECTS_CORE_CSS, /\.playground-ticket-detail-content\s+\.platform-instructions-editor\.playground-tasks-detail-description\s*\{\s*margin-top: 0;\s*margin-bottom: 0;\s*padding-bottom: 3px;/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-database-description-section\.playground-agents-detail-instructions-section\s*\{\s*margin-top: 0;\s*margin-bottom: 0;\s*padding-bottom: 3px !important;/);
 assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-ticket-attachments\s*\{\s*margin-top: 12px;/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-ticket-subtasks\s*\{\s*margin-top: 12px;/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-ticket-screen-panel \.playground-tasks-connectors-header,[\s\S]*?padding-bottom: 12px;\s*border-bottom: 1px solid rgba\(255, 255, 255, 0\.1\);/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-ticket-screen-panel \.playground-tasks-connectors-header\s*\{\s*margin-bottom: 12px;/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-ticket-screen-panel \.playground-tasks-comments-toolbar\s*\{\s*margin-bottom: 24px;/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-ticket-screen-panel \.playground-tasks-comments-list\s*\{\s*gap: 24px;/);
+assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(PlatformPopup, \{\s*open: taskDetailPopover === "menu",[\s\S]*?variant: "minimal",[\s\S]*?placement: "bottom-end"/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-comment-modal-instructions\s*\{[\s\S]*?min-height: 180px;/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-comment-modal-instructions \.platform-instructions-editor__title\s*\{\s*font-size: 14px;/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-comment-modal-body\s*\{[\s\S]*?padding-top: 0;/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-detail-creator-value \.playground-tasks-detail-select-trigger-label\s*\{\s*color: rgba\(255, 255, 255, 0\.82\);\s*font-size: 12px;\s*font-weight: 400;/);
 assert.match(PROJECTS_CORE_CSS, /\.playground-content-body\.is-tasks-page\s+\.playground-environments-page\.playground-tasks-project-workspace:not\(\.playground-agents-page\)\s+\.playground-environments-detail-scroll\.playground-tasks-project-workspace-scroll\.is-board\s*\{\s*padding-bottom: 24px;/);
 assert.match(PROJECTS_CORE_CSS, /\.playground-ticket-detail-sidebar \.is-centralized-sidebar-content\s*\{/);
 assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-ticket-thread-divider\s*\{\s*width: 100%;\s*height: 1px;\s*flex: 0 0 1px;\s*margin: 12px 0;/);
-assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-detail-thread-row\s*\{\s*width: calc\(100% \+ 16px\);[\s\S]*?margin-right: -8px;\s*padding: 10px 8px;\s*border: 0;/);
+assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-detail-thread-row\s*\{\s*width: calc\(100% \+ 16px\);[\s\S]*?margin-left: -8px;\s*padding: 10px 8px;\s*border: 0;\s*border-radius: 8px;/);
 assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-backlog-header\.is-backlog-list-header\s+\.playground-tasks-backlog-heading,\s*\.playground-tasks-backlog-header\.is-board-list-header\s+\.playground-tasks-backlog-heading\s*\{\s*font-weight: 400;/);
 assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-project-workspace\s+\.playground-tasks-backlog-view\s+\.playground-tasks-backlog-item\s*\{\s*border-color: rgba\(255, 255, 255, 0\.075\);\s*background: rgba\(255, 255, 255, 0\.075\);/);
 assert.match(PROJECTS_CORE_CSS, /\.playground-tasks-backlog-central-search\.platform-search,\s*\.playground-tasks-board-central-search\.platform-search\s*\{\s*width: 300px;\s*min-width: 300px;\s*flex: 0 0 300px;/);
@@ -292,7 +357,11 @@ assert.match(platformEntrySource, /React\.createElement\(PlatformSearch, \{\s*cl
 assert.match(platformEntrySource, /React\.createElement\(PlatformButtonSelector, \{\s*mode: "popup",\s*buttonVariant: "secondary"[\s\S]*?popupVariant: "minimal"/);
 assert.match(platformEntrySource, /React\.createElement\(PlatformPopup, \{[\s\S]*?variant: "minimal",\s*placement: "bottom-start"/);
 assert.match(platformEntrySource, /import \{ PlatformUiCard \} from "\/dist\/platform-ui\/components\/composite\/ui-card\/index\.js";/);
-assert.match(platformEntrySource, /import \{ PlatformAttachments \} from "\/dist\/platform-ui\/components\/composite\/attachments\/index\.js";/);
+assert.match(platformEntrySource, /import \{ PlatformAttachmentActionMenu, PlatformAttachments \} from "\/dist\/platform-ui\/components\/composite\/attachments\/index\.js";/);
+assert.match(platformEntrySource, /import \{ PlatformFileExplorerBrowserModal, PlatformFileExplorerModal \} from "\/dist\/platform-ui\/components\/composite\/file-explorer\/index\.js";/);
+assert.match(platformEntrySource, /import \{ PlatformSubtasks \} from "\/dist\/platform-ui\/components\/composite\/subtasks\/index\.js";/);
+assert.match(platformEntrySource, /attachmentPreviewPortalId: "playground-task-attachment-preview-root"/);
+assert.match(platformEntrySource, /id: "playground-task-attachment-preview-root",\s*className: "platform-floating-sidebar-portal playground-task-attachment-preview-portal"/);
 assert.match(platformEntrySource, /React\.createElement\(ListFilter, \{ width: 14/);
 assert.match(platformEntrySource, /playground-project-resources-toolbar-title-group/);
 assert.match(platformEntrySource, /renderSharedFilterControl\(\)[\s\S]*?renderSharedNewControl\(\),\s*renderSharedSearchControl\(\)/);

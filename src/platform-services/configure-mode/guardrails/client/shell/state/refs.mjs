@@ -7,6 +7,7 @@ export const GUARDRAILS_APP_REFS_SCRIPT = `        const guardrailsToolbarRef = 
         const guardrailVersionDescriptionTextareaRef = useRef(null);
         const guardrailVersionModalCloseTimerRef = useRef(null);
         const guardrailVersionModalFrameRef = useRef(null);
+        const guardrailDetailSidebarCollapsedBeforeVersionsRef = useRef(null);
         const guardrailVersionBaselineRef = useRef({ key: "", signature: "" });
         const guardrailVersionDraftTouchedRef = useRef(false);
         const guardrailsBackendLoadRef = useRef("");

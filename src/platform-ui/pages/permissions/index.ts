@@ -3,6 +3,7 @@ export {
   PLATFORM_PERMISSION_RESOURCE_TYPES,
   PLATFORM_PERMISSION_RING_DEFINITIONS,
   PLATFORM_PERMISSION_RING_IDS,
+  PLATFORM_SCOPED_PERMISSION_SUBJECT_TYPES,
   PLATFORM_PERMISSION_SUBJECT_TYPES,
 } from "./permission-catalog.js";
 export type { PlatformPermissionSubjectType } from "./permission-catalog.js";
@@ -28,6 +29,11 @@ export {
   updatePlatformPermissionActionRing,
   updatePlatformPermissionRingAccess,
 } from "./permission-policy.js";
+export {
+  createPlatformRolePermissionSet,
+  normalizePlatformRolePermissionSet,
+} from "./permission-presets.js";
+export type { PlatformPermissionRoleId } from "./permission-presets.js";
 export {
   PLATFORM_PERMISSION_ACCESS_OPTIONS,
   PLATFORM_PERMISSION_MINI_RING_GRADIENTS,

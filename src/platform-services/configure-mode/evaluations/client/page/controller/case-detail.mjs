@@ -87,22 +87,25 @@ export const EVALUATIONS_PAGE_CONTROLLER_CASE_DETAIL_SCRIPT = String.raw`       
           return React.createElement("div", { className: "playground-evaluations-case-text-content" }, text);
         }
 
-        function renderEvaluationPassThresholdInline(set) {
+        function renderEvaluationPassThresholdInline(set, options = {}) {
+          const showLabel = options.showLabel !== false;
           return React.createElement("div", { className: "playground-evaluations-pass-threshold-inline" },
-            React.createElement("span", { className: "playground-evaluations-pass-threshold-label-group" },
-              React.createElement("span", { className: "playground-evaluations-pass-threshold-inline-label" }, "Pass Threshold"),
-              React.createElement("button", {
-                type: "button",
-                className: "playground-evaluations-pass-threshold-help",
-                "aria-label": "Pass threshold information",
-                onClick: (event) => event.preventDefault(),
-              },
-                React.createElement(CircleHelp, { width: 12, height: 12, strokeWidth: 1.8 }),
-                React.createElement("span", { className: "playground-evaluations-pass-threshold-tooltip", role: "tooltip" },
-                  "Minimum score a case must reach to count as passed. The run pass rate is calculated from cases at or above this threshold."
+            showLabel
+              ? React.createElement("span", { className: "playground-evaluations-pass-threshold-label-group" },
+                  React.createElement("span", { className: "playground-evaluations-pass-threshold-inline-label" }, "Pass Threshold"),
+                  React.createElement("button", {
+                    type: "button",
+                    className: "playground-evaluations-pass-threshold-help",
+                    "aria-label": "Pass threshold information",
+                    onClick: (event) => event.preventDefault(),
+                  },
+                    React.createElement(CircleHelp, { width: 12, height: 12, strokeWidth: 1.8 }),
+                    React.createElement("span", { className: "playground-evaluations-pass-threshold-tooltip", role: "tooltip" },
+                      "Minimum score a case must reach to count as passed. The run pass rate is calculated from cases at or above this threshold."
+                    )
+                  )
                 )
-              )
-            ),
+              : null,
             React.createElement("input", {
               type: "number",
               min: "0",
@@ -121,135 +124,17 @@ export const EVALUATIONS_PAGE_CONTROLLER_CASE_DETAIL_SCRIPT = String.raw`       
 
         function renderEvaluationGuidanceEditor(set) {
           const guidance = String(set?.evaluationGuidance || "");
-          const isEditing = evaluationGuidanceEditingId === set.id;
-          const history = evaluationGuidanceHistoryById[set.id] || { past: [], future: [] };
-          const canUndo = Array.isArray(history.past) && history.past.length > 0;
-          const canRedo = Array.isArray(history.future) && history.future.length > 0;
           const placeholder = "Optional scoring instructions that apply to every row in this evaluation set.";
-          const applyHistoryValue = (value) => {
-            updateEvaluationGuidanceValue(set.id, String(value ?? ""), { recordHistory: false });
-            focusEvaluationGuidanceTextareaAtEnd(value);
-          };
-          const handleUndo = () => {
-            if (!canUndo) return;
-            const currentValue = guidance;
-            const previousValue = history.past[history.past.length - 1];
-            setEvaluationGuidanceHistoryById((current) => {
-              const currentHistory = current[set.id] || { past: [], future: [] };
-              return {
-                ...current,
-                [set.id]: {
-                  past: (Array.isArray(currentHistory.past) ? currentHistory.past : []).slice(0, -1),
-                  future: [currentValue, ...(Array.isArray(currentHistory.future) ? currentHistory.future : [])].slice(0, 80),
-                },
-              };
-            });
-            applyHistoryValue(previousValue);
-          };
-          const handleRedo = () => {
-            if (!canRedo) return;
-            const currentValue = guidance;
-            const nextValue = history.future[0];
-            setEvaluationGuidanceHistoryById((current) => {
-              const currentHistory = current[set.id] || { past: [], future: [] };
-              return {
-                ...current,
-                [set.id]: {
-                  past: [...(Array.isArray(currentHistory.past) ? currentHistory.past : []), currentValue].slice(-80),
-                  future: (Array.isArray(currentHistory.future) ? currentHistory.future : []).slice(1),
-                },
-              };
-            });
-            applyHistoryValue(nextValue);
-          };
-          const renderToolbarButton = (action) =>
-            React.createElement("button", {
-              key: action.id,
-              type: "button",
-              className: "playground-tasks-detail-format-button",
-              title: action.label,
-              "aria-label": action.label,
-              disabled: Boolean(action.disabled),
-              onMouseDown: (event) => event.preventDefault(),
-              onClick: action.onClick || (() => handleEvaluationGuidanceMarkdownFormat(set.id, action.id)),
-            }, React.createElement(action.icon, {
-              width: 14,
-              height: 14,
-              strokeWidth: action.strokeWidth || 1.8,
-            }));
-          const formatActionGroups = [
-            [
-              { id: "undo", label: "Undo", icon: Undo2, disabled: !canUndo, onClick: handleUndo },
-              { id: "redo", label: "Redo", icon: Redo2, disabled: !canRedo, onClick: handleRedo },
-            ],
-            [
-              { id: "bold", label: "Bold", icon: Bold, strokeWidth: 2.7 },
-              { id: "italic", label: "Italic", icon: Italic },
-              { id: "underline", label: "Underline", icon: Underline },
-            ],
-            [
-              { id: "list", label: "List", icon: List },
-              { id: "ordered-list", label: "Ordered list", icon: ListOrdered },
-            ],
-            [
-              { id: "code", label: "Code", icon: CodeXml },
-              { id: "link", label: "Link", icon: Link2 },
-            ],
-          ];
-          return React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section playground-evaluations-dataset-guidance-section" },
-            React.createElement("div", { className: "playground-tasks-detail-section-header" },
-              React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Dataset Evaluator Guidance"),
-              React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                formatActionGroups.flatMap((group, groupIndex) => [
-                  groupIndex > 0
-                    ? React.createElement("span", {
-                        key: "divider:" + groupIndex,
-                        className: "playground-agents-detail-instructions-toolbar-divider",
-                        "aria-hidden": "true",
-                      })
-                    : null,
-                  ...group.map((action) => renderToolbarButton(action)),
-                ])
-              )
-            ),
-            React.createElement("div", {
-              className: "playground-tasks-detail-description-editor" + (isEditing ? " is-editing" : " is-preview"),
-            },
-              !isEditing
-                ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                    guidance.trim()
-                      ? typeof PlaygroundTaskDescriptionMarkdown === "function"
-                        ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                            content: guidance,
-                            className: "playground-tasks-detail-description-preview tb-message-markdown",
-                          })
-                        : React.createElement("div", {
-                            className: "playground-tasks-detail-description-preview",
-                          }, guidance)
-                      : React.createElement("div", {
-                          className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                        }, placeholder)
-                  )
-                : null,
-              React.createElement("textarea", {
-                ref: evaluationGuidanceTextareaRef,
-                className: "playground-tasks-detail-description-input " + (isEditing ? "is-editing" : "is-preview"),
-                rows: 1,
-                placeholder: isEditing ? placeholder : "",
-                value: guidance,
-                onFocus: () => {
-                  setEvaluationGuidanceEditingId(set.id);
-                },
-                onChange: (event) => {
-                  updateEvaluationGuidanceValue(set.id, event.target.value);
-                  resizeEvaluationGuidanceTextarea(event.currentTarget);
-                },
-                onBlur: () => {
-                  setEvaluationGuidanceEditingId("");
-                },
-              })
-            )
-          );
+          return React.createElement(PlatformInstructionsEditor, {
+            value: guidance,
+            onChange: (value) => updateEvaluationGuidanceValue(set.id, value),
+            title: "Dataset Evaluator Guidance",
+            placeholder,
+            ariaLabel: "Dataset evaluator guidance",
+            stickyHeader: true,
+            historyKey: "evaluation-guidance:" + set.id,
+            className: "playground-evaluations-dataset-guidance-section",
+          });
         }
 
         function renderEvaluationCaseEditorMarkdownSection(field, title, placeholder) {
@@ -398,4 +283,3 @@ export const EVALUATIONS_PAGE_CONTROLLER_CASE_DETAIL_SCRIPT = String.raw`       
         }
 
 `;
-

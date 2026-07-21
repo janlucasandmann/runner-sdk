@@ -512,6 +512,7 @@
         .playground-content-shell.is-resources-side-detail-open > .playground-content-nav,
         .playground-content-shell.is-metronome-node-detail-open > .playground-content-nav,
         .playground-content-shell:has(> .playground-agent-versions-node-drawer.is-open) > .playground-content-nav,
+        .playground-content-shell:has(> #playground-task-attachment-preview-root > .playground-ticket-detail-attachment-sidebar[data-state="open"]) > .playground-content-nav,
         .playground-content-shell:has(> .playground-content-body.is-files-page .playground-files-shell.has-preview > .playground-files-preview) > .playground-content-nav,
         .playground-content-shell:has(.playground-tasks-shell.is-detail-open > .playground-tasks-detail-panel.is-project-task-detail) > .playground-content-nav {
           padding-right: calc(6px + var(--playground-thread-task-detail-width));
@@ -773,6 +774,10 @@
         .playground-content-body.is-thread-side-detail-open,
         .playground-content-body.is-metronome-node-detail-open,
         .playground-content-body.is-agent-versions-detail-open {
+          margin-right: calc(var(--playground-thread-task-detail-width) + 6px);
+        }
+
+        .playground-content-shell:has(> #playground-task-attachment-preview-root > .playground-ticket-detail-attachment-sidebar[data-state="open"]) > .playground-content-body {
           margin-right: calc(var(--playground-thread-task-detail-width) + 6px);
         }
   
@@ -22037,7 +22042,7 @@
           margin: 0 0 10px;
           color: rgba(255, 255, 255, 0.92);
           font-size: 12px;
-          font-weight: 500;
+          font-weight: 400;
           line-height: 1.3;
         }
   

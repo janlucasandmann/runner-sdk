@@ -102,6 +102,45 @@ describe("PlatformSelector", () => {
     expect(screen.getByText("andrea@example.com")).not.toBeNull();
   });
 
+  it("supports an interactive popup header outside the listbox", async () => {
+    const user = userEvent.setup();
+    render(
+      <PlatformSelector
+        value="andrea"
+        options={[{ value: "andrea", label: "Andrea" }]}
+        popupHeader={<button type="button">People</button>}
+        ariaLabel="Choose assignee"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Choose assignee" }));
+
+    const listbox = screen.getByRole("listbox", { name: "Choose assignee options" });
+    expect(screen.getByRole("button", { name: "People" })).not.toBeNull();
+    expect(listbox.contains(screen.getByRole("button", { name: "People" }))).toBe(false);
+  });
+
+  it("supports custom popup content without rendering an options list", async () => {
+    const user = userEvent.setup();
+    render(
+      <PlatformSelector
+        value="scheduled"
+        options={[]}
+        label="Tomorrow"
+        popupContent={<input aria-label="Run at" />}
+        popupAriaLabel="Edit schedule"
+        ariaLabel="Select ticket schedule"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Select ticket schedule" }));
+
+    const popup = screen.getByRole("dialog", { name: "Edit schedule" });
+    expect(popup.classList.contains("has-custom-content")).toBe(true);
+    expect(screen.getByRole("textbox", { name: "Run at" })).not.toBeNull();
+    expect(screen.queryByRole("listbox")).toBeNull();
+  });
+
   it("supports right-edge popup alignment independently from trigger alignment", async () => {
     const user = userEvent.setup();
     render(
@@ -121,7 +160,8 @@ describe("PlatformSelector", () => {
 
     expect(
       screen.getByRole("listbox", { name: "Right aligned permissions options" })
-        .getAttribute("data-platform-popup-placement"),
+        .closest(".platform-popup-surface")
+        ?.getAttribute("data-platform-popup-placement"),
     ).toBe("bottom-end");
   });
 });

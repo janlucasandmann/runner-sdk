@@ -63,4 +63,33 @@ describe("PlatformFloatingSidebar", () => {
     expect(portalTarget.querySelector("[data-platform-floating-sidebar='true']")).not.toBeNull();
     portalTarget.remove();
   });
+
+  it("contains click events when rendered through a portal", async () => {
+    const onParentClick = vi.fn();
+    const portalTarget = document.createElement("div");
+    document.body.append(portalTarget);
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => {
+      callback(0);
+      return 1;
+    });
+
+    render(
+      <div onClick={onParentClick}>
+        <PlatformFloatingSidebar
+          open
+          title="Attachment"
+          portal
+          portalTarget={portalTarget}
+          onClose={() => {}}
+        >
+          <button type="button">Preview action</button>
+        </PlatformFloatingSidebar>
+      </div>,
+    );
+
+    await act(async () => {});
+    fireEvent.click(screen.getByRole("button", { name: "Preview action" }));
+    expect(onParentClick).not.toHaveBeenCalled();
+    portalTarget.remove();
+  });
 });

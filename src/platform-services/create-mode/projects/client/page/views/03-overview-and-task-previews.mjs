@@ -1312,11 +1312,14 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
             : "";
           const taskComments = normalizePlaygroundTaskCommentList(draftTask.comments)
             .slice()
-            .sort((left, right) => String(left.createdAt || "").localeCompare(String(right.createdAt || "")));
+            .sort((left, right) => {
+              const leftTimestamp = Date.parse(String(left.createdAt || ""));
+              const rightTimestamp = Date.parse(String(right.createdAt || ""));
+              const normalizedLeftTimestamp = Number.isFinite(leftTimestamp) ? leftTimestamp : 0;
+              const normalizedRightTimestamp = Number.isFinite(rightTimestamp) ? rightTimestamp : 0;
+              return normalizedRightTimestamp - normalizedLeftTimestamp;
+            });
           const isFullPageTaskDetail = Boolean(projectTaskDetailScreenOpen);
-          const taskSkillEntries = getEffectivePlaygroundTaskEnabledSkillIds(draftTask)
-            .map((skillId) => resolveTaskSkillItem(skillId))
-            .filter(Boolean);
           const taskConnectorEntries = PLAYGROUND_TASK_CONNECTOR_OPTIONS.map((option) => {
             const selection = getDraftTaskConnectorSelection(option.source, draftTask);
             return {
@@ -1365,43 +1368,32 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
             ? getPlaygroundTaskAssigneePopupMode(activeAssigneeActor)
             : (taskDetailAvailableAssigneePopupModes[0] || "agents");
 
-          function toggleTaskDetailSelectPopover(nextPopoverId) {
-            setTaskDetailPopover("");
-            setTaskSkillsPopoverOpen(false);
-            if (nextPopoverId === "assignee" && taskDetailSelectPopover !== "assignee") {
-              setTaskDetailAssigneePopupMode(defaultTaskAssigneePopupMode);
-            }
-            setTaskDetailSelectPopover((current) => current === nextPopoverId ? "" : nextPopoverId);
-          }
-
-          function renderTaskDetailSelectOptionRow({ key, label, description, selected, onClick, disabled = false }) {
-            return React.createElement("button", {
-                key,
-                type: "button",
-                className: "tb-popup-row tb-popup-row-select" + (selected ? " selected" : ""),
-                onClick,
-                disabled,
-              },
-              React.createElement("span", { className: "tb-popup-check-slot" },
-                selected
-                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                  : null
-              ),
-              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                React.createElement("span", null, label),
-                description
-                  ? React.createElement("span", null, description)
-                  : null
-              )
-            );
+          function createTaskDetailSelectorOption({ value, label, description, leading = null, onSelect, disabled = false }) {
+            return {
+              value: String(value || ""),
+              label,
+              description: description || undefined,
+              leading: leading || undefined,
+              disabled,
+              onSelect,
+            };
           }
 
           function renderTaskDetailSelectControl({
             popoverId,
+            value,
             valueLabel,
             disabled = false,
             isEmpty = false,
             buttonContent = null,
-            menuClassName = "",
-            children,
+            popupClassName = "",
+            popupHeader = null,
+            popupContent = null,
+            popupAriaLabel = "",
+            open = null,
+            onOpenChange = null,
+            popupWidth = "min(280px, calc(100vw - 48px))",
+            popupMaxHeight = "min(320px, calc(100vh - 120px))",
+            options = [],
+            emptyContent = "No options available.",
 `;

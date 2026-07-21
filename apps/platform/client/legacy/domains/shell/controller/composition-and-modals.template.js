@@ -723,6 +723,7 @@
   ${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation}
   ${MODELS_APP_SCRIPT_FRAGMENTS.topNavigation}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.topNavigation}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.topNavigation}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.topNavigation}${INFERENCE_APP_SCRIPT_FRAGMENTS.topNavigation}${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.topNavigation}
   ${API_KEYS_APP_SCRIPT_FRAGMENTS.topNavigation}
+  ${SECURITY_APP_SCRIPT_FRAGMENTS.topNavigation}
           function renderResourcesPageNav() {
             const isResourcesDetailView = resourcesHeaderState.mode === "detail";
             const activeDevelopServerPageItem = activeResourcesView === "servers"
@@ -2240,6 +2241,7 @@
   ${MODELS_APP_SCRIPT_FRAGMENTS.pageView}${GUARDRAILS_PAGE_RUNTIME_SCRIPT}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.pageView}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.pageView}${CONFIGURE_HOME_PAGE_SCRIPT_FRAGMENTS.home}${CONFIGURE_HOME_PAGE_SCRIPT_FRAGMENTS.notifications}
   ${API_KEYS_PAGE_SCRIPT_FRAGMENTS.management}
   ${DEVELOP_HOME_PAGE_SCRIPT}
+  ${SECURITY_APP_SCRIPT_FRAGMENTS.pageView}
   ${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.statusIndicators}
   ${APP_HEADER_APP_SCRIPT_FRAGMENTS.breadcrumbBar}
   ${APP_HEADER_APP_SCRIPT_FRAGMENTS.appHeader}
@@ -2453,6 +2455,8 @@
   	                      ? renderDevelopWebhooksNav()
   	                    : activePage === "develop-api-keys"
   	                      ? renderDevelopApiKeysNav()
+                        : activePage === "develop-security"
+                          ? renderDevelopSecurityNav()
   	                    : isResourcesPage
   	                      ? renderResourcesPageNav()
   	                    : activePage === "team"
@@ -2834,6 +2838,12 @@
   	                          : hasDemoAccess
   	                            ? renderDemoFeaturePage("resources")
   	                            : renderAuthGate()
+                          : activePage === "develop-security"
+                            ? hasRealAccess
+                              ? renderDevelopSecurityPage()
+                              : hasDemoAccess
+                                ? renderDemoFeaturePage("resources")
+                                : renderAuthGate()
   	                      : activePage === "tools"
                           ? hasRealAccess
                             ? renderPluginsPage()
@@ -3176,6 +3186,7 @@
                                   : { projectId: normalizedProjectId });
                               },
                               onOpenResourceTemplatesPage: openResourceTemplatesPage,
+                              attachmentPreviewPortalId: "playground-task-attachment-preview-root",
                               projectOverviewResourceFilter,
                               setProjectOverviewResourceFilter,
                               projectOverviewResourceSearchQuery,
@@ -3694,6 +3705,13 @@
                       ? React.createElement("div", {
                           id: "playground-metronome-node-drawer-root",
                           className: "platform-floating-sidebar-portal",
+                        })
+                      : null
+                    ,
+                    activePage === "tasks" || activePage === "calendar"
+                      ? React.createElement("div", {
+                          id: "playground-task-attachment-preview-root",
+                          className: "platform-floating-sidebar-portal playground-task-attachment-preview-portal",
                         })
                       : null
                     ,

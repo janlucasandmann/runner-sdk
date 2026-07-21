@@ -321,14 +321,10 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
         height: 100%;
         min-width: 0;
         min-height: 0;
+        position: relative;
         display: grid;
         grid-template-columns: minmax(0, 1fr);
-        column-gap: 42px;
         overflow: hidden;
-      }
-
-      .playground-ticket-detail-frame.has-preview {
-        grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
       }
 
       .playground-ticket-detail-page {
@@ -431,12 +427,16 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
         gap: 0;
       }
 
-      .playground-ticket-detail-preview {
+      .playground-ticket-detail-attachment-sidebar-body {
         min-width: 0;
         min-height: 0;
+        padding: 0;
         overflow: hidden;
-        border-left: 1px solid rgba(255, 255, 255, 0.08);
-        background: rgba(0, 0, 0, 0.5);
+      }
+
+      .playground-ticket-detail-attachment-sidebar-body > .playground-tasks-detail-preview-host {
+        width: 100%;
+        height: 100%;
       }
 
       .playground-tasks-ticket-sidebar-toggle-button {
@@ -483,6 +483,37 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
 
       .playground-tasks-ticket-attachments {
         margin-top: 12px;
+      }
+
+      .playground-tasks-ticket-subtasks {
+        margin-top: 12px;
+      }
+
+      .playground-tasks-ticket-screen-panel .playground-tasks-connectors-header,
+      .playground-tasks-ticket-screen-panel .playground-tasks-comments-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-tasks-ticket-screen-panel .playground-tasks-connectors-header {
+        margin-bottom: 12px;
+      }
+
+      .playground-tasks-ticket-screen-panel .playground-tasks-comments-toolbar {
+        margin-bottom: 24px;
+      }
+
+      .playground-tasks-ticket-screen-panel .playground-tasks-comments-list {
+        gap: 24px;
+      }
+
+      .playground-tasks-ticket-screen-panel .playground-tasks-connectors-header .playground-tasks-detail-section-title,
+      .playground-tasks-ticket-screen-panel .playground-tasks-comments-toolbar .playground-tasks-detail-section-title {
+        margin: 0;
       }
 
       .playground-tasks-ticket-screen-panel .playground-tasks-attachments-environment-button,

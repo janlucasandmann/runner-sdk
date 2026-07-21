@@ -1,5 +1,5 @@
 export const CALENDAR_PROJECTS_PAGE_SCHEDULE_DIALOG_VIEW_SCRIPT = `
-        function renderTaskScheduleDialog() {
+        function renderTaskScheduleDialog({ embedded = false } = {}) {
           if (!taskScheduleDialogState) {
             return null;
           }
@@ -13,7 +13,7 @@ export const CALENDAR_PROJECTS_PAGE_SCHEDULE_DIALOG_VIEW_SCRIPT = `
             ? " is-exit"
             : " is-enter";
           return React.createElement("div", {
-              className: "playground-tasks-schedule-panel" + animationClass,
+              className: "playground-tasks-schedule-panel" + (embedded ? " is-centralized-selector-content" : animationClass),
               onClick: (event) => event.stopPropagation(),
             },
             React.createElement("div", { className: "playground-tasks-schedule-topbar" },
@@ -34,6 +34,7 @@ export const CALENDAR_PROJECTS_PAGE_SCHEDULE_DIALOG_VIEW_SCRIPT = `
             React.createElement("div", { className: "playground-tasks-schedule-body" },
               React.createElement("div", { className: "tb-popup-panel-section tb-popup-panel-section-attach-header" },
                 React.createElement(PlatformSwitch, {
+                  className: "playground-tasks-schedule-type-switch",
                   ariaLabel: "Schedule type",
                   value: isRecurring ? "recurring" : "one-time",
                   options: [

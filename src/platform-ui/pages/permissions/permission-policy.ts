@@ -1,4 +1,5 @@
 import {
+  PLATFORM_LEGACY_SERVER_PERMISSION_ACTION_ALIASES,
   PLATFORM_PERMISSION_ACTION_DEFINITIONS,
   PLATFORM_PERMISSION_RESOURCE_TYPES,
   PLATFORM_PERMISSION_RING_DEFINITIONS,
@@ -12,6 +13,7 @@ import {
   getPlatformPermissionRingAccess,
   normalizePlatformPermissionAccess,
   PLATFORM_PERMISSION_ACCESS_OPTIONS,
+  shouldShowPlatformPermissionAction,
 } from "./permission-model.js";
 import type {
   PlatformPermissionAccess,
@@ -55,9 +57,14 @@ export function createPlatformDefaultPermissionRings(): Record<string, PlatformP
   );
 }
 
-export function createPlatformDefaultPermissionActions(): Record<string, PlatformPermissionActionPolicy> {
+export function createPlatformDefaultPermissionActions(
+  subjectType?: PlatformPermissionSubjectType,
+): Record<string, PlatformPermissionActionPolicy> {
+  const actionDefinitions = subjectType
+    ? PLATFORM_PERMISSION_ACTION_DEFINITIONS.filter((action) => shouldShowPlatformPermissionAction(action, subjectType))
+    : PLATFORM_PERMISSION_ACTION_DEFINITIONS;
   return Object.fromEntries(
-    PLATFORM_PERMISSION_ACTION_DEFINITIONS.map((action) => [
+    actionDefinitions.map((action) => [
       action.id,
       { ringId: action.ringId },
     ]),
@@ -97,12 +104,21 @@ function normalizePermissionRings(value: unknown): Record<string, PlatformPermis
   return rings;
 }
 
-function normalizePermissionActions(value: unknown): Record<string, PlatformPermissionActionPolicy> {
-  const actions = createPlatformDefaultPermissionActions();
+function normalizePermissionActions(
+  value: unknown,
+  subjectType: PlatformPermissionSubjectType,
+): Record<string, PlatformPermissionActionPolicy> {
+  const actions = createPlatformDefaultPermissionActions(subjectType);
   const inputActions = isPlatformPermissionRecord(value) ? value : {};
+  const legacyAliases = PLATFORM_LEGACY_SERVER_PERMISSION_ACTION_ALIASES[
+    subjectType as keyof typeof PLATFORM_LEGACY_SERVER_PERMISSION_ACTION_ALIASES
+  ];
 
-  for (const action of PLATFORM_PERMISSION_ACTION_DEFINITIONS) {
-    const actionValue = inputActions[action.id];
+  for (const action of PLATFORM_PERMISSION_ACTION_DEFINITIONS.filter(
+    (definition) => shouldShowPlatformPermissionAction(definition, subjectType),
+  )) {
+    const legacyActionId = legacyAliases?.[action.id];
+    const actionValue = inputActions[action.id] ?? (legacyActionId ? inputActions[legacyActionId] : undefined);
     if (typeof actionValue === "string") {
       const access = normalizePlatformPermissionAccessValue(actionValue, "");
       actions[action.id] = {
@@ -151,7 +167,7 @@ export function createPlatformDefaultPermissionSet(
     subjectType: normalizedSubjectType,
     defaultAccess: "full_access",
     rings: createPlatformDefaultPermissionRings(),
-    actions: createPlatformDefaultPermissionActions(),
+    actions: createPlatformDefaultPermissionActions(normalizedSubjectType),
     resources: createPlatformDefaultPermissionResources("full_access"),
   };
 }
@@ -164,7 +180,9 @@ export function createPlatformFullAccessPermissionSet(
     PLATFORM_PERMISSION_RING_IDS.map((ringId) => [ringId, { defaultAccess: "full_access" }]),
   );
   permissionSet.actions = Object.fromEntries(
-    PLATFORM_PERMISSION_ACTION_DEFINITIONS.map((action) => [
+    PLATFORM_PERMISSION_ACTION_DEFINITIONS
+      .filter((action) => shouldShowPlatformPermissionAction(action, subjectType))
+      .map((action) => [
       action.id,
       {
         ringId: normalizePlatformPermissionRingId(action.ringId, "ring_1"),
@@ -178,16 +196,18 @@ export function createPlatformFullAccessPermissionSet(
 
 export function normalizePlatformPermissionSet(
   value: unknown,
-  subjectType: PlatformPermissionSubjectType = "agent",
+  subjectType?: PlatformPermissionSubjectType,
 ): PlatformPermissionSet {
-  const fallbackSubjectType = normalizePlatformPermissionSubjectType(subjectType, "agent");
+  const storedSubjectType = isPlatformPermissionRecord(value)
+    ? normalizePlatformPermissionSubjectType(value.subjectType, "agent")
+    : "agent";
+  const fallbackSubjectType = subjectType === undefined
+    ? storedSubjectType
+    : normalizePlatformPermissionSubjectType(subjectType, "agent");
   const fallback = createPlatformDefaultPermissionSet(fallbackSubjectType);
   if (!isPlatformPermissionRecord(value)) return fallback;
 
-  const normalizedSubjectType = normalizePlatformPermissionSubjectType(
-    value.subjectType,
-    fallbackSubjectType,
-  );
+  const normalizedSubjectType = subjectType === undefined ? storedSubjectType : fallbackSubjectType;
   const defaultAccess = normalizePlatformPermissionAccessValue(
     value.defaultAccess,
     fallback.defaultAccess,
@@ -220,7 +240,7 @@ export function normalizePlatformPermissionSet(
     subjectType: normalizedSubjectType,
     defaultAccess,
     rings: normalizePermissionRings(value.rings),
-    actions: normalizePermissionActions(value.actions),
+    actions: normalizePermissionActions(value.actions, normalizedSubjectType),
     resources,
   };
 }
@@ -276,9 +296,11 @@ export function getPlatformPermissionActionExplicitAccessByDefinition(
     ? getPlatformPermissionActionDefinitionById(actionDefinition)
     : actionDefinition;
   if (!resolvedAction) return "";
+  const subjectType = normalizePlatformPermissionSubjectType(permissionSet?.subjectType, "agent");
+  if (!shouldShowPlatformPermissionAction(resolvedAction, subjectType)) return "";
   const normalizedPermissionSet = normalizePlatformPermissionSet(
     permissionSet,
-    normalizePlatformPermissionSubjectType(permissionSet?.subjectType, "agent"),
+    subjectType,
   );
   return getPlatformPermissionActionExplicitAccess(
     normalizedPermissionSet,
@@ -290,15 +312,20 @@ export function getPlatformPermissionActionExplicitAccessByDefinition(
 
 export function getPlatformPermissionActionAccessByDefinition(
   permissionSet: PlatformPermissionSet | null | undefined,
-  actionDefinition: PlatformPermissionActionDefinition | null | undefined,
+  actionDefinition: PlatformPermissionActionDefinition | string | null | undefined,
 ): PlatformPermissionAccess {
-  if (!actionDefinition) return "full_access";
+  const resolvedAction = typeof actionDefinition === "string"
+    ? getPlatformPermissionActionDefinitionById(actionDefinition)
+    : actionDefinition;
+  if (!resolvedAction) return "full_access";
+  const subjectType = normalizePlatformPermissionSubjectType(permissionSet?.subjectType, "agent");
+  if (!shouldShowPlatformPermissionAction(resolvedAction, subjectType)) return "no_access";
   const explicitAccess = getPlatformPermissionActionExplicitAccessByDefinition(
     permissionSet,
-    actionDefinition,
+    resolvedAction,
   );
   if (explicitAccess) return explicitAccess;
-  const ringId = getPlatformPermissionActionRingIdByDefinition(permissionSet, actionDefinition);
+  const ringId = getPlatformPermissionActionRingIdByDefinition(permissionSet, resolvedAction);
   return getPlatformPermissionRingAccessById(permissionSet, ringId);
 }
 
@@ -371,8 +398,8 @@ export function updatePlatformPermissionActionRing(
 ): PlatformPermissionSet {
   const action = getPlatformPermissionActionDefinitionById(actionId);
   const current = normalizePlatformPermissionSet(permissionSet, subjectType);
-  if (!action) return current;
-  const currentActions = current.actions || createPlatformDefaultPermissionActions();
+  if (!action || !shouldShowPlatformPermissionAction(action, subjectType)) return current;
+  const currentActions = current.actions || createPlatformDefaultPermissionActions(subjectType);
   const rawPolicy = currentActions[action.id];
   const currentPolicy = typeof rawPolicy === "object" && rawPolicy
     ? rawPolicy
@@ -402,8 +429,8 @@ export function updatePlatformPermissionActionAccess(
 ): PlatformPermissionSet {
   const action = getPlatformPermissionActionDefinitionById(actionId);
   const current = normalizePlatformPermissionSet(permissionSet, subjectType);
-  if (!action) return current;
-  const currentActions = current.actions || createPlatformDefaultPermissionActions();
+  if (!action || !shouldShowPlatformPermissionAction(action, subjectType)) return current;
+  const currentActions = current.actions || createPlatformDefaultPermissionActions(subjectType);
   const rawPolicy = currentActions[action.id];
   const currentPolicy = typeof rawPolicy === "object" && rawPolicy
     ? rawPolicy

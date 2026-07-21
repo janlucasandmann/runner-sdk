@@ -476,6 +476,13 @@ export interface RunnerEvaluationRunCreateInput {
   computerId?: string;
   environmentId?: string;
   versionId?: string;
+  guardrailId?: string;
+  guardrailVersionId?: string;
+  targetGuardrailId?: string;
+  targetGuardrailName?: string;
+  targetGuardrailVersionId?: string;
+  targetGuardrailVersionNumber?: number;
+  targetGuardrailVersionLabel?: string;
   label?: string;
   metadata?: Record<string, unknown> | null;
 }
@@ -487,6 +494,12 @@ export interface RunnerEvaluationRun {
   agentId?: string;
   environmentId?: string;
   versionId?: string | null;
+  guardrailId?: string;
+  targetGuardrailId?: string;
+  targetGuardrailName?: string;
+  targetGuardrailVersionId?: string;
+  targetGuardrailVersionNumber?: number;
+  targetGuardrailVersionLabel?: string;
   status?: "queued" | "running" | "completed" | "failed" | "cancelled" | string;
   averageScore?: number;
   passRate?: number;

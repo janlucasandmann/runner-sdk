@@ -1,13 +1,17 @@
-import { Redo2, Undo2 } from "lucide-react";
+import { EllipsisVertical, Redo2, SquarePen, Trash2, Undo2 } from "lucide-react";
 import type {
   ChangeEvent,
   DragEventHandler,
   KeyboardEvent as ReactKeyboardEvent,
+  MouseEvent as ReactMouseEvent,
   MouseEventHandler,
   ReactNode,
 } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { PlatformLoadingState } from "../loading-state/index.js";
+import { PlatformPopup } from "../popup/index.js";
+import { PlatformCheckbox } from "../../ui/checkbox/index.js";
 import { PlatformIconButton } from "../../ui/icon-button/index.js";
 import { PlatformSearch } from "../../ui/search/index.js";
 import {
@@ -32,6 +36,14 @@ export interface PlatformCodeEditorFile {
   closable?: boolean;
   ariaLabel?: string;
   searchText?: string;
+  selectable?: boolean;
+  renameDisabled?: boolean;
+  deleteDisabled?: boolean;
+}
+
+export interface PlatformCodeEditorFileSelectionChange {
+  selectedIds: ReadonlySet<string>;
+  selectedFiles: readonly PlatformCodeEditorFile[];
 }
 
 export interface PlatformCodeEditorHistoryControls {
@@ -45,8 +57,16 @@ export interface PlatformCodeEditorWorkspaceProps {
   files: readonly PlatformCodeEditorFile[];
   activeFileId?: string;
   onFileSelect?: (fileId: string) => void;
+  selectedFileIds?: ReadonlySet<string> | readonly string[];
+  defaultSelectedFileIds?: ReadonlySet<string> | readonly string[];
+  onFileSelectionChange?: (change: PlatformCodeEditorFileSelectionChange) => void;
+  onFileRename?: (file: PlatformCodeEditorFile) => void | Promise<void>;
+  onFilesDelete?: (files: readonly PlatformCodeEditorFile[]) => void | Promise<void>;
+  /** @deprecated The Explorer heading is no longer rendered. */
   sidebarTitle?: ReactNode;
+  /** @deprecated Use tabBarActions. */
   sidebarActions?: ReactNode;
+  tabBarActions?: ReactNode;
   fileSearchValue?: string;
   defaultFileSearchValue?: string;
   fileSearchPlaceholder?: string;
@@ -87,6 +107,16 @@ function stopEditorKeyboardPropagation(event: ReactKeyboardEvent<HTMLElement>) {
   event.stopPropagation();
 }
 
+function normalizeFileSelection(
+  value: ReadonlySet<string> | readonly string[] | undefined,
+) {
+  return new Set(
+    Array.from(value || [])
+      .map((fileId) => String(fileId || "").trim())
+      .filter(Boolean),
+  );
+}
+
 function renderHistoryControls(historyControls: PlatformCodeEditorHistoryControls) {
   return (
     <>
@@ -116,8 +146,13 @@ export function PlatformCodeEditorWorkspace({
   files,
   activeFileId = "",
   onFileSelect,
-  sidebarTitle = "Explorer",
+  selectedFileIds,
+  defaultSelectedFileIds = [],
+  onFileSelectionChange,
+  onFileRename,
+  onFilesDelete,
   sidebarActions = null,
+  tabBarActions,
   fileSearchValue,
   defaultFileSearchValue = "",
   fileSearchPlaceholder = "Search files",
@@ -146,6 +181,15 @@ export function PlatformCodeEditorWorkspace({
   const [internalFileSearchValue, setInternalFileSearchValue] = useState(
     defaultFileSearchValue,
   );
+  const [internalSelectedFileIds, setInternalSelectedFileIds] = useState<Set<string>>(
+    () => normalizeFileSelection(defaultSelectedFileIds),
+  );
+  const [fileMenu, setFileMenu] = useState<{
+    fileId: string;
+    x: number;
+    y: number;
+    alignment: "start" | "end";
+  } | null>(null);
   const [openFileIds, setOpenFileIds] = useState<string[]>(() =>
     Array.from(
       new Set(
@@ -157,6 +201,20 @@ export function PlatformCodeEditorWorkspace({
   );
   const closedActiveFileIdRef = useRef("");
   const previousActiveFileIdRef = useRef("");
+  const fileMenuSurfaceRef = useRef<HTMLDivElement | null>(null);
+  const selectionControlled = selectedFileIds !== undefined;
+  const resolvedSelectedFileIds = useMemo(
+    () => selectionControlled
+      ? normalizeFileSelection(selectedFileIds)
+      : internalSelectedFileIds,
+    [internalSelectedFileIds, selectedFileIds, selectionControlled],
+  );
+  const fileById = useMemo(
+    () => new Map(files.map((file) => [file.id, file])),
+    [files],
+  );
+  const fileActionsEnabled = Boolean(onFileRename || onFilesDelete);
+  const fileSelectionEnabled = Boolean(onFilesDelete);
   const resolvedFileSearchValue =
     fileSearchValue === undefined ? internalFileSearchValue : fileSearchValue;
   const normalizedFileSearchValue = resolvedFileSearchValue.trim().toLocaleLowerCase();
@@ -226,6 +284,108 @@ export function PlatformCodeEditorWorkspace({
     });
   }, [activeFileId, isLoadingFiles, tabbableFileById]);
 
+  useEffect(() => {
+    if (selectionControlled) return;
+    setInternalSelectedFileIds((current) => {
+      const next = new Set(
+        Array.from(current).filter((fileId) => {
+          const file = fileById.get(fileId);
+          return file && file.selectable !== false && !file.deleteDisabled;
+        }),
+      );
+      if (next.size === current.size && Array.from(next).every((fileId) => current.has(fileId))) {
+        return current;
+      }
+      return next;
+    });
+  }, [fileById, selectionControlled]);
+
+  useEffect(() => {
+    if (!fileMenu) return;
+    const closeFileMenu = () => setFileMenu(null);
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      if (target && fileMenuSurfaceRef.current?.contains(target)) return;
+      closeFileMenu();
+    };
+    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") closeFileMenu();
+    };
+    document.addEventListener("pointerdown", handlePointerDown);
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("resize", closeFileMenu);
+    window.addEventListener("scroll", closeFileMenu, true);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("resize", closeFileMenu);
+      window.removeEventListener("scroll", closeFileMenu, true);
+    };
+  }, [fileMenu]);
+
+  const commitFileSelection = useCallback((next: Set<string>) => {
+    if (!selectionControlled) setInternalSelectedFileIds(next);
+    onFileSelectionChange?.({
+      selectedIds: next,
+      selectedFiles: files.filter((file) => next.has(file.id)),
+    });
+  }, [files, onFileSelectionChange, selectionControlled]);
+
+  const toggleFileSelection = useCallback((file: PlatformCodeEditorFile) => {
+    if (!fileSelectionEnabled || file.selectable === false || file.deleteDisabled) return;
+    const next = new Set(resolvedSelectedFileIds);
+    if (next.has(file.id)) next.delete(file.id);
+    else next.add(file.id);
+    commitFileSelection(next);
+  }, [commitFileSelection, fileSelectionEnabled, resolvedSelectedFileIds]);
+
+  const openFileMenu = useCallback((
+    event: ReactMouseEvent<HTMLElement>,
+    file: PlatformCodeEditorFile,
+    contextMenu = false,
+  ) => {
+    if (!fileActionsEnabled) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const rect = contextMenu ? null : event.currentTarget.getBoundingClientRect();
+    setFileMenu((current) => {
+      if (!contextMenu && current?.fileId === file.id) return null;
+      return {
+        fileId: file.id,
+        x: contextMenu ? event.clientX : (rect?.right || event.clientX),
+        y: contextMenu ? event.clientY : (rect?.bottom || event.clientY),
+        alignment: contextMenu ? "start" : "end",
+      };
+    });
+  }, [fileActionsEnabled]);
+
+  const menuFile = fileMenu ? fileById.get(fileMenu.fileId) : undefined;
+  const selectedFiles = useMemo(
+    () => files.filter((file) => resolvedSelectedFileIds.has(file.id)),
+    [files, resolvedSelectedFileIds],
+  );
+  const menuTargetFiles = menuFile
+    ? resolvedSelectedFileIds.has(menuFile.id) && selectedFiles.length > 1
+      ? selectedFiles
+      : [menuFile]
+    : [];
+  const menuTargetsMultipleFiles = menuTargetFiles.length > 1;
+  const renameMenuDisabled = !menuFile || menuFile.renameDisabled;
+  const deleteMenuDisabled = !menuTargetFiles.length
+    || menuTargetFiles.some((file) => file.deleteDisabled);
+
+  const runFileAction = useCallback((action: () => void | Promise<void>) => {
+    setFileMenu(null);
+    try {
+      const result = action();
+      if (result && typeof result.catch === "function") {
+        result.catch((error) => console.error("[PlatformCodeEditorWorkspace] File action failed", error));
+      }
+    } catch (error) {
+      console.error("[PlatformCodeEditorWorkspace] File action failed", error);
+    }
+  }, []);
+
   const openFile = (file: PlatformCodeEditorFile) => {
     if (file.openInTab !== false && !file.disabled) {
       closedActiveFileIdRef.current = "";
@@ -255,6 +415,71 @@ export function PlatformCodeEditorWorkspace({
   };
 
   const activeFileIsOpen = !activeFileId || openFileIds.includes(activeFileId);
+  const fileMenuPopup = typeof document !== "undefined" && document.body
+    ? createPortal(
+        <PlatformPopup
+          open={Boolean(fileMenu && menuFile)}
+          portal
+          portalTarget={document.body}
+          variant="minimal"
+          placement={fileMenu?.alignment === "end" ? "bottom-end" : "bottom-start"}
+          portalOffset={6}
+          animation="down-in"
+          rootClassName="platform-code-editor-workspace__file-menu-anchor"
+          rootProps={{
+            style: {
+              position: "fixed",
+              left: fileMenu?.x ?? 0,
+              top: fileMenu?.y ?? 0,
+              width: 1,
+              height: 1,
+              pointerEvents: "none",
+            },
+          }}
+          surfaceRef={fileMenuSurfaceRef}
+          surfaceClassName="platform-code-editor-workspace__file-menu"
+          surfaceProps={{
+            role: "menu",
+            width: 180,
+            onClick: (event) => event.stopPropagation(),
+            onContextMenu: (event) => event.preventDefault(),
+          }}
+          trigger={<span aria-hidden="true" />}
+        >
+          {!menuTargetsMultipleFiles && onFileRename ? (
+            <button
+              type="button"
+              role="menuitem"
+              className="tb-popup-row"
+              disabled={renameMenuDisabled}
+              onClick={() => {
+                if (!menuFile || renameMenuDisabled) return;
+                runFileAction(() => onFileRename(menuFile));
+              }}
+            >
+              <SquarePen className="tb-popup-icon" aria-hidden="true" />
+              <span className="tb-popup-label">Rename</span>
+            </button>
+          ) : null}
+          {onFilesDelete ? (
+            <button
+              type="button"
+              role="menuitem"
+              className="tb-popup-row"
+              disabled={deleteMenuDisabled}
+              onClick={() => {
+                if (deleteMenuDisabled) return;
+                runFileAction(() => onFilesDelete(menuTargetFiles));
+              }}
+            >
+              <Trash2 className="tb-popup-icon" aria-hidden="true" />
+              <span className="tb-popup-label">Delete</span>
+            </button>
+          ) : null}
+        </PlatformPopup>,
+        document.body,
+      )
+    : null;
 
   return (
     <section
@@ -274,16 +499,6 @@ export function PlatformCodeEditorWorkspace({
     >
       <aside className="platform-code-editor-workspace__sidebar">
         <div className="platform-code-editor-workspace__sidebar-header">
-          <div className="platform-code-editor-workspace__sidebar-heading">
-            <div className="platform-code-editor-workspace__sidebar-title">
-              {sidebarTitle}
-            </div>
-            {sidebarActions ? (
-              <div className="platform-code-editor-workspace__sidebar-actions">
-                {sidebarActions}
-              </div>
-            ) : null}
-          </div>
           <PlatformSearch
             className="platform-code-editor-workspace__sidebar-search"
             value={resolvedFileSearchValue}
@@ -308,37 +523,68 @@ export function PlatformCodeEditorWorkspace({
           ) : visibleFiles.length > 0 ? (
             visibleFiles.map((file) => {
               const isActive = file.id === activeFileId;
+              const isSelected = resolvedSelectedFileIds.has(file.id);
+              const fileSelectable = fileSelectionEnabled
+                && file.selectable !== false
+                && !file.deleteDisabled;
               return (
-                <button
+                <div
                   key={file.id}
-                  type="button"
                   className={joinClassNames(
                     "platform-code-editor-workspace__file",
                     isActive && "is-active",
+                    isSelected && "is-selected",
+                    fileMenu?.fileId === file.id && "is-menu-open",
                   )}
-                  disabled={file.disabled}
-                  aria-current={isActive ? "page" : undefined}
-                  aria-label={file.ariaLabel}
-                  style={{
-                    paddingInlineStart: `${14 + Math.max(0, Number(file.depth) || 0) * 16}px`,
-                  }}
-                  onClick={() => openFile(file)}
+                  onContextMenu={(event) => openFileMenu(event, file, true)}
                 >
-                  <span
-                    className="platform-code-editor-workspace__file-spacer"
-                    aria-hidden="true"
-                  >
-                    {file.leading}
-                  </span>
-                  {file.icon ? (
-                    <span className="platform-code-editor-workspace__file-icon" aria-hidden="true">
-                      {file.icon}
-                    </span>
+                  {fileSelectionEnabled ? (
+                    <PlatformCheckbox
+                      className="platform-code-editor-workspace__file-checkbox"
+                      checked={isSelected}
+                      disabled={!fileSelectable}
+                      aria-label={`${isSelected ? "Deselect" : "Select"} ${file.ariaLabel || file.id}`}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        toggleFileSelection(file);
+                      }}
+                    />
                   ) : null}
-                  <span className="platform-code-editor-workspace__file-label">
-                    {file.label ?? file.id}
-                  </span>
-                </button>
+                  <button
+                    type="button"
+                    className="platform-code-editor-workspace__file-main"
+                    disabled={file.disabled}
+                    aria-current={isActive ? "page" : undefined}
+                    aria-label={file.ariaLabel}
+                    onClick={() => openFile(file)}
+                  >
+                    {file.leading ? (
+                      <span
+                        className="platform-code-editor-workspace__file-leading"
+                        aria-hidden="true"
+                      >
+                        {file.leading}
+                      </span>
+                    ) : null}
+                    <span className="platform-code-editor-workspace__file-label">
+                      {file.label ?? file.id}
+                    </span>
+                  </button>
+                  {fileActionsEnabled ? (
+                    <button
+                      type="button"
+                      className="platform-code-editor-workspace__file-actions"
+                      aria-label={`Open actions for ${file.ariaLabel || file.id}`}
+                      aria-haspopup="menu"
+                      aria-expanded={fileMenu?.fileId === file.id ? "true" : "false"}
+                      onClick={(event) => openFileMenu(event, file)}
+                      onContextMenu={(event) => openFileMenu(event, file, true)}
+                    >
+                      <EllipsisVertical aria-hidden="true" />
+                    </button>
+                  ) : null}
+                </div>
               );
             })
           ) : (
@@ -356,6 +602,7 @@ export function PlatformCodeEditorWorkspace({
             activeTabId={activeFileId}
             onTabSelect={selectOpenFile}
             onTabClose={closeOpenFile}
+            endActions={tabBarActions ?? sidebarActions}
           />
         ) : null}
         <div className="platform-code-editor-workspace__editor-body">
@@ -382,6 +629,8 @@ export function PlatformCodeEditorWorkspace({
           </div>
         ) : null}
       </div>
+
+      {fileMenuPopup}
     </section>
   );
 }

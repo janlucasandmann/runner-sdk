@@ -4,18 +4,21 @@
 
 ## Purpose
 
-`PlatformFileExplorerModal` is the canonical split-pane file picker. It uses
-the shared modal lifecycle and its sidebar/content primitives, keeps both pane
-headers at the same height and padding, and owns the responsive file-list,
-preview, and action-footer layout.
+`PlatformFileExplorerModal` is the low-level canonical split-pane file picker.
+It uses the shared modal lifecycle and its sidebar/content primitives and keeps
+all pane headers aligned.
 
-Callers retain ownership of file loading, integration authorization,
-selection, navigation, and attachment mutations. Supply those controls through
-the optional sidebar-header, sidebar, content-header, main-content, preview, and
-footer slots. The preview is a separate right-hand pane with its own header and
-close action; closing it must clear the caller-owned preview state without
-closing the explorer. The dialog `title` remains its accessible name when a
-custom sidebar header replaces the visible title.
+`PlatformFileExplorerBrowserModal` is the standard product-facing explorer.
+It owns the complete source rail, back/forward navigation, breadcrumbs, search,
+file filters, list states, preview slot, and action footer used by task inputs
+and resource attachment flows. Prefer it whenever users browse workspace or
+integration files; callers provide records and callbacks, not layout markup.
+
+Callers retain ownership of file loading, authorization, selection, navigation,
+and attachment mutations. The browser modal filters supplied records for its
+standard All Files, Recently Changed, Images, and PDFs tabs. Its `content` slot
+is reserved for authorization or provider-specific empty states. The low-level
+modal remains available for genuinely different explorer compositions.
 
 `PlatformFileExplorerThumbnail` renders lazy image thumbnails, can retry with
 the source file URL, and falls back to the caller's canonical file icon when

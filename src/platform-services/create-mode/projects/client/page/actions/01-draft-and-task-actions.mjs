@@ -708,11 +708,60 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
           clearBacklogDragState();
         }
 
-        function getTaskCommentDisplayName(comment) {
-          if (comment?.authorAgentId && agentsById[comment.authorAgentId]?.name) {
-            return agentsById[comment.authorAgentId].name;
+        function getTaskWorkspaceMemberByUserId(userId) {
+          const normalizedUserId = String(userId || "").trim();
+          if (!normalizedUserId || !Array.isArray(workspaceTeamMembers)) {
+            return null;
           }
-          return comment?.authorName || "Computer Agents";
+          return workspaceTeamMembers.find((member) => {
+            const memberUser = member?.user && typeof member.user === "object" ? member.user : {};
+            const memberProfile = member?.profile && typeof member.profile === "object" ? member.profile : {};
+            return [member?.userId, member?.uid, member?.accountId, memberUser.id, memberUser.userId, memberUser.uid, memberProfile.id, memberProfile.userId, memberProfile.uid]
+              .some((value) => String(value || "").trim() === normalizedUserId);
+          }) || null;
+        }
+
+        function getTaskCommentWorkspaceMember(comment) {
+          return getTaskWorkspaceMemberByUserId(comment?.authorUserId);
+        }
+
+        function readTaskCommentMemberIdentityValue(member, keys) {
+          const metadata = member?.metadata && typeof member.metadata === "object" ? member.metadata : {};
+          const sources = [member, member?.user, member?.profile, member?.account, member?.identity, metadata, metadata.user, metadata.profile]
+            .filter((value) => value && typeof value === "object" && !Array.isArray(value));
+          for (const source of sources) {
+            for (const key of keys) {
+              const value = source[key];
+              if (typeof value === "string" && value.trim()) {
+                return value.trim();
+              }
+            }
+          }
+          return "";
+        }
+
+        function isTaskCommentByCurrentUser(comment) {
+          const authorUserId = String(comment?.authorUserId || "").trim();
+          return Boolean(authorUserId && currentUserId && authorUserId === String(currentUserId).trim());
+        }
+
+        function getTaskCommentDisplayName(comment) {
+          if (comment?.authorType === "agent" || comment?.authorAgentId) {
+            const authorAgent = comment?.authorAgentId
+              ? agentsById[comment.authorAgentId] || assignableActorsById[comment.authorAgentId] || null
+              : null;
+            return String(authorAgent?.name || comment?.authorName || "Agent").trim() || "Agent";
+          }
+          if (comment?.authorType === "system") {
+            return String(comment?.authorName || "System").trim() || "System";
+          }
+          if (isTaskCommentByCurrentUser(comment)) {
+            return String(currentUserName || comment?.authorName || "Me").trim() || "Me";
+          }
+          const workspaceMember = getTaskCommentWorkspaceMember(comment);
+          return readTaskCommentMemberIdentityValue(workspaceMember, ["displayName", "display_name", "name", "fullName", "full_name"])
+            || String(comment?.authorName || "User").trim()
+            || "User";
         }
 
         function getTaskCommentAvatarLetter(name) {
@@ -722,23 +771,104 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
 
         function renderTaskCommentAvatar(comment, className) {
           const authorName = getTaskCommentDisplayName(comment);
-          const authorAgent = comment?.authorAgentId ? agentsById[comment.authorAgentId] || null : null;
+          const authorAgent = comment?.authorAgentId
+            ? agentsById[comment.authorAgentId] || assignableActorsById[comment.authorAgentId] || null
+            : null;
+          const workspaceMember = getTaskCommentWorkspaceMember(comment);
+          const memberPhotoUrl = readTaskCommentMemberIdentityValue(workspaceMember, [
+            "photoURL",
+            "photoUrl",
+            "photo_url",
+            "avatarURL",
+            "avatarUrl",
+            "avatar_url",
+            "avatar",
+            "picture",
+            "imageUrl",
+            "image_url",
+          ]);
           const normalizedPhotoUrl = normalizeSessionPhotoUrl(
-            typeof comment?.authorAvatarUrl === "string" && comment.authorAvatarUrl.trim()
-              ? comment.authorAvatarUrl.trim()
-              : authorAgent
-                ? getPlaygroundAgentProfilePhotoUrl(authorAgent)
-                : ""
+            authorAgent
+              ? getPlaygroundAgentRunnerPhotoUrl(authorAgent)
+              : isTaskCommentByCurrentUser(comment) && canRenderAvatarImage(currentUserAvatarUrl)
+                ? currentUserAvatarUrl
+                : memberPhotoUrl || comment?.authorAvatarUrl || ""
           );
           const avatarLetter = getTaskCommentAvatarLetter(authorName);
-          return React.createElement("div", { className },
-            canRenderAvatarImage(normalizedPhotoUrl)
-              ? React.createElement("img", {
-                  className: className + "-image",
-                  src: normalizedPhotoUrl,
-                  alt: avatarLetter,
-                })
-              : React.createElement("span", { className: className + "-fallback" }, avatarLetter)
+          return React.createElement(AccountAvatar, {
+            className,
+            imageClassName: className + "-image",
+            fallbackLabel: avatarLetter,
+            photoUrl: normalizedPhotoUrl,
+          });
+        }
+
+        function getTaskCreatorIdentity(task) {
+          const creator = task?.creator && typeof task.creator === "object" ? task.creator : {};
+          const creatorAgentId = String(creator.agentId || task?.creatorAgentId || task?.createdByAgentId || "").trim();
+          const creatorUserId = String(creator.userId || task?.createdByUserId || task?.userId || "").trim();
+          if (creatorAgentId) {
+            const creatorAgent = agentsById[creatorAgentId] || assignableActorsById[creatorAgentId] || null;
+            return {
+              type: "agent",
+              name: String(creatorAgent?.name || creator.name || "Agent").trim() || "Agent",
+              photoUrl: normalizeSessionPhotoUrl(
+                creatorAgent
+                  ? getPlaygroundAgentProfilePhotoUrl(creatorAgent)
+                  : creator.avatarUrl || ""
+              ),
+            };
+          }
+
+          const isCurrentUser = Boolean(
+            creatorUserId
+            && currentUserId
+            && creatorUserId === String(currentUserId).trim()
+          );
+          const workspaceMember = getTaskWorkspaceMemberByUserId(creatorUserId);
+          const memberName = readTaskCommentMemberIdentityValue(workspaceMember, [
+            "displayName",
+            "display_name",
+            "name",
+            "fullName",
+            "full_name",
+          ]);
+          const memberPhotoUrl = readTaskCommentMemberIdentityValue(workspaceMember, [
+            "photoURL",
+            "photoUrl",
+            "photo_url",
+            "avatarURL",
+            "avatarUrl",
+            "avatar_url",
+            "avatar",
+            "picture",
+            "imageUrl",
+            "image_url",
+          ]);
+          return {
+            type: "user",
+            name: isCurrentUser
+              ? String(currentUserName || creator.name || "User").trim() || "User"
+              : memberName || String(creator.name || "User").trim() || "User",
+            photoUrl: normalizeSessionPhotoUrl(
+              isCurrentUser && canRenderAvatarImage(currentUserAvatarUrl)
+                ? currentUserAvatarUrl
+                : memberPhotoUrl || creator.avatarUrl || ""
+            ),
+          };
+        }
+
+        function renderTaskCreatorValue(task) {
+          const creator = getTaskCreatorIdentity(task);
+          const fallbackLabel = getTaskCommentAvatarLetter(creator.name);
+          return React.createElement("span", { className: "playground-tasks-detail-person-value playground-tasks-detail-creator-value" },
+            React.createElement(AccountAvatar, {
+              className: "playground-tasks-detail-person-avatar",
+              imageClassName: "playground-tasks-detail-person-avatar-image",
+              fallbackLabel,
+              photoUrl: creator.photoUrl,
+            }),
+            React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, creator.name)
           );
         }
 
@@ -809,27 +939,21 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
           };
         }
 
-        function focusTaskCommentTextarea() {
-          if (typeof window === "undefined") {
+        function openTaskCommentComposer(options = {}) {
+          setTaskCommentMode(options?.review === true ? "review" : "");
+          setTaskCommentComposerOpen(true);
+        }
+
+        function closeTaskCommentComposer() {
+          if (saveState.isSaving) {
             return;
           }
-          window.requestAnimationFrame(() => {
-            const textarea = taskCommentTextareaRef.current;
-            if (!textarea) {
-              return;
-            }
-            textarea.focus();
-            textarea.scrollIntoView({
-              block: "center",
-              behavior: "smooth",
-            });
-            resizeTaskCommentTextarea(textarea);
-          });
+          setTaskCommentComposerOpen(false);
+          setTaskCommentMode("");
         }
 
         function activateTaskReviewCommentMode() {
-          setTaskCommentMode("review");
-          focusTaskCommentTextarea();
+          openTaskCommentComposer({ review: true });
         }
 
         async function handleAddTaskComment() {
@@ -859,6 +983,9 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
                 body: nextCommentBody,
                 authorType: "user",
                 authorName: currentUserName || undefined,
+                metadata: currentUserAvatarUrl
+                  ? { authorAvatarUrl: currentUserAvatarUrl }
+                  : undefined,
               }),
             });
             const data = await response.json().catch(() => ({}));
@@ -1152,7 +1279,7 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
             return;
           }
 
-          if (target.closest(".playground-tasks-card, .playground-tasks-backlog-item, .playground-tasks-backlog-composer-shell, .playground-tasks-lane-card, .playground-tasks-calendar-entry, .playground-tasks-ticket-screen, .playground-tasks-detail-panel, .playground-tasks-detail-shell, .playground-files-toolbar-anchor, .playground-files-control-button, .playground-files-toolbar-menu, .tb-runner-chat, .tb-popup-menu, .tb-selection-popup, .tb-file-browser-scrim, .tb-popup-modal-scrim, .playground-tasks-confirm-scrim, .playground-tasks-parent-picker-scrim")) {
+          if (target.closest(".playground-tasks-card, .playground-tasks-backlog-item, .playground-tasks-backlog-composer-shell, .playground-tasks-lane-card, .playground-tasks-calendar-entry, .playground-tasks-ticket-screen, .playground-tasks-detail-panel, .playground-tasks-detail-shell, .playground-files-toolbar-anchor, .playground-files-control-button, .playground-files-toolbar-menu, .tb-runner-chat, .tb-popup-menu, .tb-selection-popup, .tb-file-browser-scrim, .tb-popup-modal-scrim, .platform-modal-backdrop, .playground-tasks-confirm-scrim, .playground-tasks-parent-picker-scrim")) {
             return;
           }
 

@@ -243,7 +243,9 @@ export const TEAMS_PAGE_SETUP_SCRIPT = `        function renderTeamPage() {
           });
           const formatRole = (role) => getPlaygroundTeamRoleDefinition(role).label;
           const formatAccess = (accessLevel) => accessOptions.find((option) => option.value === accessLevel)?.label || String(accessLevel || "Use");
-          const formatResourceType = (resourceType) => resourceTypeOptions.find((option) => option.value === resourceType)?.label || String(resourceType || "Resource");
+          const formatResourceType = (resourceType) => resourceTypeOptions.find((option) => option.value === resourceType)?.label
+            || getTeamResourceTypeMeta(resourceType).label
+            || String(resourceType || "Resource");
           const getTeamResourceShareMetadataTitle = (share) => {
             const metadata = parseTeamResourceShareMetadata(share);
             const workflow = metadata.workflow && typeof metadata.workflow === "object" && !Array.isArray(metadata.workflow)

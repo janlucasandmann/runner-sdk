@@ -8,10 +8,12 @@
 
 - the file navigation rail and active-file presentation;
 - a VS Code-style tab strip with persistent open files, keyboard navigation, close controls, and dirty-state markers;
-- a two-line Explorer header with actions above full-width file search;
+- a compact Explorer search header and file rows aligned with the app-sidebar navigation rhythm;
 - file filtering through the shared `PlatformSearch` primitive;
+- file multi-selection through the shared `PlatformCheckbox` primitive;
+- single-file rename/delete and multi-file delete menus through the shared minimal `PlatformPopup`;
 - centered file-loading feedback through the shared `PlatformLoadingState`;
-- nested-file disclosure and optional sidebar actions;
+- nested-file disclosure and optional actions aligned to the right of the editor tab strip;
 - the editor content region and empty states;
 - the status footer;
 - Undo and Redo controls rendered through the shared icon-button primitive.
@@ -27,6 +29,9 @@ Use `variant="full-screen"` when the workspace should occupy the complete width 
   activeFileId="main.py"
   variant="full-screen"
   onFileSelect={setActiveFileId}
+  onFileRename={renameFile}
+  onFilesDelete={deleteFiles}
+  tabBarActions={<AddFileSelector />}
   editor={<Editor value={source} onChange={setSource} />}
   status="Unsaved changes"
   historyControls={{

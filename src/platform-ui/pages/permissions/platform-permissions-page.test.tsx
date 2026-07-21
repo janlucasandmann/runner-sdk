@@ -138,7 +138,8 @@ describe("PlatformPermissionsPage", () => {
     await user.click(screen.getByRole("button", { name: "Read workspace permissions" }));
     expect(
       screen.getByRole("listbox", { name: "Read workspace permissions options" })
-        .getAttribute("data-platform-popup-placement"),
+        .closest(".platform-popup-surface")
+        ?.getAttribute("data-platform-popup-placement"),
     ).toBe("bottom-end");
     await user.click(screen.getByRole("option", { name: "No access" }));
 

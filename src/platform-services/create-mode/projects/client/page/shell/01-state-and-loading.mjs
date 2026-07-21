@@ -59,6 +59,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         onCalendarTopNavStateChange,
         calendarTopNavActionsRef,
         onProjectIssueCreateHandlerChange,
+        attachmentPreviewPortalId = "",
         projectNavBackRequestToken = 0,
         projectNavViewRequest = null,
         projectNavSettingsRequestToken = 0,
@@ -90,7 +91,6 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         const backlogTaskContextMenuRef = useRef(null);
         const taskStatusMenuRef = useRef(null);
         const taskDetailActionsRef = useRef(null);
-        const taskDetailSelectPopoverRef = useRef(null);
         const taskDetailThreadsToolbarRef = useRef(null);
         const taskSkillsActionsRef = useRef(null);
 	        const taskDetailMainRef = useRef(null);
@@ -100,7 +100,6 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
 	        const projectRuleComposerTextareaRef = useRef(null);
 	        const projectRuleEditTextareaRef = useRef(null);
 \${CALENDAR_PROJECTS_PAGE_SHELL_FRAGMENTS.textareaRefs}
-        const taskCommentTextareaRef = useRef(null);
         const taskAttachmentInputRef = useRef(null);
         const projectAttachmentInputRef = useRef(null);
         const taskScheduleDialogTimerRef = useRef(null);
@@ -948,15 +947,19 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
             || "";
         }
 
-        function buildProjectIssueComposerDraft() {
+        function buildProjectIssueComposerDraft(options = {}) {
           const now = new Date().toISOString();
-          return normalizePlaygroundTaskRecord(syncPlaygroundTaskRecordMetadata({
+          const requestedTaskType = normalizePlaygroundTaskType(options?.taskType);
+          const requestedParentTaskId = requestedTaskType === "subtask"
+            ? normalizePlaygroundParentTaskId(options?.parentTaskId)
+            : null;
+          const normalizedDraft = normalizePlaygroundTaskRecord(syncPlaygroundTaskRecordMetadata({
             ...buildPlaygroundDefaultTaskDraft(),
             projectId: selectedProjectId || selectedProject?.id || null,
             title: "",
             description: "",
-            taskType: "task",
-            parentTaskId: null,
+            taskType: requestedTaskType,
+            parentTaskId: requestedParentTaskId,
             status: "todo",
             priority: "medium",
             taskColor: PLAYGROUND_TASK_COLOR_OPTIONS[0].id,
@@ -981,9 +984,13 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
               },
             },
           }));
+          return {
+            ...normalizedDraft,
+            title: "",
+          };
         }
 
-        function openProjectIssueComposer() {
+        function openProjectIssueComposer(options = {}) {
           if (!selectedProjectId && !selectedProject?.id) {
             return false;
           }
@@ -1005,7 +1012,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           setIssueComposerEnvironmentPopoverOpen(false);
           setIssueComposerDetailSelectPopover("");
           setIssueComposerDetailsCollapsed(false);
-          setIssueComposerDraft(buildProjectIssueComposerDraft());
+          setIssueComposerDraft(buildProjectIssueComposerDraft(options));
           setIssueComposerSaveState({
             isSaving: false,
             error: "",

@@ -10,6 +10,9 @@ Reusable UI for versioned platform resources.
 the current version or create the next version, and captures an optional
 description before the caller persists and publishes the resource.
 
+`PlatformVersionPublishControl` provides the primary split action and
+minimalistic version-options popup shared by versioned resources.
+
 The package also re-exports `PlatformVersionLabel` and
 `PlatformVersionHistorySidebar` so resource modules can import the complete
 versioning surface from one stable entry point.

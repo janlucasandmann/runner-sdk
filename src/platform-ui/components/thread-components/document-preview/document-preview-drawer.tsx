@@ -104,6 +104,7 @@ export interface RunnerDocumentPreviewDrawerProps {
     naturalSize: RunnerImageNaturalSize;
     strokes: RunnerImageMaskStroke[];
   } | null) => void;
+  showHeaderCopy?: boolean;
   showCloseButton?: boolean;
   showResizeHandle?: boolean;
   onDocumentBlobSave?: (blob: Blob, options: RunnerSpreadsheetSaveOptions) => Promise<void> | void;
@@ -133,6 +134,7 @@ export function RunnerDocumentPreviewDrawer({
   enableImagePreviewTools = false,
   onImagePreviewLoad,
   onImageSelectionChange,
+  showHeaderCopy = true,
   showCloseButton = true,
   showResizeHandle = false,
   onDocumentBlobSave,
@@ -1324,6 +1326,9 @@ export function RunnerDocumentPreviewDrawer({
   );
   const shouldRenderImagePreviewZoomControl = Boolean(imagePreviewFullscreen && isImageAttachment && effectiveImagePreviewUrl);
   const imagePreviewZoomPercent = `${Math.round(Math.max(0.35, Math.min(5, imagePreviewZoom)) * 100)}%`;
+  const shouldRenderDrawerHeader = Boolean(
+    showHeaderCopy || shouldRenderImagePreviewZoomControl || hasDrawerHeaderActions
+  );
 
   return (
     <div className={`tb-runner-document-preview-host${inline ? " tb-runner-document-preview-host-inline" : ""}`}>
@@ -1340,134 +1345,138 @@ export function RunnerDocumentPreviewDrawer({
             tabIndex={-1}
           />
         ) : null}
-        <div className="tb-attachment-preview-drawer-header">
-          {headerCopy ? (
-            <div className="tb-attachment-preview-drawer-header-copy">
-              {headerCopy}
-            </div>
-          ) : (
-            <div className="tb-attachment-preview-drawer-header-copy">
-              {isDirectoryLikePreview ? (
-                <img
-                  src={RUNNER_FOLDER_ICON_URL}
-                  alt=""
-                  aria-hidden="true"
-                  draggable={false}
-                  className="tb-attachment-preview-drawer-header-icon-asset"
-                />
+        {shouldRenderDrawerHeader ? (
+          <div className="tb-attachment-preview-drawer-header">
+            {showHeaderCopy ? (
+              headerCopy ? (
+                <div className="tb-attachment-preview-drawer-header-copy">
+                  {headerCopy}
+                </div>
               ) : (
-                <img
-                  src={RUNNER_TEXT_FILE_ICON_URL}
-                  alt=""
-                  aria-hidden="true"
-                  draggable={false}
-                  className="tb-attachment-preview-drawer-header-icon-asset"
-                />
-              )}
-              <div className="tb-attachment-preview-drawer-header-text">
-                <div className="tb-attachment-preview-drawer-name" title={attachment.filename}>
-                  {attachment.filename}
+                <div className="tb-attachment-preview-drawer-header-copy">
+                  {isDirectoryLikePreview ? (
+                    <img
+                      src={RUNNER_FOLDER_ICON_URL}
+                      alt=""
+                      aria-hidden="true"
+                      draggable={false}
+                      className="tb-attachment-preview-drawer-header-icon-asset"
+                    />
+                  ) : (
+                    <img
+                      src={RUNNER_TEXT_FILE_ICON_URL}
+                      alt=""
+                      aria-hidden="true"
+                      draggable={false}
+                      className="tb-attachment-preview-drawer-header-icon-asset"
+                    />
+                  )}
+                  <div className="tb-attachment-preview-drawer-header-text">
+                    <div className="tb-attachment-preview-drawer-name" title={attachment.filename}>
+                      {attachment.filename}
+                    </div>
+                  </div>
+                </div>
+              )
+            ) : null}
+            {shouldRenderImagePreviewZoomControl ? (
+              <div className="tb-attachment-preview-drawer-header-center">
+                <div className="tb-image-preview-zoom-control" aria-label="Image zoom controls">
+                  <button
+                    type="button"
+                    className="tb-image-preview-zoom-button"
+                    onClick={() => applyImagePreviewZoomStep(-1)}
+                    disabled={imagePreviewZoom <= 0.351}
+                    aria-label="Zoom out"
+                    title="Zoom out"
+                  >
+                    <LucideMinus width={14} height={14} strokeWidth={1.9} />
+                  </button>
+                  <span className="tb-image-preview-zoom-label">{imagePreviewZoomPercent}</span>
+                  <button
+                    type="button"
+                    className="tb-image-preview-zoom-button"
+                    onClick={() => applyImagePreviewZoomStep(1)}
+                    disabled={imagePreviewZoom >= 4.99}
+                    aria-label="Zoom in"
+                    title="Zoom in"
+                  >
+                    <LucidePlus width={14} height={14} strokeWidth={1.9} />
+                  </button>
                 </div>
               </div>
-            </div>
-          )}
-          {shouldRenderImagePreviewZoomControl ? (
-            <div className="tb-attachment-preview-drawer-header-center">
-              <div className="tb-image-preview-zoom-control" aria-label="Image zoom controls">
-                <button
-                  type="button"
-                  className="tb-image-preview-zoom-button"
-                  onClick={() => applyImagePreviewZoomStep(-1)}
-                  disabled={imagePreviewZoom <= 0.351}
-                  aria-label="Zoom out"
-                  title="Zoom out"
-                >
-                  <LucideMinus width={14} height={14} strokeWidth={1.9} />
-                </button>
-                <span className="tb-image-preview-zoom-label">{imagePreviewZoomPercent}</span>
-                <button
-                  type="button"
-                  className="tb-image-preview-zoom-button"
-                  onClick={() => applyImagePreviewZoomStep(1)}
-                  disabled={imagePreviewZoom >= 4.99}
-                  aria-label="Zoom in"
-                  title="Zoom in"
-                >
-                  <LucidePlus width={14} height={14} strokeWidth={1.9} />
-                </button>
+            ) : null}
+            {hasDrawerHeaderActions ? (
+              <div className="tb-attachment-preview-drawer-header-actions">
+                {isBuiltInImageToolModeActive ? (
+                  builtInImagePreviewHeaderActions
+                ) : (
+	                  <>
+	                    {editableCodeHeaderActions}
+	                    {spreadsheetPreviewHeaderActions}
+	                    {builtInImagePreviewHeaderActions}
+	                    {canShowAttachmentDiff ? (
+	                      <button
+	                        type="button"
+	                        className={`tb-image-preview-select-button tb-document-preview-mode-toggle${isAttachmentDiffMode ? " is-active" : ""}`}
+	                        onClick={() => setAttachmentDiffMode((current) => !current)}
+	                        aria-label={isAttachmentDiffMode ? "Show preview" : "Show diff"}
+	                        aria-pressed={isAttachmentDiffMode}
+	                        title={isAttachmentDiffMode ? "Show preview" : "Show diff"}
+	                      >
+	                        {isAttachmentDiffMode ? (
+	                          <LucideEye width={14} height={14} strokeWidth={1.9} />
+	                        ) : (
+	                          <LucideFileDiff width={14} height={14} strokeWidth={1.9} />
+	                        )}
+	                        <span>{isAttachmentDiffMode ? "Preview" : "Diff"}</span>
+	                      </button>
+	                    ) : null}
+	                    {canTogglePreviewCode ? (
+	                      <button
+	                        type="button"
+	                        className={`tb-image-preview-select-button tb-document-preview-mode-toggle${isPreviewCodeMode ? " is-active" : ""}`}
+	                        onClick={() => {
+	                          setAttachmentDiffMode(false);
+	                          if (isSpreadsheetAttachment) {
+	                            setSpreadsheetPreviewMode((current) => current === "code" ? "preview" : "code");
+	                            return;
+	                          }
+	                          setMarkdownPreviewMode((current) => current === "code" ? "rendered" : "code");
+	                        }}
+	                        aria-label={isPreviewCodeMode ? "Show preview" : "Show code"}
+	                        aria-pressed={isPreviewCodeMode}
+	                        title={isPreviewCodeMode ? "Show preview" : "Show code"}
+	                      >
+	                        {isPreviewCodeMode ? (
+	                          <LucideEye width={14} height={14} strokeWidth={1.9} />
+	                        ) : (
+	                          <LucideCode2 width={14} height={14} strokeWidth={1.9} />
+	                        )}
+	                        <span>{isPreviewCodeMode ? "Preview" : "Code"}</span>
+	                      </button>
+	                    ) : null}
+	                    {headerActions}
+	                    {headerActionsAfterPreviewToggle && !builtInImagePreviewHeaderActions ? (
+	                      <span className="tb-image-preview-header-divider" aria-hidden="true" />
+	                    ) : null}
+	                    {headerActionsAfterPreviewToggle}
+	                    {showCloseButton && onClose ? (
+	                      <button
+	                        type="button"
+	                        className="tb-attachment-preview-drawer-action"
+	                        onClick={onClose}
+	                        aria-label="Close file preview"
+	                      >
+	                        <LucideX className="tb-attachment-preview-drawer-action-icon" strokeWidth={2} />
+	                      </button>
+	                    ) : null}
+                  </>
+                )}
               </div>
-            </div>
-          ) : null}
-          {hasDrawerHeaderActions ? (
-            <div className="tb-attachment-preview-drawer-header-actions">
-              {isBuiltInImageToolModeActive ? (
-                builtInImagePreviewHeaderActions
-              ) : (
-	                <>
-	                  {editableCodeHeaderActions}
-	                  {spreadsheetPreviewHeaderActions}
-	                  {builtInImagePreviewHeaderActions}
-	                  {canShowAttachmentDiff ? (
-	                    <button
-	                      type="button"
-	                      className={`tb-image-preview-select-button tb-document-preview-mode-toggle${isAttachmentDiffMode ? " is-active" : ""}`}
-	                      onClick={() => setAttachmentDiffMode((current) => !current)}
-	                      aria-label={isAttachmentDiffMode ? "Show preview" : "Show diff"}
-	                      aria-pressed={isAttachmentDiffMode}
-	                      title={isAttachmentDiffMode ? "Show preview" : "Show diff"}
-	                    >
-	                      {isAttachmentDiffMode ? (
-	                        <LucideEye width={14} height={14} strokeWidth={1.9} />
-	                      ) : (
-	                        <LucideFileDiff width={14} height={14} strokeWidth={1.9} />
-	                      )}
-	                      <span>{isAttachmentDiffMode ? "Preview" : "Diff"}</span>
-	                    </button>
-	                  ) : null}
-	                  {canTogglePreviewCode ? (
-	                    <button
-	                      type="button"
-	                      className={`tb-image-preview-select-button tb-document-preview-mode-toggle${isPreviewCodeMode ? " is-active" : ""}`}
-	                      onClick={() => {
-	                        setAttachmentDiffMode(false);
-	                        if (isSpreadsheetAttachment) {
-	                          setSpreadsheetPreviewMode((current) => current === "code" ? "preview" : "code");
-	                          return;
-                        }
-                        setMarkdownPreviewMode((current) => current === "code" ? "rendered" : "code");
-                      }}
-                      aria-label={isPreviewCodeMode ? "Show preview" : "Show code"}
-                      aria-pressed={isPreviewCodeMode}
-                      title={isPreviewCodeMode ? "Show preview" : "Show code"}
-                    >
-                      {isPreviewCodeMode ? (
-                        <LucideEye width={14} height={14} strokeWidth={1.9} />
-                      ) : (
-                        <LucideCode2 width={14} height={14} strokeWidth={1.9} />
-                      )}
-                      <span>{isPreviewCodeMode ? "Preview" : "Code"}</span>
-                    </button>
-                  ) : null}
-                  {headerActions}
-                  {headerActionsAfterPreviewToggle && !builtInImagePreviewHeaderActions ? (
-                    <span className="tb-image-preview-header-divider" aria-hidden="true" />
-                  ) : null}
-                  {headerActionsAfterPreviewToggle}
-                  {showCloseButton && onClose ? (
-                    <button
-                      type="button"
-                      className="tb-attachment-preview-drawer-action"
-                      onClick={onClose}
-                      aria-label="Close file preview"
-                    >
-                      <LucideX className="tb-attachment-preview-drawer-action-icon" strokeWidth={2} />
-                    </button>
-                  ) : null}
-                </>
-              )}
-            </div>
-          ) : null}
-        </div>
+            ) : null}
+          </div>
+        ) : null}
         <div className="tb-attachment-preview-drawer-body">
           {isImageUnderstandingAttachment && attachment.imageUnderstandingPreview ? (
             <RunnerImageUnderstandingSidebarPreview

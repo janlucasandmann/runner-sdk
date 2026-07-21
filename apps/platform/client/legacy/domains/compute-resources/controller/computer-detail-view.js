@@ -786,6 +786,20 @@
                 : null
             );
             const canMutateEnvironmentRecord = Boolean(draftEnvironment.id && !draftEnvironment.isSystem && !draftEnvironment.isDefault);
+            const environmentSystemIdentity = {
+              id: "computer-agents",
+              userId: "computer-agents",
+              name: "Computer Agents",
+              email: "",
+              avatarUrl: COMPUTER_AGENTS_CREATOR_PROFILE_URL,
+            };
+            const environmentIdentityFallback = getCurrentDevelopResourceIdentityInput();
+            const environmentCreatorIdentity = draftEnvironment.isSystem || draftEnvironment.isDefault
+              ? environmentSystemIdentity
+              : getDevelopResourceCreatorIdentity(draftEnvironment, environmentIdentityFallback);
+            const environmentOwnerIdentity = draftEnvironment.isSystem || draftEnvironment.isDefault
+              ? environmentSystemIdentity
+              : getDevelopResourceOwnerIdentity(draftEnvironment, environmentIdentityFallback);
             const environmentSidebar = React.createElement(React.Fragment, null,
               React.createElement("section", { className: "playground-project-overview-sidebar-card playground-computer-detail-properties-card" },
                 React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
@@ -794,6 +808,12 @@
                 React.createElement("div", { className: "playground-project-overview-sidebar-rows" },
                   renderEnvironmentSidebarRow("Status", environmentRuntimeStatusNode, {
                     valueClassName: "playground-computer-detail-sidebar-status-value",
+                  }),
+                  renderEnvironmentSidebarRow("Creator", renderDevelopResourceIdentityValue(environmentCreatorIdentity), {
+                    valueClassName: "playground-server-detail-sidebar-identity-cell",
+                  }),
+                  renderEnvironmentSidebarRow("Owner", renderDevelopResourceIdentityValue(environmentOwnerIdentity), {
+                    valueClassName: "playground-server-detail-sidebar-identity-cell",
                   }),
                   renderEnvironmentSidebarRow("Computer Profile",
                     environmentComputeProfileSelector,

@@ -528,6 +528,30 @@
             };
             return normalizeDatabaseOwnerIdentity(metadata.owner || database?.owner || null, fallbackIdentity);
           }
+
+          function getDatabaseCreatorIdentity(database) {
+            return normalizeDatabaseOwnerIdentity(
+              getDevelopResourceCreatorIdentity(database, getCurrentDevelopResourceIdentityInput())
+            );
+          }
+
+          function renderDevelopResourceIdentityValue(identity) {
+            const normalizedIdentity = normalizeDatabaseOwnerIdentity(identity);
+            const label = String(
+              normalizedIdentity.name || normalizedIdentity.email || normalizedIdentity.userId || "Unknown"
+            ).trim();
+            return React.createElement("span", { className: "playground-team-member-cell playground-develop-resource-identity-value" },
+              React.createElement(AccountAvatar, {
+                className: "playground-team-member-avatar",
+                imageClassName: "playground-team-member-avatar-image",
+                fallbackLabel: getAccountInitials(label),
+                photoUrl: normalizedIdentity.avatarUrl || "",
+              }),
+              React.createElement("span", { className: "playground-team-member-copy" },
+                React.createElement("span", { className: "playground-team-table-title" }, label)
+              )
+            );
+          }
   
           function isCurrentUserDatabaseOwner(database) {
             const ownerKeys = new Set(getDatabaseOwnerIdentityKeys(getDatabaseOwnerIdentity(database)));
@@ -638,9 +662,10 @@
             return PLAYGROUND_TEAM_ROLE_DEFINITIONS.reduce((result, role) => {
               result[role.id] = role.id === "owner"
                 ? createPlaygroundDatabaseTeamRolePermissionSet(role.id)
-                : normalizePlaygroundPermissionSet(
-                    source[role.id] || legacyPermissionSet || createPlaygroundDatabaseTeamRolePermissionSet(role.id),
-                    "database"
+                : normalizePlaygroundRolePermissionSet(
+                    source[role.id] || legacyPermissionSet,
+                    "database",
+                    role.id
                   );
               return result;
             }, {});
@@ -1736,9 +1761,19 @@
               ? server.metadata
               : {};
           }
+
+          function getServerPermissionSubjectType(server) {
+            const kind = canonicalizePlaygroundServerKind(server?.kind);
+            return ["web_app", "function", "auth", "secrets", "payments", "agent_runtime"].includes(kind)
+              ? kind
+              : "server";
+          }
   
           function getServerPermissionSet(server) {
-            return normalizePlaygroundPermissionSet(getServerAccessMetadataRecord(server).permissionSet, "server");
+            return normalizePlaygroundPermissionSet(
+              getServerAccessMetadataRecord(server).permissionSet,
+              getServerPermissionSubjectType(server)
+            );
           }
   
           function getServerOwnerIdentity(server) {
@@ -1750,6 +1785,12 @@
               email: metadata.ownerEmail || metadata.owner_email || currentUserEmail || "",
               avatarUrl: metadata.ownerAvatarUrl || metadata.owner_avatar_url || currentUserAvatarUrl || "",
             });
+          }
+
+          function getServerCreatorIdentity(server) {
+            return normalizeDatabaseOwnerIdentity(
+              getDevelopResourceCreatorIdentity(server, getCurrentDevelopResourceIdentityInput())
+            );
           }
   
           function isCurrentUserServerOwner(server) {
@@ -1808,9 +1849,10 @@
   
           function getServerTeamPermissionSet(server, teamId) {
             const normalizedTeamId = String(teamId || "").trim();
+            const subjectType = getServerPermissionSubjectType(server);
             return normalizePlaygroundPermissionSet(
-              getServerTeamPermissionSets(server)[normalizedTeamId] || createPlaygroundServerTeamRolePermissionSet("member"),
-              "server"
+              getServerTeamPermissionSets(server)[normalizedTeamId] || createPlaygroundServerTeamRolePermissionSet("member", subjectType),
+              subjectType
             );
           }
   
@@ -1821,15 +1863,17 @@
   
           function getServerTeamRolePermissionSets(server, teamId) {
             const normalizedTeamId = String(teamId || "").trim();
+            const subjectType = getServerPermissionSubjectType(server);
             const configured = getServerTeamRolePermissionSetsMap(server)[normalizedTeamId];
             const source = configured && typeof configured === "object" && !Array.isArray(configured) ? configured : {};
             const legacyPermissionSet = getServerTeamPermissionSets(server)[normalizedTeamId];
             return PLAYGROUND_TEAM_ROLE_DEFINITIONS.reduce((result, role) => {
               result[role.id] = role.id === "owner"
-                ? createPlaygroundServerTeamRolePermissionSet(role.id)
-                : normalizePlaygroundPermissionSet(
-                    source[role.id] || legacyPermissionSet || createPlaygroundServerTeamRolePermissionSet(role.id),
-                    "server"
+                ? createPlaygroundServerTeamRolePermissionSet(role.id, subjectType)
+                : normalizePlaygroundRolePermissionSet(
+                    source[role.id] || legacyPermissionSet,
+                    subjectType,
+                    role.id
                   );
               return result;
             }, {});
@@ -1881,9 +1925,10 @@
             if (isSelectedServerTemplatePreview) return;
             const currentServer = normalizePlaygroundServerRecord(draftServer || selectedServerSnapshot || buildPlaygroundDefaultServerDraft());
             const currentPermissionSet = getServerPermissionSet(currentServer);
+            const subjectType = getServerPermissionSubjectType(currentServer);
             const nextPermissionSet = normalizePlaygroundPermissionSet(
               typeof updater === "function" ? updater(currentPermissionSet) : updater,
-              "server"
+              subjectType
             );
             const nextServer = normalizePlaygroundServerRecord({
               ...currentServer,
@@ -1898,7 +1943,7 @@
             if (!normalizedRingId) return;
             updateServerPermissionSet((current) => ({
               ...current,
-              subjectType: "server",
+              subjectType: getServerPermissionSubjectType(draftServer),
               rings: {
                 ...(current.rings || createPlaygroundDefaultPermissionRings()),
                 [normalizedRingId]: {
@@ -1911,10 +1956,11 @@
   
           function updateServerPermissionActionRing(actionId, ringId) {
             const definition = getPlaygroundPermissionActionDefinition(actionId);
-            if (!definition?.subjectTypes?.includes("server")) return;
+            const subjectType = getServerPermissionSubjectType(draftServer);
+            if (!definition?.subjectTypes?.includes(subjectType)) return;
             updateServerPermissionSet((current) => ({
               ...current,
-              subjectType: "server",
+              subjectType,
               actions: {
                 ...(current.actions || createPlaygroundDefaultPermissionActions()),
                 [definition.id]: buildPlaygroundPermissionActionPolicy(
@@ -1930,10 +1976,11 @@
   
           function updateServerPermissionActionAccess(actionId, access) {
             const definition = getPlaygroundPermissionActionDefinition(actionId);
-            if (!definition?.subjectTypes?.includes("server")) return;
+            const subjectType = getServerPermissionSubjectType(draftServer);
+            if (!definition?.subjectTypes?.includes(subjectType)) return;
             updateServerPermissionSet((current) => ({
               ...current,
-              subjectType: "server",
+              subjectType,
               actions: {
                 ...(current.actions || createPlaygroundDefaultPermissionActions()),
                 [definition.id]: buildPlaygroundPermissionActionPolicy(
@@ -1954,9 +2001,10 @@
             const roleSetsMap = getServerTeamRolePermissionSetsMap(currentServer);
             const teamRoleSets = getServerTeamRolePermissionSets(currentServer, normalizedTeamId);
             const currentPermissionSet = getServerTeamRolePermissionSet(currentServer, normalizedTeamId, normalizedRoleId);
+            const subjectType = getServerPermissionSubjectType(currentServer);
             const nextPermissionSet = normalizePlaygroundPermissionSet(
               typeof updater === "function" ? updater(currentPermissionSet) : updater,
-              "server"
+              subjectType
             );
             const nextServer = normalizePlaygroundServerRecord({
               ...currentServer,
@@ -1977,7 +2025,7 @@
             if (!normalizedRingId) return;
             updateServerTeamRolePermissionSet(teamId, roleId, (current) => ({
               ...current,
-              subjectType: "server",
+              subjectType: getServerPermissionSubjectType(draftServer),
               rings: {
                 ...(current.rings || createPlaygroundDefaultPermissionRings()),
                 [normalizedRingId]: {
@@ -1990,10 +2038,11 @@
   
           function updateServerTeamRolePermissionActionRing(teamId, roleId, actionId, ringId) {
             const definition = getPlaygroundPermissionActionDefinition(actionId);
-            if (!definition?.subjectTypes?.includes("server")) return;
+            const subjectType = getServerPermissionSubjectType(draftServer);
+            if (!definition?.subjectTypes?.includes(subjectType)) return;
             updateServerTeamRolePermissionSet(teamId, roleId, (current) => ({
               ...current,
-              subjectType: "server",
+              subjectType,
               actions: {
                 ...(current.actions || createPlaygroundDefaultPermissionActions()),
                 [definition.id]: buildPlaygroundPermissionActionPolicy(
@@ -2009,10 +2058,11 @@
   
           function updateServerTeamRolePermissionActionAccess(teamId, roleId, actionId, access) {
             const definition = getPlaygroundPermissionActionDefinition(actionId);
-            if (!definition?.subjectTypes?.includes("server")) return;
+            const subjectType = getServerPermissionSubjectType(draftServer);
+            if (!definition?.subjectTypes?.includes(subjectType)) return;
             updateServerTeamRolePermissionSet(teamId, roleId, (current) => ({
               ...current,
-              subjectType: "server",
+              subjectType,
               actions: {
                 ...(current.actions || createPlaygroundDefaultPermissionActions()),
                 [definition.id]: buildPlaygroundPermissionActionPolicy(

@@ -13,6 +13,8 @@ Create and Configure mode.
 - [`develop-home/`](develop-home/) — Develop landing page and resource
   activity.
 - [`api-keys/`](api-keys/) — API credential lifecycle and analytics.
+- [`security/`](security/) — GitHub repository security policy, runs, findings,
+  audit records, and remediation approval boundaries.
 - [`web-apps/`](web-apps/) — Web application resources.
 - [`apis/`](apis/) — API resources.
 - [`functions/`](functions/) — Function resources.

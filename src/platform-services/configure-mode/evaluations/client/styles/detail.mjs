@@ -368,5 +368,188 @@ export const EVALUATIONS_STYLE_DETAIL = String.raw`        line-height: 1.35;
       .playground-evaluations-create-modal .playground-evaluations-field.is-full {
         grid-column: 1 / -1;
       }
-`;
 
+      .playground-evaluations-page .playground-guardrails-browser-body.is-detail-page {
+        width: 100%;
+        max-width: none;
+        padding: 42px 44px 56px;
+        overflow: auto;
+        box-sizing: border-box;
+      }
+
+      .playground-evaluations-detail-overview-layout {
+        --platform-page-content-max-width: 87.5rem;
+      }
+
+      .playground-evaluations-detail-page-header {
+        min-height: 32px;
+      }
+
+      .playground-evaluations-detail-header-copy {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 0;
+      }
+
+      .playground-evaluations-title-input {
+        min-width: 0;
+        flex: 1 1 auto;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: #fff;
+        font-size: 18px;
+        line-height: 1.3;
+        font-weight: 500;
+        outline: none;
+      }
+
+      .playground-evaluations-detail-inline-back-button {
+        margin-left: -7px;
+      }
+
+      .playground-evaluations-detail-overview-main,
+      .playground-evaluations-detail-overview-main > .playground-guardrails-editor {
+        min-width: 0;
+      }
+
+      .playground-evaluations-detail-overview-main > .playground-guardrails-editor {
+        display: contents;
+      }
+
+      .playground-evaluations-detail-sidebar-list {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .playground-evaluations-detail-sidebar-row {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 12px;
+        line-height: 1.35;
+        font-weight: 400;
+      }
+
+      .playground-evaluations-detail-sidebar-label {
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .playground-evaluations-detail-sidebar-value {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        text-align: right;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-evaluations-detail-person {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .playground-evaluations-detail-sidebar-value .playground-evaluations-run-agent-cell {
+        justify-content: flex-end;
+      }
+
+      .playground-evaluations-detail-sidebar-row.is-owner .playground-evaluations-detail-sidebar-value {
+        flex: 1 1 auto;
+        overflow: visible;
+      }
+
+      .playground-evaluations-detail-owner-selector {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .playground-evaluations-detail-owner-trigger.platform-selector__trigger {
+        width: 100%;
+        min-width: 0;
+        min-height: 24px;
+        justify-content: flex-end;
+        gap: 6px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+      }
+
+      .playground-evaluations-detail-owner-trigger.platform-selector__trigger:hover,
+      .playground-evaluations-detail-owner-trigger.platform-selector__trigger:focus-visible {
+        background: transparent;
+      }
+
+      .playground-evaluations-detail-owner-value {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 7px;
+      }
+
+      .playground-evaluations-detail-owner-avatar.playground-team-member-avatar {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 18px;
+      }
+
+      .playground-evaluations-detail-owner-name {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-evaluations-access-settings,
+      .playground-evaluations-access-detail {
+        min-width: 0;
+        width: 100%;
+      }
+
+      .playground-evaluations-access-detail .platform-permissions-page,
+      .playground-evaluations-access-detail .platform-role-permissions-page {
+        margin-top: 12px;
+      }
+
+      .playground-evaluations-detail-sidebar-actions {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .playground-evaluations-detail-sidebar-action {
+        width: 100%;
+        min-width: 0;
+        justify-content: flex-start;
+        padding-left: 0;
+        padding-right: 0;
+      }
+
+      .playground-evaluations-detail-overview-main .playground-evaluations-analytics-card {
+        width: 100%;
+      }
+
+      .playground-evaluations-detail-overview-main .playground-evaluations-dataset-guidance-section {
+        min-width: 0;
+      }
+
+      @media (max-width: 760px) {
+        .playground-evaluations-page .playground-guardrails-browser-body.is-detail-page {
+          padding: 16px;
+        }
+      }
+`;

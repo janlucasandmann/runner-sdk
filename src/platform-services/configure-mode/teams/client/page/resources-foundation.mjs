@@ -4,6 +4,8 @@ export const TEAMS_PAGE_RESOURCES_FOUNDATION_SCRIPT = `          const getTeamRe
               project: { label: "Project", Icon: Rocket },
               environment: { label: "Computer", Icon: Monitor },
               agent: { label: "Agent", Icon: Bot },
+              guardrail: { label: "Guardrail", Icon: Shield },
+              evaluation: { label: "Evaluation", Icon: ChartColumnIncreasing },
               file: { label: "File", Icon: FileText },
               metronome: { label: "Metronome Workflow", Icon: Metronome },
               metronome_workflow: { label: "Metronome Workflow", Icon: Metronome },
@@ -639,6 +641,8 @@ export const TEAMS_PAGE_RESOURCES_FOUNDATION_SCRIPT = `          const getTeamRe
 	            { id: "project", label: "Projects" },
             { id: "environment", label: "Computers" },
             { id: "agent", label: "Agents" },
+            { id: "guardrail", label: "Guardrails" },
+            { id: "evaluation", label: "Evaluations" },
             { id: "file", label: "Files" },
             { id: "metronome", label: "Metronomes" },
             { id: "web_app", label: "Web Apps" },
@@ -1122,4 +1126,3 @@ export const TEAMS_PAGE_RESOURCES_FOUNDATION_SCRIPT = `          const getTeamRe
           }
 
 `;
-

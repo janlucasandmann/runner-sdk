@@ -2,6 +2,11 @@ import type {
   DevelopVoiceAgentMutationState,
   DevelopVoiceAgentOverviewRow,
 } from "./voice-agent-types.js";
+import {
+  getDevelopResourceCreatorIdentity,
+  getDevelopResourceOwnerIdentity,
+  type DevelopResourceIdentityInput,
+} from "../../../shared/client/domain/index.js";
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -24,6 +29,7 @@ export function createDevelopVoiceAgentOverviewRows(
   draftsById: Readonly<Record<string, unknown>> = {},
   mutationState: DevelopVoiceAgentMutationState = {},
   sessionResultsById: Readonly<Record<string, unknown>> = {},
+  identityFallback: DevelopResourceIdentityInput = {},
 ): DevelopVoiceAgentOverviewRow[] {
   return records.flatMap((rawRecord) => {
     const record = asRecord(rawRecord);
@@ -58,6 +64,8 @@ export function createDevelopVoiceAgentOverviewRows(
       instructions,
       phoneNumber,
       phoneStatus: asString(phone.status) || (phoneNumber ? "active" : ""),
+      creator: getDevelopResourceCreatorIdentity(agent, identityFallback),
+      owner: getDevelopResourceOwnerIdentity(agent, identityFallback),
       enabled: mode !== "off" || Boolean(phoneNumber),
       webEnabled: mode === "web" || mode === "web_and_phone",
       phoneEnabled: mode === "phone" || mode === "web_and_phone",

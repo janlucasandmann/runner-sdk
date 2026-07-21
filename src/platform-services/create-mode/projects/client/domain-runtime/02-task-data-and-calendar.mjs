@@ -539,6 +539,63 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
 
         const draft = buildPlaygroundDefaultTaskDraft();
         const runnerPlaygroundMetadata = getPlaygroundTaskRunnerMetadata(task);
+        const directCreator = task.creator && typeof task.creator === "object" && !Array.isArray(task.creator)
+          ? task.creator
+          : {};
+        const metadataCreator = runnerPlaygroundMetadata?.creator
+          && typeof runnerPlaygroundMetadata.creator === "object"
+          && !Array.isArray(runnerPlaygroundMetadata.creator)
+          ? runnerPlaygroundMetadata.creator
+          : {};
+        const creatorAgentId = [
+          directCreator.agentId,
+          directCreator.agent_id,
+          task.creatorAgentId,
+          task.creator_agent_id,
+          task.createdByAgentId,
+          task.created_by_agent_id,
+          metadataCreator.agentId,
+          metadataCreator.agent_id,
+        ].map((value) => String(value || "").trim()).find(Boolean) || null;
+        const creatorUserId = [
+          directCreator.userId,
+          directCreator.user_id,
+          task.createdByUserId,
+          task.created_by_user_id,
+          metadataCreator.userId,
+          metadataCreator.user_id,
+          task.userId,
+          task.user_id,
+        ].map((value) => String(value || "").trim()).find(Boolean) || null;
+        const creatorName = [
+          directCreator.name,
+          directCreator.displayName,
+          task.creatorName,
+          task.creator_name,
+          metadataCreator.name,
+          metadataCreator.displayName,
+        ].map((value) => String(value || "").trim()).find(Boolean) || null;
+        const creatorAvatarUrl = [
+          directCreator.avatarUrl,
+          directCreator.avatar_url,
+          directCreator.photoUrl,
+          directCreator.photoURL,
+          task.creatorAvatarUrl,
+          task.creator_avatar_url,
+          metadataCreator.avatarUrl,
+          metadataCreator.avatar_url,
+          metadataCreator.photoUrl,
+          metadataCreator.photoURL,
+        ].map((value) => String(value || "").trim()).find(Boolean) || null;
+        const creator = creatorAgentId || creatorUserId
+          ? {
+              type: creatorAgentId ? "agent" : "user",
+              userId: creatorUserId,
+              agentId: creatorAgentId,
+              name: creatorName,
+              avatarUrl: creatorAvatarUrl,
+            }
+          : null;
         const normalizedLinkedThreadIds = normalizePlaygroundIdList(task.linkedThreadIds || task.linked_thread_ids);
         const normalizedLastStartedThreadId =
           typeof task.lastStartedThreadId === "string" && task.lastStartedThreadId.trim()
@@ -659,6 +716,8 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
           ...draft,
           ...task,
           id: typeof task.id === "string" ? task.id : draft.id,
+          createdByUserId: creatorUserId,
+          creator,
           projectId: typeof task.projectId === "string" && task.projectId.trim() ? task.projectId.trim() : null,
           releaseId: typeof task.releaseId === "string" && task.releaseId.trim() ? task.releaseId.trim() : null,
           ticketNumber,

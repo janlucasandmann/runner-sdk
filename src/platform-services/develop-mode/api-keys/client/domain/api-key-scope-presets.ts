@@ -14,8 +14,8 @@ export const API_KEY_SCOPE_PRESETS = Object.freeze([
   Object.freeze({
     id: "read",
     label: "Read Only",
-    description: "View projects, threads, and billing data.",
-    permissions: Object.freeze(["projects:read", "threads:read", "billing:read"]),
+    description: "View projects, threads, repository security, and billing data.",
+    permissions: Object.freeze(["projects:read", "threads:read", "security:read", "billing:read"]),
   }),
 ] as const);
 

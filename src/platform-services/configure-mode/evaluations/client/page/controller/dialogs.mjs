@@ -14,6 +14,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_DIALOGS_SCRIPT = String.raw`        fun
                 React.createElement(Play, { width: 14, height: 14, strokeWidth: 1.8 }),
                 React.createElement("span", null, "Run Evaluation")
               ),
+              renderEvaluationPublishSplitButton(),
               React.createElement("div", {
                   className: "playground-tasks-toolbar-popup-shell",
                   ref: evaluationActionsPopoverRef,
@@ -534,7 +535,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_DIALOGS_SCRIPT = String.raw`        fun
           renderEvaluationTopNavActions(),
           React.createElement("div", { className: "playground-files-shell playground-guardrails-shell" },
             React.createElement("section", { className: "playground-files-browser playground-guardrails-browser" },
-              evaluationVersionChangesState
+              evaluationVersionChangesState || isEvaluationDetailPage
                 ? null
                 : React.createElement("div", { className: "playground-files-browser-header playground-guardrails-browser-header" + (isEvaluationOverviewPage ? " playground-guardrails-overview-browser-header" : "") },
                 React.createElement("div", { className: "playground-files-library-header playground-guardrails-library-header" },
@@ -591,7 +592,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_DIALOGS_SCRIPT = String.raw`        fun
                   )
                 )
               ),
-              React.createElement("div", { className: "playground-files-browser-body playground-guardrails-browser-body" + (isEvaluationOverviewPage ? " playground-guardrails-overview-browser-body" : "") },
+              React.createElement("div", { className: "playground-files-browser-body playground-guardrails-browser-body" + (isEvaluationOverviewPage ? " playground-guardrails-overview-browser-body" : "") + (isEvaluationDetailPage ? " is-detail-page playground-evaluations-detail-page-body" : "") },
                 normalizedMode === "detail" && evaluationVersionChangesState
                   ? React.createElement("div", { className: "playground-guardrails-detail playground-evaluations-version-changes-shell" },
                       renderEvaluationVersionChangesPage()

@@ -2148,15 +2148,24 @@ export class RunnerClient {
       guardrailId: string;
       versionId: string;
       snapshot?: RunnerGuardrailVersionCreateInput["snapshot"];
+      description?: RunnerGuardrailVersionCreateInput["description"];
     },
   ): Promise<RunnerGuardrailSet> {
-    return this.actionResourceVersion<RunnerGuardrailSet>(
-      options,
-      `/guardrails/${encodeURIComponent(options.guardrailId)}`,
-      options.versionId,
-      "publish",
-      ["guardrail", "set"],
+    const url = this.buildApiUrl(
+      options.backendUrl,
+      `/guardrails/${encodeURIComponent(options.guardrailId)}/versions/${encodeURIComponent(options.versionId)}/publish`,
     );
+    const payload = await this.requestJson<unknown>(url, {
+      method: "POST",
+      headers: this.withJsonContentType(options.headers, options.organizationId),
+      credentials: options.credentials,
+      signal: options.signal,
+      body: JSON.stringify({
+        ...(options.snapshot !== undefined ? { snapshot: options.snapshot } : {}),
+        ...(options.description !== undefined ? { description: options.description } : {}),
+      }),
+    });
+    return this.readObjectResponse<RunnerGuardrailSet>(payload, ["guardrail", "set"]);
   }
 
   async unpublishGuardrailVersion(

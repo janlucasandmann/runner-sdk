@@ -35,6 +35,157 @@ export const PLATFORM_PERMISSION_RING_DEFINITIONS: readonly PlatformPermissionRi
 
 export const PLATFORM_PERMISSION_RING_IDS = PLATFORM_PERMISSION_RING_DEFINITIONS.map((ring) => ring.id);
 
+type ManagedResourcePermissionSubjectType =
+  | "web_app"
+  | "function"
+  | "auth"
+  | "secrets"
+  | "payments"
+  | "agent_runtime";
+
+interface ManagedResourcePermissionCatalogOptions {
+  subjectType: ManagedResourcePermissionSubjectType;
+  noun: string;
+  viewLabel: string;
+  invokeLabel: string;
+  activityLabel: string;
+  manageLabel: string;
+  publishLabel: string;
+}
+
+function createManagedResourcePermissionActions({
+  subjectType,
+  noun,
+  viewLabel,
+  invokeLabel,
+  activityLabel,
+  manageLabel,
+  publishLabel,
+}: ManagedResourcePermissionCatalogOptions): PlatformPermissionActionDefinition[] {
+  return [
+    {
+      id: `${subjectType}_view`,
+      ringId: "ring_1",
+      label: viewLabel,
+      description: `View this ${noun}'s configuration, versions, status, and metadata.`,
+      subjectTypes: [subjectType],
+    },
+    {
+      id: `${subjectType}_invoke`,
+      ringId: "ring_1",
+      label: invokeLabel,
+      description: `Use the deployed capabilities exposed by this ${noun}.`,
+      subjectTypes: [subjectType],
+    },
+    {
+      id: `${subjectType}_activity_view`,
+      ringId: "ring_1",
+      label: activityLabel,
+      description: `View analytics, logs, activity history, and operational status for this ${noun}.`,
+      subjectTypes: [subjectType],
+    },
+    {
+      id: `${subjectType}_manage`,
+      ringId: "ring_2",
+      label: manageLabel,
+      description: `Change this ${noun}'s source, configuration, and operational settings.`,
+      subjectTypes: [subjectType],
+    },
+    {
+      id: `${subjectType}_connections_manage`,
+      ringId: "ring_2",
+      label: "Manage connections",
+      description: `Connect or disconnect this ${noun} from other managed resources.`,
+      subjectTypes: [subjectType],
+    },
+    {
+      id: `${subjectType}_publish`,
+      ringId: "ring_3",
+      label: publishLabel,
+      description: `Publish, roll back, or change the active version of this ${noun}.`,
+      subjectTypes: [subjectType],
+    },
+    {
+      id: `${subjectType}_owner_transfer`,
+      ringId: "ring_3",
+      label: "Transfer ownership",
+      description: `Transfer permanent ownership of this ${noun} to another eligible team member.`,
+      subjectTypes: [subjectType],
+    },
+    {
+      id: `${subjectType}_access_manage`,
+      ringId: "ring_3",
+      label: "Manage access",
+      description: `Share this ${noun} with teams and change their role permission policies.`,
+      subjectTypes: [subjectType],
+    },
+    {
+      id: `${subjectType}_delete`,
+      ringId: "ring_3",
+      label: `Delete ${noun}`,
+      description: `Permanently delete this ${noun} and its managed data.`,
+      subjectTypes: [subjectType],
+    },
+  ];
+}
+
+const PLATFORM_MANAGED_RESOURCE_PERMISSION_ACTIONS: readonly PlatformPermissionActionDefinition[] = [
+  ...createManagedResourcePermissionActions({
+    subjectType: "web_app",
+    noun: "web app",
+    viewLabel: "View web app",
+    invokeLabel: "Open web app",
+    activityLabel: "View requests and logs",
+    manageLabel: "Edit source and configuration",
+    publishLabel: "Publish deployments",
+  }),
+  ...createManagedResourcePermissionActions({
+    subjectType: "function",
+    noun: "function",
+    viewLabel: "View function",
+    invokeLabel: "Invoke function",
+    activityLabel: "View invocations and logs",
+    manageLabel: "Edit source and configuration",
+    publishLabel: "Deploy function",
+  }),
+  ...createManagedResourcePermissionActions({
+    subjectType: "auth",
+    noun: "authentication resource",
+    viewLabel: "View authentication",
+    invokeLabel: "Authenticate users",
+    activityLabel: "View authentication activity",
+    manageLabel: "Manage users and authentication",
+    publishLabel: "Publish authentication changes",
+  }),
+  ...createManagedResourcePermissionActions({
+    subjectType: "secrets",
+    noun: "secrets vault",
+    viewLabel: "View secret metadata",
+    invokeLabel: "Access secret values",
+    activityLabel: "View secret access activity",
+    manageLabel: "Manage secrets",
+    publishLabel: "Publish secrets changes",
+  }),
+  ...createManagedResourcePermissionActions({
+    subjectType: "payments",
+    noun: "payments resource",
+    viewLabel: "View payments configuration",
+    invokeLabel: "Create checkout sessions",
+    activityLabel: "View payment activity",
+    manageLabel: "Manage payments",
+    publishLabel: "Publish payment changes",
+  }),
+  ...createManagedResourcePermissionActions({
+    subjectType: "agent_runtime",
+    noun: "agent runtime",
+    viewLabel: "View runtime configuration",
+    invokeLabel: "Run agents",
+    activityLabel: "View runtime runs and usage",
+    manageLabel: "Configure runtime",
+    publishLabel: "Publish runtime changes",
+  }),
+];
+
 export const PLATFORM_PERMISSION_ACTION_DEFINITIONS: readonly PlatformPermissionActionDefinition[] = [
   {
     id: "workspace_read",
@@ -130,7 +281,21 @@ export const PLATFORM_PERMISSION_ACTION_DEFINITIONS: readonly PlatformPermission
     id: "team_settings_update",
     ringId: "ring_3",
     label: "Edit team settings",
-    description: "Rename the team, change governance settings, delete the team, or alter role permission pages.",
+    description: "Rename the team and change its governance settings.",
+    subjectTypes: ["team", "team_role"],
+  },
+  {
+    id: "team_role_permissions_manage",
+    ringId: "ring_3",
+    label: "Manage role permissions",
+    description: "Change the capability policies assigned to team roles.",
+    subjectTypes: ["team", "team_role"],
+  },
+  {
+    id: "team_delete",
+    ringId: "ring_3",
+    label: "Delete team",
+    description: "Permanently delete the team, revoke invitations, and remove shared-resource access.",
     subjectTypes: ["team", "team_role"],
   },
   {
@@ -169,6 +334,13 @@ export const PLATFORM_PERMISSION_ACTION_DEFINITIONS: readonly PlatformPermission
     subjectTypes: ["organization_role"],
   },
   {
+    id: "organization_team_manage",
+    ringId: "ring_2",
+    label: "Manage organization teams",
+    description: "Create, update, or remove teams owned by the organization.",
+    subjectTypes: ["organization_role"],
+  },
+  {
     id: "organization_billing_manage",
     ringId: "ring_3",
     label: "Manage usage and billing",
@@ -183,10 +355,80 @@ export const PLATFORM_PERMISSION_ACTION_DEFINITIONS: readonly PlatformPermission
     subjectTypes: ["organization_role"],
   },
   {
+    id: "organization_permissions_manage",
+    ringId: "ring_3",
+    label: "Manage role permissions",
+    description: "Change the capability policies assigned to organization roles.",
+    subjectTypes: ["organization_role"],
+  },
+  {
+    id: "organization_owner_transfer",
+    ringId: "ring_3",
+    label: "Transfer ownership",
+    description: "Transfer permanent ownership of the organization to another eligible member.",
+    subjectTypes: ["organization_role"],
+  },
+  {
+    id: "organization_delete",
+    ringId: "ring_3",
+    label: "Delete organization",
+    description: "Permanently delete the organization and detach its members and resources.",
+    subjectTypes: ["organization_role"],
+  },
+  {
+    id: "project_view",
+    ringId: "ring_1",
+    label: "View project",
+    description: "View the project overview, backlog, board, releases, and activity.",
+    subjectTypes: ["project", "project_team_role"],
+  },
+  {
+    id: "project_threads_view",
+    ringId: "ring_1",
+    label: "View project threads",
+    description: "View agent threads and run summaries associated with this project.",
+    subjectTypes: ["project", "project_team_role"],
+  },
+  {
+    id: "project_resources_view",
+    ringId: "ring_1",
+    label: "View project resources",
+    description: "View computers, agents, files, and deployed resources connected to this project.",
+    subjectTypes: ["project", "project_team_role"],
+  },
+  {
     id: "project_rules_view",
     ringId: "ring_1",
     label: "View project rules",
     description: "Read project rules that guide agents, tickets, and shared execution behavior.",
+    subjectTypes: ["project", "project_team_role"],
+  },
+  {
+    id: "project_threads_create",
+    ringId: "ring_2",
+    label: "Start project threads",
+    description: "Start agent work in the project and continue existing project threads.",
+    subjectTypes: ["project", "project_team_role"],
+  },
+  {
+    id: "project_issues_manage",
+    ringId: "ring_2",
+    label: "Manage issues",
+    description: "Create, edit, assign, move, complete, or delete project issues.",
+    subjectTypes: ["project", "project_team_role"],
+  },
+  {
+    id: "project_strategy_manage",
+    ringId: "ring_2",
+    label: "Manage strategy",
+    description: "Edit strategy notes, outcomes, milestones, releases, and project goals.",
+    subjectTypes: ["project", "project_team_role"],
+  },
+  {
+    id: "project_resources_manage",
+    ringId: "ring_2",
+    label: "Manage project resources",
+    description: "Connect, update, or remove computers, agents, files, and deployed resources.",
     subjectTypes: ["project", "project_team_role"],
   },
   {
@@ -197,11 +439,151 @@ export const PLATFORM_PERMISSION_ACTION_DEFINITIONS: readonly PlatformPermission
     subjectTypes: ["project", "project_team_role"],
   },
   {
+    id: "project_automations_run",
+    ringId: "ring_2",
+    label: "Run project automations",
+    description: "Run Mission Control and other project-wide automated workflows.",
+    subjectTypes: ["project", "project_team_role"],
+  },
+  {
     id: "project_access_manage",
     ringId: "ring_3",
     label: "Manage project access",
     description: "Add teams, remove teams, or change project role permission pages.",
     subjectTypes: ["project", "project_team_role"],
+  },
+  {
+    id: "project_delete",
+    ringId: "ring_3",
+    label: "Delete project",
+    description: "Permanently delete this project and detach its issues, threads, and connected resources.",
+    subjectTypes: ["project", "project_team_role"],
+  },
+  {
+    id: "guardrail_view",
+    ringId: "ring_1",
+    label: "View guardrail",
+    description: "View the guardrail description, instructions, versions, evaluations, and access configuration.",
+    subjectTypes: ["guardrail", "guardrail_team_role"],
+  },
+  {
+    id: "guardrail_use",
+    ringId: "ring_1",
+    label: "Use with agents",
+    description: "Attach this guardrail to agents that the user can configure.",
+    subjectTypes: ["guardrail", "guardrail_team_role"],
+  },
+  {
+    id: "guardrail_evaluate",
+    ringId: "ring_2",
+    label: "Run evaluations",
+    description: "Run evaluation datasets against this guardrail and inspect the resulting runs.",
+    subjectTypes: ["guardrail", "guardrail_team_role"],
+  },
+  {
+    id: "guardrail_edit",
+    ringId: "ring_2",
+    label: "Edit guardrail details",
+    description: "Rename the guardrail and change its description.",
+    subjectTypes: ["guardrail", "guardrail_team_role"],
+  },
+  {
+    id: "guardrail_prompts_manage",
+    ringId: "ring_2",
+    label: "Manage instructions",
+    description: "Create, edit, reorder, or remove the instructions enforced during agent runs.",
+    subjectTypes: ["guardrail", "guardrail_team_role"],
+  },
+  {
+    id: "guardrail_versions_manage",
+    ringId: "ring_2",
+    label: "Manage versions",
+    description: "Create, compare, restore, or remove saved guardrail versions.",
+    subjectTypes: ["guardrail", "guardrail_team_role"],
+  },
+  {
+    id: "guardrail_publish",
+    ringId: "ring_3",
+    label: "Publish versions",
+    description: "Publish or unpublish a guardrail version used by connected agents.",
+    subjectTypes: ["guardrail", "guardrail_team_role"],
+  },
+  {
+    id: "guardrail_access_manage",
+    ringId: "ring_3",
+    label: "Manage access",
+    description: "Share this guardrail with teams and change their role permission pages.",
+    subjectTypes: ["guardrail", "guardrail_team_role"],
+  },
+  {
+    id: "guardrail_delete",
+    ringId: "ring_3",
+    label: "Delete guardrail",
+    description: "Permanently delete this guardrail and remove it from connected agents.",
+    subjectTypes: ["guardrail", "guardrail_team_role"],
+  },
+  {
+    id: "evaluation_view",
+    ringId: "ring_1",
+    label: "View evaluation",
+    description: "View the evaluation dataset, evaluator configuration, versions, runs, and access configuration.",
+    subjectTypes: ["evaluation", "evaluation_team_role"],
+  },
+  {
+    id: "evaluation_runs_view",
+    ringId: "ring_1",
+    label: "View evaluation runs",
+    description: "Inspect evaluation runs, case results, scores, reasoning, costs, and related threads.",
+    subjectTypes: ["evaluation", "evaluation_team_role"],
+  },
+  {
+    id: "evaluation_run",
+    ringId: "ring_2",
+    label: "Run evaluations",
+    description: "Start evaluation runs against agents, versions, projects, or computers.",
+    subjectTypes: ["evaluation", "evaluation_team_role"],
+  },
+  {
+    id: "evaluation_cases_manage",
+    ringId: "ring_2",
+    label: "Manage cases",
+    description: "Create, import, edit, or remove evaluation cases and their expected outputs.",
+    subjectTypes: ["evaluation", "evaluation_team_role"],
+  },
+  {
+    id: "evaluation_settings_manage",
+    ringId: "ring_2",
+    label: "Manage evaluation settings",
+    description: "Change evaluator guidance, evaluator configuration, pass threshold, and evaluation metadata.",
+    subjectTypes: ["evaluation", "evaluation_team_role"],
+  },
+  {
+    id: "evaluation_versions_manage",
+    ringId: "ring_2",
+    label: "Manage versions",
+    description: "Create, compare, restore, or remove saved evaluation versions.",
+    subjectTypes: ["evaluation", "evaluation_team_role"],
+  },
+  {
+    id: "evaluation_publish",
+    ringId: "ring_3",
+    label: "Publish versions",
+    description: "Publish or unpublish the evaluation version used for new runs.",
+    subjectTypes: ["evaluation", "evaluation_team_role"],
+  },
+  {
+    id: "evaluation_access_manage",
+    ringId: "ring_3",
+    label: "Manage access",
+    description: "Share this evaluation with teams and change their role permission pages.",
+    subjectTypes: ["evaluation", "evaluation_team_role"],
+  },
+  {
+    id: "evaluation_delete",
+    ringId: "ring_3",
+    label: "Delete evaluation",
+    description: "Permanently delete this evaluation, its versions, and its retained run history.",
+    subjectTypes: ["evaluation", "evaluation_team_role"],
   },
   {
     id: "database_schema_read",
@@ -246,6 +628,13 @@ export const PLATFORM_PERMISSION_ACTION_DEFINITIONS: readonly PlatformPermission
     subjectTypes: ["database"],
   },
   {
+    id: "database_connections_manage",
+    ringId: "ring_2",
+    label: "Manage connections",
+    description: "Connect or disconnect functions, web apps, auth, runtimes, and other managed resources.",
+    subjectTypes: ["database"],
+  },
+  {
     id: "database_document_delete",
     ringId: "ring_3",
     label: "Delete documents",
@@ -264,6 +653,20 @@ export const PLATFORM_PERMISSION_ACTION_DEFINITIONS: readonly PlatformPermission
     ringId: "ring_3",
     label: "Manage access",
     description: "Share the database and change permissions for teams and collaborators.",
+    subjectTypes: ["database"],
+  },
+  {
+    id: "database_owner_transfer",
+    ringId: "ring_3",
+    label: "Transfer ownership",
+    description: "Transfer permanent ownership of this database to another eligible team member.",
+    subjectTypes: ["database"],
+  },
+  {
+    id: "database_delete",
+    ringId: "ring_3",
+    label: "Delete database",
+    description: "Permanently delete this database, its collections, indexes, and stored documents.",
     subjectTypes: ["database"],
   },
   {
@@ -316,12 +719,111 @@ export const PLATFORM_PERMISSION_ACTION_DEFINITIONS: readonly PlatformPermission
     subjectTypes: ["server"],
   },
   {
+    id: "server_owner_transfer",
+    ringId: "ring_3",
+    label: "Transfer ownership",
+    description: "Transfer permanent ownership of this resource to another eligible team member.",
+    subjectTypes: ["server"],
+  },
+  {
     id: "server_delete",
     ringId: "ring_3",
     label: "Delete resource",
     description: "Permanently delete this function or web app and its managed deployment.",
     subjectTypes: ["server"],
   },
+  {
+    id: "security_repository_view",
+    ringId: "ring_1",
+    label: "View repository security",
+    description: "View repository configuration, monitoring status, and current security posture.",
+    subjectTypes: ["security_repository"],
+  },
+  {
+    id: "security_repository_findings_view",
+    ringId: "ring_1",
+    label: "View findings and evidence",
+    description: "View vulnerability findings, source locations, validation evidence, and remediation status.",
+    subjectTypes: ["security_repository"],
+  },
+  {
+    id: "security_repository_audit_view",
+    ringId: "ring_1",
+    label: "View security audit log",
+    description: "View the append-only history of scans, triage decisions, approvals, and GitHub publication events.",
+    subjectTypes: ["security_repository"],
+  },
+  {
+    id: "security_repository_run",
+    ringId: "ring_2",
+    label: "Run security scans",
+    description: "Queue or cancel exact-commit security analysis runs for this repository.",
+    subjectTypes: ["security_repository"],
+  },
+  {
+    id: "security_repository_triage",
+    ringId: "ring_2",
+    label: "Triage findings",
+    description: "Accept, reopen, fix, or mark findings as false positives with an audited reason.",
+    subjectTypes: ["security_repository"],
+  },
+  {
+    id: "security_repository_policy_manage",
+    ringId: "ring_2",
+    label: "Manage scan policy",
+    description: "Change scanner coverage, trigger rules, branch filters, and remediation limits.",
+    subjectTypes: ["security_repository"],
+  },
+  {
+    id: "security_repository_threat_model_manage",
+    ringId: "ring_2",
+    label: "Manage threat model",
+    description: "Change trust boundaries, sensitive paths, priority areas, and documented exclusions.",
+    subjectTypes: ["security_repository"],
+  },
+  {
+    id: "security_repository_remediation_generate",
+    ringId: "ring_2",
+    label: "Generate isolated fixes",
+    description: "Generate and validate patch artifacts in an isolated worker without writing to GitHub.",
+    subjectTypes: ["security_repository"],
+  },
+  {
+    id: "security_repository_risk_accept",
+    ringId: "ring_3",
+    label: "Accept security risk",
+    description: "Accept a vulnerability risk for a bounded period with a mandatory audited justification.",
+    subjectTypes: ["security_repository"],
+  },
+  {
+    id: "security_repository_remediation_publish",
+    ringId: "ring_3",
+    label: "Publish remediation pull requests",
+    description: "Approve a validated patch and publish it to GitHub as a draft pull request. Merging is never implied.",
+    subjectTypes: ["security_repository"],
+  },
+  {
+    id: "security_repository_github_manage",
+    ringId: "ring_3",
+    label: "Manage GitHub connection",
+    description: "Connect, refresh, disconnect, or change the GitHub App installation used by this repository.",
+    subjectTypes: ["security_repository"],
+  },
+  {
+    id: "security_repository_access_manage",
+    ringId: "ring_3",
+    label: "Manage repository access",
+    description: "Change who can view findings, run scans, triage risk, or approve remediation publication.",
+    subjectTypes: ["security_repository"],
+  },
+  {
+    id: "security_repository_delete",
+    ringId: "ring_3",
+    label: "Delete security repository",
+    description: "Permanently delete this repository's security configuration, findings, run history, and retained evidence.",
+    subjectTypes: ["security_repository"],
+  },
+  ...PLATFORM_MANAGED_RESOURCE_PERMISSION_ACTIONS,
   {
     id: "managed_resource_mutation",
     ringId: "ring_2",
@@ -368,6 +870,7 @@ export const PLATFORM_PERMISSION_RESOURCE_TYPES = [
   "files",
   "directories",
   "projects",
+  "security_repositories",
 ] as const;
 
 export const PLATFORM_PERMISSION_SUBJECT_TYPES = [
@@ -379,7 +882,57 @@ export const PLATFORM_PERMISSION_SUBJECT_TYPES = [
   "organization_role",
   "database",
   "server",
+  "web_app",
+  "function",
+  "auth",
+  "secrets",
+  "payments",
+  "agent_runtime",
+  "guardrail",
+  "guardrail_team_role",
+  "evaluation",
+  "evaluation_team_role",
+  "security_repository",
   "human_user",
 ] as const;
+
+export const PLATFORM_SCOPED_PERMISSION_SUBJECT_TYPES = [
+  "project",
+  "project_team_role",
+  "team",
+  "team_role",
+  "organization_role",
+  "database",
+  "server",
+  "web_app",
+  "function",
+  "auth",
+  "secrets",
+  "payments",
+  "agent_runtime",
+  "guardrail",
+  "guardrail_team_role",
+  "evaluation",
+  "evaluation_team_role",
+  "security_repository",
+] as const;
+
+export const PLATFORM_LEGACY_SERVER_PERMISSION_ACTION_ALIASES: Readonly<
+  Partial<Record<ManagedResourcePermissionSubjectType, Readonly<Record<string, string>>>>
+> = Object.fromEntries(
+  (["web_app", "function", "auth", "secrets", "payments", "agent_runtime"] as const).map((subjectType) => [
+    subjectType,
+    {
+      [`${subjectType}_view`]: "server_source_read",
+      [`${subjectType}_invoke`]: "server_invoke",
+      [`${subjectType}_activity_view`]: "server_logs_read",
+      [`${subjectType}_manage`]: "server_source_write",
+      [`${subjectType}_connections_manage`]: "server_connection_manage",
+      [`${subjectType}_publish`]: "server_deploy",
+      [`${subjectType}_access_manage`]: "server_access_manage",
+      [`${subjectType}_delete`]: "server_delete",
+    },
+  ]),
+);
 
 export type PlatformPermissionSubjectType = typeof PLATFORM_PERMISSION_SUBJECT_TYPES[number];

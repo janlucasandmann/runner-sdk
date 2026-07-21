@@ -1071,6 +1071,21 @@ export const PROJECTS_PAGE_CONNECTORS_SCRIPT = `        function getProjectConne
           }), { autosave: true });
         }
 
+        function handleRenameTaskAttachment(attachmentId, nextName) {
+          if (!draftTask?.id) return;
+          const normalizedAttachmentId = String(attachmentId || "").trim();
+          const normalizedName = String(nextName || "").trim();
+          if (!normalizedAttachmentId || !normalizedName) return;
+          updateDraftTask((current) => ({
+            ...current,
+            attachments: current.attachments.map((attachment) =>
+              attachment.id === normalizedAttachmentId
+                ? { ...attachment, filename: normalizedName }
+                : attachment
+            ),
+          }), { autosave: true });
+        }
+
 ${CALENDAR_PROJECTS_PAGE_CONNECTOR_FRAGMENTS.attachmentRemoval}
         function buildTaskAttachmentListItem(attachment, options = {}) {
           const resolvedAttachment = buildResolvedTaskAttachmentRecord(attachment) || attachment;
@@ -1130,6 +1145,9 @@ ${CALENDAR_PROJECTS_PAGE_CONNECTOR_FRAGMENTS.attachmentRemoval}
                   draggable: false,
                 }),
             onActivate: () => handlePreview(resolvedAttachment),
+            onRename: isRemovable
+              ? (nextName) => handleRenameTaskAttachment(resolvedAttachment.id, nextName)
+              : undefined,
             onRemove: isRemovable ? () => handleRemove(resolvedAttachment.id) : undefined,
             removeLabel: "Remove " + (resolvedAttachment.filename || "attachment"),
           };
@@ -1320,76 +1338,98 @@ ${CALENDAR_PROJECTS_PAGE_CONNECTOR_FRAGMENTS.attachmentRemoval}
           const selectedFilesCount = taskEnvironmentFilePickerInventory.filter((entry) =>
             !entry.isFolder && taskEnvironmentFilePickerSelectedPaths.includes(normalizeHistoryPath(entry.path))
           ).length;
+          const sourceGroups = [
+            {
+              id: "computers",
+              label: "Computers",
+              items: activeTaskEnvironment
+                ? [{
+                    id: String(activeTaskEnvironment.id || activeTaskEnvironmentId || "workspace"),
+                    label: activeTaskEnvironment.name || "Computer",
+                    active: true,
+                    onSelect: () => {},
+                  }]
+                : [],
+            },
+            {
+              id: "integrations",
+              label: "Integrations",
+              items: PLAYGROUND_TASK_CONNECTOR_OPTIONS.map((option) => ({
+                id: option.source,
+                label: option.label,
+                icon: renderTaskConnectorServiceIcon(
+                  option.source,
+                  "tb-file-browser-source-brand-icon"
+                ),
+                note: taskConnectorConfigByKey[option.key]?.connected === false ? "Connect" : undefined,
+                onSelect: () => {
+                  setTaskEnvironmentFilePickerOpen(false);
+                  openTaskConnectorBrowser(option.source);
+                },
+              })),
+            },
+          ];
 
           return React.createElement("div", { className: "tb-runner-chat" },
-            React.createElement(PlatformModalBackdrop, {
-              className: "tb-file-browser-scrim",
-              onClick: () => setTaskEnvironmentFilePickerOpen(false),
-            },
-              React.createElement(PlatformModalSurface, {
-                className: "tb-file-browser-modal",
-                onClick: (event) => event.stopPropagation(),
+            React.createElement(PlatformFileExplorerBrowserModal, {
+              open: true,
+              visible: true,
+              portal: false,
+              size: "full",
+              title: "Attach files",
+              backdropClassName: "tb-file-browser-scrim",
+              className: "tb-file-browser-modal",
+              onClose: () => setTaskEnvironmentFilePickerOpen(false),
+              closeButtonLabel: "Close workspace files",
+              sourceGroups,
+              breadcrumbs: [{
+                id: String(activeTaskEnvironment?.id || activeTaskEnvironmentId || "workspace"),
+                label: activeTaskEnvironment?.name || "Computer",
+                onSelect: () => {},
+              }],
+              searchQuery: taskEnvironmentFilePickerSearch,
+              onSearchQueryChange: setTaskEnvironmentFilePickerSearch,
+              searchPlaceholder: "Search Files",
+              onBack: () => {},
+              onForward: () => {},
+              canGoBack: false,
+              canGoForward: false,
+              filterContextKey: "workspace:" + String(activeTaskEnvironmentId || ""),
+              items: taskEnvironmentFilePickerRows,
+              renderItem: renderTaskEnvironmentFilePickerRow,
+              getItemKind: (row) => {
+                const entry = row?.entry;
+                if (entry?.isFolder) return "folder";
+                if (getPlaygroundFileKind(entry) === "image") return "image";
+                if (/\.pdf$/i.test(String(entry?.name || ""))) return "pdf";
+                return "file";
               },
-                React.createElement("div", { className: "tb-file-browser-body" },
-                  renderTaskDetailFileBrowserSidebar("workspace", taskEnvironmentFilePickerSearch, setTaskEnvironmentFilePickerSearch),
-                  React.createElement("div", { className: "tb-file-browser-main" },
-                    React.createElement("div", { className: "tb-file-browser-header" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "tb-file-browser-nav-button",
-                        onClick: () => setTaskEnvironmentFilePickerOpen(false),
-                        "aria-label": "Close environment files",
-                      }, React.createElement(X, { className: "tb-file-browser-nav-icon", strokeWidth: 1.9 })),
-                      React.createElement("div", { className: "tb-file-browser-header-icon" },
-                        React.createElement(Cloud, { className: "tb-file-browser-source-icon", strokeWidth: 1.75 })
-                      ),
-                      React.createElement("div", { className: "tb-file-browser-breadcrumbs" },
-                        React.createElement("span", { className: "tb-file-browser-breadcrumb-chip" },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "tb-file-browser-breadcrumb active",
-                          }, activeTaskEnvironment?.name || "Environment")
-                        )
-                      ),
-                      React.createElement("div", { className: "tb-file-browser-count" }, selectedFilesCount + (selectedFilesCount === 1 ? " file selected" : " files selected"))
-                    ),
-                    React.createElement("div", { className: "tb-file-browser-list" },
-                      taskEnvironmentFilePickerState.status === "loading"
-                        ? React.createElement("div", { className: "tb-file-browser-empty" }, "Loading environment files...")
-                        : taskEnvironmentFilePickerState.error
-                          ? React.createElement("div", { className: "tb-file-browser-empty" }, taskEnvironmentFilePickerState.error)
-                          : taskEnvironmentFilePickerRows.length === 0
-                            ? React.createElement("div", { className: "tb-file-browser-empty" }, taskEnvironmentFilePickerSearch.trim() ? "No matching files found." : "No files found in this environment.")
-                            : React.createElement("div", { className: "tb-file-browser-list-inner" },
-                                taskEnvironmentFilePickerRows.map((row) => renderTaskEnvironmentFilePickerRow(row))
-                              )
-                    )
-                  )
-                ),
-                React.createElement("div", { className: "tb-file-browser-footer" },
-                  React.createElement(PlatformSecondaryButton, {
-                    type: "button",
-                    className: "tb-file-browser-footer-button tb-file-browser-footer-button-secondary",
-                    onClick: () => setTaskEnvironmentFilePickerOpen(false),
-                  }, "Cancel"),
-                  React.createElement(PlatformPrimaryButton, {
-                    type: "button",
-                    className: "tb-file-browser-footer-button tb-file-browser-footer-button-primary",
-                    onClick: () => void handleAttachTaskEnvironmentFiles(),
-                    disabled: selectedFilesCount === 0 || taskAttachmentTransferState.isProcessing,
-                  },
-                    React.createElement("span", { className: "tb-file-browser-footer-button-content" },
-                      taskAttachmentTransferState.isProcessing
-                        ? React.createElement("span", { className: "runner-spinner tb-file-browser-footer-button-spinner" })
-                        : null,
-                      React.createElement("span", { className: "tb-file-browser-footer-button-label" },
-                        taskAttachmentTransferState.isProcessing ? "Attaching Files..." : "Attach Files"
-                      )
-                    )
-                  )
+              getItemTimestamp: (row) => row?.entry?.modifiedTime || row?.entry?.createdTime,
+              loading: taskEnvironmentFilePickerState.status === "loading",
+              loadingMessage: "Loading workspace files...",
+              error: taskEnvironmentFilePickerState.error || null,
+              emptyMessage: ({ activeFilter, hasSearchQuery }) =>
+                hasSearchQuery
+                  ? "No files match your search"
+                  : activeFilter === "recent"
+                    ? "No recently changed files"
+                    : activeFilter === "images"
+                      ? "No images in this folder"
+                      : activeFilter === "pdfs"
+                        ? "No PDFs in this folder"
+                        : "This folder is empty",
+              confirmLabel: React.createElement("span", { className: "tb-file-browser-footer-button-content" },
+                taskAttachmentTransferState.isProcessing
+                  ? React.createElement("span", { className: "runner-spinner tb-file-browser-footer-button-spinner" })
+                  : null,
+                React.createElement("span", { className: "tb-file-browser-footer-button-label" },
+                  taskAttachmentTransferState.isProcessing ? "Attaching Files..." : "Attach Files"
                 )
-              )
-            )
+              ),
+              confirmDisabled: selectedFilesCount === 0 || taskAttachmentTransferState.isProcessing,
+              onCancel: () => setTaskEnvironmentFilePickerOpen(false),
+              onConfirm: handleAttachTaskEnvironmentFiles,
+            })
           );
         }
 
@@ -1409,7 +1449,7 @@ ${CALENDAR_PROJECTS_PAGE_CONNECTOR_FRAGMENTS.attachmentRemoval}
         function renderTaskDetailFileBrowserSidebar(activeSource, searchValue, setSearchValue, options = {}) {
           const sidebarEnvironment = options.environment || activeTaskEnvironment;
           const showIntegrations = options.showIntegrations !== false;
-          return React.createElement("div", { className: "tb-file-browser-sidebar" },
+          const sidebarContent = React.createElement(React.Fragment, null,
             React.createElement("div", { className: "tb-file-browser-search-wrap" },
               React.createElement("div", { className: "tb-file-browser-search" },
                 React.createElement(Search, { className: "tb-file-browser-search-icon", strokeWidth: 1.9 }),
@@ -1479,6 +1519,9 @@ ${CALENDAR_PROJECTS_PAGE_CONNECTOR_FRAGMENTS.attachmentRemoval}
                 )
               : null
           );
+          return options.contentOnly
+            ? sidebarContent
+            : React.createElement("div", { className: "tb-file-browser-sidebar" }, sidebarContent);
         }
 
         function renderTaskConnectorBrowserItemIcon(item) {

@@ -112,11 +112,17 @@ export const GUARDRAILS_PAGE_CONTROLLER_SCRIPT = `        function renderGuardra
               description: "",
               metadata: {
                 creator,
+                owner: { ...creator, type: "user" },
                 ...(creator.id ? { creatorId: creator.id, creator_id: creator.id } : {}),
                 ...(creator.userId ? { creatorUserId: creator.userId, creator_user_id: creator.userId } : {}),
                 ...(creator.name ? { creatorName: creator.name, creator_name: creator.name } : {}),
                 ...(creator.email ? { creatorEmail: creator.email, creator_email: creator.email } : {}),
                 ...(creator.avatarUrl ? { creatorAvatarUrl: creator.avatarUrl, creator_avatar_url: creator.avatarUrl } : {}),
+                ...(creator.id ? { ownerId: creator.id, owner_id: creator.id } : {}),
+                ...(creator.userId ? { ownerUserId: creator.userId, owner_user_id: creator.userId } : {}),
+                ...(creator.name ? { ownerName: creator.name, owner_name: creator.name } : {}),
+                ...(creator.email ? { ownerEmail: creator.email, owner_email: creator.email } : {}),
+                ...(creator.avatarUrl ? { ownerAvatarUrl: creator.avatarUrl, owner_avatar_url: creator.avatarUrl } : {}),
               },
             });
             const nextSet = ensurePlaygroundGuardrailInitialVersion(draftSet);
@@ -135,12 +141,17 @@ export const GUARDRAILS_PAGE_CONTROLLER_SCRIPT = `        function renderGuardra
               replaceGuardrailSetFromBackend(detailedSet, { select: true, rememberBaseline: true });
               setGuardrailsBackendSyncState({ status: "idle", error: "" });
               setGuardrailsPageMode("detail");
+              setGuardrailDetailTab("general");
+              setGuardrailAccessTeamId("");
+              setGuardrailAccessRoleId("member");
+              setGuardrailOwnerSelectorOpen(false);
               setGuardrailsToolbarPopover("");
               setGuardrailSetActionMenuId("");
               setGuardrailDetailActionsMenuOpen(false);
               setGuardrailPublishMenuOpen(false);
               setGuardrailVersionsHeaderMenuOpen(false);
               setGuardrailVersionChangesState(null);
+              setGuardrailVersionSaveDialog(null);
             } catch (error) {
               setGuardrailsBackendSyncState({ status: "error", error: error?.message || String(error) });
             }
@@ -149,6 +160,13 @@ export const GUARDRAILS_PAGE_CONTROLLER_SCRIPT = `        function renderGuardra
           function selectGuardrailSet(setId) {
             setSelectedGuardrailSetId(setId);
             setGuardrailsPageMode("detail");
+            setGuardrailDetailTab("general");
+            setGuardrailAccessTeamId("");
+            setGuardrailAccessRoleId("member");
+            setGuardrailShareTeamModalOpen(false);
+            setGuardrailShareTeamId("");
+            setGuardrailShareTeamState({ status: "idle", error: "" });
+            setGuardrailOwnerSelectorOpen(false);
             setGuardrailsToolbarPopover("");
             setGuardrailSetActionMenuId("");
             setGuardrailDetailActionsMenuOpen(false);
@@ -156,6 +174,7 @@ export const GUARDRAILS_PAGE_CONTROLLER_SCRIPT = `        function renderGuardra
             setGuardrailPublishMenuOpen(false);
             setGuardrailVersionsHeaderMenuOpen(false);
             setGuardrailVersionChangesState(null);
+            setGuardrailVersionSaveDialog(null);
             setOpenGuardrailVersionMenuId("");
             finishCloseGuardrailVersionModal();
             guardrailVersionDraftTouchedRef.current = false;
@@ -163,6 +182,15 @@ export const GUARDRAILS_PAGE_CONTROLLER_SCRIPT = `        function renderGuardra
 
           function returnToGuardrailsOverview() {
             setGuardrailsPageMode("overview");
+            setGuardrailDetailTab("general");
+            setGuardrailAccessTeamId("");
+            setGuardrailAccessRoleId("member");
+            setGuardrailShareTeamModalOpen(false);
+            setGuardrailShareTeamId("");
+            setGuardrailShareTeamState({ status: "idle", error: "" });
+            setGuardrailOwnerSelectorOpen(false);
+            setGuardrailAccessMenuOpen(false);
+            setGuardrailEvaluationRunModalOpen(false);
             setGuardrailsToolbarPopover("");
             setGuardrailSetActionMenuId("");
             setGuardrailDetailActionsMenuOpen(false);
@@ -170,6 +198,7 @@ export const GUARDRAILS_PAGE_CONTROLLER_SCRIPT = `        function renderGuardra
             setGuardrailPublishMenuOpen(false);
             setGuardrailVersionsHeaderMenuOpen(false);
             setGuardrailVersionChangesState(null);
+            setGuardrailVersionSaveDialog(null);
             setOpenGuardrailVersionMenuId("");
             finishCloseGuardrailVersionModal();
             guardrailVersionDraftTouchedRef.current = false;

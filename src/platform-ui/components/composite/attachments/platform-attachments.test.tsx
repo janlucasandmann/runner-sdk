@@ -37,6 +37,9 @@ describe("PlatformAttachments", () => {
     expect(attachmentsCss).toMatch(
       /\.platform-attachments__drop-target\.is-empty\s*\{[^}]*border:\s*0;/s,
     );
+    expect(attachmentsCss).toMatch(
+      /\.platform-attachments__list\s*\{[^}]*gap:\s*2px;/s,
+    );
   });
 
   it("renders the centralized card, upload action, and empty drop target", () => {
@@ -54,7 +57,7 @@ describe("PlatformAttachments", () => {
     expect(container.querySelector("[data-platform-attachments='true']")).not.toBeNull();
     expect(screen.getByRole("heading", { name: "Attachments", level: 2 })).not.toBeNull();
 
-    const computerUpload = screen.getByRole("button", { name: "From Computer Agents" });
+    const computerUpload = screen.getByRole("button", { name: "From Workspace" });
     expect(computerUpload.getAttribute("data-platform-button-variant")).toBe("secondary");
     expect(computerUpload.querySelector("svg")).not.toBeNull();
     fireEvent.click(computerUpload);
@@ -67,6 +70,7 @@ describe("PlatformAttachments", () => {
   it("renders the add row and interactive attachment rows", () => {
     const onBrowse = vi.fn();
     const onActivate = vi.fn();
+    const onRename = vi.fn();
     const onRemove = vi.fn();
 
     render(
@@ -79,6 +83,7 @@ describe("PlatformAttachments", () => {
             metadata: "12 KB",
             preview: <span data-testid="preview">CSV</span>,
             onActivate,
+            onRename,
             onRemove,
           },
         ]}
@@ -93,8 +98,19 @@ describe("PlatformAttachments", () => {
     expect(screen.getByText("12 KB")).not.toBeNull();
     expect(screen.getByTestId("preview")).not.toBeNull();
 
-    fireEvent.click(screen.getByRole("button", { name: "Remove study.csv" }));
+    fireEvent.click(screen.getByRole("button", { name: "More actions for study.csv" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Rename" }));
+    const renameInput = screen.getByRole("textbox", { name: "File name" });
+    fireEvent.change(renameInput, { target: { value: "study-renamed.csv" } });
+    fireEvent.click(screen.getByRole("button", { name: "Rename" }));
+    expect(onRename).toHaveBeenCalledWith("study-renamed.csv");
+
+    fireEvent.click(screen.getByRole("button", { name: "More actions for study.csv" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
     expect(onRemove).toHaveBeenCalledOnce();
+
+    fireEvent.click(screen.getByRole("button", { name: "Remove study.csv" }));
+    expect(onRemove).toHaveBeenCalledTimes(2);
   });
 
   it("reports drag state and dropped files", () => {

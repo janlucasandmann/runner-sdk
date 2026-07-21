@@ -188,6 +188,11 @@ export function createEvaluationRun(evaluationSet, options = {}) {
     targetAgentVersionNumber: Math.max(0, Number(options.targetAgentVersionNumber || options.target_agent_version_number || options.agentVersionNumber || options.agent_version_number || 0) || 0),
     targetAgentVersionLabel: normalizeString(options.targetAgentVersionLabel || options.target_agent_version_label || options.agentVersionLabel || options.agent_version_label),
     targetAgentVersionRevisionId: normalizeString(options.targetAgentVersionRevisionId || options.target_agent_version_revision_id || options.agentVersionRevisionId || options.agent_version_revision_id),
+    targetGuardrailId: normalizeString(options.targetGuardrailId || options.target_guardrail_id || options.guardrailId || options.guardrail_id),
+    targetGuardrailName: normalizeString(options.targetGuardrailName || options.target_guardrail_name || options.guardrailName || options.guardrail_name),
+    targetGuardrailVersionId: normalizeString(options.targetGuardrailVersionId || options.target_guardrail_version_id || options.guardrailVersionId || options.guardrail_version_id),
+    targetGuardrailVersionNumber: Math.max(0, Number(options.targetGuardrailVersionNumber || options.target_guardrail_version_number || options.guardrailVersionNumber || options.guardrail_version_number || 0) || 0),
+    targetGuardrailVersionLabel: normalizeString(options.targetGuardrailVersionLabel || options.target_guardrail_version_label || options.guardrailVersionLabel || options.guardrail_version_label),
     fineTuningJobId: normalizeString(options.fineTuningJobId || options.fine_tuning_job_id),
     fine_tuning_job_id: normalizeString(options.fine_tuning_job_id || options.fineTuningJobId),
     environmentType: normalizeString(options.environmentType || evaluationSet.environmentType).toLowerCase() === "project" ? "project" : "computer",
@@ -203,6 +208,8 @@ export function createEvaluationRun(evaluationSet, options = {}) {
       ...(options.metadata && typeof options.metadata === "object" && !Array.isArray(options.metadata) ? options.metadata : {}),
       fineTuningJobId: normalizeString(options.fineTuningJobId || options.fine_tuning_job_id),
       fine_tuning_job_id: normalizeString(options.fine_tuning_job_id || options.fineTuningJobId),
+      targetGuardrailId: normalizeString(options.targetGuardrailId || options.target_guardrail_id || options.guardrailId || options.guardrail_id),
+      target_guardrail_id: normalizeString(options.target_guardrail_id || options.targetGuardrailId || options.guardrail_id || options.guardrailId),
     },
     cases: evaluationSet.dataRows
       .flatMap((row) => {
@@ -223,5 +230,4 @@ export function createEvaluationRun(evaluationSet, options = {}) {
   };
   return recomputeRun(run);
 }
-
 

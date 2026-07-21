@@ -97,6 +97,140 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
         gap: 24px;
       }
 
+      .playground-fine-tuning-page .playground-fine-tuning-detail-page-body {
+        width: 100%;
+        max-width: none;
+        padding: 42px 44px 56px;
+        overflow: auto;
+        box-sizing: border-box;
+      }
+
+      .playground-fine-tuning-detail-overview-layout {
+        --platform-page-content-max-width: 87.5rem;
+      }
+
+      .playground-fine-tuning-detail-page-header {
+        min-height: 32px;
+      }
+
+      .playground-fine-tuning-detail-header-copy {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 0;
+      }
+
+      .playground-fine-tuning-detail-inline-back-button {
+        margin-left: -7px;
+      }
+
+      .playground-fine-tuning-detail-title {
+        min-width: 0;
+        margin: 0;
+        color: #fff;
+        font-size: 18px;
+        line-height: 1.3;
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-fine-tuning-detail-overview-main {
+        min-width: 0;
+      }
+
+      .playground-fine-tuning-detail-sidebar-list {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .playground-fine-tuning-detail-sidebar-row {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 12px;
+        line-height: 1.35;
+        font-weight: 400;
+      }
+
+      .playground-fine-tuning-detail-sidebar-label {
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .playground-fine-tuning-detail-sidebar-value {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        text-align: right;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .playground-fine-tuning-detail-person,
+      .playground-fine-tuning-detail-environment {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .playground-fine-tuning-detail-person > span:last-child,
+      .playground-fine-tuning-detail-environment > span:last-child {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-fine-tuning-detail-sidebar-actions {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .playground-fine-tuning-detail-sidebar-action {
+        width: 100%;
+        min-width: 0;
+        justify-content: flex-start;
+        padding-left: 0;
+        padding-right: 0;
+      }
+
+      .playground-fine-tuning-detail-sidebar-action .is-spinning {
+        animation: playgroundFineTuningSpin 0.9s linear infinite;
+      }
+
+      .playground-fine-tuning-detail-overview-main .playground-fine-tuning-kpi-card,
+      .playground-fine-tuning-detail-overview-main .playground-fine-tuning-reference-platform-table {
+        width: 100%;
+      }
+
+      .playground-fine-tuning-content-title {
+        margin: 0 0 12px;
+        color: #fff;
+        font-size: 14px;
+        line-height: 1.3;
+        font-weight: 400;
+      }
+
+      .playground-fine-tuning-analysis-section.platform-ui-card {
+        padding: 20px;
+      }
+
+      .playground-fine-tuning-changes-section {
+        min-width: 0;
+      }
+
       .playground-fine-tuning-detail-grid {
         display: flex;
         flex-direction: column;
@@ -655,6 +789,12 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
 
         .playground-fine-tuning-create-modal .playground-evaluations-form-grid {
           grid-template-columns: minmax(0, 1fr);
+        }
+      }
+
+      @media (max-width: 760px) {
+        .playground-fine-tuning-page .playground-fine-tuning-detail-page-body {
+          padding: 16px;
         }
       }
 `;

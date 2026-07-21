@@ -1,3 +1,21 @@
+          function getCurrentDevelopResourceIdentityInput() {
+            return {
+              id: currentUserId || currentUserEmail || "",
+              userId: currentUserId || "",
+              name: currentUserName || currentUserEmail || "User",
+              email: currentUserEmail || "",
+              avatarUrl: currentUserAvatarUrl || "",
+            };
+          }
+
+          function initializeNewDevelopResourceRecord(record) {
+            return initializeDevelopResourceIdentityMetadata(
+              record && typeof record === "object" && !Array.isArray(record) ? record : {},
+              getCurrentDevelopResourceIdentityInput(),
+              { force: true }
+            );
+          }
+
           function buildSanitizedEnvironmentPayload(environment) {
             const normalizedEnvironment = normalizePlaygroundEnvironmentRecord(environment);
             const profile = getPlaygroundEnvironmentComputeProfileConfig(normalizedEnvironment.computeProfile);
@@ -212,12 +230,17 @@
             if (!environmentRecord) {
               return;
             }
-  
-            const payload = buildSanitizedEnvironmentPayload(environmentRecord);
+
+            const isNewEnvironment = !String(environmentRecord.id || "").trim()
+              || environmentRecord.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID;
+            const preparedEnvironmentRecord = isNewEnvironment
+              ? normalizePlaygroundEnvironmentRecord(initializeNewDevelopResourceRecord(environmentRecord))
+              : environmentRecord;
+            const payload = buildSanitizedEnvironmentPayload(preparedEnvironmentRecord);
             const result = await saveComputerResource({
               backendUrl,
               requestHeaders,
-              computerId: environmentRecord.id,
+              computerId: preparedEnvironmentRecord.id,
               draftId: PLAYGROUND_ENVIRONMENT_DRAFT_ID,
               createPayload: {
                 name: payload.name,
@@ -237,7 +260,7 @@
               : null;
             const savedEnvironment = getPlaygroundEnvironmentResponseRecord(result.data)
               || normalizePlaygroundEnvironmentRecord({
-                ...(createdEnvironment || environmentRecord),
+                ...(createdEnvironment || preparedEnvironmentRecord),
                 ...payload,
                 id: result.computerId,
                 ...(result.isNew ? {} : { updatedAt: new Date().toISOString() }),
@@ -257,21 +280,25 @@
             if (isPlaygroundResourceTemplatePreviewRecord(serverRecord)) {
               return normalizePlaygroundServerRecord(serverRecord);
             }
-  
-            const payload = buildSanitizedServerPayload(serverRecord);
+            const creatingServer = !String(serverRecord.id || "").trim()
+              || serverRecord.id === PLAYGROUND_SERVER_DRAFT_ID;
+            const preparedServerRecord = creatingServer
+              ? normalizePlaygroundServerRecord(initializeNewDevelopResourceRecord(serverRecord))
+              : serverRecord;
+            const payload = buildSanitizedServerPayload(preparedServerRecord);
             const { data, isNew: isNewServer } = await saveDevelopResource({
               backendUrl,
               requestHeaders,
               resourceType: "server",
-              resourceId: serverRecord.id,
+              resourceId: preparedServerRecord.id,
               draftId: PLAYGROUND_SERVER_DRAFT_ID,
               payload,
             });
   
             return getPlaygroundServerResponseRecord(data) || normalizePlaygroundServerRecord({
-              ...serverRecord,
+              ...preparedServerRecord,
               ...payload,
-              id: isNewServer ? serverRecord.id : serverRecord.id,
+              id: preparedServerRecord.id,
               updatedAt: new Date().toISOString(),
             });
           }
@@ -283,19 +310,23 @@
             if (isPlaygroundResourceTemplatePreviewRecord(databaseRecord)) {
               return normalizePlaygroundDatabaseRecord(databaseRecord);
             }
-  
-            const payload = buildSanitizedDatabasePayload(databaseRecord);
+            const isNewDatabase = !String(databaseRecord.id || "").trim()
+              || databaseRecord.id === PLAYGROUND_DATABASE_DRAFT_ID;
+            const preparedDatabaseRecord = isNewDatabase
+              ? normalizePlaygroundDatabaseRecord(initializeNewDevelopResourceRecord(databaseRecord))
+              : databaseRecord;
+            const payload = buildSanitizedDatabasePayload(preparedDatabaseRecord);
             const { data } = await saveDevelopResource({
               backendUrl,
               requestHeaders,
               resourceType: "database",
-              resourceId: databaseRecord.id,
+              resourceId: preparedDatabaseRecord.id,
               draftId: PLAYGROUND_DATABASE_DRAFT_ID,
               payload,
             });
   
             return getPlaygroundDatabaseResponseRecord(data) || normalizePlaygroundDatabaseRecord({
-              ...databaseRecord,
+              ...preparedDatabaseRecord,
               ...payload,
               updatedAt: new Date().toISOString(),
             });
@@ -305,7 +336,9 @@
             if (!serverRecord) {
               return null;
             }
-  
+            const preparedServerRecord = normalizePlaygroundServerRecord(
+              initializeNewDevelopResourceRecord(serverRecord)
+            );
             const response = await fetch(backendUrl + "/servers/templates/ai-chat-app", {
               method: "POST",
               headers: {
@@ -313,15 +346,16 @@
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                name: String(serverRecord?.name || "").trim() || "AI Chat App",
-                title: String(serverRecord?.name || "").trim() || "AI Chat App",
-                description: typeof serverRecord?.description === "string" ? serverRecord.description : "",
-                projectId: typeof serverRecord?.projectId === "string" && serverRecord.projectId.trim() ? serverRecord.projectId.trim() : null,
-                region: typeof serverRecord?.region === "string" && serverRecord.region.trim() ? serverRecord.region.trim() : "europe-west1",
-                location: typeof serverRecord?.databaseLocation === "string" && serverRecord.databaseLocation.trim() ? serverRecord.databaseLocation.trim() : "eur3",
-                authMode: serverRecord?.authMode === "private" ? "private" : "public",
-                agentId: typeof serverRecord?.templateAgentId === "string" && serverRecord.templateAgentId.trim() ? serverRecord.templateAgentId.trim() : null,
-                environmentId: typeof serverRecord?.templateEnvironmentId === "string" && serverRecord.templateEnvironmentId.trim() ? serverRecord.templateEnvironmentId.trim() : null,
+                name: String(preparedServerRecord?.name || "").trim() || "AI Chat App",
+                title: String(preparedServerRecord?.name || "").trim() || "AI Chat App",
+                description: typeof preparedServerRecord?.description === "string" ? preparedServerRecord.description : "",
+                projectId: typeof preparedServerRecord?.projectId === "string" && preparedServerRecord.projectId.trim() ? preparedServerRecord.projectId.trim() : null,
+                region: typeof preparedServerRecord?.region === "string" && preparedServerRecord.region.trim() ? preparedServerRecord.region.trim() : "europe-west1",
+                location: typeof preparedServerRecord?.databaseLocation === "string" && preparedServerRecord.databaseLocation.trim() ? preparedServerRecord.databaseLocation.trim() : "eur3",
+                authMode: preparedServerRecord?.authMode === "private" ? "private" : "public",
+                agentId: typeof preparedServerRecord?.templateAgentId === "string" && preparedServerRecord.templateAgentId.trim() ? preparedServerRecord.templateAgentId.trim() : null,
+                environmentId: typeof preparedServerRecord?.templateEnvironmentId === "string" && preparedServerRecord.templateEnvironmentId.trim() ? preparedServerRecord.templateEnvironmentId.trim() : null,
+                metadata: preparedServerRecord.metadata,
               }),
             });
             const data = await response.json().catch(() => ({}));
@@ -329,12 +363,18 @@
               throw new Error(data?.message || data?.error || "Failed to create AI chat app.");
             }
   
+            const initializeTemplateResource = (resource, normalizer) => resource?.id
+              ? normalizer(initializeDevelopResourceIdentityMetadata(
+                  resource,
+                  getCurrentDevelopResourceIdentityInput()
+                ))
+              : normalizer(resource || null);
             return {
               template: data?.template || "ai_chat_app",
-              webApp: getPlaygroundServerResponseRecord({ server: data?.webApp }) || normalizePlaygroundServerRecord(data?.webApp || null),
-              auth: getPlaygroundServerResponseRecord({ server: data?.auth }) || normalizePlaygroundServerRecord(data?.auth || null),
-              agentRuntime: getPlaygroundServerResponseRecord({ server: data?.agentRuntime }) || normalizePlaygroundServerRecord(data?.agentRuntime || null),
-              database: getPlaygroundDatabaseResponseRecord({ database: data?.database }) || normalizePlaygroundDatabaseRecord(data?.database || null),
+              webApp: initializeTemplateResource(data?.webApp, normalizePlaygroundServerRecord),
+              auth: initializeTemplateResource(data?.auth, normalizePlaygroundServerRecord),
+              agentRuntime: initializeTemplateResource(data?.agentRuntime, normalizePlaygroundServerRecord),
+              database: initializeTemplateResource(data?.database, normalizePlaygroundDatabaseRecord),
               collections: Array.isArray(data?.collections) ? data.collections : [],
               files: Array.isArray(data?.files) ? data.files : [],
             };
@@ -1989,47 +2029,77 @@
             }
           }
   
-          async function handleServerFileDelete(entry) {
-            if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || isSelectedServerTemplatePreview || !entry?.path) {
+          async function handleServerFilesDelete(entries) {
+            if (!draftServer?.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID || isSelectedServerTemplatePreview) {
               return;
             }
+            const uniqueEntries = Array.from(new Map(
+              (Array.isArray(entries) ? entries : [])
+                .filter((entry) => entry?.path)
+                .map((entry) => [normalizeHistoryPath(entry.path), entry])
+            ).values());
+            if (!uniqueEntries.length) return;
             setServerSourceFileMenuPath("");
-            if (!window.confirm('Delete "' + (entry.name || entry.path) + '" from this server source bundle?')) {
+            const confirmationMessage = uniqueEntries.length === 1
+              ? 'Delete "' + (uniqueEntries[0].name || uniqueEntries[0].path) + '" from this server source bundle?'
+              : "Delete " + uniqueEntries.length + " selected source files from this server source bundle?";
+            if (!window.confirm(confirmationMessage)) {
               return;
             }
   
             try {
-              const encodedPath = String(entry.path || "")
-                .split("/")
-                .filter(Boolean)
-                .map((segment) => encodeURIComponent(segment))
-                .join("/");
-              const response = await fetch(
-                backendUrl + "/servers/" + encodeURIComponent(draftServer.id) + "/files/" + encodedPath,
-                {
-                  method: "DELETE",
-                  headers: requestHeaders,
-                }
-              );
-              const data = await response.json().catch(() => ({}));
-              if (!response.ok) {
-                throw new Error(data?.message || data?.error || "Failed to delete source file.");
+              const deleteResults = await Promise.all(uniqueEntries.map(async (entry) => {
+                const encodedPath = String(entry.path || "")
+                  .split("/")
+                  .filter(Boolean)
+                  .map((segment) => encodeURIComponent(segment))
+                  .join("/");
+                const response = await fetch(
+                  backendUrl + "/servers/" + encodeURIComponent(draftServer.id) + "/files/" + encodedPath,
+                  {
+                    method: "DELETE",
+                    headers: requestHeaders,
+                  }
+                );
+                const data = await response.json().catch(() => ({}));
+                return {
+                  entry,
+                  ok: response.ok,
+                  message: data?.message || data?.error || "Failed to delete source file.",
+                };
+              }));
+              const deletedEntries = deleteResults.filter((result) => result.ok);
+              const failedEntries = deleteResults.filter((result) => !result.ok);
+              if (deletedEntries.length) {
+                await loadServerFiles(draftServer.id);
+                serverVersionDraftTouchedRef.current = true;
               }
-  
-              await loadServerFiles(draftServer.id);
-              serverVersionDraftTouchedRef.current = true;
+              if (failedEntries.length) {
+                const failedNames = failedEntries
+                  .map((result) => result.entry.name || result.entry.path)
+                  .join(", ");
+                throw new Error(
+                  (failedEntries.length === 1 ? failedEntries[0].message : "Some source files could not be deleted.")
+                  + " "
+                  + failedNames
+                );
+              }
               setServerFileTransferState((current) => ({
                 ...current,
                 error: "",
-                message: "Deleted",
+                message: uniqueEntries.length === 1 ? "Deleted" : "Deleted " + uniqueEntries.length + " files",
               }));
             } catch (error) {
               setServerFileTransferState((current) => ({
                 ...current,
-                error: error instanceof Error ? error.message : "Failed to delete source file.",
+                error: error instanceof Error ? error.message : "Failed to delete source files.",
                 message: "",
               }));
             }
+          }
+
+          async function handleServerFileDelete(entry) {
+            return handleServerFilesDelete([entry]);
           }
   
           async function handleServerFileRename(entry) {

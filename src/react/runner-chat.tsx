@@ -393,6 +393,12 @@ import { useRunnerFileBrowserNavigation } from "./runner-chat/use-file-browser-n
 import { useRunnerFileBrowserPreview } from "./runner-chat/use-file-browser-preview.js";
 import { useRunnerFileBrowserSourceLoaders } from "./runner-chat/use-file-browser-source-loaders.js";
 import { useRunnerFileBrowserSourceState } from "./runner-chat/use-file-browser-source-state.js";
+import {
+  deleteRunnerWorkspaceFile,
+  isRunnerWorkspacePathWithin,
+  remapRunnerWorkspaceItemPath,
+  renameRunnerWorkspaceFile,
+} from "./runner-chat/file-browser-workspace-actions.js";
 import { useRunnerFileDropController } from "./runner-chat/use-file-drop-controller.js";
 import { useRunnerFileBrowserAttachmentController } from "./runner-chat/use-file-browser-attachment-controller.js";
 import { useRunnerAttachmentController } from "./runner-chat/use-attachment-controller.js";
@@ -4170,13 +4176,7 @@ export function RunnerChat({
     }
   }
 
-  function handleFileBrowserItemClick(item: RunnerChatFileNode) {
-    setFileBrowserPreviewId(item.id);
-    if (item.isFolder) {
-      void openFileBrowserFolder(item);
-      return;
-    }
-
+  function toggleFileBrowserItemSelection(item: RunnerChatFileNode) {
     if (currentFileBrowserSource === "google-drive") {
       toggleFileBrowserSelection("google-drive", item.id);
       return;
@@ -4196,6 +4196,20 @@ export function RunnerChat({
     }
 
     toggleFileBrowserSelection("workspace", item.id);
+  }
+
+  function handleFileBrowserItemClick(item: RunnerChatFileNode) {
+    setFileBrowserPreviewId(item.id);
+    if (item.isFolder) {
+      void openFileBrowserFolder(item);
+      return;
+    }
+    toggleFileBrowserItemSelection(item);
+  }
+
+  function handleFileBrowserItemOpen(item: RunnerChatFileNode) {
+    setFileBrowserPreviewId(item.id);
+    if (item.isFolder) void openFileBrowserFolder(item);
   }
 
   async function handleFileBrowserAttach() {
@@ -5277,6 +5291,90 @@ export function RunnerChat({
     sourceState: fileBrowserSourceState,
     workspaceEnvironmentId: activeWorkspaceEnvironmentId,
   });
+
+  async function handleWorkspaceFileRename(
+    item: RunnerChatFileNode,
+    nextName: string,
+  ) {
+    try {
+      const result = await renameRunnerWorkspaceFile({
+        apiKey,
+        backendUrl: normalizedBackendUrl,
+        environmentId: activeWorkspaceEnvironmentId,
+        item,
+        nextName,
+        requestHeaders,
+      });
+      const targetPath = result.targetPath || result.sourcePath;
+      if (targetPath !== result.sourcePath) {
+        const remapPath = (path: string) => {
+          if (!isRunnerWorkspacePathWithin(path, result.sourcePath)) return path;
+          return `${targetPath}${path.slice(result.sourcePath.length)}`;
+        };
+        fileBrowserSourceState.workspace.setItems((current) =>
+          current.map((entry) =>
+            remapRunnerWorkspaceItemPath(
+              entry,
+              result.sourcePath,
+              targetPath,
+            ),
+          ),
+        );
+        setSelectedWorkspaceFileIds((current) => current.map(remapPath));
+        setExpandedFileBrowserFolderIds((current) => current.map(remapPath));
+        setFileBrowserPreviewId((current) => current ? remapPath(current) : current);
+        mapFileBrowserHistory((entry) => (
+          entry.source === "workspace" && entry.folderId
+            ? { ...entry, folderId: remapPath(entry.folderId) }
+            : entry
+        ));
+      }
+      setWorkspaceBrowserError(null);
+      await loadWorkspaceFolder(result.parentId, { inline: true });
+    } catch (error) {
+      const normalizedError = error instanceof Error
+        ? error
+        : new Error(String(error));
+      setWorkspaceBrowserError(normalizedError.message || "Failed to rename item.");
+      throw normalizedError;
+    }
+  }
+
+  async function handleWorkspaceFileDelete(item: RunnerChatFileNode) {
+    try {
+      const result = await deleteRunnerWorkspaceFile({
+        apiKey,
+        backendUrl: normalizedBackendUrl,
+        environmentId: activeWorkspaceEnvironmentId,
+        item,
+        requestHeaders,
+      });
+      fileBrowserSourceState.workspace.setItems((current) =>
+        current.filter((entry) =>
+          !isRunnerWorkspacePathWithin(entry.path || entry.id, result.sourcePath),
+        ),
+      );
+      setSelectedWorkspaceFileIds((current) => current.filter((itemId) =>
+        !isRunnerWorkspacePathWithin(itemId, result.sourcePath),
+      ));
+      setExpandedFileBrowserFolderIds((current) => current.filter((folderId) =>
+        !isRunnerWorkspacePathWithin(folderId, result.sourcePath),
+      ));
+      setFileBrowserPreviewId((current) => (
+        current && isRunnerWorkspacePathWithin(current, result.sourcePath)
+          ? null
+          : current
+      ));
+      setWorkspaceBrowserError(null);
+      await loadWorkspaceFolder(result.parentId, { inline: true });
+    } catch (error) {
+      const normalizedError = error instanceof Error
+        ? error
+        : new Error(String(error));
+      setWorkspaceBrowserError(normalizedError.message || "Failed to delete item.");
+      throw normalizedError;
+    }
+  }
   const workspaceRootLabel = workspaceConfig?.rootLabel || "Workspace";
   const googleDriveRootLabel = googleDriveConfig?.rootLabel || "My Drive";
   const oneDriveRootLabel = oneDriveConfig?.rootLabel || "OneDrive";
@@ -5310,8 +5408,13 @@ export function RunnerChat({
         : workspaceItems;
   const fileBrowserPath = childFolderPath(fileBrowserItems, fileBrowserRootLabel, currentFileBrowserFolderId);
   const visibleFileBrowserItems = fileItemsForParent(fileBrowserItems, currentFileBrowserFolderId);
-  const filteredFileBrowserItems = fileBrowserSearchQuery.trim()
-    ? visibleFileBrowserItems.filter((item) => item.name.toLowerCase().includes(fileBrowserSearchQuery.trim().toLowerCase()))
+  const normalizedWorkspaceFileSearchQuery = currentFileBrowserSource === "workspace"
+    ? fileBrowserSearchQuery.trim().toLowerCase()
+    : "";
+  const filteredFileBrowserItems = normalizedWorkspaceFileSearchQuery
+    ? workspaceItems.filter((item) =>
+        !item.isFolder && item.name.toLowerCase().includes(normalizedWorkspaceFileSearchQuery)
+      )
     : visibleFileBrowserItems;
   const selectedFileBrowserIds =
     currentFileBrowserSource === "google-drive"
@@ -6912,6 +7015,7 @@ export function RunnerChat({
                           </div>
                           <div className="tb-popup-panel-section tb-popup-panel-section-attach-header">
                             <PlatformSwitch
+                              className="tb-popup-skill-source-switch"
                               ariaLabel="Skill source"
                               value={skillsTab}
                               options={[
@@ -7706,7 +7810,19 @@ export function RunnerChat({
               onEnsureBranchesLoaded={(repoFullName, fallbackRef) => {
                 void ensureGithubBranchesLoaded(repoFullName, fallbackRef);
               }}
+              onDeleteItem={
+                currentFileBrowserSource === "workspace"
+                  ? handleWorkspaceFileDelete
+                  : undefined
+              }
               onItemClick={handleFileBrowserItemClick}
+              onOpenItem={handleFileBrowserItemOpen}
+              onRenameItem={
+                currentFileBrowserSource === "workspace"
+                  ? handleWorkspaceFileRename
+                  : undefined
+              }
+              onToggleSelection={toggleFileBrowserItemSelection}
               onToggleFolder={toggleFileBrowserFolderExpansion}
               onToggleGithubSelection={(itemId) => {
                 toggleFileBrowserSelection("github", itemId);

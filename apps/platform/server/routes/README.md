@@ -20,7 +20,7 @@ This directory owns ordered HTTP route-family matching. Route modules translate 
 - [`request-router.mjs`](request-router.mjs) — Focused implementation of Request Router.
 - [`request-router.test.mjs`](request-router.test.mjs) — Regression coverage for Request Router.
 - [`resource-routes.mjs`](resource-routes.mjs) — Route composition for Resource Routes.
-- [`service-routes.mjs`](service-routes.mjs) — Route composition for Service Routes.
+- [`service-routes.mjs`](service-routes.mjs) — Ordered service route composition, including Repository Security.
 - [`thread-proxy-contract.mjs`](thread-proxy-contract.mjs) — Focused implementation of Thread Proxy Contract.
 - [`thread-proxy-contract.test.mjs`](thread-proxy-contract.test.mjs) — Regression coverage for Thread Proxy Contract.
 - [`thread-routes.mjs`](thread-routes.mjs) — Route composition for Thread Routes.

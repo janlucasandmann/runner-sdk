@@ -116,7 +116,7 @@ export const PROJECT_OVERVIEW_ACTIVITY_ANALYTICS_FRAGMENT = String.raw`
                 verb: "worked on",
                 object: displayThreadTitle || "Untitled thread",
                 taskId: threadTaskId,
-                permissionActionId: "local_skill_run",
+                permissionActionId: "project_threads_create",
                 time: Number.isFinite(timestamp) ? timestamp : 0,
                 timeLabel: formatProjectOverviewActivityTimeLabel(safeThread?.updatedAt || safeThread?.createdAt),
               });
@@ -137,8 +137,8 @@ export const PROJECT_OVERVIEW_ACTIVITY_ANALYTICS_FRAGMENT = String.raw`
                 object: String(row?.title || row?.path || "file").trim(),
                 taskId: fileTaskId,
                 permissionActionId: String(row?.operationKind || row?.operation || "").toLowerCase().match(/read|view|open|list/)
-                  ? "workspace_read"
-                  : "workspace_write",
+                  ? "project_resources_view"
+                  : "project_resources_manage",
                 time: Number.isFinite(timestamp) ? timestamp : 0,
                 timeLabel: formatProjectOverviewActivityTimeLabel(timestamp, row?.dateLabel),
               });
@@ -159,7 +159,7 @@ export const PROJECT_OVERVIEW_ACTIVITY_ANALYTICS_FRAGMENT = String.raw`
                 verb: String(task?.createdAt || "") === String(task?.updatedAt || "") ? "created" : "updated",
                 object: task?.title || "Untitled task",
                 taskId: String(task?.id || "").trim(),
-                permissionActionId: "shared_resource_write",
+                permissionActionId: "project_issues_manage",
                 time: Number.isFinite(timestamp) ? timestamp : 0,
                 timeLabel: formatProjectOverviewActivityTimeLabel(task?.updatedAt || task?.createdAt),
               });

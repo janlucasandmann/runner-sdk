@@ -107,6 +107,22 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACTIONS_SCRIPT = String.raw`        fun
             passThreshold,
             creator: currentEvaluationCreator,
             createdBy: currentEvaluationCreator,
+            metadata: {
+              owner: { ...currentEvaluationCreator, type: "user" },
+              ownerId: currentEvaluationCreator.id,
+              owner_id: currentEvaluationCreator.id,
+              ownerUserId: currentEvaluationCreator.userId,
+              owner_user_id: currentEvaluationCreator.userId,
+              ownerName: currentEvaluationCreator.name,
+              owner_name: currentEvaluationCreator.name,
+              ownerEmail: currentEvaluationCreator.email,
+              owner_email: currentEvaluationCreator.email,
+              ownerAvatarUrl: currentEvaluationCreator.avatarUrl,
+              owner_avatar_url: currentEvaluationCreator.avatarUrl,
+              teamAccessIds: [],
+              teamAccessShareIds: {},
+              teamRolePermissionSets: {},
+            },
             evaluator: {
               type: evaluatorType,
               agentId: evaluatorType === "agent" ? String(form.evaluatorAgentId || defaultAgentId || agentOptions[0]?.id || "").trim() : "",
@@ -580,4 +596,3 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACTIONS_SCRIPT = String.raw`        fun
         }
 
 `;
-

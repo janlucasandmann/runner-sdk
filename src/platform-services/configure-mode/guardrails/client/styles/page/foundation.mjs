@@ -15,6 +15,12 @@ export const GUARDRAILS_PAGE_FOUNDATION_CSS = `      .playground-guardrails-page
       .playground-guardrails-detail-topnav-actions {
         display: inline-flex;
         align-items: center;
+        gap: 8px;
+      }
+
+      .playground-guardrails-detail-publish-controls {
+        display: inline-flex;
+        align-items: center;
       }
 
       .playground-guardrails-action-menu-shell {
@@ -38,6 +44,11 @@ export const GUARDRAILS_PAGE_FOUNDATION_CSS = `      .playground-guardrails-page
         min-width: 180px;
         max-height: min(220px, calc(100vh - 120px));
         transform-origin: top right;
+      }
+
+      .playground-guardrails-detail-action-menu-shell .playground-guardrails-action-menu {
+        width: 260px;
+        min-width: 260px;
       }
 
       .playground-guardrails-action-menu .tb-popup-row.is-danger,

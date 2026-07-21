@@ -122,24 +122,6 @@
               array: "Array",
             };
   
-            const renderDatabaseFactRow = (label, control) => React.createElement("div", {
-                className: "playground-tasks-detail-fact",
-                key: label,
-              },
-              React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
-              React.createElement("div", { className: "playground-tasks-detail-fact-control" }, control)
-            );
-            const databaseDetailTimescaleControl = React.createElement(PlatformSwitch, {
-              className: "playground-database-detail-usage-ranges",
-              value: normalizedDatabaseDetailChartTimescale,
-              options: [
-                { value: "day", label: "24H" },
-                { value: "week", label: "7D" },
-                { value: "month", label: "30D" },
-              ],
-              onValueChange: setDatabaseDetailChartTimescale,
-              ariaLabel: "Database analytics time frame",
-            });
             const canUndoDatabaseDescription = Array.isArray(databaseDescriptionHistory.past) && databaseDescriptionHistory.past.length > 0;
             const canRedoDatabaseDescription = Array.isArray(databaseDescriptionHistory.future) && databaseDescriptionHistory.future.length > 0;
             const renderDatabaseDescriptionToolbarButton = (action) =>
@@ -250,33 +232,23 @@
               databaseDescriptionEditor
             );
   
-            const databaseDetailsSection = React.createElement(React.Fragment, null,
-              React.createElement("div", { className: "playground-database-detail-usage-header-actions" },
-                databaseDetailTimescaleControl
-              ),
-              React.createElement(PlatformAnalyticsSection, {
-                analytics: databaseDetailAnalytics,
-                chartType: "line",
-                className: "playground-database-detail-usage-analytics",
-              }),
-              React.createElement("div", { className: "playground-server-detail-fact-rows playground-database-detail-usage-fact-rows" },
-                renderDatabaseFactRow("ID",
-                  React.createElement("span", {
-                    className: "playground-environments-editor-fact-value is-id",
-                    title: draftDatabase.id || "Unsaved database",
-                  }, draftDatabase.id || "Unsaved database")
-                ),
-                renderDatabaseFactRow("Provider",
-                  React.createElement("span", { className: "playground-environments-editor-fact-value" }, draftDatabase.provider || "firestore")
-                ),
-                renderDatabaseFactRow("Location",
-                  React.createElement("span", { className: "playground-environments-editor-fact-value" }, draftDatabase.location || "eur3")
-                ),
-                renderDatabaseFactRow("Updated",
-                  React.createElement("span", { className: "playground-environments-editor-fact-value" }, formatPlaygroundFileDate(draftDatabase.updatedAt))
-                )
-              )
-            );
+            const databaseDetailsSection = React.createElement(PlatformAnalyticsSection, {
+              variant: "framed",
+              analytics: databaseDetailAnalytics,
+              chartType: "line",
+              title: databaseDetailAnalytics.title,
+              timeframe: {
+                value: normalizedDatabaseDetailChartTimescale,
+                options: [
+                  { value: "day", label: "24H" },
+                  { value: "week", label: "7D" },
+                  { value: "month", label: "30D" },
+                ],
+                onValueChange: setDatabaseDetailChartTimescale,
+                ariaLabel: "Database analytics time frame",
+              },
+              className: "playground-database-detail-usage-analytics playground-server-detail-analytics",
+            });
   
             function renderDatabaseSelectorRow({
               label,
@@ -971,22 +943,13 @@
   	                || !draftDatabase.id
   	                || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID,
   	            }, "Delete database")
-  	          );
-  	          const normalizedDatabaseDetailTab = ["data", "usage", "settings"].includes(databaseDetailTab) ? databaseDetailTab : "data";
-  	          const databaseDetailTabPanelId = "playground-database-detail-tab-panel";
-  	          const databaseDetailTabs = React.createElement(PlatformDetailTabBar, {
-  	            tabs: [
-  	              { id: "data", label: "Data", icon: Database },
-  	              { id: "usage", label: "Usage", icon: ChartColumnIncreasing },
-  	              { id: "settings", label: "Settings", icon: Settings },
-  	            ],
-  	            value: normalizedDatabaseDetailTab,
-  	            onValueChange: setDatabaseDetailTab,
-  	            ariaLabel: "Database sections",
-  	            panelId: databaseDetailTabPanelId,
-  	            showDivider: true,
-  	            className: "playground-database-detail-tabs",
-  	          });
+	          );
+	          const normalizedDatabaseDetailTab = ["data", "usage", "settings"].includes(databaseDetailTab) ? databaseDetailTab : "data";
+	          const databaseDetailTabs = [
+	            { id: "data", label: "Data", icon: Database },
+	            { id: "usage", label: "Usage", icon: ChartColumnIncreasing },
+	            { id: "settings", label: "Settings", icon: Settings },
+	          ];
   	          const databaseApiBaseUrl = "https://api.computer-agents.com/v1";
   	          const databaseApiResourceUrl = databaseApiBaseUrl + "/databases/" + encodeURIComponent(draftDatabase.id || "database_id") + "/collections";
   	          const databaseQuickstartSnippets = {
@@ -1057,7 +1020,9 @@
   	          const databaseWorkspaceTeamById = new Map(
   	            normalizedEnvironmentWorkspaceTeams.map((team) => [team.id, team])
   	          );
-  	          const databaseOwnerIdentity = getDatabaseOwnerIdentity(draftDatabase);
+	          const databaseCreatorIdentity = getDatabaseCreatorIdentity(draftDatabase);
+	          const databaseCreatorValue = renderDevelopResourceIdentityValue(databaseCreatorIdentity);
+	          const databaseOwnerIdentity = getDatabaseOwnerIdentity(draftDatabase);
   	          const isCurrentDatabaseOwner = isCurrentUserDatabaseOwner(draftDatabase);
   	          const databaseOwnerIdentityKey = getDatabaseOwnerIdentityKey(databaseOwnerIdentity);
   	          const databaseOwnerCandidatesByKey = new Map();
@@ -1113,43 +1078,7 @@
   	              };
   	            }),
   	          ];
-  	          const normalizedDatabaseAccessSortDirection = databaseAccessSortDirection === "desc" ? "desc" : "asc";
-  	          const normalizedDatabaseAccessSearchQuery = String(databaseAccessSearchQuery || "").trim().toLowerCase();
-  	          const getDatabaseAccessSortValue = (team, sortKey) => {
-  	            if (sortKey === "policy") return String(team?.permission || "");
-  	            if (sortKey === "created") {
-  	              const timestamp = Date.parse(String(team?.createdAt || ""));
-  	              return Number.isFinite(timestamp) ? timestamp : 0;
-  	            }
-  	            return String(team?.name || "");
-  	          };
-  	          const visibleDatabasePermissionTeams = databasePermissionTeams.filter((team) => {
-  	            if (databaseAccessFilter === "teams" && team.locked) return false;
-  	            if (databaseAccessFilter === "default" && !team.locked) return false;
-  	            if (!normalizedDatabaseAccessSearchQuery) return true;
-  	            return [team.name, team.permission, team.meta]
-  	              .some((value) => String(value || "").toLowerCase().includes(normalizedDatabaseAccessSearchQuery));
-  	          }).sort((left, right) => {
-  	            const leftValue = getDatabaseAccessSortValue(left, databaseAccessSort);
-  	            const rightValue = getDatabaseAccessSortValue(right, databaseAccessSort);
-  	            let comparison = 0;
-  	            if (typeof leftValue === "number" || typeof rightValue === "number") {
-  	              comparison = Number(leftValue || 0) - Number(rightValue || 0);
-  	            } else {
-  	              comparison = String(leftValue || "").localeCompare(String(rightValue || ""), undefined, {
-  	                numeric: true,
-  	                sensitivity: "base",
-  	              });
-  	            }
-  	            if (!comparison) {
-  	              comparison = String(left?.name || "").localeCompare(String(right?.name || ""), undefined, {
-  	                numeric: true,
-  	                sensitivity: "base",
-  	              });
-  	            }
-  	            return normalizedDatabaseAccessSortDirection === "desc" ? -comparison : comparison;
-  	          });
-  	          const databaseAddableTeams = availableEnvironmentShareTeams.filter((team) => !databaseSharedTeamIdSet.has(team.id));
+	          const databaseAddableTeams = availableEnvironmentShareTeams.filter((team) => !databaseSharedTeamIdSet.has(team.id));
   	          const selectedDatabasePermissionTeam = databasePermissionTeams.find((team) =>
   	            String(team.id) === String(databasePermissionTeamId || "")
   	          ) || null;
@@ -1158,12 +1087,7 @@
   	            && draftDatabase.id
   	            && draftDatabase.id !== PLAYGROUND_DATABASE_DRAFT_ID
   	          );
-  	          const databaseAccessFilterOptions = [
-  	            { id: "all", label: "All access", description: "Show default and team access" },
-  	            { id: "teams", label: "Teams", description: "Only show team access grants" },
-  	            { id: "default", label: "Default access", description: "Only show the database default" },
-  	          ];
-  	          const formatDatabaseTeamCreatedDate = (value) => {
+	          const formatDatabaseTeamCreatedDate = (value) => {
   	            if (!value) return "";
   	            try {
   	              return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(value));
@@ -1171,20 +1095,14 @@
   	              return String(value || "");
   	            }
   	          };
-  	          const renderAddDatabaseTeamsMenu = () => {
-  	            if (databaseTeamMenuId !== "add-teams") {
-  	              return null;
-  	            }
-  	            return React.createElement(PlatformPopupSurface, {
-  	                className: "playground-tasks-toolbar-popup-menu playground-project-teams-add-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-  	                onClick: (event) => event.stopPropagation(),
-  	              },
-  	              databaseAddableTeams.length
-  	                ? databaseAddableTeams.map((team) =>
-  	                    React.createElement("button", {
-  	                      key: team.id,
-  	                      type: "button",
-  	                      className: "tb-popup-row playground-project-team-menu-item",
+	          const renderAddDatabaseTeamsMenuContent = () =>
+	              databaseAddableTeams.length
+	                ? databaseAddableTeams.map((team) =>
+	                    React.createElement("button", {
+	                      key: team.id,
+	                      type: "button",
+	                      role: "menuitem",
+	                      className: "tb-popup-row playground-project-team-menu-item",
   	                      disabled: databaseSaveState.isSaving || Boolean(databaseTeamAccessState.action),
   	                      onClick: () => void handleAddDatabaseTeamAccess(team),
   	                    },
@@ -1192,104 +1110,78 @@
   	                      React.createElement("span", null, team.name || "Untitled team")
   	                    )
   	                  )
-  	                : React.createElement("button", {
-  	                    type: "button",
-  	                    className: "tb-popup-row playground-project-team-menu-item",
+	                : React.createElement("button", {
+	                    type: "button",
+	                    role: "menuitem",
+	                    className: "tb-popup-row playground-project-team-menu-item",
   	                    disabled: true,
   	                  }, workspaceTeamsLoading
   	                    ? "Loading teams..."
   	                    : workspaceTeamsRequiresPlan
   	                      ? "Teams require a team plan"
-  	                      : "All teams already have access")
-  	            );
-  	          };
-  	          const databaseOwnerLabel = String(databaseOwnerIdentity.name || databaseOwnerIdentity.email || "Owner").trim();
-  	          const databaseOwnerDetail = databaseOwnerIdentity.email
-  	            && databaseOwnerLabel.toLowerCase() !== databaseOwnerIdentity.email.toLowerCase()
-  	              ? databaseOwnerIdentity.email
-  	              : "";
-  	          const databaseOwnerSelectorRow = React.createElement("div", {
-  	              className: "playground-database-access-owner-row",
-  	            },
-  	            React.createElement("span", { className: "playground-database-access-owner-label" }, "Owner"),
-  	            renderPlaygroundPlatformPopup({
-  	              open: databaseOwnerPopoverOpen,
-  	              shellRef: databaseOwnerPopoverRef,
-  	              shellClassName: "playground-database-owner-popup-shell",
-  	              menuClassName: "playground-database-owner-menu playground-agents-detail-owner-menu",
-  	              trigger: React.createElement("button", {
-  	                  type: "button",
-  	                  className: "playground-database-owner-trigger",
-  	                  disabled: !canManageDatabaseTeamAccess || !isCurrentDatabaseOwner || databaseSaveState.isSaving,
-  	                  onClick: () => setDatabaseOwnerPopoverOpen((current) => !current),
-  	                  "aria-label": "Choose database owner",
-  	                  "aria-expanded": databaseOwnerPopoverOpen ? "true" : "false",
-  	                  title: !isCurrentDatabaseOwner
-  	                    ? "Only the current owner can transfer database ownership."
-  	                    : (databaseOwnerDetail ? databaseOwnerLabel + " · " + databaseOwnerDetail : databaseOwnerLabel),
-  	                },
-  	                React.createElement("span", { className: "playground-team-member-cell" },
-  	                  React.createElement(AccountAvatar, {
-  	                    className: "playground-team-member-avatar",
-  	                    imageClassName: "playground-team-member-avatar-image",
-  	                    fallbackLabel: getAccountInitials(databaseOwnerLabel),
-  	                    photoUrl: databaseOwnerIdentity.avatarUrl || "",
-  	                  }),
-  	                  React.createElement("span", { className: "playground-team-member-copy" },
-  	                    React.createElement("span", { className: "playground-team-table-title" }, databaseOwnerLabel)
-  	                  )
-  	                ),
-  	                React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
-  	              ),
-  	              menuProps: {
-  	                role: "menu",
-  	                onClick: (event) => event.stopPropagation(),
-  	              },
-  	              children: databaseSharedTeamIds.length === 0
-  	                ? React.createElement("div", { className: "playground-agents-detail-owner-menu-empty" },
-  	                    "Grant a team access before choosing an owner."
-  	                  )
-  	                : databaseOwnerMissingTeamIds.length > 0
-  	                  ? React.createElement("div", { className: "playground-agents-detail-owner-menu-empty" }, "Loading team members...")
-  	                  : databaseOwnerCandidates.length > 0
-  	                    ? databaseOwnerCandidates.map((candidate) => {
-  	                        const candidateKey = getDatabaseOwnerIdentityKey(candidate);
-  	                        const isSelected = candidateKey === databaseOwnerIdentityKey;
-  	                        const candidateLabel = String(candidate.name || candidate.email || "Team member").trim();
-  	                        const candidateDetail = candidate.email && candidateLabel.toLowerCase() !== candidate.email.toLowerCase()
-  	                          ? candidate.email
-  	                          : (Array.isArray(candidate.teamNames) ? candidate.teamNames.join(", ") : "");
-  	                        return React.createElement("button", {
-  	                            key: candidateKey,
-  	                            type: "button",
-  	                            className: "tb-popup-row playground-agents-detail-owner-option" + (isSelected ? " is-selected" : ""),
-  	                            role: "menuitem",
-  	                            onClick: () => {
-  	                              if (isSelected) {
-  	                                setDatabaseOwnerPopoverOpen(false);
-  	                                return;
-  	                              }
-  	                              openDatabaseOwnerTransferModal(candidate);
-  	                            },
-  	                          },
-  	                          React.createElement(AccountAvatar, {
-  	                            className: "playground-agents-detail-owner-option-avatar",
-  	                            imageClassName: "playground-agents-detail-owner-option-avatar-image",
-  	                            fallbackLabel: getAccountInitials(candidateLabel),
-  	                            photoUrl: candidate.avatarUrl || "",
-  	                          }),
-  	                          React.createElement("span", { className: "playground-agents-detail-owner-option-copy" },
-  	                            React.createElement("span", null, candidateLabel),
-  	                            candidateDetail ? React.createElement("span", null, candidateDetail) : null
-  	                          ),
-  	                          isSelected ? React.createElement(Check, { width: 13, height: 13, strokeWidth: 1.8 }) : null
-  	                        );
-  	                      })
-  	                    : React.createElement("div", { className: "playground-agents-detail-owner-menu-empty" },
-  	                        "No human team members are available."
-  	                      ),
-  	            })
-  	          );
+	                      : "All teams already have access");
+	          const databaseOwnerLabel = String(databaseOwnerIdentity.name || databaseOwnerIdentity.email || "Owner").trim();
+	          const databaseOwnerOptions = databaseOwnerCandidates.map((candidate) => {
+	            const candidateKey = getDatabaseOwnerIdentityKey(candidate);
+	            const candidateLabel = String(candidate.name || candidate.email || "Team member").trim();
+	            const candidateDetail = candidate.email && candidateLabel.toLowerCase() !== candidate.email.toLowerCase()
+	              ? candidate.email
+	              : (Array.isArray(candidate.teamNames) ? candidate.teamNames.join(", ") : "");
+	            return {
+	              value: candidateKey,
+	              label: candidateLabel,
+	              description: candidateDetail || undefined,
+	              ariaLabel: candidateDetail ? candidateLabel + ", " + candidateDetail : candidateLabel,
+	              leading: React.createElement(AccountAvatar, {
+	                className: "playground-agents-detail-owner-option-avatar",
+	                imageClassName: "playground-agents-detail-owner-option-avatar-image",
+	                fallbackLabel: getAccountInitials(candidateLabel),
+	                photoUrl: candidate.avatarUrl || "",
+	              }),
+	              candidate,
+	            };
+	          });
+	          const databaseOwnerSelectorControl = React.createElement(PlatformSelector, {
+	            value: databaseOwnerIdentityKey,
+	            options: databaseOwnerOptions,
+	            open: databaseOwnerPopoverOpen,
+	            onOpenChange: setDatabaseOwnerPopoverOpen,
+	            onValueChange: (nextValue) => {
+	              const selectedOwner = databaseOwnerOptions.find((option) => option.value === nextValue)?.candidate;
+	              if (!selectedOwner || nextValue === databaseOwnerIdentityKey) {
+	                setDatabaseOwnerPopoverOpen(false);
+	                return;
+	              }
+	              openDatabaseOwnerTransferModal(selectedOwner);
+	            },
+	            ariaLabel: "Choose database owner",
+	            label: React.createElement("span", { className: "playground-team-member-cell" },
+	              React.createElement(AccountAvatar, {
+	                className: "playground-team-member-avatar",
+	                imageClassName: "playground-team-member-avatar-image",
+	                fallbackLabel: getAccountInitials(databaseOwnerLabel),
+	                photoUrl: databaseOwnerIdentity.avatarUrl || "",
+	              }),
+	              React.createElement("span", { className: "playground-team-member-copy" },
+	                React.createElement("span", { className: "playground-team-table-title" }, databaseOwnerLabel)
+	              )
+	            ),
+	            alignment: "end",
+	            popupAlignment: "right",
+	            fullWidth: true,
+	            disabled: !canManageDatabaseTeamAccess || !isCurrentDatabaseOwner || databaseSaveState.isSaving,
+	            loading: databaseSharedTeamIds.length > 0 && databaseOwnerMissingTeamIds.length > 0,
+	            loadingContent: "Loading team members...",
+	            emptyContent: databaseSharedTeamIds.length === 0
+	              ? "Grant a team access before choosing an owner."
+	              : "No human team members are available.",
+	            popupWidth: 260,
+	            popupMaxHeight: "min(320px, calc(100vh - 180px))",
+	            className: "playground-database-owner-selector playground-server-owner-selector",
+	            triggerClassName: "playground-database-owner-trigger playground-server-owner-selector-trigger",
+	            popupClassName: "playground-agents-detail-owner-menu playground-server-owner-selector-popup",
+	            optionClassName: "playground-agents-detail-owner-option",
+	          });
   	          const databaseOwnerTransferTargetLabel = String(
   	            databaseOwnerTransferTarget?.name || databaseOwnerTransferTarget?.email || "New owner"
   	          ).trim();
@@ -1373,46 +1265,66 @@
   	            && document.body
   	              ? createPortal(databaseOwnerTransferModalContent, document.body)
   	              : databaseOwnerTransferModalContent;
-  	          const databaseAddTeamsControl = canManageDatabaseTeamAccess
-  	            ? React.createElement("div", {
-  	                className: "playground-tasks-toolbar-popup-shell playground-project-teams-add-shell playground-database-team-menu-scope" + (databaseTeamMenuId === "add-teams" ? " is-open" : ""),
-  	              },
-  	              React.createElement("button", {
-  	                type: "button",
-  	                className: "playground-files-control-button playground-project-teams-add-button",
-  	                disabled: workspaceTeamsLoading || databaseSaveState.isSaving || Boolean(databaseTeamAccessState.action),
-  	                onClick: (event) => {
-  	                  event.stopPropagation();
-  	                  if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) onWorkspaceTeamsRequest({});
-  	                  setDatabaseTeamMenuId((current) => current === "add-teams" ? "" : "add-teams");
-  	                },
-  	              },
-  	                React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
-  	                React.createElement("span", null, "Add Teams")
-  	              ),
-  	              renderAddDatabaseTeamsMenu()
-  	            )
-  	            : null;
-  	          const databaseAccessColumns = [
-  	            {
-  	              id: "name",
-  	              header: "Team",
-  	              accessor: (team) => team.name || "Untitled team",
-  	              sortable: true,
-  	              width: "minmax(220px, 1.45fr)",
-  	              cell: ({ row: team }) => React.createElement("div", { className: "playground-agents-overview-name-cell" },
-  	                React.createElement("div", { className: "playground-agents-overview-name-copy" },
-  	                  React.createElement("div", { className: "playground-agents-overview-name-title" }, team.name)
-  	                )
-  	              ),
+	          const databaseAddTeamsControl = canManageDatabaseTeamAccess
+	            ? React.createElement(PlatformPopup, {
+	                open: databaseTeamMenuId === "add-teams",
+	                variant: "minimal",
+	                portal: true,
+	                placement: "bottom-end",
+	                portalOffset: 6,
+	                rootClassName: "playground-project-teams-add-shell playground-database-team-menu-scope",
+	                surfaceClassName: "playground-project-teams-add-menu playground-database-team-menu-scope",
+	                surfaceProps: {
+	                  role: "menu",
+	                  "aria-label": "Add teams to database",
+	                  onClick: (event) => event.stopPropagation(),
+	                  onKeyDown: (event) => {
+	                    if (event.key === "Escape") {
+	                      event.preventDefault();
+	                      event.stopPropagation();
+	                      setDatabaseTeamMenuId("");
+	                    }
+	                  },
+	                },
+	                animation: "down-in",
+	                trigger: React.createElement(PlatformSecondaryButton, {
+	                  type: "button",
+	                  size: "small",
+	                  className: "playground-project-teams-add-button",
+	                  "aria-haspopup": "menu",
+	                  "aria-expanded": databaseTeamMenuId === "add-teams" ? "true" : "false",
+	                  disabled: workspaceTeamsLoading || databaseSaveState.isSaving || Boolean(databaseTeamAccessState.action),
+	                  onClick: (event) => {
+	                    event.stopPropagation();
+	                    if (typeof onWorkspaceTeamsRequest === "function" && !workspaceTeamsLoading) onWorkspaceTeamsRequest({});
+	                    setDatabaseTeamMenuId((current) => current === "add-teams" ? "" : "add-teams");
+	                  },
+	                },
+	                  React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }),
+	                  React.createElement("span", null, "Add Teams")
+	                ),
+	              },
+	              renderAddDatabaseTeamsMenuContent()
+	            )
+	            : null;
+	          const databaseAccessColumns = [
+	            {
+	              id: "team",
+	              header: "Team",
+	              accessor: (team) => team.name || "Untitled team",
+	              sortable: true,
+	              width: "minmax(220px, 1.45fr)",
+	              cell: ({ row: team }) => React.createElement("div", null,
+	                React.createElement("div", { className: "playground-team-table-title" }, team.name),
+	                React.createElement("div", { className: "playground-team-table-meta" }, team.meta)
+	              ),
   	            },
   	            {
   	              id: "policy",
   	              header: "Policy",
   	              accessor: (team) => team.permission || "",
   	              sortable: true,
-  	              width: "minmax(150px, 0.9fr)",
-  	              cell: ({ row: team }) => React.createElement("div", { className: "playground-agents-overview-table-value" }, team.permission),
+	              width: "minmax(145px, 0.85fr)",
   	            },
   	            {
   	              id: "created",
@@ -1422,27 +1334,20 @@
   	              sortDescFirst: true,
   	              width: "minmax(120px, 0.7fr)",
   	              align: "end",
-  	              cell: ({ row: team }) => React.createElement("div", { className: "playground-agents-overview-table-value" }, team.locked ? "Default" : (formatDatabaseTeamCreatedDate(team.createdAt) || "—")),
-  	            },
-  	          ];
-  	          const databaseTeamAccessPlatformSection = React.createElement("section", {
-  	              className: "playground-project-settings-access-section playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-resources-overview-section is-develop-server-kind-list playground-agents-overview-table-section playground-database-access-table-section",
-  	            },
-  	            React.createElement(PlatformDataTable, {
-  	              rows: visibleDatabasePermissionTeams,
-  	              columns: databaseAccessColumns,
-  	              getRowId: (team) => String(team.id || ""),
-  	              ariaLabel: "Database team access",
-  	              className: "playground-database-access-platform-data-table",
-  	              sorting: {
-  	                value: { id: databaseAccessSort, direction: normalizedDatabaseAccessSortDirection },
-  	                manual: true,
-  	                onChange: (next) => {
-  	                  if (!next) return;
-  	                  setDatabaseAccessSort(next.id);
-  	                  setDatabaseAccessSortDirection(next.direction);
-  	                },
-  	              },
+	              cell: ({ row: team }) => team.locked ? "Default" : (formatDatabaseTeamCreatedDate(team.createdAt) || "—"),
+	            },
+	          ];
+	          const databaseTeamAccessPlatformSection = React.createElement("section", {
+	              className: "playground-project-settings-access-section",
+	            },
+	            React.createElement(PlatformDataTable, {
+	              rows: databasePermissionTeams,
+	              columns: databaseAccessColumns,
+	              getRowId: (team) => String(team.id || ""),
+	              ariaLabel: "Database team access",
+	              className: "playground-database-access-platform-data-table",
+	              variant: "minimalistic-ui",
+	              sorting: { defaultValue: { id: "team", direction: "asc" } },
   	              selection: {
   	                enabled: true,
   	                value: selectedDatabaseAccessTeamIds,
@@ -1450,22 +1355,9 @@
   	                ariaLabel: (team) => team.locked ? "All Agents is always included" : "Select " + team.name,
   	                onChange: ({ selectedIds }) => setSelectedDatabaseAccessTeamIds(new Set(selectedIds)),
   	              },
-  	              toolbar: {
-  	                search: {
-  	                  value: databaseAccessSearchQuery,
-  	                  onChange: setDatabaseAccessSearchQuery,
-  	                  placeholder: "Search teams",
-  	                  manual: true,
-  	                },
-  	                filters: [{
-  	                  id: "database-access-kind",
-  	                  label: "Filter",
-  	                  value: databaseAccessFilter,
-  	                  onChange: setDatabaseAccessFilter,
-  	                  options: databaseAccessFilterOptions,
-  	                }],
-  	                showSort: true,
-  	                trailing: databaseAddTeamsControl,
+	              toolbar: {
+	                title: "Manage Database Access",
+	                ...(databaseAddTeamsControl ? { trailing: databaseAddTeamsControl } : {}),
   	              },
   	              onRowActivate: (team) => {
   	                setDatabaseTeamMenuId("");
@@ -1495,26 +1387,19 @@
   	                    },
   	                  ],
   	              error: databaseTeamAccessState.error || null,
-  	              emptyState: normalizedDatabaseAccessSearchQuery || databaseAccessFilter !== "all"
-  	                ? "No matching team access found."
-  	                : "No team access configured.",
-  	              noResultsState: "No matching team access found.",
+	              emptyState: "No teams have database access.",
+	              noResultsState: "No matching team access found.",
   	            })
   	          );
   	          const databaseSettingsOverviewContent = React.createElement("section", {
   	              className: "playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-teams-section playground-project-settings-root playground-database-settings-root",
   	            },
-  	            databaseDescriptionSection,
-  	            React.createElement("div", { className: "playground-database-access-section-group" },
-  	              React.createElement("div", { className: "playground-database-access-section-header" },
-  	                React.createElement("h2", { className: "playground-project-teams-table-title playground-database-access-section-title" }, "Manage Database Access"),
-  	                databaseOwnerSelectorRow
-  	              ),
-  	              databaseTeamAccessPlatformSection
-  	            ),
-  	            databaseDangerSection,
-  	            databaseOwnerTransferModal
-  	          );
+	            databaseDescriptionSection,
+	            React.createElement("div", { className: "playground-database-access-section-group" },
+	              databaseTeamAccessPlatformSection
+	            ),
+	            databaseDangerSection
+	          );
   	          const selectedDatabaseRoleDefinition = getPlaygroundTeamRoleDefinition(databasePermissionRoleId);
   	          const selectedDatabaseRolePermissionSet = selectedDatabasePermissionTeam && selectedDatabasePermissionTeam.id !== "all_agents"
   	            ? getDatabaseTeamRolePermissionSet(draftDatabase, selectedDatabasePermissionTeam.id, selectedDatabaseRoleDefinition.id)
@@ -1598,54 +1483,122 @@
   	                : databaseTeamRolePages
   	            )
   	            : null;
-  	          const databaseSettingsTabContent = selectedDatabasePermissionTeam
-  	            ? databaseSettingsPermissionContent
-  	            : databaseSettingsOverviewContent;
-  	          const databaseEditorTabContent = normalizedDatabaseDetailTab === "data"
-  	            ? databaseDataTabContent
-  	            : normalizedDatabaseDetailTab === "settings"
-  	              ? databaseSettingsTabContent
-  	              : databaseUsageTabContent;
-  	          const databaseEditorMainClassName = "playground-environments-editor-main playground-tasks-detail-main" + (
-  	            normalizedDatabaseDetailTab === "data" ? " is-database-data-tab" : ""
-  	          );
-  	          const databaseEditorScrollClassName = "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" + (
-  	            normalizedDatabaseDetailTab === "data" ? " is-database-data-tab" : ""
-  	          );
-  	          const databaseDetailContentClassName = "playground-server-detail-content playground-database-detail-content" + (
-  	            normalizedDatabaseDetailTab === "data" ? " is-database-data-tab" : ""
-  	          );
-  	          const databaseDetailTabPanelClassName = "playground-database-detail-tab-panel " + (
-  	            normalizedDatabaseDetailTab === "data" ? "is-data" : normalizedDatabaseDetailTab === "settings" ? "is-settings" : "is-usage"
-  	          );
-  
-  	          return React.createElement(React.Fragment, null,
-  	            React.createElement("div", { className: databaseEditorMainClassName },
-  	              React.createElement("div", { className: databaseEditorScrollClassName },
-                  React.createElement("div", { className: databaseDetailContentClassName },
-                    databaseSaveState.error
-                      ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, databaseSaveState.error)
-                      : null,
-                    React.createElement("div", { className: "playground-database-detail-header-area" },
-                      databaseDetailTabs
-                    ),
-  	                  React.createElement("div", {
-  	                      id: databaseDetailTabPanelId,
-  	                      role: "tabpanel",
-  	                      className: databaseDetailTabPanelClassName,
-  	                      "aria-label": normalizedDatabaseDetailTab === "data"
-  	                        ? "Database data"
-  	                        : normalizedDatabaseDetailTab === "settings"
-  	                          ? "Database settings"
-  	                          : "Database usage",
-  	                    },
-  	                    databaseEditorTabContent
-  	                  )
-                  )
-                )
-              ),
-              renderDatabaseRenameModal(),
-              databaseCollectionComposerModal,
+	          const databaseSettingsTabContent = selectedDatabasePermissionTeam
+	            ? databaseSettingsPermissionContent
+	            : databaseSettingsOverviewContent;
+	          const renderDatabaseSidebarValue = (value, className = "") =>
+	            React.createElement("span", {
+	              className: "playground-environments-editor-fact-value" + (className ? " " + className : ""),
+	              title: String(value || ""),
+	            }, value || "Not set");
+	          const renderDatabaseSidebarRow = (label, valueNode, options = {}) =>
+	            React.createElement("div", {
+	                key: label,
+	                className: "playground-project-overview-sidebar-row"
+	                  + (options.className ? " " + options.className : ""),
+	              },
+	              React.createElement("div", { className: "playground-project-overview-sidebar-row-label" }, label),
+	              React.createElement("div", {
+	                className: "playground-project-overview-sidebar-row-value"
+	                  + (options.valueClassName ? " " + options.valueClassName : ""),
+	              }, valueNode)
+	            );
+	          const databaseDetailSidebar = React.createElement(PlatformUiCard, {
+	              as: "section",
+	              variant: "sidebar",
+	              cardTitle: "Properties",
+	              className: "playground-project-overview-sidebar-card playground-server-detail-properties-card playground-database-detail-properties-card",
+	            },
+	            React.createElement("div", { className: "playground-project-overview-sidebar-rows" },
+	              renderDatabaseSidebarRow("Creator", databaseCreatorValue, {
+	                valueClassName: "playground-server-detail-sidebar-identity-cell",
+	              }),
+	              renderDatabaseSidebarRow("Owner", databaseOwnerSelectorControl, {
+	                className: "playground-server-detail-sidebar-owner-row",
+	                valueClassName: "playground-server-detail-sidebar-owner-cell",
+	              }),
+	              renderDatabaseSidebarRow("Provider",
+	                renderDatabaseSidebarValue(draftDatabase.provider || "firestore")
+	              ),
+	              renderDatabaseSidebarRow("Location",
+	                renderDatabaseSidebarValue(draftDatabase.location || "eur3")
+	              ),
+	              renderDatabaseSidebarRow("Resource ID",
+	                renderDatabaseSidebarValue(draftDatabase.id || "Unsaved database", "is-id")
+	              ),
+	              renderDatabaseSidebarRow("Created",
+	                renderDatabaseSidebarValue(formatPlaygroundFileDate(draftDatabase.createdAt))
+	              ),
+	              renderDatabaseSidebarRow("Updated",
+	                renderDatabaseSidebarValue(formatPlaygroundFileDate(draftDatabase.updatedAt))
+	              )
+	            )
+	          );
+	          const databaseDetailSidebarCollapsed = Boolean(databaseDetailsCollapsed);
+	          const databaseDetailSidebarToggle = React.createElement("button", {
+	              type: "button",
+	              className: "playground-project-overview-sidebar-toggle",
+	              onClick: () => setDatabaseDetailsCollapsed((current) => !current),
+	              title: databaseDetailSidebarCollapsed ? "Show database properties" : "Hide database properties",
+	              "aria-label": databaseDetailSidebarCollapsed ? "Show database properties" : "Hide database properties",
+	              "aria-pressed": databaseDetailSidebarCollapsed ? "true" : "false",
+	            },
+	            React.createElement(PanelRight, {
+	              width: 15,
+	              height: 15,
+	              strokeWidth: 1.8,
+	            })
+	          );
+	          const databaseEditorTabContent = normalizedDatabaseDetailTab === "data"
+	            ? databaseDataTabContent
+	            : normalizedDatabaseDetailTab === "settings"
+	              ? databaseSettingsTabContent
+	              : databaseUsageTabContent;
+	          const databaseEditorMainClassName = "playground-environments-editor-main playground-tasks-detail-main playground-database-detail-main" + (
+	            normalizedDatabaseDetailTab === "data" ? " is-database-data-tab" : ""
+	          );
+	          const databaseEditorScrollClassName = "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" + (
+	            normalizedDatabaseDetailTab === "data" ? " is-database-data-tab" : ""
+	          );
+	          const databaseDetailContentClassName = "playground-server-detail-content playground-database-detail-content" + (
+	            normalizedDatabaseDetailTab === "data" ? " is-database-data-tab" : ""
+	          );
+	          const databaseDetailWorkspace = React.createElement(DevelopServerDetailPage, {
+	              tabs: databaseDetailTabs,
+	              activeTab: normalizedDatabaseDetailTab,
+	              onTabChange: (nextTab) => {
+	                setDatabaseOwnerPopoverOpen(false);
+	                setDatabaseDetailTab(nextTab);
+	              },
+	              sidebarToggle: databaseDetailSidebarToggle,
+	              sidebar: databaseDetailSidebar,
+	              sidebarCollapsed: databaseDetailSidebarCollapsed,
+	              sidebarAutoCollapseTabs: ["data"],
+	              ariaLabel: "Database details for " + (draftDatabase.name || "Untitled database"),
+	              sidebarAriaLabel: (draftDatabase.name || "Database") + " properties",
+	              className: "is-database-server-detail" + (
+	                normalizedDatabaseDetailTab === "data" ? " is-database-data-tab" : ""
+	              ),
+	              contentClassName: databaseDetailContentClassName,
+	            },
+	            databaseSaveState.error
+	              ? React.createElement("div", {
+	                  className: "playground-environments-error playground-environments-editor-notice",
+	                  role: "alert",
+	                }, databaseSaveState.error)
+	              : null,
+	            databaseEditorTabContent
+	          );
+
+	          return React.createElement(React.Fragment, null,
+	            React.createElement("div", { className: databaseEditorMainClassName },
+	              React.createElement("div", { className: databaseEditorScrollClassName },
+	                databaseDetailWorkspace
+	                )
+	              ),
+	              databaseOwnerTransferModal,
+	              renderDatabaseRenameModal(),
+	              databaseCollectionComposerModal,
               databaseDocumentComposerModal,
               databaseFieldComposerModal
             );

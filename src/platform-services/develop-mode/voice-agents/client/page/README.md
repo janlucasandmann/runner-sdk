@@ -9,7 +9,8 @@ This directory contains page composition and page-local interaction behavior for
 ## Contents
 
 - [`index.ts`](index.ts) — Public barrel or composition entry point.
-- [`overview-page.tsx`](overview-page.tsx) — Presentation composition for Overview Page.
+- [`overview-page.tsx`](overview-page.tsx) — Voice Agent overview and shared-shell detail composition.
+- [`overview-page.test.tsx`](overview-page.test.tsx) — Focused overview-to-detail and configuration interaction coverage.
 
 ## Working in this directory
 

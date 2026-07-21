@@ -3193,6 +3193,8 @@
   ${CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.navigation}
   ${MODELS_APP_SCRIPT_FRAGMENTS.navigation}${GUARDRAILS_APP_SCRIPT_FRAGMENTS.navigation}${EVALUATIONS_APP_SCRIPT_FRAGMENTS.navigation}${FINE_TUNING_APP_SCRIPT_FRAGMENTS.navigation}${MARKETPLACE_APP_SCRIPT_FRAGMENTS.navigation}${API_KEYS_APP_SCRIPT_FRAGMENTS.navigation}
   ${DEVELOP_HOME_APP_SCRIPT_FRAGMENTS.navigation}
+  ${SECURITY_APP_SCRIPT_FRAGMENTS.navigation}
+  ${SECURITY_APP_SCRIPT_FRAGMENTS.setupReturnLifecycle}
           function isSidebarPageAvailableForMode(mode) {
             if (activePage === "thread") {
               return true;
@@ -3215,6 +3217,7 @@
             return activePage === "develop"
               || activePage === "develop-webhooks"
               || activePage === "develop-api-keys"
+              || activePage === "develop-security"
               || (isResourcesPage && activeResourcesView === "servers")
               || (activePage === "tools" && toolsView === "actions");
           }

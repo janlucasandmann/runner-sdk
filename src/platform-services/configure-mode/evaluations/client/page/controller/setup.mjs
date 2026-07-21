@@ -71,6 +71,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         const evaluationVersionModalFrameRef = useRef(null);
         const evaluationVersionModalCloseTimerRef = useRef(null);
         const evaluationVersionBaselineRef = useRef({ key: "", signature: "" });
+        const evaluationDetailSidebarCollapsedBeforeVersionsRef = useRef(false);
         const evaluationVersionDraftTouchedRef = useRef(false);
         const evaluationBackendLoadRef = useRef("");
         const evaluationBackendLoadedRef = useRef(false);
@@ -125,6 +126,14 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         const [evaluationVersionChangesState, setEvaluationVersionChangesState] = useState(null);
         const [openEvaluationVersionMenuId, setOpenEvaluationVersionMenuId] = useState("");
         const [evaluationBackendSyncState, setEvaluationBackendSyncState] = useState({ status: "idle", error: "" });
+        const [evaluationDetailSidebarCollapsed, setEvaluationDetailSidebarCollapsed] = useState(false);
+        const [evaluationAnalyticsTimeframe, setEvaluationAnalyticsTimeframe] = useState("month");
+        const [evaluationAccessTeamId, setEvaluationAccessTeamId] = useState("");
+        const [evaluationAccessRoleId, setEvaluationAccessRoleId] = useState("member");
+        const [evaluationAccessMenuOpen, setEvaluationAccessMenuOpen] = useState(false);
+        const [evaluationAccessActionId, setEvaluationAccessActionId] = useState("");
+        const [evaluationOwnerSelectorOpen, setEvaluationOwnerSelectorOpen] = useState(false);
+        const [evaluationOwnerCandidateStateBySetId, setEvaluationOwnerCandidateStateBySetId] = useState({});
         const requestHeadersSignature = useMemo(() => JSON.stringify(requestHeaders || {}), [requestHeaders]);
         const currentEvaluationCreator = normalizePlaygroundEvaluationPersonIdentity({
           id: currentUserId || currentUserEmail || "",
@@ -478,6 +487,20 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         }, [evaluationVersionsSidebarOpen, onVersionsSidebarOpenChange]);
 
         useEffect(() => {
+          if (!isEvaluationDetailPage) {
+            evaluationDetailSidebarCollapsedBeforeVersionsRef.current = false;
+            setEvaluationDetailSidebarCollapsed(false);
+            return;
+          }
+          if (evaluationVersionsSidebarOpen) {
+            evaluationDetailSidebarCollapsedBeforeVersionsRef.current = evaluationDetailSidebarCollapsed;
+            setEvaluationDetailSidebarCollapsed(true);
+            return;
+          }
+          setEvaluationDetailSidebarCollapsed(evaluationDetailSidebarCollapsedBeforeVersionsRef.current);
+        }, [evaluationVersionsSidebarOpen, isEvaluationDetailPage]);
+
+        useEffect(() => {
           if (!activeSet?.id || !isEvaluationDetailPage) {
             return;
           }
@@ -506,6 +529,14 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           setIsEvaluationVersionDescriptionEditing(false);
           evaluationVersionDraftTouchedRef.current = false;
         }, [isEvaluationDetailPage]);
+
+        useEffect(() => {
+          setEvaluationAccessTeamId("");
+          setEvaluationAccessRoleId("member");
+          setEvaluationAccessMenuOpen(false);
+          setEvaluationAccessActionId("");
+          setEvaluationOwnerSelectorOpen(false);
+        }, [activeSet?.id]);
 
         useEffect(() => {
           if (!evaluationGuidanceEditingId || typeof window === "undefined") {

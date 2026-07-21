@@ -7,6 +7,7 @@ import type {
   PlatformPermissionRingPolicy,
   PlatformPermissionSet,
 } from "./permission-types.js";
+import { PLATFORM_SCOPED_PERMISSION_SUBJECT_TYPES } from "./permission-catalog.js";
 
 export const PLATFORM_PERMISSION_ACCESS_OPTIONS: readonly PlatformPermissionAccessOption[] = [
   { id: "full_access", label: "Full access", progress: 100 },
@@ -181,8 +182,7 @@ export function shouldShowPlatformPermissionAction(
   action: PlatformPermissionActionDefinition,
   subjectType: string,
 ): boolean {
-  const scopedOnlySubjectTypes = new Set(["team", "team_role", "organization_role", "database"]);
-  if (scopedOnlySubjectTypes.has(subjectType)) {
+  if ((PLATFORM_SCOPED_PERMISSION_SUBJECT_TYPES as readonly string[]).includes(subjectType)) {
     return Array.isArray(action.subjectTypes) && action.subjectTypes.includes(subjectType);
   }
   return !Array.isArray(action.subjectTypes) || action.subjectTypes.includes(subjectType);

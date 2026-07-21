@@ -1464,6 +1464,27 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
         return ["<system>", normalizedPrompt, "</system>"].join(newline);
       }
 
+      function getPlaygroundTaskCommentIdentitySources(comment) {
+        const source = comment && typeof comment === "object" && !Array.isArray(comment) ? comment : {};
+        const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
+          ? source.metadata
+          : {};
+        return [source, source.author, source.user, source.agent, metadata, metadata.author, metadata.user, metadata.agent]
+          .filter((value) => value && typeof value === "object" && !Array.isArray(value));
+      }
+
+      function readPlaygroundTaskCommentIdentityString(comment, keys) {
+        for (const source of getPlaygroundTaskCommentIdentitySources(comment)) {
+          for (const key of keys) {
+            const value = source[key];
+            if (typeof value === "string" && value.trim()) {
+              return value.trim();
+            }
+          }
+        }
+        return "";
+      }
+
       function normalizePlaygroundTaskCommentRecord(comment) {
         if (!comment || typeof comment !== "object") {
           return null;
@@ -1484,38 +1505,56 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
           return null;
         }
 
+        const authorAgentId = readPlaygroundTaskCommentIdentityString(comment, ["authorAgentId", "author_agent_id", "agentId", "agent_id"]) || undefined;
+        const authorUserId = readPlaygroundTaskCommentIdentityString(comment, ["authorUserId", "author_user_id", "createdByUserId", "created_by_user_id", "userId", "user_id", "uid"]) || undefined;
         const authorType = comment.authorType === "agent" || comment.authorType === "system" || comment.authorType === "user"
           ? comment.authorType
-          : "user";
-        const authorAgentId = typeof comment.authorAgentId === "string" && comment.authorAgentId.trim()
-          ? comment.authorAgentId.trim()
-          : undefined;
-        const authorName = typeof comment.authorName === "string" && comment.authorName.trim()
-          ? comment.authorName.trim()
+          : authorAgentId
+            ? "agent"
+            : "user";
+        const explicitAuthorName = readPlaygroundTaskCommentIdentityString(comment, ["authorName", "author_name", "displayName", "display_name", "name", "fullName", "full_name"]);
+        const authorName = explicitAuthorName
+          ? explicitAuthorName
           : authorType === "agent"
             ? "Agent"
             : authorType === "system"
               ? "System"
-              : "Computer Agents";
-        const authorAvatarUrl = typeof comment.authorAvatarUrl === "string" && comment.authorAvatarUrl.trim()
-          ? comment.authorAvatarUrl.trim()
-          : comment.author && typeof comment.author === "object" && typeof comment.author.avatarUrl === "string" && comment.author.avatarUrl.trim()
-            ? comment.author.avatarUrl.trim()
-          : undefined;
+              : "User";
+        const authorAvatarUrl = readPlaygroundTaskCommentIdentityString(comment, [
+          "authorAvatarUrl",
+          "author_avatar_url",
+          "authorPhotoUrl",
+          "author_photo_url",
+          "profilePhotoUrl",
+          "profile_photo_url",
+          "photoURL",
+          "photoUrl",
+          "photo_url",
+          "avatarURL",
+          "avatarUrl",
+          "avatar_url",
+          "avatar",
+          "picture",
+          "imageUrl",
+          "image_url",
+        ]) || undefined;
         const sourceThreadId = typeof comment.sourceThreadId === "string" && comment.sourceThreadId.trim()
           ? comment.sourceThreadId.trim()
           : typeof comment.threadId === "string" && comment.threadId.trim()
             ? comment.threadId.trim()
             : undefined;
-        const createdAt = typeof comment.createdAt === "string" && comment.createdAt
-          ? comment.createdAt
-          : new Date().toISOString();
+        const createdAt = typeof comment.createdAt === "string" && comment.createdAt.trim()
+          ? comment.createdAt.trim()
+          : typeof comment.updatedAt === "string" && comment.updatedAt.trim()
+            ? comment.updatedAt.trim()
+            : "";
 
         return {
           id,
           text,
           authorType,
           authorAgentId,
+          authorUserId,
           authorName,
           authorAvatarUrl,
           sourceThreadId,
@@ -1548,6 +1587,7 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
           text: normalizedText,
           authorType: author?.authorType || "user",
           authorAgentId: author?.authorAgentId || "",
+          authorUserId: author?.authorUserId || "",
           authorName: author?.name || "Computer Agents",
           authorAvatarUrl: author?.avatarUrl || "",
           createdAt: new Date().toISOString(),

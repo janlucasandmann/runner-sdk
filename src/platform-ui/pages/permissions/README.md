@@ -13,17 +13,19 @@ This directory owns the reusable page layer for platform permission editing.
 - `PlatformPermissionMiniRingIcon` exposes the canonical compact ring visualization for summaries outside the page.
 - `permission-catalog.ts` owns the canonical rings, actions, resources, and supported subject types.
 - `permission-policy.ts` owns normalization, defaults, immutable policy updates, and policy lookup.
+- `permission-presets.ts` owns conservative role defaults for every resource-scoped subject and merges those defaults into older saved policies.
 
 ## Ownership
 
 The page layer owns presentation, accessibility, responsive layout, the canonical policy model, and immutable policy operations. Resource modules continue to own:
 
-- Role defaults and resource-specific labels
 - Loading and mutation state
 - API persistence and optimistic rollback
 - Routing and team/member assignment controls
 
 This keeps the page independent from agent, project, team, organization, database, and server APIs while ensuring that every resource renders the same permission editor.
+
+Resource permission subjects are explicit catalogs. Projects, teams, organizations, databases, guardrails, web apps, functions, authentication, secrets, payments, and agent runtimes only persist actions from their own catalog. Managed resources migrate legacy `server_*` policies into their concrete action namespace during normalization.
 
 The ring tables use the shared minimal table variant without a toolbar or pagination footer. Their column header remains visible so action, ring, and permission controls keep consistent table semantics across every resource.
 

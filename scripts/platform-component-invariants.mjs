@@ -31,6 +31,7 @@ const compositeComponents = [
   "page-hero",
   "popup",
   "settings-section",
+  "subtasks",
   "ui-card",
   "version-history-sidebar",
   "versioning",
@@ -161,6 +162,10 @@ const canonicalExports = new Map([
   [
     "./platform-ui/components/composite/attachments",
     "./dist/platform-ui/components/composite/attachments/index.js",
+  ],
+  [
+    "./platform-ui/components/composite/subtasks",
+    "./dist/platform-ui/components/composite/subtasks/index.js",
   ],
   [
     "./platform-ui/components/composite/code-editor-workspace",

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { PlatformFloatingSidebar } from "../../../../../platform-ui/components/composite/floating-sidebar/index.js";
 import { PlatformUiCard } from "../../../../../platform-ui/components/composite/ui-card/index.js";
 import { ResourceDetailPage } from "../../../../../platform-ui/pages/details/index.js";
 
@@ -10,6 +11,10 @@ export interface TicketDetailPageProps {
   detailsActions?: ReactNode;
   threads: ReactNode;
   preview?: ReactNode;
+  previewTitle?: ReactNode;
+  previewHeaderActions?: ReactNode;
+  previewPortalTarget?: Element | DocumentFragment | null;
+  onPreviewClose?: () => void;
   sidebarCollapsed?: boolean;
   sidebarPopoverOpen?: boolean;
   ariaLabel?: string;
@@ -24,6 +29,10 @@ export function TicketDetailPage({
   detailsActions,
   threads,
   preview,
+  previewTitle = "Attachment preview",
+  previewHeaderActions,
+  previewPortalTarget = null,
+  onPreviewClose,
   sidebarCollapsed = false,
   sidebarPopoverOpen = false,
   ariaLabel = "Ticket details",
@@ -39,7 +48,7 @@ export function TicketDetailPage({
       <ResourceDetailPage
         header={header}
         headerActions={headerActions}
-        sidebarCollapsed={sidebarCollapsed}
+        sidebarCollapsed={sidebarCollapsed || hasPreview}
         sidebar={(
           <>
             <PlatformUiCard
@@ -70,11 +79,20 @@ export function TicketDetailPage({
       >
         {children}
       </ResourceDetailPage>
-      {hasPreview ? (
-        <aside className="playground-ticket-detail-preview" aria-label="Attachment preview">
-          {preview}
-        </aside>
-      ) : null}
+      <PlatformFloatingSidebar
+        open={hasPreview}
+        title={previewTitle}
+        headerActions={previewHeaderActions}
+        ariaLabel="Attachment preview"
+        closeButtonLabel="Close attachment preview"
+        className="playground-ticket-detail-attachment-sidebar"
+        bodyClassName="playground-ticket-detail-attachment-sidebar-body"
+        portal={Boolean(previewPortalTarget)}
+        portalTarget={previewPortalTarget}
+        onClose={() => onPreviewClose?.()}
+      >
+        {preview}
+      </PlatformFloatingSidebar>
     </div>
   );
 }

@@ -659,9 +659,10 @@ export const PROJECTS_CORE_CSS_02_FRAGMENT = `      .playground-projects-overvie
         display: flex;
         align-items: center;
         gap: 10px;
-        margin-right: -8px;
+        margin-left: -8px;
         padding: 10px 8px;
         border: 0;
+        border-radius: 8px;
         background: transparent;
         color: inherit;
         text-align: left;
@@ -1065,8 +1066,9 @@ export const PROJECTS_CORE_CSS_02_FRAGMENT = `      .playground-projects-overvie
 	      }
 
 	      .playground-database-description-section.playground-agents-detail-instructions-section {
+	        margin-top: 0;
 	        margin-bottom: 0;
-	        padding-bottom: 6px !important;
+	        padding-bottom: 3px !important;
 	        border: 1px solid rgba(255, 255, 255, 0.075) !important;
 	        border-radius: 15px !important;
 	        background: rgba(255, 255, 255, 0.075) !important;

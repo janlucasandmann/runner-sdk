@@ -9,6 +9,12 @@ export {
   createDevelopResourceOverviewRows,
 } from "../../platform-services/develop-mode/resource-definition-registry.js";
 export {
+  getDevelopResourceCreatorIdentity,
+  getDevelopResourceOwnerIdentity,
+  initializeDevelopResourceIdentityMetadata,
+  normalizeDevelopResourceIdentity,
+} from "../../platform-services/develop-mode/shared/client/domain/resource-identity.js";
+export {
   createDevelopVoiceAgentOverviewRows,
 } from "../../platform-services/develop-mode/voice-agents/client/domain/overview-model.js";
 export {
