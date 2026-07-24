@@ -10,6 +10,10 @@ export const CONFIGURE_HOME_NOTIFICATIONS_SECTION_SCRIPT = `        function han
             handleOpenHumanTaskNotification(item);
             return;
           }
+          if (item.kind === "task_activity") {
+            handleOpenTaskActivityNotification(item);
+            return;
+          }
           if (item.kind === "team_invitation") {
             openTeamPage();
             return;
@@ -29,6 +33,7 @@ export const CONFIGURE_HOME_NOTIFICATIONS_SECTION_SCRIPT = `        function han
         function canOpenConfigureHomeNotification(item) {
           return item?.kind === "permission"
             || item?.kind === "human_task"
+            || item?.kind === "task_activity"
             || item?.kind === "team_invitation"
             || item?.kind === "organization_invitation"
             || item?.kind === "email_verification";

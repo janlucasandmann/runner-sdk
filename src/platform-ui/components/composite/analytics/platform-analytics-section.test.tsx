@@ -83,4 +83,29 @@ describe("PlatformAnalyticsSection", () => {
 
     expect(screen.getByRole("status", { name: "Loading analytics" })).not.toBeNull();
   });
+
+  it("renders the compact sidebar composition with its title and three KPIs", () => {
+    const { container } = render(
+      <PlatformAnalyticsSection
+        variant="compact"
+        title="Progress"
+        analytics={{
+          ariaLabel: "Project progress",
+          metrics: [
+            { id: "scope", label: "Scope", value: "3", color: "#777" },
+            { id: "started", label: "Started", value: "1", color: "#ffd000" },
+            { id: "completed", label: "Completed", value: "0", color: "#636bdc" },
+          ],
+          labels: [],
+          series: [],
+        }}
+      />,
+    );
+
+    const section = screen.getByLabelText("Project progress");
+    expect(section.classList.contains("is-compact")).toBe(true);
+    expect(section.getAttribute("data-platform-analytics-variant")).toBe("compact");
+    expect(screen.getByRole("heading", { name: "Progress", level: 2 })).not.toBeNull();
+    expect(container.querySelectorAll(".platform-analytics__metric")).toHaveLength(3);
+  });
 });

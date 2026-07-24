@@ -309,30 +309,337 @@ export const PROJECT_OVERVIEW_ACTIVITY_ANALYTICS_FRAGMENT = String.raw`
             );
           }
 
+          function getProjectOverviewTaskActivityActorName(event) {
+            const actorName = String(event?.actorName || "").trim();
+            if (actorName) {
+              return actorName;
+            }
+            const fallbackActor = resolveProjectOverviewActivityActor(
+              event?.actorAgentId,
+              event?.actorType === "system" ? "Computer Agents" : "User",
+              event
+            );
+            return fallbackActor.name;
+          }
+
+          function renderProjectOverviewTaskActivityActorAvatar(
+            event,
+            className = "playground-tasks-activity-avatar"
+          ) {
+            if (typeof renderTaskCommentAvatar === "function") {
+              return renderTaskCommentAvatar({
+                id: event?.id || "",
+                authorType: event?.actorType || "user",
+                authorAgentId: event?.actorAgentId || undefined,
+                authorUserId: event?.actorUserId || undefined,
+                authorName: event?.actorName || undefined,
+                authorAvatarUrl: event?.actorAvatarUrl || undefined,
+              }, className);
+            }
+            const actor = resolveProjectOverviewActivityActor(
+              event?.actorAgentId,
+              event?.actorName || "User",
+              event
+            );
+            return renderAgentNameAvatar(
+              actor.name,
+              className,
+              actor.photoUrl
+            );
+          }
+
+          function getProjectOverviewTaskActivityParticipantKey(event) {
+            const actorAgentId = String(event?.actorAgentId || "").trim();
+            if (actorAgentId) {
+              return "agent:" + actorAgentId;
+            }
+            const actorUserId = String(event?.actorUserId || "").trim();
+            if (actorUserId) {
+              return "user:" + actorUserId;
+            }
+            const actorName = getProjectOverviewTaskActivityActorName(event).toLowerCase();
+            return actorName ? "name:" + actorName : "";
+          }
+
+          function renderProjectOverviewTaskActivityParticipants(events) {
+            const seen = new Set();
+            const participants = (Array.isArray(events) ? events : []).filter((event) => {
+              const key = getProjectOverviewTaskActivityParticipantKey(event);
+              if (!key || seen.has(key)) {
+                return false;
+              }
+              seen.add(key);
+              return true;
+            });
+            if (!participants.length) {
+              return null;
+            }
+            return React.createElement("div", {
+              className: "playground-project-overview-activity-participants",
+              "aria-label": "Recent activity participants",
+            }, participants.map((event) =>
+              React.cloneElement(
+                renderProjectOverviewTaskActivityActorAvatar(
+                  event,
+                  "playground-project-overview-activity-participant-avatar"
+                ),
+                {
+                  key: getProjectOverviewTaskActivityParticipantKey(event) || event.id,
+                  title: getProjectOverviewTaskActivityActorName(event),
+                }
+              )
+            ));
+          }
+
+          function formatProjectOverviewTaskActivityFieldValue(fieldName, value) {
+            const normalizedValue = value === null || value === undefined ? "" : String(value).trim();
+            if (!normalizedValue) {
+              return "";
+            }
+            if (fieldName === "status") {
+              return getPlaygroundTaskStatusLabel(normalizedValue);
+            }
+            if (fieldName === "priority") {
+              return PLAYGROUND_TASK_PRIORITY_OPTIONS.find((option) => option.id === normalizedValue)?.label || normalizedValue;
+            }
+            if (fieldName === "assigneeAgentId") {
+              return getTaskAssigneeName(normalizedValue, normalizedValue);
+            }
+            if (fieldName === "releaseId" || fieldName === "milestoneId") {
+              return releasesById[normalizedValue]?.name || normalizedValue;
+            }
+            if (fieldName === "sprintId") {
+              return sprintsById[normalizedValue]?.name || normalizedValue;
+            }
+            if (["dueAt", "scheduledStartAt", "scheduledEndAt"].includes(fieldName)) {
+              return formatPlaygroundFileDate(normalizedValue) || normalizedValue;
+            }
+            return normalizedValue;
+          }
+
+          function renderProjectOverviewTaskActivitySummary(event) {
+            const actor = React.createElement("strong", null, getProjectOverviewTaskActivityActorName(event));
+            if (event.eventType === "created") {
+              return React.createElement(React.Fragment, null, actor, " created the issue");
+            }
+            if (event.eventType === "status_changed") {
+              const previousStatus = formatProjectOverviewTaskActivityFieldValue("status", event.previousValue);
+              const nextStatus = formatProjectOverviewTaskActivityFieldValue("status", event.nextValue);
+              return React.createElement(
+                React.Fragment,
+                null,
+                actor,
+                " moved from ",
+                React.createElement("strong", null, previousStatus || "Unknown"),
+                " to ",
+                React.createElement("strong", null, nextStatus || "Unknown")
+              );
+            }
+            if (event.eventType === "thread_started") {
+              const threadTitle = String(event.thread?.title || event.metadata?.threadTitle || event.task?.title || "Untitled thread").trim();
+              return React.createElement(
+                React.Fragment,
+                null,
+                actor,
+                " started ",
+                React.createElement("strong", null, threadTitle)
+              );
+            }
+            if (event.eventType === "field_changed") {
+              const fieldName = String(event.fieldName || "").trim();
+              const nextValue = formatProjectOverviewTaskActivityFieldValue(fieldName, event.nextValue);
+              const previousValue = formatProjectOverviewTaskActivityFieldValue(fieldName, event.previousValue);
+              if (fieldName === "title") {
+                return React.createElement(
+                  React.Fragment,
+                  null,
+                  actor,
+                  " renamed the issue to ",
+                  React.createElement("strong", null, nextValue)
+                );
+              }
+              if (fieldName === "dueAt") {
+                return React.createElement(
+                  React.Fragment,
+                  null,
+                  actor,
+                  nextValue ? " set the due date to " : " cleared the due date",
+                  nextValue ? React.createElement("strong", null, nextValue) : null
+                );
+              }
+              if (fieldName === "assigneeAgentId") {
+                return React.createElement(
+                  React.Fragment,
+                  null,
+                  actor,
+                  nextValue ? " assigned the issue to " : " removed the assignee",
+                  nextValue ? React.createElement("strong", null, nextValue) : null
+                );
+              }
+              if (fieldName === "releaseId" || fieldName === "milestoneId") {
+                return React.createElement(
+                  React.Fragment,
+                  null,
+                  actor,
+                  nextValue ? " changed milestone to " : " cleared milestone",
+                  nextValue ? React.createElement("strong", null, nextValue) : null
+                );
+              }
+              if (fieldName === "dependencyIds") {
+                return React.createElement(React.Fragment, null, actor, " updated the issue blockers");
+              }
+              const fieldLabel = fieldName
+                .replace(/Id$/, "")
+                .replace(/([a-z])([A-Z])/g, "$1 $2")
+                .toLowerCase();
+              return React.createElement(
+                React.Fragment,
+                null,
+                actor,
+                " changed ",
+                fieldLabel || "the issue",
+                previousValue ? " from " : " to ",
+                previousValue ? React.createElement("strong", null, previousValue) : null,
+                previousValue ? " to " : null,
+                React.createElement("strong", null, nextValue || "None")
+              );
+            }
+            return actor;
+          }
+
+          function getProjectOverviewTaskActivityEvents() {
+            return (projectOverviewTaskActivityState?.items || [])
+              .filter((event) => {
+                const fieldName = String(event?.fieldName || "").trim().toLowerCase();
+                return event?.eventType !== "comment_added"
+                  && !(event?.eventType === "field_changed" && fieldName === "description");
+              })
+              .slice(0, 5);
+          }
+
+          function buildProjectOverviewTaskActivityTimelineItems(events = getProjectOverviewTaskActivityEvents()) {
+            return events.map((event) => {
+                const isThread = event.eventType === "thread_started";
+                const isStatus = event.eventType === "status_changed";
+                const isFieldChange = event.eventType === "field_changed";
+                const fieldName = String(event.fieldName || "").trim();
+                const isPriorityChange = isFieldChange && fieldName === "priority";
+                const isMilestoneChange = isFieldChange && ["releaseId", "milestoneId"].includes(fieldName);
+                const isScheduleChange = isFieldChange && [
+                  "dueAt",
+                  "scheduledStartAt",
+                  "scheduledEndAt",
+                  "scheduleType",
+                  "cronExpression",
+                  "scheduleTimezone",
+                  "scheduleEnabled",
+                ].includes(fieldName);
+                const task = event.task
+                  || (event.taskId ? normalizedOverviewTasksById[event.taskId] || null : null);
+                const taskId = String(event.taskId || task?.id || "").trim();
+                const ticketNumber = taskId
+                  ? String(taskTicketNumbersById[taskId] || task?.ticketNumber || "").trim()
+                  : "";
+                const ticketLabel = [ticketNumber, task?.title || ""].filter(Boolean).join(" ");
+                return {
+                  id: event.id,
+                  tone: isThread ? "thread" : isStatus ? "status" : "created",
+                  summary: renderProjectOverviewTaskActivitySummary(event),
+                  timestamp: formatRelativeThreadTime(event.createdAt)
+                    || formatPlaygroundFileDate(event.createdAt),
+                  trailing: ticketLabel
+                    ? React.createElement("span", {
+                        className: "playground-project-overview-task-activity-ticket",
+                        title: ticketLabel,
+                      }, ticketLabel)
+                    : null,
+                  avatar: isStatus
+                    ? renderPlaygroundTaskStatusGlyph(
+                        event.nextValue,
+                        "platform-activity-timeline__status-icon"
+                      )
+                    : isPriorityChange
+                      ? renderPlaygroundTaskPriorityIcon(
+                          event.nextValue,
+                          "platform-activity-timeline__priority-icon"
+                        )
+                      : isFieldChange
+                        ? null
+                        : renderProjectOverviewTaskActivityActorAvatar(event),
+                  icon: isMilestoneChange
+                    ? Flag
+                    : isScheduleChange
+                      ? CalendarIcon
+                      : isFieldChange
+                        ? PencilRuler
+                        : undefined,
+                  onActivate: taskId && typeof openProjectTaskDetailScreen === "function"
+                    ? () => openProjectTaskDetailScreen(taskId)
+                    : undefined,
+                  ariaLabel: ticketLabel ? "Open " + ticketLabel : undefined,
+                };
+              });
+          }
+
           function renderProjectOverviewActivitySection() {
             const allActivityItems = buildProjectOverviewActivityItems();
             const allActivityTasks = buildProjectOverviewActivityTasks(allActivityItems);
-            const activityTasks = allActivityTasks.slice(0, 5);
+            const backlogTasks = allActivityTasks.slice(0, 5);
+            const activityEvents = getProjectOverviewTaskActivityEvents();
+            const activityTimelineItems = buildProjectOverviewTaskActivityTimelineItems(activityEvents);
+            const isActivityTab = projectOverviewActivityTab !== "backlog";
             return React.createElement("section", { className: "playground-project-overview-activity-card is-main" },
               React.createElement("div", { className: "playground-project-overview-activity-header" },
-                React.createElement("h2", { className: "playground-project-overview-activity-title" }, "Activity"),
-                React.createElement(PlatformSecondaryButton, {
-                  type: "button",
-                  size: "small",
-                  onClick: () => {
-                    if (typeof setTaskView === "function") {
-                      setTaskView("backlog");
-                    }
-                  },
-                }, "View All")
+                React.createElement(PlatformDetailTabBar, {
+                  ariaLabel: "Project activity",
+                  value: isActivityTab ? "activity" : "backlog",
+                  tabs: [
+                    { id: "activity", label: "Activity" },
+                    { id: "backlog", label: "Backlog" },
+                  ],
+                  onValueChange: setProjectOverviewActivityTab,
+                  variant: "minimal",
+                  className: "playground-project-overview-activity-tabs",
+                  endActions: isActivityTab
+                    ? renderProjectOverviewTaskActivityParticipants(activityEvents)
+                    : React.createElement(PlatformSecondaryButton, {
+                        type: "button",
+                        size: "small",
+                        onClick: () => {
+                          if (typeof setTaskView === "function") {
+                            setTaskView("backlog");
+                          }
+                        },
+                      }, "View All")
+                })
               ),
-              activityTasks.length > 0
-                ? React.createElement("div", { className: "playground-project-overview-activity-list is-ticket-preview-list" },
-                    activityTasks.map((task) => renderOverviewTaskRow(task))
+              isActivityTab
+                ? (
+                    projectOverviewTaskActivityState?.status === "loading" && activityTimelineItems.length === 0
+                      ? React.createElement(PlatformLoadingState, {
+                          className: "playground-project-overview-task-activity-loading",
+                          message: "Loading activity...",
+                          centered: true,
+                        })
+                      : React.createElement(PlatformActivityTimeline, {
+                          className: "playground-project-overview-task-activity-timeline",
+                          title: null,
+                          items: activityTimelineItems,
+                          emptyTitle: projectOverviewTaskActivityState?.status === "error"
+                            ? "Activity unavailable"
+                            : "No activity yet",
+                          emptyDescription: projectOverviewTaskActivityState?.status === "error"
+                            ? projectOverviewTaskActivityState.error
+                            : "Ticket actions will appear here as work progresses.",
+                        })
                   )
-                : React.createElement("div", { className: "playground-project-overview-activity-empty" },
-                    "Ticket activity will appear here once work begins on this project."
-                  )
+                : backlogTasks.length > 0
+                  ? React.createElement("div", { className: "playground-project-overview-activity-list is-ticket-preview-list" },
+                      backlogTasks.map((task) => renderOverviewTaskRow(task))
+                    )
+                  : React.createElement("div", { className: "playground-project-overview-activity-empty" },
+                      "Backlog tickets will appear here once work begins on this project."
+                    )
             );
           }
 
@@ -560,87 +867,261 @@ export const PROJECT_OVERVIEW_ACTIVITY_ANALYTICS_FRAGMENT = String.raw`
             return buckets;
           }
 
-          function renderProjectOverviewProgressUsageChartSection() {
+          function getProjectOverviewProgressBucketCount() {
+            const now = new Date();
+            now.setHours(23, 59, 59, 999);
+            const candidateTimestamps = [
+              selectedProject?.startDate,
+              selectedProject?.createdAt,
+              selectedProject?.metadata?.startDate,
+              selectedProject?.metadata?.createdAt,
+              ...normalizedOverviewTasks.flatMap((task) => [
+                task?.createdAt,
+                task?.created_at,
+              ]),
+            ]
+              .map((value) => parseProjectOverviewTaskTimelineTimestamp(value))
+              .filter((value) => Number.isFinite(value) && value <= now.getTime());
+            if (!candidateTimestamps.length) {
+              return 30;
+            }
+            const earliestTimestamp = Math.min(...candidateTimestamps);
+            const elapsedDays = Math.floor((now.getTime() - earliestTimestamp) / (24 * 60 * 60 * 1000));
+            return Math.min(365, Math.max(2, elapsedDays + 1));
+          }
+
+          function buildProjectOverviewSidebarProgressAnalytics() {
             const progressStats = getProjectOverviewProgressStats();
-            const performanceRangeOptions = [
-              { id: "5d", label: "5D", bucketCount: 5 },
-              { id: "1m", label: "1M", bucketCount: 30 },
-              { id: "6m", label: "6M", bucketCount: 180 },
-              { id: "1y", label: "1Y", bucketCount: 365 },
-            ];
-            const activePerformanceRangeId = typeof projectOverviewPerformanceRange === "string"
-              ? projectOverviewPerformanceRange
-              : "1m";
-            const activePerformanceRange = performanceRangeOptions.find((option) => option.id === activePerformanceRangeId)
-              || performanceRangeOptions[1];
-            const dailyCtBuckets = buildProjectOverviewDailyCtBuckets(activePerformanceRange.bucketCount);
+            const dailyCtBuckets = buildProjectOverviewDailyCtBuckets(getProjectOverviewProgressBucketCount());
             const progressSeries = buildProjectOverviewProgressSeriesForBuckets(dailyCtBuckets);
-            const totalDailyCt = dailyCtBuckets.reduce((sum, bucket) => sum + Math.max(0, Number(bucket?.totalCT || 0)), 0);
             const metricColors = {
-              scope: "rgba(255, 255, 255, 0.72)",
-              started: "#7effff",
-              completed: "#4da3ff",
-              cost: "#8fc4ff",
+              scope: "rgba(255, 255, 255, 0.42)",
+              started: "#ffd000",
+              completed: "#636bdc",
             };
-            const analytics = {
-              title: "Recent performance",
-              ariaLabel: "Project progress and cost analytics",
+            return {
+              title: "Progress",
+              ariaLabel: "Project progress",
               metrics: progressStats.rows.map((row) => ({
                 id: row.id,
                 label: row.label,
                 value: formatProjectOverviewInteger(row.value),
                 color: metricColors[row.id] || "rgba(255, 255, 255, 0.72)",
-              })).concat({
-                id: "cost",
-                label: "Cost",
-                value: formatProjectOverviewCt(totalDailyCt),
-                color: metricColors.cost,
-              }),
+              })),
               labels: dailyCtBuckets.map((bucket) => String(bucket?.label || "")),
-              series: [
-                {
-                  id: "cost",
-                  label: "Cost",
-                  values: dailyCtBuckets.map((bucket) => Math.max(0, Number(bucket?.totalCT || 0))),
-                  color: metricColors.cost,
-                  type: "bar",
-                  axis: "secondary",
-                  valueKind: "tokens",
-                },
-                ...progressSeries.map((entry) => ({
-                  id: entry.id,
-                  label: entry.id === "scope" ? "Scope" : entry.id === "started" ? "Started" : "Completed",
-                  values: entry.values,
-                  color: metricColors[entry.id] || "rgba(255, 255, 255, 0.72)",
-                  type: "line",
-                  axis: "primary",
-                  valueKind: "count",
-                  fill: entry.id === "completed",
-                })),
-              ],
-              loading: projectOverviewCostSummaryState?.status === "loading"
-                && projectThreads.length === 0
-                && progressStats.scopeCount === 0,
+              series: progressSeries.map((entry) => ({
+                id: entry.id,
+                label: entry.id === "scope" ? "Scope" : entry.id === "started" ? "Started" : "Completed",
+                values: entry.values,
+                color: metricColors[entry.id] || "rgba(255, 255, 255, 0.72)",
+                type: "line",
+                axis: "primary",
+                valueKind: "count",
+                fill: entry.id === "completed",
+                fillColor: entry.id === "completed" ? "rgba(99, 107, 220, 0.28)" : undefined,
+              })),
+              hasData: progressStats.scopeCount > 0,
+              loading: taskLoadState?.status === "loading" && progressStats.scopeCount === 0,
             };
-            return React.createElement(PlatformAnalyticsSection, {
-              variant: "framed",
-              className: "playground-project-detail-analytics",
-              analytics,
-              title: "Recent performance",
-              timeframe: {
-                value: activePerformanceRange.id,
-                options: performanceRangeOptions.map((option) => ({
-                  value: option.id,
-                  label: option.label,
-                })),
-                onValueChange: (nextRangeId) => {
-                  if (typeof setProjectOverviewPerformanceRange === "function") {
-                    setProjectOverviewPerformanceRange(nextRangeId);
-                  }
-                },
-                ariaLabel: "Project analytics time frame",
-              },
+          }
+
+          function getProjectOverviewSidebarTaskLabels(task) {
+            const metadata = task?.metadata && typeof task.metadata === "object" && !Array.isArray(task.metadata)
+              ? task.metadata
+              : {};
+            const values = [
+              task?.labels,
+              task?.tags,
+              task?.labelIds,
+              task?.tagIds,
+              metadata.labels,
+              metadata.tags,
+              metadata.labelIds,
+              metadata.tagIds,
+            ];
+            const labelsById = new Map();
+            values.forEach((value) => {
+              const entries = Array.isArray(value) ? value : value ? [value] : [];
+              entries.forEach((entry) => {
+                const source = entry && typeof entry === "object" && !Array.isArray(entry)
+                  ? entry
+                  : {};
+                const label = String(
+                  source.label
+                    || source.name
+                    || source.title
+                    || (typeof entry === "string" ? entry : "")
+                ).replace(/\s+/g, " ").trim();
+                if (!label) {
+                  return;
+                }
+                const id = String(source.id || source.value || label).trim().toLowerCase();
+                if (!labelsById.has(id)) {
+                  labelsById.set(id, {
+                    id,
+                    label,
+                    color: String(source.color || source.hex || "").trim(),
+                  });
+                }
+              });
             });
+            return Array.from(labelsById.values());
+          }
+
+          function buildProjectOverviewSidebarProgressGroups(view) {
+            const groupsById = new Map();
+            const tasksForGroups = Array.isArray(normalizedOverviewTasks) ? normalizedOverviewTasks : [];
+            tasksForGroups.forEach((task) => {
+              const isComplete = isProjectOverviewTaskCompletedStatus(getProjectOverviewTaskStatusId(task));
+              const assigneeId = String(task?.assigneeAgentId || "").trim();
+              const groupEntries = view === "labels"
+                ? getProjectOverviewSidebarTaskLabels(task)
+                : [{
+                    id: assigneeId || "__unassigned__",
+                    label: assigneeId
+                      ? (
+                          typeof isPlaygroundHumanAssigneeId === "function" && isPlaygroundHumanAssigneeId(assigneeId)
+                            ? String(currentUserName || getTaskAssigneeName(assigneeId, "Me") || "Me").trim()
+                            : getTaskAssigneeName(assigneeId, "Assignee")
+                        )
+                      : "No assignee",
+                    actorId: assigneeId,
+                  }];
+              const resolvedEntries = groupEntries.length > 0
+                ? groupEntries
+                : [{ id: "__unlabeled__", label: "No label", color: "" }];
+              resolvedEntries.forEach((entry) => {
+                const groupId = String(entry?.id || entry?.label || "").trim() || "__other__";
+                const current = groupsById.get(groupId) || {
+                  id: groupId,
+                  label: String(entry?.label || "Other").trim() || "Other",
+                  actorId: String(entry?.actorId || "").trim(),
+                  color: String(entry?.color || "").trim(),
+                  total: 0,
+                  completed: 0,
+                };
+                current.total += 1;
+                current.completed += isComplete ? 1 : 0;
+                groupsById.set(groupId, current);
+              });
+            });
+            return Array.from(groupsById.values())
+              .map((group) => ({
+                ...group,
+                percent: group.total > 0 ? Math.round((group.completed / group.total) * 100) : 0,
+              }))
+              .sort((left, right) => {
+                const leftEmpty = left.id === "__unassigned__" || left.id === "__unlabeled__";
+                const rightEmpty = right.id === "__unassigned__" || right.id === "__unlabeled__";
+                if (leftEmpty !== rightEmpty) {
+                  return leftEmpty ? 1 : -1;
+                }
+                return right.total - left.total || left.label.localeCompare(right.label);
+              });
+          }
+
+          function renderProjectOverviewSidebarProgressGroupLeading(group, view) {
+            if (view === "assignees" && group.actorId && typeof renderTaskActorAvatar === "function") {
+              const avatar = renderTaskActorAvatar(
+                group.actorId,
+                "playground-project-overview-sidebar-progress-avatar"
+              );
+              if (avatar) {
+                return avatar;
+              }
+            }
+            if (view === "labels") {
+              return React.createElement("span", {
+                  className: "playground-project-overview-sidebar-progress-label-icon",
+                  style: group.color ? { "--project-progress-group-color": group.color } : undefined,
+                  "aria-hidden": "true",
+                },
+                React.createElement(Tag, { width: 13, height: 13, strokeWidth: 1.8 })
+              );
+            }
+            return React.createElement("span", {
+                className: "playground-project-overview-sidebar-progress-unassigned",
+                "aria-hidden": "true",
+              },
+              React.createElement(UsersRound, { width: 15, height: 15, strokeWidth: 1.8 })
+            );
+          }
+
+          function renderProjectOverviewSidebarProgressSection() {
+            const activeView = projectOverviewSidebarProgressView === "labels" ? "labels" : "assignees";
+            const groups = buildProjectOverviewSidebarProgressGroups(activeView);
+            const analytics = buildProjectOverviewSidebarProgressAnalytics();
+            return React.createElement(PlatformUiCard, {
+                as: "section",
+                variant: "sidebar",
+                className: "playground-project-overview-sidebar-progress-card",
+              },
+              React.createElement(PlatformAnalyticsSection, {
+                variant: "compact",
+                className: "playground-project-overview-sidebar-progress-analytics",
+                title: React.createElement("span", {
+                    className: "playground-project-overview-sidebar-progress-title",
+                  },
+                  React.createElement("span", null, "Progress"),
+                  React.createElement(ChevronDown, {
+                    width: 12,
+                    height: 12,
+                    strokeWidth: 1.8,
+                    "aria-hidden": "true",
+                  })
+                ),
+                analytics,
+              }),
+              React.createElement("div", { className: "playground-project-overview-sidebar-progress-breakdown" },
+                React.createElement(PlatformSwitch, {
+                  className: "playground-project-overview-sidebar-progress-switch",
+                  ariaLabel: "Project progress grouping",
+                  value: activeView,
+                  options: [
+                    { value: "assignees", label: "Assignees" },
+                    { value: "labels", label: "Labels" },
+                  ],
+                  onValueChange: setProjectOverviewSidebarProgressView,
+                }),
+                groups.length > 0
+                  ? React.createElement("div", {
+                      className: "playground-project-overview-sidebar-progress-list",
+                    },
+                    groups.map((group) =>
+                      React.createElement("div", {
+                          key: group.id,
+                          className: "playground-project-overview-sidebar-progress-list-row",
+                        },
+                        React.createElement("div", {
+                            className: "playground-project-overview-sidebar-progress-list-person",
+                          },
+                          renderProjectOverviewSidebarProgressGroupLeading(group, activeView),
+                          React.createElement("span", {
+                            className: "playground-project-overview-sidebar-progress-list-name",
+                            title: group.label,
+                          }, group.label)
+                        ),
+                        React.createElement("div", {
+                            className: "playground-project-overview-sidebar-progress-list-value",
+                          },
+                          React.createElement("span", {
+                            className: "playground-project-overview-sidebar-progress-ring",
+                            style: {
+                              "--project-progress-percent": group.percent + "%",
+                              "--project-progress-group-color": group.color || "#636bdc",
+                            },
+                            "aria-hidden": "true",
+                          }),
+                          React.createElement("span", null, group.percent + "% of " + group.total)
+                        )
+                      )
+                    )
+                  )
+                  : React.createElement("div", {
+                    className: "playground-project-overview-sidebar-progress-empty",
+                  }, activeView === "labels" ? "No labels yet." : "No assignees yet.")
+              )
+            );
           }
 
           function renderProjectOverviewWidgetHeader(title, Icon, action) {

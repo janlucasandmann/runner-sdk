@@ -180,6 +180,7 @@ describe("permission policy", () => {
         "project_rules_edit",
         "project_automations_run",
         "project_access_manage",
+        "project_owner_transfer",
         "project_delete",
       ],
     ],

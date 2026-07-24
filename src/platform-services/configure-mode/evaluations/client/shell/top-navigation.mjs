@@ -90,6 +90,12 @@ export const EVALUATIONS_APP_TOP_NAVIGATION_SCRIPT = `        function renderEva
                     setEvaluationsPageMode("run");
                   }
                 : undefined,
+              trailing: evaluationsPageMode === "run"
+                ? React.createElement("span", {
+                    id: "playground-evaluation-run-breadcrumb-actions",
+                    className: "playground-evaluations-breadcrumb-actions-root",
+                  })
+                : null,
             });
           }
           if (evaluationsPageMode === "case" && activeEvaluationCaseTitle) {
@@ -101,14 +107,19 @@ export const EVALUATIONS_APP_TOP_NAVIGATION_SCRIPT = `        function renderEva
             center: showEvaluationSetActions
               ? React.createElement(PlatformSwitch, {
                   className: "playground-evaluations-detail-header-switch",
-                  value: evaluationDetailTab === "settings" || evaluationDetailTab === "data"
-                    ? "settings"
-                    : "general",
+                  value: evaluationDetailTab === "cases" || evaluationDetailTab === "data"
+                    ? "cases"
+                    : (evaluationDetailTab === "settings" ? "settings" : "general"),
                   options: [
                     { value: "general", label: "General" },
+                    { value: "cases", label: "Cases" },
                     { value: "settings", label: "Settings" },
                   ],
-                  onValueChange: (nextTab) => setEvaluationDetailTab(nextTab === "settings" ? "settings" : "general"),
+                  onValueChange: (nextTab) => setEvaluationDetailTab(
+                    nextTab === "cases"
+                      ? "cases"
+                      : (nextTab === "settings" ? "settings" : "general")
+                  ),
                   ariaLabel: "Evaluation section",
                 })
               : null,

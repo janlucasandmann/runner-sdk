@@ -3816,7 +3816,11 @@
 
             function handleDatabaseActionsPopoverPointerDown(event) {
               const target = event?.target instanceof Node ? event.target : null;
-              if (!target || !databaseActionsPopoverRef.current || databaseActionsPopoverRef.current.contains(target)) {
+              if (
+                !target
+                || databaseActionsPopoverRef.current?.contains(target)
+                || databaseActionsPopoverSurfaceRef.current?.contains(target)
+              ) {
                 return;
               }
               setDatabaseActionsPopoverOpen(false);

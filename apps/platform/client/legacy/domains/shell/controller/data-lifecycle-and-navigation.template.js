@@ -2264,9 +2264,18 @@
                 const nextAgents = parsePlaygroundAgentListResponse(parsed);
                 writeCachedPlaygroundAgentList(scopeKey, nextAgents);
                 if (activeAgentRequestScopeKeyRef.current === scopeKey) {
+                  const currentAgents = realAgentsScopeKeyRef.current === scopeKey
+                    ? realAgentsRef.current
+                    : [];
+                  const committedAgents = arePlaygroundAgentListsEquivalent(currentAgents, nextAgents)
+                    ? currentAgents
+                    : nextAgents;
                   realAgentsScopeKeyRef.current = scopeKey;
-                  realAgentsRef.current = nextAgents;
-                  setRealAgents(nextAgents);
+                  realAgentsRef.current = committedAgents;
+                  if (committedAgents !== currentAgents) {
+                    setRealAgents(committedAgents);
+                  }
+                  return committedAgents;
                 }
                 return nextAgents;
               } catch {

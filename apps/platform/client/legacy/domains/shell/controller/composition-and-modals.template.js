@@ -735,6 +735,9 @@
                 ? "Computers"
                 : "Agents";
             const isConfigureResourcesPage = !activeDevelopServerPageItem;
+            const isDatabaseResourcesDetailView = isResourcesDetailView
+              && activeResourcesView === "servers"
+              && resourcesHeaderState.resourceType === "database";
             const isVersionedDevelopResource = activeResourcesView === "servers"
               && ["web_app", "function"].includes(String(activeResourcesServerKind || ""));
             const returnToResourcesOverview = () => openResourcesView(activeResourcesView, {
@@ -774,17 +777,23 @@
                     },
                   })
               : null;
+            const resourcesDetailTitleActions = activeResourcesView === "agents"
+              ? React.createElement("span", {
+                  id: "playground-agent-title-actions",
+                  className: "playground-agent-title-actions-root",
+                })
+              : isDatabaseResourcesDetailView
+                ? React.createElement("span", {
+                    id: "playground-database-title-actions",
+                    className: "playground-database-title-actions-root",
+                  })
+                : null;
             const resourcesDetailPathItem = {
               label: resourcesHeaderState.title || "Resource",
-              trailing: resourcesDetailVersionLabel || activeResourcesView === "agents"
+              trailing: resourcesDetailVersionLabel || resourcesDetailTitleActions
                 ? React.createElement(React.Fragment, null,
                     resourcesDetailVersionLabel,
-                    activeResourcesView === "agents"
-                      ? React.createElement("span", {
-                          id: "playground-agent-title-actions",
-                          className: "playground-agent-title-actions-root",
-                        })
-                      : null
+                    resourcesDetailTitleActions
                   )
                 : null,
             };
@@ -838,7 +847,25 @@
                     },
                     ariaLabel: "Agent section",
                   })
-                : null,
+                : isDatabaseResourcesDetailView
+                  ? React.createElement(PlatformSwitch, {
+                      className: "playground-database-detail-header-switch",
+                      value: ["data", "usage", "settings"].includes(resourcesHeaderState.activeSection)
+                        ? resourcesHeaderState.activeSection
+                        : "data",
+                      options: [
+                        { value: "data", label: "Data" },
+                        { value: "usage", label: "Usage" },
+                        { value: "settings", label: "Settings" },
+                      ],
+                      onValueChange: (nextSection) => {
+                        if (typeof resourcesHeaderState.onSectionChange === "function") {
+                          resourcesHeaderState.onSectionChange(nextSection);
+                        }
+                      },
+                      ariaLabel: "Database section",
+                    })
+                  : null,
               includeSearchDivider: activeResourcesView === "agents"
                 || activeResourcesView === "computers"
                 || (activeResourcesView === "servers" && Boolean(activeResourcesServerKind)),
@@ -2323,6 +2350,7 @@
                   serverCreationRequestKind: resourcesNavigationTarget.serverCreationKind,
                   resourceTemplatePreviewResources,
                   topNavActionsPortalId: "playground-resources-nav-actions",
+                  databaseTitleActionsPortalId: "playground-database-title-actions",
                   versionsDrawerPortalId: "playground-agent-versions-drawer-root",
                   onVersionsSidebarOpenChange: setIsAgentVersionsDetailOpen,
                   onResourcesHeaderChange: setResourcesHeaderState,

@@ -25,7 +25,7 @@ describe("API key management dialogs", () => {
     expect(onSubmit).toHaveBeenCalledWith({
       name: "Read-only integration",
       description: "Used by the reporting service",
-      permissions: ["projects:read", "threads:read", "security:read", "billing:read"],
+      permissions: ["projects:read", "threads:read", "security:read", "evidence:read", "billing:read"],
     });
   });
 

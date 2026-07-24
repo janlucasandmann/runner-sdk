@@ -1023,6 +1023,67 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
           openTaskCommentComposer({ review: true });
         }
 
+        async function handleToggleTaskActivitySubscription() {
+          const taskId = String(draftTask?.id || selectedTaskId || "").trim();
+          if (
+            !taskId
+            || taskActivitySubscriptionState.status === "loading"
+            || taskActivitySubscriptionState.status === "saving"
+          ) {
+            return;
+          }
+
+          const wasSubscribed = taskActivitySubscriptionState.taskId === taskId
+            ? Boolean(taskActivitySubscriptionState.subscribed)
+            : false;
+          const nextSubscribed = !wasSubscribed;
+          setTaskActivitySubscriptionState({
+            taskId,
+            status: "saving",
+            subscribed: nextSubscribed,
+            error: "",
+          });
+
+          try {
+            const response = await fetch(
+              backendUrl + "/tasks/" + encodeURIComponent(taskId) + "/activity-subscription",
+              {
+                method: "PUT",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ subscribed: nextSubscribed }),
+              }
+            );
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to update ticket subscription.");
+            }
+            setTaskActivitySubscriptionState((current) => (
+              current.taskId === taskId
+                ? {
+                    taskId,
+                    status: "ready",
+                    subscribed: Boolean(data?.subscribed),
+                    error: "",
+                  }
+                : current
+            ));
+          } catch (error) {
+            setTaskActivitySubscriptionState((current) => (
+              current.taskId === taskId
+                ? {
+                    taskId,
+                    status: "error",
+                    subscribed: wasSubscribed,
+                    error: error instanceof Error ? error.message : "Failed to update ticket subscription.",
+                  }
+                : current
+            ));
+          }
+        }
+
         async function handleAddTaskComment(options = {}) {
           if (!draftTask?.id) {
             return;

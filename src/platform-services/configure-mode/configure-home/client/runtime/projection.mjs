@@ -137,6 +137,7 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
 	          const readProducts = new Set(readProductNotificationIds);
 	          const readPermissions = new Set(readPermissionNotificationIds);
 	          const readHumanTasks = new Set(readHumanTaskNotificationIds);
+	          const readTaskActivities = new Set(readTaskActivityNotificationIds);
 	          const readTeamInvitations = new Set(readTeamInvitationNotificationIds);
 	          const readOrganizationInvitations = new Set(readOrganizationInvitationNotificationIds);
 	          const items = [];
@@ -167,6 +168,16 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
               return;
 	            }
 	            items.push(notification);
+	          });
+
+	          taskActivityNotifications.forEach((notification) => {
+	            if (!notification?.id || readTaskActivities.has(notification.id)) {
+              return;
+	            }
+	            items.push({
+	              ...notification,
+	              kind: "task_activity",
+	            });
 	          });
 
 	          teamInvitationNotifications.forEach((invitation) => {
@@ -215,11 +226,13 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
 	          organizationInvitationNotifications,
 	          productNotifications,
 	          readHumanTaskNotificationIds,
+	          readTaskActivityNotificationIds,
 	          readOrganizationInvitationNotificationIds,
 	          readPermissionNotificationIds,
           readProductNotificationIds,
           readTeamInvitationNotificationIds,
           sessionState.emailVerified,
+          taskActivityNotifications,
           teamInvitationNotifications,
         ]);
         const hasVisibleNotifications = notificationItems.length > 0;
@@ -266,6 +279,9 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
             item?.reason,
             item?.teamName,
             item?.organizationName,
+            item?.taskTitle,
+            item?.ticketNumber,
+            item?.actorName,
           ].map((value) => String(value || "").toLowerCase()).join(" ");
         }
 
@@ -273,6 +289,7 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
           const readProducts = new Set(readProductNotificationIds);
           const readPermissions = new Set(readPermissionNotificationIds);
           const readHumanTasks = new Set(readHumanTaskNotificationIds);
+          const readTaskActivities = new Set(readTaskActivityNotificationIds);
           const readTeamInvitations = new Set(readTeamInvitationNotificationIds);
           const readOrganizationInvitations = new Set(readOrganizationInvitationNotificationIds);
           const items = [];
@@ -322,6 +339,29 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
                 notification.ticketNumber ? ("Ticket " + notification.ticketNumber) : "",
                 notification.createdAt ? formatThreadSearchTimestamp(notification.createdAt) : "",
               ].filter(Boolean).join(" · "),
+            });
+          });
+
+          taskActivityNotifications.forEach((notification) => {
+            const id = String(notification?.id || "").trim();
+            if (!id) {
+              return;
+            }
+            const isRead = readTaskActivities.has(id);
+            items.push({
+              ...notification,
+              id,
+              kind: "task_activity",
+              kindLabel: "Ticket activity",
+              label: notification.text || "Ticket updated",
+              text: notification.title || notification.taskTitle || "Ticket updated",
+              meta: [
+                notification.actorName ? ("By " + notification.actorName) : "",
+                notification.createdAt ? formatThreadSearchTimestamp(notification.createdAt) : "",
+              ].filter(Boolean).join(" · "),
+              statusLabel: isRead ? "Read" : "Unread",
+              unread: !isRead,
+              createdAt: notification.createdAt || "",
             });
           });
 
@@ -405,11 +445,13 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
           permissionNotificationItems,
           productNotifications,
           readHumanTaskNotificationIds,
+          readTaskActivityNotificationIds,
           readOrganizationInvitationNotificationIds,
           readPermissionNotificationIds,
           readProductNotificationIds,
           readTeamInvitationNotificationIds,
           sessionState.emailVerified,
+          taskActivityNotifications,
           teamInvitationNotifications,
         ]);
 
@@ -425,7 +467,7 @@ export const CONFIGURE_HOME_NOTIFICATION_PROJECTION_SCRIPT = `        const canF
             if (notificationsPageFilter === "permission" && item.kind !== "permission") {
               return false;
             }
-            if (notificationsPageFilter === "tasks" && item.kind !== "human_task") {
+            if (notificationsPageFilter === "tasks" && item.kind !== "human_task" && item.kind !== "task_activity") {
               return false;
             }
             if (notificationsPageFilter === "team" && item.kind !== "team_invitation") {

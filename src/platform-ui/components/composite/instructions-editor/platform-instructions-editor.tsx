@@ -34,9 +34,11 @@ import {
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type DragEvent,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent,
@@ -46,6 +48,7 @@ import {
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { visit } from "unist-util-visit";
+import { PlatformSecondaryButton } from "../../ui/button/index.js";
 import { resolvePlatformFileExplorerFileKind } from "../file-explorer/index.js";
 import { ParagraphQuote, remarkParagraphQuotes } from "./paragraph-quote.js";
 import {
@@ -122,6 +125,7 @@ export interface PlatformInstructionsEditorProps {
   /** @deprecated Use editorRef. Kept for compatibility with existing focus flows. */
   textareaRef?: Ref<HTMLTextAreaElement>;
   autoFocus?: boolean;
+  collapsedLines?: number;
   onEditingChange?: (editing: boolean) => void;
 }
 
@@ -648,9 +652,17 @@ export function PlatformInstructionsEditor({
   editorRef: forwardedEditorRef,
   textareaRef: forwardedTextareaRef,
   autoFocus = false,
+  collapsedLines = 0,
   onEditingChange,
 }: PlatformInstructionsEditorProps) {
+  const normalizedCollapsedLines = Number.isFinite(Number(collapsedLines))
+    ? Math.max(0, Math.floor(Number(collapsedLines)))
+    : 0;
+  const collapseEnabled = normalizedCollapsedLines > 0;
   const [editing, setEditing] = useState(false);
+  const [contentExpanded, setContentExpanded] = useState(false);
+  const [contentExceedsCollapsedHeight, setContentExceedsCollapsedHeight] =
+    useState(false);
   const [headerStuck, setHeaderStuck] = useState(false);
   const [fileDragging, setFileDragging] = useState(false);
   const [fileUploading, setFileUploading] = useState(false);
@@ -663,6 +675,7 @@ export function PlatformInstructionsEditor({
   const [slashMenuActiveIndex, setSlashMenuActiveIndex] = useState(0);
   const shellRef = useRef<HTMLElement>(null);
   const headerRef = useRef<HTMLElement>(null);
+  const contentViewportRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const insertionTargetRef = useRef<FileInsertionTarget | null>(null);
   const changeContextRef = useRef<PlatformInstructionsEditorChangeContext>({
@@ -690,9 +703,12 @@ export function PlatformInstructionsEditor({
   const setEditingState = useCallback((next: boolean) => {
     if (editingRef.current === next) return;
     editingRef.current = next;
+    if (next && collapseEnabled) {
+      setContentExpanded(true);
+    }
     setEditing(next);
     onEditingChangeRef.current?.(next);
-  }, []);
+  }, [collapseEnabled]);
 
   const refreshToolbarState = useCallback((editor: TiptapEditor) => {
     if (editor.isDestroyed) return;
@@ -835,6 +851,58 @@ export function PlatformInstructionsEditor({
       },
     );
   }, [richTextEditor, value]);
+
+  useEffect(() => {
+    setContentExpanded(false);
+  }, [historyKey, normalizedCollapsedLines]);
+
+  useLayoutEffect(() => {
+    if (!collapseEnabled) {
+      setContentExceedsCollapsedHeight(false);
+      return undefined;
+    }
+    const viewport = contentViewportRef.current;
+    if (!viewport) return undefined;
+    const content = viewport.querySelector<HTMLElement>(
+      ".platform-instructions-editor__prosemirror, .platform-instructions-editor__readonly",
+    ) || viewport;
+    const measure = () => {
+      const computedStyle = window.getComputedStyle(content);
+      const fontSize = Number.parseFloat(computedStyle.fontSize) || 12;
+      const rawLineHeight = Number.parseFloat(computedStyle.lineHeight);
+      const lineHeight = Number.isFinite(rawLineHeight)
+        ? rawLineHeight < 4
+          ? rawLineHeight * fontSize
+          : rawLineHeight
+        : fontSize * 1.6;
+      const collapsedHeight = normalizedCollapsedLines * lineHeight;
+      const renderedHeight = Math.max(
+        viewport.scrollHeight,
+        content.scrollHeight,
+        content.getBoundingClientRect().height,
+      );
+      const nextExceedsCollapsedHeight =
+        renderedHeight > collapsedHeight + 1;
+      setContentExceedsCollapsedHeight((current) =>
+        current === nextExceedsCollapsedHeight
+          ? current
+          : nextExceedsCollapsedHeight,
+      );
+    };
+    measure();
+    const resizeObserver =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(measure);
+    resizeObserver?.observe(viewport);
+    if (content !== viewport) resizeObserver?.observe(content);
+    return () => resizeObserver?.disconnect();
+  }, [
+    collapseEnabled,
+    normalizedCollapsedLines,
+    richTextEditor,
+    value,
+  ]);
 
   useEffect(() => {
     if (richTextEditor.isDestroyed) return undefined;
@@ -1466,10 +1534,13 @@ export function PlatformInstructionsEditor({
   return (
     <section
       ref={shellRef}
-      className={`platform-instructions-editor playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section${stickyHeader && !readOnly ? " is-sticky" : " is-static"}${readOnly ? " is-readonly" : ""}${editing && !readOnly ? " is-editing" : ""}${variant === "minimalistic-ui" ? " is-minimalistic-ui" : ""}${fileUploadEnabled ? " is-file-enabled" : ""}${fileDragging ? " is-file-dragging" : ""}${fileUploading ? " is-file-uploading" : ""}${className ? ` ${className}` : ""}`}
+      className={`platform-instructions-editor playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section${stickyHeader && !readOnly ? " is-sticky" : " is-static"}${readOnly ? " is-readonly" : ""}${editing && !readOnly ? " is-editing" : ""}${variant === "minimalistic-ui" ? " is-minimalistic-ui" : ""}${fileUploadEnabled ? " is-file-enabled" : ""}${fileDragging ? " is-file-dragging" : ""}${fileUploading ? " is-file-uploading" : ""}${collapseEnabled ? " is-content-collapsible" : ""}${collapseEnabled && contentExceedsCollapsedHeight && !contentExpanded && !editing ? " is-content-collapsed" : ""}${collapseEnabled && (contentExpanded || editing) ? " is-content-expanded" : ""}${className ? ` ${className}` : ""}`}
       data-platform-instructions-editor="true"
       data-platform-instructions-editor-variant={variant}
       data-platform-instructions-editor-content-variant={contentVariant}
+      data-platform-instructions-editor-collapsed-lines={
+        collapseEnabled ? normalizedCollapsedLines : undefined
+      }
       aria-busy={fileUploading || undefined}
       onPointerDownCapture={() => {
         userInteractionRef.current = true;
@@ -1625,27 +1696,40 @@ export function PlatformInstructionsEditor({
         ) : null}
       </header>
       <div className="platform-instructions-editor__body playground-tasks-detail-description-editor">
-        {readOnly ? (
-          String(value || "").trim() ? (
-            <PlatformMarkdownRenderer
-              content={value}
-              className="platform-instructions-editor__readonly platform-instructions-editor__preview playground-tasks-detail-description-preview tb-message-markdown"
-              resolvePreviewSource={fileUploadConfig?.resolvePreviewSource}
-            />
+        <div
+          ref={contentViewportRef}
+          className="platform-instructions-editor__content-viewport"
+          style={
+            collapseEnabled
+              ? ({
+                  "--platform-instructions-editor-collapsed-lines":
+                    normalizedCollapsedLines,
+                } as CSSProperties)
+              : undefined
+          }
+        >
+          {readOnly ? (
+            String(value || "").trim() ? (
+              <PlatformMarkdownRenderer
+                content={value}
+                className="platform-instructions-editor__readonly platform-instructions-editor__preview playground-tasks-detail-description-preview tb-message-markdown"
+                resolvePreviewSource={fileUploadConfig?.resolvePreviewSource}
+              />
+            ) : (
+              <div className="platform-instructions-editor__readonly platform-instructions-editor__preview playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder">
+                {placeholder}
+              </div>
+            )
           ) : (
-            <div className="platform-instructions-editor__readonly platform-instructions-editor__preview playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder">
-              {placeholder}
-            </div>
-          )
-        ) : (
-          <EditorContent
-            editor={richTextEditor}
-            className="platform-instructions-editor__content"
-            onKeyDownCapture={handleEditorKeyDown}
-            onKeyUpCapture={() => refreshSlashMenuState(richTextEditor)}
-            onMouseUpCapture={() => refreshSlashMenuState(richTextEditor)}
-          />
-        )}
+            <EditorContent
+              editor={richTextEditor}
+              className="platform-instructions-editor__content"
+              onKeyDownCapture={handleEditorKeyDown}
+              onKeyUpCapture={() => refreshSlashMenuState(richTextEditor)}
+              onMouseUpCapture={() => refreshSlashMenuState(richTextEditor)}
+            />
+          )}
+        </div>
         {fileUploadError ? (
           <div
             className="platform-instructions-editor__upload-error"
@@ -1655,6 +1739,19 @@ export function PlatformInstructionsEditor({
           </div>
         ) : null}
       </div>
+      {collapseEnabled && contentExceedsCollapsedHeight ? (
+        <div className="platform-instructions-editor__collapse-actions">
+          <PlatformSecondaryButton
+            type="button"
+            size="compact"
+            className="platform-instructions-editor__collapse-button"
+            aria-expanded={contentExpanded || editing}
+            onClick={() => setContentExpanded((current) => !current)}
+          >
+            {contentExpanded ? "Show less" : "Show more"}
+          </PlatformSecondaryButton>
+        </div>
+      ) : null}
       {!readOnly ? (
         <PlatformInstructionsEditorSlashMenu
           open={Boolean(slashMenuState)}

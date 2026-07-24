@@ -11,6 +11,7 @@ interface CapturedChartConfiguration {
   options: {
     scales: {
       y: {
+        display?: boolean;
         grid: {
           display: boolean;
         };
@@ -138,5 +139,37 @@ describe("PlatformAnalyticsChart", () => {
     expect(chartConfigurations.at(-1)?.data.datasets[0]).toMatchObject({
       data: [0, 0],
     });
+  });
+
+  it("uses the compact chart configuration and explicit area color for sidebar charts", () => {
+    render(
+      <PlatformAnalyticsChart
+        compact
+        chartType="line"
+        analytics={{
+          metrics: [],
+          labels: ["Jun 11", "Jul 1", "Jul 24"],
+          series: [
+            {
+              id: "completed",
+              label: "Completed",
+              color: "#636bdc",
+              fillColor: "rgba(99, 107, 220, 0.28)",
+              values: [0, 1, 2],
+              fill: true,
+            },
+          ],
+        }}
+      />,
+    );
+
+    const configuration = chartConfigurations.at(-1);
+    expect(configuration?.data.datasets[0]).toMatchObject({
+      borderColor: "#636bdc",
+      backgroundColor: "rgba(99, 107, 220, 0.28)",
+      pointRadius: [0, 0, 3],
+    });
+    expect(configuration?.options.scales.y.display).toBe(false);
+    expect(configuration?.plugins).toEqual([]);
   });
 });

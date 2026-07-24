@@ -5,11 +5,15 @@ export const CONFIGURE_HOME_NOTIFICATIONS_STATE_SCRIPT = `        const [product
         const [organizationInvitationNotifications, setOrganizationInvitationNotifications] = useState([]);
         const [readOrganizationInvitationNotificationIds, setReadOrganizationInvitationNotificationIds] = useState([]);
         const [permissionNotifications, setPermissionNotifications] = useState([]);
+        const [taskActivityNotifications, setTaskActivityNotifications] = useState([]);
 	        const [readPermissionNotificationIds, setReadPermissionNotificationIds] = useState(() => (
 	          readStoredNotificationIds(PLAYGROUND_PERMISSION_NOTIFICATION_READ_STORAGE_KEY, "session")
 	        ));
 	        const [readHumanTaskNotificationIds, setReadHumanTaskNotificationIds] = useState(() => (
 	          readStoredNotificationIds(PLAYGROUND_HUMAN_TASK_NOTIFICATION_READ_STORAGE_KEY)
+	        ));
+	        const [readTaskActivityNotificationIds, setReadTaskActivityNotificationIds] = useState(() => (
+	          readStoredNotificationIds(PLAYGROUND_TASK_ACTIVITY_NOTIFICATION_READ_STORAGE_KEY)
 	        ));
 	        const [emailVerificationNotificationDismissed, setEmailVerificationNotificationDismissed] = useState(false);
         const [notificationsPageSearchQuery, setNotificationsPageSearchQuery] = useState("");

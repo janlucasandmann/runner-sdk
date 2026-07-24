@@ -31,6 +31,9 @@ assert.equal(
 );
 
 assert.match(CONFIGURE_HOME_DOMAIN_SCRIPT_FRAGMENTS.constants, /PLAYGROUND_NOTIFICATION_READ_STORAGE_PREFIX/);
+assert.match(CONFIGURE_HOME_DOMAIN_SCRIPT_FRAGMENTS.constants, /PLAYGROUND_NOTIFICATION_REFRESH_EVENT/);
+assert.match(CONFIGURE_HOME_DOMAIN_SCRIPT_FRAGMENTS.constants, /PLAYGROUND_NOTIFICATION_VISIBLE_REFRESH_INTERVAL_MS = 15000/);
+assert.match(CONFIGURE_HOME_DOMAIN_SCRIPT_FRAGMENTS.constants, /PLAYGROUND_NOTIFICATION_REQUEST_TIMEOUT_MS = 8000/);
 assert.match(CONFIGURE_HOME_DOMAIN_SCRIPT_FRAGMENTS.storage, /function readStoredNotificationIds/);
 assert.match(CONFIGURE_HOME_DOMAIN_SCRIPT_FRAGMENTS.storage, /function buildNotificationReadStorageKey/);
 assert.match(CONFIGURE_HOME_DOMAIN_SCRIPT_FRAGMENTS.records, /function normalizeInAppNotificationRecord/);
@@ -43,9 +46,21 @@ assert.doesNotThrow(() => new Function(`
 
 assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationProjection, /const notificationItems = useMemo/);
 assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationProjection, /const visibleNotificationPageItems = useMemo/);
-assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationLoadLifecycle, /loadProductNotifications/);
+assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationProjection, /kind: "task_activity"/);
+assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationLoadLifecycle, /const notificationCenterSurfaceVisible/);
+assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationLoadLifecycle, /const loadNotificationCenter/);
+assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationLoadLifecycle, /data\?\.taskNotifications/);
+assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationLoadLifecycle, /Promise\.allSettled/);
+assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationLoadLifecycle, /requestInFlight/);
+assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationLoadLifecycle, /refreshQueued/);
+assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationLoadLifecycle, /window\.addEventListener\("focus"/);
+assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationLoadLifecycle, /window\.addEventListener\("online"/);
+assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationLoadLifecycle, /document\.addEventListener\("visibilitychange"/);
+assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationLoadLifecycle, /PLAYGROUND_NOTIFICATION_REFRESH_EVENT/);
+assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationLoadLifecycle, /PLAYGROUND_NOTIFICATION_VISIBLE_REFRESH_INTERVAL_MS/);
 assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationLoadLifecycle, /loadThreadPermissionNotifications/);
 assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationActions, /function handleMarkAllNotificationsRead/);
+assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationActions, /function handleOpenTaskActivityNotification/);
 assert.match(CONFIGURE_HOME_RUNTIME_SCRIPT_FRAGMENTS.notificationActions, /function handleOrganizationInvitationDecision/);
 assert.doesNotThrow(() => new Function(`
   function configureHomeRuntimeHost() {
@@ -54,11 +69,13 @@ assert.doesNotThrow(() => new Function(`
 `));
 
 assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.notificationsState, /productNotifications/);
+assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.notificationsState, /taskActivityNotifications/);
 assert.doesNotMatch(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.notificationsState, /notificationsOpen/);
 assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.state, /configureHomeTab/);
 assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.notificationStorageKey, /notificationReadStorageKey/);
 assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.notificationNavigation, /function openNotificationsPage/);
 assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.notificationNavigation, /setConfigureHomeTab\("notifications"\)/);
+assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.notificationNavigation, /PLAYGROUND_NOTIFICATION_REFRESH_EVENT/);
 assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.navigation, /function openConfigureHome/);
 assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.historyCapture, /mode: configureHomeTab === "notifications"/);
 assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.historyRestore, /entry\.page === "configure"/);

@@ -714,6 +714,75 @@ describe("PlatformInstructionsEditor", () => {
     ).toBe("default");
   });
 
+  it("collapses only overflowing content and expands before editing", async () => {
+    const user = userEvent.setup();
+    const scrollHeight = vi
+      .spyOn(HTMLElement.prototype, "scrollHeight", "get")
+      .mockImplementation(function getScrollHeight() {
+        return this.classList.contains(
+          "platform-instructions-editor__prosemirror",
+        )
+          ? 240
+          : 0;
+      });
+
+    const { container } = render(
+      <PlatformInstructionsEditor
+        value={Array.from(
+          { length: 12 },
+          (_, index) => `Description line ${index + 1}`,
+        ).join("\n\n")}
+        onChange={() => undefined}
+        collapsedLines={10}
+      />,
+    );
+
+    const editorShell = container.querySelector<HTMLElement>(
+      "[data-platform-instructions-editor]",
+    );
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: "Show more" }),
+      ).not.toBeNull();
+    });
+    expect(
+      editorShell?.getAttribute(
+        "data-platform-instructions-editor-collapsed-lines",
+      ),
+    ).toBe("10");
+    expect(editorShell?.classList.contains("is-content-collapsed")).toBe(true);
+
+    await user.click(screen.getByRole("button", { name: "Show more" }));
+    expect(editorShell?.classList.contains("is-content-expanded")).toBe(true);
+    expect(screen.getByRole("button", { name: "Show less" })).not.toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "Show less" }));
+    expect(editorShell?.classList.contains("is-content-collapsed")).toBe(true);
+
+    await user.click(screen.getByRole("textbox", { name: "Instructions" }));
+    await waitFor(() => {
+      expect(editorShell?.classList.contains("is-content-collapsed")).toBe(
+        false,
+      );
+    });
+    expect(editorShell?.classList.contains("is-content-expanded")).toBe(true);
+    scrollHeight.mockRestore();
+  });
+
+  it("does not show a disclosure control when content fits", () => {
+    vi.spyOn(HTMLElement.prototype, "scrollHeight", "get").mockReturnValue(80);
+
+    render(
+      <PlatformInstructionsEditor
+        value="Short description"
+        onChange={() => undefined}
+        collapsedLines={10}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: "Show more" })).toBeNull();
+  });
+
   it("exposes its editing surface for composed keyboard focus flows", () => {
     const editorRef = createRef<HTMLElement>();
     render(
@@ -1217,6 +1286,9 @@ describe("PlatformInstructionsEditor", () => {
     );
     expect(css).toMatch(
       /\.platform-instructions-editor__slash-popup::?-webkit-scrollbar\s*\{\s*display:\s*none;/,
+    );
+    expect(css).toMatch(
+      /\.platform-instructions-editor\.is-content-collapsed[\s\S]*\.platform-instructions-editor__content-viewport\s*\{[\s\S]*max-height:\s*calc\([\s\S]*--platform-instructions-editor-collapsed-lines[\s\S]*overflow:\s*hidden;/,
     );
   });
 

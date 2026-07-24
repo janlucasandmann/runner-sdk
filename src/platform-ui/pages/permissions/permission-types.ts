@@ -78,7 +78,7 @@ export interface PlatformPermissionsOverviewProps {
 }
 
 export interface PlatformPermissionsSettingsSummaryProps
-  extends Omit<PlatformPermissionsOverviewProps, "disabled" | "onRingAccessChange"> {
+  extends PlatformPermissionsOverviewProps {
   title?: ReactNode;
   tooltip?: string;
   editLabel?: ReactNode;

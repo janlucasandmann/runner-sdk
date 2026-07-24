@@ -110,8 +110,50 @@ assert.match(
 );
 assert.match(
   agentDialogsSource,
-  /React\.createElement\(PlatformUiCard, \{[\s\S]{0,180}variant: "sidebar",[\s\S]{0,120}cardTitle: "About"/,
-  "The Agent About sidebar section must use the centralized sidebar card.",
+  /React\.createElement\(PlatformUiCard, \{[\s\S]{0,180}variant: "sidebar",[\s\S]{0,220}className: "playground-ticket-detail-sidebar-section playground-ticket-detail-sidebar-details playground-agents-detail-about-card"/,
+  "The Agent details sidebar must reuse the centralized Ticket details card.",
+);
+assert.match(
+  agentDialogsSource,
+  /className: "playground-tasks-detail-facts is-centralized-sidebar-content playground-agent-detail-sidebar-facts"/,
+  "The Agent details sidebar must reuse the centralized Ticket facts layout.",
+);
+assert.match(
+  agentDialogsSource,
+  /const agentUsageChartSection = React\.createElement\(PlatformAnalyticsSection, \{[\s\S]{0,180}variant: "default",[\s\S]{0,180}analytics: agentDetailAnalyticsModel/,
+  "The Agent Insights analytics section must use the standard unboxed variant.",
+);
+assert.match(
+  agentDialogsSource,
+  /renderAgentFactRow\(\s*"Email",\s*renderAgentCopyableFactValue\(\s*"agent-email",\s*agentEmailAddress,\s*"email address",\s*"playground-agents-detail-about-email"/,
+  "The Agent details Email value must expose the existing clipboard control.",
+);
+assert.match(
+  agentDialogsSource,
+  /React\.createElement\(PlatformButtonSelector, \{[\s\S]{0,220}mode: "split-action",[\s\S]{0,120}buttonVariant: "primary",[\s\S]{0,220}label: "Start a Thread",[\s\S]{0,400}popupVariant: "minimal",[\s\S]{0,400}matchTriggerWidth: true,[\s\S]{0,1200}onAction: handleAgentProfileNewThread/,
+  "The Agent details sidebar must use the centralized primary split-action control to start a thread.",
+);
+for (const itemLabel of ["Share with a Team", "Use via API", "Copy Agent"]) {
+  assert.match(
+    agentDialogsSource,
+    new RegExp(`const agentThreadActionControl =[\\s\\S]{0,3200}"${itemLabel}"`),
+    `The Agent details split action must include ${itemLabel}.`,
+  );
+}
+assert.match(
+  agentDialogsSource,
+  /const agentThreadActionControl =[\s\S]{0,2200}openAgentSendToTeamModal\(draftAgent\)[\s\S]{0,1200}openAgentApiModal[\s\S]{0,1200}openCurrentAgentCopyModal/,
+  "The Agent details split-action menu must reuse the existing share, API, and copy flows.",
+);
+assert.match(
+  agentMutationsSource,
+  /function handleAgentProfileNewThread\(\)[\s\S]{0,500}onStartThreadWithAgent\(normalizedAgentId\)/,
+  "Starting a thread from Agent details must pass the selected Agent to the shell.",
+);
+assert.match(
+  shellCompositionSource,
+  /onStartThreadWithAgent: \(agentId\) => \{[\s\S]{0,500}setPreferredAgentId\(normalizedAgentId\)[\s\S]{0,300}handleNewThread\(\)/,
+  "The Agent detail thread action must open New Thread with that Agent preselected.",
 );
 assert.doesNotMatch(
   agentDialogsSource,
@@ -163,13 +205,23 @@ assert.doesNotMatch(
 );
 assert.match(
   shellCompositionSource,
-  /resourcesDetailVersionLabel[\s\S]{0,1600}id: "playground-agent-title-actions"/,
+  /resourcesDetailVersionLabel[\s\S]{0,2200}id: "playground-agent-title-actions"/,
   "The Agent action target must render beside the resource title and version label.",
 );
 assert.match(
   shellCompositionSource,
   /titleActionsPortalId: "playground-agent-title-actions"/,
   "The Agent detail controller must receive the title action portal target.",
+);
+assert.match(
+  shellCompositionSource,
+  /isDatabaseResourcesDetailView[\s\S]{0,2600}id: "playground-database-title-actions"/,
+  "The Database action target must render beside the database title.",
+);
+assert.match(
+  shellCompositionSource,
+  /databaseTitleActionsPortalId: "playground-database-title-actions"/,
+  "The Database detail controller must receive the title action portal target.",
 );
 assert.doesNotMatch(
   agentDialogsSource,
@@ -183,8 +235,8 @@ assert.doesNotMatch(
 );
 assert.match(
   agentDialogsSource,
-  /renderAgentFactRow\(\s*"Owner",\s*renderAgentOwnerRow\(\{ compact: true, alignment: "end" \}\),[\s\S]{0,220}className: "playground-agents-detail-about-owner-row"[\s\S]{0,160}valueClassName: "playground-agents-detail-about-owner-control"/,
-  "The Agent About card must render the owner selector as its final divided property row.",
+  /renderAgentFactRow\(\s*"Owner",\s*renderAgentOwnerRow\(\{ compact: true, alignment: "end" \}\),[\s\S]{0,220}className: "is-assignee playground-agents-detail-about-owner-row"[\s\S]{0,160}valueClassName: "playground-agents-detail-about-owner-control"/,
+  "The Agent details card must render the owner selector as its final divided property row.",
 );
 assert.match(
   agentDialogsSource,
@@ -210,6 +262,16 @@ assert.match(
   shellCompositionSource,
   /className: "playground-agent-detail-header-switch"[\s\S]{0,500}\{ value: "general", label: "General" \}[\s\S]{0,120}\{ value: "insights", label: "Insights" \}[\s\S]{0,120}\{ value: "settings", label: "Settings" \}/,
   "Agent detail navigation must use the centralized app-header switch.",
+);
+assert.match(
+  shellCompositionSource,
+  /const isDatabaseResourcesDetailView =[\s\S]{0,220}resourcesHeaderState\.resourceType === "database"/,
+  "The app header must identify Database detail routes.",
+);
+assert.match(
+  shellCompositionSource,
+  /className: "playground-database-detail-header-switch"[\s\S]{0,500}\{ value: "data", label: "Data" \}[\s\S]{0,120}\{ value: "usage", label: "Usage" \}[\s\S]{0,120}\{ value: "settings", label: "Settings" \}/,
+  "Database detail navigation must use the centralized app-header switch.",
 );
 assert.match(
   platformTemplateCss,
@@ -248,8 +310,8 @@ assert.match(
 );
 assert.match(
   agentDialogsSource,
-  /const agentSettingsPermissionsSummary = React\.createElement\([\s\S]{0,120}PlatformPermissionsSettingsSummary,[\s\S]{0,700}title: "Agent Permissions",[\s\S]{0,220}tooltip: "Controls the permissions this agent has when working\.",[\s\S]{0,120}editLabel: "Manage",[\s\S]{0,300}variant: "default",[\s\S]{0,200}onEdit: \(\) => setAgentDetailTab\("permissions"\)/,
-  "Agent Settings must render the full-size permission summary with contextual help and a Manage action.",
+  /const agentSettingsPermissionsSummary = React\.createElement\([\s\S]{0,120}PlatformPermissionsSettingsSummary,[\s\S]{0,700}title: "Agent Permissions",[\s\S]{0,220}tooltip: "Controls the permissions this agent has when working\.",[\s\S]{0,120}editLabel: "Manage",[\s\S]{0,300}variant: "default",[\s\S]{0,900}onRingAccessChange: \(ringId, access\) => \{[\s\S]{0,500}updatePlaygroundPermissionRingAccess\([\s\S]{0,300}onEdit: \(\) => setAgentDetailTab\("permissions"\)/,
+  "Agent Settings must render editable full-size permission rings with contextual help and a Manage action.",
 );
 assert.match(
   agentDialogsSource,
@@ -258,8 +320,23 @@ assert.match(
 );
 assert.match(
   agentDialogsSource,
-  /const agentSettingsSection = agentAccessPrincipalId\s*\?\s*agentAccessSettingsSection\s*:\s*React\.createElement\([\s\S]{0,300}agentSettingsPermissionsSummary,[\s\S]{0,120}agentAccessSettingsSection,[\s\S]{0,120}agentGuardrailsSection[\s\S]{0,300}normalizedAgentDetailTab === "settings"\s*\?\s*agentSettingsSection/,
-  "Agent Settings must place Agent Permissions above Manage Access, include Guardrails, and isolate principal permission subpages.",
+  /const agentSettingsTableTabs = React\.createElement\(PlatformDetailTabBar,[\s\S]{0,700}\{ id: "access", label: "Access" \},[\s\S]{0,120}\{ id: "guardrails", label: "Guardrails" \}/,
+  "Agent Settings must expose Access and Guardrails as adjacent table tabs.",
+);
+assert.match(
+  agentDialogsSource,
+  /tableProps: \{[\s\S]{0,180}title: null,[\s\S]{0,260}leading: agentSettingsTableTabs[\s\S]{0,900}const agentSettingsGuardrailsSection = renderAgentGuardrailsSection\([\s\S]{0,180}leading: agentSettingsTableTabs/,
+  "Agent Access and Guardrails must share the same centralized table toolbar tabs.",
+);
+assert.match(
+  agentDialogsSource,
+  /tableProps: \{[\s\S]{0,500}pagination: \{\}/,
+  "Agent Access must render the centralized data-table footer.",
+);
+assert.match(
+  agentDialogsSource,
+  /const agentSettingsSection = agentAccessPrincipalId\s*\?\s*agentAccessSettingsSection\s*:\s*React\.createElement\([\s\S]{0,300}agentSettingsPermissionsSummary,[\s\S]{0,220}normalizedAgentSettingsTableMode === "guardrails"\s*\?\s*agentSettingsGuardrailsSection\s*:\s*agentAccessSettingsSection[\s\S]{0,300}normalizedAgentDetailTab === "settings"\s*\?\s*agentSettingsSection/,
+  "Agent Settings must keep permissions above the selected table and isolate principal permission subpages.",
 );
 assert.match(
   agentDialogsSource,
@@ -270,6 +347,71 @@ assert.match(
   agentDialogsSource,
   /agentDetailTab === "guardrails"[\s\S]{0,80}\? "settings"/,
   "Legacy Guardrails tab state must migrate to Settings.",
+);
+assert.match(
+  agentBootstrapSource,
+  /const pendingRequest = agentDetailRequestInFlightRef\.current\.get\(requestKey\);[\s\S]{0,100}return pendingRequest;/,
+  "Agent detail requests must reuse an existing scoped download.",
+);
+assert.match(
+  agentBootstrapSource,
+  /agentDetailRequestInFlightRef\.current\.set\(requestKey, requestPromise\);/,
+  "Agent detail requests must coalesce concurrent downloads for the same scoped Agent.",
+);
+assert.match(
+  agentBootstrapSource,
+  /const hasLoaded = loadedAgentDetailRequestKeysRef\.current\.has\(requestKey\);[\s\S]{0,120}!force && cachedAgent && hasLoaded[\s\S]{0,80}return cachedAgent;/,
+  "Agent detail records must load once per scoped Agent for the component lifetime.",
+);
+assert.match(
+  agentBootstrapSource,
+  /void loadAgentDetails\(normalizedSelectedAgentId\);[\s\S]{0,100}\}, \[loadAgentDetails, selectedAgentId\]\);/,
+  "Agent selection must not refetch merely because the overview Agent collection changed identity.",
+);
+assert.doesNotMatch(
+  agentBootstrapSource,
+  /pollAgentInstructions|loadAgentDetails\(normalizedAgentId, \{ force: true, background: true \}\)[\s\S]{0,180}1500/,
+  "Agent instruction generation must not periodically replace the full Agent configuration.",
+);
+assert.match(
+  agentBootstrapSource,
+  /const onWorkspaceTeamsRequestRef = useRef\(onWorkspaceTeamsRequest\);[\s\S]{0,260}onWorkspaceTeamsRequestRef\.current = onWorkspaceTeamsRequest;/,
+  "Agent lifecycle callbacks supplied by the shell must be read through a stable ref.",
+);
+assert.match(
+  agentBootstrapSource,
+  /setAgentPermissionChartAnimationKey\(\(current\) => current \+ 1\);[\s\S]{0,140}\}, \[agentDetailTab, selectedAgentId\]\);/,
+  "Agent permission presentation state must only reset when the selected Agent or detail tab changes.",
+);
+assert.match(
+  agentBootstrapSource,
+  /typeof onWorkspaceTeamsRequestRef\.current !== "function"[\s\S]{0,180}onWorkspaceTeamsRequestRef\.current\(\{\}\);/,
+  "Agent workspace team loading must not depend on an unstable callback identity.",
+);
+assert.match(
+  agentBootstrapSource,
+  /stringifyPlaygroundVersionComparableValue\(current\[agent\.id\]\)[\s\S]{0,320}Object\.keys\(current\)\.length === Object\.keys\(next\)\.length[\s\S]{0,80}return current;/,
+  "Identical Agent list records must not replace the Agent detail cache.",
+);
+assert.match(
+  agentMutationsSource,
+  /function requestAgentWorkspaceTeams\(options = \{\}\)[\s\S]{0,240}onWorkspaceTeamsRequestRef\.current\(options\);/,
+  "Agent team actions must use the stable workspace-team callback ref.",
+);
+assert.match(
+  shellDataLifecycleSource,
+  /const committedAgents = arePlaygroundAgentListsEquivalent\(currentAgents, nextAgents\)[\s\S]{0,260}if \(committedAgents !== currentAgents\)[\s\S]{0,100}setRealAgents\(committedAgents\);/,
+  "Semantically identical Agent list refreshes must not propagate a new collection into Agent Details.",
+);
+assert.match(
+  platformTemplateSource,
+  /const fallbackTimestamp = id === PLAYGROUND_AGENT_DRAFT_ID \? draft\.createdAt : "";/,
+  "Persisted Agent normalization must define a deterministic timestamp fallback.",
+);
+assert.match(
+  platformTemplateSource,
+  /createdAt: typeof agent\.createdAt === "string" && agent\.createdAt \? agent\.createdAt : fallbackTimestamp,\s+updatedAt: typeof agent\.updatedAt === "string" && agent\.updatedAt \? agent\.updatedAt : fallbackTimestamp,/,
+  "Persisted Agents without timestamps must normalize deterministically instead of receiving a new timestamp per refresh.",
 );
 assert.match(
   agentDialogsSource,
@@ -285,6 +427,11 @@ assert.match(
   agentDialogsSource,
   /emptyState: agentDetailThreadFilterMode === "all"\s*\?\s*emptyAgentThreadsState/,
   "Agent Threads must render the centralized empty state when no filter is active.",
+);
+assert.match(
+  agentDialogsSource,
+  /const agentThreadsSection =[\s\S]{0,900}tableOptions: \{[\s\S]{0,260}pagination: \{\}/,
+  "Agent Threads must render the centralized data-table footer.",
 );
 assert.match(
   agentDialogsSource,
@@ -318,8 +465,13 @@ assert.match(
 );
 assert.match(
   agentDialogsSource,
-  /const renderAgentReadonlyModelValue\s*=[\s\S]*?React\.createElement\("button",\s*\{[\s\S]*?playground-agents-detail-about-model-readonly[\s\S]*?disabled:\s*true,/,
-  "Default-agent model values must render as native disabled buttons.",
+  /const renderAgentDetailModelSelector\s*=[\s\S]{0,1400}React\.createElement\(PlatformSelector,[\s\S]{0,900}disabled: Boolean\(options\.disabled\)[\s\S]{0,1200}disabled: isTeamAgent \|\| isDefaultAgentConfigurationLocked/,
+  "Agent model values must use the centralized selector and remain disabled for locked Agents.",
+);
+assert.match(
+  agentDialogsSource,
+  /const renderAgentVoiceSelector\s*=\s*\(\)\s*=>\s*React\.createElement\(PlatformSelector,[\s\S]{0,1400}alignment: "end"[\s\S]{0,300}popupAlignment: "right"[\s\S]{0,300}fullWidth: true/,
+  "Agent voice values must use the right-aligned centralized selector.",
 );
 assert.match(
   agentBootstrapSource,
@@ -353,8 +505,8 @@ assert.match(
 );
 assert.match(
   platformTemplateCss,
-  /\.playground-agents-detail-about-model-readonly:disabled\s*\{[\s\S]*?opacity:\s*0\.42;/,
-  "The disabled default-agent model control must use the sidebar disabled appearance.",
+  /\.playground-agents-detail-sidebar \.playground-agent-detail-sidebar-facts,[\s\S]{0,180}\.playground-agents-detail-sidebar \.playground-agent-detail-sidebar-facts > \.playground-tasks-detail-facts-body\s*\{[\s\S]{0,300}border:\s*0;[\s\S]{0,200}border-radius:\s*0;[\s\S]{0,200}background:\s*transparent;/,
+  "The Agent detail facts must not retain a redundant inner frame.",
 );
 assert.match(
   shellBootstrapSource,

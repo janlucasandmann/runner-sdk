@@ -15,6 +15,7 @@ import {
 } from "./domain/primitives.mjs";
 import {
   compactFineTuningJobRecord,
+  compactFineTuningJobOverviewRecord,
   mergeFineTuningJobRecords,
 } from "./domain/jobs.mjs";
 import {
@@ -49,6 +50,7 @@ import {
   findFineTuningVersionInList,
   readJsonResponse,
 } from "./domain/responses.mjs";
+import { createFineTuningJobPersistenceCoordinator } from "./job-persistence.mjs";
 
 export function createPlaygroundFineTuningRuntime(deps = {}) {
   const {
@@ -64,12 +66,23 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
   } = deps;
   const jobsById = new Map();
   const deletedJobIds = new Set();
+  const jobPersistence = createFineTuningJobPersistenceCoordinator({
+    ...(deps.fineTuningPersistenceOptions || {}),
+    persist: (record, job) => persistBackendFineTuningJob(record, job),
+    onError(error, context) {
+      console.error("[fine-tuning] Failed to persist fine-tuning job", {
+        jobId: context?.jobId || "",
+        message: error instanceof Error ? error.message : String(error),
+      });
+    },
+  });
 
   function pruneJobs() {
     const now = Date.now();
     for (const [jobId, record] of jobsById.entries()) {
       if (now - Number(record.updatedAtMs || 0) > FINE_TUNING_JOB_TTL_MS) {
         jobsById.delete(jobId);
+        jobPersistence.forget(jobId);
       }
     }
   }
@@ -83,6 +96,19 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
       updatedAtMs: Date.now(),
     });
     return compactJob;
+  }
+
+  async function ensureJobPersisted(record, job) {
+    const normalizedJob = compactFineTuningJobRecord(job);
+    if (!normalizedJob.id) return null;
+    try {
+      await jobPersistence.waitForIdle(normalizedJob.id);
+      return normalizedJob;
+    } catch {
+      const latestJob = jobsById.get(normalizedJob.id)?.job || normalizedJob;
+      await jobPersistence.enqueue(record, latestJob);
+      return latestJob;
+    }
   }
 
   async function requestBackendJson(record, path, init = {}, fallbackMessage = "Backend request failed.") {
@@ -236,7 +262,8 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
       return await updateBackendFineTuningJob(record, compactJob);
     } catch (error) {
       if (Number(error?.status || 0) !== 404) throw error;
-      return await createBackendFineTuningJob(record, compactJob);
+      await createBackendFineTuningJob(record, compactJob);
+      return await updateBackendFineTuningJob(record, compactJob);
     }
   }
 
@@ -341,6 +368,78 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
     });
   }
 
+  function mapFineTuningThreadStatus(status) {
+    const normalizedStatus = normalizeString(status).toLowerCase();
+    if (normalizedStatus === "completed") return "completed";
+    if (normalizedStatus === "cancelled" || normalizedStatus === "canceled") return "cancelled";
+    if (normalizedStatus === "failed" || normalizedStatus === "error") return "error";
+    return "running";
+  }
+
+  async function recoverFineTuningJobsFromThreads(record) {
+    const data = await requestBackendJson(
+      record,
+      "/threads?appId=runner-web-sdk-demo&limit=250",
+      { method: "GET" },
+      "Failed to inspect fine-tuning threads."
+    );
+    return normalizeResponseArray(data, ["threads", "data", "items"])
+      .map((thread, index) => {
+        const metadata = readPlainObject(thread?.metadata);
+        const fineTuning = readPlainObject(metadata.fineTuning || metadata.fine_tuning);
+        const runnerPlayground = readPlainObject(metadata.runnerPlayground || metadata.runner_playground);
+        const jobId = normalizeString(
+          fineTuning.jobId
+          || fineTuning.job_id
+          || runnerPlayground.fineTuningJobId
+          || runnerPlayground.fine_tuning_job_id
+        );
+        if (!jobId) return null;
+        const threadId = normalizeString(thread?.id || thread?.threadId || thread?.thread_id);
+        const createdAt = normalizeString(thread?.createdAt || thread?.created_at || new Date().toISOString());
+        const updatedAt = normalizeString(thread?.updatedAt || thread?.updated_at || thread?.completedAt || thread?.completed_at || createdAt);
+        const targetAgentId = normalizeString(fineTuning.targetAgentId || fineTuning.target_agent_id || fineTuning.agentId || fineTuning.agent_id);
+        const fineTunerAgentId = normalizeString(fineTuning.fineTunerAgentId || fineTuning.fine_tuner_agent_id || thread?.agentId || thread?.agent_id);
+        const environmentId = normalizeString(fineTuning.environmentId || fineTuning.environment_id || thread?.environmentId || thread?.environment_id);
+        const evaluationSetIds = Array.isArray(fineTuning.evaluationSetIds)
+          ? fineTuning.evaluationSetIds
+          : Array.isArray(fineTuning.evaluation_set_ids)
+            ? fineTuning.evaluation_set_ids
+            : [];
+        const status = mapFineTuningThreadStatus(thread?.status);
+        const targetAgentName = normalizeString(fineTuning.targetAgentName || fineTuning.target_agent_name || "Agent");
+        return compactFineTuningJobRecord({
+          id: jobId,
+          name: normalizeString(fineTuning.jobName || fineTuning.job_name || thread?.title) || "Fine-Tune Job " + (index + 1),
+          status,
+          createdAt,
+          updatedAt,
+          agentId: targetAgentId,
+          targetAgentId,
+          agentName: targetAgentName,
+          targetAgentName,
+          fineTunerAgentId,
+          fineTunerAgentName: normalizeString(fineTuning.fineTunerAgentName || fineTuning.fine_tuner_agent_name || thread?.agentName || thread?.agent_name),
+          environmentId,
+          environmentName: normalizeString(fineTuning.environmentName || fineTuning.environment_name || thread?.environmentName || thread?.environment_name || "Computer"),
+          evaluationSets: evaluationSetIds.map((setId, setIndex) => ({
+            id: normalizeString(setId),
+            name: "Evaluation " + (setIndex + 1),
+          })).filter((set) => set.id),
+          threadId,
+          threadTitle: normalizeString(thread?.title || "Fine-Tuning Thread"),
+          analysisSummary: status === "running"
+            ? "Fine-tuning analysis is running."
+            : "Recovered from the fine-tuning execution thread.",
+          metadata: {
+            recoveredFromThread: true,
+            recovered_from_thread: true,
+          },
+        });
+      })
+      .filter(Boolean);
+  }
+
   function mergeFineTuningJobLists(...jobLists) {
     const byId = new Map();
     jobLists.flatMap((jobs) => Array.isArray(jobs) ? jobs : []).forEach((job) => {
@@ -378,6 +477,40 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
       return true;
     });
     return limit > 0 ? filtered.slice(offset, offset + limit) : filtered.slice(offset);
+  }
+
+  function shouldRecoverLegacyOverviewJobs(url, backendJobs) {
+    if (Array.isArray(backendJobs) && backendJobs.length > 0) return false;
+    const search = url?.searchParams || new URLSearchParams();
+    return ![
+      "agentId",
+      "targetAgentId",
+      "evaluationSetId",
+      "status",
+      "q",
+      "offset",
+    ].some((parameter) => normalizeString(search.get(parameter)));
+  }
+
+  function migrateRecoveredFineTuningJobs(record, jobs) {
+    const recoveredJobs = mergeFineTuningJobLists(jobs)
+      .filter((job) => job.id && !deletedJobIds.has(job.id));
+    if (!recoveredJobs.length) return [];
+
+    recoveredJobs.forEach((job) => {
+      storeJob(job);
+    });
+    void Promise.allSettled(
+      recoveredJobs.map((job) => jobPersistence.enqueue(record, job)),
+    ).then((results) => {
+      const failedWrites = results.filter((result) => result.status === "rejected");
+      if (!failedWrites.length) return;
+      console.error("[fine-tuning] Failed to migrate some legacy fine-tuning jobs", {
+        recovered: recoveredJobs.length,
+        failed: failedWrites.length,
+      });
+    });
+    return recoveredJobs;
   }
 
   async function fetchFineTuningThreadCosts(record, threadId) {
@@ -1101,7 +1234,7 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
     }
 
     let currentJob = storeJob(mergeFineTuningVerificationReferences(normalizedJob, references)) || normalizedJob;
-    await persistBackendFineTuningJob(record, currentJob).catch(() => null);
+    await jobPersistence.enqueue(record, currentJob);
 
     for (const startedRun of startedRuns) {
       const completedRun = await waitForFineTuningEvaluationRun(record, startedRun.run);
@@ -1120,11 +1253,11 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
         error: completedRun.error || "",
       };
       currentJob = storeJob(mergeFineTuningVerificationReferences(currentJob, [nextReference])) || currentJob;
-      await persistBackendFineTuningJob(record, currentJob).catch(() => null);
+      await jobPersistence.enqueue(record, currentJob);
     }
 
     const finalJob = storeJob(mergeFineTuningVerificationReferences(currentJob, [], "")) || currentJob;
-    await persistBackendFineTuningJob(record, finalJob).catch(() => null);
+    await jobPersistence.enqueue(record, finalJob);
     return finalJob;
   }
 
@@ -1197,10 +1330,14 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
       const metadata = {
         fineTuning: {
           jobId,
+          jobName: normalizeString(body.name || "Fine-Tune " + targetAgent.name),
           agentId: targetAgent.id,
           targetAgentId: targetAgent.id,
+          targetAgentName: targetAgent.name,
           fineTunerAgentId: fineTunerAgent.id,
+          fineTunerAgentName: fineTunerAgent.name,
           environmentId: environment.id,
+          environmentName: environment.name,
           evaluationSetIds: evaluationSets.map((set) => set.id),
           hidden: true,
           sidebarHidden: true,
@@ -1350,9 +1487,16 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
         agentVersionCreationStatus: "pending",
       };
       const storedInitialJob = storeJob(initialJob) || initialJob;
-      await createBackendFineTuningJob(record, storedInitialJob)
-        .catch(() => persistBackendFineTuningJob(record, storedInitialJob).catch(() => null));
-      void persistBackendFineTuningJob(record, storedInitialJob).catch(() => {});
+      try {
+        await jobPersistence.enqueue(record, storedInitialJob);
+      } catch (error) {
+        jobsById.delete(storedInitialJob.id);
+        jobPersistence.forget(storedInitialJob.id);
+        throw createRuntimeError(
+          `The fine-tuning job could not be durably created: ${error instanceof Error ? error.message : String(error)}`,
+          Number(error?.status || 502) >= 500 ? Number(error?.status || 502) : 502,
+        );
+      }
       sendJson(res, 202, {
         object: "fine_tuning_job",
         job: storedInitialJob,
@@ -1370,7 +1514,7 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
           const analysisSummary = threadOutcome.analysisSummary || "";
           const jobAfterAnalysis = jobsById.get(jobId)?.job || null;
           if (normalizeString(jobAfterAnalysis?.status).toLowerCase() === "cancelled") {
-            void persistBackendFineTuningJob(record, jobAfterAnalysis).catch(() => {});
+            await jobPersistence.enqueue(record, jobAfterAnalysis);
             return;
           }
           const proposedInstructions = buildProposedInstructions(targetAgent, evaluationSets, instructions, analysisSummary);
@@ -1456,7 +1600,7 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
           const publishedDiffFiles = buildFineTuningDiffFilesFromSnapshots(beforeSnapshot, publishedSnapshot);
           const jobBeforeCompletion = jobsById.get(jobId)?.job || null;
           if (normalizeString(jobBeforeCompletion?.status).toLowerCase() === "cancelled") {
-            void persistBackendFineTuningJob(record, jobBeforeCompletion).catch(() => {});
+            await jobPersistence.enqueue(record, jobBeforeCompletion);
             return;
           }
           const versionReadyJob = storeJob({
@@ -1481,7 +1625,7 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
             agentVersionError,
             error: agentVersionError,
           }) || initialJob;
-          await persistBackendFineTuningJob(record, versionReadyJob).catch(() => null);
+          await jobPersistence.enqueue(record, versionReadyJob);
           if (agentVersionCreationStatus !== "published") {
             return;
           }
@@ -1507,7 +1651,7 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
               },
             updatedAt: new Date().toISOString(),
           }) || currentJob;
-          void persistBackendFineTuningJob(record, failedJob).catch(() => {});
+          void jobPersistence.enqueue(record, failedJob).catch(() => {});
         }
       })();
       return;
@@ -1524,6 +1668,8 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
       void (async () => {
         try {
           pruneJobs();
+          const isOverviewRequest = normalizeString(url.searchParams.get("view")).toLowerCase() === "overview";
+          const includeLegacyJobs = url.searchParams.get("includeLegacy") === "1";
           const body = {};
           const record = {
             requestContext: req,
@@ -1538,15 +1684,49 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
             });
             return;
           }
-          const backendJobs = await fetchBackendFineTuningJobs(record, url.search).catch(() => []);
-          backendJobs.forEach((job) => storeJob(job));
+          let backendLoadError = null;
+          const backendJobs = await fetchBackendFineTuningJobs(record, url.search).catch((error) => {
+            backendLoadError = error;
+            console.error("[fine-tuning] Failed to load durable fine-tuning jobs", {
+              message: error instanceof Error ? error.message : String(error),
+            });
+            return [];
+          });
+          if (!isOverviewRequest) {
+            backendJobs.forEach((job) => {
+              const memoryJob = jobsById.get(job.id)?.job || null;
+              storeJob(memoryJob ? mergeFineTuningJobRecords(job, memoryJob) : job);
+            });
+          }
           const memoryJobs = Array.from(jobsById.values()).map((record) => record.job);
-          const versionJobs = await recoverFineTuningJobsFromAgentVersions(record).catch(() => []);
-          const jobs = mergeFineTuningJobLists(backendJobs, versionJobs, memoryJobs).filter((job) => !deletedJobIds.has(job.id));
+          const recoverEmptyOverview = isOverviewRequest
+            && shouldRecoverLegacyOverviewJobs(url, backendJobs);
+          const shouldRecoverLegacyJobs = !isOverviewRequest
+            || includeLegacyJobs
+            || recoverEmptyOverview;
+          const versionJobs = shouldRecoverLegacyJobs
+            ? await recoverFineTuningJobsFromAgentVersions(record).catch(() => [])
+            : [];
+          const threadJobs = shouldRecoverLegacyJobs
+            && !backendJobs.length
+            && !memoryJobs.length
+            && !versionJobs.length
+            ? await recoverFineTuningJobsFromThreads(record).catch(() => [])
+            : [];
+          if (recoverEmptyOverview) {
+            migrateRecoveredFineTuningJobs(record, [...versionJobs, ...threadJobs]);
+          }
+          if (backendLoadError && !memoryJobs.length && !versionJobs.length && !threadJobs.length) {
+            throw backendLoadError;
+          }
+          const jobs = mergeFineTuningJobLists(backendJobs, versionJobs, threadJobs, memoryJobs).filter((job) => !deletedJobIds.has(job.id));
           const filteredJobs = filterFineTuningJobs(jobs, url);
           sendJson(res, 200, {
             object: "list",
-            jobs: filteredJobs,
+            view: isOverviewRequest ? "overview" : "full",
+            jobs: isOverviewRequest
+              ? filteredJobs.map((job) => compactFineTuningJobOverviewRecord(job))
+              : filteredJobs,
             total: jobs.length,
           });
         } catch (error) {
@@ -1580,7 +1760,11 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
             body,
           };
           let job = jobsById.get(jobId)?.job || null;
-          const backendJob = await fetchBackendFineTuningJob(record, jobId).catch(() => null);
+          let backendLoadError = null;
+          const backendJob = await fetchBackendFineTuningJob(record, jobId).catch((error) => {
+            backendLoadError = error;
+            return null;
+          });
           if (backendJob) {
             job = job ? mergeFineTuningJobRecords(backendJob, job) : backendJob;
           }
@@ -1589,11 +1773,18 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
           if (versionJob) {
             job = job ? mergeFineTuningJobRecords(job, versionJob) : versionJob;
           }
+          if (!job) {
+            const threadJobs = await recoverFineTuningJobsFromThreads(record).catch(() => []);
+            job = threadJobs.find((item) => item.id === jobId) || null;
+          }
           if (job) {
             job = await hydrateFineTuningJobDetails(record, job).catch(() => job);
           }
           if (job) storeJob(job);
           if (!job) {
+            if (backendLoadError && Number(backendLoadError?.status || 0) !== 404) {
+              throw backendLoadError;
+            }
             sendJson(res, 404, { error: "Fine-tuning job not found." });
             return;
           }
@@ -1630,7 +1821,7 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
             updatedAt: normalizeString(incomingJob?.updatedAt || incomingJob?.updated_at || new Date().toISOString()),
           });
           const storedJob = storeJob(mergedJob) || mergedJob;
-          const persistedJob = await persistBackendFineTuningJob(record, storedJob).catch(() => null);
+          const persistedJob = await jobPersistence.enqueue(record, storedJob);
           const responseJob = persistedJob ? (storeJob(mergeFineTuningJobRecords(storedJob, persistedJob)) || persistedJob) : storedJob;
           sendJson(res, 200, { object: "fine_tuning_job", job: responseJob });
         } catch (error) {
@@ -1657,6 +1848,7 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
           };
           const backendJob = await fetchBackendFineTuningJob(record, jobId).catch(() => null);
           const existingJob = mergeFineTuningJobRecords(backendJob || { id: jobId }, jobsById.get(jobId)?.job || { id: jobId });
+          await ensureJobPersisted(record, existingJob);
           const cancelledEvaluationRuns = (Array.isArray(existingJob.evaluationRuns) ? existingJob.evaluationRuns : []).map((reference) => ({
             ...reference,
             status: isFineTuningRuntimeActiveStatus(reference?.status) ? "cancelled" : reference?.status,
@@ -1681,7 +1873,14 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
               "Failed to cancel fine-tuning thread."
             ).catch(() => null);
           }
-          const persistedJob = await cancelBackendFineTuningJob(record, jobId).catch(() => null);
+          let persistedJob;
+          try {
+            persistedJob = await cancelBackendFineTuningJob(record, jobId);
+          } catch (error) {
+            storeJob(existingJob);
+            throw error;
+          }
+          jobPersistence.forget(jobId);
           const responseJob = persistedJob
             ? (storeJob(mergeFineTuningJobRecords(storedJob, {
                 ...persistedJob,
@@ -1711,7 +1910,14 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
             apiKey: readOptionalApiKey(req, body),
             body,
           };
-          await deleteBackendFineTuningJob(record, jobId).catch(() => null);
+          const existingJob = jobsById.get(jobId)?.job || null;
+          if (existingJob) {
+            await ensureJobPersisted(record, existingJob);
+          } else {
+            await jobPersistence.waitForIdle(jobId);
+          }
+          await deleteBackendFineTuningJob(record, jobId);
+          jobPersistence.forget(jobId);
           jobsById.delete(jobId);
           deletedJobIds.add(jobId);
           sendJson(res, 200, { object: "fine_tuning_job.deleted", deleted: true });
@@ -1731,4 +1937,3 @@ export function createPlaygroundFineTuningRuntime(deps = {}) {
     handleRequest,
   };
 }
-

@@ -336,6 +336,12 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
             error: "",
             summary: null,
           });
+          setProjectOverviewTaskActivityState({
+            projectId: "",
+            status: "idle",
+            error: "",
+            items: [],
+          });
           setTaskLoadState({
             status: "idle",
             error: "",

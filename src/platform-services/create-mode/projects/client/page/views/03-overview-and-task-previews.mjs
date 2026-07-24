@@ -1138,22 +1138,6 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                           )
                         : null
                     ),
-                    React.createElement(PlatformInstructionsEditor, {
-                      value: missionControlDocumentDraft,
-                      onChange: (nextValue) => updateMissionControlDocumentDraftValue(nextValue, {
-                        previousValue: missionControlDocumentDraft,
-                      }),
-                      title: "Strategy Notes",
-                      placeholder: "Run Mission Control first to generate the project strategy and backlog plan.",
-                      ariaLabel: "Project strategy notes",
-                      historyKey: "full-strategy:" + selectedProject.id,
-                      onEditingChange: (editing) => {
-                        setIsMissionControlDocumentEditing(editing);
-                        if (!editing) {
-                          commitMissionControlDocumentIfDirty();
-                        }
-                      },
-                    }),
                     React.createElement("div", { className: "playground-tasks-comments" },
                       React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Comments"),
                       selectedProjectMissionComments.length > 0

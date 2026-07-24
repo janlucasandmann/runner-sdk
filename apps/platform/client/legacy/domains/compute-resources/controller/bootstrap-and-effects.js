@@ -31,6 +31,7 @@
           embeddedResourcesView = "computers",
           embeddedServerKind = "",
           topNavActionsPortalId = "",
+          databaseTitleActionsPortalId = "",
           onResourcesHeaderChange,
           backRequestToken = 0,
           resourceBillingPreferences = SETTINGS_DEFAULT_BILLING_PREFERENCES,
@@ -121,6 +122,7 @@
           const environmentBulkActionMenuCloseTimerRef = useRef(null);
           const environmentRenameInputRef = useRef(null);
           const databaseActionsPopoverRef = useRef(null);
+          const databaseActionsPopoverSurfaceRef = useRef(null);
           const serverOwnerTransferModalCloseTimerRef = useRef(null);
           const databaseOwnerTransferModalCloseTimerRef = useRef(null);
           const databaseOwnerTransferModalFrameRef = useRef(null);
@@ -208,6 +210,7 @@
           const isServersMode = resourceMode === "servers";
           const [isHomeViewActive, setIsHomeViewActive] = useState(true);
           const [topNavActionsContainer, setTopNavActionsContainer] = useState(null);
+          const [databaseTitleActionsContainer, setDatabaseTitleActionsContainer] = useState(null);
           const handledBackRequestTokenRef = useRef(backRequestToken);
           const [selectedEnvironmentId, setSelectedEnvironmentId] = useState(initialEnvironmentId || "");
           const [selectedServerId, setSelectedServerId] = useState("");
@@ -1518,6 +1521,15 @@
             const frame = window.requestAnimationFrame(updateContainer);
             return () => window.cancelAnimationFrame(frame);
           }, [topNavActionsPortalId]);
+
+          useLayoutEffect(() => {
+            if (!databaseTitleActionsPortalId || typeof document === "undefined") {
+              setDatabaseTitleActionsContainer((current) => current === null ? current : null);
+              return;
+            }
+            const nextContainer = document.getElementById(databaseTitleActionsPortalId);
+            setDatabaseTitleActionsContainer((current) => current === nextContainer ? current : nextContainer);
+          });
   
           useEffect(() => {
   	          if (!embeddedInResources || typeof onResourcesHeaderChange !== "function") {
@@ -1602,12 +1614,27 @@
                             onVersionClick: openAuthoritativeServerVersionsSidebar,
                           }
                       : {}),
+                    ...(selectedResourcesDetailType === "database"
+                      ? {
+                          activeSection: ["data", "usage", "settings"].includes(databaseDetailTab)
+                            ? databaseDetailTab
+                            : "data",
+                          onSectionChange: (nextSection) => {
+                            const normalizedNextSection = ["data", "usage", "settings"].includes(nextSection)
+                              ? nextSection
+                              : "data";
+                            setDatabaseOwnerPopoverOpen(false);
+                            setDatabaseDetailTab(normalizedNextSection);
+                          },
+                        }
+                      : {}),
                   }
                 : { mode: "overview", title: "", sideDetailOpen: isSourcePreviewOpen, resourceMode, resourceId: "", resourceType: selectedResourcesDetailType }
             );
           }, [
             draftEnvironment,
             draftServer,
+            databaseDetailTab,
             embeddedInResources,
             environmentComposerOpen,
             environmentVersionState.status,

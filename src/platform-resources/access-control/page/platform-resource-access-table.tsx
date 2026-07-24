@@ -5,6 +5,7 @@ import {
   type PlatformDataTableAction,
   type PlatformDataTableColumn,
   type PlatformDataTableFilter,
+  type PlatformDataTablePaginationConfig,
   type PlatformDataTableSearchConfig,
   type PlatformDataTableSortingConfig,
 } from "../../../platform-ui/components/composite/data-table/index.js";
@@ -22,15 +23,17 @@ export interface PlatformResourceAccessTableProps<
 > {
   teams: readonly TTeam[];
   resourceLabel: string;
-  title?: string;
+  title?: ReactNode;
   titleTooltip?: string;
   className?: string;
   selectedIds?: ReadonlySet<string>;
   busy?: boolean;
+  leading?: ReactNode;
   trailing?: ReactNode;
   error?: ReactNode;
   search?: PlatformDataTableSearchConfig<PlatformSystemAccessPrincipal | TTeam>;
   filters?: readonly PlatformDataTableFilter[];
+  pagination?: PlatformDataTablePaginationConfig | false;
   sorting?: PlatformDataTableSortingConfig;
   onSelectedIdsChange?: (selectedIds: Set<string>) => void;
   onOpenPermissions: (
@@ -96,10 +99,12 @@ export function PlatformResourceAccessTable<
   className = "",
   selectedIds,
   busy = false,
+  leading = null,
   trailing = null,
   error = null,
   search,
   filters,
+  pagination = false,
   sorting,
   onSelectedIdsChange,
   onOpenPermissions,
@@ -189,7 +194,7 @@ export function PlatformResourceAccessTable<
       layout="fill"
       variant="minimalistic-ui"
       sticky={false}
-      pagination={false}
+      pagination={pagination}
       sorting={sorting || { defaultValue: { id: "name", direction: "asc" } }}
       selection={{
         enabled: true,
@@ -203,7 +208,8 @@ export function PlatformResourceAccessTable<
           updateSelectedIds(new Set(nextSelectedIds)),
       }}
       toolbar={{
-        title: titleTooltip ? (
+        leading,
+        title: titleTooltip && typeof title === "string" ? (
           <span className="platform-resource-access-table__title">
             <span>{title}</span>
             <PlatformPermissionHelpTooltip
@@ -212,7 +218,7 @@ export function PlatformResourceAccessTable<
               placement="bottom"
             />
           </span>
-        ) : title,
+        ) : title || undefined,
         controlsLeading: trailing,
         search: search || {
           placeholder: "Search access",

@@ -3,6 +3,7 @@ export {
   type AgentResourceRepository,
 } from "./agent-resource-client.js";
 export {
+  arePlatformAgentListRecordsEquivalent,
   buildPlatformAgentListScopeKey,
   clearCachedPlatformAgentList,
   normalizePlatformAgentListRecords,

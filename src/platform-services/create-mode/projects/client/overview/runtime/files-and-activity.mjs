@@ -545,10 +545,6 @@ export const PROJECT_OVERVIEW_FILES_ACTIVITY_FRAGMENT = String.raw`
             const ticketNumber = taskTicketNumbersById[taskId] || task?.ticketNumber || "000";
             const isSubtask = typeof isPlaygroundSubtaskRecord === "function" ? isPlaygroundSubtaskRecord(task) : false;
             const TaskTypeIcon = isSubtask ? Check : Bookmark;
-            const isLaunchLocked = typeof isTaskThreadLaunchLocked === "function" ? isTaskThreadLaunchLocked(task) : false;
-            const isRunDisabled = Boolean(saveState?.isSaving)
-              || isLaunchLocked
-              || isPlaygroundTaskTerminalStatus(task?.status);
             const openTaskDetail = () => {
               if (!taskId) {
                 return;
@@ -579,29 +575,6 @@ export const PROJECT_OVERVIEW_FILES_ACTIVITY_FRAGMENT = String.raw`
                 assignee: typeof renderTaskAssigneeAvatar === "function"
                   ? renderTaskAssigneeAvatar(task, "playground-tasks-backlog-assignee-avatar")
                   : null,
-                action: React.createElement("button", {
-                  type: "button",
-                  className: "playground-tasks-backlog-run-button",
-                  "aria-label": "Run task thread",
-                  title: "Run thread",
-                  disabled: isRunDisabled,
-                  onClick: (event) => {
-                    event.stopPropagation();
-                    if (taskId && typeof handleStartTaskThread === "function") {
-                      void handleStartTaskThread(task);
-                    } else {
-                      openTaskDetail();
-                    }
-                  },
-                },
-                  React.createElement(Play, {
-                    width: 13,
-                    height: 13,
-                    strokeWidth: 1.9,
-                    fill: "currentColor",
-                    "aria-hidden": "true",
-                  })
-                ),
                 className: typeof isTaskPreviewStatusMenuOpen === "function" && isTaskPreviewStatusMenuOpen(taskId)
                   ? "is-status-menu-open"
                   : "",

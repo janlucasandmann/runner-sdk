@@ -4,7 +4,7 @@ import type { PlatformSwitchOption } from "../../ui/switch/index.js";
 export type PlatformAnalyticsChartType = "bar" | "line";
 export type PlatformAnalyticsValueKind = "count" | "currency" | "duration" | "percent" | "tokens";
 export type PlatformAnalyticsAxis = "primary" | "secondary";
-export type PlatformAnalyticsSectionVariant = "default" | "framed";
+export type PlatformAnalyticsSectionVariant = "default" | "framed" | "compact";
 
 export interface PlatformAnalyticsMetric {
   id: string;
@@ -23,6 +23,7 @@ export interface PlatformAnalyticsSeries {
   stack?: string;
   valueKind?: PlatformAnalyticsValueKind;
   fill?: boolean;
+  fillColor?: string;
 }
 
 export interface PlatformAnalyticsModel {
@@ -39,6 +40,7 @@ export interface PlatformAnalyticsModel {
 export interface PlatformAnalyticsChartProps {
   analytics: PlatformAnalyticsModel;
   chartType?: PlatformAnalyticsChartType;
+  compact?: boolean;
 }
 
 export interface PlatformAnalyticsTimeframeControl {

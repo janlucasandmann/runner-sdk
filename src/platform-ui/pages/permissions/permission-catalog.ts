@@ -630,6 +630,13 @@ export const PLATFORM_PERMISSION_ACTION_DEFINITIONS: readonly PlatformPermission
     subjectTypes: ["project", "project_team_role"],
   },
   {
+    id: "project_owner_transfer",
+    ringId: "ring_3",
+    label: "Transfer ownership",
+    description: "Transfer permanent project ownership to another eligible organization member.",
+    subjectTypes: ["project", "project_team_role"],
+  },
+  {
     id: "project_delete",
     ringId: "ring_3",
     label: "Delete project",

@@ -86,6 +86,58 @@
   min-width: 0;
 }
 
+.platform-analytics.is-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: visible;
+}
+
+.platform-analytics.is-compact .platform-analytics__header {
+  margin-bottom: 0;
+}
+
+.platform-analytics.is-compact .platform-analytics__title {
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.platform-analytics.is-compact .platform-analytics__metrics {
+  min-height: 0;
+  padding: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.platform-analytics.is-compact .platform-analytics__metric-label {
+  gap: 6px;
+  font-size: 11px;
+}
+
+.platform-analytics.is-compact .platform-analytics__metric-dot {
+  width: 5px;
+  height: 5px;
+  flex-basis: 5px;
+  border-radius: 1px;
+  box-shadow: none;
+}
+
+.platform-analytics.is-compact .platform-analytics__metric-value {
+  margin-top: 5px;
+  padding-left: 11px;
+  color: #fff;
+  font-size: 14px;
+}
+
+.platform-analytics.is-compact .platform-analytics-chart__frame,
+.platform-analytics.is-compact .platform-analytics-chart__state {
+  height: 174px;
+}
+
+.platform-analytics.is-compact .platform-analytics-chart__frame {
+  padding: 0;
+}
+
 .platform-analytics.is-framed .platform-analytics__metrics {
   min-height: 0;
   padding: 0;

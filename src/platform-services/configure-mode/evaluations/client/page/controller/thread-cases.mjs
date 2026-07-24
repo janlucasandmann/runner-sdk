@@ -107,7 +107,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_THREAD_CASES_SCRIPT = String.raw`      
             setEvaluationJsonlFileImportMessage(
               "Imported " + importedRows.length + " " + (importedRows.length === 1 ? "case" : "cases") + "."
             );
-            setEvaluationDetailTab("settings");
+            setEvaluationDetailTab("cases");
             return true;
           } catch (error) {
             setEvaluationJsonlFileImportError(error?.message || String(error));
@@ -445,7 +445,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_THREAD_CASES_SCRIPT = String.raw`      
               [normalizedSetId]: [...existing, ...nextEntries],
             };
           });
-          setEvaluationDetailTab("settings");
+          setEvaluationDetailTab("cases");
           closeEvaluationThreadCaseModal();
 
           void (async () => {

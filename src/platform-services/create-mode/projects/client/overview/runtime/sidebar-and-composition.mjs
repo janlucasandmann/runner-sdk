@@ -258,6 +258,231 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
             };
           }
 
+          function getProjectOverviewSidebarOwner(projectRecord = projectOverviewDraft || selectedProject) {
+            const project = projectRecord && typeof projectRecord === "object" && !Array.isArray(projectRecord)
+              ? projectRecord
+              : {};
+            const metadata = project.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+              ? project.metadata
+              : {};
+            const metadataOwner = metadata.owner && typeof metadata.owner === "object" && !Array.isArray(metadata.owner)
+              ? metadata.owner
+              : {};
+            const userId = String(
+              project.ownerUserId
+                || project.userId
+                || metadata.ownerUserId
+                || metadataOwner.userId
+                || metadataOwner.id
+                || ""
+            ).trim();
+            const email = String(
+              project.ownerEmail
+                || metadata.ownerEmail
+                || metadataOwner.email
+                || (userId && userId === String(currentUserId || "").trim() ? currentUserEmail : "")
+                || ""
+            ).trim();
+            const name = String(
+              project.ownerName
+                || metadata.ownerName
+                || metadataOwner.name
+                || metadataOwner.displayName
+                || (userId && userId === String(currentUserId || "").trim() ? currentUserName : "")
+                || email
+                || "Project owner"
+            ).trim();
+            const avatarUrl = String(
+              project.ownerAvatarUrl
+                || metadata.ownerAvatarUrl
+                || metadataOwner.avatarUrl
+                || metadataOwner.photoUrl
+                || (userId && userId === String(currentUserId || "").trim() ? currentUserAvatarUrl : "")
+                || ""
+            ).trim();
+            return {
+              id: userId,
+              userId,
+              name,
+              email,
+              avatarUrl,
+            };
+          }
+
+          function normalizeProjectOverviewOwnerCandidate(candidate) {
+            const userId = String(
+              getProjectOverviewOwnerCandidateUserId(candidate)
+                || candidate?.id
+                || ""
+            ).trim();
+            const email = String(
+              getProjectOverviewOwnerCandidateEmail(candidate)
+                || candidate?.email
+                || ""
+            ).trim();
+            const name = String(
+              getProjectOverviewOwnerCandidateName(candidate)
+                || candidate?.name
+                || email
+                || "Organization member"
+            ).trim();
+            return {
+              id: userId,
+              userId,
+              name,
+              email,
+              avatarUrl: String(
+                getProjectOverviewOwnerCandidateAvatarUrl(candidate)
+                  || candidate?.avatarUrl
+                  || ""
+              ).trim(),
+            };
+          }
+
+          function buildProjectOverviewSidebarOwnerOptions() {
+            const currentOwner = getProjectOverviewSidebarOwner();
+            const candidates = projectOverviewOwnerCandidatesState?.projectId === String(selectedProject?.id || "").trim()
+              && Array.isArray(projectOverviewOwnerCandidatesState?.items)
+                ? projectOverviewOwnerCandidatesState.items
+                : [];
+            const options = [];
+            const seen = new Set();
+            [currentOwner, ...candidates].forEach((candidate) => {
+              const normalized = normalizeProjectOverviewOwnerCandidate(candidate);
+              if (!normalized.userId || seen.has(normalized.userId)) {
+                return;
+              }
+              seen.add(normalized.userId);
+              options.push(normalized);
+            });
+            return options;
+          }
+
+          async function requestProjectOverviewOwnerCandidates(options = {}) {
+            const projectId = String((projectOverviewDraft || selectedProject)?.id || normalizedSelectedProjectId || "").trim();
+            if (!projectId || typeof setProjectOverviewOwnerCandidatesState !== "function") {
+              return [];
+            }
+            const isCurrentProject = projectOverviewOwnerCandidatesState?.projectId === projectId;
+            if (
+              !options.force
+              && isCurrentProject
+              && ["loading", "ready"].includes(projectOverviewOwnerCandidatesState?.status)
+            ) {
+              return Array.isArray(projectOverviewOwnerCandidatesState?.items)
+                ? projectOverviewOwnerCandidatesState.items
+                : [];
+            }
+            setProjectOverviewOwnerCandidatesState((current) => ({
+              projectId,
+              status: "loading",
+              error: "",
+              items: current?.projectId === projectId && Array.isArray(current.items) ? current.items : [],
+            }));
+            try {
+              const response = await fetch(
+                backendUrl + "/projects/" + encodeURIComponent(projectId) + "/owner-candidates",
+                { headers: requestHeaders }
+              );
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Failed to load project owners.");
+              }
+              const items = (Array.isArray(data?.data) ? data.data : [])
+                .map((candidate) => normalizeProjectOverviewOwnerCandidate(candidate))
+                .filter((candidate) => candidate.userId);
+              setProjectOverviewOwnerCandidatesState({
+                projectId,
+                status: "ready",
+                error: "",
+                items,
+              });
+              return items;
+            } catch (error) {
+              setProjectOverviewOwnerCandidatesState((current) => ({
+                projectId,
+                status: "error",
+                error: error instanceof Error ? error.message : "Failed to load project owners.",
+                items: current?.projectId === projectId && Array.isArray(current.items) ? current.items : [],
+              }));
+              return [];
+            }
+          }
+
+          async function transferProjectOverviewOwnership(candidate) {
+            const nextOwner = normalizeProjectOverviewOwnerCandidate(candidate);
+            const baseProject = normalizePlaygroundProjectRecord(projectOverviewDraft || selectedProject);
+            const projectId = String(baseProject?.id || normalizedSelectedProjectId || "").trim();
+            const currentOwner = getProjectOverviewSidebarOwner(baseProject);
+            if (!projectId || !nextOwner.userId || nextOwner.userId === currentOwner.userId) {
+              if (typeof setProjectOverviewSidebarPropertyPopover === "function") {
+                setProjectOverviewSidebarPropertyPopover("");
+              }
+              return;
+            }
+            const baseMetadata = getProjectOverviewSidebarMetadata(baseProject);
+            const ownerRecord = {
+              userId: nextOwner.userId,
+              name: nextOwner.name,
+              email: nextOwner.email,
+              avatarUrl: nextOwner.avatarUrl,
+            };
+            const optimisticProject = normalizePlaygroundProjectRecord({
+              ...baseProject,
+              userId: nextOwner.userId,
+              ownerUserId: nextOwner.userId,
+              ownerName: nextOwner.name,
+              ownerEmail: nextOwner.email,
+              ownerAvatarUrl: nextOwner.avatarUrl,
+              owner: ownerRecord,
+              metadata: {
+                ...baseMetadata,
+                ownerUserId: nextOwner.userId,
+                ownerName: nextOwner.name,
+                ownerEmail: nextOwner.email,
+                ownerAvatarUrl: nextOwner.avatarUrl,
+                owner: ownerRecord,
+              },
+            });
+            if (typeof setProjectOverviewSidebarPropertyPopover === "function") {
+              setProjectOverviewSidebarPropertyPopover("");
+            }
+            commitProjectOverviewSidebarProjectRecord(optimisticProject);
+            if (typeof setProjectSaveState === "function") {
+              setProjectSaveState({ isSaving: true, error: "", message: "" });
+            }
+            try {
+              const headers = new Headers(requestHeaders || {});
+              headers.set("Content-Type", "application/json");
+              const response = await fetch(
+                backendUrl + "/projects/" + encodeURIComponent(projectId) + "/owner",
+                {
+                  method: "PATCH",
+                  headers,
+                  body: JSON.stringify({ ownerUserId: nextOwner.userId }),
+                }
+              );
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Failed to transfer project ownership.");
+              }
+              const updatedProject = getPlaygroundProjectResponseRecord(data, optimisticProject);
+              commitProjectOverviewSidebarProjectRecord(updatedProject || optimisticProject);
+              if (typeof setProjectSaveState === "function") {
+                setProjectSaveState({ isSaving: false, error: "", message: "" });
+              }
+            } catch (error) {
+              commitProjectOverviewSidebarProjectRecord(baseProject);
+              if (typeof setProjectSaveState === "function") {
+                setProjectSaveState({
+                  isSaving: false,
+                  error: error instanceof Error ? error.message : "Failed to transfer project ownership.",
+                  message: "",
+                });
+              }
+            }
+          }
+
           function renderProjectOverviewSidebarSelectControl(id, value, content, options = {}) {
             const normalizedId = String(id || "").trim();
             const isOpen = Boolean(normalizedId && projectOverviewSidebarPropertyPopover === normalizedId);
@@ -280,27 +505,32 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
               placeholder: content,
               open: isOpen,
               onOpenChange: (nextOpen) => {
-                if (normalizedId === "lead" && nextOpen && projectOverviewSharedTeamId) {
-                  requestProjectOverviewWorkspaceTeams({ teamId: projectOverviewSharedTeamId });
+                if (normalizedId === "owner" && nextOpen) {
+                  void requestProjectOverviewOwnerCandidates();
                 }
                 if (typeof setProjectOverviewSidebarPropertyPopover === "function") {
                   setProjectOverviewSidebarPropertyPopover(nextOpen ? normalizedId : "");
                 }
               },
-              alignment: "start",
-              popupAlignment: "left",
+              disabled: options.disabled === true,
+              loading: options.loading === true,
+              loadingContent: options.loadingContent || "Loading organization members...",
+              alignment: "end",
+              popupAlignment: "right",
               fullWidth: true,
               emptyContent: options.emptyContent || "No options available.",
               popupWidth: "min(280px, calc(100vw - 48px))",
               popupMaxWidth: "calc(100vw - 48px)",
               popupMaxHeight: "min(320px, calc(100vh - 120px))",
-              className: "playground-project-overview-sidebar-selector",
-              triggerClassName: "playground-project-overview-sidebar-selector-trigger" + (options.empty ? " is-empty" : ""),
-              popupClassName: "playground-project-overview-sidebar-selector-popup",
+              className: "playground-tasks-detail-central-selector playground-project-overview-sidebar-selector"
+                + (options.empty ? " is-empty" : ""),
+              triggerClassName: "playground-tasks-detail-central-selector-trigger playground-project-overview-sidebar-selector-trigger"
+                + (options.empty ? " is-empty" : ""),
+              popupClassName: "playground-tasks-detail-central-selector-popup playground-project-overview-sidebar-selector-popup",
             });
           }
 
-          function getProjectOverviewLeadCandidateSources(record) {
+          function getProjectOverviewOwnerCandidateSources(record) {
             const source = record && typeof record === "object" && !Array.isArray(record) ? record : {};
             const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata) ? source.metadata : {};
             return [
@@ -325,8 +555,8 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
             ].filter((value) => value && typeof value === "object" && !Array.isArray(value));
           }
 
-          function readProjectOverviewLeadCandidateString(record, keys = []) {
-            for (const source of getProjectOverviewLeadCandidateSources(record)) {
+          function readProjectOverviewOwnerCandidateString(record, keys = []) {
+            for (const source of getProjectOverviewOwnerCandidateSources(record)) {
               for (const key of keys) {
                 const value = String(source?.[key] || "").replace(/\s+/g, " ").trim();
                 if (value) {
@@ -337,8 +567,8 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
             return "";
           }
 
-          function getProjectOverviewLeadCandidateName(record) {
-            const directName = readProjectOverviewLeadCandidateString(record, [
+          function getProjectOverviewOwnerCandidateName(record) {
+            const directName = readProjectOverviewOwnerCandidateString(record, [
               "displayName",
               "display_name",
               "name",
@@ -356,7 +586,7 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
             if (directName) {
               return directName;
             }
-            for (const source of getProjectOverviewLeadCandidateSources(record)) {
+            for (const source of getProjectOverviewOwnerCandidateSources(record)) {
               const firstName = String(source.firstName || source.first_name || source.givenName || source.given_name || "").trim();
               const lastName = String(source.lastName || source.last_name || source.familyName || source.family_name || "").trim();
               const fullName = [firstName, lastName].filter(Boolean).join(" ").trim();
@@ -367,8 +597,8 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
             return "";
           }
 
-          function getProjectOverviewLeadCandidateEmail(record) {
-            return readProjectOverviewLeadCandidateString(record, [
+          function getProjectOverviewOwnerCandidateEmail(record) {
+            return readProjectOverviewOwnerCandidateString(record, [
               "email",
               "emailAddress",
               "email_address",
@@ -378,8 +608,8 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
             ]).toLowerCase();
           }
 
-          function getProjectOverviewLeadCandidateUserId(record) {
-            return readProjectOverviewLeadCandidateString(record, [
+          function getProjectOverviewOwnerCandidateUserId(record) {
+            return readProjectOverviewOwnerCandidateString(record, [
               "userId",
               "user_id",
               "uid",
@@ -392,8 +622,8 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
             ]);
           }
 
-          function getProjectOverviewLeadCandidateAvatarUrl(record) {
-            return readProjectOverviewLeadCandidateString(record, [
+          function getProjectOverviewOwnerCandidateAvatarUrl(record) {
+            return readProjectOverviewOwnerCandidateString(record, [
               "photoURL",
               "photoUrl",
               "photo_url",
@@ -407,152 +637,17 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
             ]);
           }
 
-          function isProjectOverviewAgentLeadCandidate(record) {
-            const sources = getProjectOverviewLeadCandidateSources(record);
-            const typeValues = [];
-            sources.forEach((source) => {
-              [
-                source.type,
-                source.kind,
-                source.memberType,
-                source.member_type,
-                source.actorKind,
-                source.actor_kind,
-                source.agentType,
-                source.agent_type,
-                source.resourceType,
-                source.resource_type,
-                source.subjectType,
-                source.subject_type,
-                source.entityType,
-                source.entity_type,
-              ].forEach((value) => {
-                const normalized = String(value || "").trim().toLowerCase();
-                if (normalized) {
-                  typeValues.push(normalized);
-                }
-              });
-            });
-            if (typeValues.some((value) => value.includes("agent") || value.includes("bot") || value.includes("assistant") || value.includes("automation"))) {
-              return true;
-            }
-            return sources.some((source) =>
-              source.isAgent === true
-              || source.agent === true
-              || Boolean(String(source.agentId || source.agent_id || source.agentUid || source.agent_uid || "").trim())
-            );
-          }
-
-          function isProjectOverviewHumanLeadCandidate(record, options = {}) {
-            if (options.forceHuman) {
-              return true;
-            }
-            if (isProjectOverviewAgentLeadCandidate(record)) {
-              return false;
-            }
-            if (getProjectOverviewLeadCandidateEmail(record) || getProjectOverviewLeadCandidateUserId(record)) {
-              return true;
-            }
-            return getProjectOverviewLeadCandidateSources(record).some((source) => {
-              const normalized = String(source.type || source.kind || source.memberType || source.member_type || source.subjectType || source.subject_type || "").trim().toLowerCase();
-              return normalized.includes("human")
-                || normalized.includes("user")
-                || normalized.includes("person")
-                || normalized.includes("account")
-                || normalized === "member";
-            });
-          }
-
-          function collectProjectOverviewLeadCandidateRecords(value, addCandidate) {
-            if (Array.isArray(value)) {
-              value.forEach((item) => collectProjectOverviewLeadCandidateRecords(item, addCandidate));
-              return;
-            }
-            if (!value || typeof value !== "object") {
-              return;
-            }
-            addCandidate(value);
-            const source = value;
-            const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata) ? source.metadata : {};
-            [
-              source.members,
-              source.teamMembers,
-              source.users,
-              source.userMembers,
-              source.memberProfiles,
-              source.memberships,
-              source.collaborators,
-              source.sharedWith,
-              source.sharedWithUsers,
-              source.accessUsers,
-              metadata.members,
-              metadata.teamMembers,
-              metadata.users,
-              metadata.userMembers,
-              metadata.memberProfiles,
-              metadata.memberships,
-              metadata.collaborators,
-              metadata.sharedWith,
-              metadata.sharedWithUsers,
-              metadata.accessUsers,
-            ].forEach((collection) => {
-              if (Array.isArray(collection)) {
-                collection.forEach((item) => addCandidate(item));
-              }
-            });
-          }
-
-          function buildProjectOverviewSidebarLeadOptions() {
-            const currentLead = getProjectOverviewSidebarLead();
-            const options = [];
-            const seen = new Set();
-            function addOption(option, addOptions = {}) {
-              if (!option || typeof option !== "object") {
-                return;
-              }
-              if (option.id !== "__unassigned__" && !isProjectOverviewHumanLeadCandidate(option, addOptions)) {
-                return;
-              }
-              const name = getProjectOverviewLeadCandidateName(option) || String(option?.name || option?.label || "").trim();
-              const email = getProjectOverviewLeadCandidateEmail(option) || String(option?.email || "").trim();
-              const userId = getProjectOverviewLeadCandidateUserId(option) || String(option?.userId || "").trim();
-              const id = String(userId || email || option?.id || name || "").trim();
-              if (!id && !name) return;
-              const key = (id || email || name).toLowerCase();
-              if (seen.has(key)) return;
-              seen.add(key);
-              options.push({
-                id: id || key,
-                name: name || email || "Project lead",
-                email,
-                avatarUrl: getProjectOverviewLeadCandidateAvatarUrl(option) || String(option?.avatarUrl || option?.photoUrl || option?.profilePhotoUrl || "").trim(),
-              });
-            }
-            addOption({
-              id: "__unassigned__",
-              name: "Unassigned",
-            }, { forceHuman: true });
-            addOption({
-              id: currentLead.id || currentLead.email || currentLead.name,
-              userId: currentLead.id,
-              name: currentLead.name,
-              email: currentLead.email,
-              avatarUrl: currentLead.avatarUrl,
-            });
-            [
-              projectOverviewSharedWorkspaceTeam,
-              ...projectOverviewSharedTeamMemberRows,
-              ...(Array.isArray(workspaceTeams) ? workspaceTeams : []),
-            ].forEach((source) => collectProjectOverviewLeadCandidateRecords(source, addOption));
-            return options;
-          }
-
           function renderProjectOverviewSidebarRow(label, value, options = {}) {
             const content = options.content || React.createElement("span", null, value || "None");
-            return React.createElement("div", { className: "playground-project-overview-sidebar-row" },
-              React.createElement("div", { className: "playground-project-overview-sidebar-row-label" }, label),
+            return React.createElement("div", {
+                className: "playground-tasks-detail-fact playground-project-overview-sidebar-row"
+                  + (options.className ? " " + options.className : ""),
+              },
               React.createElement("div", {
-                className: "playground-project-overview-sidebar-row-value"
+                className: "playground-tasks-detail-fact-label playground-project-overview-sidebar-row-label",
+              }, label),
+              React.createElement("div", {
+                className: "playground-tasks-detail-fact-control playground-project-overview-sidebar-row-value"
                   + (!value && !options.content ? " playground-project-overview-sidebar-muted" : "")
                   + (options.editable ? " is-editable" : ""),
               }, content)
@@ -590,57 +685,11 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
             );
           }
 
-          function openProjectOverviewSidebarResourceTarget(resourceType) {
-            const id = String(resourceType || "").trim();
-            if (id === "files") {
-              if (typeof onOpenFilesPage === "function") {
-                onOpenFilesPage({
-                  token: Date.now().toString(36) + Math.random().toString(36).slice(2),
-                  projectId: normalizedSelectedProjectId,
-                  environmentId: activeProjectAttachmentEnvironmentId || selectedProject?.defaultEnvironmentId || "",
-                });
-              }
-              return;
-            }
-            if (id === "metronomes") {
-              if (typeof onOpenProjectMetronomes === "function") {
-                onOpenProjectMetronomes({ projectId: normalizedSelectedProjectId });
-              }
-              return;
-            }
-            if (typeof setProjectOverviewHomeTab === "function") {
-              setProjectOverviewHomeTab("resources");
-            }
-            if (typeof setProjectOverviewFilesSubview === "function") {
-              const resourceSubviewId = ["web-apps", "functions", "databases", "imagine"].includes(id) ? id : "resources";
-              setProjectOverviewFilesSubview(resourceSubviewId);
-            }
-          }
-
-          function renderProjectOverviewSidebarResourceRow(resource) {
-            const Icon = resource.Icon || Server;
-            const count = Math.max(0, Number(resource.count || 0));
-            return React.createElement("button", {
-                key: resource.id,
-                type: "button",
-                className: "playground-project-overview-sidebar-resource-row",
-                onClick: () => openProjectOverviewSidebarResourceTarget(resource.id),
-              },
-              React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
-                React.createElement(Icon, { width: 14, height: 14, strokeWidth: 1.85 })
-              ),
-              React.createElement("span", { className: "playground-project-overview-sidebar-resource-label" }, resource.label),
-              React.createElement("span", { className: "playground-project-overview-sidebar-resource-count" },
-                typeof formatProjectOverviewInteger === "function" ? formatProjectOverviewInteger(count) : String(count)
-              )
-            );
-          }
-
           function renderProjectOverviewSidebar() {
             const metadata = selectedProject?.metadata && typeof selectedProject.metadata === "object" && !Array.isArray(selectedProject.metadata)
               ? selectedProject.metadata
               : {};
-            const lead = getProjectOverviewSidebarLead();
+            const owner = getProjectOverviewSidebarOwner();
             const progressStats = getProjectOverviewProgressStats();
             const operatingProfile = getProjectOverviewOperatingProfile();
             const projectTypeLabel = String(operatingProfile?.label || operatingProfile?.name || metadata.projectTypeLabel || "").trim();
@@ -656,26 +705,6 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
               0,
               Number(selectedProjectSummary?.openTasksCount) || Number(selectedProjectTaskStatusOverview?.total) || Number(progressStats.scopeCount) || 0
             );
-            const releaseSections = overviewCurrentTaskReleaseSections
-              .filter((section) => section.key !== "__no_release__");
-            const metronomeResourceCount = allOverviewResourceItems.filter((item) => isProjectOverviewMetronomeResource(item)).length;
-            const webAppResourceCount = allOverviewResourceItems
-              .filter((item) => !isProjectOverviewMetronomeResource(item) && isProjectOverviewWebAppResource(item))
-              .length;
-            const functionResourceCount = allOverviewResourceItems
-              .filter((item) => !isProjectOverviewMetronomeResource(item) && isProjectOverviewFunctionResource(item))
-              .length;
-            const databaseResourceCount = allOverviewResourceItems
-              .filter((item) => !isProjectOverviewMetronomeResource(item) && isProjectOverviewDatabaseResource(item))
-              .length;
-            const sidebarResources = [
-              { id: "files", label: "Files", count: allOverviewProjectFileCount, Icon: FolderOpen },
-              { id: "metronomes", label: "Metronomes", count: metronomeResourceCount, Icon: Metronome },
-              { id: "web-apps", label: "Web Apps", count: webAppResourceCount, Icon: Monitor },
-              { id: "functions", label: "Functions", count: functionResourceCount, Icon: FunctionSquare },
-              { id: "databases", label: "Databases", count: databaseResourceCount, Icon: Database },
-              { id: "imagine", label: "Imagine Resources", count: projectOverviewImagineResources.length, Icon: Clapperboard },
-            ];
             const statusOptions = [
               { id: "backlog", label: "Backlog" },
               { id: "in_progress", label: "In progress" },
@@ -704,8 +733,17 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
             ).trim();
             const startDateInputValue = getProjectOverviewSidebarDateInputValue(selectedProject?.startDate || metadata.startDate);
             const targetDateInputValue = getProjectOverviewSidebarDateInputValue(selectedProject?.targetDate || selectedProject?.dueDate || metadata.targetDate || metadata.dueDate);
-            const leadOptions = buildProjectOverviewSidebarLeadOptions();
-            const selectedLeadKey = String(lead.id || lead.email || lead.name || "").trim().toLowerCase();
+            const ownerOptions = buildProjectOverviewSidebarOwnerOptions();
+            const selectedOwnerId = String(owner.userId || "").trim();
+            const ownerCandidatesAreLoading = projectOverviewOwnerCandidatesState?.projectId === String(selectedProject?.id || "").trim()
+              && projectOverviewOwnerCandidatesState?.status === "loading";
+            const ownershipRecord = projectOverviewDraft || selectedProject || {};
+            const canTransferOwnership = typeof ownershipRecord.canTransferOwnership === "boolean"
+              ? ownershipRecord.canTransferOwnership
+              : Boolean(selectedOwnerId && selectedOwnerId === String(currentUserId || "").trim());
+            const isMissionControlRunning = typeof isSelectedProjectMissionControlRunning !== "undefined"
+              && Boolean(isSelectedProjectMissionControlRunning);
+            const canOpenMissionControl = typeof openMissionControlComposer === "function";
             const renderStatusContent = (option) => React.createElement(React.Fragment, null,
               React.createElement("span", { className: "playground-project-overview-sidebar-status-dot" }),
               React.createElement("span", null, option?.label || "Backlog")
@@ -716,16 +754,49 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
                 React.createElement(Icon, { width: 14, height: 14, strokeWidth: 1.85 })
               );
             };
+            const projectSectionLinks = [
+              { id: "general", label: "Home", Icon: House },
+              { id: "resources", label: "Resources", Icon: FolderOpen },
+              { id: "strategy", label: "Strategy", Icon: Rocket },
+              ...(canViewProjectSettings
+                ? [{ id: "permissions", label: "Settings", Icon: Settings2 }]
+                : []),
+            ];
 
             return React.createElement(React.Fragment, null,
               React.createElement(PlatformUiCard, {
                   as: "section",
                   variant: "sidebar",
-                  cardTitle: "Properties",
                   className: "playground-project-overview-sidebar-card",
                 },
-                React.createElement("div", { className: "playground-project-overview-sidebar-rows" },
-                  renderProjectOverviewSidebarRow("Priority", getPlaygroundTaskPriorityLabel(currentPriorityValue), {
+                React.createElement("div", {
+                    className: "playground-tasks-detail-facts is-centralized-sidebar-content playground-project-overview-sidebar-facts",
+                  },
+                  React.createElement("div", {
+                      className: "playground-tasks-detail-facts-body playground-project-overview-sidebar-rows",
+                    },
+                    React.createElement("nav", {
+                        className: "playground-project-overview-sidebar-navigation",
+                        "aria-label": "Project sections",
+                      },
+                      projectSectionLinks.map((item) => React.createElement("button", {
+                          key: item.id,
+                          type: "button",
+                          className: "playground-project-overview-sidebar-navigation-link"
+                            + (activeProjectOverviewHomeTab === item.id ? " is-active" : ""),
+                          "aria-current": activeProjectOverviewHomeTab === item.id ? "page" : undefined,
+                          onClick: () => handleProjectOverviewHomeTabChange(item.id),
+                        },
+                        React.createElement(item.Icon, {
+                          width: 14,
+                          height: 14,
+                          strokeWidth: 1.8,
+                          "aria-hidden": "true",
+                        }),
+                        React.createElement("span", null, item.label)
+                      ))
+                    ),
+                    renderProjectOverviewSidebarRow("Priority", getPlaygroundTaskPriorityLabel(currentPriorityValue), {
                     editable: true,
                     content: renderProjectOverviewSidebarSelectControl("priority", currentPriorityValue, renderPlaygroundTaskPriorityLabel(currentPriorityValue), {
                       ariaLabel: "Project priority",
@@ -742,52 +813,7 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
                       })),
                     }),
                   }),
-                  renderProjectOverviewSidebarRow("Lead", lead.name, {
-                    editable: true,
-                    content: renderProjectOverviewSidebarSelectControl("lead", selectedLeadKey, React.createElement("span", { className: "playground-project-overview-sidebar-lead" },
-                      renderProjectOverviewSidebarAvatar(lead.name, lead.avatarUrl),
-                      React.createElement("span", null, lead.name)
-                    ), {
-                      empty: !lead.name || lead.name === "Unassigned",
-                      ariaLabel: "Project lead",
-                      options: leadOptions.map((option) => {
-                        const optionKey = String(option.id || option.email || option.name || "").trim().toLowerCase();
-                        const isUnassigned = option.id === "__unassigned__";
-                        const isSelected = Boolean(optionKey && selectedLeadKey && (optionKey === selectedLeadKey || (isUnassigned && selectedLeadKey === "unassigned")));
-                        return createProjectOverviewSidebarSelectorOption({
-                          id: option.id,
-                          label: option.name,
-                          description: option.email,
-                          selected: isSelected || (!selectedLeadKey && isUnassigned),
-                          icon: renderProjectOverviewSidebarAvatar(option.name, option.avatarUrl),
-                          onSelect: () => {
-                            const leadRecord = isUnassigned
-                              ? null
-                              : {
-                                  id: option.id,
-                                  userId: option.id,
-                                  name: option.name,
-                                  email: option.email,
-                                  avatarUrl: option.avatarUrl,
-                                };
-                            updateProjectOverviewSidebarProjectProperty({
-                              leadUserId: isUnassigned ? "" : option.id,
-                              leadName: isUnassigned ? "" : option.name,
-                              leadEmail: isUnassigned ? "" : option.email,
-                              leadAvatarUrl: isUnassigned ? "" : option.avatarUrl,
-                            }, {
-                              leadUserId: isUnassigned ? "" : option.id,
-                              leadName: isUnassigned ? "" : option.name,
-                              leadEmail: isUnassigned ? "" : option.email,
-                              leadAvatarUrl: isUnassigned ? "" : option.avatarUrl,
-                              lead: leadRecord,
-                            });
-                          },
-                        });
-                      }),
-                    }),
-                  }),
-                  renderProjectOverviewSidebarRow("Type", currentProjectTypeLabel, {
+                    renderProjectOverviewSidebarRow("Type", currentProjectTypeLabel, {
                     editable: true,
                     content: renderProjectOverviewSidebarSelectControl("type", getPlaygroundProjectBlueprintId(currentProjectTypeValue), React.createElement(React.Fragment, null,
                       renderProjectTypeIcon(currentProjectType),
@@ -816,7 +842,7 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
                       })),
                     }),
                   }),
-                  renderProjectOverviewSidebarRow("Computer", currentEnvironmentLabel, {
+                    renderProjectOverviewSidebarRow("Computer", currentEnvironmentLabel, {
                     editable: true,
                     content: renderProjectOverviewSidebarSelectControl("computer", currentEnvironmentValue, React.createElement(React.Fragment, null,
                       React.createElement(Monitor, { width: 14, height: 14, strokeWidth: 1.85 }),
@@ -845,116 +871,71 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
                           })
                         : []
                     }),
-                  }),
+                    }),
+                    renderProjectOverviewSidebarRow("Owner", owner.name, {
+                      className: "is-owner",
+                      editable: true,
+                      content: renderProjectOverviewSidebarSelectControl(
+                        "owner",
+                        selectedOwnerId,
+                        React.createElement("span", { className: "playground-project-overview-sidebar-lead" },
+                          renderProjectOverviewSidebarAvatar(owner.name, owner.avatarUrl),
+                          React.createElement("span", null, owner.name)
+                        ),
+                        {
+                          ariaLabel: "Project owner",
+                          disabled: !canTransferOwnership || projectSaveState?.isSaving,
+                          loading: ownerCandidatesAreLoading,
+                          emptyContent: projectOverviewOwnerCandidatesState?.error || "No eligible organization members.",
+                          options: ownerOptions.map((option) => createProjectOverviewSidebarSelectorOption({
+                            id: option.userId,
+                            label: option.name,
+                            description: option.email,
+                            selected: option.userId === selectedOwnerId,
+                            icon: renderProjectOverviewSidebarAvatar(option.name, option.avatarUrl),
+                            onSelect: () => void transferProjectOverviewOwnership(option),
+                          })),
+                        }
+                      ),
+                    }),
+                    React.createElement(PlatformPrimaryButton, {
+                      type: "button",
+                      size: "small",
+                      className: "playground-project-overview-sidebar-mission-button",
+                      disabled: !canOpenMissionControl || isMissionControlRunning,
+                      onClick: () => {
+                        if (canOpenMissionControl) {
+                          openMissionControlComposer();
+                        }
+                      },
+                    }, isMissionControlRunning ? "Running Mission Control" : "Mission Control")
+                  )
                 )
               ),
-              React.createElement(PlatformUiCard, {
-                  as: "section",
-                  variant: "sidebar",
-                  cardTitle: "Resources",
-                  className: "playground-project-overview-sidebar-card",
-                },
-                React.createElement("div", { className: "playground-project-overview-sidebar-resource-list" },
-                  sidebarResources.map(renderProjectOverviewSidebarResourceRow)
-                )
-              ),
-              React.createElement(PlatformUiCard, {
-                  as: "section",
-                  variant: "sidebar",
-                  cardTitle: "Milestones",
-                  className: "playground-project-overview-sidebar-card",
-                  headerActions: React.createElement("button", {
-                    type: "button",
-                    className: "playground-project-overview-sidebar-icon-button",
-                    onClick: (event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      if (typeof setProjectOverviewMilestoneMenuId === "function") {
-                        setProjectOverviewMilestoneMenuId("");
-                      }
-                      if (typeof openReleaseComposer === "function") {
-                        openReleaseComposer();
-                      }
-                    },
-                    title: "Add milestone",
-                    "aria-label": "Add milestone",
-                  }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8 }))
-                },
-                releaseSections.length > 0
-                  ? React.createElement("div", { className: "playground-project-overview-sidebar-rows" },
-                      releaseSections.map((section) => {
-                        const releaseId = String(section.releaseId || "").trim();
-                        const menuId = "milestone:" + (releaseId || section.key || "");
-                        const isMenuOpen = projectOverviewMilestoneMenuId === menuId;
-                        return React.createElement("div", {
-                          key: section.key,
-                          className: "playground-project-overview-sidebar-row playground-project-overview-sidebar-milestone-row",
-                        },
-                          React.createElement("button", {
-                            type: "button",
-                            className: "playground-project-overview-sidebar-milestone-trigger",
-                            onClick: () => {
-                              if (typeof setSelectedReleaseId === "function") {
-                                setSelectedReleaseId(releaseId);
-                              }
-                              if (typeof setTaskView === "function") {
-                                setTaskView("backlog");
-                              }
-                            },
-                          },
-                            React.createElement("div", { className: "playground-project-overview-sidebar-row-value is-full" },
-                              React.createElement("span", { className: "playground-project-overview-sidebar-chip" },
-                                section.title,
-                                React.createElement("span", { className: "playground-project-overview-sidebar-muted" }, String(section.tasks.length))
-                              )
-                            )
-                          ),
-                          renderPlaygroundPlatformPopup({
-                            open: isMenuOpen,
-                            shellClassName: "playground-project-overview-sidebar-milestone-menu-shell",
-                            menuClassName: "playground-project-overview-sidebar-milestone-menu",
-                            menuProps: {
-                              onClick: (event) => event.stopPropagation(),
-                            },
-                            trigger: React.createElement("button", {
-                              type: "button",
-                              className: "playground-project-overview-sidebar-icon-button",
-                              onClick: (event) => {
-                                event.preventDefault();
-                                event.stopPropagation();
-                                if (typeof setProjectOverviewMilestoneMenuId === "function") {
-                                  setProjectOverviewMilestoneMenuId((current) => current === menuId ? "" : menuId);
-                                }
-                              },
-                              title: "Milestone actions",
-                              "aria-label": "Milestone actions for " + (section.title || "milestone"),
-                              "aria-expanded": isMenuOpen ? "true" : "false",
-                            }, React.createElement(EllipsisVertical, { width: 14, height: 14, strokeWidth: 1.8 })),
-                            children: React.createElement("button", {
-                                    type: "button",
-                                    className: "tb-popup-row playground-project-team-menu-item is-danger",
-                                    disabled: !releaseId,
-                                    onClick: (event) => {
-                                      event.preventDefault();
-                                      event.stopPropagation();
-                                      if (typeof setProjectOverviewMilestoneMenuId === "function") {
-                                        setProjectOverviewMilestoneMenuId("");
-                                      }
-                                      if (releaseId && typeof handleDeleteRelease === "function") {
-                                        void handleDeleteRelease(releaseId);
-                                      }
-                                    },
-                                  },
-                                    React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8 }),
-                                    React.createElement("span", null, "Delete milestone")
-                                  ),
-                          })
-                        );
-                      })
-                    )
-                  : React.createElement("div", { className: "playground-project-overview-sidebar-empty" }, "No milestone")
-              )
+              renderProjectOverviewSidebarProgressSection()
             );
+          }
+
+          function renderProjectOverviewDescriptionEditor() {
+            return React.createElement(PlatformInstructionsEditor, {
+              value: missionControlDocumentDraft,
+              onChange: (nextValue) => updateMissionControlDocumentDraftValue(nextValue, {
+                previousValue: missionControlDocumentDraft,
+              }),
+              title: selectedProject.name || "Untitled Project",
+              placeholder: "Add project description",
+              ariaLabel: "Project description",
+              historyKey: "project-description:" + selectedProject.id,
+              variant: "minimalistic-ui",
+              collapsedLines: 10,
+              className: "playground-project-overview-description-editor",
+              onEditingChange: (editing) => {
+                setIsMissionControlDocumentEditing(editing);
+                if (!editing) {
+                  commitMissionControlDocumentIfDirty();
+                }
+              },
+            });
           }
 
           function renderProjectOverviewStrategyPanel() {
@@ -1458,23 +1439,7 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
                             )
                           )
                     )
-                  ),
-                  React.createElement(PlatformInstructionsEditor, {
-                    value: missionControlDocumentDraft,
-                    onChange: (nextValue) => updateMissionControlDocumentDraftValue(nextValue, {
-                      previousValue: missionControlDocumentDraft,
-                    }),
-                    title: "Strategy Notes",
-                    placeholder: "Run Mission Control first to generate the project strategy and backlog plan.",
-                    ariaLabel: "Project strategy notes",
-                    historyKey: selectedProject.id,
-                    onEditingChange: (editing) => {
-                      setIsMissionControlDocumentEditing(editing);
-                      if (!editing) {
-                        commitMissionControlDocumentIfDirty();
-                      }
-                    },
-                  })
+                  )
                 ),
                 renderProjectOverviewOutcomeEditorModal()
               )
@@ -2117,43 +2082,11 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	          return React.createElement("div", { className: "playground-tasks-view-section playground-project-overview-view is-" + activeProjectOverviewHomeTab },
             React.createElement("div", { className: "playground-project-overview-hero-shell" },
               React.createElement(ProjectDetailPage, {
-                  header: React.createElement("div", { className: "playground-project-overview-summary-copy" },
-                    React.createElement("div", { className: "playground-project-overview-summary-title-row" },
-                      React.createElement("h1", { className: "playground-project-overview-summary-title" }, selectedProject.name || "Untitled Project")
-                    )
-                  ),
-                  tabBarActions: activeProjectOverviewHomeTab === "general"
-                    ? React.createElement(PlatformSecondaryButton, {
-                        type: "button",
-                        className: "playground-files-control-button playground-project-overview-summary-mission-button",
-                        onClick: openMissionControlComposer,
-                      },
-                        React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("span", { className: "playground-project-overview-summary-mission-label" }, "Mission Control")
-                      )
+                  header: activeProjectOverviewHomeTab === "general"
+                    ? renderProjectOverviewDescriptionEditor()
                     : null,
                   activeTab: activeProjectOverviewHomeTab,
-                  onTabChange: handleProjectOverviewHomeTabChange,
-                  showSettings: canViewProjectSettings,
                   sidebarCollapsed: projectOverviewSidebarCollapsed,
-                  sidebarToggle: React.createElement("button", {
-                    type: "button",
-                    className: "playground-project-overview-sidebar-toggle",
-                    onClick: () => {
-                      projectOverviewSidebarAutoCollapsedForTaskRef.current = false;
-                      projectOverviewSidebarAutoCollapsedForPermissionRef.current = false;
-                      setProjectOverviewSidebarCollapsed((current) => !current);
-                    },
-                    title: projectOverviewSidebarCollapsed ? "Show project sidebar" : "Hide project sidebar",
-                    "aria-label": projectOverviewSidebarCollapsed ? "Show project sidebar" : "Hide project sidebar",
-                    "aria-pressed": projectOverviewSidebarCollapsed ? "true" : "false",
-                  },
-                    React.createElement(PanelRight, {
-                      width: 15,
-                      height: 15,
-                      strokeWidth: 1.8,
-                    })
-                  ),
                   sidebar: renderProjectOverviewSidebar(),
                 },
                 projectOverviewActivePanel

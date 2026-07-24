@@ -221,7 +221,9 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         const [projectOverviewChartTimescale, setProjectOverviewChartTimescale] = useState("day");
         const [projectOverviewPerformanceRange, setProjectOverviewPerformanceRange] = useState("1m");
         const [projectOverviewHomeTab, setProjectOverviewHomeTab] = useState("general");
+        const [projectOverviewActivityTab, setProjectOverviewActivityTab] = useState("activity");
         const [projectOverviewSidebarCollapsed, setProjectOverviewSidebarCollapsed] = useState(false);
+        const [projectOverviewSidebarProgressView, setProjectOverviewSidebarProgressView] = useState("assignees");
         const projectOverviewSidebarAutoCollapsedForTaskRef = useRef(false);
         const projectOverviewSidebarAutoCollapsedForPermissionRef = useRef(false);
         const [projectOverviewPermissionTeamId, setProjectOverviewPermissionTeamId] = useState("");
@@ -306,6 +308,12 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           error: "",
           items: [],
         });
+        const [projectOverviewTaskActivityState, setProjectOverviewTaskActivityState] = useState({
+          projectId: "",
+          status: "idle",
+          error: "",
+          items: [],
+        });
         const [projectOverviewThreadRecords, setProjectOverviewThreadRecords] = useState([]);
         const [projectOverviewCostSummaryState, setProjectOverviewCostSummaryState] = useState({
           status: "idle",
@@ -359,6 +367,12 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
 	        const [projectOverviewVisibleThreadCount, setProjectOverviewVisibleThreadCount] = useState(5);
 	        const [projectOverviewVisibleActivityCount, setProjectOverviewVisibleActivityCount] = useState(5);
 	        const [projectOverviewSidebarPropertyPopover, setProjectOverviewSidebarPropertyPopover] = useState("");
+	        const [projectOverviewOwnerCandidatesState, setProjectOverviewOwnerCandidatesState] = useState({
+	          projectId: "",
+	          status: "idle",
+	          error: "",
+	          items: [],
+	        });
 	        const [projectFullAutoState, setProjectFullAutoState] = useState({
 	          projectId: "",
 	          enabled: false,
@@ -454,6 +468,12 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         const [taskActivityCommentValue, setTaskActivityCommentValue] = useState("");
         const [taskActivityCommentPending, setTaskActivityCommentPending] = useState(false);
         const [taskActivityCommentError, setTaskActivityCommentError] = useState("");
+        const [taskActivitySubscriptionState, setTaskActivitySubscriptionState] = useState({
+          taskId: "",
+          status: "idle",
+          subscribed: false,
+          error: "",
+        });
         const [previewedTaskAttachmentId, setPreviewedTaskAttachmentId] = useState("");
         const [taskLoadState, setTaskLoadState] = useState({
           status: "idle",

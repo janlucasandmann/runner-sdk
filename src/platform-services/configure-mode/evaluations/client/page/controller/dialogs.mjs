@@ -1,6 +1,6 @@
 export const EVALUATIONS_PAGE_CONTROLLER_DIALOGS_SCRIPT = String.raw`        function renderEvaluationTopNavActions() {
           if (
-            !isEvaluationDetailPage
+            !supportsEvaluationActionsPopover
             || !activeSet
             || typeof createPortal !== "function"
             || (!evaluationTopNavActionsContainer && !evaluationBreadcrumbActionsContainer)
@@ -8,19 +8,9 @@ export const EVALUATIONS_PAGE_CONTROLLER_DIALOGS_SCRIPT = String.raw`        fun
             return null;
           }
 
-          const rightActionsPortal = evaluationTopNavActionsContainer
+          const rightActionsPortal = isEvaluationDetailPage && evaluationTopNavActionsContainer
             ? createPortal(
                 React.createElement("div", { className: "playground-evaluations-detail-topnav-actions" },
-                  React.createElement(PlatformSecondaryButton, {
-                    type: "button",
-                    size: "small",
-                    className: "playground-evaluations-run-action",
-                    onClick: () => openRunEvaluationModal(activeSet.id),
-                    disabled: getEvaluationRunnableCaseCount(activeSet) === 0,
-                  },
-                    React.createElement(Play, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Run Evaluation")
-                  ),
                   renderEvaluationPublishSplitButton()
                 ),
                 evaluationTopNavActionsContainer
@@ -28,7 +18,47 @@ export const EVALUATIONS_PAGE_CONTROLLER_DIALOGS_SCRIPT = String.raw`        fun
             : null;
           const breadcrumbActionsPortal = evaluationBreadcrumbActionsContainer
             ? createPortal(
-                React.createElement(PlatformPopup, {
+                isEvaluationRunActionsPage
+                  ? React.createElement(PlatformPopup, {
+                    open: evaluationActionsPopoverOpen,
+                    variant: "minimal",
+                    portal: true,
+                    placement: "bottom-start",
+                    portalOffset: 6,
+                    animation: "down-in",
+                    rootRef: evaluationActionsPopoverRef,
+                    surfaceRef: evaluationActionsPopoverSurfaceRef,
+                    rootClassName: "playground-evaluations-breadcrumb-action-menu",
+                    surfaceClassName: "playground-evaluations-breadcrumb-action-popup",
+                    surfaceProps: {
+                      role: "menu",
+                      "aria-label": "Evaluation run actions",
+                    },
+                    trigger: React.createElement(PlatformIconButton, {
+                      type: "button",
+                      size: "compact",
+                      active: evaluationActionsPopoverOpen,
+                      title: "Evaluation run actions",
+                      "aria-label": "Evaluation run actions",
+                      "aria-haspopup": "menu",
+                      "aria-expanded": evaluationActionsPopoverOpen ? "true" : "false",
+                      onClick: () => setEvaluationActionsPopoverOpen((current) => !current),
+                    }, React.createElement(Ellipsis, { width: 15, height: 15, strokeWidth: 1.8 }))
+                  },
+                    React.createElement("button", {
+                      type: "button",
+                      role: "menuitem",
+                      className: "tb-popup-row",
+                      onClick: () => {
+                        setEvaluationActionsPopoverOpen(false);
+                        handleDeleteEvaluationRun(activeSet.id, activeRun.id);
+                      },
+                    },
+                      React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Delete Run")
+                    )
+                  )
+                  : React.createElement(PlatformPopup, {
                   open: evaluationActionsPopoverOpen,
                   variant: "minimal",
                   portal: true,
@@ -514,6 +544,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_DIALOGS_SCRIPT = String.raw`        fun
           );
           const canStartRun = Boolean(
             targetSet
+            && getEvaluationRunnableCaseCount(targetSet) > 0
             && selectedEnvironmentKey
             && selectedTargetAgentId
             && (evaluatorType !== "agent" || selectedEvaluatorAgentId)

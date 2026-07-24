@@ -49,7 +49,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects domain runtime",
     source: PROJECTS_DOMAIN_RUNTIME_SCRIPT,
-    expectedSha256: "14dd7d5df4732100b282c8d58e5e21f38719e1a0237733f3878ccd114447db32",
+    expectedSha256: "ee7d9188db311a37dbf236940b2896d17fa884bdbf66ab42f991141ed8c827e8",
     fragmentGroups: [
       {
         baseUrl: projectsClientUrl,
@@ -61,7 +61,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects overview runtime",
     source: PROJECT_OVERVIEW_SCRIPT,
-    expectedSha256: "0f030a0af8584addc030bb11349ba43654d943eee862e11f295c6117bcc9ea48",
+    expectedSha256: "36dcf559c817c6861331cfd4f22918038167a103ee3eed7ce758d712df5374c7",
     fragmentGroups: [
       {
         baseUrl: projectsOverviewUrl,
@@ -73,7 +73,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects overview styles",
     source: PROJECT_OVERVIEW_CSS,
-    expectedSha256: "bd12e0a49190e62c399bde10e21878acfa89e06b81a215719fff709dc17cbe0d",
+    expectedSha256: "a38831887d9ee70614da8e252367247077e15c94af1397eb0c208cdf887f5d1c",
     fragmentGroups: [
       {
         baseUrl: projectsOverviewUrl,
@@ -85,7 +85,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects actions runtime",
     source: PROJECTS_PAGE_ACTIONS_SCRIPT,
-    expectedSha256: "d632260d9d6d925c0856fd126dcccf52373005021f23195d7542c8ff7f5afd18",
+    expectedSha256: "8240118e9fb7d54f8b872a90979df7439d084943480727f6fd374cc112a00cbc",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -97,7 +97,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects data runtime",
     source: PROJECTS_PAGE_DATA_SCRIPT,
-    expectedSha256: "ade7ced3f05767cb5349bf954906596d350b68015a38dc6532ca0299a3a23bf9",
+    expectedSha256: "61eaa1eacdabf992c8a7b2a857bca51164e7d7a8822ac83afe5c0bab81297441",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -109,7 +109,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects shell runtime",
     source: PROJECTS_PAGE_SHELL_SCRIPT,
-    expectedSha256: "9aa3b302f375e70ae126fcf6007172130838179319412efb0562b162b1e54c28",
+    expectedSha256: "70a6e02067a0d3d53e2198b71e67882da75a0e4274213443cb35740de4c7d073",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -121,7 +121,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects views runtime",
     source: PROJECTS_PAGE_VIEWS_SCRIPT,
-    expectedSha256: "3d8da0cb87c00d916a3d1c71e6a00d9a7fb548729836a9ce33933db8920b57e2",
+    expectedSha256: "e2cc2a0f3956e32b1cc8634fc219373584a3ce88132fa29b72ccf3e1ffb52767",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -133,7 +133,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects core styles",
     source: PROJECTS_CORE_CSS,
-    expectedSha256: "83cf07d043c95ec179c790bdaac5a29cb929828e013a767956b9ed3253c944b4",
+    expectedSha256: "7863f347df75d02d4aa28482f7cfbccbf5993593017f619f5dbab865909c678f",
     fragmentGroups: [
       {
         baseUrl: projectsStylesUrl,
@@ -164,6 +164,10 @@ assert.match(
 assert.match(PROJECTS_DOMAIN_RUNTIME_SCRIPT, /normalizePlaygroundProjectRecord/);
 assert.match(
   PROJECTS_DOMAIN_RUNTIME_SCRIPT,
+  /const ownerUserId = String\([\s\S]*?project\.ownerUserId[\s\S]*?project\.userId/,
+);
+assert.match(
+  PROJECTS_DOMAIN_RUNTIME_SCRIPT,
   /function normalizePlaygroundTaskThreadStatusSnapshot/,
 );
 assert.match(PROJECTS_DOMAIN_RUNTIME_SCRIPT, /function getPlaygroundTaskThreadSummaryRecords/);
@@ -175,6 +179,54 @@ assert.match(PROJECTS_PAGE_RUNTIME_SCRIPT, /function renderProjectOverviewView/)
 assert.match(
   PROJECTS_PAGE_ACTIONS_SCRIPT,
   /function renderTaskPreviewStatusControl\(taskRecord\)[\s\S]*?return React\.createElement\(PlatformSelector, \{/,
+);
+assert.match(
+  PROJECTS_PAGE_ACTIONS_SCRIPT,
+  /async function handleToggleTaskActivitySubscription\(\)[\s\S]*?\/activity-subscription[\s\S]*?subscribed: nextSubscribed/,
+);
+assert.match(
+  PROJECTS_PAGE_ACTIONS_SCRIPT,
+  /activity: normalizePlaygroundTaskActivityList\(\[[\s\S]*?resolvedTask\.activity[\s\S]*?savedTask\.activity/,
+);
+assert.match(
+  PROJECTS_PAGE_ACTIONS_SCRIPT,
+  /hasOwnProperty\.call\(overrides, "comments"\)[\s\S]*?\? savedTask\.comments/,
+);
+assert.match(
+  PROJECTS_PAGE_ACTIONS_SCRIPT,
+  /hasOwnProperty\.call\(overrides, "activity"\)[\s\S]*?\? normalizePlaygroundTaskActivityList\(savedTask\.activity\)/,
+);
+assert.match(
+  PROJECTS_PAGE_DATA_SCRIPT,
+  /\/activity-subscription[\s\S]*?setTaskActivitySubscriptionState\(\{[\s\S]*?status: "ready"/,
+);
+assert.match(
+  PROJECTS_PAGE_DATA_SCRIPT,
+  /return \(\) => controller\.abort\(\);\s*\}, \[\s*backendUrl,\s*projectTaskDetailScreenOpen,\s*requestHeadersKey,\s*selectedProjectId,\s*selectedTaskId,\s*\]\);/,
+);
+assert.match(
+  PROJECTS_PAGE_SHELL_SCRIPT,
+  /const \[taskActivitySubscriptionState, setTaskActivitySubscriptionState\] = useState/,
+);
+assert.match(
+  PROJECTS_PAGE_SHELL_SCRIPT,
+  /const \[projectOverviewOwnerCandidatesState, setProjectOverviewOwnerCandidatesState\] = useState/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /getPlaygroundTaskStatusLabel\(normalizedValue\)/,
+);
+assert.doesNotMatch(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /normalizedValue === "backlog" \? "todo"/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /className: "playground-tasks-activity-subscription-button"[\s\S]*?activitySubscribed \? UserRoundMinus : UserRoundPlus[\s\S]*?activitySubscribed \? "Unsubscribe" : "Subscribe"/,
+);
+assert.doesNotMatch(
+  PROJECTS_CORE_CSS,
+  /\.playground-tasks-activity-subscription-button\.platform-button/,
 );
 assert.doesNotMatch(PROJECTS_PAGE_DATA_SCRIPT, /handleTaskStatusMenuPointerDown/);
 assert.doesNotMatch(PROJECTS_PAGE_SHELL_SCRIPT, /taskStatusMenuRef/);
@@ -220,13 +272,14 @@ assert.match(
 );
 assert.match(
   PROJECT_OVERVIEW_CSS,
-  /\.playground-environments-detail-scroll\.playground-tasks-project-workspace-scroll\.is-overview \.playground-project-overview-summary-title\s*\{\s*margin-top: 42px;/,
+  /\.playground-environments-detail-scroll\.playground-tasks-project-workspace-scroll\.is-overview[\s\S]*?\.playground-project-detail-overview-layout\s*\{\s*--project-detail-sticky-offset: 42px;\s*padding-top: var\(--project-detail-sticky-offset\);/,
 );
 assert.match(
   PROJECT_OVERVIEW_CSS,
   /\.playground-project-overview-general-grid\s*\{\s*display: grid;\s*grid-template-columns: minmax\(0, 1fr\);\s*gap: 42px;/,
 );
-assert.match(PROJECT_OVERVIEW_SCRIPT, /tabBarActions: activeProjectOverviewHomeTab === "general"/);
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /tabBarActions: activeProjectOverviewHomeTab === "general"/);
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /playground-project-overview-summary-mission-button/);
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
   /React\.createElement\(PlatformSecondaryButton, \{\s*type: "button",\s*size: "small",\s*className: "playground-project-settings-add-rule-button"/,
@@ -263,7 +316,59 @@ assert.match(
 );
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
-  /activityTasks\.map\(\(task\) => renderOverviewTaskRow\(task\)\)/,
+  /tabs: \[\s*\{ id: "activity", label: "Activity" \},\s*\{ id: "backlog", label: "Backlog" \},\s*\]/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /value: isActivityTab \? "activity" : "backlog"[\s\S]*?variant: "minimal"/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /React\.createElement\(PlatformActivityTimeline, \{[\s\S]*?items: activityTimelineItems/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /const activityEvents = getProjectOverviewTaskActivityEvents\(\);[\s\S]*?buildProjectOverviewTaskActivityTimelineItems\(activityEvents\)/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /endActions: isActivityTab\s*\?\s*renderProjectOverviewTaskActivityParticipants\(activityEvents\)/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /function getProjectOverviewTaskActivityParticipantKey\(event\)[\s\S]*?\"agent:\" \+ actorAgentId[\s\S]*?\"user:\" \+ actorUserId/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /React\.createElement\(PlatformLoadingState, \{[\s\S]*?message: \"Loading activity\.\.\.\"[\s\S]*?centered: true/,
+);
+assert.match(
+  PROJECT_OVERVIEW_CSS,
+  /\.playground-project-overview-activity-participant-avatar\s*\{[\s\S]*?width: 20px;[\s\S]*?height: 20px;[\s\S]*?border-radius: 50%;/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /event\?\.eventType !== "comment_added"[\s\S]*?fieldName === "description"/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /\.slice\(0, 5\)[\s\S]*?\.map\(\(event\) =>/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /backlogTasks\.map\(\(task\) => renderOverviewTaskRow\(task\)\)/,
+);
+assert.match(
+  PROJECTS_PAGE_DATA_SCRIPT,
+  /function isLegacyProjectTaskActivityRoute\(result\)[\s\S]*?message === "task not found"/,
+);
+assert.match(
+  PROJECTS_PAGE_DATA_SCRIPT,
+  /async function loadLegacyProjectOverviewTaskActivity\(projectId, tasks, loadToken\)[\s\S]*?const batchSize = 4/,
+);
+assert.match(
+  PROJECTS_PAGE_DATA_SCRIPT,
+  /isLegacyProjectTaskActivityRoute\(activityResult\)[\s\S]*?void loadLegacyProjectOverviewTaskActivity\(projectId, nextTasks, loadToken\)/,
 );
 assert.match(
   PROJECT_OVERVIEW_SCRIPT,
@@ -280,16 +385,73 @@ assert.doesNotMatch(
   /renderProjectOverviewActivityParticipants\(activityItems\)/,
 );
 assert.match(
+  PROJECTS_PAGE_SHELL_SCRIPT,
+  /const \[projectOverviewActivityTab, setProjectOverviewActivityTab\] = useState\("activity"\)/,
+);
+assert.match(
+  PROJECTS_PAGE_DATA_SCRIPT,
+  /new URL\(backendUrl \+ "\/tasks\/activity", window\.location\.origin\)[\s\S]*?searchParams\.set\("projectId", projectId\)[\s\S]*?searchParams\.set\("limit", "5"\)/,
+);
+assert.match(
+  PROJECTS_PAGE_DATA_SCRIPT,
+  /normalizedEvent\.eventType === "comment_added"[\s\S]*?normalizedEvent\.eventType === "field_changed" && fieldName === "description"/,
+);
+assert.match(
   PROJECT_OVERVIEW_CSS,
-  /\.playground-project-overview-activity-card\.is-main \.playground-project-overview-activity-list\s*\{\s*gap: 8px;/,
+  /\.playground-project-overview-activity-card\.is-main \.playground-project-overview-activity-list\s*\{\s*gap: 12px;/,
 );
 assert.equal(
   (PROJECT_OVERVIEW_SCRIPT.match(/React\.createElement\(PlatformUiCard, \{/g) || []).length,
-  3,
+  2,
 );
-assert.match(PROJECT_OVERVIEW_SCRIPT, /variant: "sidebar",\s*cardTitle: "Properties"/);
-assert.match(PROJECT_OVERVIEW_SCRIPT, /variant: "sidebar",\s*cardTitle: "Resources"/);
-assert.match(PROJECT_OVERVIEW_SCRIPT, /variant: "sidebar",\s*cardTitle: "Milestones"/);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /variant: "sidebar",\s*className: "playground-project-overview-sidebar-card"/,
+);
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /variant: "sidebar",\s*cardTitle: "Properties"/);
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /variant: "sidebar",\s*cardTitle: "Resources"/);
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /variant: "sidebar",\s*cardTitle: "Milestones"/);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /className: "playground-tasks-detail-facts is-centralized-sidebar-content playground-project-overview-sidebar-facts"/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /className: "playground-tasks-detail-fact playground-project-overview-sidebar-row"/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /React\.createElement\(PlatformPrimaryButton, \{[\s\S]*?className: "playground-project-overview-sidebar-mission-button"[\s\S]*?"Mission Control"\)/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /renderProjectOverviewSidebarRow\("Owner", owner\.name,[\s\S]*?className: "is-owner"[\s\S]*?ariaLabel: "Project owner"/,
+);
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /renderProjectOverviewSidebarRow\("Lead"/);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /async function transferProjectOverviewOwnership\(candidate\)[\s\S]*?\/owner"[\s\S]*?ownerUserId: nextOwner\.userId/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /async function requestProjectOverviewOwnerCandidates\(options = \{\}\)[\s\S]*?\/owner-candidates"/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /React\.createElement\(PlatformAnalyticsSection, \{\s*variant: "compact",\s*className: "playground-project-overview-sidebar-progress-analytics"/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /renderProjectOverviewSidebarProgressSection\(\)[\s\S]*?className: "playground-project-overview-sidebar-progress-card"/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /ariaLabel: "Project progress grouping"[\s\S]*?\{ value: "assignees", label: "Assignees" \}[\s\S]*?\{ value: "labels", label: "Labels" \}/,
+);
+assert.doesNotMatch(
+  PROJECT_OVERVIEW_SCRIPT,
+  /renderProjectOverviewGeneralPanel\(\)[\s\S]*?renderProjectOverviewProgressUsageChartSection\(\)/,
+);
 assert.match(
   PROJECT_OVERVIEW_CSS,
   /\.playground-project-overview-sidebar-card\s*\{\s*overflow: visible;\s*\}/,
@@ -298,14 +460,18 @@ assert.match(PROJECT_OVERVIEW_SCRIPT, /return React\.createElement\(PlatformSele
 assert.equal(
   (
     PROJECT_OVERVIEW_SCRIPT.match(
-      /renderProjectOverviewSidebarSelectControl\("(?:priority|lead|type|computer)"/g,
+      /renderProjectOverviewSidebarSelectControl\(\s*"(?:priority|type|computer|owner)"/g,
     ) || []
   ).length,
   4,
 );
 assert.match(
+  PROJECT_OVERVIEW_CSS,
+  /\.playground-project-overview-sidebar-row\.is-owner\s*\{[\s\S]*?margin-top: 12px;[\s\S]*?padding-top: 12px;[\s\S]*?border-top: 1px solid rgba\(255, 255, 255, 0\.1\);/,
+);
+assert.match(
   PROJECT_OVERVIEW_SCRIPT,
-  /popupClassName: "playground-project-overview-sidebar-selector-popup"/,
+  /popupClassName: "playground-tasks-detail-central-selector-popup playground-project-overview-sidebar-selector-popup"/,
 );
 assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /renderProjectOverviewSidebarSelectOption/);
 assert.doesNotMatch(
@@ -466,10 +632,7 @@ assert.doesNotMatch(
   PROJECTS_PAGE_VIEWS_SCRIPT,
   /playground-tasks-loading-copy" \}, "Loading project/,
 );
-assert.match(
-  PROJECTS_PAGE_VIEWS_SCRIPT,
-  /React\.createElement\(PlatformInstructionsEditor, \{\s*value: missionControlDocumentDraft[\s\S]*?historyKey: "full-strategy:" \+ selectedProject\.id/,
-);
+assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /historyKey: "full-strategy:" \+ selectedProject\.id/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /React\.createElement\(TicketDetailPage, \{/);
 assert.match(PROJECTS_PAGE_VIEWS_SCRIPT, /className: "is-neutral",\s*icon: History/);
 assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /playground-tasks-detail-thread-meta/);
@@ -536,6 +699,10 @@ assert.match(
 assert.match(
   PROJECTS_VIEWS_04_FRAGMENT,
   /avatar: isStatus[\s\S]*?renderPlaygroundTaskStatusGlyph\(\s*event\.nextValue,\s*"platform-activity-timeline__status-icon"\s*\)[\s\S]*?icon: isMilestoneChange[\s\S]*?\? Flag[\s\S]*?: isScheduleChange[\s\S]*?\? CalendarIcon[\s\S]*?: isFieldChange[\s\S]*?\? PencilRuler/,
+);
+assert.match(
+  PROJECTS_VIEWS_04_FRAGMENT,
+  /const isPriorityChange = isFieldChange[\s\S]*?fieldName \|\| ""\)\.trim\(\) === "priority"[\s\S]*?renderPlaygroundTaskPriorityIcon\(\s*event\.nextValue,\s*"platform-activity-timeline__priority-icon"\s*\)/,
 );
 assert.match(
   PROJECTS_VIEWS_04_FRAGMENT,
@@ -1113,6 +1280,18 @@ assert.match(
   PROJECT_OVERVIEW_SCRIPT,
   /function renderOverviewTaskRow\(task\)[\s\S]*?React\.createElement\(PlatformTicketItem, \{[\s\S]*?variant: "list"/,
 );
+assert.doesNotMatch(
+  PROJECT_OVERVIEW_SCRIPT,
+  /function renderOverviewTaskRow\(task\)[\s\S]*?aria-label: "Run task thread"/,
+);
+assert.doesNotMatch(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
+  /"aria-label": isCanceledTask[\s\S]*?: "Run task"/,
+);
+assert.doesNotMatch(
+  PROJECTS_VIEWS_04_FRAGMENT,
+  /"aria-label": isCanceledSubtask[\s\S]*?: "Run task"/,
+);
 assert.match(
   PROJECTS_CORE_CSS,
   /\.playground-new-issue-modal\.platform-modal-surface\s*\{\s*display: flex;\s*flex-direction: column;/,
@@ -1285,10 +1464,45 @@ assert.doesNotMatch(
   PROJECTS_PAGE_VIEWS_SCRIPT,
   /onClick: \(\) => handleTaskDescriptionFormat\(action\.id\)/,
 );
-assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /title: "Strategy Notes"[\s\S]*?stickyHeader: false/);
-assert.doesNotMatch(
-  PROJECTS_PAGE_VIEWS_SCRIPT,
-  /historyKey: "full-strategy:" \+ selectedProject\.id,\s*stickyHeader: false/,
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /function renderProjectOverviewDescriptionEditor\(\)[\s\S]*?title: selectedProject\.name \|\| "Untitled Project"[\s\S]*?placeholder: "Add project description"[\s\S]*?ariaLabel: "Project description"[\s\S]*?historyKey: "project-description:" \+ selectedProject\.id[\s\S]*?variant: "minimalistic-ui"[\s\S]*?collapsedLines: 10[\s\S]*?className: "playground-project-overview-description-editor"/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /header: activeProjectOverviewHomeTab === "general"\s*\?\s*renderProjectOverviewDescriptionEditor\(\)\s*:\s*null/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /const projectSectionLinks = \[[\s\S]*?\{ id: "general", label: "Home", Icon: House \}[\s\S]*?\{ id: "resources", label: "Resources", Icon: FolderOpen \}[\s\S]*?\{ id: "strategy", label: "Strategy", Icon: Rocket \}[\s\S]*?canViewProjectSettings[\s\S]*?\{ id: "permissions", label: "Settings", Icon: Settings2 \}/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /className: "playground-project-overview-sidebar-navigation"[\s\S]*?"aria-label": "Project sections"[\s\S]*?handleProjectOverviewHomeTabChange\(item\.id\)/,
+);
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /sidebarToggle: React\.createElement/);
+assert.doesNotMatch(PROJECT_OVERVIEW_SCRIPT, /"Strategy Notes"/);
+assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /"Strategy Notes"/);
+assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /historyKey: "full-strategy:" \+ selectedProject\.id/);
+assert.match(
+  PROJECT_OVERVIEW_CSS,
+  /\.playground-project-detail-header \.playground-project-overview-description-editor\s*\{\s*width: 100%;[\s\S]*?margin: 0;/,
+);
+assert.match(
+  PROJECT_OVERVIEW_CSS,
+  /\.playground-project-detail-header[\s\S]*?\.playground-project-overview-description-editor[\s\S]*?\.platform-instructions-editor__title\s*\{\s*flex: 1 1 auto;\s*font-size: 18px;/,
+);
+assert.match(
+  PROJECT_OVERVIEW_CSS,
+  /\.playground-project-detail-header[\s\S]*?\.playground-project-overview-description-editor\.platform-instructions-editor\.is-minimalistic-ui[\s\S]*?\.platform-instructions-editor__prosemirror\s*\{\s*padding-top: 12px;/,
+);
+assert.match(
+  PROJECT_OVERVIEW_CSS,
+  /\.playground-project-overview-sidebar\s*\{[\s\S]*?position: sticky;\s*top: var\(--project-detail-sticky-offset, 0px\);/,
+);
+assert.match(
+  PROJECT_OVERVIEW_CSS,
+  /\.playground-project-overview-sidebar-navigation-link\.is-active\s*\{\s*color: #fff;\s*background: rgba\(255, 255, 255, 0\.075\);/,
 );
 assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /renderMissionControlDocumentToolbarButton/);
 assert.match(
@@ -1338,6 +1552,31 @@ assert.match(PROJECTS_STYLE_FRAGMENTS.core, /playground-tasks-page/);
 assert.match(
   PROJECTS_STYLE_FRAGMENTS.connectorBrowser,
   /playground-tasks-connector-browser-portal/,
+);
+assert.match(
+  PROJECTS_CORE_CSS,
+  /\.playground-resources-page\.is-develop-server-kind-page\.is-database-data-tab[\s\S]{0,180}playground-environments-detail-scroll\.playground-settings-detail-scroll\.is-database-data-tab\s*\{[\s\S]{0,300}padding: 0;[\s\S]{0,120}overflow: hidden;/,
+  "Database Data must remove the centered detail-page spacer and fill the available scroll area.",
+);
+assert.match(
+  PROJECTS_CORE_CSS,
+  /\.playground-server-detail-content\.is-database-data-tab \.playground-database-browser-surface\.playground-server-details-card\s*\{[\s\S]{0,420}width: 100%;[\s\S]{0,360}margin: 0;[\s\S]{0,180}padding: 0;[\s\S]{0,100}border: 0;[\s\S]{0,100}border-radius: 0;[\s\S]{0,100}background: transparent;/,
+  "Database Data must render its browser as an unframed full-size workspace.",
+);
+assert.match(
+  PROJECTS_CORE_CSS,
+  /\.playground-server-detail-content\.is-database-data-tab[\s\S]{0,140}\.playground-database-browser-surface\.playground-server-details-card::before\s*\{[\s\S]{0,100}content: none;[\s\S]{0,100}display: none;/,
+  "Database Data must suppress the legacy generated border layer.",
+);
+assert.match(
+  PROJECTS_CORE_CSS,
+  /\.playground-database-browser-columns\s*\{\s*--playground-database-browser-column-inline-padding: 20px;[\s\S]{0,2200}\.playground-database-browser-pane-header\s*\{[\s\S]{0,160}padding: 10px var\(--playground-database-browser-column-inline-padding\);[\s\S]{0,4200}\.playground-database-browser-pane-row\s*\{[\s\S]{0,160}padding: 0 var\(--playground-database-browser-column-inline-padding\);/,
+  "Database browser pane headers and rows must share the app-header horizontal inset.",
+);
+assert.match(
+  PROJECTS_CORE_CSS,
+  /\.playground-resources-page\.is-develop-server-kind-page[\s\S]{0,140}playground-settings-detail-scroll\.is-database-data-tab,[\s\S]{0,260}:has\([\s\S]{0,160}is-database-data-tab[\s\S]{0,80}\)\s*\{[\s\S]{0,320}padding-bottom: 0;/,
+  "Database Data must remove detail-scroll bottom padding through both direct and descendant tab markers.",
 );
 assert.match(PROJECTS_CORE_CSS, /\.playground-ticket-detail-frame\s*\{/);
 assert.doesNotMatch(PROJECTS_CORE_CSS, /\.playground-ticket-detail-frame\.has-preview\s*\{/);
@@ -1618,6 +1857,15 @@ assert.equal(result.call.adapter, "json");
 assert.equal(result.call.args[2], "/projects/project%201");
 assert.equal(result.call.args[3], "PATCH");
 
+result = dispatch("GET", "/api/real/projects/project%201/owner-candidates");
+assert.equal(result.call.adapter, "get");
+assert.equal(result.call.args[2], "/projects/project%201/owner-candidates");
+
+result = dispatch("PATCH", "/api/real/projects/project%201/owner");
+assert.equal(result.call.adapter, "json");
+assert.equal(result.call.args[2], "/projects/project%201/owner");
+assert.equal(result.call.args[3], "PATCH");
+
 result = dispatch("POST", "/api/aios/projects/project_1/skills");
 assert.equal(result.call.adapter, "aios");
 assert.equal(result.call.args[2], "/api/projects/project_1/skills");
@@ -1639,6 +1887,27 @@ result = dispatch("GET", "/api/real/tasks/task_1?threadDetails=summary");
 assert.equal(result.call.adapter, "cloud");
 assert.equal(result.call.args[1], "/tasks/task_1?threadDetails=summary");
 await new Promise((resolve) => setImmediate(resolve));
+
+result = dispatch("GET", "/api/real/tasks/activity?projectId=project_1&limit=5");
+assert.equal(result.call.adapter, "cloud");
+assert.equal(result.call.args[1], "/tasks/activity?projectId=project_1&limit=5");
+await new Promise((resolve) => setImmediate(resolve));
+
+result = dispatch("GET", "/api/real/tasks/task_1/activity");
+assert.equal(result.call.adapter, "cloud");
+assert.equal(result.call.args[1], "/tasks/task_1/activity");
+await new Promise((resolve) => setImmediate(resolve));
+
+result = dispatch("GET", "/api/real/tasks/task_1/activity-subscription");
+assert.equal(result.call.adapter, "cloud");
+assert.equal(result.call.args[1], "/tasks/task_1/activity-subscription");
+await new Promise((resolve) => setImmediate(resolve));
+
+result = dispatch("PUT", "/api/real/tasks/task_1/activity-subscription");
+assert.equal(result.handled, true);
+await Promise.resolve();
+assert.equal(calls[0].adapter, "cloud");
+assert.equal(calls[0].args[1], "/tasks/task_1/activity-subscription");
 
 result = dispatch("POST", "/api/real/tasks/task_1/start-thread");
 assert.equal(result.handled, true);

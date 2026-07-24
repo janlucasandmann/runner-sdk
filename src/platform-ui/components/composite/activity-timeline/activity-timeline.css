@@ -102,6 +102,10 @@
   color: #4da3ff;
 }
 
+.platform-activity-timeline__marker .platform-activity-timeline__priority-icon {
+  justify-content: center;
+}
+
 .platform-activity-timeline__entry {
   box-sizing: border-box;
   position: relative;
@@ -460,6 +464,19 @@
   color: rgba(255, 255, 255, 0.42);
 }
 
+.platform-activity-timeline__reply-composer-submit.platform-icon-button {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+
+.platform-activity-timeline__reply-composer-submit.platform-icon-button:disabled {
+  background: rgba(255, 255, 255, 0.075) !important;
+}
+
+.platform-activity-timeline__reply-composer-submit.platform-icon-button:not(:disabled):hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+
 .platform-activity-timeline__reply-composer-error {
   grid-column: 2 / -1;
   color: #ff7777;
@@ -571,15 +588,15 @@
 
 .platform-activity-timeline__composer-submit.platform-icon-button {
   color: #fff;
-  background: rgba(255, 255, 255, 0.075);
+  background: rgba(255, 255, 255, 0.15) !important;
 }
 
 .platform-activity-timeline__composer-submit.platform-icon-button:disabled {
-  background: rgba(255, 255, 255, 0.075);
+  background: rgba(255, 255, 255, 0.075) !important;
 }
 
 .platform-activity-timeline__composer-submit.platform-icon-button:not(:disabled):hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.15) !important;
 }
 
 .platform-activity-timeline__composer-files {

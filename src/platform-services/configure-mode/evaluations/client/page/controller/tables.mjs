@@ -93,7 +93,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
             ],
           };
           return React.createElement(PlatformAnalyticsSection, {
-            variant: run ? "framed" : "default",
+            variant: "default",
             title: "Analytics",
             analytics,
             className: "playground-evaluations-analytics-card",
@@ -185,19 +185,13 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
 
         function renderRunsTable(set) {
           const runs = Array.isArray(set?.runs) ? set.runs : [];
-          const sortOptions = [
-            { id: "recent-desc", label: "Recently Updated", description: "Show newest evaluation activity first" },
-            { id: "created-desc", label: "Newest Created", description: "Show newly created runs first" },
-            { id: "score-desc", label: "Highest Score", description: "Show best scoring runs first" },
-            { id: "name-asc", label: "Run Name (A-Z)", description: "Sort runs alphabetically" },
-          ];
+          const tableMode = evaluationRunsTableMode === "scores" ? "scores" : "runs";
           const filterOptions = [
             { id: "all", label: "All Runs", description: "Show every evaluation run" },
             { id: "running", label: "Running", description: "Only show active runs" },
             { id: "completed", label: "Completed", description: "Only show completed runs" },
             { id: "failed", label: "Failed", description: "Only show failed runs" },
           ];
-          const sortMode = sortOptions.some((option) => option.id === evaluationRunsSortMode) ? evaluationRunsSortMode : "recent-desc";
           const filterMode = filterOptions.some((option) => option.id === evaluationRunsFilterMode) ? evaluationRunsFilterMode : "all";
           const normalizedSearch = String(evaluationRunsSearchQuery || "").trim().toLowerCase();
           const getRunTimestamp = (run) => Date.parse(String(run.completedAt || run.updatedAt || run.createdAt || "")) || 0;
@@ -206,7 +200,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
             const agent = getPlaygroundEvaluationAgentRecord(agentOptions, agentId);
             return String(run?.targetAgentName || agent?.name || agent?.label || agent?.title || agentId || "Agent").trim();
           };
-          const getRunEnvironmentLabel = (run) => {
+          const getRunEnvironmentIdentity = (run) => {
             const source = {
               environmentType: run?.environmentType || set?.environmentType || "computer",
               environmentId: run?.environmentId || set?.environmentId || "",
@@ -214,10 +208,20 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
             };
             const choice = getPlaygroundEvaluationEnvironmentChoice(environmentChoices, source, defaultEnvironmentId);
             const isProject = String(run?.environmentType || source.environmentType || "").trim().toLowerCase() === "project" || choice?.type === "project";
-            return isProject
+            const label = isProject
               ? String(run?.projectName || choice?.projectName || choice?.name || source.projectId || "Project").trim()
               : String(run?.environmentName || choice?.environmentName || choice?.name || source.environmentId || "Computer").trim();
+            const resourceId = isProject
+              ? String(source.projectId || choice?.projectId || "").trim()
+              : String(source.environmentId || choice?.environmentId || "").trim();
+            const type = isProject ? "project" : "computer";
+            return {
+              type,
+              label,
+              key: type + ":" + (resourceId || label.toLowerCase()),
+            };
           };
+          const getRunEnvironmentLabel = (run) => getRunEnvironmentIdentity(run).label;
           const filteredRuns = runs
             .filter((run) => {
               const status = String(run?.status || "").trim().toLowerCase();
@@ -236,147 +240,261 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
                 formatPlaygroundEvaluationDate(run?.completedAt || run?.createdAt),
               ].join(" ").toLowerCase();
               return haystack.includes(normalizedSearch);
-            })
-            .sort((left, right) => {
-              if (sortMode === "name-asc") {
-                return String(left?.label || "").localeCompare(String(right?.label || ""));
-              }
-              if (sortMode === "created-desc") {
-                return (Date.parse(String(right?.createdAt || "")) || 0) - (Date.parse(String(left?.createdAt || "")) || 0);
-              }
-              if (sortMode === "score-desc") {
-                return Number(right?.averageScore || 0) - Number(left?.averageScore || 0);
-              }
-              return getRunTimestamp(right) - getRunTimestamp(left);
             });
-          const visibleCount = Math.max(5, Number(evaluationRunsVisibleCount) || 5);
-          const visibleRuns = filteredRuns.slice(0, visibleCount);
-          const hasMoreRuns = filteredRuns.length > visibleRuns.length;
-          const hasFilters = Boolean(normalizedSearch || filterMode !== "all");
+          const allScoreRows = buildPlaygroundEvaluationScoreRows(runs, {
+            targetAgentId: set?.targetAgentId || "",
+            environmentType: set?.environmentType || "computer",
+            environmentId: set?.environmentId || "",
+            projectId: set?.projectId || "",
+          }).map((row) => ({
+            ...row,
+            agentLabel: getRunAgentLabel(row.latestRun),
+            environmentLabel: getRunEnvironmentLabel(row.latestRun),
+          }));
+          const scoreRows = allScoreRows
+            .filter((row) => {
+              if (!normalizedSearch) return true;
+              return [
+                row.agentLabel,
+                row.environmentLabel,
+                formatPlaygroundEvaluationPercent(row.latestScore),
+                formatPlaygroundEvaluationPercent(row.averageScore),
+                String(row.runCount),
+                formatPlaygroundEvaluationDate(row.latestRun?.completedAt || row.latestRun?.createdAt),
+              ].join(" ").toLowerCase().includes(normalizedSearch);
+            });
+          const tableRows = tableMode === "scores" ? scoreRows : filteredRuns;
+          const hasFilters = Boolean(normalizedSearch || (tableMode === "runs" && filterMode !== "all"));
           const runHistoryUnavailable = runs.length === 0 && evaluationRunHistorySyncState.status === "error";
-          return React.createElement(PlatformDataTable, {
-              rows: visibleRuns,
-              getRowId: (run) => run.id,
-              ariaLabel: "Evaluation runs",
-              className: "playground-evaluation-runs-platform-table playground-evaluations-runs-section",
-              surface: "plain",
-              variant: "minimalistic-ui",
-              sticky: false,
-              pagination: false,
-              emptyState: runs.length > 0 && hasFilters
+          const tableTabs = React.createElement(PlatformDetailTabBar, {
+            ariaLabel: "Evaluation result views",
+            value: tableMode,
+            tabs: [
+              { id: "runs", label: "Runs" },
+              { id: "scores", label: "Scores" },
+            ],
+            onValueChange: (value) => {
+              const nextMode = value === "scores" ? "scores" : "runs";
+              setEvaluationRunsTableMode(nextMode);
+              if (nextMode !== "runs") {
+                setSelectedEvaluationRunIds(new Set());
+              }
+            },
+            variant: "minimal",
+            className: "playground-evaluations-runs-table-tabs",
+          });
+          const runColumns = [
+            {
+              id: "run",
+              header: "Run",
+              accessor: (run) => run.label || "Run",
+              sortable: true,
+              width: "minmax(170px, 1.5fr)",
+              cell: ({ row: run }) => React.createElement("div", { className: "playground-plugin-row-title" }, run.label || "Run"),
+            },
+            {
+              id: "agent",
+              header: "Agent",
+              accessor: getRunAgentLabel,
+              sortable: true,
+              width: "minmax(130px, 1fr)",
+              cell: ({ row: run }) => renderRunAgentCell(run, set),
+            },
+            {
+              id: "environment",
+              header: "Environment",
+              accessor: getRunEnvironmentLabel,
+              sortable: true,
+              width: "minmax(140px, 1.1fr)",
+              hideBelow: 760,
+              cell: ({ row: run }) => renderRunEnvironmentCell(run, set),
+            },
+            {
+              id: "score",
+              header: "Score",
+              accessor: (run) => Number(run.averageScore || 0),
+              sortable: true,
+              width: "minmax(80px, 0.65fr)",
+              cell: ({ row: run }) => {
+                const status = String(run?.status || "").trim().toLowerCase();
+                return status === "queued" || status === "running" ? "running" : formatPlaygroundEvaluationPercent(run.averageScore);
+              },
+            },
+            { id: "cases", header: "Cases", accessor: (run) => Number(run.totalCount || 0), sortable: true, width: "minmax(70px, 0.55fr)", hideBelow: 680 },
+            {
+              id: "date",
+              header: "Date",
+              accessor: getRunTimestamp,
+              sortable: true,
+              sortDescFirst: true,
+              width: "minmax(110px, 0.9fr)",
+              align: "end",
+              cell: ({ row: run }) => formatPlaygroundEvaluationDate(run.completedAt || run.createdAt),
+            },
+          ];
+          const scoreColumns = [
+            {
+              id: "agent",
+              header: "Agent",
+              accessor: (row) => row.agentLabel,
+              sortable: true,
+              width: "minmax(190px, 1.35fr)",
+              cell: ({ row }) => renderRunAgentCell(row.latestRun, set),
+            },
+            {
+              id: "environment",
+              header: "Environment",
+              accessor: (row) => row.environmentLabel,
+              sortable: true,
+              width: "minmax(170px, 1.2fr)",
+              cell: ({ row }) => renderRunEnvironmentCell(row.latestRun, set),
+            },
+            {
+              id: "latestScore",
+              header: "Latest Score",
+              accessor: (row) => row.latestScore,
+              sortable: true,
+              sortDescFirst: true,
+              width: "minmax(100px, 0.75fr)",
+              cell: ({ row }) => formatPlaygroundEvaluationPercent(row.latestScore),
+            },
+            {
+              id: "averageScore",
+              header: "Avg Score",
+              accessor: (row) => row.averageScore,
+              sortable: true,
+              sortDescFirst: true,
+              width: "minmax(100px, 0.75fr)",
+              cell: ({ row }) => formatPlaygroundEvaluationPercent(row.averageScore),
+            },
+            {
+              id: "runs",
+              header: "Runs",
+              accessor: (row) => row.runCount,
+              sortable: true,
+              width: "minmax(70px, 0.5fr)",
+            },
+            {
+              id: "date",
+              header: "Date",
+              accessor: (row) => row.latestTimestamp,
+              sortable: true,
+              sortDescFirst: true,
+              width: "minmax(110px, 0.8fr)",
+              align: "end",
+              cell: ({ row }) => formatPlaygroundEvaluationDate(row.latestRun?.completedAt || row.latestRun?.createdAt),
+            },
+          ];
+          const emptyState = runHistoryUnavailable
+            ? React.createElement(PlatformEmptyState, {
+                icon: ChartColumnIncreasing,
+                title: "Run history is unavailable",
+                description: "Existing evaluation runs could not be loaded. Your run history has not been cleared.",
+                primaryAction: {
+                  label: "Retry",
+                  onClick: () => {
+                    void reloadBackendEvaluationRunHistory(set?.id, { maxAttempts: 3 }).catch(() => {});
+                  },
+                },
+              })
+            : tableMode === "scores"
+              ? allScoreRows.length > 0 && normalizedSearch
+                ? React.createElement(PlatformEmptyState, {
+                    icon: Search,
+                    title: "No matching scores",
+                    description: "Adjust the search to find an agent score.",
+                  })
+                : React.createElement(PlatformEmptyState, {
+                    icon: ChartColumnIncreasing,
+                    title: "No scores yet",
+                    description: "Completed evaluation runs will appear here for comparison.",
+                  })
+              : runs.length > 0 && hasFilters
                 ? React.createElement(PlatformEmptyState, {
                     icon: Search,
                     title: "No matching runs",
                     description: "Adjust the search or filter to find an evaluation run.",
                   })
-                : runHistoryUnavailable
-                  ? React.createElement(PlatformEmptyState, {
-                      icon: ChartColumnIncreasing,
-                      title: "Run history is unavailable",
-                      description: "Existing evaluation runs could not be loaded. Your run history has not been cleared.",
-                      primaryAction: {
-                        label: "Retry",
-                        onClick: () => {
-                          void reloadBackendEvaluationRunHistory(set?.id, { maxAttempts: 3 }).catch(() => {});
-                        },
-                      },
-                    })
                 : React.createElement(PlatformEmptyState, {
                     icon: ChartColumnIncreasing,
                     title: "No evaluation runs yet",
                     description: "Run this evaluation to measure performance across its cases.",
-                  }),
+                  });
+          return React.createElement(PlatformDataTable, {
+              key: "evaluation-results-" + tableMode,
+              rows: tableRows,
+              getRowId: (row) => row.id,
+              ariaLabel: tableMode === "scores" ? "Evaluation scores" : "Evaluation runs",
+              className: "playground-evaluation-runs-platform-table playground-evaluations-runs-section" + (tableMode === "scores" ? " is-scores-view" : ""),
+              surface: "plain",
+              variant: "minimalistic-ui",
+              sticky: false,
+              pagination: {},
+              sorting: {
+                defaultValue: tableMode === "scores"
+                  ? { id: "latestScore", direction: "desc" }
+                  : { id: "date", direction: "desc" },
+              },
+              selection: tableMode === "runs"
+                ? {
+                    enabled: true,
+                    value: selectedEvaluationRunIds,
+                    onChange: ({ selectedIds }) => setSelectedEvaluationRunIds(new Set(selectedIds)),
+                    ariaLabel: (run) => "Select " + (run.label || "evaluation run"),
+                  }
+                : undefined,
+              emptyState,
               toolbar: {
-                title: "Runs",
+                leading: tableTabs,
                 search: {
                   value: evaluationRunsSearchQuery || "",
                   onChange: (value) => {
                     if (typeof setEvaluationRunsSearchQuery === "function") setEvaluationRunsSearchQuery(value);
-                    if (typeof setEvaluationRunsVisibleCount === "function") setEvaluationRunsVisibleCount(5);
                   },
-                  placeholder: "Search runs",
-                  ariaLabel: "Search evaluation runs",
+                  placeholder: tableMode === "scores" ? "Search scores" : "Search runs",
+                  ariaLabel: tableMode === "scores" ? "Search evaluation scores" : "Search evaluation runs",
                   manual: true,
                 },
-                filters: [{
-                  id: "run-status",
-                  label: "Filter",
-                  value: filterMode,
-                  options: filterOptions,
-                  onChange: (value) => {
-                    if (typeof setEvaluationRunsFilterMode === "function") setEvaluationRunsFilterMode(value);
-                    if (typeof setEvaluationRunsVisibleCount === "function") setEvaluationRunsVisibleCount(5);
-                  },
-                }],
-                trailing: hasMoreRuns
-                  ? React.createElement(PlatformSecondaryButton, {
-                      type: "button",
-                      size: "small",
-                      onClick: () => {
-                        if (typeof setEvaluationRunsVisibleCount === "function") {
-                          setEvaluationRunsVisibleCount((current) => Math.max(5, Number(current) || 5) + 10);
-                        }
+                filters: tableMode === "runs"
+                  ? [{
+                      id: "run-status",
+                      label: "Filter",
+                      value: filterMode,
+                      options: filterOptions,
+                      onChange: (value) => {
+                        if (typeof setEvaluationRunsFilterMode === "function") setEvaluationRunsFilterMode(value);
                       },
-                    },
-                      React.createElement(List, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, "Show more")
-                    )
-                  : null,
+                    }]
+                  : [],
               },
-              columns: [
-                {
-                  id: "run",
-                  header: "Run",
-                  accessor: (run) => run.label || "Run",
-                  sortable: true,
-                  width: "minmax(170px, 1.5fr)",
-                  cell: ({ row: run }) => React.createElement("div", { className: "playground-plugin-row-title" }, run.label || "Run"),
-                },
-                {
-                  id: "agent",
-                  header: "Agent",
-                  accessor: getRunAgentLabel,
-                  sortable: true,
-                  width: "minmax(130px, 1fr)",
-                  cell: ({ row: run }) => renderRunAgentCell(run, set),
-                },
-                {
-                  id: "environment",
-                  header: "Environment",
-                  accessor: getRunEnvironmentLabel,
-                  sortable: true,
-                  width: "minmax(140px, 1.1fr)",
-                  hideBelow: 760,
-                  cell: ({ row: run }) => renderRunEnvironmentCell(run, set),
-                },
-                {
-                  id: "score",
-                  header: "Score",
-                  accessor: (run) => Number(run.averageScore || 0),
-                  sortable: true,
-                  width: "minmax(80px, 0.65fr)",
-                  cell: ({ row: run }) => {
-                    const status = String(run?.status || "").trim().toLowerCase();
-                    return status === "queued" || status === "running" ? "running" : formatPlaygroundEvaluationPercent(run.averageScore);
-                  },
-                },
-                { id: "cases", header: "Cases", accessor: (run) => Number(run.totalCount || 0), sortable: true, width: "minmax(70px, 0.55fr)", hideBelow: 680 },
-                {
-                  id: "date",
-                  header: "Date",
-                  accessor: getRunTimestamp,
-                  sortable: true,
-                  width: "minmax(110px, 0.9fr)",
-                  align: "end",
-                  cell: ({ row: run }) => formatPlaygroundEvaluationDate(run.completedAt || run.createdAt),
-                },
-              ],
-              onRowActivate: (run) => openRunDetail(set.id, run.id),
-              getRowAriaLabel: (run) => "Open evaluation run " + (run.label || "Run"),
-              getRowActions: (run) => [
-                { id: "rename", label: "Rename", icon: SquarePen, onSelect: () => openEvaluationRunRenameDialog(set, run) },
-                { id: "delete", label: "Delete", icon: Trash2, danger: true, separatorBefore: true, onSelect: () => handleDeleteEvaluationRun(set.id, run.id) },
-              ],
+              columns: tableMode === "scores" ? scoreColumns : runColumns,
+              onRowActivate: (row) => {
+                const run = tableMode === "scores" ? row.latestRun : row;
+                if (run?.id) openRunDetail(set.id, run.id);
+              },
+              getRowAriaLabel: (row) => tableMode === "scores"
+                ? "Open latest evaluation run for " + row.agentLabel + " in " + row.environmentLabel
+                : "Open evaluation run " + (row.label || "Run"),
+              getRowActions: tableMode === "runs"
+                ? (run, state) => {
+                    const targetRuns = Array.isArray(state?.targetRows) && state.targetRows.length
+                      ? state.targetRows
+                      : [run];
+                    if (targetRuns.length > 1) {
+                      return [{
+                        id: "delete-selected",
+                        label: "Delete selected",
+                        icon: Trash2,
+                        danger: true,
+                        onSelect: () => handleDeleteEvaluationRuns(set.id, targetRuns.map((targetRun) => targetRun.id)),
+                      }];
+                    }
+                    return [
+                      { id: "rename", label: "Rename", icon: SquarePen, onSelect: () => openEvaluationRunRenameDialog(set, run) },
+                      { id: "delete", label: "Delete", icon: Trash2, danger: true, separatorBefore: true, onSelect: () => handleDeleteEvaluationRun(set.id, run.id) },
+                    ];
+                  }
+                : undefined,
             });
         }
 
@@ -395,13 +513,65 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
                   size: "small",
                   onClick: () => openEvaluationThreadCaseModal(set),
                 }, React.createElement(MessageSquare, { width: 15, height: 15, strokeWidth: 1.8 }), React.createElement("span", null, "From Threads")),
-                React.createElement(PlatformPrimaryButton, {
-                  type: "button",
-                  size: "small",
-                  onClick: () => openNewEvaluationCaseEditor(set),
-                }, React.createElement(Plus, { width: 15, height: 15, strokeWidth: 1.8 }), React.createElement("span", null, "Case"))
+                React.createElement(PlatformButtonSelector, {
+                    mode: "split-action",
+                    buttonVariant: "primary",
+                    buttonSize: "small",
+                    label: "Case",
+                    leading: React.createElement(Plus, { width: 15, height: 15, strokeWidth: 1.8 }),
+                    actionAriaLabel: "Add case",
+                    popupAriaLabel: "Case import options",
+                    onAction: () => openNewEvaluationCaseEditor(set),
+                    closeOnSelect: true,
+                    popupAlignment: "right",
+                    popupRole: "menu",
+                    popupVariant: "minimal",
+                    popupWidth: 230,
+                    popupClassName: "playground-evaluations-case-import-menu",
+                  },
+                  React.createElement("button", {
+                      type: "button",
+                      role: "menuitem",
+                      className: "platform-data-table__menu-item",
+                      onClick: openEvaluationJsonlFilePicker,
+                    },
+                    React.createElement(FileText, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Upload JSONL file")
+                  ),
+                  React.createElement("button", {
+                      type: "button",
+                      role: "menuitem",
+                      className: "platform-data-table__menu-item",
+                      onClick: () => openEvaluationJsonlWorkspacePicker(set),
+                    },
+                    React.createElement(FolderOpen, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Upload from Workspace")
+                  )
+                )
               )
             ),
+            React.createElement("input", {
+              ref: evaluationJsonlFileInputRef,
+              type: "file",
+              accept: ".jsonl,application/x-ndjson,application/jsonl",
+              multiple: true,
+              hidden: true,
+              onChange: (event) => {
+                void handleEvaluationJsonlFiles(set.id, event.target.files);
+                event.target.value = "";
+              },
+            }),
+            evaluationJsonlFileImportError
+              ? React.createElement("div", {
+                  className: "playground-evaluations-case-import-feedback is-error",
+                  role: "alert",
+                }, evaluationJsonlFileImportError)
+              : evaluationJsonlFileImportMessage
+                ? React.createElement("div", {
+                    className: "playground-evaluations-case-import-feedback",
+                    role: "status",
+                  }, evaluationJsonlFileImportMessage)
+                : null,
             hasCaseRows
               ? React.createElement("div", { className: "playground-evaluations-case-preview-list" },
                   pendingRows.map((pending) => {
@@ -511,46 +681,6 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
 		                  description: "Add a case or refine an existing thread to build this evaluation dataset.",
 		                })
 		          );
-        }
-
-        function renderEvaluationImportsSection(set) {
-          return React.createElement(PlatformAttachments, {
-              className: "playground-evaluations-jsonl-imports",
-              title: React.createElement("span", { className: "playground-evaluations-imports-title" },
-                React.createElement("span", null, "Imports"),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-evaluations-imports-help",
-                  "aria-label": "JSONL import format",
-                  onClick: (event) => event.preventDefault(),
-                },
-                  React.createElement(CircleHelp, { width: 12, height: 12, strokeWidth: 1.8 }),
-                  React.createElement("span", {
-                    className: "playground-evaluations-pass-threshold-tooltip playground-evaluations-imports-tooltip",
-                    role: "tooltip",
-                  },
-                    "Upload .jsonl files with one JSON object per line. Each object should include input and expectedOutput, and can optionally include evaluatorGuidance and runCount."
-                  )
-                )
-              ),
-              inputRef: evaluationJsonlFileInputRef,
-              accept: ".jsonl,application/x-ndjson,application/jsonl",
-              multiple: true,
-              dragging: evaluationJsonlFileDragging,
-              uploadFromComputerLabel: "From Workspace",
-              emptyTitle: evaluationJsonlFileDragging ? "Drop JSONL files here" : "Drag & drop JSONL files here",
-              emptyDescription: "or click to browse",
-              statusMessage: evaluationJsonlFileImportMessage || null,
-              errorMessage: evaluationJsonlFileImportError || null,
-              onUploadFromComputer: () => openEvaluationJsonlWorkspacePicker(set),
-              onBrowse: openEvaluationJsonlFilePicker,
-              onInputChange: (event) => {
-                void handleEvaluationJsonlFiles(set.id, event.target.files);
-                event.target.value = "";
-              },
-              onDraggingChange: setEvaluationJsonlFileDragging,
-              onFilesDrop: (files) => void handleEvaluationJsonlFiles(set.id, files),
-            });
         }
 
         function renderEvaluationThreadButton(threadId, label) {

@@ -135,6 +135,144 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
           };
         }
 
+        function normalizeProjectOverviewTaskActivityRows(rows, tasks, projectId) {
+          const tasksById = new Map(
+            (Array.isArray(tasks) ? tasks : [])
+              .filter((task) => task?.id)
+              .map((task) => [task.id, task])
+          );
+          return (Array.isArray(rows) ? rows : [])
+            .map((row) => {
+              const normalizedEvent = normalizePlaygroundTaskActivityRecord(row);
+              if (!normalizedEvent || normalizedEvent.eventType === "comment_added") {
+                return null;
+              }
+              const fieldName = String(normalizedEvent.fieldName || "").trim().toLowerCase();
+              if (normalizedEvent.eventType === "field_changed" && fieldName === "description") {
+                return null;
+              }
+              const taskId = String(row?.taskId || row?.task_id || row?.task?.id || "").trim();
+              const task = tasksById.get(taskId)
+                || (row?.task ? normalizePlaygroundTaskRecord(row.task) : null);
+              if (!taskId || !task) {
+                return null;
+              }
+              return {
+                ...normalizedEvent,
+                taskId,
+                projectId: String(row?.projectId || row?.project_id || projectId).trim(),
+                task,
+              };
+            })
+            .filter(Boolean)
+            .sort((left, right) => {
+              const leftTime = Date.parse(String(left.createdAt || "")) || 0;
+              const rightTime = Date.parse(String(right.createdAt || "")) || 0;
+              return rightTime - leftTime || String(right.id).localeCompare(String(left.id));
+            })
+            .slice(0, 5);
+        }
+
+        function isLegacyProjectTaskActivityRoute(result) {
+          if (Number(result?.response?.status) !== 404) {
+            return false;
+          }
+          const message = String(result?.data?.message || result?.data?.error || "").trim().toLowerCase();
+          return message === "task not found";
+        }
+
+        function readProjectTaskActivityUpperBound(task) {
+          const timestamp = Date.parse(String(task?.updatedAt || task?.createdAt || ""));
+          return Number.isFinite(timestamp) ? timestamp : Number.POSITIVE_INFINITY;
+        }
+
+        async function loadLegacyProjectOverviewTaskActivity(projectId, tasks, loadToken) {
+          const orderedTasks = (Array.isArray(tasks) ? tasks : [])
+            .filter((task) => task?.id)
+            .sort((left, right) =>
+              readProjectTaskActivityUpperBound(right) - readProjectTaskActivityUpperBound(left)
+              || String(left.id).localeCompare(String(right.id))
+            );
+          const activityRows = [];
+          const batchSize = 4;
+          let firstFailure = null;
+
+          for (let offset = 0; offset < orderedTasks.length; offset += batchSize) {
+            if (projectWorkspaceLoadTokenRef.current !== loadToken) {
+              return null;
+            }
+            const batch = orderedTasks.slice(offset, offset + batchSize);
+            const batchResults = await Promise.all(batch.map(async (task) => {
+              const target = new URL(
+                backendUrl + "/tasks/" + encodeURIComponent(task.id) + "/activity",
+                window.location.origin
+              );
+              try {
+                const response = await fetch(target.toString(), {
+                  method: "GET",
+                  headers: requestHeaders,
+                });
+                const data = await response.json().catch(() => ({}));
+                return { task, response, data };
+              } catch (error) {
+                return { task, error };
+              }
+            }));
+
+            batchResults.forEach((result) => {
+              if (!result.response?.ok) {
+                firstFailure ||= result.error
+                  || new Error(
+                    result.data?.message
+                    || result.data?.error
+                    || "Failed to load ticket activity."
+                  );
+                return;
+              }
+              const rows = Array.isArray(result.data?.data)
+                ? result.data.data
+                : Array.isArray(result.data?.items)
+                  ? result.data.items
+                  : [];
+              rows.forEach((row) => {
+                activityRows.push({
+                  ...row,
+                  taskId: String(row?.taskId || row?.task_id || result.task.id).trim(),
+                  projectId: String(row?.projectId || row?.project_id || projectId).trim(),
+                  task: row?.task || result.task,
+                });
+              });
+            });
+
+            const normalizedItems = normalizeProjectOverviewTaskActivityRows(
+              activityRows,
+              orderedTasks,
+              projectId
+            );
+            const nextTask = orderedTasks[offset + batch.length] || null;
+            if (
+              normalizedItems.length >= 5
+              && (
+                !nextTask
+                || (Date.parse(String(normalizedItems[4]?.createdAt || "")) || 0)
+                  >= readProjectTaskActivityUpperBound(nextTask)
+              )
+            ) {
+              return normalizedItems;
+            }
+          }
+
+          const normalizedItems = normalizeProjectOverviewTaskActivityRows(
+            activityRows,
+            orderedTasks,
+            projectId
+          );
+          if (normalizedItems.length === 0 && firstFailure) {
+            throw firstFailure;
+          }
+          return normalizedItems;
+        }
+
         async function loadProjectWorkspace(projectId) {
           if (!projectId) {
             projectWorkspaceLoadTokenRef.current = "";
@@ -153,6 +291,12 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
             error: "",
             summary: current.summary,
           }));
+          setProjectOverviewTaskActivityState((current) => ({
+            projectId,
+            status: "loading",
+            error: "",
+            items: current.projectId === projectId ? current.items : [],
+          }));
 
           try {
             const threadsRequestTarget = new URL(backendUrl + "/threads", window.location.origin);
@@ -161,8 +305,11 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
             const costSummaryRequestTarget = new URL(backendUrl + "/costs/summary", window.location.origin);
             costSummaryRequestTarget.searchParams.set("projectId", projectId);
             costSummaryRequestTarget.searchParams.set("period", "year");
+            const activityRequestTarget = new URL(backendUrl + "/tasks/activity", window.location.origin);
+            activityRequestTarget.searchParams.set("projectId", projectId);
+            activityRequestTarget.searchParams.set("limit", "5");
 
-            const [tasksResponse, releasesResponse, sprintsResponse, threadsResponse, costSummaryResult] = await Promise.all([
+            const [tasksResponse, releasesResponse, sprintsResponse, threadsResponse, costSummaryResult, activityResult] = await Promise.all([
               fetch(backendUrl + buildProjectScopedPath("/tasks", projectId), {
                 method: "GET",
                 headers: requestHeaders,
@@ -180,6 +327,15 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
                 headers: requestHeaders,
               }),
               fetch(costSummaryRequestTarget.toString(), {
+                method: "GET",
+                headers: requestHeaders,
+              })
+                .then(async (response) => ({
+                  response,
+                  data: await response.json().catch(() => ({})),
+                }))
+                .catch((error) => ({ error })),
+              fetch(activityRequestTarget.toString(), {
                 method: "GET",
                 headers: requestHeaders,
               })
@@ -212,6 +368,63 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
             const nextTasks = parsePlaygroundTaskListResponse(tasksData);
             const nextReleases = parsePlaygroundTaskReleaseListResponse(releasesData);
             const nextSprints = parsePlaygroundTaskSprintListResponse(sprintsData);
+            if (activityResult?.error) {
+              setProjectOverviewTaskActivityState((current) => ({
+                projectId,
+                status: "error",
+                error: activityResult.error instanceof Error
+                  ? activityResult.error.message
+                  : "Failed to load project activity.",
+                items: current.projectId === projectId ? current.items : [],
+              }));
+            } else if (activityResult?.response?.ok) {
+              const activityRows = Array.isArray(activityResult.data?.data)
+                ? activityResult.data.data
+                : Array.isArray(activityResult.data?.items)
+                  ? activityResult.data.items
+                  : [];
+              setProjectOverviewTaskActivityState({
+                projectId,
+                status: "ready",
+                error: "",
+                items: normalizeProjectOverviewTaskActivityRows(activityRows, nextTasks, projectId),
+              });
+            } else if (isLegacyProjectTaskActivityRoute(activityResult)) {
+              void loadLegacyProjectOverviewTaskActivity(projectId, nextTasks, loadToken)
+                .then((items) => {
+                  if (!items || projectWorkspaceLoadTokenRef.current !== loadToken) {
+                    return;
+                  }
+                  setProjectOverviewTaskActivityState({
+                    projectId,
+                    status: "ready",
+                    error: "",
+                    items,
+                  });
+                })
+                .catch((error) => {
+                  if (projectWorkspaceLoadTokenRef.current !== loadToken) {
+                    return;
+                  }
+                  setProjectOverviewTaskActivityState((current) => ({
+                    projectId,
+                    status: "error",
+                    error: error instanceof Error
+                      ? error.message
+                      : "Failed to load project activity.",
+                    items: current.projectId === projectId ? current.items : [],
+                  }));
+                });
+            } else {
+              setProjectOverviewTaskActivityState((current) => ({
+                projectId,
+                status: "error",
+                error: activityResult?.data?.message
+                  || activityResult?.data?.error
+                  || "Failed to load project activity.",
+                items: current.projectId === projectId ? current.items : [],
+              }));
+            }
             const currentDetailProject = selectedProjectDetail?.project?.id === projectId
               ? selectedProjectDetail.project
               : null;
@@ -332,6 +545,12 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
               status: "error",
               error: error instanceof Error ? error.message : "Failed to load project workspace.",
             });
+            setProjectOverviewTaskActivityState((current) => ({
+              projectId,
+              status: "error",
+              error: error instanceof Error ? error.message : "Failed to load project activity.",
+              items: current.projectId === projectId ? current.items : [],
+            }));
           }
         }
 
@@ -386,6 +605,10 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
               localStorage.removeItem("runner_demo_tasks_project_scope_id");
             }
           } catch {}
+        }, [selectedProjectId]);
+
+        useEffect(() => {
+          setProjectOverviewActivityTab("activity");
         }, [selectedProjectId]);
 
 	        useEffect(() => {

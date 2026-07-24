@@ -17474,7 +17474,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   justify-content: center;
   padding: 0 !important;
   border: 0 !important;
-  border-radius: 5px !important;
+  border-radius: 50% !important;
   outline: none;
   background: transparent !important;
   color: rgba(255, 255, 255, 0.7) !important;

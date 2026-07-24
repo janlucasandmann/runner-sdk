@@ -56,6 +56,13 @@
           const editorDirtyRef = useRef(false);
           const selectedAgentIdRef = useRef(initialAgentId || "");
           const lastInitializedAgentSelectionRef = useRef("");
+          const agentDetailRequestInFlightRef = useRef(new Map());
+          const loadedAgentDetailRequestKeysRef = useRef(new Set());
+          const agentAnalyticsRequestInFlightRef = useRef(new Map());
+          const agentsHomeThreadsRequestInFlightRef = useRef(new Map());
+          const requestHeadersRef = useRef(requestHeaders);
+          const onWorkspaceTeamsRequestRef = useRef(onWorkspaceTeamsRequest);
+          onWorkspaceTeamsRequestRef.current = onWorkspaceTeamsRequest;
           const lastAppliedCreateAgentRequestTokenRef = useRef("");
           const agentAutosaveTimerRef = useRef(0);
           const agentAutosaveQueuedRef = useRef(null);
@@ -112,6 +119,8 @@
             });
             return next;
           });
+          const agentDetailsByIdRef = useRef(agentDetailsById);
+          agentDetailsByIdRef.current = agentDetailsById;
           const [draftAgent, setDraftAgent] = useState(null);
           const [toolbarPopover, setToolbarPopover] = useState("");
           const [searchPopupQuery, setSearchPopupQuery] = useState("");
@@ -143,6 +152,7 @@
           const [agentDetailThreadSorting, setAgentDetailThreadSorting] = useState(() => ({ id: "date", direction: "desc" }));
           const [agentDetailThreadFilterMode, setAgentDetailThreadFilterMode] = useState("all");
           const [agentDetailInsightsTableMode, setAgentDetailInsightsTableMode] = useState("threads");
+          const [agentDetailSettingsTableMode, setAgentDetailSettingsTableMode] = useState("access");
   ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.state}${GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.state}        const [selectedAgentsObservabilityThreadId, setSelectedAgentsObservabilityThreadId] = useState("");
           const [agentsObservabilityThreadDetailsById, setAgentsObservabilityThreadDetailsById] = useState({});
           const [loadingAgentId, setLoadingAgentId] = useState("");
@@ -150,6 +160,8 @@
           const [isHomeViewActive, setIsHomeViewActive] = useState(() => !String(focusedAgentId || "").trim());
           const AGENT_THREAD_FETCH_LIMIT = 20;
           const [agentsHomeThreadRecords, setAgentsHomeThreadRecords] = useState([]);
+          const agentsHomeThreadRecordsRef = useRef(agentsHomeThreadRecords);
+          agentsHomeThreadRecordsRef.current = agentsHomeThreadRecords;
           const [agentsHomeThreadsLoading, setAgentsHomeThreadsLoading] = useState(false);
           const [agentsHomeThreadsError, setAgentsHomeThreadsError] = useState("");
           const [agentsHomeChartTimescale, setAgentsHomeChartTimescale] = useState("month");
@@ -163,6 +175,7 @@
             } catch {}
             return String(backendUrl || "").replace(new RegExp("/+$"), "") + "|" + String(currentUserId || currentUserEmail || "session") + "|" + headerSignature;
           }, [backendUrl, currentUserEmail, currentUserId, requestHeaders]);
+          requestHeadersRef.current = requestHeaders;
           const [agentsOverviewAnalyticsState, setAgentsOverviewAnalyticsState] = useState(() => ({
             scopeKey: "",
             dataByPeriod: {},
@@ -180,6 +193,8 @@
             return getPlaygroundAgentListMode(initialSelectedAgent);
           });
           const [agentAnalyticsById, setAgentAnalyticsById] = useState({});
+          const agentAnalyticsByIdRef = useRef(agentAnalyticsById);
+          agentAnalyticsByIdRef.current = agentAnalyticsById;
           const [agentAnalyticsErrorById, setAgentAnalyticsErrorById] = useState({});
           const [agentAnalyticsVisibility, setAgentAnalyticsVisibility] = useState({
             requests: true,
@@ -406,6 +421,8 @@
               return String(left?.name || "").localeCompare(String(right?.name || ""));
             });
           }, [agents]);
+          const orderedAgentsRef = useRef(orderedAgents);
+          orderedAgentsRef.current = orderedAgents;
   
           const agentListActionTarget = useMemo(() => {
             if (!agentListActionMenuState?.agentId) {
@@ -2452,37 +2469,70 @@
             return React.createElement(PlaygroundAgentTelemetryTimeseriesChart, config);
           }
   
-          const loadAgentDetails = useCallback(async (agentId) => {
-            if (!agentId || agentId === PLAYGROUND_AGENT_DRAFT_ID) {
-              return;
+          const loadAgentDetails = useCallback(async (agentId, options = {}) => {
+            const normalizedAgentId = String(agentId || "").trim();
+            if (!normalizedAgentId || normalizedAgentId === PLAYGROUND_AGENT_DRAFT_ID) {
+              return null;
             }
-  
-            setLoadingAgentId(agentId);
-            try {
-              const response = await fetch(backendUrl + "/agents/" + encodeURIComponent(agentId), {
-                method: "GET",
-                headers: requestHeaders,
-              });
-              const data = await response.json().catch(() => ({}));
-              if (!response.ok) {
-                throw new Error(data?.message || data?.error || "Failed to load agent.");
-              }
-  
-              const normalized = getPlaygroundAgentResponseRecord(data);
-              if (!normalized) {
-                throw new Error("Agent response was empty.");
-              }
-  
-              setAgentDetailsById((current) => {
-                  const currentVersions = readPlaygroundAgentVersions(current[agentId]);
-                  return {
-                    ...current,
-                    [agentId]: currentVersions.length > 0
-                      ? createPlaygroundAgentWithVersionList(normalized, currentVersions)
-                      : normalized,
-                  };
+
+            const requestScope = agentsOverviewAnalyticsScopeKey;
+            const requestKey = requestScope + "|agent-detail|" + normalizedAgentId;
+            const pendingRequest = agentDetailRequestInFlightRef.current.get(requestKey);
+            if (pendingRequest) {
+              return pendingRequest;
+            }
+
+            const force = Boolean(options?.force);
+            const cachedAgent = agentDetailsByIdRef.current[normalizedAgentId] || null;
+            const hasLoaded = loadedAgentDetailRequestKeysRef.current.has(requestKey);
+            if (!force && cachedAgent && hasLoaded) {
+              return cachedAgent;
+            }
+
+            const showBlockingLoader = !cachedAgent && options?.background !== true;
+            if (showBlockingLoader) {
+              setLoadingAgentId(normalizedAgentId);
+            }
+
+            const requestPromise = (async () => {
+              try {
+                const response = await fetch(backendUrl + "/agents/" + encodeURIComponent(normalizedAgentId), {
+                  method: "GET",
+                  headers: requestHeadersRef.current,
                 });
-              if (selectedAgentIdRef.current === agentId && !editorDirtyRef.current) {
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                  throw new Error(data?.message || data?.error || "Failed to load agent.");
+                }
+
+                const normalized = getPlaygroundAgentResponseRecord(data);
+                if (!normalized) {
+                  throw new Error("Agent response was empty.");
+                }
+
+                const cachedVersions = readPlaygroundAgentVersions(
+                  agentDetailsByIdRef.current[normalizedAgentId]
+                );
+                const resolvedAgent = cachedVersions.length > 0
+                  ? createPlaygroundAgentWithVersionList(normalized, cachedVersions)
+                  : normalized;
+                loadedAgentDetailRequestKeysRef.current.add(requestKey);
+                agentDetailsByIdRef.current = {
+                  ...agentDetailsByIdRef.current,
+                  [normalizedAgentId]: resolvedAgent,
+                };
+                setAgentDetailsById((current) => {
+                  const currentVersions = readPlaygroundAgentVersions(current[normalizedAgentId]);
+                  const nextAgent = currentVersions.length > 0
+                    ? createPlaygroundAgentWithVersionList(normalized, currentVersions)
+                    : resolvedAgent;
+                  agentDetailsByIdRef.current = {
+                    ...current,
+                    [normalizedAgentId]: nextAgent,
+                  };
+                  return agentDetailsByIdRef.current;
+                });
+                if (selectedAgentIdRef.current === normalizedAgentId && !editorDirtyRef.current) {
                   setDraftAgent((current) => {
                     const currentVersions = readPlaygroundAgentVersions(current);
                     const currentSelectedVersion = currentVersions.length > 0
@@ -2501,30 +2551,49 @@
                     rememberAgentVersionBaseline(nextAgent, { force: true });
                     return nextAgent;
                   });
+                }
+                return resolvedAgent;
+              } catch (error) {
+                if (selectedAgentIdRef.current === normalizedAgentId) {
+                  setSaveState((current) => ({
+                    ...current,
+                    error: error instanceof Error ? error.message : "Failed to load agent.",
+                  }));
+                }
+                return null;
+              } finally {
+                if (showBlockingLoader) {
+                  setLoadingAgentId((current) => current === normalizedAgentId ? "" : current);
+                }
               }
-            } catch (error) {
-              if (selectedAgentIdRef.current === agentId) {
-                setSaveState((current) => ({
-                  ...current,
-                  error: error instanceof Error ? error.message : "Failed to load agent.",
-                }));
-              }
+            })();
+
+            agentDetailRequestInFlightRef.current.set(requestKey, requestPromise);
+            try {
+              return await requestPromise;
             } finally {
-              setLoadingAgentId((current) => current === agentId ? "" : current);
+              if (agentDetailRequestInFlightRef.current.get(requestKey) === requestPromise) {
+                agentDetailRequestInFlightRef.current.delete(requestKey);
+              }
             }
-          }, [backendUrl, requestHeaders]);
+          }, [agentsOverviewAnalyticsScopeKey, backendUrl]);
   
           const loadAgentAnalytics = useCallback(async (agentId, options = {}) => {
             const normalizedAgentId = String(agentId || "").trim();
             if (!normalizedAgentId || normalizedAgentId === PLAYGROUND_AGENT_DRAFT_ID) {
               return null;
             }
-  
-            const force = Boolean(options?.force);
-            if (!force && agentAnalyticsById[normalizedAgentId]) {
-              return agentAnalyticsById[normalizedAgentId];
+
+            const requestKey = agentsOverviewAnalyticsScopeKey + "|agent-analytics|" + normalizedAgentId;
+            const pendingRequest = agentAnalyticsRequestInFlightRef.current.get(requestKey);
+            if (pendingRequest) {
+              return pendingRequest;
             }
-  
+            const force = Boolean(options?.force);
+            if (!force && agentAnalyticsByIdRef.current[normalizedAgentId]) {
+              return agentAnalyticsByIdRef.current[normalizedAgentId];
+            }
+
             setLoadingAgentAnalyticsId(normalizedAgentId);
             setAgentAnalyticsErrorById((current) => {
               if (!current[normalizedAgentId]) {
@@ -2535,41 +2604,67 @@
                 [normalizedAgentId]: "",
               };
             });
-  
-            try {
-              const response = await fetch(
-                buildPlaygroundAgentAnalyticsUrl(backendUrl, normalizedAgentId),
-                {
-                  method: "GET",
-                  headers: requestHeaders,
+
+            const requestPromise = (async () => {
+              try {
+                const response = await fetch(
+                  buildPlaygroundAgentAnalyticsUrl(backendUrl, normalizedAgentId),
+                  {
+                    method: "GET",
+                    headers: requestHeadersRef.current,
+                  }
+                );
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                  throw new Error(data?.message || data?.error || "Failed to load analytics.");
                 }
-              );
-              const data = await response.json().catch(() => ({}));
-              if (!response.ok) {
-                throw new Error(data?.message || data?.error || "Failed to load analytics.");
+                agentAnalyticsByIdRef.current = {
+                  ...agentAnalyticsByIdRef.current,
+                  [normalizedAgentId]: data,
+                };
+                setAgentAnalyticsById((current) => {
+                  const next = {
+                    ...current,
+                    [normalizedAgentId]: data,
+                  };
+                  agentAnalyticsByIdRef.current = next;
+                  return next;
+                });
+                return data;
+              } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : "Failed to load analytics.";
+                setAgentAnalyticsErrorById((current) => ({
+                  ...current,
+                  [normalizedAgentId]: errorMessage,
+                }));
+                return null;
+              } finally {
+                setLoadingAgentAnalyticsId((current) => current === normalizedAgentId ? "" : current);
               }
-              setAgentAnalyticsById((current) => ({
-                ...current,
-                [normalizedAgentId]: data,
-              }));
-              return data;
-            } catch (error) {
-              const errorMessage = error instanceof Error ? error.message : "Failed to load analytics.";
-              setAgentAnalyticsErrorById((current) => ({
-                ...current,
-                [normalizedAgentId]: errorMessage,
-              }));
-              return null;
+            })();
+
+            agentAnalyticsRequestInFlightRef.current.set(requestKey, requestPromise);
+            try {
+              return await requestPromise;
             } finally {
-              setLoadingAgentAnalyticsId((current) => current === normalizedAgentId ? "" : current);
+              if (agentAnalyticsRequestInFlightRef.current.get(requestKey) === requestPromise) {
+                agentAnalyticsRequestInFlightRef.current.delete(requestKey);
+              }
             }
-          }, [agentAnalyticsById, backendUrl, requestHeaders]);
+          }, [agentsOverviewAnalyticsScopeKey, backendUrl]);
   
           const loadAgentsHomeThreads = useCallback(async (options = {}) => {
+            const requestKey = agentsOverviewAnalyticsScopeKey + "|agent-threads|" + AGENT_THREAD_FETCH_LIMIT;
+            const pendingRequest = agentsHomeThreadsRequestInFlightRef.current.get(requestKey);
+            if (pendingRequest) {
+              return pendingRequest;
+            }
             const force = Boolean(options?.force);
-            if (!force && agentsHomeThreadRecords.length > 0) {
-              const cachedThreads = agentsHomeThreadRecords.slice(0, AGENT_THREAD_FETCH_LIMIT);
-              if (cachedThreads.length !== agentsHomeThreadRecords.length) {
+            const cachedThreadRecords = agentsHomeThreadRecordsRef.current;
+            if (!force && cachedThreadRecords.length > 0) {
+              const cachedThreads = cachedThreadRecords.slice(0, AGENT_THREAD_FETCH_LIMIT);
+              if (cachedThreads.length !== cachedThreadRecords.length) {
+                agentsHomeThreadRecordsRef.current = cachedThreads;
                 setAgentsHomeThreadRecords(cachedThreads);
               }
               return cachedThreads;
@@ -2609,37 +2704,52 @@
   
             setAgentsHomeThreadsLoading((current) => current ? current : true);
             setAgentsHomeThreadsError((current) => current ? "" : current);
-            try {
-              const response = await fetch(backendUrl + "/threads?limit=" + AGENT_THREAD_FETCH_LIMIT, {
-                method: "GET",
-                headers: requestHeaders,
-              });
-              const data = await response.json().catch(() => ({}));
-              if (!response.ok) {
-                throw new Error(data?.message || data?.error || "Failed to load threads.");
+            const requestPromise = (async () => {
+              try {
+                const response = await fetch(backendUrl + "/threads?limit=" + AGENT_THREAD_FETCH_LIMIT, {
+                  method: "GET",
+                  headers: requestHeadersRef.current,
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                  throw new Error(data?.message || data?.error || "Failed to load threads.");
+                }
+                const items = (
+                  Array.isArray(data?.data)
+                    ? data.data
+                    : Array.isArray(data?.threads)
+                      ? data.threads
+                      : []
+                ).slice(0, AGENT_THREAD_FETCH_LIMIT);
+                setAgentsHomeThreadRecords((current) => {
+                  const next = areThreadRecordListsEquivalent(current, items) ? current : items;
+                  agentsHomeThreadRecordsRef.current = next;
+                  return next;
+                });
+                return items;
+              } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : "Failed to load threads.";
+                setAgentsHomeThreadsError((current) => current === errorMessage ? current : errorMessage);
+                setAgentsHomeThreadRecords((current) => {
+                  const next = Array.isArray(current) && current.length === 0 ? current : [];
+                  agentsHomeThreadRecordsRef.current = next;
+                  return next;
+                });
+                return [];
+              } finally {
+                setAgentsHomeThreadsLoading((current) => current ? false : current);
               }
-              const items = (
-                Array.isArray(data?.data)
-                  ? data.data
-                  : Array.isArray(data?.threads)
-                    ? data.threads
-                    : []
-              ).slice(0, AGENT_THREAD_FETCH_LIMIT);
-              setAgentsHomeThreadRecords((current) => (
-                areThreadRecordListsEquivalent(current, items) ? current : items
-              ));
-              return items;
-            } catch (error) {
-              const errorMessage = error instanceof Error ? error.message : "Failed to load threads.";
-              setAgentsHomeThreadsError((current) => current === errorMessage ? current : errorMessage);
-              setAgentsHomeThreadRecords((current) => (
-                Array.isArray(current) && current.length === 0 ? current : []
-              ));
-              return [];
+            })();
+
+            agentsHomeThreadsRequestInFlightRef.current.set(requestKey, requestPromise);
+            try {
+              return await requestPromise;
             } finally {
-              setAgentsHomeThreadsLoading((current) => current ? false : current);
+              if (agentsHomeThreadsRequestInFlightRef.current.get(requestKey) === requestPromise) {
+                agentsHomeThreadsRequestInFlightRef.current.delete(requestKey);
+              }
             }
-          }, [agentsHomeThreadRecords, backendUrl, requestHeaders]);
+          }, [agentsOverviewAnalyticsScopeKey, backendUrl]);
   
           const loadAgentsObservabilityThreadDetails = useCallback(async (threadId, options = {}) => {
             const normalizedThreadId = String(threadId || "").trim();
@@ -3385,13 +3495,26 @@
           useEffect(() => {
             setAgentDetailsById((current) => {
               const next = {};
+              let changed = false;
               agents.forEach((agent) => {
                 if (!agent?.id) return;
-                next[agent.id] = normalizePlaygroundAgentRecord({
+                const nextAgent = normalizePlaygroundAgentRecord({
                   ...(current[agent.id] || {}),
                   ...agent,
                 });
+                next[agent.id] = nextAgent;
+                if (
+                  !current[agent.id]
+                  || stringifyPlaygroundVersionComparableValue(current[agent.id])
+                    !== stringifyPlaygroundVersionComparableValue(nextAgent)
+                ) {
+                  changed = true;
+                }
               });
+              if (!changed && Object.keys(current).length === Object.keys(next).length) {
+                return current;
+              }
+              agentDetailsByIdRef.current = next;
               return next;
             });
           }, [agents]);
@@ -3410,6 +3533,7 @@
             setAgentDetailThreadSorting({ id: "date", direction: "desc" });
             setAgentDetailThreadFilterMode("all");
             setAgentDetailInsightsTableMode("threads");
+            setAgentDetailSettingsTableMode("access");
             setAgentDetailEvaluationSelectedSetId("");
             setAgentAccessPrincipalId("");
             setAgentAccessRoleId("member");
@@ -3428,18 +3552,9 @@
                 scrollNode.scrollTop = 0;
               }
               setAgentPermissionChartAnimationKey((current) => current + 1);
-              if (
-                agentDetailTab === "settings"
-                && typeof onWorkspaceTeamsRequest === "function"
-                && !workspaceTeamsLoading
-                && !agentWorkspaceTeamsRequestedRef.current
-              ) {
-                agentWorkspaceTeamsRequestedRef.current = true;
-                onWorkspaceTeamsRequest({});
-              }
             });
             return () => window.cancelAnimationFrame(frameId);
-          }, [agentDetailTab, onWorkspaceTeamsRequest, selectedAgentId, workspaceTeamsLoading]);
+          }, [agentDetailTab, selectedAgentId]);
   
           useEffect(() => {
             if (isHomeViewActive || !selectedAgentId || selectedAgentId === PLAYGROUND_AGENT_DRAFT_ID) {
@@ -3620,8 +3735,8 @@
               return;
             }
   
-            const seedAgent = agentDetailsById[normalizedSelectedAgentId]
-              || orderedAgents.find((agent) => agent.id === normalizedSelectedAgentId)
+            const seedAgent = agentDetailsByIdRef.current[normalizedSelectedAgentId]
+              || orderedAgentsRef.current.find((agent) => agent.id === normalizedSelectedAgentId)
               || null;
   
             if (isNewAgentSelection) {
@@ -3639,7 +3754,7 @@
               setDraftAgent(normalizedSeedAgent);
             }
             void loadAgentDetails(normalizedSelectedAgentId);
-          }, [loadAgentDetails, orderedAgents, selectedAgentId]);
+          }, [loadAgentDetails, selectedAgentId]);
   
           useEffect(() => {
             if (!draftAgent?.id || draftAgent.id === PLAYGROUND_AGENT_DRAFT_ID) {
@@ -3694,7 +3809,7 @@
             agentWorkspaceTeamsRequestedRef.current = false;
             agentWorkspaceTeamMembersRequestedRef.current = new Set();
             setAgentWorkspaceTeamMembersById({});
-          }, [requestHeaders]);
+          }, [agentsOverviewAnalyticsScopeKey]);
   
           useEffect(() => {
             const normalizedTeamId = String(workspaceTeamMembersTeamId || "").trim();
@@ -3748,16 +3863,15 @@
               || agentWorkspaceTeamsRequestedRef.current
               || workspaceTeamsLoading
               || workspaceTeamsRequiresPlan
-              || typeof onWorkspaceTeamsRequest !== "function"
+              || typeof onWorkspaceTeamsRequestRef.current !== "function"
             ) {
               return;
             }
             agentWorkspaceTeamsRequestedRef.current = true;
-            onWorkspaceTeamsRequest({});
+            onWorkspaceTeamsRequestRef.current({});
           }, [
             draftAgent?.id,
             normalizedWorkspaceTeams.length,
-            onWorkspaceTeamsRequest,
             workspaceTeamsLoading,
             workspaceTeamsRequiresPlan,
           ]);
@@ -4063,36 +4177,6 @@
             allKnownAgents.length,
             resolvedAgentModelOptions,
           ]);
-  
-          useEffect(() => {
-            const normalizedAgentId = String(agentCreationInstructionContext?.agentId || "").trim();
-            const normalizedStatus = String(agentCreationInstructionContext?.status || "").trim();
-            if (!normalizedAgentId || normalizedStatus === "completed" || normalizedStatus === "failed" || normalizedStatus === "cancelled") {
-              return undefined;
-            }
-  
-            let isCancelled = false;
-            let timerId = 0;
-            const pollAgentInstructions = () => {
-              timerId = window.setTimeout(async () => {
-                if (isCancelled) {
-                  return;
-                }
-                await loadAgentDetails(normalizedAgentId);
-                if (!isCancelled) {
-                  pollAgentInstructions();
-                }
-              }, 1500);
-            };
-  
-            pollAgentInstructions();
-            return () => {
-              isCancelled = true;
-              if (timerId) {
-                window.clearTimeout(timerId);
-              }
-            };
-          }, [agentCreationInstructionContext?.agentId, agentCreationInstructionContext?.status, loadAgentDetails]);
   
           useEffect(() => {
             if (!agentActionsPopoverOpen) {

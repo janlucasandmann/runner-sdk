@@ -705,18 +705,30 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACTIONS_SCRIPT = String.raw`        fun
           closeEvaluationRenameDialog();
         }
 
-        function handleDeleteEvaluationRun(setId, runId) {
+        function handleDeleteEvaluationRuns(setId, runIds) {
           const normalizedSetId = String(setId || "").trim();
-          const normalizedRunId = String(runId || "").trim();
-          if (!normalizedSetId || !normalizedRunId) return;
+          const normalizedRunIds = Array.from(new Set(
+            (Array.isArray(runIds) ? runIds : [])
+              .map((runId) => String(runId || "").trim())
+              .filter(Boolean)
+          ));
+          if (!normalizedSetId || !normalizedRunIds.length) return;
+          const deletedRunIds = new Set(normalizedRunIds);
           setEvaluationRunRowMenuId("");
-          void deleteEvaluationRunFromBackend(normalizedRunId).catch((error) => {
-            setEvaluationBackendSyncState({ status: "error", error: error?.message || String(error) });
+          setSelectedEvaluationRunIds(new Set());
+          void Promise.allSettled(normalizedRunIds.map((runId) => deleteEvaluationRunFromBackend(runId))).then((results) => {
+            const failedResult = results.find((result) => result.status === "rejected");
+            if (failedResult?.status === "rejected") {
+              setEvaluationBackendSyncState({
+                status: "error",
+                error: failedResult.reason?.message || String(failedResult.reason),
+              });
+            }
           });
           setEvaluationSets((current) => (Array.isArray(current) ? current : []).map((item) => {
             const normalizedSet = normalizePlaygroundEvaluationSet(item);
             if (normalizedSet.id !== normalizedSetId) return normalizedSet;
-            const nextRuns = normalizedSet.runs.filter((run) => run.id !== normalizedRunId);
+            const nextRuns = normalizedSet.runs.filter((run) => !deletedRunIds.has(run.id));
             const nextSet = normalizePlaygroundEvaluationSet({
               ...normalizedSet,
               runs: nextRuns,
@@ -727,7 +739,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACTIONS_SCRIPT = String.raw`        fun
               const versionRuns = Array.isArray(version.snapshot?.runs) ? version.snapshot.runs : [];
               const nextVersionRuns = versionRuns
                 .map((run) => normalizePlaygroundEvaluationRun(run))
-                .filter((run) => run.id !== normalizedRunId);
+                .filter((run) => !deletedRunIds.has(run.id));
               if (nextVersionRuns.length === versionRuns.length) return version;
               return normalizePlaygroundEvaluationVersion({
                 ...version,
@@ -741,33 +753,61 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACTIONS_SCRIPT = String.raw`        fun
             });
             return createPlaygroundEvaluationWithVersionList(nextSet, nextVersions);
           }));
-          if (selectedEvaluationSetId === normalizedSetId && selectedEvaluationRunId === normalizedRunId) {
+          if (selectedEvaluationSetId === normalizedSetId && deletedRunIds.has(selectedEvaluationRunId)) {
             setSelectedEvaluationRunId("");
             if (typeof setSelectedEvaluationCaseId === "function") setSelectedEvaluationCaseId("");
             setEvaluationsPageMode("detail");
           }
         }
 
-        function handleDeleteEvaluation(setId) {
+        function handleDeleteEvaluationRun(setId, runId) {
+          handleDeleteEvaluationRuns(setId, [runId]);
+        }
+
+        function handleDeleteEvaluations(setIds) {
+          const normalizedSetIds = Array.from(new Set(
+            (Array.isArray(setIds) ? setIds : [])
+              .map((setId) => String(setId || "").trim())
+              .filter(Boolean)
+          ));
+          if (!normalizedSetIds.length) return;
+          const deletedSetIds = new Set(normalizedSetIds);
           setEvaluationActionsPopoverOpen(false);
           closeEvaluationRenameDialog();
-          const normalizedSetId = String(setId || "").trim();
-          if (normalizedSetId) {
-            void requestEvaluationBackendJson(
-              "/evaluations/" + encodeURIComponent(normalizedSetId),
+          void Promise.allSettled(normalizedSetIds.map((setId) => (
+            requestEvaluationBackendJson(
+              "/evaluations/" + encodeURIComponent(setId),
               { method: "DELETE" },
               "Failed to delete evaluation."
-            ).catch((error) => {
-              setEvaluationBackendSyncState({ status: "error", error: error?.message || String(error) });
-            });
-          }
-          setEvaluationSets((current) => (Array.isArray(current) ? current : []).filter((item) => normalizePlaygroundEvaluationSet(item).id !== setId));
-          if (selectedEvaluationSetId === setId) {
+            )
+          ))).then((results) => {
+            const failedResult = results.find((result) => result.status === "rejected");
+            if (failedResult?.status === "rejected") {
+              setEvaluationBackendSyncState({
+                status: "error",
+                error: failedResult.reason?.message || String(failedResult.reason),
+              });
+            }
+          });
+          setEvaluationSets((current) => (
+            (Array.isArray(current) ? current : []).filter((item) => (
+              !deletedSetIds.has(normalizePlaygroundEvaluationSet(item).id)
+            ))
+          ));
+          if (deletedSetIds.has(selectedEvaluationSetId)) {
             setSelectedEvaluationSetId("");
             setSelectedEvaluationRunId("");
-            if (typeof setSelectedEvaluationCaseId === "function") setSelectedEvaluationCaseId("");
+            if (typeof setSelectedEvaluationCaseId === "function") {
+              setSelectedEvaluationCaseId("");
+            }
             setEvaluationsPageMode("overview");
           }
+        }
+
+        function handleDeleteEvaluation(setId) {
+          const normalizedSetId = String(setId || "").trim();
+          if (!normalizedSetId) return;
+          handleDeleteEvaluations([normalizedSetId]);
         }
 
 `;

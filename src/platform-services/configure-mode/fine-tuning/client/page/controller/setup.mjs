@@ -35,18 +35,22 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
 
         const modalFrameRef = useRef(null);
         const modalCloseTimerRef = useRef(null);
-        const fineTuningInstructionsTextareaRef = useRef(null);
         const evaluationSetPickerRef = useRef(null);
+        const evaluationSetPickerSurfaceRef = useRef(null);
         const fineTuningVersionRetryRef = useRef(new Set());
         const fineTuningRuntimeHydrationRef = useRef(new Set());
         const fineTuningThreadNotificationRef = useRef(new Set());
         const fineTuningJobListLoadRef = useRef("");
+        const fineTuningEvaluationSetListLoadRef = useRef("");
+        const fineTuningCreateDefaultEvaluationAppliedRef = useRef(false);
         const fineTuningPersistTimersRef = useRef(new Map());
         const [modalVisible, setModalVisible] = useState(false);
         const [modalClosing, setModalClosing] = useState(false);
         const [createError, setCreateError] = useState("");
         const [createBusy, setCreateBusy] = useState(false);
         const [fineTuningJobsLoading, setFineTuningJobsLoading] = useState(false);
+        const [fineTuningEvaluationSetsLoading, setFineTuningEvaluationSetsLoading] = useState(false);
+        const [fineTuningEvaluationSetsError, setFineTuningEvaluationSetsError] = useState("");
         const [fineTuningDetailTab, setFineTuningDetailTab] = useState("general");
         const [fineTuningDetailSidebarCollapsed, setFineTuningDetailSidebarCollapsed] = useState(false);
         const [fineTuningAccessTeamId, setFineTuningAccessTeamId] = useState("");
@@ -57,8 +61,6 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         const [fineTuningOwnerCandidatesByJobId, setFineTuningOwnerCandidatesByJobId] = useState({});
         const [fineTuningStopJobId, setFineTuningStopJobId] = useState("");
         const [evaluationSetPickerOpen, setEvaluationSetPickerOpen] = useState(false);
-        const [isFineTuningInstructionsEditing, setIsFineTuningInstructionsEditing] = useState(false);
-        const [fineTuningInstructionsHistory, setFineTuningInstructionsHistory] = useState({ past: [], future: [] });
         const requestHeadersSignature = useMemo(() => JSON.stringify(requestHeaders || {}), [requestHeaders]);
 
         const normalizedJobs = useMemo(() => (Array.isArray(fineTuningJobs) ? fineTuningJobs : [])
@@ -195,6 +197,10 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           avatarUrl: currentUserAvatarUrl || "",
         }), [currentUserId, currentUserName, currentUserEmail, currentUserAvatarUrl]);
         const selectedJob = scoredJobs.find((job) => job.id === selectedFineTuningJobId) || scoredJobs[0] || null;
+        const shouldLoadFineTuningEvaluationData = shouldLoadData && (
+          fineTuningCreateModalOpen
+          || fineTuningPageMode === "detail"
+        );
 
         useEffect(() => {
           setFineTuningAccessTeamId("");
@@ -485,8 +491,6 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           setModalClosing(false);
           setModalVisible(false);
           setEvaluationSetPickerOpen(false);
-          setIsFineTuningInstructionsEditing(false);
-          setFineTuningInstructionsHistory({ past: [], future: [] });
           if (modalFrameRef.current && typeof window !== "undefined") {
             window.cancelAnimationFrame(modalFrameRef.current);
           }
@@ -501,6 +505,49 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
             setModalVisible(true);
           }
         }, [fineTuningCreateModalOpen]);
+
+        useEffect(() => {
+          if (fineTuningCreateModalOpen) return;
+          fineTuningCreateDefaultEvaluationAppliedRef.current = false;
+        }, [fineTuningCreateModalOpen]);
+
+        useEffect(() => {
+          if (
+            !fineTuningCreateModalOpen
+            || fineTuningCreateDefaultEvaluationAppliedRef.current
+            || !normalizedEvaluationSets.length
+            || typeof setFineTuningCreateForm !== "function"
+          ) {
+            return;
+          }
+          const availableSetIds = new Set(normalizedEvaluationSets.map((set) => normalizePlaygroundFineTuningString(set.id)));
+          setFineTuningCreateForm((current) => {
+            const currentForm = current && typeof current === "object" && !Array.isArray(current) ? current : {};
+            const currentSetIds = (Array.isArray(currentForm.evaluationSetIds) ? currentForm.evaluationSetIds : [])
+              .map((setId) => normalizePlaygroundFineTuningString(setId))
+              .filter((setId) => availableSetIds.has(setId));
+            const nextSetIds = currentSetIds.length
+              ? currentSetIds
+              : [normalizePlaygroundFineTuningString(normalizedEvaluationSets[0].id)];
+            const currentRunIds = currentForm.evaluationRunIds && typeof currentForm.evaluationRunIds === "object" && !Array.isArray(currentForm.evaluationRunIds)
+              ? currentForm.evaluationRunIds
+              : {};
+            const nextRunIds = {};
+            nextSetIds.forEach((setId) => {
+              const set = normalizedEvaluationSets.find((item) => normalizePlaygroundFineTuningString(item.id) === setId) || null;
+              const latestRun = getPlaygroundFineTuningLatestRun(set);
+              nextRunIds[setId] = normalizePlaygroundFineTuningString(
+                currentRunIds[setId] || latestRun?.id || latestRun?.runId || latestRun?.run_id || ""
+              );
+            });
+            return {
+              ...currentForm,
+              evaluationSetIds: nextSetIds,
+              evaluationRunIds: nextRunIds,
+            };
+          });
+          fineTuningCreateDefaultEvaluationAppliedRef.current = true;
+        }, [fineTuningCreateModalOpen, normalizedEvaluationSets, setFineTuningCreateForm]);
 
         useEffect(() => () => {
           if (modalFrameRef.current && typeof window !== "undefined") window.cancelAnimationFrame(modalFrameRef.current);
@@ -522,7 +569,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           setFineTuningJobsLoading(true);
           void (async () => {
             try {
-              const response = await fetch(normalizedBackendUrl + "/fine-tuning/jobs", {
+              const response = await fetch(normalizedBackendUrl + "/fine-tuning/jobs?view=overview&limit=100", {
                 method: "GET",
                 credentials: "include",
                 cache: "no-store",
@@ -544,9 +591,74 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         }, [backendUrl, requestHeadersSignature, setFineTuningJobs, shouldLoadData]);
 
         useEffect(() => {
+          if (!shouldLoadFineTuningEvaluationData) return undefined;
+          const normalizedBackendUrl = normalizePlaygroundFineTuningString(backendUrl).replace(/\/+$/, "");
+          if (!normalizedBackendUrl || typeof setEvaluationSets !== "function") return undefined;
+          const loadKey = normalizedBackendUrl + "|" + requestHeadersSignature;
+          if (fineTuningEvaluationSetListLoadRef.current === loadKey) return undefined;
+          fineTuningEvaluationSetListLoadRef.current = loadKey;
+          let cancelled = false;
+          setFineTuningEvaluationSetsLoading(true);
+          setFineTuningEvaluationSetsError("");
+          void (async () => {
+            const runsRequest = fetch(normalizedBackendUrl + "/evaluations/runs?limit=1000", {
+              method: "GET",
+              credentials: "include",
+              cache: "no-store",
+              headers: requestHeaders || {},
+            }).then((response) => readFineTuningJsonResponse(response, "Failed to load evaluation runs."))
+              .catch(() => null);
+            try {
+              const setsResponse = await fetch(normalizedBackendUrl + "/evaluations?limit=500", {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+                headers: requestHeaders || {},
+              });
+              const setsPayload = await readFineTuningJsonResponse(setsResponse, "Failed to load evaluation sets.");
+              if (cancelled) return;
+              const backendSets = readPlaygroundFineTuningEvaluationListFromPayload(
+                setsPayload,
+                ["evaluations", "evaluationSets", "evaluation_sets"]
+              );
+              const locallyPersistedSets = !backendSets.length && typeof readPlaygroundEvaluationSetsFromStorage === "function"
+                ? readPlaygroundEvaluationSetsFromStorage()
+                    .map((set, index) => normalizePlaygroundFineTuningEvaluationSet(set, index))
+                    .filter((set) => normalizePlaygroundFineTuningString(set?.id))
+                : [];
+              const availableSets = backendSets.length ? backendSets : locallyPersistedSets;
+              setEvaluationSets((current) => mergePlaygroundFineTuningEvaluationSources(current, availableSets));
+              setFineTuningEvaluationSetsLoading(false);
+
+              const runsPayload = await runsRequest;
+              if (cancelled || !runsPayload) return;
+              const backendRuns = readPlaygroundFineTuningEvaluationListFromPayload(
+                runsPayload,
+                ["runs", "evaluationRuns", "evaluation_runs"]
+              );
+              setEvaluationSets((current) => mergePlaygroundFineTuningEvaluationSources(current, availableSets, backendRuns));
+            } catch (error) {
+              if (cancelled) return;
+              fineTuningEvaluationSetListLoadRef.current = "";
+              setFineTuningEvaluationSetsError(
+                error instanceof Error ? error.message : "Failed to load evaluation sets."
+              );
+              setFineTuningEvaluationSetsLoading(false);
+            }
+          })();
+          return () => {
+            cancelled = true;
+            if (fineTuningEvaluationSetListLoadRef.current === loadKey) {
+              fineTuningEvaluationSetListLoadRef.current = "";
+            }
+          };
+        }, [backendUrl, requestHeadersSignature, setEvaluationSets, shouldLoadFineTuningEvaluationData]);
+
+        useEffect(() => {
           if (!evaluationSetPickerOpen || typeof document === "undefined") return undefined;
           const handlePointerDown = (event) => {
             if (evaluationSetPickerRef.current && evaluationSetPickerRef.current.contains(event.target)) return;
+            if (evaluationSetPickerSurfaceRef.current && evaluationSetPickerSurfaceRef.current.contains(event.target)) return;
             setEvaluationSetPickerOpen(false);
           };
           const handleKeyDown = (event) => {
@@ -578,22 +690,29 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
 
         useEffect(() => {
           const normalizedBackendUrl = normalizePlaygroundFineTuningString(backendUrl).replace(/\/+$/, "");
-          if (!normalizedBackendUrl || !displaySourceJobs.length) return undefined;
-          displaySourceJobs
-            .filter((job) => job.id && needsPlaygroundFineTuningRuntimeDetailsHydration(job))
-            .forEach((job) => {
-              const isComplete = isFineTuningRuntimeJobComplete(job);
-              const hydrationKey = job.id + ":" + (isComplete ? "details" : "poll");
-              if (fineTuningRuntimeHydrationRef.current.has(hydrationKey)) return;
-              fineTuningRuntimeHydrationRef.current.add(hydrationKey);
-              const hydrationPromise = isComplete
-                ? fetchFineTuningRuntimeJob(job.id, job)
-                : waitForFineTuningRuntimeJob(job.id, job);
-              void hydrationPromise.catch(() => {
-                if (!isComplete) fineTuningRuntimeHydrationRef.current.delete(hydrationKey);
-              });
-            });
+          if (fineTuningPageMode !== "detail" || !normalizedBackendUrl || !selectedJob?.id) return undefined;
+          const job = normalizePlaygroundFineTuningJob(selectedJob);
+          if (!needsPlaygroundFineTuningRuntimeDetailsHydration(job)) return undefined;
+          const isComplete = isFineTuningRuntimeJobComplete(job);
+          const hydrationKey = job.id + ":" + (isComplete ? "details" : "poll");
+          if (fineTuningRuntimeHydrationRef.current.has(hydrationKey)) return undefined;
+          fineTuningRuntimeHydrationRef.current.add(hydrationKey);
+          const hydrationPromise = isComplete
+            ? fetchFineTuningRuntimeJob(job.id, job)
+            : waitForFineTuningRuntimeJob(job.id, job);
+          void hydrationPromise.catch(() => {
+            fineTuningRuntimeHydrationRef.current.delete(hydrationKey);
+          });
           return undefined;
-        }, [backendUrl, displaySourceJobs.map((job) => job.id + ":" + job.status + ":" + (job.threadId || "") + ":" + (Array.isArray(job.diffFiles) ? job.diffFiles.length : 0)).join("|")]);
+        }, [
+          backendUrl,
+          fineTuningPageMode,
+          selectedJob?.id,
+          selectedJob?.status,
+          selectedJob?.threadId,
+          selectedJob?.analysisSummary,
+          Array.isArray(selectedJob?.diffFiles) ? selectedJob.diffFiles.length : 0,
+          Array.isArray(selectedJob?.evaluationRuns) ? selectedJob.evaluationRuns.length : 0,
+        ]);
 
 `;

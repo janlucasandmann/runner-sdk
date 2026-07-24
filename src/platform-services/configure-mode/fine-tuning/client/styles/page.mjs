@@ -583,12 +583,32 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
         min-height: 0;
       }
 
-      .playground-fine-tuning-create-modal.playground-project-overview-outcome-editor-modal {
-        width: min(720px, calc(100vw - 48px));
+      .playground-fine-tuning-create-modal.platform-modal-surface {
+        display: flex;
+        flex-direction: column;
         height: auto !important;
         min-height: 0;
         max-height: min(720px, calc(100vh - 48px));
-        overflow: auto;
+        overflow: hidden;
+      }
+
+      .playground-fine-tuning-create-modal-platform-body.platform-modal-body {
+        min-height: 0;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        overflow-x: hidden;
+        overflow-y: auto;
+      }
+
+      .playground-fine-tuning-create-modal > .platform-modal-header,
+      .playground-fine-tuning-create-modal > .platform-modal-footer {
+        flex: 0 0 auto;
+      }
+
+      .playground-fine-tuning-create-modal-shell {
+        width: 100%;
+        min-height: 0;
       }
 
       .playground-fine-tuning-create-modal .playground-project-overview-outcome-editor-body {
@@ -612,15 +632,54 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
         min-width: 64px;
       }
 
-      .playground-fine-tuning-create-modal .playground-evaluations-field .playground-evaluations-select {
+      .playground-fine-tuning-create-modal .playground-evaluations-field .playground-fine-tuning-create-selector {
         flex: 1 1 auto;
-        border: 0;
-        background: transparent;
-        text-align: right;
-        text-align-last: right;
-        padding-right: 0;
+        min-width: 0;
+        max-width: 100%;
+      }
+
+      .playground-fine-tuning-create-selector .playground-fine-tuning-create-selector-trigger {
+        width: 100%;
+        min-height: 30px;
+        justify-content: flex-end;
+        gap: 6px;
         color: rgba(255, 255, 255, 0.92);
-        box-shadow: none;
+        text-align: right;
+      }
+
+      .playground-fine-tuning-create-selector .platform-selector__value,
+      .playground-fine-tuning-create-selector-value {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 7px;
+      }
+
+      .playground-fine-tuning-create-selector-value > span:last-child {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-fine-tuning-create-selector-avatar {
+        width: 18px;
+        height: 18px;
+        min-width: 18px;
+        flex: 0 0 18px;
+        border-radius: 50%;
+        overflow: hidden;
+      }
+
+      .playground-fine-tuning-create-selector-avatar-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .playground-fine-tuning-create-selector-popup {
+        width: min(280px, calc(100vw - 48px));
       }
 
       .playground-fine-tuning-evaluation-picker {
@@ -713,14 +772,9 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
         z-index: 2;
       }
 
-      .playground-fine-tuning-evaluation-menu-shell .playground-fine-tuning-evaluation-menu {
-        top: calc(100% + 6px);
-        right: 0;
-        left: auto;
-        width: min(320px, calc(100vw - 64px));
+      .playground-fine-tuning-evaluation-menu {
         max-height: 270px;
-        overflow: auto;
-        z-index: 1600;
+        overflow-y: auto;
       }
 
       .playground-fine-tuning-evaluation-menu .tb-popup-row {

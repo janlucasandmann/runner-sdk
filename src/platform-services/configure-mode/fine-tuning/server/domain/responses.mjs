@@ -3,6 +3,7 @@ import {
   clampScore,
   compactFineTuningReferenceMetadata,
   computeTokensToUsd,
+  createRuntimeError,
   hasPlainObjectContent,
   normalizeResponseArray,
   normalizeString,
@@ -80,5 +81,4 @@ export function extractThreadRecord(payload) {
   }
   return null;
 }
-
 

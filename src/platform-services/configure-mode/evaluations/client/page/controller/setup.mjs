@@ -40,14 +40,8 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           setEvaluationRunForm,
           evaluationRunsSearchQuery,
           setEvaluationRunsSearchQuery,
-          evaluationRunsSortMode,
-          setEvaluationRunsSortMode,
           evaluationRunsFilterMode,
           setEvaluationRunsFilterMode,
-          evaluationRunsToolbarPopover,
-          setEvaluationRunsToolbarPopover,
-          evaluationRunsVisibleCount,
-          setEvaluationRunsVisibleCount,
           onOpenThread,
           onEvaluationThreadStarted,
           evaluationRunReturnTarget,
@@ -129,7 +123,6 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         const [evaluationCaseEditorClosing, setEvaluationCaseEditorClosing] = useState(false);
         const [evaluationCaseFocusedEditor, setEvaluationCaseFocusedEditor] = useState(null);
         const [evaluationCaseTextImportError, setEvaluationCaseTextImportError] = useState("");
-        const [evaluationJsonlFileDragging, setEvaluationJsonlFileDragging] = useState(false);
         const [evaluationJsonlFileImportError, setEvaluationJsonlFileImportError] = useState("");
         const [evaluationJsonlFileImportMessage, setEvaluationJsonlFileImportMessage] = useState("");
         const [evaluationJsonlWorkspacePickerOpen, setEvaluationJsonlWorkspacePickerOpen] = useState(false);
@@ -162,8 +155,10 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
 	        const [openEvaluationVersionMenuId, setOpenEvaluationVersionMenuId] = useState("");
 	        const [evaluationBackendSyncState, setEvaluationBackendSyncState] = useState({ status: "idle", error: "" });
 	        const [evaluationRunHistorySyncState, setEvaluationRunHistorySyncState] = useState({ status: "idle", error: "" });
-	        const [evaluationDetailSidebarCollapsed, setEvaluationDetailSidebarCollapsed] = useState(false);
+        const [evaluationDetailSidebarCollapsed, setEvaluationDetailSidebarCollapsed] = useState(false);
         const [evaluationAnalyticsTimeframe, setEvaluationAnalyticsTimeframe] = useState("month");
+        const [evaluationRunsTableMode, setEvaluationRunsTableMode] = useState("runs");
+        const [selectedEvaluationRunIds, setSelectedEvaluationRunIds] = useState(() => new Set());
         const [evaluationAccessTeamId, setEvaluationAccessTeamId] = useState("");
         const [evaluationAccessRoleId, setEvaluationAccessRoleId] = useState("member");
         const [evaluationAccessMenuOpen, setEvaluationAccessMenuOpen] = useState(false);
@@ -242,6 +237,8 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
               ? "detail"
               : "overview";
         const isEvaluationDetailPage = normalizedMode === "detail" && Boolean(activeSet);
+        const isEvaluationRunActionsPage = normalizedMode === "run" && Boolean(activeSet && activeRun);
+        const supportsEvaluationActionsPopover = isEvaluationDetailPage || isEvaluationRunActionsPage;
         const hasUnsavedEvaluationChanges = Boolean(
           isEvaluationDetailPage
           && activeSet
@@ -826,9 +823,9 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         }, [activeSet?.id]);
 
         useEffect(() => {
-          const normalizedDetailTab = evaluationDetailTab === "settings" || evaluationDetailTab === "data"
-            ? "settings"
-            : "general";
+          const normalizedDetailTab = evaluationDetailTab === "cases" || evaluationDetailTab === "data"
+            ? "cases"
+            : (evaluationDetailTab === "settings" ? "settings" : "general");
           setEvaluationAccessMenuOpen(false);
           if (normalizedDetailTab !== "settings") {
             setEvaluationAccessTeamId("");
@@ -1062,7 +1059,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
             }
             if (observer) observer.disconnect();
           };
-        }, [breadcrumbActionsPortalId, normalizedMode, activeSet?.id]);
+        }, [breadcrumbActionsPortalId, normalizedMode, activeSet?.id, activeRun?.id]);
 
         useEffect(() => () => {
           if (evaluationCaseEditorFrameRef.current && typeof window !== "undefined") {
@@ -1131,12 +1128,12 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         ]);
 
         useEffect(() => {
-          if (!isEvaluationDetailPage) {
+          if (!supportsEvaluationActionsPopover) {
             setEvaluationActionsPopoverOpen(false);
             setEvaluationRunRowMenuId("");
             setEvaluationCaseRowMenuId("");
           }
-        }, [isEvaluationDetailPage]);
+        }, [supportsEvaluationActionsPopover]);
 
         useEffect(() => {
           if (!evaluationActionsPopoverOpen) {

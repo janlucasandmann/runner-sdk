@@ -13,7 +13,7 @@ const SCOPE_PRESETS = Object.freeze([
   },
   {
     label: "Read Only",
-    permissions: ["projects:read", "threads:read", "security:read", "billing:read"],
+    permissions: ["projects:read", "threads:read", "security:read", "evidence:read", "billing:read"],
   },
 ]);
 

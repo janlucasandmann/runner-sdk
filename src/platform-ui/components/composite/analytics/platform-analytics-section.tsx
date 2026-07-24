@@ -11,7 +11,8 @@ export function PlatformAnalyticsSection({
   timeframe,
 }: PlatformAnalyticsSectionProps) {
   const resolvedTitle = title ?? analytics.title;
-  const hasHeader = variant === "framed" && Boolean(resolvedTitle || timeframe);
+  const hasHeader = (variant === "framed" || variant === "compact")
+    && Boolean(resolvedTitle || timeframe);
 
   return (
     <section
@@ -52,7 +53,11 @@ export function PlatformAnalyticsSection({
         ))}
       </div>
       <div className="platform-analytics__chart">
-        <PlatformAnalyticsChart analytics={analytics} chartType={chartType} />
+        <PlatformAnalyticsChart
+          analytics={analytics}
+          chartType={chartType}
+          compact={variant === "compact"}
+        />
       </div>
     </section>
   );

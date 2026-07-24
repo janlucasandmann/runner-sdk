@@ -65,6 +65,20 @@ function getResponseItems(value: unknown): unknown[] {
   return [];
 }
 
+function createComparableValueSignature(value: unknown): string {
+  if (value === null || typeof value !== "object") {
+    return JSON.stringify(value);
+  }
+  if (Array.isArray(value)) {
+    return `[${value.map((entry) => createComparableValueSignature(entry)).join(",")}]`;
+  }
+  const record = value as Record<string, unknown>;
+  return `{${Object.keys(record)
+    .sort()
+    .map((key) => `${JSON.stringify(key)}:${createComparableValueSignature(record[key])}`)
+    .join(",")}}`;
+}
+
 function readStoredEntry(scopeKey: string): PlatformAgentListCacheEntry | null {
   if (typeof window === "undefined") return null;
   try {
@@ -108,6 +122,15 @@ export function normalizePlatformAgentListRecords(value: unknown): Record<string
     ).trim();
     return id ? [{ ...agent, id }] : [];
   });
+}
+
+export function arePlatformAgentListRecordsEquivalent(left: unknown, right: unknown): boolean {
+  const leftAgents = normalizePlatformAgentListRecords(left);
+  const rightAgents = normalizePlatformAgentListRecords(right);
+  if (leftAgents.length !== rightAgents.length) return false;
+  return leftAgents.every((agent, index) => (
+    createComparableValueSignature(agent) === createComparableValueSignature(rightAgents[index])
+  ));
 }
 
 export function buildPlatformAgentListScopeKey(options: PlatformAgentListCacheScope): string {

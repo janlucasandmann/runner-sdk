@@ -12,6 +12,7 @@ export {
   readCachedAgentsOverviewAnalytics,
 } from "../../platform-resources/agents/overview/agents-overview-analytics-client.js";
 export {
+  arePlatformAgentListRecordsEquivalent,
   buildPlatformAgentListScopeKey,
   normalizePlatformAgentListRecords,
   readCachedPlatformAgentList,

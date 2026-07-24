@@ -31,6 +31,20 @@ assert.deepEqual(
     external: true,
   },
 );
+assert.deepEqual(
+  remoteBrowserImportsPlugin.resolveId("@tiptap/core"),
+  {
+    id: "https://esm.sh/@tiptap/core@3.28.0?bundle",
+    external: true,
+  },
+);
+assert.deepEqual(
+  remoteBrowserImportsPlugin.resolveId("@tiptap/pm/state"),
+  {
+    id: "https://esm.sh/@tiptap/pm@3.28.0/state?bundle",
+    external: true,
+  },
+);
 const platformShellTemplate = readFileSync(
   new URL("../client/legacy/templates/platform-shell.template.html", import.meta.url),
   "utf8",
@@ -38,6 +52,14 @@ const platformShellTemplate = readFileSync(
 assert.match(
   platformShellTemplate,
   /"@tiptap\/react":\s*"https:\/\/esm\.sh\/@tiptap\/react@3\.28\.0\?bundle&external=react,react-dom"/,
+);
+assert.match(
+  platformShellTemplate,
+  /"@tiptap\/core":\s*"https:\/\/esm\.sh\/@tiptap\/core@3\.28\.0\?bundle"/,
+);
+assert.match(
+  platformShellTemplate,
+  /"@tiptap\/pm\/state":\s*"https:\/\/esm\.sh\/@tiptap\/pm@3\.28\.0\/state\?bundle"/,
 );
 const navigationPlugin = developmentPlugins.find(
   (plugin) => plugin?.name === "platform-hmr-only-navigation",

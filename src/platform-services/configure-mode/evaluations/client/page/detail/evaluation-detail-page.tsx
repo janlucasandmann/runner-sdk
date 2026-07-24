@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { PlatformUiCard } from "../../../../../../platform-ui/components/composite/ui-card/index.js";
 import { ResourceDetailPage } from "../../../../../../platform-ui/pages/details/index.js";
 
-export type EvaluationDetailTab = "general" | "settings";
+export type EvaluationDetailTab = "general" | "cases" | "settings";
 export type EvaluationDetailVariant = "evaluation" | "run";
 
 export interface EvaluationDetailPageProps {
@@ -37,8 +37,7 @@ export function EvaluationDetailPage({
           <PlatformUiCard
             as="section"
             variant="sidebar"
-            cardTitle={isRun ? "Run Properties" : "Properties"}
-            className="playground-evaluations-detail-sidebar-card"
+            className="playground-ticket-detail-sidebar-section playground-ticket-detail-sidebar-details playground-evaluations-detail-sidebar-card"
           >
             {properties}
           </PlatformUiCard>

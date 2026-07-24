@@ -48,6 +48,25 @@ export const APP_HEADER_NOTIFICATIONS_POPUP_SCRIPT = `        function renderPro
 	            );
 	          }
 
+	          if (item.kind === "task_activity") {
+	            const metaText = item.createdAt ? formatThreadSearchTimestamp(item.createdAt) : "";
+	            return React.createElement("button", {
+              key: item.id,
+              type: "button",
+              className: "notification-menu-item",
+              onClick: () => handleOpenTaskActivityNotification(item),
+	            },
+              React.createElement(ListTodo, { className: "notification-menu-icon", strokeWidth: 1.8 }),
+              React.createElement("div", { className: "notification-menu-copy" },
+                React.createElement("div", { className: "notification-menu-label" }, item.text || "Ticket updated"),
+                React.createElement("div", { className: "notification-menu-text" }, item.title || item.taskTitle || "Open ticket"),
+                metaText
+                  ? React.createElement("div", { className: "notification-menu-meta" }, metaText)
+                  : null
+              )
+	            );
+	          }
+
 	          if (item.kind === "email_verification") {
             return React.createElement("button", {
               key: item.id,

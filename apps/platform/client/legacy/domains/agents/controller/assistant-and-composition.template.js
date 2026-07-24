@@ -11,7 +11,7 @@
                 : current
               );
               if (agentId) {
-                void loadAgentDetails(agentId);
+                void loadAgentDetails(agentId, { force: true, background: true });
               }
             }
             if (typeof onAgentMutated === "function") {

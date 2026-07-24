@@ -468,8 +468,8 @@ assert.doesNotMatch(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /const databaseDetailsSection = React\.createElement\(PlatformAnalyticsSection, \{[\s\S]{0,100}variant: "framed",[\s\S]{0,700}timeframe: \{[\s\S]{0,400}ariaLabel: "Database analytics time frame"/,
-  "Database Usage must use the same centralized framed analytics component as source-backed services.",
+  /const databaseDetailsSection = React\.createElement\(PlatformAnalyticsSection, \{[\s\S]{0,100}variant: "default",[\s\S]{0,700}timeframe: \{[\s\S]{0,400}ariaLabel: "Database analytics time frame"/,
+  "Database Usage must use the centralized unframed analytics presentation.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
@@ -488,8 +488,87 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /const databaseDetailWorkspace = React\.createElement\(DevelopServerDetailPage,[\s\S]{0,700}sidebarAutoCollapseTabs: \["data"\]/,
-  "Database details must use the shared detail shell and auto-collapse its sidebar on Data.",
+  /const databaseDetailWorkspace = React\.createElement\(DevelopServerDetailPage,[\s\S]{0,180}tabs: \[\],[\s\S]{0,700}sidebarAutoCollapseTabs: \["data"\]/,
+  "Database details must use the tabless shared detail shell and auto-collapse its sidebar on Data.",
+);
+assert.doesNotMatch(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /const databaseDetailTabs = \[/,
+  "Database details must not duplicate app-header navigation with an in-page tab bar.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /selectedResourcesDetailType === "database"[\s\S]{0,280}activeSection: \["data", "usage", "settings"\]\.includes\(databaseDetailTab\)[\s\S]{0,500}setDatabaseDetailTab\(normalizedNextSection\)/,
+  "Database details must publish their active section and navigation handler to the app header.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /databaseDetailTab !== "data"[\s\S]{0,400}setDatabaseDetailsCollapsed\(\(current\) => !current\)[\s\S]{0,600}renderDatabaseExportControl\(\)/,
+  "Database Usage and Settings must preserve the properties toggle in the app header.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /const renderDatabaseTitleActionsControl = \(\) => \{[\s\S]{0,1800}React\.createElement\(PlatformPopup, \{[\s\S]{0,900}variant: "minimal",[\s\S]{0,120}portal: true,[\s\S]{0,120}placement: "bottom-start"/,
+  "Database actions must use the centralized minimal popup beside the title.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /const databaseTitleActions = databaseTitleActionsContainer[\s\S]{0,300}createPortal\([\s\S]{0,100}renderDatabaseTitleActionsControl\(\),[\s\S]{0,100}databaseTitleActionsContainer/,
+  "Database title actions must portal into the shared app-header breadcrumb target.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /useLayoutEffect\(\(\) => \{[\s\S]{0,300}databaseTitleActionsPortalId[\s\S]{0,500}document\.getElementById\(databaseTitleActionsPortalId\)[\s\S]{0,300}current === nextContainer \? current : nextContainer[\s\S]{0,100}\}\);/,
+  "The Database title action portal must re-resolve after its app-header target mounts.",
+);
+assert.equal(
+  (COMPUTE_RESOURCES_PAGE_SCRIPT.match(/renderCurrentResourceSettingsControl\(buttonClassName\)/g) || []).length,
+  1,
+  "The right-side app-header settings control must only remain on non-database server details.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /databaseActionsPopoverRef\.current\?\.contains\(target\)[\s\S]{0,120}databaseActionsPopoverSurfaceRef\.current\?\.contains\(target\)/,
+  "The portaled Database action popup must participate in outside-click containment.",
+);
+const databaseDetailViewSource = await fs.readFile(
+  path.join(domainRoot, "controller/database-detail-view.js"),
+  "utf8",
+);
+assert.doesNotMatch(
+  databaseDetailViewSource,
+  /databaseStorageLocation|Data is stored in Location/,
+  "Database Data must let the browser occupy the full tab height without a storage-location footer.",
+);
+assert.match(
+  databaseDetailViewSource,
+  /const renderDatabaseBrowserEmptyPane = \(\{ icon, title, description \}\) =>\s*React\.createElement\(PlatformEmptyState,/,
+  "Database collection and document columns must use the centralized empty-state component.",
+);
+assert.match(
+  databaseDetailViewSource,
+  /title: "No fields yet",[\s\S]{0,240}primaryAction: isDatabaseTemplatePreview/,
+  "The database fields column must use the centralized actionable empty state.",
+);
+assert.match(
+  databaseDetailViewSource,
+  /const renderDatabaseComposerModal = \([\s\S]{0,1800}React\.createElement\(PlatformModal, \{[\s\S]{0,1200}React\.createElement\(PlatformSecondaryButton,[\s\S]{0,500}React\.createElement\(PlatformPrimaryButton,/,
+  "Database collection, document, and field composers must use the centralized modal and button components.",
+);
+assert.equal(
+  (databaseDetailViewSource.match(/ComposerModal = renderDatabaseComposerModal\(/g) || []).length,
+  3,
+  "All three database data composers must use the shared centralized modal helper.",
+);
+assert.doesNotMatch(
+  databaseDetailViewSource,
+  /const database(?:Collection|Document|Field)ComposerModal = [\s\S]{0,120}PlatformModalBackdrop/,
+  "Database data composers must not rebuild the low-level modal shell.",
+);
+assert.match(
+  databaseDetailViewSource,
+  /className: "playground-database-browser-add-field"[\s\S]{0,240}" is-layout-placeholder"[\s\S]{0,320}databaseDocumentViewMode !== "preview"/,
+  "Database JSON mode must preserve a hidden, disabled Add Field layout placeholder.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,

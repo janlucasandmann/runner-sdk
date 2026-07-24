@@ -55,6 +55,12 @@ describe("PlatformResourceAccessTable", () => {
         }) as HTMLButtonElement
       ).disabled,
     ).toBe(true);
+    within(table)
+      .getAllByRole("checkbox")
+      .forEach((checkbox) => {
+        expect(checkbox.getAttribute("data-platform-checkbox")).toBe("true");
+        expect(checkbox.classList.contains("platform-checkbox")).toBe(true);
+      });
   });
 
   it("opens system-principal policies and only selects physical teams", async () => {
@@ -116,6 +122,21 @@ describe("PlatformResourceAccessTable", () => {
     ).toBe(true);
   });
 
+  it("renders a shared leading toolbar control in place of a page-specific title", () => {
+    render(
+      <PlatformResourceAccessTable
+        teams={teams}
+        resourceLabel="Agent"
+        title={null}
+        leading={<button type="button">Access</button>}
+        onOpenPermissions={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Access" })).not.toBeNull();
+    expect(screen.queryByText("Manage Agent Access")).toBeNull();
+  });
+
   it("renders contextual help beside the access title", () => {
     render(
       <PlatformResourceAccessTable
@@ -130,5 +151,20 @@ describe("PlatformResourceAccessTable", () => {
     expect(
       screen.getByRole("button", { name: "About Manage Agent Access" }).getAttribute("data-tooltip"),
     ).toBe("Explains who can manage this agent.");
+  });
+
+  it("renders the centralized footer when pagination is enabled", () => {
+    render(
+      <PlatformResourceAccessTable
+        teams={teams}
+        resourceLabel="Agent"
+        pagination={{}}
+        onOpenPermissions={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByRole("navigation", { name: "Agent access pagination" }),
+    ).not.toBeNull();
   });
 });

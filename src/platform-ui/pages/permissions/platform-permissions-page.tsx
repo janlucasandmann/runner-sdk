@@ -214,6 +214,8 @@ export function PlatformPermissionsSettingsSummary({
   onEdit,
   className = "",
   variant = "compact",
+  disabled = false,
+  onRingAccessChange,
   ...overviewProps
 }: PlatformPermissionsSettingsSummaryProps) {
   return (
@@ -244,7 +246,8 @@ export function PlatformPermissionsSettingsSummary({
       <PlatformPermissionsOverview
         {...overviewProps}
         variant={variant}
-        disabled
+        disabled={disabled}
+        onRingAccessChange={onRingAccessChange}
       />
     </section>
   );

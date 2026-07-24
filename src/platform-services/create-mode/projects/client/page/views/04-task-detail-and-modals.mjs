@@ -200,7 +200,7 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
               return "";
             }
             if (fieldName === "status") {
-              return getPlaygroundTaskStatusLabel(normalizedValue === "backlog" ? "todo" : normalizedValue);
+              return getPlaygroundTaskStatusLabel(normalizedValue);
             }
             if (fieldName === "priority") {
               return PLAYGROUND_TASK_PRIORITY_OPTIONS.find((option) => option.id === normalizedValue)?.label || normalizedValue;
@@ -315,6 +315,11 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
             const canAgentReviewTask = normalizedDraftTaskStatus === "in_review" && isAgentReviewerForTask;
             const canRequestTaskChanges = (isHumanReviewerForTask || isAgentReviewerForTask)
               && (normalizedDraftTaskStatus === "in_review" || normalizedDraftTaskStatus === "done");
+            const activitySubscriptionMatchesTask = taskActivitySubscriptionState.taskId === draftTask.id;
+            const activitySubscribed = activitySubscriptionMatchesTask
+              && Boolean(taskActivitySubscriptionState.subscribed);
+            const activitySubscriptionPending = activitySubscriptionMatchesTask
+              && ["loading", "saving"].includes(taskActivitySubscriptionState.status);
             const activityItems = getTaskActivityEvents().map((event) => {
               const comment = event.comment;
               const thread = event.thread;
@@ -322,6 +327,8 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
               const isThread = event.eventType === "thread_started";
               const isStatus = event.eventType === "status_changed";
               const isFieldChange = event.eventType === "field_changed";
+              const isPriorityChange = isFieldChange
+                && String(event.fieldName || "").trim() === "priority";
               const isMilestoneChange = isFieldChange
                 && ["releaseId", "milestoneId"].includes(String(event.fieldName || "").trim());
               const isScheduleChange = isFieldChange
@@ -358,6 +365,11 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                       event.nextValue,
                       "platform-activity-timeline__status-icon"
                     )
+                  : isPriorityChange
+                    ? renderPlaygroundTaskPriorityIcon(
+                        event.nextValue,
+                        "platform-activity-timeline__priority-icon"
+                      )
                   : isFieldChange
                     ? null
                     : renderTaskActivityActorAvatar(event),
@@ -439,8 +451,25 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
             return React.createElement(PlatformActivityTimeline, {
               className: "playground-tasks-activity",
               items: activityItems,
-              headerActions: canRequestTaskChanges || canHumanReviewTask || canAgentReviewTask
-                ? React.createElement(React.Fragment, null,
+              headerActions: React.createElement(React.Fragment, null,
+                    React.createElement(PlatformSecondaryButton, {
+                      type: "button",
+                      size: "small",
+                      className: "playground-tasks-activity-subscription-button",
+                      disabled: activitySubscriptionPending,
+                      "aria-pressed": activitySubscribed,
+                      title: activitySubscriptionMatchesTask
+                        ? taskActivitySubscriptionState.error || undefined
+                        : undefined,
+                      onClick: () => void handleToggleTaskActivitySubscription(),
+                    },
+                    React.createElement(activitySubscribed ? UserRoundMinus : UserRoundPlus, {
+                      width: 14,
+                      height: 14,
+                      strokeWidth: 1.8,
+                      "aria-hidden": "true",
+                    }),
+                    activitySubscribed ? "Unsubscribe" : "Subscribe"),
                     canRequestTaskChanges
                       ? React.createElement(PlatformSecondaryButton, {
                           type: "button",
@@ -467,8 +496,7 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                           onClick: () => void handleStartSelectedTaskAgentReview(),
                         }, taskAgentReviewStartPending ? "Starting..." : "Start Agent Review")
                       : null
-                  )
-                : null,
+                  ),
               composer: {
                 value: taskActivityCommentValue,
                 onChange: (nextValue) => {
@@ -1285,29 +1313,21 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                           completed: subtask.status === "done",
                           statusContent: renderTaskPreviewStatusControl(subtask),
                           assignee: renderTaskAssigneeAvatar(subtask, "playground-tasks-backlog-assignee-avatar"),
-                          action: React.createElement("button", {
-                            type: "button",
-                            className: "playground-tasks-backlog-run-button" + (isHumanSubtask && !isPlaygroundTaskTerminalStatus(subtask.status) ? " is-human-unchecked" : ""),
-                            "aria-label": isCanceledSubtask
-                              ? "Canceled task"
-                              : (isHumanSubtask ? (subtask.status === "done" ? "Reopen task" : "Complete task") : "Run task"),
-                            title: isCanceledSubtask
-                              ? "Canceled"
-                              : (isHumanSubtask ? (subtask.status === "done" ? "Reopen task" : "Complete task") : "Run task"),
-                            disabled: isTaskConfigLocked || isCanceledSubtask || (isHumanSubtask
-                              ? saveState.isSaving
-                              : saveState.isSaving || isTaskThreadLaunchLocked(subtask)),
-                            onClick: (event) => {
-                              if (isHumanSubtask) {
-                                void handleToggleTaskDone(subtask, event);
-                                return;
-                              }
-                              event.stopPropagation();
-                              void handleStartTaskThread(subtask);
-                            },
-                          },
-                            isHumanSubtask
-                              ? (
+                          action: isHumanSubtask
+                            ? React.createElement("button", {
+                                type: "button",
+                                className: "playground-tasks-backlog-run-button" + (!isPlaygroundTaskTerminalStatus(subtask.status) ? " is-human-unchecked" : ""),
+                                "aria-label": isCanceledSubtask
+                                  ? "Canceled task"
+                                  : (subtask.status === "done" ? "Reopen task" : "Complete task"),
+                                title: isCanceledSubtask
+                                  ? "Canceled"
+                                  : (subtask.status === "done" ? "Reopen task" : "Complete task"),
+                                disabled: isTaskConfigLocked || isCanceledSubtask || saveState.isSaving,
+                                onClick: (event) => {
+                                  void handleToggleTaskDone(subtask, event);
+                                },
+                              },
                                 subtask.status === "done"
                                   ? React.createElement(Check, {
                                       width: 13,
@@ -1317,14 +1337,7 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                                     })
                                   : null
                               )
-                              : React.createElement(Play, {
-                                  width: 13,
-                                  height: 13,
-                                  strokeWidth: 1.9,
-                                  fill: "currentColor",
-                                  "aria-hidden": "true",
-                                })
-                          ),
+                            : null,
                           onActivate: () => handleSelectTask(subtask.id, { screen: projectTaskDetailScreenOpen }),
                         };
                       }),

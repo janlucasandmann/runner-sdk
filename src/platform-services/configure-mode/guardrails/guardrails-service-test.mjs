@@ -92,7 +92,9 @@ assert.doesNotMatch(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.evaluation, /String
 assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.historyCapture, /guardrailId: selectedGuardrailSetId/);
 assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.sidebarEntry, /label: "Guardrails"/);
 assert.match(GUARDRAILS_AGENT_DOMAIN_SCRIPT, /function buildPlaygroundAgentGuardrailBundle/);
-assert.match(GUARDRAILS_AGENT_PAGE_SCRIPT, /const agentGuardrailsSection/);
+assert.match(GUARDRAILS_AGENT_PAGE_SCRIPT, /function renderAgentGuardrailsSection\(options = \{\}\)/);
+assert.match(GUARDRAILS_AGENT_PAGE_SCRIPT, /function renderAgentGuardrailTable\(options = \{\}\)/);
+assert.match(GUARDRAILS_AGENT_PAGE_SCRIPT, /leading: toolbarLeading/);
 assert.match(GUARDRAILS_AGENT_PAGE_SCRIPT, /variant: "minimalistic-ui"/);
 assert.match(GUARDRAILS_AGENT_PAGE_SCRIPT, /controlsLeading: React\.createElement\(PlatformPopup/);
 assert.match(GUARDRAILS_AGENT_PAGE_SCRIPT, /React\.createElement\(PlatformSecondaryButton/);
@@ -107,7 +109,7 @@ assert.doesNotMatch(GUARDRAILS_AGENT_PAGE_SCRIPT, /disabled: Boolean\(isDefaultA
 assert.doesNotMatch(GUARDRAILS_AGENT_PAGE_SCRIPT, /if \(isDefaultAgentConfigurationLocked\) \{\s*return;\s*\}/);
 assert.doesNotMatch(GUARDRAILS_AGENT_PAGE_SCRIPT, /function renderAgentGuardrailImportMenu\(\)/);
 assert.doesNotMatch(GUARDRAILS_AGENT_PAGE_SCRIPT, /trailing: React\.createElement\("div"[\s\S]{0,900}Add Guardrail/);
-assert.doesNotMatch(GUARDRAILS_AGENT_PAGE_SCRIPT, /pagination\s*:/);
+assert.match(GUARDRAILS_AGENT_PAGE_SCRIPT, /pagination: \{\}/);
 assert.match(GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.versionDiffPayload, /invisiblePromptAdaptations/);
 assert.match(GUARDRAILS_STYLE_FRAGMENTS.page, /\.playground-guardrails-page/);
 assert.match(GUARDRAILS_STYLE_FRAGMENTS.versionChanges, /\.playground-guardrails-version-changes-page/);

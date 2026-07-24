@@ -35,7 +35,7 @@ export function AgentDetailPage({
       sidebarAriaLabel={sidebarAriaLabel}
       className={`playground-project-overview-layout playground-agents-detail-overview-layout${className ? ` ${className}` : ""}`}
       contentClassName={`playground-project-overview-main playground-agents-detail-overview-main${activeTab === "permissions" ? " is-permissions-tab" : ""}`}
-      sidebarClassName={`playground-project-overview-sidebar playground-agents-detail-sidebar${sidebarPopoverOpen ? " is-popover-open" : ""}`}
+      sidebarClassName={`playground-project-overview-sidebar playground-agents-detail-sidebar playground-ticket-detail-sidebar${sidebarPopoverOpen ? " is-popover-open" : ""}`}
     >
       {activeTab === "permissions" && permissions ? (
         <section

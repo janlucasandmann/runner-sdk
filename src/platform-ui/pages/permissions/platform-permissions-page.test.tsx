@@ -108,6 +108,33 @@ describe("PlatformPermissionsPage", () => {
     expect(onEdit).toHaveBeenCalledTimes(1);
   });
 
+  it("supports editable ring selectors when a settings summary provides a change handler", async () => {
+    const user = userEvent.setup();
+    const onRingAccessChange = vi.fn();
+    render(
+      <PlatformPermissionsSettingsSummary
+        title="Agent Permissions"
+        permissionSet={{
+          subjectType: "agent",
+          rings: {
+            ring_1: { defaultAccess: "full_access" },
+            ring_2: { defaultAccess: "ask_for_permission" },
+          },
+        }}
+        accessOptions={PLATFORM_PERMISSION_ACCESS_OPTIONS}
+        ringDefinitions={rings}
+        onRingAccessChange={onRingAccessChange}
+      />,
+    );
+
+    const ringSelector = screen.getByRole("button", { name: "Ring 1 default permissions" });
+    expect(ringSelector.hasAttribute("disabled")).toBe(false);
+    await user.click(ringSelector);
+    await user.click(screen.getByRole("option", { name: "Read only" }));
+
+    expect(onRingAccessChange).toHaveBeenCalledWith("ring_1", "read_only");
+  });
+
   it("renders the canonical ring and action editor and emits changes", async () => {
     const user = userEvent.setup();
     const onRingAccessChange = vi.fn();

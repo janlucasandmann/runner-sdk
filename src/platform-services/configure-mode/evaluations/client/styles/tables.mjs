@@ -346,6 +346,21 @@ export const EVALUATIONS_STYLE_TABLES = String.raw`        line-height: 1.35;
         background: transparent !important;
       }
 
+      .playground-evaluations-description-section .platform-instructions-editor__title,
+      .playground-evaluations-dataset-guidance-section .platform-instructions-editor__title {
+        font-size: 14px !important;
+      }
+
+      .playground-evaluations-dataset-guidance-title {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .playground-evaluations-dataset-guidance-tooltip {
+        width: 320px;
+      }
+
       .playground-evaluations-description-section .playground-tasks-detail-description-editor,
       .playground-evaluations-dataset-guidance-section .playground-tasks-detail-description-editor {
         min-height: 118px;
@@ -374,6 +389,17 @@ export const EVALUATIONS_STYLE_TABLES = String.raw`        line-height: 1.35;
         padding-bottom: 12px;
         margin-bottom: 12px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-evaluations-case-import-feedback {
+        margin: -2px 0 0;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .playground-evaluations-case-import-feedback.is-error {
+        color: #ff8f8f;
       }
 
       .playground-evaluations-cases-title {

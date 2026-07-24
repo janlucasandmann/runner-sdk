@@ -28,7 +28,8 @@ export const GUARDRAILS_AGENT_PAGE_ACTIONS_SCRIPT = `          function renderAg
                   );
                 });
           }
-          function renderAgentGuardrailTable() {
+          function renderAgentGuardrailTable(options = {}) {
+            const toolbarLeading = options?.leading || null;
             const emptyGuardrailsState = React.createElement(PlatformEmptyState, {
               icon: Shield,
               title: "No guardrails yet",
@@ -47,11 +48,13 @@ export const GUARDRAILS_AGENT_PAGE_ACTIONS_SCRIPT = `          function renderAg
               surface: "plain",
               variant: "minimalistic-ui",
               sticky: false,
+              pagination: {},
               sorting: {
                 defaultValue: { id: "updated", direction: "desc" },
               },
               toolbar: {
-                title: "Guardrails",
+                leading: toolbarLeading,
+                title: toolbarLeading ? undefined : "Guardrails",
                 search: {
                   value: agentGuardrailSearchQuery,
                   onChange: setAgentGuardrailSearchQuery,

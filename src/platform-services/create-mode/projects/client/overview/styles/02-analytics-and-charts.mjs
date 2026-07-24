@@ -30,6 +30,8 @@ export const PROJECT_OVERVIEW_CSS_02_FRAGMENT = String.raw`        .playground-p
 
         .playground-project-overview-sidebar {
           position: static;
+          max-height: none;
+          overflow: visible;
         }
       }
 
@@ -717,7 +719,7 @@ export const PROJECT_OVERVIEW_CSS_02_FRAGMENT = String.raw`        .playground-p
       }
 
       .playground-project-overview-activity-card.is-main .playground-project-overview-activity-list {
-        gap: 8px;
+        gap: 12px;
       }
 
       .playground-project-overview-activity-card.is-main .playground-project-overview-activity-row {
@@ -760,17 +762,18 @@ export const PROJECT_OVERVIEW_CSS_02_FRAGMENT = String.raw`        .playground-p
       }
 
       .playground-project-overview-activity-participant-avatar {
-        width: 24px;
-        height: 24px;
-        flex: 0 0 24px;
-        border-radius: 999px;
+        width: 20px;
+        height: 20px;
+        flex: 0 0 20px;
+        box-sizing: border-box;
+        border-radius: 50%;
         overflow: hidden;
         border: 2px solid #050505;
         background: rgba(255, 255, 255, 0.1);
       }
 
       .playground-project-overview-activity-participant-avatar + .playground-project-overview-activity-participant-avatar {
-        margin-left: -7px;
+        margin-left: -5px;
       }
 
       .playground-project-overview-activity-participant-avatar-image {
@@ -929,6 +932,32 @@ export const PROJECT_OVERVIEW_CSS_02_FRAGMENT = String.raw`        .playground-p
         align-items: center;
         justify-content: space-between;
         gap: 16px;
+      }
+
+      .playground-project-overview-activity-tabs {
+        width: 100%;
+      }
+
+      .playground-project-overview-task-activity-timeline .platform-activity-timeline__header {
+        display: none;
+      }
+
+      .playground-project-overview-task-activity-ticket {
+        display: block;
+        max-width: min(32vw, 280px);
+        overflow: hidden;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 11px;
+        line-height: 1.4;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-project-overview-task-activity-loading {
+        min-height: 124px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
       .playground-project-overview-activity-title {

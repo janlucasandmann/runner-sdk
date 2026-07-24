@@ -155,6 +155,33 @@ export function compactFineTuningJobRecord(job) {
   };
 }
 
+export function compactFineTuningJobOverviewRecord(job) {
+  const compactJob = compactFineTuningJobRecord(job);
+  return {
+    id: compactJob.id,
+    name: compactJob.name,
+    status: compactJob.status,
+    createdAt: compactJob.createdAt,
+    updatedAt: compactJob.updatedAt,
+    agentId: compactJob.agentId,
+    targetAgentId: compactJob.targetAgentId,
+    agentName: compactJob.agentName,
+    targetAgentName: compactJob.targetAgentName,
+    agentPhotoUrl: compactJob.agentPhotoUrl,
+    targetAgentPhotoUrl: compactJob.targetAgentPhotoUrl,
+    conductedBy: compactJob.conductedBy,
+    createdBy: compactJob.createdBy,
+    environmentId: compactJob.environmentId,
+    environmentName: compactJob.environmentName,
+    evaluationSets: compactJob.evaluationSets,
+    evaluationSetIds: compactJob.evaluationSetIds,
+    evaluationSetCount: compactJob.evaluationSets.length,
+    beforeScore: compactJob.beforeScore,
+    afterScore: compactJob.afterScore,
+    improvementScore: compactJob.improvementScore,
+  };
+}
+
 export function mergeFineTuningJobRecords(existingJob, incomingJob) {
   const incomingSource = readPlainObject(incomingJob);
   const incomingMetadata = readPlainObject(incomingSource.metadata);

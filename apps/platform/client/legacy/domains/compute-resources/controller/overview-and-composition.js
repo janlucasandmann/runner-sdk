@@ -83,6 +83,103 @@
               )),
             });
           };
+          const renderDatabaseTitleActionsControl = () => {
+            const activeDatabase = draftDatabase?.id === selectedDatabaseId ? draftDatabase : null;
+            const normalizedDatabaseId = String(activeDatabase?.id || "").trim();
+            const actionsDisabled = Boolean(
+              databaseSaveState.isSaving
+              || !normalizedDatabaseId
+              || normalizedDatabaseId === PLAYGROUND_DATABASE_DRAFT_ID
+            );
+            return React.createElement(PlatformPopup, {
+                open: databaseActionsPopoverOpen && !actionsDisabled,
+                rootRef: databaseActionsPopoverRef,
+                surfaceRef: databaseActionsPopoverSurfaceRef,
+                rootClassName: "playground-database-title-actions-shell",
+                surfaceClassName: "playground-database-title-actions-popup",
+                surfaceProps: {
+                  role: "menu",
+                  "aria-label": "Database actions",
+                  width: 280,
+                  maxWidth: "calc(100vw - 16px)",
+                  onClick: (event) => event.stopPropagation(),
+                },
+                animation: "down-in",
+                variant: "minimal",
+                portal: true,
+                placement: "bottom-start",
+                trigger: React.createElement(PlatformIconButton, {
+                  type: "button",
+                  size: "compact",
+                  active: databaseActionsPopoverOpen,
+                  title: "Database actions",
+                  "aria-label": "Database actions",
+                  "aria-haspopup": "menu",
+                  "aria-expanded": databaseActionsPopoverOpen ? "true" : "false",
+                  disabled: actionsDisabled,
+                  onClick: (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setDatabaseExportMenuOpen(false);
+                    setDatabaseActionsPopoverOpen((current) => !current);
+                  },
+                }, React.createElement(Ellipsis, { width: 14, height: 14, strokeWidth: 1.8 }))
+              },
+              React.createElement("div", { className: "tb-popup-row playground-thread-nav-popup-static-row" },
+                React.createElement("span", { className: "tb-popup-check-slot", "aria-hidden": "true" }),
+                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                  React.createElement("span", null, "Database ID"),
+                  React.createElement("span", {
+                    className: "playground-thread-nav-popup-thread-id",
+                    title: normalizedDatabaseId,
+                  }, normalizedDatabaseId)
+                )
+              ),
+              React.createElement("div", { className: "playground-thread-nav-popup-divider", "aria-hidden": "true" }),
+              React.createElement("button", {
+                type: "button",
+                role: "menuitem",
+                className: "tb-popup-row",
+                onClick: () => {
+                  setDatabaseActionsPopoverOpen(false);
+                  window.open("http://localhost:3001/developers/libraries/databases", "_blank", "noopener,noreferrer");
+                },
+              },
+                React.createElement(BookOpen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                  React.createElement("span", null, "Documentation")
+                )
+              ),
+              React.createElement("button", {
+                type: "button",
+                role: "menuitem",
+                className: "tb-popup-row",
+                onClick: () => {
+                  setDatabaseActionsPopoverOpen(false);
+                  openDatabaseRenameDialog(activeDatabase);
+                },
+              },
+                React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                  React.createElement("span", null, "Rename")
+                )
+              ),
+              React.createElement("button", {
+                type: "button",
+                role: "menuitem",
+                className: "tb-popup-row playground-tasks-detail-menu-item-danger",
+                onClick: () => {
+                  setDatabaseActionsPopoverOpen(false);
+                  void handleDeleteDatabase(normalizedDatabaseId);
+                },
+              },
+                React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
+                  React.createElement("span", null, "Delete")
+                )
+              )
+            );
+          };
           const renderCurrentResourceSettingsControl = (buttonClassName) => {
             const normalizedButtonClassName = String(buttonClassName || "playground-files-header-icon-button").trim();
             if (isServersMode && selectedServerId) {
@@ -220,95 +317,6 @@
                   : null
               );
             }
-            if (isServersMode && selectedDatabaseId) {
-              const activeDatabase = draftDatabase?.id === selectedDatabaseId ? draftDatabase : null;
-              const normalizedDatabaseId = String(activeDatabase?.id || "").trim();
-              if (!normalizedDatabaseId || normalizedDatabaseId === PLAYGROUND_DATABASE_DRAFT_ID) {
-                return React.createElement("button", {
-                  type: "button",
-                  className: normalizedButtonClassName,
-                  title: "Database actions",
-                  "aria-label": "Database actions",
-                  disabled: true,
-                }, React.createElement(Ellipsis, { width: 16, height: 16, strokeWidth: 1.8 }));
-              }
-              return React.createElement("div", {
-                  className: "playground-files-toolbar-anchor playground-thread-nav-popup-shell playground-tasks-toolbar-popup-shell",
-                  ref: databaseActionsPopoverRef,
-                },
-                React.createElement("button", {
-                  type: "button",
-                  className: normalizedButtonClassName + (databaseActionsPopoverOpen ? " is-active" : ""),
-                  title: "Database actions",
-                  "aria-label": "Database actions",
-                  "aria-haspopup": "menu",
-                  "aria-expanded": databaseActionsPopoverOpen ? "true" : "false",
-                  onClick: () => {
-                    setDatabaseExportMenuOpen(false);
-                    setDatabaseActionsPopoverOpen((current) => !current);
-                  },
-                  disabled: databaseSaveState.isSaving,
-                }, React.createElement(Ellipsis, { width: 16, height: 16, strokeWidth: 1.8 })),
-                databaseActionsPopoverOpen
-                  ? React.createElement(PlatformPopupSurface, {
-                      className: "playground-tasks-toolbar-popup-menu playground-thread-nav-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                      role: "menu",
-                      onClick: (event) => event.stopPropagation(),
-                    },
-                      React.createElement("div", { className: "tb-popup-row playground-thread-nav-popup-static-row" },
-                        React.createElement("span", { className: "tb-popup-check-slot", "aria-hidden": "true" }),
-                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                          React.createElement("span", null, "Database ID"),
-                          React.createElement("span", {
-                            className: "playground-thread-nav-popup-thread-id",
-                            title: normalizedDatabaseId,
-                          }, normalizedDatabaseId)
-                        )
-                      ),
-                      React.createElement("div", { className: "playground-thread-nav-popup-divider", "aria-hidden": "true" }),
-                      React.createElement("button", {
-                        type: "button",
-                        role: "menuitem",
-                        className: "tb-popup-row",
-                        onClick: () => {
-                          setDatabaseActionsPopoverOpen(false);
-                          window.open("http://localhost:3001/developers/libraries/databases", "_blank", "noopener,noreferrer");
-                        },
-                      },
-                        React.createElement(BookOpen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                          React.createElement("span", null, "Documentation")
-                        )
-                      ),
-                      React.createElement("button", {
-                        type: "button",
-                        role: "menuitem",
-                        className: "tb-popup-row",
-                        onClick: () => openDatabaseRenameDialog(activeDatabase),
-                      },
-                        React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                          React.createElement("span", null, "Rename")
-                        )
-                      ),
-                      React.createElement("button", {
-                        type: "button",
-                        role: "menuitem",
-                        className: "tb-popup-row playground-tasks-detail-menu-item-danger",
-                        onClick: () => {
-                          setDatabaseActionsPopoverOpen(false);
-                          void handleDeleteDatabase(normalizedDatabaseId);
-                        },
-                      },
-                        React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                        React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                          React.createElement("span", null, "Delete")
-                        )
-                      )
-                    )
-                  : null
-              );
-            }
             return null;
           };
           const renderCurrentResourceCreateControl = (buttonClassName) => {
@@ -408,8 +416,23 @@
           const renderResourcesTopActionControl = (buttonClassName) => {
             if (isServersMode && !shouldShowEnvironmentHome && selectedDatabaseId) {
               return React.createElement(React.Fragment, null,
-                renderDatabaseExportControl(),
-                renderCurrentResourceSettingsControl(buttonClassName)
+                databaseDetailTab !== "data"
+                  ? React.createElement("button", {
+                      type: "button",
+                      className: buttonClassName,
+                      onClick: () => setDatabaseDetailsCollapsed((current) => !current),
+                      title: databaseDetailsCollapsed ? "Show database properties" : "Hide database properties",
+                      "aria-label": databaseDetailsCollapsed ? "Show database properties" : "Hide database properties",
+                      "aria-pressed": databaseDetailsCollapsed ? "true" : "false",
+                    },
+                    React.createElement(PanelRight, {
+                      width: 15,
+                      height: 15,
+                      strokeWidth: 1.8,
+                    })
+                  )
+                  : null,
+                renderDatabaseExportControl()
               );
             }
             if (isServersMode && !shouldShowEnvironmentHome && selectedServerId) {
@@ -426,6 +449,15 @@
             ? createPortal(
                 renderResourcesTopActionControl(isServersMode ? "playground-files-header-icon-button is-plain" : "playground-top-nav-private-chat-button"),
                 topNavActionsContainer
+              )
+            : null;
+          const databaseTitleActions = databaseTitleActionsContainer
+            && isServersMode
+            && !shouldShowEnvironmentHome
+            && selectedDatabaseId
+            ? createPortal(
+                renderDatabaseTitleActionsControl(),
+                databaseTitleActionsContainer
               )
             : null;
   
@@ -1350,6 +1382,7 @@
   	            + (isEmbeddedSecretsTab ? " is-secrets-tab" : "");
             return React.createElement(React.Fragment, null,
               resourcesTopNavActions,
+              databaseTitleActions,
               shouldShowServerCreationSetup
                 ? React.createElement("section", { className: embeddedResourcesPageClassName },
                     renderServerCreationSetupPage()

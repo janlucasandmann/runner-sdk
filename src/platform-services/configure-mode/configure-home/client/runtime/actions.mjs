@@ -8,6 +8,9 @@ export const CONFIGURE_HOME_NOTIFICATION_ACTIONS_SCRIPT = `        function hand
 	          const humanTaskIds = notificationItems
 	            .filter((item) => item.kind === "human_task" && item.id)
 	            .map((item) => item.id);
+	          const taskActivityIds = notificationItems
+	            .filter((item) => item.kind === "task_activity" && item.id)
+	            .map((item) => item.id);
 	          const teamInvitationIds = notificationItems
 	            .filter((item) => item.kind === "team_invitation" && item.id)
 	            .map((item) => item.id);
@@ -35,6 +38,14 @@ export const CONFIGURE_HOME_NOTIFICATION_ACTIONS_SCRIPT = `        function hand
 	            setReadHumanTaskNotificationIds((current) => {
               const next = Array.from(new Set([...current, ...humanTaskIds]));
               writeStoredNotificationIds(PLAYGROUND_HUMAN_TASK_NOTIFICATION_READ_STORAGE_KEY, next);
+              return next;
+	            });
+	          }
+
+	          if (taskActivityIds.length > 0) {
+	            setReadTaskActivityNotificationIds((current) => {
+              const next = Array.from(new Set([...current, ...taskActivityIds]));
+              writeStoredNotificationIds(PLAYGROUND_TASK_ACTIVITY_NOTIFICATION_READ_STORAGE_KEY, next);
               return next;
 	            });
 	          }
@@ -74,6 +85,31 @@ export const CONFIGURE_HOME_NOTIFICATION_ACTIONS_SCRIPT = `        function hand
 	          }
 	          setNotificationsOpen(false);
 	          handleOpenWelcomeWidgetTaskDetail(taskRecord);
+	        }
+
+	        function handleOpenTaskActivityNotification(item) {
+	          const notificationId = String(item?.id || "").trim();
+	          const taskId = String(item?.taskId || "").trim();
+	          const projectId = String(item?.projectId || "").trim();
+	          if (notificationId) {
+	            setReadTaskActivityNotificationIds((current) => {
+              const next = Array.from(new Set([...current, notificationId]));
+              writeStoredNotificationIds(PLAYGROUND_TASK_ACTIVITY_NOTIFICATION_READ_STORAGE_KEY, next);
+              return next;
+	            });
+	          }
+	          setNotificationsOpen(false);
+	          if (!taskId || !projectId) {
+	            return;
+	          }
+	          const existingTask = Array.isArray(welcomeWidgetsState.tasks)
+	            ? welcomeWidgetsState.tasks.find((task) => String(task?.id || "").trim() === taskId)
+	            : null;
+	          handleOpenWelcomeWidgetTaskDetail(existingTask || {
+	            id: taskId,
+	            projectId,
+	            title: item?.taskTitle || item?.title || "Ticket",
+	          });
 	        }
 
         async function handleTeamInvitationDecision(item, action) {

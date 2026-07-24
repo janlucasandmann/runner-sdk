@@ -66,7 +66,11 @@ function resolveAreaStyle(seriesIndex: number) {
   return PLATFORM_ANALYTICS_AREA_STYLES[seriesIndex % PLATFORM_ANALYTICS_AREA_STYLES.length];
 }
 
-export function PlatformAnalyticsChart({ analytics, chartType }: PlatformAnalyticsChartProps) {
+export function PlatformAnalyticsChart({
+  analytics,
+  chartType,
+  compact = false,
+}: PlatformAnalyticsChartProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const chartRef = useRef<Chart | null>(null);
   const labels = useMemo(() => Array.from(analytics.labels || []), [analytics.labels]);
@@ -165,25 +169,31 @@ export function PlatformAnalyticsChart({ analytics, chartType }: PlatformAnalyti
           const isLine = resolvedType === "line";
           const usesAreaTreatment = isLine && entry.fill !== false;
           const areaStyle = resolveAreaStyle(seriesIndex);
+          const resolvedAreaBorderColor = entry.fillColor ? entry.color : areaStyle.borderColor;
+          const resolvedAreaBackgroundColor = entry.fillColor || areaStyle.backgroundColor;
           return {
             type: resolvedType,
             label: entry.label,
             data: entry.values.map((value) => Math.max(0, Number(value) || 0)),
-            borderColor: usesAreaTreatment ? areaStyle.borderColor : entry.color,
+            borderColor: usesAreaTreatment ? resolvedAreaBorderColor : entry.color,
             backgroundColor: usesAreaTreatment
-              ? areaStyle.backgroundColor
+              ? resolvedAreaBackgroundColor
               : isLine
                 ? "transparent"
                 : entry.color,
             borderWidth: isLine ? 1.5 : 0,
-            pointRadius: 0,
+            pointRadius: compact
+              ? entry.values.map((_, valueIndex) =>
+                  valueIndex === entry.values.length - 1 ? 3 : 0
+                )
+              : 0,
             pointHoverRadius: isLine ? 4 : 0,
             pointHitRadius: isLine ? 12 : 0,
             pointHoverBorderWidth: isLine ? 2 : 0,
             pointHoverBorderColor: isLine ? "#fff" : undefined,
             pointHoverBackgroundColor: isLine
               ? usesAreaTreatment
-                ? areaStyle.borderColor
+                ? resolvedAreaBorderColor
                 : entry.color
               : undefined,
             tension: 0.38,
@@ -207,7 +217,7 @@ export function PlatformAnalyticsChart({ analytics, chartType }: PlatformAnalyti
         normalized: true,
         layout: {
           padding: {
-            top: 8,
+            top: compact ? 2 : 8,
           },
         },
         interaction: { intersect: false, mode: "index" },
@@ -237,13 +247,20 @@ export function PlatformAnalyticsChart({ analytics, chartType }: PlatformAnalyti
             ticks: {
               color: "rgba(255,255,255,0.42)",
               font: { family: "Inter, sans-serif", size: 11, weight: 400 },
-              padding: 10,
+              padding: compact ? 6 : 10,
               maxRotation: 0,
-              autoSkip: true,
-              maxTicksLimit: 7,
+              autoSkip: !compact,
+              maxTicksLimit: compact ? 2 : 7,
+              callback(_value, index) {
+                if (compact && index !== 0 && index !== labels.length - 1) {
+                  return "";
+                }
+                return labels[index] || "";
+              },
             },
           },
           y: {
+            display: !compact,
             beginAtZero: true,
             stacked: isStacked,
             position: "left",
@@ -285,9 +302,9 @@ export function PlatformAnalyticsChart({ analytics, chartType }: PlatformAnalyti
             : {}),
         },
       },
-      plugins: [dashedGridPlugin, maxReferencePlugin],
+      plugins: compact ? [] : [dashedGridPlugin, maxReferencePlugin],
     });
-  }, [analytics.error, analytics.loading, chartType, hasData, labels, series]);
+  }, [analytics.error, analytics.loading, chartType, compact, hasData, labels, series]);
 
   if (analytics.loading) {
     return (

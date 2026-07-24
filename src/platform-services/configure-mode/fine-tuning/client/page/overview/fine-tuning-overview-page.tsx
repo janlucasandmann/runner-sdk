@@ -4,6 +4,7 @@ import type {
   PlatformDataTableAction,
   PlatformDataTableColumn,
 } from "../../../../../../platform-ui/components/composite/data-table/index.js";
+import { PlatformEmptyState } from "../../../../../../platform-ui/components/composite/empty-state/index.js";
 import {
   ResourceOverviewIdentityCell,
   ResourceOverviewPage,
@@ -183,7 +184,10 @@ export function FineTuningOverviewPage({
         className: "resource-overview-table is-fine-tuning",
         sorting: { defaultValue: { id: "name", direction: "asc" } },
         selection: { enabled: true, ariaLabel: (row) => `Select ${row.name}` },
-        pagination: false,
+        pagination: {
+          defaultValue: { pageIndex: 0, pageSize: 20 },
+          pageSizeOptions: [20, 50, 100],
+        },
         toolbar: {
           title: "All Fine-tuning Jobs",
           search: {
@@ -213,7 +217,13 @@ export function FineTuningOverviewPage({
         getRowAriaLabel: (row) => row.name,
         loading,
         error: error || undefined,
-        emptyState: "No fine-tuning jobs yet.",
+        emptyState: (
+          <PlatformEmptyState
+            icon={TestTubeDiagonal}
+            title="No fine-tuning jobs yet"
+            description="Fine-tuning jobs will appear here after you improve an agent with evaluated evidence."
+          />
+        ),
         noResultsState: "No fine-tuning jobs match this view.",
       }}
     />

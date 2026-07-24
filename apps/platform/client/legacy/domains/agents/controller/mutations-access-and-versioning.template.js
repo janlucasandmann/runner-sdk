@@ -310,10 +310,10 @@
           }
   
           function requestAgentWorkspaceTeams(options = {}) {
-            if (workspaceTeamsRequiresPlan || workspaceTeamsLoading || typeof onWorkspaceTeamsRequest !== "function") {
+            if (workspaceTeamsRequiresPlan || workspaceTeamsLoading || typeof onWorkspaceTeamsRequestRef.current !== "function") {
               return;
             }
-            onWorkspaceTeamsRequest(options);
+            onWorkspaceTeamsRequestRef.current(options);
           }
   
           async function fetchAgentTeamMemberProfilePayload(teamId, members = []) {

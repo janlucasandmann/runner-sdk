@@ -123,60 +123,6 @@ export const EVALUATIONS_STYLE_DETAIL = String.raw`        line-height: 1.35;
         outline: none;
       }
 
-      .playground-evaluations-jsonl-imports.platform-attachments {
-        margin-top: 0;
-        overflow: visible;
-      }
-
-      .playground-evaluations-jsonl-imports .platform-attachments__header,
-      .playground-evaluations-jsonl-imports .platform-attachments__title {
-        overflow: visible;
-      }
-
-      .playground-evaluations-imports-title {
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        overflow: visible;
-      }
-
-      .playground-evaluations-imports-help {
-        position: relative;
-        width: 16px;
-        height: 16px;
-        padding: 0;
-        border: 0;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.46);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: help;
-        overflow: visible;
-      }
-
-      .playground-evaluations-imports-help:hover,
-      .playground-evaluations-imports-help:focus-visible {
-        color: rgba(255, 255, 255, 0.86);
-        outline: none;
-      }
-
-      .playground-evaluations-imports-tooltip {
-        width: 320px;
-      }
-
-      .playground-evaluations-imports-help:hover .playground-evaluations-imports-tooltip,
-      .playground-evaluations-imports-help:focus-visible .playground-evaluations-imports-tooltip {
-        opacity: 1;
-        transform: translateY(0);
-      }
-
-      .playground-evaluations-jsonl-imports .platform-attachments__drop-target.is-empty,
-      .playground-evaluations-jsonl-imports .platform-attachments__empty {
-        min-height: 128px;
-      }
-
       .playground-evaluations-thread-case-modal {
         width: min(760px, calc(100vw - 32px));
         height: min(720px, calc(100dvh - 48px));
@@ -356,15 +302,16 @@ export const EVALUATIONS_STYLE_DETAIL = String.raw`        line-height: 1.35;
         min-width: 0;
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 4px;
       }
 
       .playground-evaluations-detail-sidebar-row {
         min-width: 0;
-        display: flex;
+        min-height: 30px;
+        display: grid;
+        grid-template-columns: minmax(88px, 110px) minmax(0, 1fr);
         align-items: center;
-        justify-content: space-between;
-        gap: 16px;
+        gap: 12px;
         color: rgba(255, 255, 255, 0.92);
         font-size: 12px;
         line-height: 1.35;
@@ -372,8 +319,8 @@ export const EVALUATIONS_STYLE_DETAIL = String.raw`        line-height: 1.35;
       }
 
       .playground-evaluations-detail-sidebar-label {
-        flex: 0 0 auto;
-        color: rgba(255, 255, 255, 0.5);
+        min-width: 0;
+        color: #fff;
       }
 
       .playground-evaluations-detail-sidebar-value {
@@ -397,6 +344,31 @@ export const EVALUATIONS_STYLE_DETAIL = String.raw`        line-height: 1.35;
 
       .playground-evaluations-detail-sidebar-value .playground-evaluations-run-agent-cell {
         justify-content: flex-end;
+      }
+
+      .playground-evaluations-run-agent-version-cell {
+        min-width: 0;
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .playground-evaluations-run-agent-version-cell > .playground-evaluations-run-agent-cell {
+        min-width: 0;
+        width: auto;
+        flex: 1 1 auto;
+      }
+
+      .playground-evaluations-run-agent-version-label.platform-label {
+        flex: 0 0 auto;
+      }
+
+      .playground-evaluations-detail-sidebar-row.is-environment .playground-evaluations-detail-sidebar-value,
+      .playground-evaluations-detail-sidebar-row.is-environment .playground-evaluations-run-environment-cell {
+        justify-content: flex-end;
+        text-align: right;
       }
 
       .playground-evaluations-detail-sidebar-row.is-owner .playground-evaluations-detail-sidebar-value {
@@ -440,6 +412,22 @@ export const EVALUATIONS_STYLE_DETAIL = String.raw`        line-height: 1.35;
         margin-top: 12px;
         padding-top: 12px;
         border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-evaluations-detail-sidebar-row.playground-evaluations-run-agent-property {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-evaluations-run-again-button.platform-button {
+        width: 100%;
+        margin-top: 12px;
+      }
+
+      .playground-evaluations-detail-run-button.platform-button {
+        width: 100%;
+        margin-top: 8px;
       }
 
       .playground-evaluations-detail-owner-selector {
@@ -495,20 +483,6 @@ export const EVALUATIONS_STYLE_DETAIL = String.raw`        line-height: 1.35;
       .playground-evaluations-access-detail .platform-permissions-page,
       .playground-evaluations-access-detail .platform-role-permissions-page {
         margin-top: 12px;
-      }
-
-      .playground-evaluations-detail-sidebar-actions {
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-      }
-
-      .playground-evaluations-detail-sidebar-action {
-        width: 100%;
-        min-width: 0;
-        justify-content: flex-start;
-        padding-left: 0;
-        padding-right: 0;
       }
 
       .playground-evaluations-detail-overview-main .playground-evaluations-analytics-card {

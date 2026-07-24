@@ -98,6 +98,8 @@ assert.match(fragments.notificationsPopup, /function renderAppHeaderNotification
 assert.match(fragments.notificationsPopup, /React\.createElement\(PlatformPopup,/);
 assert.match(fragments.notificationsPopup, /variant: "minimal"/);
 assert.match(fragments.notificationsPopup, /surfaceClassName: "notification-menu"/);
+assert.match(fragments.notificationsPopup, /item\.kind === "task_activity"/);
+assert.match(fragments.notificationsPopup, /handleOpenTaskActivityNotification\(item\)/);
 assert.doesNotMatch(fragments.notificationsPopup, /React\.createElement\(PlatformPopupSurface,/);
 assert.match(fragments.notificationsPopup, /React\.createElement\(PlatformEmptyState,/);
 assert.match(fragments.notificationsPopup, /React\.createElement\(PlatformSecondaryButton,/);

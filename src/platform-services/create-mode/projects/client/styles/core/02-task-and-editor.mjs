@@ -981,7 +981,7 @@ export const PROJECTS_CORE_CSS_02_FRAGMENT = `      .playground-projects-overvie
 	        min-height: 0;
 	        height: 100%;
 	        max-height: 100%;
-	        padding-bottom: 24px;
+	        padding-bottom: 0;
 	        overflow: hidden;
 	      }
 

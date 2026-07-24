@@ -40,6 +40,7 @@ export interface EvaluationsOverviewPageProps {
   onRename: (row: EvaluationOverviewRow) => void;
   onRun: (row: EvaluationOverviewRow) => void;
   onDelete: (row: EvaluationOverviewRow) => void;
+  onDeleteMany: (rows: readonly EvaluationOverviewRow[]) => void;
 }
 
 export function EvaluationsOverviewPage({
@@ -52,8 +53,12 @@ export function EvaluationsOverviewPage({
   onRename,
   onRun,
   onDelete,
+  onDeleteMany,
 }: EvaluationsOverviewPageProps) {
   const [runFilter, setRunFilter] = useState("all");
+  const [selectedRowIds, setSelectedRowIds] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
   const filteredRows = useMemo(
     () =>
       rows.filter((row) => {
@@ -145,25 +150,50 @@ export function EvaluationsOverviewPage({
 
   const getRowActions = (
     row: EvaluationOverviewRow,
-  ): readonly PlatformDataTableAction<EvaluationOverviewRow>[] => [
-    { id: "open", label: "Open", icon: ChevronRight, onSelect: () => onOpen(row) },
-    { id: "rename", label: "Rename", icon: SquarePen, onSelect: () => onRename(row) },
-    {
-      id: "run",
-      label: "Run",
-      icon: Play,
-      disabled: !row.canRun,
-      onSelect: () => onRun(row),
-    },
-    {
-      id: "delete",
-      label: "Delete",
-      icon: Trash2,
-      danger: true,
-      separatorBefore: true,
-      onSelect: () => onDelete(row),
-    },
-  ];
+    state: { targetRows: readonly EvaluationOverviewRow[] },
+  ): readonly PlatformDataTableAction<EvaluationOverviewRow>[] => {
+    const targets = state.targetRows.length ? state.targetRows : [row];
+    if (targets.length > 1) {
+      return [
+        {
+          id: "delete-selected",
+          label: "Delete selected",
+          icon: Trash2,
+          danger: true,
+          onSelect: () => {
+            onDeleteMany(targets);
+            setSelectedRowIds(new Set());
+          },
+        },
+      ];
+    }
+    return [
+      { id: "open", label: "Open", icon: ChevronRight, onSelect: () => onOpen(row) },
+      { id: "rename", label: "Rename", icon: SquarePen, onSelect: () => onRename(row) },
+      {
+        id: "run",
+        label: "Run",
+        icon: Play,
+        disabled: !row.canRun,
+        onSelect: () => onRun(row),
+      },
+      {
+        id: "delete",
+        label: "Delete",
+        icon: Trash2,
+        danger: true,
+        separatorBefore: true,
+        onSelect: () => {
+          onDelete(row);
+          setSelectedRowIds((current) => {
+            const next = new Set(current);
+            next.delete(row.id);
+            return next;
+          });
+        },
+      },
+    ];
+  };
 
   const scrollToTable = () => {
     if (typeof document === "undefined") return;
@@ -199,7 +229,12 @@ export function EvaluationsOverviewPage({
         ariaLabel: "Evaluations",
         className: "resource-overview-table is-evaluations",
         sorting: { defaultValue: { id: "updated", direction: "desc" } },
-        selection: { enabled: true, ariaLabel: (row) => `Select ${row.name}` },
+        selection: {
+          enabled: true,
+          value: selectedRowIds,
+          onChange: ({ selectedIds }) => setSelectedRowIds(new Set(selectedIds)),
+          ariaLabel: (row) => `Select ${row.name}`,
+        },
         pagination: false,
         toolbar: {
           title: "All Evaluations",

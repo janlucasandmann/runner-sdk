@@ -7,6 +7,18 @@ export const FINE_TUNING_PAGE_EVALUATIONS_SCRIPT = String.raw`      function get
         return Array.isArray(rawVersions) ? rawVersions : [];
       }
 
+      function readPlaygroundFineTuningEvaluationListFromPayload(payload, keys = []) {
+        const source = payload && typeof payload === "object" && !Array.isArray(payload) ? payload : {};
+        for (const key of Array.isArray(keys) ? keys : []) {
+          if (Array.isArray(source[key])) return source[key];
+          if (Array.isArray(source.data?.[key])) return source.data[key];
+        }
+        if (Array.isArray(source.data)) return source.data;
+        if (Array.isArray(source.items)) return source.items;
+        if (Array.isArray(source.records)) return source.records;
+        return [];
+      }
+
       function normalizePlaygroundFineTuningEvaluationSet(set, fallbackIndex = 0) {
         const normalized = typeof normalizePlaygroundEvaluationSet === "function"
           ? normalizePlaygroundEvaluationSet(set)
@@ -69,6 +81,65 @@ export const FINE_TUNING_PAGE_EVALUATIONS_SCRIPT = String.raw`      function get
           const rightTime = Date.parse(right?.createdAt || right?.created_at || right?.completedAt || right?.completed_at || right?.updatedAt || right?.updated_at || 0) || 0;
           return rightTime - leftTime;
         });
+      }
+
+      function getPlaygroundFineTuningRunEvaluationSetId(run) {
+        const source = run && typeof run === "object" && !Array.isArray(run) ? run : {};
+        const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
+          ? source.metadata
+          : {};
+        return normalizePlaygroundFineTuningString(
+          source.evaluationSetId
+          || source.evaluation_set_id
+          || source.evaluationId
+          || source.evaluation_id
+          || metadata.evaluationSetId
+          || metadata.evaluation_set_id
+          || metadata.evaluationId
+          || metadata.evaluation_id
+        );
+      }
+
+      function mergePlaygroundFineTuningEvaluationSources(currentSets = [], backendSets = [], backendRuns = []) {
+        const normalizedCurrentSets = (Array.isArray(currentSets) ? currentSets : [])
+          .map((set, index) => normalizePlaygroundFineTuningEvaluationSet(set, index))
+          .filter((set) => normalizePlaygroundFineTuningString(set?.id));
+        const normalizedBackendSets = (Array.isArray(backendSets) ? backendSets : [])
+          .map((set, index) => normalizePlaygroundFineTuningEvaluationSet(set, index))
+          .filter((set) => normalizePlaygroundFineTuningString(set?.id));
+        if (!normalizedBackendSets.length) {
+          return normalizedCurrentSets.map((set, index) => resolvePlaygroundFineTuningPublishedEvaluationSource(set, index));
+        }
+        const currentById = new Map(normalizedCurrentSets.map((set) => [
+          normalizePlaygroundFineTuningString(set.id),
+          set,
+        ]));
+        const runsBySetId = new Map();
+        (Array.isArray(backendRuns) ? backendRuns : []).forEach((run) => {
+          const setId = getPlaygroundFineTuningRunEvaluationSetId(run);
+          if (!setId) return;
+          const setRuns = runsBySetId.get(setId) || [];
+          setRuns.push(run);
+          runsBySetId.set(setId, setRuns);
+        });
+        return normalizedBackendSets
+          .map((backendSet, index) => {
+            const setId = normalizePlaygroundFineTuningString(backendSet.id);
+            const currentSet = currentById.get(setId) || {};
+            return resolvePlaygroundFineTuningPublishedEvaluationSource({
+              ...currentSet,
+              ...backendSet,
+              runs: mergePlaygroundFineTuningEvaluationRuns(
+                runsBySetId.get(setId),
+                backendSet.runs,
+                currentSet.runs
+              ),
+            }, index);
+          })
+          .sort((left, right) => (
+            (Date.parse(right?.updatedAt || right?.updated_at || right?.createdAt || right?.created_at || 0) || 0)
+            - (Date.parse(left?.updatedAt || left?.updated_at || left?.createdAt || left?.created_at || 0) || 0)
+          ));
       }
 
       function resolvePlaygroundFineTuningPublishedEvaluationSource(set, fallbackIndex = 0) {
@@ -184,4 +255,3 @@ export const FINE_TUNING_PAGE_EVALUATIONS_SCRIPT = String.raw`      function get
       }
 
 `;
-

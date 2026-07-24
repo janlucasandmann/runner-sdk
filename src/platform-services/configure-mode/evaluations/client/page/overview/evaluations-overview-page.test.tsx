@@ -25,6 +25,20 @@ const rows: readonly EvaluationOverviewRow[] = [
     updatedLabel: "Jul 3, 2024",
     canRun: true,
   },
+  {
+    id: "evaluation-code",
+    name: "Code Quality",
+    evaluatorLabel: "Exact match",
+    evaluatorType: "exact",
+    evaluatorFallback: "E",
+    caseCount: 8,
+    runCount: 2,
+    creatorLabel: "Jan",
+    creatorFallback: "J",
+    updatedAt: 1_719_900_000_000,
+    updatedLabel: "Jul 2, 2024",
+    canRun: true,
+  },
 ];
 
 afterEach(() => {
@@ -37,6 +51,7 @@ describe("EvaluationsOverviewPage", () => {
     const user = userEvent.setup();
     const onOpen = vi.fn();
     const onCreate = vi.fn();
+    const onDeleteMany = vi.fn();
     const controls = document.createElement("div");
     controls.id = CONTROLS_PORTAL_ID;
     document.body.append(controls);
@@ -50,6 +65,7 @@ describe("EvaluationsOverviewPage", () => {
         onRename={vi.fn()}
         onRun={vi.fn()}
         onDelete={vi.fn()}
+        onDeleteMany={onDeleteMany}
       />,
     );
 
@@ -64,11 +80,26 @@ describe("EvaluationsOverviewPage", () => {
     expect(container.querySelector(".platform-data-table__footer")).toBeNull();
     expect(screen.getByText("All Evaluations")).not.toBeNull();
     expect(screen.getByPlaceholderText("Search evaluations")).not.toBeNull();
+    expect(
+      screen.getByRole("checkbox", { name: "Select all visible rows" }),
+    ).not.toBeNull();
 
     await user.click(await screen.findByRole("button", { name: "Evaluation" }));
     expect(onCreate).toHaveBeenCalledOnce();
 
     await user.click(screen.getByText("Support Quality"));
     expect(onOpen).toHaveBeenCalledWith(rows[0]);
+
+    await user.click(screen.getByRole("checkbox", { name: "Select Support Quality" }));
+    await user.click(screen.getByRole("checkbox", { name: "Select Code Quality" }));
+    await user.click(
+      screen.getByRole("button", { name: "Open actions for Support Quality" }),
+    );
+    await user.click(screen.getByRole("menuitem", { name: "Delete selected" }));
+
+    expect(onDeleteMany).toHaveBeenCalledOnce();
+    expect(
+      onDeleteMany.mock.calls[0]?.[0].map((row: EvaluationOverviewRow) => row.id).sort(),
+    ).toEqual(["evaluation-code", "evaluation-support"]);
   });
 });

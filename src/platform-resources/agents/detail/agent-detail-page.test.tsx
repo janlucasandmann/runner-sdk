@@ -46,6 +46,11 @@ describe("AgentDetailPage", () => {
     expect(container.querySelectorAll("[data-resource-detail-page='true']")).toHaveLength(1);
     expect(container.querySelectorAll("[data-platform-detail-tab-bar='true']")).toHaveLength(0);
     expect(container.querySelectorAll("[data-platform-detail-sidebar='true']")).toHaveLength(1);
+    expect(
+      container
+        .querySelector("[data-platform-detail-sidebar='true']")
+        ?.classList.contains("playground-ticket-detail-sidebar"),
+    ).toBe(true);
     expect(container.querySelector(".resource-detail-page__header")).toBeNull();
     expect(screen.queryByRole("tab")).toBeNull();
     expect(screen.queryByRole("button", { name: "Toggle sidebar" })).toBeNull();

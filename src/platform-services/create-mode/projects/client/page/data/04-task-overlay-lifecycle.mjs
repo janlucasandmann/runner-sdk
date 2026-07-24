@@ -230,6 +230,73 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
 	        }, [backendUrl, requestHeaders, requestHeadersKey, selectedProjectId, selectedTaskId, taskView]);
 
         useEffect(() => {
+          if (!projectTaskDetailScreenOpen || !selectedProjectId || !selectedTaskId) {
+            setTaskActivitySubscriptionState({
+              taskId: "",
+              status: "idle",
+              subscribed: false,
+              error: "",
+            });
+            return undefined;
+          }
+
+          const taskId = String(selectedTaskId || "").trim();
+          const controller = new AbortController();
+          setTaskActivitySubscriptionState((current) => ({
+            taskId,
+            status: "loading",
+            subscribed: current.taskId === taskId ? current.subscribed : false,
+            error: "",
+          }));
+
+          void (async () => {
+            try {
+              const response = await fetch(
+                backendUrl + "/tasks/" + encodeURIComponent(taskId) + "/activity-subscription",
+                {
+                  method: "GET",
+                  headers: requestHeaders,
+                  signal: controller.signal,
+                }
+              );
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Failed to load ticket subscription.");
+              }
+              if (!controller.signal.aborted && selectedTaskIdRef.current === taskId) {
+                setTaskActivitySubscriptionState({
+                  taskId,
+                  status: "ready",
+                  subscribed: Boolean(data?.subscribed),
+                  error: "",
+                });
+              }
+            } catch (error) {
+              if (controller.signal.aborted) {
+                return;
+              }
+              setTaskActivitySubscriptionState((current) => (
+                current.taskId === taskId
+                  ? {
+                      ...current,
+                      status: "error",
+                      error: error instanceof Error ? error.message : "Failed to load ticket subscription.",
+                    }
+                  : current
+              ));
+            }
+          })();
+
+          return () => controller.abort();
+        }, [
+          backendUrl,
+          projectTaskDetailScreenOpen,
+          requestHeadersKey,
+          selectedProjectId,
+          selectedTaskId,
+        ]);
+
+        useEffect(() => {
           const requestToken = String(navigationRequest?.token || "").trim();
           if (!requestToken) {
             return;

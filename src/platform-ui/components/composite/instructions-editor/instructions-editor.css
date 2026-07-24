@@ -146,6 +146,36 @@
   overflow: visible;
 }
 
+.platform-instructions-editor__content-viewport {
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+  overflow: visible;
+}
+
+.platform-instructions-editor.is-content-collapsed
+  .platform-instructions-editor__content-viewport {
+  max-height: calc(
+    var(--platform-instructions-editor-collapsed-lines, 10) * 1.6em
+  );
+  overflow: hidden;
+}
+
+.platform-instructions-editor__collapse-actions {
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 8px;
+}
+
+.platform-instructions-editor__collapse-button.platform-button {
+  min-width: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+
 .platform-instructions-editor__content,
 .platform-instructions-editor__readonly {
   box-sizing: border-box;

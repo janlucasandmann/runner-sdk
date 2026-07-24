@@ -10,6 +10,7 @@ import {
 } from "./index.mjs";
 import {
   compactFineTuningJobRecord,
+  compactFineTuningJobOverviewRecord,
   normalizeEvaluationSet,
 } from "./server/domain/index.mjs";
 import { readPlatformCompositionSource } from "../../../../apps/platform/testing/platform-composition-source.mjs";
@@ -22,10 +23,45 @@ assert.doesNotThrow(() => new Function(PLAYGROUND_FINE_TUNING_SCRIPT));
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.foundation, /createPlaygroundFineTuningId/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.jobs, /normalizePlaygroundFineTuningJob/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.evaluations, /normalizePlaygroundFineTuningEvaluationSet/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.evaluations, /readPlaygroundFineTuningEvaluationListFromPayload/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.evaluations, /mergePlaygroundFineTuningEvaluationSources/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.setup, /"\/evaluations\?limit=500"/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.setup, /"\/evaluations\/runs\?limit=1000"/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.setup, /"\/fine-tuning\/jobs\?view=overview&limit=100"/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.setup, /shouldLoadFineTuningEvaluationData/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.setup, /fineTuningPageMode !== "detail"/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.setup, /setFineTuningEvaluationSetsLoading\(true\)/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.setup, /readPlaygroundEvaluationSetsFromStorage/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.setup, /fineTuningCreateDefaultEvaluationAppliedRef/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.access, /function renderFineTuningAccessSettings/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.access, /subjectType: "fine_tuning"/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.verification, /startFineTuningVerificationRuns/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /renderCreateModal/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /React\.createElement\(PlatformModal/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /title: "New Fine-Tune"[\s\S]*?headerVariant: "search"/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /headerSearchProps: \{[\s\S]*?icon: TestTubeDiagonal[\s\S]*?value: form\.name/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /React\.createElement\(PlatformSecondaryButton/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /React\.createElement\(PlatformPrimaryButton/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /ariaLabel: "Select fine-tuner agent"/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /ariaLabel: "Select computer"/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /className: "playground-tasks-detail-central-selector playground-fine-tuning-create-selector"/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /popupClassName: "playground-tasks-detail-central-selector-popup playground-fine-tuning-create-selector-popup"/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /Loading evaluation sets\.\.\./);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /React\.createElement\(PlatformPopup/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /variant: "minimal"/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /portal: true/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /React\.createElement\(PlatformInstructionsEditor/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /title: "Instructions"/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /variant: "minimalistic-ui"/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /contentVariant: "text"/);
+assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /React\.createElement\("textarea"/);
+assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /renderInstructionsToolbarButton/);
+assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.editor, /resizeFineTuningInstructionsTextarea/);
+assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.setup, /fineTuningInstructionsTextareaRef/);
+assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.setup, /fineTuningInstructionsHistory/);
+assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /React\.createElement\(PlatformPopupSurface/);
+assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /React\.createElement\(PlatformModal(?:Backdrop|Surface)/);
+assert.doesNotMatch(PLAYGROUND_FINE_TUNING_CSS, /\.playground-fine-tuning-create-modal \.playground-fine-tuning-instructions-section[\s\S]*?background: transparent !important;/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.overview, /React\.createElement\(FineTuningOverviewPage/);
 assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.overview, /React\.createElement\(PlatformDataTable/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /React\.createElement\(FineTuningDetailPage/);
@@ -97,6 +133,19 @@ assert.equal(compactJob.costUsd, 1.25);
 assert.equal(compactJob.description, "Improve response quality without changing supported workflows.");
 assert.equal(compactJob.metadata.owner.name, "Ada");
 assert.deepEqual(compactJob.metadata.teamAccessIds, ["team_1"]);
+
+const compactOverviewJob = compactFineTuningJobOverviewRecord({
+  ...compactJob,
+  instructions: "Only available on the detail endpoint.",
+  evaluationRuns: [{ id: "run_1" }],
+  diffFiles: [{ path: "agent/config.json" }],
+});
+assert.equal(compactOverviewJob.id, "job_1");
+assert.equal(compactOverviewJob.evaluationSetCount, 1);
+assert.equal(compactOverviewJob.instructions, undefined);
+assert.equal(compactOverviewJob.evaluationRuns, undefined);
+assert.equal(compactOverviewJob.diffFiles, undefined);
+assert.equal(compactOverviewJob.metadata, undefined);
 
 const clearedDescriptionJob = compactFineTuningJobRecord({
   id: "job_clear_description",

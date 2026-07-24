@@ -134,10 +134,19 @@ function createProjectRolePermissionSet(roleId: string): PlatformPermissionSet {
     setRingAccess(permissionSet, "ring_3", "no_access");
     applyAccess(
       permissionSet,
-      actionIds.filter((id) => !id.endsWith("_access_manage") && !id.endsWith("_delete")),
+      actionIds.filter(
+        (id) =>
+          !id.endsWith("_access_manage")
+          && !id.endsWith("_owner_transfer")
+          && !id.endsWith("_delete"),
+      ),
       "full_access",
     );
-    applyAccess(permissionSet, ["project_access_manage", "project_delete"], "no_access");
+    applyAccess(
+      permissionSet,
+      ["project_access_manage", "project_owner_transfer", "project_delete"],
+      "no_access",
+    );
     return permissionSet;
   }
   setRingAccess(permissionSet, "ring_1", "read_only");

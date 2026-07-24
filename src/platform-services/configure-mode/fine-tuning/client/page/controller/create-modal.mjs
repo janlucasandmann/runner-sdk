@@ -6,46 +6,69 @@ export const FINE_TUNING_PAGE_CONTROLLER_CREATE_MODAL_SCRIPT = String.raw`      
             ? form.evaluationRunIds
             : {};
           const selectedEvaluationSets = normalizedEvaluationSets.filter((set) => selectedSetIds.includes(set.id));
-          const canUndoInstructions = Array.isArray(fineTuningInstructionsHistory.past) && fineTuningInstructionsHistory.past.length > 0;
-          const canRedoInstructions = Array.isArray(fineTuningInstructionsHistory.future) && fineTuningInstructionsHistory.future.length > 0;
-          const renderInstructionsToolbarButton = (action) =>
-            React.createElement("button", {
-              key: action.id,
-              type: "button",
-              className: "playground-tasks-detail-format-button",
-              title: action.label,
-              "aria-label": action.label,
-              disabled: Boolean(action.disabled || createBusy),
-              onMouseDown: (event) => event.preventDefault(),
-              onClick: action.onClick,
-            }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: action.strokeWidth || 1.8 }));
-          const textFormatActions = [
-            { id: "bold", label: "Bold", icon: Bold, strokeWidth: 2.7 },
-            { id: "italic", label: "Italic", icon: Italic },
-            { id: "underline", label: "Underline", icon: Underline },
-          ];
-          const listFormatActions = [
-            { id: "list", label: "List", icon: List },
-            { id: "ordered-list", label: "Ordered list", icon: ListOrdered },
-          ];
-          const insertFormatActions = [
-            { id: "code", label: "Code", icon: CodeXml },
-            { id: "link", label: "Link", icon: Link2 },
-          ];
-          const renderMarkdownPreview = () => {
-            const content = String(form.instructions || "").trim();
-            if (!content) {
-              return React.createElement("div", {
-                className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-              }, "Add fine-tuning instructions here.");
-            }
-            return typeof PlaygroundTaskDescriptionMarkdown === "function"
-              ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                  content: form.instructions || "",
-                  className: "playground-tasks-detail-description-preview tb-message-markdown",
-                })
-              : React.createElement("div", { className: "playground-tasks-detail-description-preview tb-message-markdown" }, form.instructions || "");
-          };
+          const selectedFineTunerAgentId = normalizePlaygroundFineTuningString(
+            form.agentId || defaultAgentId || normalizedAgents[0]?.id || ""
+          );
+          const selectedFineTunerAgent = normalizedAgents.find((agent) => (
+            normalizePlaygroundFineTuningString(agent?.id) === selectedFineTunerAgentId
+          )) || null;
+          const selectedFineTunerAgentLabel = normalizePlaygroundFineTuningString(
+            selectedFineTunerAgent?.name
+            || selectedFineTunerAgent?.label
+            || selectedFineTunerAgent?.title
+            || selectedFineTunerAgent?.id
+            || "Select agent"
+          );
+          const selectedFineTunerAgentPhotoUrl = normalizePlaygroundFineTuningString(
+            selectedFineTunerAgent?.photoUrl
+            || selectedFineTunerAgent?.photoURL
+            || selectedFineTunerAgent?.avatarUrl
+            || selectedFineTunerAgent?.avatarURL
+          );
+          const fineTunerAgentOptions = normalizedAgents.map((agent) => {
+            const value = normalizePlaygroundFineTuningString(agent?.id);
+            const label = normalizePlaygroundFineTuningString(agent?.name || agent?.label || agent?.title || value) || "Agent";
+            const photoUrl = normalizePlaygroundFineTuningString(
+              agent?.photoUrl || agent?.photoURL || agent?.avatarUrl || agent?.avatarURL
+            );
+            return {
+              value,
+              label,
+              leading: React.createElement(AccountAvatar, {
+                className: "playground-fine-tuning-create-selector-avatar",
+                imageClassName: "playground-fine-tuning-create-selector-avatar-image",
+                fallbackLabel: getPlaygroundFineTuningInitials(label),
+                photoUrl,
+              }),
+            };
+          });
+          const selectedEnvironmentId = normalizePlaygroundFineTuningString(
+            form.environmentId || defaultEnvironmentId || normalizedEnvironments[0]?.id || ""
+          );
+          const selectedEnvironment = normalizedEnvironments.find((environment) => (
+            normalizePlaygroundFineTuningString(environment?.id) === selectedEnvironmentId
+          )) || null;
+          const selectedEnvironmentLabel = normalizePlaygroundFineTuningString(
+            selectedEnvironment?.name
+            || selectedEnvironment?.label
+            || selectedEnvironment?.title
+            || selectedEnvironment?.id
+            || "Select computer"
+          );
+          const environmentOptions = normalizedEnvironments.map((environment) => {
+            const value = normalizePlaygroundFineTuningString(environment?.id);
+            return {
+              value,
+              label: normalizePlaygroundFineTuningString(
+                environment?.name || environment?.label || environment?.title || value
+              ) || "Computer",
+              leading: React.createElement(Monitor, {
+                width: 14,
+                height: 14,
+                strokeWidth: 1.8,
+              }),
+            };
+          });
           const toggleEvaluationSet = (setId) => {
             const normalizedSetId = normalizePlaygroundFineTuningString(setId);
             if (!normalizedSetId) return;
@@ -84,11 +107,10 @@ export const FINE_TUNING_PAGE_CONTROLLER_CREATE_MODAL_SCRIPT = String.raw`      
             return caseCount + " " + (caseCount === 1 ? "case" : "cases") + " · " + formatPlaygroundFineTuningPercent(score);
           };
           const renderEvaluationSetPickerMenu = () =>
-            React.createElement(PlatformPopupSurface, {
-                className: "playground-tasks-toolbar-popup-menu playground-platform-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in playground-fine-tuning-evaluation-menu",
-                onClick: (event) => event.stopPropagation(),
-              },
-              normalizedEvaluationSets.length
+            React.createElement(React.Fragment, null,
+              fineTuningEvaluationSetsLoading && !normalizedEvaluationSets.length
+                ? React.createElement("div", { className: "playground-fine-tuning-evaluation-menu-empty", role: "status" }, "Loading evaluation sets...")
+                : normalizedEvaluationSets.length
                 ? normalizedEvaluationSets.map((set) => {
                     const checked = selectedSetIds.includes(set.id);
                     return React.createElement("button", {
@@ -107,82 +129,145 @@ export const FINE_TUNING_PAGE_CONTROLLER_CREATE_MODAL_SCRIPT = String.raw`      
                       )
                     );
                   })
-                : React.createElement("div", { className: "playground-fine-tuning-evaluation-menu-empty" }, "No evaluation sets available.")
+                : React.createElement("div", { className: "playground-fine-tuning-evaluation-menu-empty" },
+                    fineTuningEvaluationSetsError || "No evaluation sets available."
+                  )
             );
-          return React.createElement(PlatformModalBackdrop, {
-              className: "playground-tasks-project-modal-backdrop playground-tasks-project-issue-backdrop playground-project-overview-outcome-editor-backdrop playground-evaluations-create-modal-backdrop playground-fine-tuning-create-modal-backdrop"
-                + (modalVisible ? " is-visible" : "")
-                + (modalClosing ? " is-closing" : ""),
-              role: "dialog",
-              "aria-modal": "true",
-              onClick: closeCreateModal,
-            },
-            React.createElement(PlatformModalSurface, {
+          return React.createElement(PlatformModal, {
+              open: fineTuningCreateModalOpen,
+              visible: modalVisible,
+              closing: modalClosing,
+              animationDurationMs: 75,
+              portal: true,
               as: "form",
-              className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal playground-mission-control-modal playground-project-overview-outcome-editor-modal playground-evaluations-create-modal playground-fine-tuning-create-modal"
-                + (modalVisible ? " is-visible" : "")
-                + (modalClosing ? " is-closing" : ""),
-              onClick: (event) => event.stopPropagation(),
-              onSubmit: handleCreateFineTuningJob,
-            },
-              React.createElement("div", { className: "playground-tasks-project-modal-top" },
-                React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
-                  React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
-                    React.createElement(TestTubeDiagonal, { width: 18, height: 18, strokeWidth: 1.9 })
-                  ),
-                  React.createElement("input", {
-                    type: "text",
-                    className: "playground-tasks-project-modal-name-input playground-project-overview-outcome-editor-title-input",
-                    value: form.name || "",
-                    placeholder: "Fine-tune job name",
-                    onChange: (event) => updateCreateForm({ name: event.target.value }),
-                    autoFocus: true,
-                  })
-                ),
-                React.createElement("button", {
+              size: "medium",
+              maxHeight: "min(720px, calc(100vh - 48px))",
+              scrollable: true,
+              title: "New Fine-Tune",
+              headerVariant: "search",
+              headerSearchProps: {
+                icon: TestTubeDiagonal,
+                value: form.name || "",
+                placeholder: "Fine-tune job name",
+                "aria-label": "Fine-tune job name",
+                autoComplete: "off",
+                disabled: createBusy,
+                onChange: (event) => updateCreateForm({ name: event.target.value }),
+              },
+              onClose: () => {
+                if (!createBusy) closeCreateModal();
+              },
+              closeOnBackdrop: !createBusy,
+              closeOnEscape: !createBusy,
+              closeButtonDisabled: createBusy,
+              closeButtonLabel: "Close new fine-tune modal",
+              ariaLabel: "Create a new fine-tune job",
+              className: "playground-new-issue-modal playground-fine-tuning-create-modal",
+              backdropClassName: "playground-fine-tuning-create-modal-backdrop",
+              bodyClassName: "playground-new-issue-modal__body playground-fine-tuning-create-modal-platform-body",
+              footerClassName: "playground-new-issue-modal__footer playground-fine-tuning-modal-actions",
+              surfaceProps: { onSubmit: handleCreateFineTuningJob },
+              footer: React.createElement(React.Fragment, null,
+                React.createElement(PlatformSecondaryButton, {
                   type: "button",
-                  className: "playground-settings-icon-button playground-tasks-project-modal-close",
+                  size: "medium",
                   onClick: () => closeCreateModal(),
-                  title: "Close",
-                  "aria-label": "Close",
-                }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
+                  disabled: createBusy,
+                }, "Cancel"),
+                React.createElement(PlatformPrimaryButton, {
+                  size: "medium",
+                  type: "submit",
+                  disabled: createBusy || !String(form.name || "").trim(),
+                  "aria-busy": createBusy || undefined,
+                }, createBusy ? "Starting..." : "Start Fine-Tune")
               ),
+            },
               React.createElement("div", { className: "playground-mission-control-modal-body playground-project-overview-outcome-editor-shell playground-evaluations-create-modal-shell playground-fine-tuning-create-modal-shell" },
                 React.createElement("div", { className: "playground-mission-control-modal-context playground-project-overview-outcome-editor-body playground-evaluations-create-modal-body playground-fine-tuning-create-modal-body" },
                   React.createElement("div", { className: "playground-evaluations-form-grid" },
-                React.createElement("label", { className: "playground-evaluations-field" },
+                React.createElement("div", { className: "playground-evaluations-field" },
                   React.createElement("span", null, "Fine-Tuner Agent"),
-                  React.createElement("select", {
-                    className: "playground-evaluations-select",
-                    value: form.agentId || defaultAgentId || normalizedAgents[0]?.id || "",
-                    onChange: (event) => updateCreateForm({ agentId: event.target.value }),
-                  },
-                    normalizedAgents.length
-                      ? normalizedAgents.map((agent) => React.createElement("option", { key: agent.id, value: agent.id }, agent.name || agent.label || agent.id))
-                      : React.createElement("option", { value: "" }, "No agents available")
-                  )
+                  React.createElement(PlatformSelector, {
+                    value: selectedFineTunerAgentId,
+                    options: fineTunerAgentOptions,
+                    onValueChange: (nextValue) => updateCreateForm({ agentId: nextValue }),
+                    ariaLabel: "Select fine-tuner agent",
+                    label: React.createElement("span", { className: "playground-fine-tuning-create-selector-value" },
+                      React.createElement(AccountAvatar, {
+                        className: "playground-fine-tuning-create-selector-avatar",
+                        imageClassName: "playground-fine-tuning-create-selector-avatar-image",
+                        fallbackLabel: getPlaygroundFineTuningInitials(selectedFineTunerAgentLabel),
+                        photoUrl: selectedFineTunerAgentPhotoUrl,
+                      }),
+                      React.createElement("span", null, selectedFineTunerAgentLabel)
+                    ),
+                    placeholder: "Select agent",
+                    disabled: createBusy || fineTunerAgentOptions.length === 0,
+                    alignment: "end",
+                    popupAlignment: "right",
+                    fullWidth: true,
+                    emptyContent: "No agents available.",
+                    popupWidth: "min(280px, calc(100vw - 48px))",
+                    popupMaxWidth: "calc(100vw - 48px)",
+                    popupMaxHeight: "min(320px, calc(100vh - 120px))",
+                    className: "playground-tasks-detail-central-selector playground-fine-tuning-create-selector",
+                    triggerClassName: "playground-tasks-detail-central-selector-trigger playground-fine-tuning-create-selector-trigger",
+                    popupClassName: "playground-tasks-detail-central-selector-popup playground-fine-tuning-create-selector-popup",
+                  })
                 ),
-                React.createElement("label", { className: "playground-evaluations-field" },
+                React.createElement("div", { className: "playground-evaluations-field" },
                   React.createElement("span", null, "Computer"),
-                  React.createElement("select", {
-                    className: "playground-evaluations-select",
-                    value: form.environmentId || defaultEnvironmentId || normalizedEnvironments[0]?.id || "",
-                    onChange: (event) => updateCreateForm({ environmentId: event.target.value }),
-                  },
-                    normalizedEnvironments.length
-                      ? normalizedEnvironments.map((environment) => React.createElement("option", { key: environment.id, value: environment.id }, environment.name || environment.label || environment.id))
-                      : React.createElement("option", { value: "" }, "No computers available")
-                  )
+                  React.createElement(PlatformSelector, {
+                    value: selectedEnvironmentId,
+                    options: environmentOptions,
+                    onValueChange: (nextValue) => updateCreateForm({ environmentId: nextValue }),
+                    ariaLabel: "Select computer",
+                    label: React.createElement("span", { className: "playground-fine-tuning-create-selector-value" },
+                      React.createElement(Monitor, {
+                        width: 14,
+                        height: 14,
+                        strokeWidth: 1.8,
+                        "aria-hidden": "true",
+                      }),
+                      React.createElement("span", null, selectedEnvironmentLabel)
+                    ),
+                    placeholder: "Select computer",
+                    disabled: createBusy || environmentOptions.length === 0,
+                    alignment: "end",
+                    popupAlignment: "right",
+                    fullWidth: true,
+                    emptyContent: "No computers available.",
+                    popupWidth: "min(280px, calc(100vw - 48px))",
+                    popupMaxWidth: "calc(100vw - 48px)",
+                    popupMaxHeight: "min(320px, calc(100vh - 120px))",
+                    className: "playground-tasks-detail-central-selector playground-fine-tuning-create-selector",
+                    triggerClassName: "playground-tasks-detail-central-selector-trigger playground-fine-tuning-create-selector-trigger",
+                    popupClassName: "playground-tasks-detail-central-selector-popup playground-fine-tuning-create-selector-popup",
+                  })
                 ),
                 React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-initial-setup-goal-editor playground-mission-control-modal-context-editor playground-mission-control-modal-outcomes-editor playground-fine-tuning-evaluation-picker" },
                   React.createElement("div", { className: "playground-tasks-detail-section-header" },
                     React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Evaluation Sets"),
-                    React.createElement("div", {
-                        className: "playground-fine-tuning-evaluation-menu-shell playground-tasks-toolbar-popup-shell" + (evaluationSetPickerOpen ? " is-open" : ""),
-                        ref: evaluationSetPickerRef,
+                    React.createElement(PlatformPopup, {
+                      open: evaluationSetPickerOpen,
+                      rootRef: evaluationSetPickerRef,
+                      surfaceRef: evaluationSetPickerSurfaceRef,
+                      rootClassName: "playground-fine-tuning-evaluation-menu-shell",
+                      surfaceClassName: "playground-fine-tuning-evaluation-menu",
+                      surfaceProps: {
+                        role: "menu",
+                        "aria-label": "Evaluation sets",
+                        width: "min(320px, calc(100vw - 64px))",
+                        maxWidth: "calc(100vw - 32px)",
+                        maxHeight: "270px",
                         onClick: (event) => event.stopPropagation(),
                       },
-                      React.createElement("button", {
+                      animation: "down-in",
+                      variant: "minimal",
+                      portal: true,
+                      placement: "bottom-end",
+                      portalOffset: 6,
+                      trigger: React.createElement("button", {
                         type: "button",
                         className: "playground-mission-control-modal-outcome-add",
                         onClick: () => setEvaluationSetPickerOpen((current) => !current),
@@ -190,8 +275,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_CREATE_MODAL_SCRIPT = String.raw`      
                         "aria-label": "Add evaluation sets",
                         "aria-expanded": evaluationSetPickerOpen ? "true" : "false",
                       }, React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 })),
-                      evaluationSetPickerOpen ? renderEvaluationSetPickerMenu() : null
-                    )
+                    }, renderEvaluationSetPickerMenu())
                   ),
                   React.createElement("div", { className: "playground-fine-tuning-evaluation-picker-body" },
                     React.createElement("div", { className: "playground-fine-tuning-evaluation-list playground-mission-control-modal-outcomes-list" },
@@ -244,98 +328,34 @@ export const FINE_TUNING_PAGE_CONTROLLER_CREATE_MODAL_SCRIPT = String.raw`      
                             type: "button",
                             className: "playground-mission-control-modal-outcomes-empty",
                             onClick: () => setEvaluationSetPickerOpen(true),
-                          }, normalizedEvaluationSets.length ? "Add evaluation sets" : "No evaluation sets available.")
+                          },
+                            fineTuningEvaluationSetsLoading && !normalizedEvaluationSets.length
+                              ? "Loading evaluation sets..."
+                              : normalizedEvaluationSets.length
+                                ? "Add evaluation sets"
+                                : fineTuningEvaluationSetsError || "No evaluation sets available."
+                          )
                     )
                   )
                 ),
-                React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section playground-fine-tuning-instructions-section" },
-                  React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                    React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Instructions"),
-                    React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                      renderInstructionsToolbarButton({
-                        id: "undo",
-                        label: "Undo",
-                        icon: Undo2,
-                        disabled: !canUndoInstructions,
-                        onClick: handleFineTuningInstructionsUndo,
-                      }),
-                      renderInstructionsToolbarButton({
-                        id: "redo",
-                        label: "Redo",
-                        icon: Redo2,
-                        disabled: !canRedoInstructions,
-                        onClick: handleFineTuningInstructionsRedo,
-                      }),
-                      React.createElement("span", { key: "history-divider", className: "playground-agents-detail-instructions-toolbar-divider", "aria-hidden": "true" }),
-                      textFormatActions.map((action) =>
-                        renderInstructionsToolbarButton({
-                          ...action,
-                          onClick: () => handleFineTuningInstructionsFormat(action.id),
-                        })
-                      ),
-                      React.createElement("span", { key: "list-divider-start", className: "playground-agents-detail-instructions-toolbar-divider", "aria-hidden": "true" }),
-                      listFormatActions.map((action) =>
-                        renderInstructionsToolbarButton({
-                          ...action,
-                          onClick: () => handleFineTuningInstructionsFormat(action.id),
-                        })
-                      ),
-                      React.createElement("span", { key: "list-divider-end", className: "playground-agents-detail-instructions-toolbar-divider", "aria-hidden": "true" }),
-                      insertFormatActions.map((action) =>
-                        renderInstructionsToolbarButton({
-                          ...action,
-                          onClick: () => handleFineTuningInstructionsFormat(action.id),
-                        })
-                      )
-                    )
-                  ),
-                  React.createElement("div", {
-                      className: "playground-tasks-detail-description-editor" + (isFineTuningInstructionsEditing ? " is-editing" : " is-preview"),
-                      onClick: () => {
-                        setIsFineTuningInstructionsEditing(true);
-                        focusFineTuningInstructionsTextareaAtEnd(form.instructions || "");
-                      },
-                    },
-                    !isFineTuningInstructionsEditing
-                      ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" }, renderMarkdownPreview())
-                      : null,
-                    React.createElement("textarea", {
-                      ref: fineTuningInstructionsTextareaRef,
-                      className: "playground-tasks-detail-description-input " + (isFineTuningInstructionsEditing ? "is-editing" : "is-preview"),
-                      rows: 1,
-                      placeholder: isFineTuningInstructionsEditing ? "Add fine-tuning instructions here." : "",
-                      value: form.instructions || "",
-                      disabled: createBusy,
-                      onFocus: () => setIsFineTuningInstructionsEditing(true),
-                      onChange: (event) => {
-                        updateFineTuningInstructionsValue(event.target.value);
-                        resizeFineTuningInstructionsTextarea(event.currentTarget);
-                      },
-                      onBlur: () => setIsFineTuningInstructionsEditing(false),
-                    })
-                  )
-                ),
+                React.createElement(PlatformInstructionsEditor, {
+                  value: String(form.instructions || ""),
+                  onChange: (value) => updateCreateForm({ instructions: String(value || "") }),
+                  title: "Instructions",
+                  placeholder: "Add fine-tuning instructions here.",
+                  ariaLabel: "Fine-tuning instructions",
+                  readOnly: createBusy,
+                  stickyHeader: false,
+                  historyKey: "fine-tuning-create-instructions",
+                  variant: "minimalistic-ui",
+                  contentVariant: "text",
+                  className: "playground-fine-tuning-instructions-section",
+                }),
                 createError ? React.createElement("div", { className: "playground-fine-tuning-create-error" }, createError) : null
                   )
-                ),
-                React.createElement("div", { className: "playground-tasks-project-modal-actions" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-environments-action-button",
-                    onClick: () => closeCreateModal(),
-                    disabled: createBusy,
-                  }, "Cancel"),
-                  React.createElement(PlatformPrimaryButton, {
-                    size: "medium",
-                    type: "submit",
-                    className: "playground-environments-action-button is-primary",
-                    disabled: createBusy,
-                  }, createBusy ? "Starting..." : "Start Fine-Tune")
                 )
               )
-            )
           );
         }
 
 `;
-

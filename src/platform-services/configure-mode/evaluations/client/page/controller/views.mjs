@@ -62,17 +62,20 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
             },
             onRun: (set) => openRunEvaluationModal(set.id),
             onDelete: (set) => handleDeleteEvaluation(set.id),
+            onDeleteMany: (sets) => handleDeleteEvaluations(sets.map((set) => set.id)),
           });
         }
 
         function renderEvaluationDetailSidebarRow(key, label, value, options = {}) {
           return React.createElement("div", {
               key,
-              className: "playground-evaluations-detail-sidebar-row" + (options.className ? " " + options.className : ""),
+              className: "playground-evaluations-detail-sidebar-row playground-tasks-detail-fact" + (options.className ? " " + options.className : ""),
             },
-            React.createElement("span", { className: "playground-evaluations-detail-sidebar-label" }, label),
+            React.createElement("span", {
+              className: "playground-evaluations-detail-sidebar-label playground-tasks-detail-fact-label",
+            }, label),
             React.createElement(options.control ? "div" : "span", {
-              className: "playground-evaluations-detail-sidebar-value",
+              className: "playground-evaluations-detail-sidebar-value playground-tasks-detail-fact-control",
               title: options.title || (typeof value === "string" ? value : undefined),
             }, value)
           );
@@ -82,9 +85,9 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
           if (!activeSet) {
             return renderOverview();
           }
-          const activeDetailTab = evaluationDetailTab === "settings" || evaluationDetailTab === "data"
-            ? "settings"
-            : "general";
+          const activeDetailTab = evaluationDetailTab === "cases" || evaluationDetailTab === "data"
+            ? "cases"
+            : (evaluationDetailTab === "settings" ? "settings" : "general");
           const creator = normalizePlaygroundEvaluationPersonIdentity(activeSet.creator || activeSet.createdBy || activeSet.created_by || {});
           const creatorLabel = getPlaygroundEvaluationCreatorLabel(creator) || "Unknown";
           const creatorValue = React.createElement("span", {
@@ -180,7 +183,9 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
               )
             )
           );
-          const properties = React.createElement("div", { className: "playground-evaluations-detail-sidebar-list" },
+          const properties = React.createElement("div", {
+              className: "playground-evaluations-detail-sidebar-list playground-tasks-detail-facts-body",
+            },
             renderEvaluationDetailSidebarRow("evaluator", "Evaluator", evaluatorValue, {
               className: evaluator.type === "agent" ? "is-evaluator-selector" : "",
               control: evaluator.type === "agent",
@@ -196,22 +201,34 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
             renderEvaluationDetailSidebarRow("owner", "Owner", renderEvaluationOwnerSelector(activeSet), {
               className: "is-owner",
               control: true,
-            })
+            }),
+            React.createElement(PlatformPrimaryButton, {
+                type: "button",
+                size: "small",
+                fullWidth: true,
+                className: "playground-evaluations-detail-run-button",
+                onClick: () => openRunEvaluationModal(activeSet.id),
+                disabled: getEvaluationRunnableCaseCount(activeSet) === 0,
+              },
+              React.createElement("span", null, "Run Evaluation")
+            )
           );
           const detailContent = activeDetailTab === "settings"
             ? evaluationAccessTeamId
               ? renderEvaluationAccessSettings()
               : React.createElement(React.Fragment, null,
                   renderEvaluationDescriptionEditor(activeSet),
-                  renderEvaluationGuidanceEditor(activeSet),
-                  renderDataTable(activeSet),
-                  renderEvaluationImportsSection(activeSet),
                   renderEvaluationAccessSettings()
                 )
-            : React.createElement(React.Fragment, null,
-                renderAnalyticsCard(activeSet),
-                renderRunsTable(activeSet)
-              );
+            : activeDetailTab === "cases"
+              ? React.createElement(React.Fragment, null,
+                  renderEvaluationGuidanceEditor(activeSet),
+                  renderDataTable(activeSet)
+                )
+              : React.createElement(React.Fragment, null,
+                  renderAnalyticsCard(activeSet),
+                  renderRunsTable(activeSet)
+                );
           return React.createElement(EvaluationDetailPage, {
               properties,
               sidebarCollapsed: evaluationDetailSidebarCollapsed,
@@ -232,48 +249,51 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
               : runStatus === "running"
                 ? "blue"
                 : "gray";
-          const runVersionLabel = activeRun.targetAgentVersionLabel
-            || (activeRun.targetAgentVersionNumber ? "Version " + activeRun.targetAgentVersionNumber : "Current");
+          const runVersionNumber = Math.max(0, Number(activeRun.targetAgentVersionNumber || 0) || 0);
+          const storedRunVersionLabel = String(activeRun.targetAgentVersionLabel || "").trim();
+          const runVersionLabel = runVersionNumber > 0
+            ? "V" + runVersionNumber
+            : (storedRunVersionLabel
+                ? storedRunVersionLabel.replace(/^Version\s+/i, "V")
+                : "Current");
+          const runAgentValue = React.createElement("span", {
+              className: "playground-evaluations-run-agent-version-cell",
+            },
+            renderRunAgentCell(activeRun, activeSet),
+            React.createElement(PlatformLabel, {
+              variant: "gray",
+              className: "playground-evaluations-run-agent-version-label",
+            }, runVersionLabel)
+          );
           const runProperties = React.createElement("div", { className: "playground-evaluations-detail-sidebar-list" },
-            renderEvaluationDetailSidebarRow("evaluation", "Evaluation", activeSet.name || "Untitled Evaluation"),
             renderEvaluationDetailSidebarRow("status", "Status", React.createElement(PlatformLabel, {
               variant: runStatusVariant,
             }, runStatus.replace(/_/g, " "))),
-            renderEvaluationDetailSidebarRow("agent", "Agent", renderRunAgentCell(activeRun, activeSet)),
-            renderEvaluationDetailSidebarRow("environment", "Environment", renderRunEnvironmentCell(activeRun, activeSet)),
+            renderEvaluationDetailSidebarRow("environment", "Environment", renderRunEnvironmentCell(activeRun, activeSet), {
+              className: "is-environment",
+            }),
             renderEvaluationDetailSidebarRow("evaluator", "Evaluator", renderEvaluationSetEvaluatorCell({
               ...activeSet,
               evaluator: activeRun.evaluator,
             })),
-            renderEvaluationDetailSidebarRow("version", "Agent Version", runVersionLabel),
             renderEvaluationDetailSidebarRow("threshold", "Pass Threshold", formatPlaygroundEvaluationPercent(activeRun.passThreshold)),
             renderEvaluationDetailSidebarRow("cases", "Cases", String(activeRun.totalCount || activeRun.cases?.length || 0)),
             renderEvaluationDetailSidebarRow("created", "Started", formatPlaygroundEvaluationDate(activeRun.createdAt)),
             renderEvaluationDetailSidebarRow("completed", "Completed", runStatus === "running" || runStatus === "queued"
               ? "-"
-              : formatPlaygroundEvaluationDate(activeRun.completedAt || activeRun.createdAt))
-          );
-          const runActions = React.createElement("div", { className: "playground-evaluations-detail-sidebar-actions" },
-            React.createElement("button", {
+              : formatPlaygroundEvaluationDate(activeRun.completedAt || activeRun.createdAt)),
+            renderEvaluationDetailSidebarRow("agent", "Agent", runAgentValue, {
+              className: "is-agent-version playground-evaluations-run-agent-property",
+            }),
+            React.createElement(PlatformPrimaryButton, {
                 type: "button",
-                className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action playground-evaluations-detail-sidebar-action",
+                size: "small",
+                fullWidth: true,
+                className: "playground-evaluations-run-again-button",
                 onClick: () => openRunEvaluationModal(activeSet.id),
                 disabled: getEvaluationRunnableCaseCount(activeSet) === 0,
               },
-              React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
-                React.createElement(Play, { width: 14, height: 14, strokeWidth: 1.85 })
-              ),
-              React.createElement("span", { className: "playground-project-overview-sidebar-resource-label" }, "Run Again")
-            ),
-            React.createElement("button", {
-                type: "button",
-                className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action playground-evaluations-detail-sidebar-action",
-                onClick: () => handleDeleteEvaluationRun(activeSet.id, activeRun.id),
-              },
-              React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
-                React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.85 })
-              ),
-              React.createElement("span", { className: "playground-project-overview-sidebar-resource-label" }, "Delete Run")
+              React.createElement("span", null, "Run Again")
             )
           );
           return React.createElement(EvaluationDetailPage, {
@@ -281,7 +301,6 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
               ariaLabel: "Evaluation run details",
               className: "playground-evaluations-run-detail-page",
               properties: runProperties,
-              actions: runActions,
             },
             React.createElement(React.Fragment, null,
               renderAnalyticsCard(activeSet, activeRun),

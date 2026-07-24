@@ -1,61 +1,49 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
 import { ProjectDetailPage } from "./project-detail-page.js";
 
 afterEach(cleanup);
 
 describe("ProjectDetailPage", () => {
-  it("composes the shared detail shell and canonical project tabs", () => {
-    const onTabChange = vi.fn();
+  it("composes a tabless shared detail shell with the project header in the main column", () => {
     const { container } = render(
       <ProjectDetailPage
         header={<h1>Launch Project</h1>}
-        tabBarActions={<button type="button">Mission Control</button>}
-        sidebarToggle={<button type="button">Toggle sidebar</button>}
         sidebar={<div>Project properties</div>}
         activeTab="general"
-        onTabChange={onTabChange}
       >
         <div>Project analytics</div>
       </ProjectDetailPage>,
     );
 
     expect(container.querySelectorAll("[data-resource-detail-page='true']")).toHaveLength(1);
-    expect(container.querySelectorAll("[data-platform-detail-tab-bar='true']")).toHaveLength(1);
+    expect(container.querySelector("[data-platform-detail-tab-bar='true']")).toBeNull();
     expect(container.querySelectorAll("[data-platform-detail-sidebar='true']")).toHaveLength(1);
-    expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual([
-      "Home",
-      "Resources",
-      "Strategy",
-      "Settings",
-    ]);
-    expect(screen.getByRole("tab", { name: "Home" }).querySelector(".lucide-house")).not.toBeNull();
-
-    fireEvent.click(screen.getByRole("tab", { name: "Strategy" }));
-    expect(onTabChange).toHaveBeenCalledWith("strategy");
-    expect(screen.getByRole("button", { name: "Mission Control" })).not.toBeNull();
-    expect(screen.getByRole("button", { name: "Toggle sidebar" })).not.toBeNull();
-    expect(container.querySelector(".resource-detail-page__header-actions")).toBeNull();
-    expect(container.querySelector(".resource-detail-page__tab-bar-actions")?.textContent).toBe(
-      "Mission ControlToggle sidebar",
-    );
+    expect(container.querySelector(".resource-detail-page")?.classList.contains("is-tabless")).toBe(true);
+    expect(container.querySelector(".resource-detail-page")?.classList.contains("is-headerless")).toBe(true);
+    const mainContent = container.querySelector(".resource-detail-page__content");
+    expect(mainContent?.firstElementChild?.classList.contains("playground-project-detail-header")).toBe(true);
+    expect(screen.getByRole("heading", { name: "Launch Project" })).not.toBeNull();
+    expect(screen.getByText("Project properties")).not.toBeNull();
   });
 
-  it("hides Settings when the viewer cannot access project settings", () => {
-    render(
+  it("keeps non-home project sections headerless without rendering a tab bar", () => {
+    const { container } = render(
       <ProjectDetailPage
-        header={<h1>Launch Project</h1>}
         sidebar={<div>Project properties</div>}
-        activeTab="general"
-        onTabChange={vi.fn()}
-        showSettings={false}
+        activeTab="permissions"
       >
-        <div>Project analytics</div>
+        <div>Project settings</div>
       </ProjectDetailPage>,
     );
 
-    expect(screen.queryByRole("tab", { name: "Settings" })).toBeNull();
+    expect(container.querySelector("[data-platform-detail-tab-bar='true']")).toBeNull();
+    expect(container.querySelector(".playground-project-detail-header")).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Launch Project" })).toBeNull();
+    expect(
+      container.querySelector(".resource-detail-page__content")?.classList.contains("is-permissions-tab"),
+    ).toBe(true);
   });
 });

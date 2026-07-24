@@ -84,6 +84,14 @@
   margin-bottom: 0;
 }
 
+.playground-agent-settings-permissions-summary > .platform-permissions-page__overview {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
 .platform-permissions-settings-summary .platform-selector.is-disabled {
   opacity: 1;
 }

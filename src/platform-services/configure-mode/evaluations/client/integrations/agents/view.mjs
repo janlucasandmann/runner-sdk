@@ -673,6 +673,7 @@ export const EVALUATIONS_AGENT_VIEW_SCRIPT = `          const agentEvaluationEnv
                 surface: "plain",
                 variant: "minimalistic-ui",
                 sticky: false,
+                pagination: {},
                 sorting: {
                   defaultValue: { id: "updated", direction: "desc" },
                 },
@@ -851,6 +852,7 @@ export const EVALUATIONS_AGENT_VIEW_SCRIPT = `          const agentEvaluationEnv
                   surface: "plain",
                   variant: "minimalistic-ui",
                   sticky: false,
+                  pagination: {},
                   sorting: {
                     defaultValue: { id: "updated", direction: "desc" },
                   },

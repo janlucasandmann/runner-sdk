@@ -100,6 +100,25 @@ export function createProjectsRequestHandler({
       return startRequest(proxyProjectResourceIndexGet(req, res, decodeURIComponent(projectResourceIndexMatch[1])));
     }
 
+    const projectOwnerCandidatesMatch = pathname.match(/^\/api\/real\/projects\/([^/]+)\/owner-candidates$/);
+    if (method === "GET" && projectOwnerCandidatesMatch) {
+      return startRequest(proxyUpstreamGet(
+        req,
+        res,
+        `/projects/${encodePathSegment(projectOwnerCandidatesMatch[1])}/owner-candidates`,
+      ));
+    }
+
+    const projectOwnerMatch = pathname.match(/^\/api\/real\/projects\/([^/]+)\/owner$/);
+    if (method === "PATCH" && projectOwnerMatch) {
+      return startRequest(proxyUpstreamJsonRequest(
+        req,
+        res,
+        `/projects/${encodePathSegment(projectOwnerMatch[1])}/owner`,
+        "PATCH",
+      ));
+    }
+
     const projectDetailMatch = pathname.match(/^\/api\/real\/projects\/([^/]+)$/);
     if (["GET", "PATCH", "DELETE"].includes(method) && projectDetailMatch) {
       const upstreamPath = `/projects/${encodePathSegment(projectDetailMatch[1])}`;
@@ -116,6 +135,19 @@ export function createProjectsRequestHandler({
     }
     if (pathname === "/api/real/tasks/sprints" && ["GET", "POST"].includes(method)) {
       return startRequest(proxyUpstreamTaskJsonRequest(req, res, "/tasks/sprints", method));
+    }
+    if (pathname === "/api/real/tasks/activity" && method === "GET") {
+      return startRequest(proxyUpstreamTaskJsonRequest(req, res, "/tasks/activity", method));
+    }
+
+    const taskActivityMatch = pathname.match(/^\/api\/real\/tasks\/([^/]+)\/activity$/);
+    if (method === "GET" && taskActivityMatch) {
+      return startRequest(proxyUpstreamTaskJsonRequest(
+        req,
+        res,
+        `/tasks/${encodePathSegment(taskActivityMatch[1])}/activity`,
+        method
+      ));
     }
 
     const taskReleaseMatch = pathname.match(/^\/api\/real\/tasks\/releases\/([^/]+)$/);
@@ -136,6 +168,16 @@ export function createProjectsRequestHandler({
     const taskCommentsMatch = pathname.match(/^\/api\/real\/tasks\/([^/]+)\/comments$/);
     if (["GET", "POST"].includes(method) && taskCommentsMatch) {
       return startRequest(proxyUpstreamTaskJsonRequest(req, res, `/tasks/${encodePathSegment(taskCommentsMatch[1])}/comments`, method));
+    }
+
+    const taskActivitySubscriptionMatch = pathname.match(/^\/api\/real\/tasks\/([^/]+)\/activity-subscription$/);
+    if (["GET", "PUT"].includes(method) && taskActivitySubscriptionMatch) {
+      return startRequest(proxyUpstreamTaskJsonRequest(
+        req,
+        res,
+        `/tasks/${encodePathSegment(taskActivitySubscriptionMatch[1])}/activity-subscription`,
+        method
+      ));
     }
 
     const taskMatch = pathname.match(/^\/api\/real\/tasks\/([^/]+)$/);

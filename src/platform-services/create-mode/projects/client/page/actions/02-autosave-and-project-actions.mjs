@@ -238,7 +238,20 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
             throw new Error("Task save failed.");
           }
 
-          return savedTask;
+          return normalizePlaygroundTaskRecord({
+            ...savedTask,
+            comments: Object.prototype.hasOwnProperty.call(overrides, "comments")
+              ? savedTask.comments
+              : Array.isArray(savedTask.comments) && savedTask.comments.length > 0
+                ? savedTask.comments
+                : resolvedTask.comments,
+            activity: Object.prototype.hasOwnProperty.call(overrides, "activity")
+              ? normalizePlaygroundTaskActivityList(savedTask.activity)
+              : normalizePlaygroundTaskActivityList([
+                  ...(Array.isArray(resolvedTask.activity) ? resolvedTask.activity : []),
+                  ...(Array.isArray(savedTask.activity) ? savedTask.activity : []),
+                ]),
+          });
         }
 
         useEffect(() => {

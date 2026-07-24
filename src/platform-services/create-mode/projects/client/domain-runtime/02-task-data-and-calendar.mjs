@@ -955,6 +955,37 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
 	        const leadName = String(project.leadName || metadata?.leadName || metadataLead.name || "").trim();
 	        const leadEmail = String(project.leadEmail || metadata?.leadEmail || metadataLead.email || "").trim();
 	        const leadAvatarUrl = String(project.leadAvatarUrl || metadata?.leadAvatarUrl || metadataLead.avatarUrl || metadataLead.photoUrl || "").trim();
+        const metadataOwner = metadata?.owner && typeof metadata.owner === "object" && !Array.isArray(metadata.owner)
+          ? metadata.owner
+          : {};
+        const ownerUserId = String(
+          project.ownerUserId
+            || project.userId
+            || metadata?.ownerUserId
+            || metadataOwner.userId
+            || metadataOwner.id
+            || ""
+        ).trim();
+        const ownerName = String(
+          project.ownerName
+            || metadata?.ownerName
+            || metadataOwner.name
+            || metadataOwner.displayName
+            || ""
+        ).trim();
+        const ownerEmail = String(
+          project.ownerEmail
+            || metadata?.ownerEmail
+            || metadataOwner.email
+            || ""
+        ).trim();
+        const ownerAvatarUrl = String(
+          project.ownerAvatarUrl
+            || metadata?.ownerAvatarUrl
+            || metadataOwner.avatarUrl
+            || metadataOwner.photoUrl
+            || ""
+        ).trim();
 	        const projectPermissionSet = normalizePlaygroundPermissionSet(project.permissionSet || metadata?.permissionSet, "project");
 
 		        return {
@@ -982,9 +1013,19 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
 	          projectRules,
 	          missionControl,
           leadUserId,
-	          leadName,
+          leadName,
 	          leadEmail,
 	          leadAvatarUrl,
+          ownerUserId,
+          ownerName,
+          ownerEmail,
+          ownerAvatarUrl,
+          owner: {
+            userId: ownerUserId,
+            name: ownerName,
+            email: ownerEmail,
+            avatarUrl: ownerAvatarUrl,
+          },
 	          permissionSet: projectPermissionSet,
 		          metadata: {
 		            ...(metadata && typeof metadata === "object" ? metadata : {}),
@@ -1000,6 +1041,16 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
 	              email: leadEmail,
 	              avatarUrl: leadAvatarUrl,
 	            },
+            ownerUserId,
+            ownerName,
+            ownerEmail,
+            ownerAvatarUrl,
+            owner: {
+              userId: ownerUserId,
+              name: ownerName,
+              email: ownerEmail,
+              avatarUrl: ownerAvatarUrl,
+            },
 	            permissionSet: projectPermissionSet,
 		          },
           summary: {

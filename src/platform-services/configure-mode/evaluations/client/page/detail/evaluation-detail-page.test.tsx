@@ -7,7 +7,7 @@ import { EvaluationDetailPage } from "./evaluation-detail-page.js";
 describe("EvaluationDetailPage", () => {
   afterEach(cleanup);
 
-  it("composes headerless evaluation content and a properties-only sidebar", () => {
+  it("composes headerless evaluation content and an untitled properties sidebar", () => {
     render(
       <EvaluationDetailPage
         properties={<div>12 cases</div>}
@@ -22,7 +22,10 @@ describe("EvaluationDetailPage", () => {
     expect(page.classList.contains("is-tabless")).toBe(true);
     expect(page.classList.contains("is-sidebar-collapsed")).toBe(false);
     expect(screen.getByText("Evaluation analytics")).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "Properties" })).toBeTruthy();
+    expect(
+      page.querySelector(".playground-ticket-detail-sidebar-details"),
+    ).not.toBeNull();
+    expect(screen.queryByRole("heading", { name: "Properties" })).toBeNull();
     expect(screen.queryByRole("heading", { name: "Actions" })).toBeNull();
     expect(screen.queryByRole("tab")).toBeNull();
   });
@@ -45,7 +48,10 @@ describe("EvaluationDetailPage", () => {
     expect(page.classList.contains("is-headerless")).toBe(true);
     expect(page.classList.contains("is-tabless")).toBe(true);
     expect(page.classList.contains("is-sidebar-collapsed")).toBe(false);
-    expect(screen.getByRole("heading", { name: "Run Properties" })).toBeTruthy();
+    expect(
+      page.querySelector(".playground-ticket-detail-sidebar-details"),
+    ).not.toBeNull();
+    expect(screen.queryByRole("heading", { name: "Run Properties" })).toBeNull();
     expect(screen.getByRole("heading", { name: "Actions" })).toBeTruthy();
     expect(screen.queryByRole("tab")).toBeNull();
     expect(screen.queryByRole("button", { name: "Toggle run sidebar" })).toBeNull();

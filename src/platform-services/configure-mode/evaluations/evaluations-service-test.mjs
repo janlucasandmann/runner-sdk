@@ -71,6 +71,53 @@ assert.equal(historicalClientRun.totalCount, 2);
 assert.equal(historicalClientRun.passedCount, 1);
 assert.equal(historicalClientRun.averageScore, 0.75);
 const {
+  buildPlaygroundEvaluationScoreRows: buildClientEvaluationScoreRows,
+} = new Function(
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.foundation
+  + EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.runs
+  + "; return { buildPlaygroundEvaluationScoreRows };",
+)();
+const clientScoreRows = buildClientEvaluationScoreRows([
+  {
+    id: "run_agent_a_1",
+    status: "completed",
+    targetAgentId: "agent_a",
+    environmentId: "computer_1",
+    averageScore: 0.5,
+    completedAt: "2026-07-20T10:00:00.000Z",
+  },
+  {
+    id: "run_agent_a_2",
+    status: "failed",
+    targetAgentId: "agent_a",
+    environmentId: "computer_1",
+    averageScore: 0.9,
+    completedAt: "2026-07-21T10:00:00.000Z",
+  },
+  {
+    id: "run_agent_b_1",
+    status: "completed",
+    targetAgentId: "agent_b",
+    environmentId: "computer_2",
+    averageScore: 0.8,
+    completedAt: "2026-07-22T10:00:00.000Z",
+  },
+  {
+    id: "run_agent_c_active",
+    status: "running",
+    targetAgentId: "agent_c",
+    environmentId: "computer_3",
+    averageScore: 1,
+    completedAt: "2026-07-23T10:00:00.000Z",
+  },
+]);
+assert.equal(clientScoreRows.length, 2);
+assert.equal(clientScoreRows[0].latestRun.id, "run_agent_a_2");
+assert.equal(clientScoreRows[0].latestScore, 0.9);
+assert.equal(clientScoreRows[0].averageScore, 0.7);
+assert.equal(clientScoreRows[0].runCount, 2);
+assert.equal(clientScoreRows[1].latestRun.id, "run_agent_b_1");
+const {
   getPlaygroundEvaluationCaseDisplayStatus,
 } = new Function(
   EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.foundation
@@ -112,6 +159,8 @@ assert.match(
   /renderCaseKpi\("Status", React\.createElement\(PlatformLabel,[\s\S]*?variant: displayStatusVariant/,
 );
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /hasData: hasRecordedChartData/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /React\.createElement\(PlatformAnalyticsSection, \{[\s\S]*?variant: "default"/);
+assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /variant: run \? "framed"/);
 assert.match(
   EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables,
   /cell: \(\{ row: caseItem \}\) => renderEvaluationThreadButton\(caseItem\.threadId, caseItem\.threadId\)/,
@@ -240,12 +289,26 @@ assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.setup, /upsertEvaluationRun\(runS
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /renderRunsTable/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /className: "playground-evaluation-runs-platform-table playground-evaluations-runs-section"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /variant: "minimalistic-ui"/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /title: "Runs"/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.setup, /evaluationRunsTableMode, setEvaluationRunsTableMode\] = useState\("runs"\)/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.setup, /selectedEvaluationRunIds, setSelectedEvaluationRunIds\] = useState\(\(\) => new Set\(\)\)/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /React\.createElement\(PlatformDetailTabBar,[\s\S]*?\{ id: "runs", label: "Runs" \}[\s\S]*?\{ id: "scores", label: "Scores" \}/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /rows: tableRows,[\s\S]*?pagination: \{\}/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /selection: tableMode === "runs"[\s\S]*?enabled: true[\s\S]*?setSelectedEvaluationRunIds\(new Set\(selectedIds\)\)/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /label: "Delete selected"[\s\S]*?handleDeleteEvaluationRuns\(set\.id, targetRuns\.map/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.actions, /function handleDeleteEvaluationRuns\(setId, runIds\)[\s\S]*?Promise\.allSettled/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /header: "Agent"[\s\S]*?header: "Environment"[\s\S]*?header: "Latest Score"[\s\S]*?header: "Avg Score"[\s\S]*?header: "Runs"[\s\S]*?header: "Date"/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /defaultValue: tableMode === "scores"[\s\S]*?\{ id: "latestScore", direction: "desc" \}/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.runs, /function buildPlaygroundEvaluationScoreRows/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.runs, /run\.status !== "completed" && run\.status !== "failed"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /React\.createElement\(PlatformSecondaryButton, \{[\s\S]*?From Threads/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /React\.createElement\(PlatformPrimaryButton, \{[\s\S]*?openNewEvaluationCaseEditor/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /React\.createElement\(PlatformButtonSelector, \{[\s\S]*?mode: "split-action"[\s\S]*?buttonVariant: "primary"[\s\S]*?onAction: \(\) => openNewEvaluationCaseEditor\(set\)/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /"Upload JSONL file"/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /"Upload from Workspace"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /React\.createElement\(PlatformEmptyState, \{[\s\S]*?title: "No cases yet"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /renderEvaluationAccessSettings/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /React\.createElement\(PlatformRolePermissionsPage/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /React\.createElement\(PlatformResourceAccessTable/);
+assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /type:\s*"checkbox"|playground-agents-overview-select-checkbox/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /subjectType: "evaluation_team_role"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /resourceType: "evaluation"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.access, /renderEvaluationOwnerSelector/);
@@ -272,6 +335,7 @@ assert.match(evaluationRunModalScript, /surfaceProps: \{ onSubmit: handleConfirm
 assert.match(evaluationRunModalScript, /React\.createElement\(PlatformSecondaryButton/);
 assert.match(evaluationRunModalScript, /React\.createElement\(PlatformPrimaryButton/);
 assert.match(evaluationRunModalScript, /React\.createElement\(PlatformSelector/);
+assert.match(evaluationRunModalScript, /getEvaluationRunnableCaseCount\(targetSet\) > 0/);
 assert.match(evaluationRunModalScript, /className: "playground-tasks-detail-central-selector"/);
 assert.doesNotMatch(evaluationRunModalScript, /React\.createElement\("select"/);
 assert.doesNotMatch(evaluationRunModalScript, /React\.createElement\(PlatformModal(?:Backdrop|Surface)/);
@@ -334,7 +398,7 @@ assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs, /refreshThreadsFo
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs, /footer: React\.createElement\(React\.Fragment[\s\S]*?"Cancel"[\s\S]*?"Refine Cases"/);
 assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs, /Select historical threads\. An agent will analyze/);
 assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs, /playground-evaluations-thread-picker-list/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs, /React\.createElement\(PlatformSecondaryButton, \{[\s\S]*?playground-evaluations-run-action/);
+assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs, /playground-evaluations-run-action/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView, /onRefreshThreadRecords: \(\) => refreshThreads\(40,/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versionDialogs, /function renderEvaluationCaseEditorModal\(\)[\s\S]*?React\.createElement\(PlatformModal/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.versionDialogs, /className: "playground-evaluations-case-editor-modal"/);
@@ -382,10 +446,19 @@ assert.match(
 );
 assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /React\.createElement\(PlatformVersionLabel/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /React\.createElement\(EvaluationsOverviewPage/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /onDeleteMany: \(sets\) => handleDeleteEvaluations\(sets\.map\(\(set\) => set\.id\)\)/);
 assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /React\.createElement\(PlatformDataTable/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /React\.createElement\(EvaluationDetailPage/);
 assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /className: "playground-content-title playground-evaluations-title-input",[\s\S]{0,160}?size:/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /renderEvaluationDetailSidebarRow\("pass-threshold"/);
+assert.match(
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views,
+  /React\.createElement\(PlatformPrimaryButton, \{[\s\S]*?className: "playground-evaluations-detail-run-button"[\s\S]*?openRunEvaluationModal\(activeSet\.id\)[\s\S]*?"Run Evaluation"/,
+);
+assert.match(
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views,
+  /className: "playground-evaluations-detail-run-button"[\s\S]*?disabled: getEvaluationRunnableCaseCount\(activeSet\) === 0/,
+);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /variant: "run"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /ariaLabel: "Evaluation run details"/);
 const evaluationRunViewStart = EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views.indexOf("function renderRun()");
@@ -395,19 +468,45 @@ assert.doesNotMatch(evaluationRunViewScript, /playground-evaluations-run-title/)
 assert.doesNotMatch(evaluationRunViewScript, /\bheader:/);
 assert.doesNotMatch(evaluationRunViewScript, /\bactiveTab:/);
 assert.doesNotMatch(evaluationRunViewScript, /\bsidebarToggle:/);
+assert.doesNotMatch(evaluationRunViewScript, /renderEvaluationDetailSidebarRow\("evaluation"/);
+assert.doesNotMatch(evaluationRunViewScript, /renderEvaluationDetailSidebarRow\("version"/);
+assert.match(evaluationRunViewScript, /className: "playground-evaluations-run-agent-version-cell"/);
+assert.match(evaluationRunViewScript, /variant: "gray",\s*className: "playground-evaluations-run-agent-version-label"/);
+assert.match(evaluationRunViewScript, /renderEvaluationDetailSidebarRow\("environment"[\s\S]*?className: "is-environment"/);
+assert.match(
+  evaluationRunViewScript,
+  /renderEvaluationDetailSidebarRow\("completed"[\s\S]*?renderEvaluationDetailSidebarRow\("agent"[\s\S]*?className: "is-agent-version playground-evaluations-run-agent-property"/,
+);
+assert.match(
+  evaluationRunViewScript,
+  /React\.createElement\(PlatformPrimaryButton, \{[\s\S]*?className: "playground-evaluations-run-again-button"[\s\S]*?openRunEvaluationModal\(activeSet\.id\)[\s\S]*?"Run Again"/,
+);
+assert.doesNotMatch(
+  evaluationRunViewScript,
+  /const runActions|actions: runActions|playground-evaluations-detail-sidebar-actions|playground-evaluations-detail-sidebar-action/,
+);
+assert.doesNotMatch(evaluationRunViewScript, /handleDeleteEvaluationRun/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /renderEvaluationDetailSidebarRow\("environment"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /renderEvaluationAccessSettings\(\)/);
+assert.match(
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views,
+  /activeDetailTab === "cases"[\s\S]*?renderEvaluationGuidanceEditor\(activeSet\),[\s\S]*?renderDataTable\(activeSet\)/,
+);
+assert.match(
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views,
+  /activeDetailTab === "settings"[\s\S]*?renderEvaluationDescriptionEditor\(activeSet\),[\s\S]*?renderEvaluationAccessSettings\(\)/,
+);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /renderEvaluationOwnerSelector\(activeSet\)/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /React\.createElement\(PlatformSelector, \{[\s\S]*?ariaLabel: "Choose evaluator agent"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /evaluator: \{[\s\S]*?type: "agent",[\s\S]*?agentId: nextAgentId/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /React\.createElement\(PlatformAnalyticsSection/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /variant: run \? "framed" : "default"/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /React\.createElement\(PlatformAttachments/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /function renderEvaluationImportsSection\(set\)/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /renderDataTable\(activeSet\),[\s\S]*?renderEvaluationImportsSection\(activeSet\)/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /variant: "default"/);
+assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /React\.createElement\(PlatformAttachments/);
+assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /function renderEvaluationImportsSection\(set\)/);
+assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views, /renderEvaluationImportsSection\(activeSet\)/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /accept: "\.jsonl,application\/x-ndjson,application\/jsonl"/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /uploadFromComputerLabel: "From Workspace"/);
-assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /onUploadFromComputer: \(\) => openEvaluationJsonlWorkspacePicker\(set\)/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /onClick: openEvaluationJsonlFilePicker/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /onClick: \(\) => openEvaluationJsonlWorkspacePicker\(set\)/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /title: "No evaluation runs yet"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /title: "Run history is unavailable"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables, /icon: ChartColumnIncreasing/);
@@ -420,6 +519,8 @@ assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs, /"Run Without Changes"/)
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs, /"Save & Continue"/);
 assert.match(EVALUATIONS_STYLE_FRAGMENTS.dialogs, /\.playground-evaluations-unsaved-run-copy \{[\s\S]*?font-size: 12px;/);
 assert.match(EVALUATIONS_STYLE_FRAGMENTS.detail, /\.playground-evaluations-detail-sidebar-row\.is-owner \{[\s\S]*?margin-top: 12px;[\s\S]*?padding-top: 12px;[\s\S]*?border-top: 1px solid rgba\(255, 255, 255, 0\.1\);/);
+assert.match(EVALUATIONS_STYLE_FRAGMENTS.detail, /\.playground-evaluations-detail-sidebar-row\.playground-evaluations-run-agent-property \{[\s\S]*?margin-top: 12px;[\s\S]*?padding-top: 12px;[\s\S]*?border-top: 1px solid rgba\(255, 255, 255, 0\.1\);/);
+assert.match(EVALUATIONS_STYLE_FRAGMENTS.detail, /\.playground-evaluations-run-again-button\.platform-button \{[\s\S]*?width: 100%;[\s\S]*?margin-top: 12px;/);
 assert.match(EVALUATIONS_STYLE_FRAGMENTS.detail, /\.playground-evaluations-thread-case-modal \{[\s\S]*?display: flex;[\s\S]*?flex-direction: column;/);
 assert.match(EVALUATIONS_STYLE_FRAGMENTS.detail, /\.playground-evaluations-thread-picker-table \.platform-data-table__scroll \{[\s\S]*?overflow-y: auto;/);
 assert.match(EVALUATIONS_STYLE_FRAGMENTS.detail, /\.playground-evaluations-thread-picker-table\.platform-data-table,[\s\S]*?background: transparent !important;/);
@@ -434,6 +535,22 @@ assert.doesNotMatch(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.caseDetail, /renderToolbar
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.caseDetail, /type: "text"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.caseDetail, /inputMode: "decimal"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.caseDetail, /playground-evaluations-pass-threshold-input/);
+assert.match(
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.caseDetail,
+  /function renderEvaluationGuidanceEditor\(set\)[\s\S]*?variant: "minimalistic-ui"[\s\S]*?className: "playground-evaluations-dataset-guidance-section"/,
+);
+assert.match(
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.caseDetail,
+  /function renderEvaluationDatasetGuidanceTitle\(\)[\s\S]*?Dataset Evaluator Guidance[\s\S]*?aria-label": "Dataset evaluator guidance information"[\s\S]*?role: "tooltip"/,
+);
+assert.match(
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.caseDetail,
+  /function renderEvaluationDescriptionEditor\(set\)[\s\S]*?variant: "minimalistic-ui"[\s\S]*?className: "playground-evaluations-description-section"/,
+);
+assert.match(
+  EVALUATIONS_STYLE_FRAGMENTS.tables,
+  /playground-evaluations-description-section \.platform-instructions-editor__title,[\s\S]*?font-size: 14px !important/,
+);
 
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.state, /evaluationSets/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.navigation, /function openEvaluationsPage/);
@@ -453,13 +570,18 @@ assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-evaluat
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /React\.createElement\(PlatformVersionLabel/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /setEvaluationVersionsSidebarRequestToken/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /id: "playground-evaluations-breadcrumb-actions"/);
+assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation, /id: "playground-evaluation-run-breadcrumb-actions"/);
 assert.match(
   EVALUATIONS_APP_SCRIPT_FRAGMENTS.topNavigation,
-  /center: showEvaluationSetActions[\s\S]*?React\.createElement\(PlatformSwitch,[\s\S]*?value: evaluationDetailTab === "settings"[\s\S]*?ariaLabel: "Evaluation section"/,
+  /center: showEvaluationSetActions[\s\S]*?React\.createElement\(PlatformSwitch,[\s\S]*?\{ value: "general", label: "General" \},[\s\S]*?\{ value: "cases", label: "Cases" \},[\s\S]*?\{ value: "settings", label: "Settings" \},[\s\S]*?ariaLabel: "Evaluation section"/,
 );
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.threadCases, /setEvaluationDetailTab\("cases"\)/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.actions, /function handleDeleteEvaluations\(setIds\)/);
+assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.actions, /Promise\.allSettled\(normalizedSetIds\.map/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView, /function renderEvaluationsPage/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView, /versionsSidebarRequestToken: evaluationVersionsSidebarRequestToken/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView, /breadcrumbActionsPortalId: evaluationsPageMode === "detail"/);
+assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView, /evaluationsPageMode === "run"[\s\S]*?"playground-evaluation-run-breadcrumb-actions"/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView, /onNavigationGuardChange: registerPlatformNavigationGuard/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView, /onNavigationRequest: requestPlatformNavigation/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.sidebarEntry, /id: "evaluations"/);
@@ -467,8 +589,32 @@ assert.match(
   EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs,
   /const breadcrumbActionsPortal = evaluationBreadcrumbActionsContainer[\s\S]*?React\.createElement\(PlatformPopup, \{[\s\S]*?variant: "minimal"/,
 );
+const evaluationTopNavPortalScript = EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs.slice(
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs.indexOf("const rightActionsPortal"),
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs.indexOf("const breadcrumbActionsPortal"),
+);
+assert.doesNotMatch(evaluationTopNavPortalScript, /playground-evaluations-run-action|Run Evaluation/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs, /"Evaluation ID"/);
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs, /"Version History"/);
+const evaluationRunBreadcrumbMenuStart = EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs.indexOf(
+  "isEvaluationRunActionsPage\n                  ? React.createElement(PlatformPopup",
+);
+assert.ok(evaluationRunBreadcrumbMenuStart >= 0);
+const evaluationRunBreadcrumbMenuEnd = EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs.indexOf(
+  ": React.createElement(PlatformPopup",
+  evaluationRunBreadcrumbMenuStart,
+);
+assert.ok(evaluationRunBreadcrumbMenuEnd > evaluationRunBreadcrumbMenuStart);
+const evaluationRunBreadcrumbMenuScript = EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs.slice(
+  evaluationRunBreadcrumbMenuStart,
+  evaluationRunBreadcrumbMenuEnd,
+);
+assert.match(evaluationRunBreadcrumbMenuScript, /variant: "minimal"/);
+assert.match(evaluationRunBreadcrumbMenuScript, /"aria-label": "Evaluation run actions"/);
+assert.match(evaluationRunBreadcrumbMenuScript, /React\.createElement\(Ellipsis,/);
+assert.match(evaluationRunBreadcrumbMenuScript, /handleDeleteEvaluationRun\(activeSet\.id, activeRun\.id\)/);
+assert.match(evaluationRunBreadcrumbMenuScript, /"Delete Run"/);
+assert.doesNotMatch(evaluationRunBreadcrumbMenuScript, /"Rename"|"Run Evaluation"|"Version History"/);
 
 assert.match(EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.props, /evaluationSets/);
 assert.match(EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.refs, /agentEvaluationRunModal/);
@@ -484,7 +630,10 @@ assert.match(EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.view, /leading: agentInsightsTab
 assert.match(EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.view, /React\.createElement\(PlatformEmptyState/);
 assert.match(EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.view, /title: "No evaluations yet"/);
 assert.doesNotMatch(EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.view, /primaryAction:\s*\{[\s\S]{0,300}Run Evaluation/);
-assert.doesNotMatch(EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.view, /pagination\s*:/);
+assert.equal(
+  EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.view.match(/pagination: \{\}/g)?.length,
+  2,
+);
 assert.match(EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.modal, /renderAgentEvaluationRunModal/);
 const agentEvaluationRunModalStart = EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.view.indexOf("function renderAgentEvaluationRunModal()");
 const agentEvaluationRunModalEnd = EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.view.indexOf("function renderAgentEvaluationListSection()", agentEvaluationRunModalStart);

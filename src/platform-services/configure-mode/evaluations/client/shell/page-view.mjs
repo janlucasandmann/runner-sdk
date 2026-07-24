@@ -24,14 +24,8 @@ export const EVALUATIONS_APP_PAGE_VIEW_SCRIPT = `        function renderEvaluati
             setEvaluationRunForm,
             evaluationRunsSearchQuery,
             setEvaluationRunsSearchQuery,
-            evaluationRunsSortMode,
-            setEvaluationRunsSortMode,
             evaluationRunsFilterMode,
             setEvaluationRunsFilterMode,
-            evaluationRunsToolbarPopover,
-            setEvaluationRunsToolbarPopover,
-            evaluationRunsVisibleCount,
-            setEvaluationRunsVisibleCount,
             onOpenThread: handleThreadSelect,
             onEvaluationThreadStarted: (threadRecord) => {
               if (threadRecord?.id) {
@@ -88,7 +82,9 @@ export const EVALUATIONS_APP_PAGE_VIEW_SCRIPT = `        function renderEvaluati
               : "",
             breadcrumbActionsPortalId: evaluationsPageMode === "detail"
               ? "playground-evaluations-breadcrumb-actions"
-              : "",
+              : evaluationsPageMode === "run"
+                ? "playground-evaluation-run-breadcrumb-actions"
+                : "",
           });
         }
 

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
 import {
+  arePlatformAgentListRecordsEquivalent,
   buildPlatformAgentListScopeKey,
   clearCachedPlatformAgentList,
   normalizePlatformAgentListRecords,
@@ -61,5 +62,20 @@ describe("agent list cache", () => {
       isFresh: true,
     });
     expect(readCachedPlatformAgentList("scope-2")).toBeNull();
+  });
+
+  it("compares normalized Agent lists without depending on object key order", () => {
+    expect(arePlatformAgentListRecordsEquivalent(
+      [{ id: "agent-1", name: "Forge", metadata: { teamIds: ["team-1"], owner: "user-1" } }],
+      [{ metadata: { owner: "user-1", teamIds: ["team-1"] }, name: "Forge", agentId: "agent-1" }],
+    )).toBe(false);
+    expect(arePlatformAgentListRecordsEquivalent(
+      [{ id: "agent-1", name: "Forge", metadata: { teamIds: ["team-1"], owner: "user-1" } }],
+      [{ metadata: { owner: "user-1", teamIds: ["team-1"] }, name: "Forge", id: "agent-1" }],
+    )).toBe(true);
+    expect(arePlatformAgentListRecordsEquivalent(
+      [{ id: "agent-1", name: "Forge" }],
+      [{ id: "agent-1", name: "Spark" }],
+    )).toBe(false);
   });
 });

@@ -127,17 +127,41 @@ export const EVALUATIONS_PAGE_CONTROLLER_CASE_DETAIL_SCRIPT = String.raw`       
           );
         }
 
+        function renderEvaluationDatasetGuidanceTitle() {
+          return React.createElement("span", { className: "playground-evaluations-dataset-guidance-title" },
+            React.createElement("span", null, "Dataset Evaluator Guidance"),
+            React.createElement("button", {
+                type: "button",
+                className: "playground-evaluations-pass-threshold-help playground-evaluations-dataset-guidance-help",
+                "aria-label": "Dataset evaluator guidance information",
+                onClick: (event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                },
+              },
+              React.createElement(CircleHelp, { width: 12, height: 12, strokeWidth: 1.8, "aria-hidden": "true" }),
+              React.createElement("span", {
+                className: "playground-evaluations-pass-threshold-tooltip playground-evaluations-dataset-guidance-tooltip",
+                role: "tooltip",
+              },
+                "Instructions applied to every case in this evaluation set. Use them to define shared scoring criteria, required behavior, tolerances, or partial-credit rules."
+              )
+            )
+          );
+        }
+
         function renderEvaluationGuidanceEditor(set) {
           const guidance = String(set?.evaluationGuidance || "");
           const placeholder = "Optional scoring instructions that apply to every row in this evaluation set.";
           return React.createElement(PlatformInstructionsEditor, {
             value: guidance,
             onChange: (value) => updateEvaluationGuidanceValue(set.id, value),
-            title: "Dataset Evaluator Guidance",
+            title: renderEvaluationDatasetGuidanceTitle(),
             placeholder,
             ariaLabel: "Dataset evaluator guidance",
             stickyHeader: true,
             historyKey: "evaluation-guidance:" + set.id,
+            variant: "minimalistic-ui",
             className: "playground-evaluations-dataset-guidance-section",
           });
         }
@@ -155,6 +179,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_CASE_DETAIL_SCRIPT = String.raw`       
             ariaLabel: "Evaluation description",
             stickyHeader: true,
             historyKey: "evaluation-description:" + set.id,
+            variant: "minimalistic-ui",
             className: "playground-evaluations-description-section",
           });
         }

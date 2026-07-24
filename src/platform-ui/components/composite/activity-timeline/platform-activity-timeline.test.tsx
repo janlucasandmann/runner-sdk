@@ -220,7 +220,16 @@ describe("PlatformActivityTimeline", () => {
       /\.platform-activity-timeline__composer-actions \.platform-icon-button\s*\{[^}]*border-radius: 50%;/s,
     );
     expect(css).toMatch(
-      /\.platform-activity-timeline__composer-submit\.platform-icon-button:disabled\s*\{[^}]*background: rgba\(255, 255, 255, 0\.075\);/s,
+      /\.platform-activity-timeline__composer-submit\.platform-icon-button:disabled\s*\{[^}]*background: rgba\(255, 255, 255, 0\.075\) !important;/s,
+    );
+    expect(css).toMatch(
+      /\.platform-activity-timeline__composer-submit\.platform-icon-button\s*\{[^}]*background: rgba\(255, 255, 255, 0\.15\) !important;/s,
+    );
+    expect(css).toMatch(
+      /\.platform-activity-timeline__reply-composer-submit\.platform-icon-button\s*\{[^}]*background: rgba\(255, 255, 255, 0\.15\) !important;/s,
+    );
+    expect(css).toMatch(
+      /\.platform-activity-timeline__reply-composer-submit\.platform-icon-button:disabled\s*\{[^}]*background: rgba\(255, 255, 255, 0\.075\) !important;/s,
     );
     expect(css).toMatch(
       /\.platform-activity-timeline__composer-input\s*\{[^}]*min-height: 48px;/s,

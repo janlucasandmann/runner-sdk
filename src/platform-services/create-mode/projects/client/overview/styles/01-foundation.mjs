@@ -39,11 +39,14 @@ export const PROJECT_OVERVIEW_CSS_01_FRAGMENT = String.raw`
       .playground-project-overview-sidebar {
         min-width: 0;
         position: sticky;
-        top: 0;
+        top: var(--project-detail-sticky-offset, 0px);
+        max-height: calc(100vh - var(--project-detail-sticky-offset, 0px) - 20px);
         display: flex;
         flex-direction: column;
         gap: 12px;
-        overflow: hidden;
+        overflow-x: hidden;
+        overflow-y: auto;
+        scrollbar-width: none;
         opacity: 1;
         transform: translateX(0);
         visibility: visible;
@@ -56,6 +59,10 @@ export const PROJECT_OVERVIEW_CSS_01_FRAGMENT = String.raw`
           visibility 0s linear 0s;
       }
 
+      .playground-project-overview-sidebar::-webkit-scrollbar {
+        display: none;
+      }
+
       .playground-project-overview-layout.is-sidebar-collapsed .playground-project-overview-sidebar {
         opacity: 0;
         transform: translateX(18px);
@@ -66,6 +73,65 @@ export const PROJECT_OVERVIEW_CSS_01_FRAGMENT = String.raw`
 
       .playground-project-overview-sidebar-card {
         overflow: visible;
+      }
+
+      .playground-project-overview-sidebar-facts {
+        position: relative;
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+        overflow: visible;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+
+      .playground-project-overview-sidebar-facts::before {
+        content: none;
+        display: none;
+      }
+
+      .playground-project-overview-sidebar-navigation {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        margin-bottom: 12px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-project-overview-sidebar-navigation-link {
+        box-sizing: border-box;
+        width: 100%;
+        min-height: 30px;
+        padding: 0 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.7);
+        font: inherit;
+        font-size: 12px;
+        font-weight: 400;
+        text-align: left;
+        cursor: pointer;
+        transition: color 140ms ease, background-color 140ms ease;
+      }
+
+      .playground-project-overview-sidebar-navigation-link:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.0375);
+      }
+
+      .playground-project-overview-sidebar-navigation-link.is-active {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.075);
       }
 
       .playground-project-overview-sidebar-title {
@@ -125,31 +191,39 @@ export const PROJECT_OVERVIEW_CSS_01_FRAGMENT = String.raw`
 
       .playground-project-overview-sidebar-row {
         min-width: 0;
-        min-height: 32px;
+        min-height: 30px;
         display: grid;
-        grid-template-columns: minmax(88px, 0.85fr) minmax(0, 1.35fr);
+        grid-template-columns: minmax(88px, 110px) minmax(0, 1fr);
         gap: 12px;
         align-items: center;
-        padding: 6px 0;
+        padding: 0;
         color: rgba(255, 255, 255, 0.86);
+      }
+
+      .playground-project-overview-sidebar-row.is-owner {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       .playground-project-overview-sidebar-row-label {
         min-width: 0;
         font-size: 12px;
-        line-height: 1.25;
-        color: rgba(255, 255, 255, 0.5);
+        line-height: 1.35;
+        font-weight: 400;
+        color: #fff;
       }
 
       .playground-project-overview-sidebar-row-value {
         min-width: 0;
-        display: inline-flex;
+        display: flex;
         align-items: center;
-        justify-content: flex-start;
+        justify-content: flex-end;
         gap: 7px;
         font-size: 12px;
-        line-height: 1.25;
+        line-height: 1.35;
         color: rgba(255, 255, 255, 0.88);
+        text-align: right;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -169,7 +243,10 @@ export const PROJECT_OVERVIEW_CSS_01_FRAGMENT = String.raw`
       }
 
       .playground-project-overview-sidebar-selector-trigger {
+        width: 100%;
         max-width: 100%;
+        justify-content: flex-end;
+        text-align: right;
       }
 
       .playground-project-overview-sidebar-selector-trigger.is-empty {
@@ -178,6 +255,199 @@ export const PROJECT_OVERVIEW_CSS_01_FRAGMENT = String.raw`
 
       .playground-project-overview-sidebar-selector-popup {
         width: min(280px, calc(100vw - 48px));
+      }
+
+      .playground-project-overview-sidebar-mission-button.platform-button {
+        width: 100%;
+        margin-top: 8px;
+        justify-content: center;
+      }
+
+      .playground-project-overview-sidebar-progress-card {
+        width: 100%;
+        flex: 0 0 auto;
+        overflow: hidden;
+      }
+
+      .playground-project-overview-sidebar-progress-title {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .playground-project-overview-sidebar-progress-title svg {
+        color: rgba(255, 255, 255, 0.48);
+      }
+
+      .playground-project-overview-sidebar-progress-analytics.platform-analytics.is-compact {
+        gap: 14px;
+      }
+
+      .playground-project-overview-sidebar-progress-analytics .platform-analytics__metric-label {
+        color: rgba(255, 255, 255, 0.58);
+      }
+
+      .playground-project-overview-sidebar-progress-analytics .platform-analytics__metric-value {
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .playground-project-overview-sidebar-progress-analytics .platform-analytics-chart__frame {
+        height: 168px;
+      }
+
+      .playground-project-overview-sidebar-progress-breakdown {
+        min-width: 0;
+        margin-top: 8px;
+      }
+
+      .playground-project-overview-sidebar-progress-switch.platform-switch {
+        width: 100%;
+        min-width: 0;
+        height: 30px;
+        min-height: 30px;
+        gap: 8px;
+        padding: 0;
+        overflow: visible;
+        border-radius: 0;
+        background: transparent;
+      }
+
+      .playground-project-overview-sidebar-progress-switch .platform-switch__option {
+        min-width: 0;
+        flex: 1 1 0;
+        padding: 4px 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .playground-project-overview-sidebar-progress-switch .platform-switch__option.is-active {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+      }
+
+      .playground-project-overview-sidebar-progress-list {
+        max-height: 220px;
+        margin-top: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        overflow-y: auto;
+        scrollbar-width: none;
+      }
+
+      .playground-project-overview-sidebar-progress-list::-webkit-scrollbar {
+        display: none;
+      }
+
+      .playground-project-overview-sidebar-progress-list-row {
+        min-width: 0;
+        min-height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .playground-project-overview-sidebar-progress-list-person,
+      .playground-project-overview-sidebar-progress-list-value {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .playground-project-overview-sidebar-progress-list-person {
+        flex: 1 1 auto;
+      }
+
+      .playground-project-overview-sidebar-progress-list-value {
+        flex: 0 0 auto;
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 11px;
+        line-height: 1.2;
+      }
+
+      .playground-project-overview-sidebar-progress-list-name {
+        min-width: 0;
+        overflow: hidden;
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 12px;
+        line-height: 1.3;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-project-overview-sidebar-progress-avatar,
+      .playground-project-overview-sidebar-progress-unassigned,
+      .playground-project-overview-sidebar-progress-label-icon {
+        width: 20px;
+        height: 20px;
+        flex: 0 0 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        color: rgba(255, 255, 255, 0.56);
+      }
+
+      .playground-project-overview-sidebar-progress-avatar {
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.1);
+        font-size: 9px;
+      }
+
+      .playground-project-overview-sidebar-progress-avatar-image {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+      }
+
+      .playground-project-overview-sidebar-progress-avatar-fallback {
+        font-size: 9px;
+        line-height: 1;
+      }
+
+      .playground-project-overview-sidebar-progress-unassigned {
+        border: 1px dashed rgba(255, 255, 255, 0.34);
+      }
+
+      .playground-project-overview-sidebar-progress-label-icon {
+        border-radius: 5px;
+        color: var(--project-progress-group-color, rgba(255, 255, 255, 0.58));
+        background: color-mix(
+          in srgb,
+          var(--project-progress-group-color, rgba(255, 255, 255, 0.58)) 12%,
+          transparent
+        );
+      }
+
+      .playground-project-overview-sidebar-progress-ring {
+        --project-progress-percent: 0%;
+        --project-progress-group-color: #636bdc;
+        width: 16px;
+        height: 16px;
+        flex: 0 0 16px;
+        display: inline-block;
+        border-radius: 999px;
+        background: conic-gradient(
+          var(--project-progress-group-color) var(--project-progress-percent),
+          rgba(255, 255, 255, 0.1) 0
+        );
+        -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 0);
+        mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 0);
+      }
+
+      .playground-project-overview-sidebar-progress-empty {
+        min-height: 72px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.44);
+        font-size: 11px;
+        text-align: center;
       }
 
       .playground-project-overview-sidebar-date-fields {
@@ -581,8 +851,40 @@ export const PROJECT_OVERVIEW_CSS_01_FRAGMENT = String.raw`
         gap: 0;
       }
 
+      .playground-project-detail-header .playground-project-overview-description-editor {
+        width: 100%;
+        min-width: 0;
+        margin: 0;
+      }
+
+      .playground-project-detail-header
+        .playground-project-overview-description-editor
+        .platform-instructions-editor__header {
+        background: #000;
+      }
+
+      .playground-project-detail-header
+        .playground-project-overview-description-editor
+        .platform-instructions-editor__title {
+        flex: 1 1 auto;
+        font-size: 18px;
+        font-weight: 500;
+      }
+
+      .playground-project-detail-header
+        .playground-project-overview-description-editor.platform-instructions-editor.is-minimalistic-ui
+        .platform-instructions-editor__prosemirror {
+        padding-top: 12px;
+      }
+
       .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-overview {
         padding-top: 0 !important;
+      }
+
+      .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-overview
+        .playground-project-detail-overview-layout {
+        --project-detail-sticky-offset: 42px;
+        padding-top: var(--project-detail-sticky-offset);
       }
 
       .playground-environments-detail-scroll.playground-tasks-project-workspace-scroll.is-overview .playground-project-overview-summary-title {

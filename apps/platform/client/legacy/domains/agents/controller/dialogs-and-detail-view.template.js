@@ -1284,13 +1284,16 @@
               );
             };
             const renderAgentFactRow = (label, control, options = {}) => React.createElement("div", {
-                className: "playground-project-overview-sidebar-row"
+                className: "playground-tasks-detail-fact"
                   + (options.className ? " " + options.className : ""),
                 key: label,
               },
-              React.createElement("div", { className: "playground-project-overview-sidebar-row-label" }, label),
+              React.createElement("div", { className: "playground-tasks-detail-fact-label" },
+                label,
+                options.labelAction || null
+              ),
               React.createElement("div", {
-                className: "playground-project-overview-sidebar-row-value is-editable"
+                className: "playground-tasks-detail-fact-control"
                   + (options.valueClassName ? " " + options.valueClassName : ""),
               }, control)
             );
@@ -1360,7 +1363,7 @@
                 },
                 ariaLabel: "Choose agent owner",
                 label: React.createElement("span", {
-                    className: "playground-project-overview-sidebar-row-value playground-agents-detail-owner-value",
+                    className: "playground-agents-detail-owner-value",
                   },
                   React.createElement("span", { className: "playground-team-member-cell playground-agents-detail-owner-member-cell" },
                     renderAgentOwnerAvatar(
@@ -1384,8 +1387,8 @@
                 emptyContent: "No team members available.",
                 popupWidth: 260,
                 popupMaxHeight: "min(320px, calc(100vh - 180px))",
-                className: "playground-agents-detail-owner-popup-shell",
-                triggerClassName: "playground-project-overview-sidebar-row playground-agents-detail-sidebar-owner-row"
+                className: "playground-agents-detail-owner-popup-shell playground-tasks-detail-central-selector",
+                triggerClassName: "playground-tasks-detail-central-selector-trigger playground-agents-detail-sidebar-owner-row"
                   + (isCompact ? " is-compact" : ""),
                 popupClassName: "playground-agents-detail-owner-menu",
                 optionClassName: "playground-agents-detail-owner-option",
@@ -1544,13 +1547,10 @@
               )
             );
   
-            const renderAgentReadonlyModelValue = (modelMeta) => {
+            const renderAgentModelSelectorLabel = (modelMeta) => {
               const providerIcon = getPlaygroundAgentModelProviderIcon(modelMeta);
-              return React.createElement("button", {
-                  type: "button",
-                  className: "playground-agents-detail-about-model-readonly",
-                  disabled: true,
-                  title: modelMeta?.label || "Select model",
+              return React.createElement("span", {
+                  className: "playground-agents-detail-selector-label playground-agents-detail-model-selector-label",
                 },
                 providerIcon
                   ? React.createElement("span", { className: "playground-agents-model-provider-icon-shell", "aria-hidden": "true" },
@@ -1564,67 +1564,76 @@
                   : React.createElement("span", { className: "playground-agents-model-provider-icon-shell", "aria-hidden": "true" },
                       React.createElement(Bot, { width: 14, height: 14, strokeWidth: 1.8 })
                     ),
-                React.createElement("span", { className: "playground-agents-detail-about-model-readonly-label" }, modelMeta?.label || "Select model")
+                React.createElement("span", {
+                  className: "playground-agents-detail-selector-label-copy",
+                }, modelMeta?.label || "Select model")
               );
             };
-            const agentPrimaryModelControl = isTeamAgent
-              ? renderAgentFactValue(teamDerivedModelMeta?.label || "Select orchestrator first")
-              : isDefaultAgentConfigurationLocked
-                ? renderAgentReadonlyModelValue(selectedAgentModel)
-                : renderPlaygroundAgentModelButton(
-                    selectedAgentModel,
-                    () => openAgentModelPicker("detail"),
-                    false,
-                    true
-                  );
+            const renderAgentDetailModelSelector = (modelMeta, options = {}) => React.createElement(PlatformSelector, {
+                value: String(modelMeta?.id || draftAgent.model || ""),
+                options: [],
+                label: renderAgentModelSelectorLabel(modelMeta),
+                ariaLabel: "Select agent model",
+                alignment: "end",
+                popupAlignment: "right",
+                fullWidth: true,
+                disabled: Boolean(options.disabled),
+                open: false,
+                onOpenChange: (nextOpen) => {
+                  if (nextOpen && !options.disabled) {
+                    openAgentModelPicker("detail");
+                  }
+                },
+                popupContent: React.createElement("span", { "aria-hidden": "true" }),
+                popupAriaLabel: "Choose an agent model",
+                className: "playground-tasks-detail-central-selector playground-agents-detail-model-selector",
+                triggerClassName: "playground-tasks-detail-central-selector-trigger",
+              });
+            const agentPrimaryModelControl = renderAgentDetailModelSelector(
+              isTeamAgent ? teamDerivedModelMeta : selectedAgentModel,
+              {
+                disabled: isTeamAgent || isDefaultAgentConfigurationLocked,
+              }
+            );
             const selectedVoiceId = String(draftAgent.voiceId || "eve").trim() || "eve";
             const selectedVoiceOption = PLAYGROUND_VOICE_AGENT_VOICE_OPTIONS.find((option) => option.id === selectedVoiceId);
             const selectedVoiceLabel = selectedVoiceOption?.label || selectedVoiceId;
-            const renderAgentVoiceSelector = () => React.createElement("div", {
-                className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-agents-model-select-popup playground-agents-detail-voice-select-popup" + (agentVoicePopoverOpen ? " is-open" : ""),
+            const renderAgentVoiceSelector = () => React.createElement(PlatformSelector, {
                 ref: agentVoicePopoverRef,
-              },
-              React.createElement("button", {
-                  type: "button",
-                  className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action playground-agents-detail-about-row playground-agents-detail-voice-select-trigger is-voice",
-                  onClick: () => setAgentVoicePopoverOpen((current) => !current),
-                  disabled: isDefaultAgentConfigurationLocked,
-                  title: "Voice: " + selectedVoiceLabel,
-                  "aria-label": "Select voice. Current voice: " + selectedVoiceLabel,
-                  "aria-expanded": agentVoicePopoverOpen ? "true" : "false",
+                value: selectedVoiceId,
+                options: PLAYGROUND_VOICE_AGENT_VOICE_OPTIONS.map((option) => ({
+                  value: option.id,
+                  label: option.label,
+                })),
+                onValueChange: (nextVoiceId) => {
+                  updateAgentVoiceSelection(nextVoiceId);
+                  setAgentVoicePopoverOpen(false);
                 },
-                React.createElement("span", { className: "playground-project-overview-sidebar-resource-label playground-agents-detail-about-value playground-agents-detail-voice-select-value" },
-                  React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
-                    React.createElement(AudioLines, { width: 14, height: 14, strokeWidth: 1.85 })
-                  ),
-                  React.createElement("span", { className: "playground-environments-runtime-value-label" }, selectedVoiceLabel)
-                ),
-                React.createElement(ChevronDown, { className: "playground-agents-detail-voice-select-chevron", strokeWidth: 1.8 })
-              ),
-              agentVoicePopoverOpen
-                ? React.createElement(PlatformPopupSurface, {
-                    className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in playground-agents-detail-voice-select-menu",
-                    onClick: (event) => event.stopPropagation(),
+                open: agentVoicePopoverOpen,
+                onOpenChange: setAgentVoicePopoverOpen,
+                ariaLabel: "Select agent voice",
+                label: React.createElement("span", {
+                    className: "playground-agents-detail-selector-label playground-agents-detail-voice-selector-label",
                   },
-                  PLAYGROUND_VOICE_AGENT_VOICE_OPTIONS.map((option) => {
-                    const isSelected = option.id === selectedVoiceId;
-                    return React.createElement("button", {
-                        key: option.id || "off",
-                        type: "button",
-                        className: "tb-popup-row tb-popup-row-select" + (isSelected ? " selected" : ""),
-                        onClick: () => updateAgentVoiceSelection(option.id),
-                      },
-                      React.createElement("span", { className: "tb-popup-check-slot" },
-                        isSelected
-                          ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                          : null
-                      ),
-                      React.createElement("span", null, option.label)
-                    );
-                  })
-                )
-                : null
-            );
+                  React.createElement(AudioLines, {
+                    width: 14,
+                    height: 14,
+                    strokeWidth: 1.85,
+                    "aria-hidden": "true",
+                  }),
+                  React.createElement("span", {
+                    className: "playground-agents-detail-selector-label-copy",
+                  }, selectedVoiceLabel)
+                ),
+                alignment: "end",
+                popupAlignment: "right",
+                fullWidth: true,
+                  disabled: isDefaultAgentConfigurationLocked,
+                popupWidth: 220,
+                className: "playground-tasks-detail-central-selector playground-agents-detail-voice-select-popup",
+                triggerClassName: "playground-tasks-detail-central-selector-trigger playground-agents-detail-voice-select-trigger",
+                popupClassName: "playground-agents-detail-voice-select-menu",
+              });
   
             const agentDetailPerformanceRangeOptions = [
               { id: "day", label: "24H", bucketCount: 1 },
@@ -2118,79 +2127,122 @@
               loading: agentsHomeThreadsLoading,
             };
             const agentUsageChartSection = React.createElement(PlatformAnalyticsSection, {
-                variant: "framed",
+                variant: "default",
                 className: "playground-agents-detail-analytics",
                 analytics: agentDetailAnalyticsModel,
-                title: "Analytics",
-                timeframe: {
-                  value: activeAgentDetailPerformanceRange.id,
-                  options: agentDetailPerformanceRangeOptions.map((option) => ({
-                    value: option.id,
-                    label: option.label,
-                  })),
-                  onValueChange: setAgentDetailPerformanceRange,
-                  ariaLabel: "Performance range",
-                },
               }
             );
   
-            const renderAgentAboutRow = (key, icon, content, options = {}) => {
-              const isButton = typeof options.onClick === "function";
-              const Element = isButton ? "button" : "div";
-              const rowProps = {
-                key,
-                className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action playground-agents-detail-about-row"
-                  + (options.extraClassName ? " " + options.extraClassName : ""),
-                title: options.title,
-              };
-              if (isButton) {
-                rowProps.type = "button";
-                rowProps.onClick = options.onClick;
-                rowProps["aria-label"] = options.ariaLabel || options.title;
-              }
-              return React.createElement(Element, rowProps,
-                icon
-                  ? React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" }, icon)
-                  : null,
-                React.createElement("span", { className: "playground-project-overview-sidebar-resource-label playground-agents-detail-about-value" }, content)
-              );
-            };
+            const normalizedAgentDetailActionId = String(draftAgent?.id || "").trim();
+            const agentDetailHasPersistedId = Boolean(
+              normalizedAgentDetailActionId
+              && normalizedAgentDetailActionId !== PLAYGROUND_AGENT_DRAFT_ID
+            );
+            const agentThreadActionControl = React.createElement("div", {
+                className: "playground-tasks-detail-work-control playground-agents-detail-thread-control",
+              },
+              React.createElement(PlatformButtonSelector, {
+                  mode: "split-action",
+                  buttonVariant: "primary",
+                  buttonSize: "small",
+                  label: "Start a Thread",
+                  actionAriaLabel: "Start a Thread",
+                  popupAriaLabel: "Agent thread options",
+                  popupRole: "menu",
+                  popupVariant: "minimal",
+                  popupAlignment: "left",
+                  matchTriggerWidth: true,
+                  closeOnSelect: true,
+                  actionDisabled: !agentDetailHasPersistedId
+                    || saveState.isSaving
+                    || typeof onStartThreadWithAgent !== "function",
+                  popupDisabled: saveState.isSaving,
+                  className: "playground-tasks-detail-work-selector playground-agents-detail-thread-selector",
+                  popupClassName: "playground-tasks-detail-work-selector-popup playground-agents-detail-thread-selector-popup",
+                  onAction: handleAgentProfileNewThread,
+                },
+                React.createElement("button", {
+                  type: "button",
+                  role: "menuitem",
+                  className: "tb-popup-row",
+                  onClick: () => openAgentSendToTeamModal(draftAgent),
+                  disabled: !agentDetailHasPersistedId || isDefaultAgentConfigurationLocked,
+                },
+                  React.createElement(UsersRound, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", { className: "tb-popup-label" }, "Share with a Team")
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  role: "menuitem",
+                  className: "tb-popup-row",
+                  onClick: openAgentApiModal,
+                  disabled: !agentDetailHasPersistedId,
+                },
+                  React.createElement(Code, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", { className: "tb-popup-label" }, "Use via API")
+                ),
+                React.createElement("button", {
+                  type: "button",
+                  role: "menuitem",
+                  className: "tb-popup-row",
+                  onClick: openCurrentAgentCopyModal,
+                },
+                  React.createElement(Split, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                  React.createElement("span", { className: "tb-popup-label" }, "Copy Agent")
+                )
+              )
+            );
             const agentPropertiesSidebar = React.createElement(PlatformUiCard, {
                 as: "section",
                 variant: "sidebar",
-                cardTitle: "About",
-                className: "playground-agents-detail-about-card",
+                className: "playground-ticket-detail-sidebar-section playground-ticket-detail-sidebar-details playground-agents-detail-about-card",
               },
-              React.createElement("div", { className: "playground-agents-detail-sidebar-actions playground-agents-detail-about-list" },
-                renderAgentAboutRow(
-                  "email",
-                  React.createElement(Mail, { width: 14, height: 14, strokeWidth: 1.85 }),
-                  React.createElement("span", {
-                    className: "playground-agents-detail-about-email",
-                    title: agentEmailAddress || "No email address available",
-                  }, agentEmailAddress || "No email address available"),
-                  {
-                    extraClassName: "is-email",
-                    title: agentEmailAddress || "No email address available",
-                  }
-                ),
-	                renderAgentAboutRow(
-	                  "model",
-	                  null,
-	                  agentPrimaryModelControl,
-	                  { extraClassName: "is-model" }
-	                ),
-                renderAgentVoiceSelector(),
-                renderAgentFactRow(
-                  "Owner",
-                  renderAgentOwnerRow({ compact: true, alignment: "end" }),
-                  {
-                    className: "playground-agents-detail-about-owner-row",
-                    valueClassName: "playground-agents-detail-about-owner-control",
-                  }
+              React.createElement("div", {
+                  className: "playground-tasks-detail-facts is-centralized-sidebar-content playground-agent-detail-sidebar-facts",
+                },
+                React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                  renderAgentFactRow(
+                    "Email",
+                    renderAgentCopyableFactValue(
+                      "agent-email",
+                      agentEmailAddress,
+                      "email address",
+                      "playground-agents-detail-about-email",
+                      agentEmailAddress || "No email address available"
+                    ),
+                    {
+                      className: "is-email",
+                      valueClassName: "playground-agents-detail-about-email-control",
+                    }
+                  ),
+                  renderAgentFactRow(
+                    "Model",
+                    agentPrimaryModelControl,
+                    {
+                      className: "is-model",
+                      valueClassName: "playground-agents-detail-about-model-control playground-tasks-detail-central-selector",
+                    }
+                  ),
+                  renderAgentFactRow(
+                    "Voice",
+                    renderAgentVoiceSelector(),
+                    {
+                      className: "is-voice",
+                      valueClassName: "playground-agents-detail-about-voice-control",
+                    }
+                  ),
+                  renderAgentFactRow(
+                    "Owner",
+                    renderAgentOwnerRow({ compact: true, alignment: "end" }),
+                    {
+                      className: "is-assignee playground-agents-detail-about-owner-row",
+                      valueClassName: "playground-agents-detail-about-owner-control",
+                    }
+                  ),
+                  agentThreadActionControl
                 )
-	              )
-	            );
+              )
+            );
   
   ${GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.page}          const agentDetailThreadFilterOptions = [
               { id: "all", label: "All Threads", description: "Show every agent thread" },
@@ -2729,6 +2781,7 @@
                   key: "agent-insights-threads-" + selectedAgentThreadId,
                   ariaLabel: "Threads for " + (draftAgent.name || "agent"),
                   variant: "minimalistic-ui",
+                  pagination: {},
                   sorting: {
                     value: agentDetailThreadSorting,
                     onChange: setAgentDetailThreadSorting,
@@ -2964,9 +3017,39 @@
                 ariaLabel: "Agent permissions overview",
                 className: "playground-agent-settings-permissions-summary",
                 variant: "default",
+                onRingAccessChange: (ringId, access) => {
+                  updateDraftAgent((current) => ({
+                    ...current,
+                    permissionSet: updatePlaygroundPermissionRingAccess(
+                      normalizePlaygroundPermissionSet(current.permissionSet, "agent"),
+                      ringId,
+                      access,
+                      "agent"
+                    ),
+                  }));
+                },
                 onEdit: () => setAgentDetailTab("permissions"),
               }
             );
+            const normalizedAgentSettingsTableMode = agentDetailSettingsTableMode === "guardrails"
+              ? "guardrails"
+              : "access";
+            const agentSettingsTableTabs = React.createElement(PlatformDetailTabBar, {
+              ariaLabel: "Agent settings resources",
+              value: normalizedAgentSettingsTableMode,
+              tabs: [
+                { id: "access", label: "Access" },
+                { id: "guardrails", label: "Guardrails" },
+              ],
+              onValueChange: (nextMode) => {
+                const normalizedNextMode = nextMode === "guardrails" ? "guardrails" : "access";
+                setAgentDetailSettingsTableMode(normalizedNextMode);
+                setAgentAccessTeamMenuOpen(false);
+                setAgentGuardrailImportPopoverOpen(false);
+              },
+              variant: "minimal",
+              className: "agents-overview-tab-bar playground-agent-settings-table-tabs",
+            });
             const agentAccessSettingsSection = React.createElement(PlatformResourceAccessSettings, {
               teams: agentAccessTeams,
               resourceLabel: isTeamAgent ? "Squad" : "Agent",
@@ -3020,10 +3103,13 @@
               className: "playground-agent-access-settings",
               tableProps: {
                 className: "playground-agent-access-platform-data-table",
+                title: null,
                 titleTooltip: "Controls the access levels and permissions users inside teams have when editing or managing this agent.",
+                leading: agentSettingsTableTabs,
                 trailing: agentAccessAddTeamsControl,
                 selectedIds: selectedAgentAccessTeamIds,
                 onSelectedIdsChange: setSelectedAgentAccessTeamIds,
+                pagination: {},
                 busy: Boolean(agentAccessState.action),
                 onRemoveTeams: isDefaultAgentConfigurationLocked
                   ? undefined
@@ -3032,14 +3118,19 @@
                 error: agentAccessState.error || null,
               },
             });
+            const agentSettingsGuardrailsSection = renderAgentGuardrailsSection({
+              key: "settings-guardrails",
+              leading: agentSettingsTableTabs,
+            });
             const agentSettingsSection = agentAccessPrincipalId
               ? agentAccessSettingsSection
               : React.createElement(
                   React.Fragment,
                   null,
                   agentSettingsPermissionsSummary,
-                  agentAccessSettingsSection,
-                  agentGuardrailsSection
+                  normalizedAgentSettingsTableMode === "guardrails"
+                    ? agentSettingsGuardrailsSection
+                    : agentAccessSettingsSection
                 );
             const agentDetailActiveSection = normalizedAgentDetailTab === "permissions"
               ? null

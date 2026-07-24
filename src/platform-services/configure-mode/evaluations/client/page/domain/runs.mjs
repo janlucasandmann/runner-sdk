@@ -21,6 +21,61 @@ export const EVALUATIONS_PAGE_RUNS_SCRIPT = String.raw`      function parsePlayg
         return String(value || "").trim().replace(/\s+/g, " ").toLowerCase();
       }
 
+      function buildPlaygroundEvaluationScoreRows(rawRuns, fallback = {}) {
+        const runs = Array.isArray(rawRuns) ? rawRuns : [];
+        const groups = new Map();
+        runs.forEach((rawRun, index) => {
+          const source = rawRun && typeof rawRun === "object" && !Array.isArray(rawRun) ? rawRun : {};
+          const run = normalizePlaygroundEvaluationRun({
+            ...source,
+            targetAgentId: source.targetAgentId || source.target_agent_id || fallback.targetAgentId || "",
+            targetAgentName: source.targetAgentName || source.target_agent_name || fallback.targetAgentName || "",
+            environmentType: source.environmentType || source.environment_type || fallback.environmentType || "computer",
+            environmentId: source.environmentId || source.environment_id || fallback.environmentId || "",
+            environmentName: source.environmentName || source.environment_name || fallback.environmentName || "",
+            projectId: source.projectId || source.project_id || fallback.projectId || "",
+            projectName: source.projectName || source.project_name || fallback.projectName || "",
+          }, index);
+          if (run.status !== "completed" && run.status !== "failed") return;
+          const agentKey = run.targetAgentId || "agent:" + String(run.targetAgentName || "Agent").trim().toLowerCase();
+          const environmentResourceId = run.environmentType === "project"
+            ? run.projectId || run.projectName
+            : run.environmentId || run.environmentName;
+          const environmentKey = run.environmentType + ":" + String(environmentResourceId || run.environmentType).trim().toLowerCase();
+          const id = agentKey + "|" + environmentKey;
+          const latestTimestamp = Date.parse(String(run.completedAt || run.createdAt || "")) || 0;
+          const score = Math.max(0, Math.min(1, Number(run.averageScore || 0)));
+          const current = groups.get(id) || {
+            id,
+            latestRun: run,
+            latestTimestamp,
+            scoreTotal: 0,
+            runCount: 0,
+          };
+          current.scoreTotal += score;
+          current.runCount += 1;
+          if (latestTimestamp >= current.latestTimestamp) {
+            current.latestRun = run;
+            current.latestTimestamp = latestTimestamp;
+          }
+          groups.set(id, current);
+        });
+        return Array.from(groups.values())
+          .map((group) => ({
+            id: group.id,
+            latestRun: group.latestRun,
+            latestTimestamp: group.latestTimestamp,
+            latestScore: Math.max(0, Math.min(1, Number(group.latestRun?.averageScore || 0))),
+            averageScore: group.runCount > 0 ? group.scoreTotal / group.runCount : 0,
+            runCount: group.runCount,
+          }))
+          .sort((left, right) => (
+            right.latestScore - left.latestScore
+            || right.averageScore - left.averageScore
+            || right.latestTimestamp - left.latestTimestamp
+          ));
+      }
+
       function buildPlaygroundEvaluationRun(set, agents = []) {
         const evaluationSet = normalizePlaygroundEvaluationSet(set);
         const evaluator = normalizePlaygroundEvaluationEvaluator(evaluationSet.evaluator);
@@ -117,4 +172,3 @@ export const EVALUATIONS_PAGE_RUNS_SCRIPT = String.raw`      function parsePlayg
       }
 
 `;
-

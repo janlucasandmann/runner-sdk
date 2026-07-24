@@ -1016,29 +1016,21 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
                   completed: task.status === "done",
                   status: renderTaskPreviewStatusControl(task),
                   assignee: renderTaskAssigneeAvatar(task, "playground-tasks-backlog-assignee-avatar"),
-                  action: React.createElement("button", {
-                    type: "button",
-                    className: "playground-tasks-backlog-run-button" + (isHumanTask && !isPlaygroundTaskTerminalStatus(task.status) ? " is-human-unchecked" : ""),
-                    "aria-label": isCanceledTask
-                      ? "Canceled task"
-                      : (isHumanTask ? (task.status === "done" ? "Reopen task" : "Complete task") : "Run task"),
-                    title: isCanceledTask
-                      ? "Canceled"
-                      : (isHumanTask ? (task.status === "done" ? "Reopen task" : "Complete task") : "Run task"),
-                    onClick: (event) => {
-                      if (isHumanTask) {
-                        void handleToggleTaskDone(task, event);
-                        return;
-                      }
-                      event.stopPropagation();
-                      void handleStartTaskThread(task);
-                    },
-                    disabled: isCanceledTask || (isHumanTask
-                      ? saveState.isSaving
-                      : saveState.isSaving || isTaskThreadLaunchLocked(task)),
-                  },
-                    isHumanTask
-                      ? (
+                  action: isHumanTask
+                    ? React.createElement("button", {
+                        type: "button",
+                        className: "playground-tasks-backlog-run-button" + (!isPlaygroundTaskTerminalStatus(task.status) ? " is-human-unchecked" : ""),
+                        "aria-label": isCanceledTask
+                          ? "Canceled task"
+                          : (task.status === "done" ? "Reopen task" : "Complete task"),
+                        title: isCanceledTask
+                          ? "Canceled"
+                          : (task.status === "done" ? "Reopen task" : "Complete task"),
+                        onClick: (event) => {
+                          void handleToggleTaskDone(task, event);
+                        },
+                        disabled: isCanceledTask || saveState.isSaving,
+                      },
                         task.status === "done"
                           ? React.createElement(Check, {
                               width: 13,
@@ -1048,14 +1040,7 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
                             })
                           : null
                       )
-                      : React.createElement(Play, {
-                          width: 13,
-                          height: 13,
-                          strokeWidth: 1.9,
-                          fill: "currentColor",
-                          "aria-hidden": "true",
-                        })
-                  ),
+                    : null,
                   active: selectedTaskId === task.id,
                   className: (depth > 0 ? "is-subtask" : "")
                     + (isDraggable ? " is-draggable" : "")

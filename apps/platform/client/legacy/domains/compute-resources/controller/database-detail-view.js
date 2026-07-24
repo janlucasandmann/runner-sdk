@@ -121,7 +121,7 @@
               map: "Map",
               array: "Array",
             };
-  
+
             const canUndoDatabaseDescription = Array.isArray(databaseDescriptionHistory.past) && databaseDescriptionHistory.past.length > 0;
             const canRedoDatabaseDescription = Array.isArray(databaseDescriptionHistory.future) && databaseDescriptionHistory.future.length > 0;
             const renderDatabaseDescriptionToolbarButton = (action) =>
@@ -233,7 +233,7 @@
             );
   
             const databaseDetailsSection = React.createElement(PlatformAnalyticsSection, {
-              variant: "framed",
+              variant: "default",
               analytics: databaseDetailAnalytics,
               chartType: "line",
               title: databaseDetailAnalytics.title,
@@ -408,9 +408,19 @@
                         React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
                       )
                     : !selectedCollection
-                      ? React.createElement("div", { className: "playground-files-state" }, "Select a collection to browse its documents.")
+                      ? React.createElement(PlatformEmptyState, {
+                          className: "playground-database-browser-pane-empty",
+                          icon: Braces,
+                          title: "Select a collection",
+                          description: "Choose a collection to browse its documents and fields.",
+                        })
                       : !selectedDocument
-                        ? React.createElement("div", { className: "playground-files-state" }, "Select a document to inspect its fields.")
+                        ? React.createElement(PlatformEmptyState, {
+                            className: "playground-database-browser-pane-empty",
+                            icon: Braces,
+                            title: "Select a document",
+                            description: "Choose a document to inspect and edit its fields.",
+                          })
                         : databaseDocumentViewMode === "json"
                           ? React.createElement("div", {
                               className: "playground-database-browser-json-editor-shell playground-code-preview-editor-shell",
@@ -470,18 +480,19 @@
                           : React.createElement("div", { className: "playground-database-browser-fields-body" },
                               parsedDocumentData && Object.keys(parsedDocumentData).length
                                 ? renderDatabaseFieldRows(parsedDocumentData, [], 0)
-                                : React.createElement("div", { className: "playground-database-browser-empty-fields is-root" },
-                                    React.createElement("div", null, "This document does not contain any fields yet."),
-                                    React.createElement("button", {
-                                      type: "button",
-                                      className: "playground-database-browser-add-field",
-                                      onClick: () => openDatabaseFieldComposer([]),
-                                      disabled: isDatabaseTemplatePreview,
-                                    },
-                                      React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }),
-                                      React.createElement("span", null, "Add Field")
-                                    )
-                                  )
+                                : React.createElement(PlatformEmptyState, {
+                                    className: "playground-database-browser-pane-empty playground-database-browser-fields-empty-state",
+                                    icon: Braces,
+                                    title: "No fields yet",
+                                    description: "Add a field to begin structuring this document.",
+                                    primaryAction: isDatabaseTemplatePreview
+                                      ? undefined
+                                      : {
+                                          label: "Add Field",
+                                          icon: Plus,
+                                          onClick: () => openDatabaseFieldComposer([]),
+                                        },
+                                  })
                             );
             const renderDatabaseBrowserActionMenu = ({ open, onToggle, onDelete, deleteLabel, disabled }) =>
               React.createElement("div", { className: "playground-database-browser-pane-menu-shell" },
@@ -537,8 +548,13 @@
                     : null
                 )
               );
-            const renderDatabaseBrowserEmptyPane = (label) =>
-              React.createElement("div", { className: "playground-database-browser-pane-empty" }, label);
+            const renderDatabaseBrowserEmptyPane = ({ icon, title, description }) =>
+              React.createElement(PlatformEmptyState, {
+                className: "playground-database-browser-pane-empty",
+                icon,
+                title,
+                description,
+              });
             const databaseBrowserSection = React.createElement("div", { className: "playground-tasks-detail-facts playground-environments-editor-facts playground-server-details-card playground-database-browser-surface" },
               React.createElement("div", { className: "playground-database-browser-columns" },
                 React.createElement("div", { className: "playground-database-browser-pane playground-database-browser-collections-pane" },
@@ -586,7 +602,11 @@
                               React.createElement(ChevronRight, { width: 14, height: 14, strokeWidth: 1.9 })
                             )
                           )
-                        : renderDatabaseBrowserEmptyPane("No collections yet.")
+                        : renderDatabaseBrowserEmptyPane({
+                            icon: Layers,
+                            title: "No collections yet",
+                            description: "Create a collection to start storing documents.",
+                          })
                   )
                 ),
                 React.createElement("div", { className: "playground-database-browser-pane playground-database-browser-documents-pane" },
@@ -611,9 +631,13 @@
                     documentsLoading
                       ? React.createElement("div", { className: "playground-files-state" },
                           React.createElement(Loader2, { className: "playground-files-state-loader", strokeWidth: 1.75 })
-                        )
+                      )
                       : !selectedCollection
-                        ? renderDatabaseBrowserEmptyPane("Select a collection.")
+                        ? renderDatabaseBrowserEmptyPane({
+                            icon: Layers,
+                            title: "Select a collection",
+                            description: "Choose a collection to browse its documents.",
+                          })
                         : currentDatabaseDocuments.length
                           ? currentDatabaseDocuments.map((document) =>
                               React.createElement("button", {
@@ -627,7 +651,11 @@
                                 React.createElement(ChevronRight, { width: 14, height: 14, strokeWidth: 1.9 })
                               )
                             )
-                          : renderDatabaseBrowserEmptyPane("No documents yet.")
+                          : renderDatabaseBrowserEmptyPane({
+                              icon: FileText,
+                              title: "No documents yet",
+                              description: "Add a document to begin storing data in this collection.",
+                            })
                   )
                 ),
                 React.createElement("div", { className: "playground-database-browser-pane playground-database-browser-fields-pane" },
@@ -647,13 +675,17 @@
                         })
                       ),
                       React.createElement("div", { className: "playground-database-browser-pane-action-row" },
-                        selectedDocument && parsedDocumentData
-                          && databaseDocumentViewMode === "preview"
+                        selectedDocument
                           ? React.createElement("button", {
                               type: "button",
-                              className: "playground-database-browser-add-field",
+                              className: "playground-database-browser-add-field"
+                                + (databaseDocumentViewMode === "preview" && parsedDocumentData ? "" : " is-layout-placeholder"),
                               onClick: () => openDatabaseFieldComposer([]),
-                              disabled: isDatabaseTemplatePreview,
+                              disabled: isDatabaseTemplatePreview
+                                || databaseDocumentViewMode !== "preview"
+                                || !parsedDocumentData,
+                              "aria-hidden": databaseDocumentViewMode !== "preview" || !parsedDocumentData ? "true" : undefined,
+                              tabIndex: databaseDocumentViewMode === "preview" && parsedDocumentData ? 0 : -1,
                             },
                               React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.9 }),
                               React.createElement("span", null, "Add Field")
@@ -681,33 +713,70 @@
               )
             );
   
-            const databaseCollectionComposerModal = !isDatabaseTemplatePreview && databaseCollectionComposerState.open
-              ? React.createElement(PlatformModalBackdrop, {
-                  className: "playground-tasks-project-modal-backdrop",
-                  onClick: closeDatabaseCollectionComposer,
+            const renderDatabaseComposerModal = ({
+              open,
+              title,
+              description,
+              onClose,
+              onSubmit,
+              isSaving = false,
+              submitLabel,
+              savingLabel,
+            }, bodyContent) => {
+              if (isDatabaseTemplatePreview) {
+                return null;
+              }
+              const handleClose = () => {
+                if (!isSaving) {
+                  onClose();
+                }
+              };
+              return React.createElement(PlatformModal, {
+                  open: Boolean(open),
+                  title,
+                  description,
+                  onClose: handleClose,
+                  closeOnBackdrop: !isSaving,
+                  closeOnEscape: !isSaving,
+                  closeButtonDisabled: isSaving,
+                  as: "form",
+                  size: "medium",
+                  className: "playground-database-browser-modal",
+                  bodyClassName: "playground-database-browser-modal-body",
+                  footerClassName: "playground-database-browser-modal-footer",
+                  surfaceProps: {
+                    onSubmit,
+                  },
+                  footer: React.createElement(React.Fragment, null,
+                    React.createElement(PlatformSecondaryButton, {
+                      type: "button",
+                      size: "medium",
+                      onClick: handleClose,
+                      disabled: isSaving,
+                    }, "Cancel"),
+                    React.createElement(PlatformPrimaryButton, {
+                      type: "submit",
+                      size: "medium",
+                      disabled: isSaving,
+                    }, isSaving ? savingLabel : submitLabel)
+                  ),
                 },
-                  React.createElement(PlatformModalSurface, {
-                      as: "form",
-                      className: "playground-tasks-project-modal playground-database-browser-modal",
-                      onClick: (event) => event.stopPropagation(),
-                      onSubmit: handleSubmitDatabaseCollectionComposer,
-                    },
-                    React.createElement("div", { className: "playground-tasks-project-modal-top" },
-                      React.createElement("div", { className: "playground-database-browser-modal-title-row" },
-                        React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger" },
-                          React.createElement(Database, { width: 16, height: 16, strokeWidth: 1.8 })
-                        ),
-                        React.createElement("div", { className: "playground-database-browser-modal-title" }, "New Collection")
-                      ),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-settings-icon-button playground-tasks-project-modal-close",
-                        onClick: closeDatabaseCollectionComposer,
-                        title: "Close",
-                      }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-                    ),
-                    React.createElement("div", { className: "playground-database-browser-modal-copy" }, "Create a new top-level collection inside this database."),
-                    React.createElement("div", { className: "playground-database-browser-modal-grid is-single-column" },
+                bodyContent
+              );
+            };
+
+            const databaseCollectionComposerModal = renderDatabaseComposerModal({
+                open: databaseCollectionComposerState.open,
+                title: "New Collection",
+                description: "Create a new top-level collection inside this database.",
+                onClose: closeDatabaseCollectionComposer,
+                onSubmit: handleSubmitDatabaseCollectionComposer,
+                isSaving: databaseCollectionComposerState.isSaving,
+                submitLabel: "Create",
+                savingLabel: "Creating...",
+              },
+              React.createElement(React.Fragment, null,
+                React.createElement("div", { className: "playground-database-browser-modal-grid is-single-column" },
                       React.createElement("label", { className: "playground-tasks-project-modal-field" },
                         React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Collection Name"),
                         React.createElement("input", {
@@ -726,52 +795,22 @@
                     ),
                     databaseCollectionComposerState.error
                       ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, databaseCollectionComposerState.error)
-                      : null,
-                    React.createElement("div", { className: "playground-tasks-project-modal-actions" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-environments-action-button",
-                        onClick: closeDatabaseCollectionComposer,
-                        disabled: databaseCollectionComposerState.isSaving,
-                      }, "Cancel"),
-                      React.createElement(PlatformPrimaryButton, {
-                        size: "medium",
-                        type: "submit",
-                        className: "playground-environments-action-button is-primary",
-                        disabled: databaseCollectionComposerState.isSaving,
-                      }, databaseCollectionComposerState.isSaving ? "Creating..." : "Create")
-                    )
-                  )
-                )
-              : null;
+                      : null
+              )
+            );
   
-            const databaseDocumentComposerModal = !isDatabaseTemplatePreview && databaseDocumentComposerState.open
-              ? React.createElement(PlatformModalBackdrop, {
-                  className: "playground-tasks-project-modal-backdrop",
-                  onClick: closeDatabaseDocumentComposer,
-                },
-                  React.createElement(PlatformModalSurface, {
-                      as: "form",
-                      className: "playground-tasks-project-modal playground-database-browser-modal",
-                      onClick: (event) => event.stopPropagation(),
-                      onSubmit: handleSubmitDatabaseDocumentComposer,
-                    },
-                    React.createElement("div", { className: "playground-tasks-project-modal-top" },
-                      React.createElement("div", { className: "playground-database-browser-modal-title-row" },
-                        React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger" },
-                          React.createElement(FileText, { width: 16, height: 16, strokeWidth: 1.8 })
-                        ),
-                        React.createElement("div", { className: "playground-database-browser-modal-title" }, "New Document")
-                      ),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-settings-icon-button playground-tasks-project-modal-close",
-                        onClick: closeDatabaseDocumentComposer,
-                        title: "Close",
-                      }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-                    ),
-                    React.createElement("div", { className: "playground-database-browser-modal-copy" }, "Create a new document inside the selected collection."),
-                    React.createElement("div", { className: "playground-database-browser-modal-grid is-single-column" },
+            const databaseDocumentComposerModal = renderDatabaseComposerModal({
+                open: databaseDocumentComposerState.open,
+                title: "New Document",
+                description: "Create a new document inside the selected collection.",
+                onClose: closeDatabaseDocumentComposer,
+                onSubmit: handleSubmitDatabaseDocumentComposer,
+                isSaving: databaseDocumentComposerState.isSaving,
+                submitLabel: "Create",
+                savingLabel: "Creating...",
+              },
+              React.createElement(React.Fragment, null,
+                React.createElement("div", { className: "playground-database-browser-modal-grid is-single-column" },
                       React.createElement("label", { className: "playground-tasks-project-modal-field" },
                         React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Document ID"),
                         React.createElement("input", {
@@ -790,52 +829,21 @@
                     ),
                     databaseDocumentComposerState.error
                       ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, databaseDocumentComposerState.error)
-                      : null,
-                    React.createElement("div", { className: "playground-tasks-project-modal-actions" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-environments-action-button",
-                        onClick: closeDatabaseDocumentComposer,
-                        disabled: databaseDocumentComposerState.isSaving,
-                      }, "Cancel"),
-                      React.createElement(PlatformPrimaryButton, {
-                        size: "medium",
-                        type: "submit",
-                        className: "playground-environments-action-button is-primary",
-                        disabled: databaseDocumentComposerState.isSaving,
-                      }, databaseDocumentComposerState.isSaving ? "Creating..." : "Create")
-                    )
-                  )
-                )
-              : null;
+                      : null
+              )
+            );
   
-            const databaseFieldComposerModal = !isDatabaseTemplatePreview && databaseFieldComposerState.open
-              ? React.createElement(PlatformModalBackdrop, {
-                  className: "playground-tasks-project-modal-backdrop",
-                  onClick: closeDatabaseFieldComposer,
-                },
-                  React.createElement(PlatformModalSurface, {
-                      as: "form",
-                      className: "playground-tasks-project-modal playground-database-browser-modal",
-                      onClick: (event) => event.stopPropagation(),
-                      onSubmit: handleSubmitDatabaseFieldComposer,
-                    },
-                    React.createElement("div", { className: "playground-tasks-project-modal-top" },
-                      React.createElement("div", { className: "playground-database-browser-modal-title-row" },
-                        React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger" },
-                          React.createElement(Plus, { width: 16, height: 16, strokeWidth: 1.8 })
-                        ),
-                        React.createElement("div", { className: "playground-database-browser-modal-title" }, "Add Field")
-                      ),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-settings-icon-button playground-tasks-project-modal-close",
-                        onClick: closeDatabaseFieldComposer,
-                        title: "Close",
-                      }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-                    ),
-                    React.createElement("div", { className: "playground-database-browser-modal-copy" }, "Create a new field on this document or nested object."),
-                    React.createElement("div", { className: "playground-database-browser-modal-grid" },
+            const databaseFieldComposerModal = renderDatabaseComposerModal({
+                open: databaseFieldComposerState.open,
+                title: "Add Field",
+                description: "Create a new field on this document or nested object.",
+                onClose: closeDatabaseFieldComposer,
+                onSubmit: handleSubmitDatabaseFieldComposer,
+                submitLabel: "Add",
+                savingLabel: "Adding...",
+              },
+              React.createElement(React.Fragment, null,
+                React.createElement("div", { className: "playground-database-browser-modal-grid" },
                       React.createElement("label", { className: "playground-tasks-project-modal-field" },
                         React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Field"),
                         React.createElement("input", {
@@ -907,22 +915,9 @@
                     ),
                     databaseFieldComposerState.error
                       ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, databaseFieldComposerState.error)
-                      : null,
-                    React.createElement("div", { className: "playground-tasks-project-modal-actions" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-environments-action-button",
-                        onClick: closeDatabaseFieldComposer,
-                      }, "Cancel"),
-                      React.createElement(PlatformPrimaryButton, {
-                        size: "medium",
-                        type: "submit",
-                        className: "playground-environments-action-button is-primary",
-                      }, "Add")
-                    )
-                  )
-                )
-  	            : null;
+                      : null
+              )
+            );
   	          const databaseDangerSection = isDatabaseTemplatePreview ? null : React.createElement("section", { className: "playground-server-danger-section playground-database-danger-section playground-server-details-card" },
   	            React.createElement("div", { className: "playground-server-danger-copy-row" },
   	              React.createElement("span", { className: "playground-server-danger-icon", "aria-hidden": "true" },
@@ -945,11 +940,6 @@
   	            }, "Delete database")
 	          );
 	          const normalizedDatabaseDetailTab = ["data", "usage", "settings"].includes(databaseDetailTab) ? databaseDetailTab : "data";
-	          const databaseDetailTabs = [
-	            { id: "data", label: "Data", icon: Database },
-	            { id: "usage", label: "Usage", icon: ChartColumnIncreasing },
-	            { id: "settings", label: "Settings", icon: Settings },
-	          ];
   	          const databaseApiBaseUrl = "https://api.computer-agents.com/v1";
   	          const databaseApiResourceUrl = databaseApiBaseUrl + "/databases/" + encodeURIComponent(draftDatabase.id || "database_id") + "/collections";
   	          const databaseQuickstartSnippets = {
@@ -1005,16 +995,9 @@
   	            databaseDetailsSection,
   	            databaseApiQuickstartSection
   	          );
-  	          const databaseStorageLocation = String(draftDatabase.location || "eur3").trim() || "eur3";
-  	          const databaseDataTabContent = React.createElement("div", { className: "playground-database-browser-tab-body" },
-  	            databaseBrowserSection,
-  	            React.createElement("div", { className: "playground-database-storage-location-note" },
-  	              React.createElement(MapPin, { width: 13, height: 13, strokeWidth: 1.8 }),
-  	              "Data is stored in Location ",
-  	              React.createElement("strong", null, databaseStorageLocation),
-  	              "."
-  	            )
-  	          );
+            const databaseDataTabContent = React.createElement("div", { className: "playground-database-browser-tab-body" },
+              databaseBrowserSection
+            );
   	          const databaseSharedTeamIds = getDatabaseSharedTeamIds(draftDatabase);
   	          const databaseSharedTeamIdSet = new Set(databaseSharedTeamIds);
   	          const databaseWorkspaceTeamById = new Map(
@@ -1487,20 +1470,6 @@
 	            )
 	          );
 	          const databaseDetailSidebarCollapsed = Boolean(databaseDetailsCollapsed);
-	          const databaseDetailSidebarToggle = React.createElement("button", {
-	              type: "button",
-	              className: "playground-project-overview-sidebar-toggle",
-	              onClick: () => setDatabaseDetailsCollapsed((current) => !current),
-	              title: databaseDetailSidebarCollapsed ? "Show database properties" : "Hide database properties",
-	              "aria-label": databaseDetailSidebarCollapsed ? "Show database properties" : "Hide database properties",
-	              "aria-pressed": databaseDetailSidebarCollapsed ? "true" : "false",
-	            },
-	            React.createElement(PanelRight, {
-	              width: 15,
-	              height: 15,
-	              strokeWidth: 1.8,
-	            })
-	          );
 	          const databaseEditorTabContent = normalizedDatabaseDetailTab === "data"
 	            ? databaseDataTabContent
 	            : normalizedDatabaseDetailTab === "settings"
@@ -1516,13 +1485,12 @@
 	            normalizedDatabaseDetailTab === "data" ? " is-database-data-tab" : ""
 	          );
 	          const databaseDetailWorkspace = React.createElement(DevelopServerDetailPage, {
-	              tabs: databaseDetailTabs,
+	              tabs: [],
 	              activeTab: normalizedDatabaseDetailTab,
 	              onTabChange: (nextTab) => {
 	                setDatabaseOwnerPopoverOpen(false);
 	                setDatabaseDetailTab(nextTab);
 	              },
-	              sidebarToggle: databaseDetailSidebarToggle,
 	              sidebar: databaseDetailSidebar,
 	              sidebarCollapsed: databaseDetailSidebarCollapsed,
 	              sidebarAutoCollapseTabs: ["data"],

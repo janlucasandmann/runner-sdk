@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { Search } from "lucide-react";
@@ -34,5 +36,19 @@ describe("PlatformIconButton", () => {
     expect(button.classList.contains("is-active")).toBe(true);
     expect(button.getAttribute("aria-pressed")).toBe("true");
     expect((button as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("keeps every shared icon control circular", () => {
+    const css = readFileSync(
+      resolve(
+        process.cwd(),
+        "src/platform-ui/components/ui/icon-button/icon-button.css",
+      ),
+      "utf8",
+    );
+
+    expect(css).toMatch(
+      /\.platform-icon-button\s*\{[^}]*border-radius: 50% !important;/s,
+    );
   });
 });

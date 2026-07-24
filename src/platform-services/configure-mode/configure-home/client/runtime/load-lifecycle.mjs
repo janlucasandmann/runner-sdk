@@ -2,30 +2,31 @@ export const CONFIGURE_HOME_NOTIFICATION_LOAD_LIFECYCLE_SCRIPT = `        useEff
           setReadProductNotificationIds(readStoredNotificationIds(notificationReadStorageKey));
         }, [notificationReadStorageKey]);
 
+        const notificationCenterSurfaceVisible = notificationsOpen
+          || (activePage === "configure" && configureHomeTab === "notifications");
+
         useEffect(() => {
           if (!canFetchNotificationCenter) {
             setProductNotifications([]);
             setTeamInvitationNotifications([]);
             setOrganizationInvitationNotifications([]);
+            setTaskActivityNotifications([]);
             return;
           }
 
           let cancelled = false;
+          let requestInFlight = false;
+          let refreshQueued = false;
 
-          const loadProductNotifications = async () => {
+          const loadPrimaryNotifications = async () => {
             try {
               const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/notifications/in-app", {
                 method: "GET",
                 credentials: "include",
                 cache: "no-store",
                 headers: requestHeaders,
-              }, 2500);
-              if (!response.ok) {
-                if (!cancelled) {
-                  setProductNotifications([]);
-                  setTeamInvitationNotifications([]);
-                  setOrganizationInvitationNotifications([]);
-                }
+              }, PLAYGROUND_NOTIFICATION_REQUEST_TIMEOUT_MS);
+              if (!response.ok || cancelled) {
                 return;
               }
               const items = Array.isArray(data?.data)
@@ -33,53 +34,107 @@ export const CONFIGURE_HOME_NOTIFICATION_LOAD_LIFECYCLE_SCRIPT = `        useEff
                 : Array.isArray(data?.notifications)
                   ? data.notifications
                   : [];
-              const normalizedItems = items.map(normalizeInAppNotificationRecord).filter(Boolean);
               const teamInvitationItems = Array.isArray(data?.teamInvitations)
                 ? data.teamInvitations
                 : [];
-              const normalizedTeamInvitations = teamInvitationItems
-                .map(normalizeTeamInvitationNotificationRecord)
-                .filter(Boolean);
-              let normalizedOrganizationInvitations = [];
-              try {
-                const { response: organizationInvitationsResponse, data: organizationInvitationsData } = await fetchJsonWithTimeout(proxyBackendBase + "/organizations/invitations/pending", {
-                  method: "GET",
-                  credentials: "include",
-                  cache: "no-store",
-                  headers: baseAuthRequestHeaders,
-                }, 2500);
-                if (organizationInvitationsResponse.ok) {
-                  const organizationInvitationItems = Array.isArray(organizationInvitationsData?.data)
-                    ? organizationInvitationsData.data
-                    : Array.isArray(organizationInvitationsData?.invitations)
-                      ? organizationInvitationsData.invitations
-                      : [];
-                  normalizedOrganizationInvitations = organizationInvitationItems
-                    .map(normalizeOrganizationInvitationNotificationRecord)
-                    .filter(Boolean);
-                }
-              } catch {}
-              if (!cancelled) {
-                setProductNotifications(normalizedItems);
-                setTeamInvitationNotifications(normalizedTeamInvitations);
-                setOrganizationInvitationNotifications(normalizedOrganizationInvitations);
+              const taskActivityItems = Array.isArray(data?.taskNotifications)
+                ? data.taskNotifications
+                : [];
+              setProductNotifications(
+                items.map(normalizeInAppNotificationRecord).filter(Boolean)
+              );
+              setTeamInvitationNotifications(
+                teamInvitationItems
+                  .map(normalizeTeamInvitationNotificationRecord)
+                  .filter(Boolean)
+              );
+              setTaskActivityNotifications(
+                taskActivityItems
+                  .map(normalizeTaskActivityNotificationRecord)
+                  .filter(Boolean)
+              );
+            } catch {}
+          };
+
+          const loadOrganizationInvitationNotifications = async () => {
+            try {
+              const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/organizations/invitations/pending", {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+                headers: baseAuthRequestHeaders,
+              }, PLAYGROUND_NOTIFICATION_REQUEST_TIMEOUT_MS);
+              if (!response.ok || cancelled) {
+                return;
               }
-            } catch {
-              if (!cancelled) {
-                setProductNotifications([]);
-                setTeamInvitationNotifications([]);
-                setOrganizationInvitationNotifications([]);
+              const items = Array.isArray(data?.data)
+                ? data.data
+                : Array.isArray(data?.invitations)
+                  ? data.invitations
+                  : [];
+              setOrganizationInvitationNotifications(
+                items.map(normalizeOrganizationInvitationNotificationRecord).filter(Boolean)
+              );
+            } catch {}
+          };
+
+          const loadNotificationCenter = async () => {
+            if (cancelled) {
+              return;
+            }
+            if (requestInFlight) {
+              refreshQueued = true;
+              return;
+            }
+            requestInFlight = true;
+            refreshQueued = false;
+            try {
+              await Promise.allSettled([
+                loadPrimaryNotifications(),
+                loadOrganizationInvitationNotifications(),
+              ]);
+            } finally {
+              requestInFlight = false;
+              if (!cancelled && refreshQueued) {
+                refreshQueued = false;
+                void loadNotificationCenter();
               }
             }
           };
 
-          void loadProductNotifications();
-          const intervalId = window.setInterval(loadProductNotifications, 120000);
+          const refreshWhenVisible = () => {
+            if (document.visibilityState === "visible") {
+              void loadNotificationCenter();
+            }
+          };
+          const handleNotificationRefreshRequest = () => {
+            void loadNotificationCenter();
+          };
+
+          void loadNotificationCenter();
+          const intervalId = window.setInterval(
+            refreshWhenVisible,
+            PLAYGROUND_NOTIFICATION_VISIBLE_REFRESH_INTERVAL_MS
+          );
+          window.addEventListener("focus", refreshWhenVisible);
+          window.addEventListener("online", refreshWhenVisible);
+          window.addEventListener(PLAYGROUND_NOTIFICATION_REFRESH_EVENT, handleNotificationRefreshRequest);
+          document.addEventListener("visibilitychange", refreshWhenVisible);
+
           return () => {
             cancelled = true;
             window.clearInterval(intervalId);
+            window.removeEventListener("focus", refreshWhenVisible);
+            window.removeEventListener("online", refreshWhenVisible);
+            window.removeEventListener(PLAYGROUND_NOTIFICATION_REFRESH_EVENT, handleNotificationRefreshRequest);
+            document.removeEventListener("visibilitychange", refreshWhenVisible);
           };
-        }, [baseAuthRequestHeaders, canFetchNotificationCenter, notificationsOpen, proxyBackendBase, requestHeaders]);
+        }, [
+          canFetchNotificationCenter,
+          notificationCenterSurfaceVisible,
+          proxyBackendBase,
+          requestHeadersSignature,
+        ]);
 
         useEffect(() => {
           if (!canFetchNotificationCenter) {
