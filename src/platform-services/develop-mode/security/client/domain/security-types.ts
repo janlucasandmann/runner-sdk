@@ -1,9 +1,31 @@
 import type { PlatformPermissionSet } from "../../../../../platform-ui/pages/permissions/index.js";
 
 export type SecuritySeverity = "critical" | "high" | "medium" | "low" | "informational";
-export type SecurityFindingStatus = "open" | "accepted" | "risk_accepted" | "false_positive" | "fixed";
-export type SecurityRunStatus = "queued" | "running" | "waiting_approval" | "succeeded" | "partial" | "failed" | "cancelled";
-export type SecurityRunStage = "ingest" | "checkout" | "inventory" | "scan" | "validate" | "triage" | "remediate" | "verify" | "publish" | "complete";
+export type SecurityFindingStatus =
+  | "open"
+  | "accepted"
+  | "risk_accepted"
+  | "false_positive"
+  | "fixed";
+export type SecurityRunStatus =
+  | "queued"
+  | "running"
+  | "waiting_approval"
+  | "succeeded"
+  | "partial"
+  | "failed"
+  | "cancelled";
+export type SecurityRunStage =
+  | "ingest"
+  | "checkout"
+  | "inventory"
+  | "scan"
+  | "validate"
+  | "triage"
+  | "remediate"
+  | "verify"
+  | "publish"
+  | "complete";
 
 export interface SecurityRepository {
   id: string;
@@ -89,6 +111,33 @@ export interface SecurityConfigurationVersion<T> {
   value: T;
   changeSummary: string;
   createdAt: string;
+}
+
+export interface SecurityRepositoryVersionSnapshot {
+  schemaVersion: 1;
+  policy: SecurityScanPolicy;
+  threatModel: SecurityThreatModel;
+}
+
+export interface SecurityRepositoryVersion {
+  [key: string]: unknown;
+  id: string;
+  version: number;
+  label: string;
+  name: string;
+  description: string;
+  status: "saved" | "published";
+  snapshot: SecurityRepositoryVersionSnapshot;
+  metadata: Record<string, unknown> | null;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SecurityRepositoryVersionMutationResult {
+  version: SecurityRepositoryVersion;
+  versions?: SecurityRepositoryVersion[];
+  repository?: SecurityRepository;
 }
 
 export interface SecurityRun {
@@ -250,6 +299,11 @@ export interface SecurityGitHubRepository {
   securityRepositoryId: string | null;
   syncedAt: string;
   updatedAt: string;
+}
+
+export interface SecurityGitHubOAuthSyncResult {
+  installation: SecurityGitHubInstallation;
+  repositories: SecurityGitHubRepository[];
 }
 
 export type SecurityWorkspaceRoute =

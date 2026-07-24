@@ -261,7 +261,10 @@ export const FINE_TUNING_PAGE_CONTROLLER_VERIFICATION_SCRIPT = String.raw`      
         async function readFineTuningJsonResponse(response, fallbackMessage) {
           const data = await response.json().catch(() => ({}));
           if (!response.ok) {
-            throw new Error(data?.message || data?.error || fallbackMessage || "Request failed.");
+            const error = new Error(data?.message || data?.error || fallbackMessage || "Request failed.");
+            error.status = Number(response.status) || 0;
+            error.payload = data;
+            throw error;
           }
           return data;
         }
@@ -713,4 +716,3 @@ export const FINE_TUNING_PAGE_CONTROLLER_VERIFICATION_SCRIPT = String.raw`      
         }
 
 `;
-

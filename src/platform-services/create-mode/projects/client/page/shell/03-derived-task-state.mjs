@@ -6,6 +6,9 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
             error: "",
           });
           setTaskCommentMode("");
+          setTaskActivityCommentValue("");
+          setTaskActivityCommentPending(false);
+          setTaskActivityCommentError("");
         }, [selectedTaskId]);
         useEffect(() => {
           const normalizedTaskId = String(draftTask?.id || "").trim();
@@ -280,6 +283,318 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
           return buildPlaygroundEnvironmentDownloadUrl(backendUrl, attachmentEnvironmentId, attachmentSourcePath);
         }
 
+        function makeTaskAttachmentUrlPortable(rawUrl) {
+          const normalizedUrl = String(rawUrl || "").trim();
+          if (!normalizedUrl) {
+            return "";
+          }
+          const normalizedUrlLower = normalizedUrl.toLowerCase();
+          if (normalizedUrlLower.startsWith("blob:") || normalizedUrlLower.startsWith("data:")) {
+            return normalizedUrl;
+          }
+          try {
+            const parsedUrl = new URL(normalizedUrl, window.location.origin);
+            if (parsedUrl.origin === window.location.origin) {
+              return parsedUrl.pathname + parsedUrl.search + parsedUrl.hash;
+            }
+          } catch {
+            return normalizedUrl;
+          }
+          return normalizedUrl;
+        }
+
+        function getTaskAttachmentStableApiUrl(attachmentId) {
+          const normalizedAttachmentId = String(attachmentId || "").trim();
+          if (!normalizedAttachmentId) {
+            return "";
+          }
+          return makeTaskAttachmentUrlPortable(
+            resolveTaskAttachmentApiUrl("", normalizedAttachmentId)
+          );
+        }
+
+        function resolveTaskAttachmentInlineImageUrl(attachment) {
+          if (!attachment) {
+            return "";
+          }
+          const workspaceDownloadUrl = getTaskAttachmentWorkspaceDownloadUrl(attachment);
+          if (workspaceDownloadUrl) {
+            return makeTaskAttachmentUrlPortable(workspaceDownloadUrl);
+          }
+          const stableAttachmentUrl = getTaskAttachmentStableApiUrl(attachment.id);
+          if (stableAttachmentUrl) {
+            return stableAttachmentUrl;
+          }
+          return makeTaskAttachmentUrlPortable(
+            resolveTaskAttachmentApiUrl(attachment.url, attachment.id)
+              || resolveTaskAttachmentPreviewUrl(attachment)
+          );
+        }
+
+        function getTaskDescriptionImageAttachmentId(rawUrl) {
+          let normalizedUrl = String(rawUrl || "").trim();
+          if (!normalizedUrl) {
+            return "";
+          }
+          try {
+            normalizedUrl = decodeURIComponent(normalizedUrl);
+          } catch {
+            // Keep the original URL when it contains malformed percent encoding.
+          }
+          const attachmentMarker = "/attachments/";
+          const markerIndex = normalizedUrl.lastIndexOf(attachmentMarker);
+          if (markerIndex < 0) {
+            return "";
+          }
+          return normalizedUrl
+            .slice(markerIndex + attachmentMarker.length)
+            .split("?")[0]
+            .split("#")[0]
+            .split("/")[0]
+            .trim();
+        }
+
+        function addTaskDescriptionAttachmentLookupValue(lookup, rawValue, attachment) {
+          const value = String(rawValue || "").trim();
+          if (!value) return;
+          if (!lookup.has(value)) {
+            lookup.set(value, attachment);
+            return;
+          }
+          const existing = lookup.get(value);
+          if (!existing || existing.id !== attachment.id) lookup.set(value, null);
+        }
+
+        function buildTaskDescriptionAttachmentLookup(attachments) {
+          const normalizedAttachments = normalizePlaygroundTaskAttachmentList(attachments);
+          const byId = new Map();
+          const byFilename = new Map();
+          const byUrl = new Map();
+          normalizedAttachments.forEach((attachment) => {
+            addTaskDescriptionAttachmentLookupValue(byId, attachment?.id, attachment);
+            addTaskDescriptionAttachmentLookupValue(byFilename, attachment?.filename, attachment);
+            [
+              resolveTaskAttachmentInlineImageUrl(attachment),
+              makeTaskAttachmentUrlPortable(attachment?.url),
+              makeTaskAttachmentUrlPortable(attachment?.previewUrl),
+              getTaskAttachmentStableApiUrl(attachment?.id),
+            ].forEach((url) => {
+              addTaskDescriptionAttachmentLookupValue(byUrl, url, attachment);
+              addTaskDescriptionAttachmentLookupValue(
+                byUrl,
+                normalizePlatformInstructionsEditorImageSource(url),
+                attachment
+              );
+            });
+          });
+          return { normalizedAttachments, byId, byFilename, byUrl };
+        }
+
+        function findTaskDescriptionAttachmentReference(lookup, options = {}) {
+          const rawUrl = String(options.rawUrl || "").trim();
+          const portableUrl = makeTaskAttachmentUrlPortable(rawUrl);
+          let decodedUrl = rawUrl;
+          try {
+            decodedUrl = decodeURIComponent(rawUrl);
+          } catch {
+            // Keep malformed legacy URLs available for filename and attachment ID fallback.
+          }
+          const portableDecodedUrl = makeTaskAttachmentUrlPortable(decodedUrl);
+          const attachmentId = String(options.attachmentId || getTaskDescriptionImageAttachmentId(rawUrl) || "").trim();
+          const filename = String(options.filename || "").trim();
+          return (attachmentId ? lookup.byId.get(attachmentId) : null)
+            || (rawUrl ? lookup.byUrl.get(rawUrl) : null)
+            || (portableUrl ? lookup.byUrl.get(portableUrl) : null)
+            || (decodedUrl ? lookup.byUrl.get(decodedUrl) : null)
+            || (portableDecodedUrl ? lookup.byUrl.get(portableDecodedUrl) : null)
+            || (filename ? lookup.byFilename.get(filename) : null)
+            || null;
+        }
+
+        function getTaskDescriptionReferencedAttachmentIds(description, attachments) {
+          const normalizedDescription = String(description || "");
+          const lookup = buildTaskDescriptionAttachmentLookup(attachments);
+          const referencedAttachmentIds = new Set();
+          const markReferenced = (attachment) => {
+            const attachmentId = String(attachment?.id || "").trim();
+            if (attachmentId) referencedAttachmentIds.add(attachmentId);
+          };
+          replacePlatformInstructionsEditorImageMarkdown(normalizedDescription, (image) => {
+            markReferenced(findTaskDescriptionAttachmentReference(lookup, {
+              attachmentId: image.attachmentId,
+              rawUrl: image.src,
+              filename: image.alt,
+            }));
+            return image.raw;
+          });
+          const attachmentDirectivePattern = /:::attachment(?:\\s+\\{([^}]*)\\})?\\s+:::/g;
+          normalizedDescription.replace(attachmentDirectivePattern, (match, rawAttributes = "") => {
+            markReferenced(findTaskDescriptionAttachmentReference(lookup, {
+              attachmentId: getTaskDescriptionAttachmentDirectiveAttribute(rawAttributes, "attachmentId"),
+              filename: getTaskDescriptionAttachmentDirectiveAttribute(rawAttributes, "name"),
+              rawUrl: getTaskDescriptionAttachmentDirectiveAttribute(rawAttributes, "src"),
+            }));
+            return match;
+          });
+          return referencedAttachmentIds;
+        }
+
+        function reconcileTaskDescriptionAttachments(description, attachments) {
+          const normalizedAttachments = normalizePlaygroundTaskAttachmentList(attachments);
+          if (!normalizedAttachments.length) return [];
+          const referencedAttachmentIds = getTaskDescriptionReferencedAttachmentIds(
+            description,
+            normalizedAttachments
+          );
+          return normalizedAttachments.filter((attachment) =>
+            attachment?.id && referencedAttachmentIds.has(attachment.id)
+          );
+        }
+
+        function resolveTaskDescriptionAttachmentImageUrls(description, attachments) {
+          const normalizedDescription = String(description || "");
+          if (!normalizedDescription.includes("![")) {
+            return normalizedDescription;
+          }
+
+          const attachmentLookup = buildTaskDescriptionAttachmentLookup(attachments);
+
+          return replacePlatformInstructionsEditorImageMarkdown(
+            normalizedDescription,
+            (image) => {
+              const attachmentId = image.attachmentId || getTaskDescriptionImageAttachmentId(image.src);
+              const matchingAttachment = findTaskDescriptionAttachmentReference(attachmentLookup, {
+                attachmentId,
+                rawUrl: image.src,
+                filename: image.alt,
+              });
+              const nextImageUrl = matchingAttachment
+                ? resolveTaskAttachmentInlineImageUrl(matchingAttachment)
+                : getTaskAttachmentStableApiUrl(attachmentId);
+              const normalizedImageUrl = normalizePlatformInstructionsEditorImageSource(
+                nextImageUrl || image.src
+              );
+              if (!nextImageUrl && normalizedImageUrl === image.src) {
+                return image.raw;
+              }
+              return serializePlatformInstructionsEditorImageMarkdown({
+                src: normalizedImageUrl,
+                name: matchingAttachment?.filename || image.alt || "Image",
+                alt: matchingAttachment?.filename || image.alt || "Image",
+                title: image.title,
+                size: Number(matchingAttachment?.size) || image.fileSize || 0,
+                mimeType: String(matchingAttachment?.mimeType || image.mimeType || ""),
+                attachmentId: String(matchingAttachment?.id || attachmentId || ""),
+                displaySize: image.displaySize,
+                alignment: image.alignment,
+              }) || image.raw;
+            }
+          );
+        }
+
+        function getTaskDescriptionAttachmentDirectiveAttribute(rawAttributes, attributeName) {
+          const normalizedAttributeName = String(attributeName || "").trim();
+          if (!normalizedAttributeName) return "";
+          const pattern = new RegExp("(?:^|\\\\s)" + normalizedAttributeName + "=\\\"([^\\\"]*)\\\"");
+          const match = String(rawAttributes || "").match(pattern);
+          return match ? String(match[1] || "").trim() : "";
+        }
+
+        function isTaskDescriptionImageAttachment(attachment) {
+          const mimeType = String(attachment?.mimeType || "").toLowerCase();
+          const filename = String(attachment?.filename || "").toLowerCase();
+          return mimeType.startsWith("image/")
+            || /\\.(?:png|jpe?g|gif|webp|svg|bmp|avif)$/.test(filename);
+        }
+
+        function serializeTaskDescriptionAttachmentReference(attachment) {
+          const normalizedAttachment = normalizePlaygroundTaskAttachmentRecord(attachment);
+          if (!normalizedAttachment) return "";
+          const src = resolveTaskAttachmentInlineImageUrl(normalizedAttachment);
+          if (!src) return "";
+          const name = String(normalizedAttachment.filename || "Attachment").trim() || "Attachment";
+          if (isTaskDescriptionImageAttachment(normalizedAttachment)) {
+            return serializePlatformInstructionsEditorImageMarkdown({
+              src,
+              name,
+              alt: name,
+              size: Number(normalizedAttachment.size) || 0,
+              mimeType: String(normalizedAttachment.mimeType || ""),
+              attachmentId: String(normalizedAttachment.id || ""),
+              displaySize: "medium",
+              alignment: "left",
+            });
+          }
+          return serializePlatformInstructionsEditorFileMarkdown({
+            src,
+            name,
+            size: Number(normalizedAttachment.size) || 0,
+            mimeType: String(normalizedAttachment.mimeType || ""),
+            attachmentId: String(normalizedAttachment.id || ""),
+          });
+        }
+
+        function resolveTaskDescriptionAttachmentFiles(description, attachments) {
+          let resolvedDescription = resolveTaskDescriptionAttachmentImageUrls(description, attachments);
+          const attachmentLookup = buildTaskDescriptionAttachmentLookup(attachments);
+          const normalizedAttachments = attachmentLookup.normalizedAttachments;
+          if (!normalizedAttachments.length) return resolvedDescription;
+          const referencedAttachmentIds = getTaskDescriptionReferencedAttachmentIds(
+            resolvedDescription,
+            normalizedAttachments
+          );
+
+          const attachmentDirectivePattern = /:::attachment(?:\\s+\\{([^}]*)\\})?\\s+:::/g;
+          resolvedDescription = resolvedDescription.replace(
+            attachmentDirectivePattern,
+            (match, rawAttributes = "") => {
+              const matchingAttachment = findTaskDescriptionAttachmentReference(attachmentLookup, {
+                attachmentId: getTaskDescriptionAttachmentDirectiveAttribute(rawAttributes, "attachmentId"),
+                filename: getTaskDescriptionAttachmentDirectiveAttribute(rawAttributes, "name"),
+                rawUrl: getTaskDescriptionAttachmentDirectiveAttribute(rawAttributes, "src"),
+              });
+              if (!matchingAttachment) return match;
+              if (matchingAttachment.id) referencedAttachmentIds.add(matchingAttachment.id);
+              return serializeTaskDescriptionAttachmentReference(matchingAttachment) || match;
+            }
+          );
+
+          const missingReferences = normalizedAttachments
+            .filter((attachment) => attachment?.id && !referencedAttachmentIds.has(attachment.id))
+            .map(serializeTaskDescriptionAttachmentReference)
+            .filter(Boolean);
+          if (!missingReferences.length) return resolvedDescription;
+          const prefix = resolvedDescription.trim() ? resolvedDescription.replace(/\\s+$/, "") + "\\n\\n" : "";
+          return prefix + missingReferences.join("\\n\\n");
+        }
+
+        function removeTaskDescriptionAttachmentReference(description, attachment) {
+          const normalizedDescription = String(description || "");
+          const attachmentId = String(attachment?.id || "").trim();
+          const filename = String(attachment?.filename || "").trim();
+          const attachmentDirectivePattern = /:::attachment(?:\\s+\\{([^}]*)\\})?\\s+:::/g;
+          const withoutFileReferences = normalizedDescription.replace(
+            attachmentDirectivePattern,
+            (match, rawAttributes = "") => {
+              const directiveId = getTaskDescriptionAttachmentDirectiveAttribute(rawAttributes, "attachmentId");
+              const directiveName = getTaskDescriptionAttachmentDirectiveAttribute(rawAttributes, "name");
+              return (attachmentId && directiveId === attachmentId) || (filename && directiveName === filename)
+                ? ""
+                : match;
+            }
+          );
+          return replacePlatformInstructionsEditorImageMarkdown(
+            withoutFileReferences,
+            (image) => {
+              const imageAttachmentId = image.attachmentId || getTaskDescriptionImageAttachmentId(image.src);
+              return (attachmentId && imageAttachmentId === attachmentId)
+                || (filename && String(image.alt || "").trim() === filename)
+                ? ""
+                : image.raw;
+            }
+          ).replace(/\\n{3,}/g, "\\n\\n");
+        }
+
         function resolveTaskAttachmentPreviewUrl(attachment) {
           if (!attachment) return "";
           const normalizedPreviewUrl = typeof attachment.previewUrl === "string" ? attachment.previewUrl.trim() : "";
@@ -315,14 +630,34 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
         }
 
         const activeDetailAttachments = useMemo(() => {
-          if (draftTask?.attachments?.length) {
-            return draftTask.attachments;
+          const taskAttachments = Array.isArray(draftTask?.attachments)
+            ? draftTask.attachments
+            : [];
+          const commentAttachments = normalizePlaygroundTaskAttachmentList(
+            (Array.isArray(draftTask?.comments) ? draftTask.comments : []).flatMap((comment) =>
+              Array.isArray(comment?.attachments)
+                ? comment.attachments
+                : Array.isArray(comment?.metadata?.attachments)
+                  ? comment.metadata.attachments
+                  : []
+            )
+          );
+          if (taskAttachments.length || commentAttachments.length) {
+            return normalizePlaygroundTaskAttachmentList([
+              ...taskAttachments,
+              ...commentAttachments,
+            ]);
           }
           if (isCalendarScheduleDetailMode && Array.isArray(scheduleDraft?.attachments)) {
             return scheduleDraft.attachments;
           }
           return [];
-        }, [draftTask?.attachments, isCalendarScheduleDetailMode, scheduleDraft?.attachments]);
+        }, [
+          draftTask?.attachments,
+          draftTask?.comments,
+          isCalendarScheduleDetailMode,
+          scheduleDraft?.attachments,
+        ]);
 
         const previewedTaskAttachment = useMemo(() => {
           if (!activeDetailAttachments.length || !previewedTaskAttachmentId) {
@@ -331,6 +666,13 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
           const matchedAttachment = activeDetailAttachments.find((attachment) => attachment.id === previewedTaskAttachmentId) || null;
           return buildResolvedTaskAttachmentRecord(matchedAttachment);
         }, [activeDetailAttachments, backendUrl, previewedTaskAttachmentId]);
+        const isPreviewedTaskAttachmentEditable = useMemo(() => (
+          Boolean(
+            previewedTaskAttachmentId
+            && (Array.isArray(draftTask?.attachments) ? draftTask.attachments : [])
+              .some((attachment) => attachment?.id === previewedTaskAttachmentId)
+          )
+        ), [draftTask?.attachments, previewedTaskAttachmentId]);
         const previewedProjectAttachment = useMemo(() => {
           const projectAttachments = normalizePlaygroundTaskAttachmentList(projectAttachmentHostRecord?.attachments);
           if (!projectAttachments.length || !projectPreviewedAttachmentId) {
@@ -383,7 +725,7 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
           { id: "started", label: "Started", description: "Only show tasks that already have threads" },
           { id: "unassigned", label: "Unassigned", description: "Only show tasks without an assignee" },
           { id: "blocked", label: "Blocked", description: "Only show tasks currently blocked" },
-          { id: "done", label: "Finished", description: "Only show finished tasks" },
+          { id: "done", label: "Done", description: "Only show done tasks" },
         ];
         const releaseFilterOptions = [
           { id: "all", label: "All Milestones", description: "Show every milestone in this project" },
@@ -853,7 +1195,7 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
 
         function getIncompletePlaygroundDirectSubtasks(taskRecord) {
           return getPlaygroundDirectSubtasks(taskRecord)
-            .filter((subtask) => String(subtask.status || "").trim() !== "done");
+            .filter((subtask) => !isPlaygroundTaskTerminalStatus(subtask.status));
         }
 
         function formatIncompleteSubtasksMessage(incompleteSubtasks) {
@@ -938,7 +1280,7 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
 	          const inReviewImplementationGuard = normalizedTaskStatus === "in_review" && !reviewRequestBody
 	            ? [
 	                "In-review ticket guard:",
-	                "- This is not a reviewer approval run. Do not approve this ticket and do not move it to Finished/done.",
+	                "- This is not a reviewer approval run. Do not approve this ticket and do not move it to Done.",
 	                "- If the user only asks a conversational question, answer that question and leave the ticket status unchanged.",
                 "- If the user explicitly asks for implementation or rework, do the requested work and leave the ticket In Review when finished so the configured reviewer can accept it.",
               ].join(newline)
@@ -1007,7 +1349,7 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
 	                reviewRequestBody ? "- This run is a reviewer change request. Address the latest review request before treating the ticket as complete." : "",
 	              "- If the ticket creates or changes deployable web apps, functions, databases, or integrations, deploy and smoke-test the affected resource unless the ticket explicitly excludes deployment.",
 	              "- If you need user-owned inputs such as API keys, credentials, billing decisions, repository access, or product decisions, create a focused human-assigned resource request ticket instead of guessing.",
-	              "- Do not update this ticket's own status directly. The platform will move it to In Review or Finished after the run. Only update subtasks, add comments, or create resource-request tickets when that is genuinely part of the work.",
+	              "- Do not update this ticket's own status directly. The platform will move it to In Review or Done after the run. Only update subtasks, add comments, or create resource-request tickets when that is genuinely part of the work.",
 	              independentReviewerId ? "- When implementation is complete, leave the ticket ready for the configured reviewer; do not perform the review yourself." : "",
 			            ].filter(Boolean).join(newline),
 		            inReviewImplementationGuard,

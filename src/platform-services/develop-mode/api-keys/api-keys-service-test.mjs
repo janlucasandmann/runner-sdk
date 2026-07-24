@@ -47,7 +47,7 @@ assert.match(API_KEYS_RUNTIME_SCRIPT_FRAGMENTS.loading, /loadSettingsApiKeys/);
 assert.match(API_KEYS_RUNTIME_SCRIPT_FRAGMENTS.loading, /settingsApiKeysSnapshotRef/);
 assert.match(API_KEYS_RUNTIME_SCRIPT_FRAGMENTS.create, /handleSettingsCreateApiKey/);
 assert.match(API_KEYS_RUNTIME_SCRIPT_FRAGMENTS.revoke, /handleSettingsRevokeApiKey/);
-assert.match(API_KEYS_RUNTIME_SCRIPT_FRAGMENTS.loadLifecycle, /activePage === "develop"/);
+assert.doesNotMatch(API_KEYS_RUNTIME_SCRIPT_FRAGMENTS.loadLifecycle, /activePage === "develop" \|\|/);
 assert.match(API_KEYS_RUNTIME_SCRIPT_FRAGMENTS.loadLifecycle, /activePage === "develop-api-keys"/);
 assert.match(API_KEYS_RUNTIME_SCRIPT_FRAGMENTS.loadLifecycle, /activePage === "develop-webhooks"/);
 assert.match(API_KEYS_RUNTIME_SCRIPT_FRAGMENTS.loadLifecycle, /loadSettingsTriggers/);

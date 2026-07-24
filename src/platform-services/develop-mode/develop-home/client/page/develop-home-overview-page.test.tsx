@@ -2,47 +2,27 @@
 
 import { cleanup, render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { Globe, KeyRound, Webhook } from "lucide-react";
+import { Bot, Globe, KeyRound, Webhook } from "lucide-react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { ResourceOverviewAnalyticsModel } from "../../../../../platform-ui/pages/overview/index.js";
 import { DevelopHomeOverviewPage } from "./develop-home-overview-page.js";
 import { DevelopWebhooksOverviewPage } from "./develop-webhooks-overview-page.js";
 
 afterEach(cleanup);
 
-const analytics: ResourceOverviewAnalyticsModel = {
-  title: "Develop resource activity",
-  ariaLabel: "Develop resource activity over time",
-  metrics: [
-    { id: "resources", label: "Resources", value: "1", color: "#7effff" },
-    { id: "operations", label: "Operations", value: "12", color: "#8fc4ff" },
-  ],
-  labels: [],
-  series: [],
-};
-
 describe("Develop overview pages", () => {
-  it("renders Develop Home entirely through the canonical overview shell without tabs", async () => {
+  it("renders Develop Home through the centralized Home page", async () => {
     const user = userEvent.setup();
     const onOpen = vi.fn();
-    const onShowUsage = vi.fn();
+    const onOpenQuickstart = vi.fn();
+    const onOpenAllConcepts = vi.fn();
+    const onOpenQuickLink = vi.fn();
     const onOpenPricing = vi.fn();
     const onOpenDocumentation = vi.fn();
-    const onQuickstartLanguageChange = vi.fn();
-    const onOpenQuickstart = vi.fn();
-    const onOpenConcept = vi.fn();
-    const onOpenAllConcepts = vi.fn();
-    const onOpenUsage = vi.fn();
-    const onCreateApiKey = vi.fn();
-    const onOpenResources = vi.fn();
-    const onOpenApiKeys = vi.fn();
-    const onOpenQuickLink = vi.fn();
 
     const { container } = render(
-      <>
-        <div id="develop-home-test-controls" data-testid="develop-home-controls" />
-        <DevelopHomeOverviewPage
-          rows={[{
+      <DevelopHomeOverviewPage
+        rows={[
+          {
             id: "web-apps",
             kind: "web_app",
             label: "Web Apps",
@@ -50,87 +30,63 @@ describe("Develop overview pages", () => {
             icon: Globe,
             resourceCount: 1,
             resourceCountLabel: "1",
-            operationCount: 12,
-            operationCountLabel: "12",
+            operationCount: 0,
+            operationCountLabel: "0",
             searchText: "Web Apps browser applications active",
-          }]}
-          period="day"
-          onPeriodChange={vi.fn()}
-          analytics={analytics}
-          controlsPortalId="develop-home-test-controls"
-          supplementaryContent={{
-            quickstartLanguages: [
-              { id: "javascript", label: "javascript", lines: ["const client = new ComputerAgentsClient();"] },
-              { id: "python", label: "python", lines: ["client = ComputerAgentsClient()"] },
-            ],
-            activeQuickstartLanguageId: "javascript",
-            onQuickstartLanguageChange,
-            onOpenQuickstart,
-            concepts: [{
-              id: "threads",
-              title: "Threads",
-              description: "Persistent agent work.",
-              imageUrl: "/threads.jpg",
-              onClick: onOpenConcept,
-            }],
-            onOpenAllConcepts,
-            usageValue: "42 CT",
-            resourceCountLabel: "3 resources",
-            apiKeyCountLabel: "2 keys",
-            onOpenUsage,
-            onCreateApiKey,
-            onOpenResources,
-            onOpenApiKeys,
-            quickLinks: [{
-              id: "api-keys",
-              label: "Create an API Key",
-              icon: KeyRound,
-              onClick: onOpenQuickLink,
-            }],
-          }}
-          onOpen={onOpen}
-          onShowUsage={onShowUsage}
-          onOpenPricing={onOpenPricing}
-          onOpenDocumentation={onOpenDocumentation}
-        />
-      </>,
+          },
+          {
+            id: "agent-runtime",
+            kind: "agent_runtime",
+            label: "Agent Runtime",
+            description: "Run persistent agents.",
+            icon: Bot,
+            resourceCount: 0,
+            resourceCountLabel: "0",
+            operationCount: 0,
+            operationCountLabel: "0",
+            searchText: "Agent Runtime persistent agents",
+          },
+        ]}
+        supplementaryContent={{
+          onOpenQuickstart,
+          onOpenAllConcepts,
+          quickLinks: [{
+            id: "api-keys",
+            label: "Create an API Key",
+            description: "Authenticate API requests.",
+            icon: KeyRound,
+            onClick: onOpenQuickLink,
+          }],
+        }}
+        onOpen={onOpen}
+        onOpenPricing={onOpenPricing}
+        onOpenDocumentation={onOpenDocumentation}
+      />,
     );
 
-    expect(container.querySelectorAll(".resource-overview-page.is-develop-home")).toHaveLength(1);
-    expect(container.querySelectorAll(".platform-analytics")).toHaveLength(1);
-    expect(screen.getByRole("table", { name: "Develop resources" })).not.toBeNull();
-    expect(screen.queryByRole("tablist")).toBeNull();
-    expect(screen.queryByRole("tab", { name: "Webhooks" })).toBeNull();
-    expect(within(screen.getByTestId("develop-home-controls")).getByRole("radiogroup", { name: "Analytics time frame" })).not.toBeNull();
-    expect(screen.getByRole("heading", { name: "Developer quickstart" })).not.toBeNull();
-    expect(screen.getByRole("heading", { name: "Core concepts" })).not.toBeNull();
-    expect(screen.getByRole("heading", { name: "Usage" })).not.toBeNull();
-    expect(screen.getByRole("heading", { name: "Quick Links" })).not.toBeNull();
-    expect(screen.getByText("42 CT")).not.toBeNull();
+    expect(container.querySelectorAll(".platform-home-page.is-develop-home")).toHaveLength(1);
+    expect(screen.getByRole("main", { name: "Develop Home" })).not.toBeNull();
+    expect(screen.getByRole("heading", { name: "Develop your Workspace" })).not.toBeNull();
+    expect(screen.getByRole("heading", { name: "Build" })).not.toBeNull();
+    expect(screen.getByRole("heading", { name: "Operate" })).not.toBeNull();
+    expect(screen.getByRole("heading", { name: "Quickstart" })).not.toBeNull();
+    expect(screen.getByRole("heading", { name: "Documentation" })).not.toBeNull();
+    expect(container.querySelector(".platform-analytics")).toBeNull();
+    expect(screen.queryByRole("table")).toBeNull();
 
-    await user.click(screen.getByRole("button", { name: "python" }));
-    expect(onQuickstartLanguageChange).toHaveBeenCalledWith("python");
-    await user.click(screen.getByRole("button", { name: "Get started" }));
-    expect(onOpenQuickstart).toHaveBeenCalledOnce();
-    await user.click(screen.getByRole("button", { name: /Threads/ }));
-    expect(onOpenConcept).toHaveBeenCalledOnce();
-    await user.click(screen.getAllByRole("button", { name: "Create an API Key" }).at(-1)!);
-    expect(onOpenQuickLink).toHaveBeenCalledOnce();
-
-    await user.click(screen.getByText("Web Apps"));
+    await user.click(screen.getByRole("button", { name: "Web Apps" }));
     expect(onOpen).toHaveBeenCalledWith(expect.objectContaining({ kind: "web_app" }));
-
-    await user.click(within(screen.getByTestId("develop-home-controls")).getByRole("button", { name: "Develop options" }));
-    const menu = screen.getByRole("menu", { name: "Develop options" });
-    await user.click(within(menu).getByRole("menuitem", { name: "Show Usage" }));
-    expect(onShowUsage).toHaveBeenCalledOnce();
-
-    await user.click(within(screen.getByTestId("develop-home-controls")).getByRole("button", { name: "Develop options" }));
-    await user.click(screen.getByRole("menuitem", { name: "API Pricing" }));
+    await user.click(screen.getByRole("button", { name: "Agent Runtime" }));
+    expect(onOpen).toHaveBeenCalledWith(expect.objectContaining({ kind: "agent_runtime" }));
+    await user.click(screen.getByRole("button", { name: "Create an API Key" }));
+    expect(onOpenQuickLink).toHaveBeenCalledOnce();
+    await user.click(screen.getByRole("button", { name: "Developer quickstart" }));
+    expect(onOpenQuickstart).toHaveBeenCalledOnce();
+    await user.click(screen.getByRole("button", { name: "Core concepts" }));
+    expect(onOpenAllConcepts).toHaveBeenCalledOnce();
+    await user.click(screen.getByRole("button", { name: "Pricing" }));
     expect(onOpenPricing).toHaveBeenCalledOnce();
-
-    await user.click(within(screen.getByTestId("develop-home-controls")).getByRole("button", { name: "Develop options" }));
-    await user.click(screen.getByRole("menuitem", { name: "Documentation" }));
+    await user.click(screen.getByRole("button", { name: "Documentation" }));
     expect(onOpenDocumentation).toHaveBeenCalledOnce();
   });
 

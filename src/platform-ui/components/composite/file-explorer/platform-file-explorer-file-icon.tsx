@@ -16,6 +16,15 @@ export interface PlatformFileExplorerFileIconProps {
   className?: string;
 }
 
+export interface PlatformFileExplorerFileDescriptor {
+  name?: string;
+  filename?: string;
+  path?: string;
+  mimeType?: string;
+  type?: string;
+  isFolder?: boolean;
+}
+
 const PLATFORM_FOLDER_ICON_URL = new URL(
   "../../thread-components/assets/folder.png",
   import.meta.url,
@@ -30,6 +39,92 @@ function joinClassNames(...classNames: Array<string | undefined>) {
     .map((className) => String(className || "").trim())
     .filter(Boolean)
     .join(" ");
+}
+
+export function resolvePlatformFileExplorerFileKind(
+  file: PlatformFileExplorerFileDescriptor | null | undefined,
+): PlatformFileExplorerFileKind {
+  if (!file || file.isFolder) return "folder";
+
+  const mimeType = String(file.mimeType || file.type || "").toLowerCase();
+  const fileName = String(file.name || file.filename || file.path || "")
+    .trim()
+    .toLowerCase();
+  const extension = fileName.includes(".")
+    ? fileName.split(".").pop() || ""
+    : "";
+
+  if (
+    mimeType.startsWith("image/") ||
+    ["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "avif"].includes(
+      extension,
+    )
+  ) {
+    return "image";
+  }
+  if (
+    mimeType.startsWith("video/") ||
+    ["mp4", "m4v", "mov", "webm", "mkv"].includes(extension)
+  ) {
+    return "video";
+  }
+  if (
+    mimeType.startsWith("audio/") ||
+    ["mp3", "m4a", "wav", "aac", "flac", "ogg", "opus"].includes(extension)
+  ) {
+    return "audio";
+  }
+  if (mimeType === "application/pdf" || extension === "pdf") return "pdf";
+  if (
+    mimeType.includes("spreadsheet") ||
+    mimeType.includes("excel") ||
+    ["csv", "tsv", "xls", "xlsx", "xlsm", "xlsb", "ods", "numbers"].includes(
+      extension,
+    )
+  ) {
+    return "spreadsheet";
+  }
+  if (
+    mimeType.includes("wordprocessing") ||
+    mimeType.includes("msword") ||
+    mimeType.includes("presentation") ||
+    ["doc", "docx", "odt", "rtf", "ppt", "pptx", "pages"].includes(extension)
+  ) {
+    return "document";
+  }
+  if (
+    mimeType.includes("json") ||
+    mimeType.startsWith("text/") ||
+    [
+      "js",
+      "jsx",
+      "ts",
+      "tsx",
+      "mjs",
+      "cjs",
+      "css",
+      "html",
+      "md",
+      "py",
+      "rb",
+      "go",
+      "rs",
+      "java",
+      "c",
+      "cpp",
+      "h",
+      "hpp",
+      "yml",
+      "yaml",
+      "sh",
+      "sql",
+      "toml",
+      "xml",
+    ].includes(extension)
+  ) {
+    return "code";
+  }
+  return "file";
 }
 
 export function PlatformFileExplorerFileIcon({

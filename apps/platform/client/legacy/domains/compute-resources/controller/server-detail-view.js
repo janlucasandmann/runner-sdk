@@ -54,7 +54,25 @@
                 },
                 ariaLabel: "Choose " + String(popoverId || "resource").replace(/^server-/, "").replace(/-/g, " "),
                 open: isOpen,
-                onOpenChange: (nextOpen) => setServerDetailSelectPopover(nextOpen ? popoverId : ""),
+                onOpenChange: (nextOpen) => {
+                  setServerDetailSelectPopover(nextOpen ? popoverId : "");
+                  if (
+                    nextOpen
+                    && popoverId === "server-connection-database"
+                    && !hasLoadedDatabases
+                    && !databaseListLoading
+                  ) {
+                    void loadDatabases();
+                  }
+                  if (
+                    nextOpen
+                    && popoverId === "agent-runtime-agent"
+                    && !serverAgentOptionsLoading
+                    && serverAgentOptions.length === 0
+                  ) {
+                    void loadServerAgentOptions();
+                  }
+                },
                 alignment: "end",
                 popupAlignment: "right",
                 fullWidth: true,
@@ -3053,13 +3071,6 @@
                 }
                 return direction * String(left.name || "").localeCompare(String(right.name || ""));
               });
-            const allAgentsServerAccessTeam = {
-              id: "all-agents",
-              name: "All Agents",
-              roleId: "default",
-              createdAt: "",
-              locked: true,
-            };
   
   
   
@@ -3211,7 +3222,8 @@
               ? createPortal(serverOwnerTransferModalContent, document.body)
               : serverOwnerTransferModalContent;
   
-            const serverPermissionTeam = serverPermissionTeamId && serverPermissionTeamId !== "all-agents"
+            const selectedServerSystemPrincipal = getPlatformSystemAccessPrincipal(serverPermissionTeamId);
+            const serverPermissionTeam = serverPermissionTeamId && !selectedServerSystemPrincipal
               ? serverWorkspaceTeamById.get(String(serverPermissionTeamId)) || serverSharedTeams.find((team) => String(team.id) === String(serverPermissionTeamId))
               : null;
             const selectedServerRoleDefinition = getPlaygroundTeamRoleDefinition(serverPermissionRoleId);
@@ -3280,14 +3292,19 @@
                     React.createElement("span", null, "Settings")
                   ),
                   React.createElement("div", { className: "playground-project-team-permissions-title" },
-                    serverPermissionTeamId === "all-agents"
-                      ? "All Agents Permissions"
+                    selectedServerSystemPrincipal
+                      ? selectedServerSystemPrincipal.name + " Permissions"
                       : (serverPermissionTeam?.name || "Team") + " " + serverKindLabel + " Access"
                   )
                 ),
-                serverPermissionTeamId === "all-agents"
+                selectedServerSystemPrincipal
                   ? React.createElement(PlatformPermissionsPage, {
-                      permissionSet: getServerPermissionSet(draftServer),
+                      permissionSet: getPlatformSystemPrincipalPermissionSet(
+                        getServerAccessMetadataRecord(draftServer),
+                        selectedServerSystemPrincipal.id,
+                        serverPermissionSubjectType,
+                        getServerPermissionSet(draftServer)
+                      ),
                       subjectType: serverPermissionSubjectType,
                       actionPresentation: serverPermissionActionPresentation,
                       animationKey: serverPermissionChartAnimationKey,
@@ -3346,63 +3363,15 @@
                   }, workspaceTeamsLoading ? "Loading teams..." : "All available teams have access.")
             );
             const usesCentralServerAccessTable = isOperationalDetailServer;
-            const serverAccessTableRows = isAuthServer
-              ? [allAgentsServerAccessTeam, ...serverSharedTeams]
-              : [allAgentsServerAccessTeam, ...visibleServerSharedTeams];
-            const serverAccessColumns = [
-              {
-                id: "name",
-                header: "Team",
-                accessor: (team) => team.name || "Untitled team",
-                sortable: true,
-                width: "minmax(220px, 1.45fr)",
-                cell: ({ row: team }) => isAuthServer
-                  ? React.createElement("div", null,
-                      React.createElement("div", { className: "playground-team-table-title" }, team.name),
-                      React.createElement("div", { className: "playground-team-table-meta" },
-                        team.locked
-                          ? "Always included"
-                          : Number(team.memberCount || 0) > 0
-                            ? String(team.memberCount) + " member" + (Number(team.memberCount) === 1 ? "" : "s")
-                            : "Team workspace"
-                      )
-                    )
-                  : React.createElement("div", { className: "playground-agents-overview-name-title" }, team.name),
-              },
-              {
-                id: "policy",
-                header: "Policy",
-                accessor: (team) => team.locked ? "Default policy" : "Role policy",
-                sortable: true,
-                width: "minmax(150px, 0.9fr)",
-                cell: ({ row: team }) => team.locked ? "Default policy" : "Role policy",
-              },
-              {
-                id: "created",
-                header: "Created",
-                accessor: (team) => Date.parse(String(team.createdAt || "")) || 0,
-                sortable: true,
-                sortDescFirst: true,
-                width: "minmax(120px, 0.7fr)",
-                align: "end",
-                cell: ({ row: team }) => team.locked ? "Default" : (team.createdAt ? formatPlaygroundFileDate(team.createdAt) : "—"),
-              },
-            ];
-            const serverTeamAccessTable = React.createElement(PlatformDataTable, {
-              rows: serverAccessTableRows,
-              columns: serverAccessColumns,
-              getRowId: (team) => String(team.id || ""),
-              ariaLabel: serverKindLabel + " team access",
+            const serverTeamAccessTable = React.createElement(PlatformResourceAccessTable, {
+              teams: isAuthServer ? serverSharedTeams : visibleServerSharedTeams,
+              resourceLabel: serverKindLabel,
               className: "playground-server-access-platform-data-table"
                 + (isSourceDeployableServer ? " is-source-server-access-table" : "")
                 + (isAuthServer ? " is-auth-server-access-table" : "")
                 + (isSecretsServer ? " is-secrets-server-access-table" : "")
                 + (isPaymentsServer ? " is-payments-server-access-table" : "")
                 + (isAgentRuntimeServer ? " is-agent-runtime-server-access-table" : ""),
-              surface: "plain",
-              variant: "minimalistic-ui",
-              sticky: false,
-              pagination: false,
               sorting: isAuthServer
                 ? { defaultValue: { id: "name", direction: "asc" } }
                 : {
@@ -3414,65 +3383,33 @@
                       setServerAccessSortDirection(next.direction);
                     },
                   },
-              selection: {
-                enabled: true,
-                value: selectedServerAccessTeamIds,
-                isRowSelectable: (team) => !team.locked,
-                ariaLabel: (team) => team.locked ? "All Agents is always included" : "Select " + team.name,
-                onChange: ({ selectedIds }) => setSelectedServerAccessTeamIds(new Set(selectedIds)),
+              selectedIds: selectedServerAccessTeamIds,
+              onSelectedIdsChange: setSelectedServerAccessTeamIds,
+              search: isAuthServer ? undefined : {
+                value: serverAccessSearchQuery,
+                onChange: setServerAccessSearchQuery,
+                placeholder: "Search access",
+                manual: true,
               },
-              toolbar: isAuthServer
-                ? {
-                    title: "Manage " + serverKindLabel + " Access",
-                    trailing: serverAddTeamsControl,
-                  }
-                : {
-                    title: usesCentralServerAccessTable ? "Manage " + serverKindLabel + " Access" : null,
-                    search: {
-                      value: serverAccessSearchQuery,
-                      onChange: setServerAccessSearchQuery,
-                      placeholder: "Search teams",
-                      manual: true,
-                    },
-                    filters: [{
-                      id: "server-access-kind",
-                      label: "Filter",
-                      value: serverAccessFilter,
-                      onChange: setServerAccessFilter,
-                      options: [
-                        { id: "all", label: "All access", description: "Show every team access grant" },
-                        { id: "managed", label: "Managed teams", description: "Only teams you can manage" },
-                      ],
-                    }],
-                    showSort: true,
-                    trailing: serverAddTeamsControl,
-                  },
-              onRowActivate: (team) => {
+              filters: isAuthServer ? undefined : [{
+                id: "server-access-kind",
+                label: "Filter",
+                value: serverAccessFilter,
+                onChange: setServerAccessFilter,
+                options: [
+                  { id: "all", label: "All access", description: "Show every team access grant" },
+                  { id: "managed", label: "Managed teams", description: "Only teams you can manage" },
+                ],
+              }],
+              trailing: serverAddTeamsControl,
+              busy: Boolean(serverTeamAccessState.action),
+              onOpenPermissions: (team) => {
                 setServerPermissionRoleId("member");
                 setServerPermissionTeamId(String(team.id));
               },
-              getRowActions: (team) => [
-                {
-                  id: "edit-permissions",
-                  label: "Edit permissions",
-                  icon: Settings,
-                  onSelect: () => {
-                    setServerPermissionRoleId("member");
-                    setServerPermissionTeamId(String(team.id));
-                  },
-                },
-                ...(!team.locked ? [{
-                  id: "remove",
-                  label: "Remove team access",
-                  icon: Trash2,
-                  danger: true,
-                  disabled: Boolean(serverTeamAccessState.action),
-                  onSelect: ({ rows }) => void handleRemoveServerTeamsAccess(rows.filter((row) => !row.locked)),
-                }] : []),
-              ],
+              onRemoveTeams: (teams) => void handleRemoveServerTeamsAccess(teams),
+              formatCreatedAt: (value) => value ? formatPlaygroundFileDate(value) : "—",
               error: serverTeamAccessState.error || null,
-              emptyState: "No team access configured.",
-              noResultsState: "No matching team access found.",
             });
             const serverTeamAccessPlatformSection = usesCentralServerAccessTable
               ? serverTeamAccessTable
@@ -4016,10 +3953,6 @@
                       renderSourceServerSidebarRow("Creator", serverCreatorValue, {
                         valueClassName: "playground-server-detail-sidebar-identity-cell",
                       }),
-                      renderSourceServerSidebarRow("Owner", serverOwnerSelectorControl, {
-                        className: "playground-server-detail-sidebar-owner-row",
-                        valueClassName: "playground-server-detail-sidebar-owner-cell",
-                      }),
                       !isFunctionServer
                         ? renderSourceServerSidebarRow("Runtime",
                             renderSourceServerSidebarValue(draftServer.runtime || "nodejs22")
@@ -4051,7 +3984,11 @@
                       ),
                       renderSourceServerSidebarRow("Updated",
                         renderSourceServerSidebarValue(formatPlaygroundFileDate(draftServer.updatedAt))
-                      )
+                      ),
+                      renderSourceServerSidebarRow("Owner", serverOwnerSelectorControl, {
+                        className: "playground-server-detail-sidebar-owner-row",
+                        valueClassName: "playground-server-detail-sidebar-owner-cell",
+                      })
                     )
                   )
               : null;
@@ -4398,10 +4335,6 @@
                   renderSourceServerSidebarRow("Creator", serverCreatorValue, {
                     valueClassName: "playground-server-detail-sidebar-identity-cell",
                   }),
-                  renderSourceServerSidebarRow("Owner", serverOwnerSelectorControl, {
-                    className: "playground-server-detail-sidebar-owner-row",
-                    valueClassName: "playground-server-detail-sidebar-owner-cell",
-                  }),
                   renderSourceServerSidebarRow("Status",
                     React.createElement(PlatformLabel, { variant: paymentsStatusVariant }, paymentsStatus)
                   ),
@@ -4427,7 +4360,11 @@
                   ),
                   renderSourceServerSidebarRow("Updated",
                     renderSourceServerSidebarValue(formatPlaygroundFileDate(draftServer.updatedAt))
-                  )
+                  ),
+                  renderSourceServerSidebarRow("Owner", serverOwnerSelectorControl, {
+                    className: "playground-server-detail-sidebar-owner-row",
+                    valueClassName: "playground-server-detail-sidebar-owner-cell",
+                  })
                 )
               );
               const paymentsDetailSidebarCollapsed = Boolean(serverDetailsCollapsed);
@@ -4819,10 +4756,6 @@
 	                renderSourceServerSidebarRow("Creator", serverCreatorValue, {
 	                  valueClassName: "playground-server-detail-sidebar-identity-cell",
 	                }),
-	                renderSourceServerSidebarRow("Owner", serverOwnerSelectorControl, {
-	                  className: "playground-server-detail-sidebar-owner-row",
-	                  valueClassName: "playground-server-detail-sidebar-owner-cell",
-	                }),
 	                renderSourceServerSidebarRow("Secrets", renderSourceServerSidebarValue(String(totalSecrets))),
 	                renderSourceServerSidebarRow("Location", renderSourceServerSidebarValue(secretsStorageLocation)),
 	                renderSourceServerSidebarRow("Resource ID",
@@ -4833,7 +4766,11 @@
 	                ),
 	                renderSourceServerSidebarRow("Updated",
 	                  renderSourceServerSidebarValue(formatPlaygroundFileDate(draftServer.updatedAt))
-	                )
+	                ),
+	                renderSourceServerSidebarRow("Owner", serverOwnerSelectorControl, {
+	                  className: "playground-server-detail-sidebar-owner-row",
+	                  valueClassName: "playground-server-detail-sidebar-owner-cell",
+	                })
 	              )
 	            );
 	            const secretsDetailSidebarCollapsed = Boolean(serverDetailsCollapsed);
@@ -5697,10 +5634,6 @@
                   renderSourceServerSidebarRow("Creator", serverCreatorValue, {
                     valueClassName: "playground-server-detail-sidebar-identity-cell",
                   }),
-                  renderSourceServerSidebarRow("Owner", serverOwnerSelectorControl, {
-                    className: "playground-server-detail-sidebar-owner-row",
-                    valueClassName: "playground-server-detail-sidebar-owner-cell",
-                  }),
                   renderSourceServerSidebarRow("Agent",
                     renderSourceServerSidebarValue(selectedAgentRuntimeAgent?.name || agentRuntimeConfig.agentId || "Not selected")
                   ),
@@ -5728,7 +5661,11 @@
                   ),
                   renderSourceServerSidebarRow("Updated",
                     renderSourceServerSidebarValue(formatPlaygroundFileDate(draftServer.updatedAt))
-                  )
+                  ),
+                  renderSourceServerSidebarRow("Owner", serverOwnerSelectorControl, {
+                    className: "playground-server-detail-sidebar-owner-row",
+                    valueClassName: "playground-server-detail-sidebar-owner-cell",
+                  })
                 )
               );
               const agentRuntimeDetailSidebarCollapsed = Boolean(serverDetailsCollapsed);
@@ -5989,10 +5926,6 @@
                   renderSourceServerSidebarRow("Creator", serverCreatorValue, {
                     valueClassName: "playground-server-detail-sidebar-identity-cell",
                   }),
-                  renderSourceServerSidebarRow("Owner", serverOwnerSelectorControl, {
-                    className: "playground-server-detail-sidebar-owner-row",
-                    valueClassName: "playground-server-detail-sidebar-owner-cell",
-                  }),
                   renderSourceServerSidebarRow("Users", renderSourceServerSidebarValue(String(authUsers.length))),
                   renderSourceServerSidebarRow("Location", renderSourceServerSidebarValue(authStorageLocation)),
                   renderSourceServerSidebarRow("Resource ID",
@@ -6003,7 +5936,11 @@
                   ),
                   renderSourceServerSidebarRow("Updated",
                     renderSourceServerSidebarValue(formatPlaygroundFileDate(draftServer.updatedAt))
-                  )
+                  ),
+                  renderSourceServerSidebarRow("Owner", serverOwnerSelectorControl, {
+                    className: "playground-server-detail-sidebar-owner-row",
+                    valueClassName: "playground-server-detail-sidebar-owner-cell",
+                  })
                 )
               );
               const authDetailSidebarCollapsed = Boolean(serverDetailsCollapsed);

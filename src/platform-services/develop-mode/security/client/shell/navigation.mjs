@@ -5,7 +5,7 @@ export const SECURITY_NAVIGATION_SCRIPT = `        function openDevelopSecurityP
             setSidebarWorkspaceMode("develop");
           }
           setResourcesHeaderState({ mode: "overview", title: "" });
+          setIsAgentVersionsDetailOpen(false);
           setActivePage("develop-security");
         }
 `;
-

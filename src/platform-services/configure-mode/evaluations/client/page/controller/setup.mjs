@@ -31,6 +31,9 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           currentUserName,
           currentUserEmail,
           currentUserAvatarUrl,
+          workspaceTeams = [],
+          workspaceTeamsLoading = false,
+          onWorkspaceTeamsRequest,
           evaluationRunModalOpen,
           setEvaluationRunModalOpen,
           evaluationRunForm,
@@ -50,32 +53,51 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           evaluationRunReturnTarget,
           onEvaluationRunBack,
           topNavActionsPortalId,
+          breadcrumbActionsPortalId,
           versionsDrawerPortalId,
           onVersionsSidebarOpenChange,
+          versionsSidebarRequestToken = 0,
           threadRecords,
           onRefreshThreadRecords,
+          onNavigationGuardChange,
+          onNavigationRequest,
           shouldLoadData = false,
         } = options;
         const evaluationActionsPopoverRef = useRef(null);
+        const evaluationActionsPopoverSurfaceRef = useRef(null);
         const evaluationPublishMenuRef = useRef(null);
         const evaluationRenameInputRef = useRef(null);
         const evaluationGuidanceTextareaRef = useRef(null);
-        const evaluationCaseEditorTextareaRefs = useRef({});
         const evaluationCaseEditorFrameRef = useRef(null);
         const evaluationCaseEditorCloseTimerRef = useRef(null);
+        const evaluationCaseInputFileRef = useRef(null);
+        const evaluationCaseExpectedOutputFileRef = useRef(null);
         const evaluationCreateModalFrameRef = useRef(null);
         const evaluationCreateModalCloseTimerRef = useRef(null);
+        const evaluationCreateSubmittingRef = useRef(false);
+        const evaluationCreateAttemptedRef = useRef(false);
+        const evaluationCreateRequestIdRef = useRef("");
+        const evaluationCreateDraftIdRef = useRef("");
         const evaluationRunModalFrameRef = useRef(null);
         const evaluationRunModalCloseTimerRef = useRef(null);
+        const evaluationRunSubmittingRef = useRef(false);
+        const evaluationUnsavedRunResolvingRef = useRef(false);
         const evaluationVersionDescriptionTextareaRef = useRef(null);
         const evaluationVersionModalFrameRef = useRef(null);
         const evaluationVersionModalCloseTimerRef = useRef(null);
         const evaluationVersionBaselineRef = useRef({ key: "", signature: "" });
+        const evaluationVersionsSidebarRequestTokenRef = useRef(Number(versionsSidebarRequestToken) || 0);
         const evaluationDetailSidebarCollapsedBeforeVersionsRef = useRef(false);
         const evaluationVersionDraftTouchedRef = useRef(false);
         const evaluationBackendLoadRef = useRef("");
         const evaluationBackendLoadedRef = useRef(false);
         const evaluationDetailsLoadedRef = useRef(new Set());
+        const evaluationWorkspaceTeamsRequestRef = useRef("");
+	        const evaluationRunHistoryLoadedRef = useRef(new Set());
+	        const evaluationRunHistoryRequestTokenRef = useRef(new Map());
+	        const evaluationRunHistoryRetryTimerRef = useRef(null);
+	        const evaluationRunHistoryRetryAttemptRef = useRef(0);
+	        const evaluationDetailEntryHydrationRef = useRef("");
         const evaluationBackendMigratedLocalRef = useRef(false);
         const evaluationSetPersistTimersRef = useRef(new Map());
         const evaluationSetPersistSignaturesRef = useRef(new Map());
@@ -83,32 +105,44 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         const announcedEvaluationThreadIdsRef = useRef(new Set());
         const hydratedEvaluationRunCostIdsRef = useRef(new Set());
         const [evaluationTopNavActionsContainer, setEvaluationTopNavActionsContainer] = useState(null);
+        const [evaluationBreadcrumbActionsContainer, setEvaluationBreadcrumbActionsContainer] = useState(null);
         const [evaluationActionsPopoverOpen, setEvaluationActionsPopoverOpen] = useState(false);
         const [evaluationRenameState, setEvaluationRenameState] = useState(null);
         const [evaluationRenameValue, setEvaluationRenameValue] = useState("");
         const [evaluationRenameError, setEvaluationRenameError] = useState("");
         const [evaluationCasesSearchQuery, setEvaluationCasesSearchQuery] = useState("");
-        const [evaluationCasesSortMode, setEvaluationCasesSortMode] = useState("case-asc");
         const [evaluationCasesFilterMode, setEvaluationCasesFilterMode] = useState("all");
-        const [evaluationCasesToolbarPopover, setEvaluationCasesToolbarPopover] = useState("");
         const [evaluationCasesVisibleCount, setEvaluationCasesVisibleCount] = useState(10);
         const [evaluationRunRowMenuId, setEvaluationRunRowMenuId] = useState("");
         const [evaluationCaseRowMenuId, setEvaluationCaseRowMenuId] = useState("");
         const [evaluationCreateModalVisible, setEvaluationCreateModalVisible] = useState(false);
         const [evaluationCreateModalClosing, setEvaluationCreateModalClosing] = useState(false);
+        const [evaluationCreateSubmitting, setEvaluationCreateSubmitting] = useState(false);
         const [evaluationRunModalVisible, setEvaluationRunModalVisible] = useState(false);
         const [evaluationRunModalClosing, setEvaluationRunModalClosing] = useState(false);
+        const [evaluationRunSubmitting, setEvaluationRunSubmitting] = useState(false);
+        const [evaluationUnsavedRunDialog, setEvaluationUnsavedRunDialog] = useState(null);
         const [evaluationGuidanceEditingId, setEvaluationGuidanceEditingId] = useState("");
         const [evaluationGuidanceHistoryById, setEvaluationGuidanceHistoryById] = useState({});
         const [evaluationCaseEditorState, setEvaluationCaseEditorState] = useState(null);
         const [evaluationCaseEditorVisible, setEvaluationCaseEditorVisible] = useState(false);
         const [evaluationCaseEditorClosing, setEvaluationCaseEditorClosing] = useState(false);
-        const [evaluationCaseEditorMarkdownEditingKey, setEvaluationCaseEditorMarkdownEditingKey] = useState("");
-        const [evaluationCaseEditorMarkdownHistoryByKey, setEvaluationCaseEditorMarkdownHistoryByKey] = useState({});
+        const [evaluationCaseFocusedEditor, setEvaluationCaseFocusedEditor] = useState(null);
+        const [evaluationCaseTextImportError, setEvaluationCaseTextImportError] = useState("");
         const [evaluationJsonlFileDragging, setEvaluationJsonlFileDragging] = useState(false);
         const [evaluationJsonlFileImportError, setEvaluationJsonlFileImportError] = useState("");
         const [evaluationJsonlFileImportMessage, setEvaluationJsonlFileImportMessage] = useState("");
+        const [evaluationJsonlWorkspacePickerOpen, setEvaluationJsonlWorkspacePickerOpen] = useState(false);
+        const [evaluationJsonlWorkspaceSetId, setEvaluationJsonlWorkspaceSetId] = useState("");
+        const [evaluationJsonlWorkspaceEnvironmentId, setEvaluationJsonlWorkspaceEnvironmentId] = useState("");
+        const [evaluationJsonlWorkspaceInventory, setEvaluationJsonlWorkspaceInventory] = useState([]);
+        const [evaluationJsonlWorkspaceState, setEvaluationJsonlWorkspaceState] = useState({ status: "idle", error: "" });
+        const [evaluationJsonlWorkspaceSearch, setEvaluationJsonlWorkspaceSearch] = useState("");
+        const [evaluationJsonlWorkspaceSelectedPaths, setEvaluationJsonlWorkspaceSelectedPaths] = useState([]);
+        const [evaluationJsonlWorkspaceExpandedFolders, setEvaluationJsonlWorkspaceExpandedFolders] = useState([]);
+        const [evaluationJsonlWorkspaceImporting, setEvaluationJsonlWorkspaceImporting] = useState(false);
         const [evaluationThreadCaseModalSetId, setEvaluationThreadCaseModalSetId] = useState("");
+        const [evaluationThreadCaseModalOpen, setEvaluationThreadCaseModalOpen] = useState(false);
         const [evaluationThreadCaseSearchQuery, setEvaluationThreadCaseSearchQuery] = useState("");
         const [evaluationThreadCaseSelectedIds, setEvaluationThreadCaseSelectedIds] = useState([]);
         const [evaluationThreadCaseStatus, setEvaluationThreadCaseStatus] = useState({ status: "idle", message: "", error: "" });
@@ -117,6 +151,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         const [evaluationPublishMenuOpen, setEvaluationPublishMenuOpen] = useState(false);
         const [evaluationVersionsHeaderMenuOpen, setEvaluationVersionsHeaderMenuOpen] = useState(false);
         const [evaluationVersionState, setEvaluationVersionState] = useState({ status: "idle", message: "", error: "" });
+        const [evaluationVersionSaveDialog, setEvaluationVersionSaveDialog] = useState(null);
         const [evaluationVersionModal, setEvaluationVersionModal] = useState(null);
         const [evaluationVersionModalVisible, setEvaluationVersionModalVisible] = useState(false);
         const [evaluationVersionModalClosing, setEvaluationVersionModalClosing] = useState(false);
@@ -124,25 +159,34 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         const [evaluationVersionDescriptionDraft, setEvaluationVersionDescriptionDraft] = useState("");
         const [isEvaluationVersionDescriptionEditing, setIsEvaluationVersionDescriptionEditing] = useState(false);
         const [evaluationVersionChangesState, setEvaluationVersionChangesState] = useState(null);
-        const [openEvaluationVersionMenuId, setOpenEvaluationVersionMenuId] = useState("");
-        const [evaluationBackendSyncState, setEvaluationBackendSyncState] = useState({ status: "idle", error: "" });
-        const [evaluationDetailSidebarCollapsed, setEvaluationDetailSidebarCollapsed] = useState(false);
+	        const [openEvaluationVersionMenuId, setOpenEvaluationVersionMenuId] = useState("");
+	        const [evaluationBackendSyncState, setEvaluationBackendSyncState] = useState({ status: "idle", error: "" });
+	        const [evaluationRunHistorySyncState, setEvaluationRunHistorySyncState] = useState({ status: "idle", error: "" });
+	        const [evaluationDetailSidebarCollapsed, setEvaluationDetailSidebarCollapsed] = useState(false);
         const [evaluationAnalyticsTimeframe, setEvaluationAnalyticsTimeframe] = useState("month");
         const [evaluationAccessTeamId, setEvaluationAccessTeamId] = useState("");
         const [evaluationAccessRoleId, setEvaluationAccessRoleId] = useState("member");
         const [evaluationAccessMenuOpen, setEvaluationAccessMenuOpen] = useState(false);
         const [evaluationAccessActionId, setEvaluationAccessActionId] = useState("");
         const [evaluationOwnerSelectorOpen, setEvaluationOwnerSelectorOpen] = useState(false);
-        const [evaluationOwnerCandidateStateBySetId, setEvaluationOwnerCandidateStateBySetId] = useState({});
-        const requestHeadersSignature = useMemo(() => JSON.stringify(requestHeaders || {}), [requestHeaders]);
-        const currentEvaluationCreator = normalizePlaygroundEvaluationPersonIdentity({
+	        const [evaluationOwnerCandidateStateBySetId, setEvaluationOwnerCandidateStateBySetId] = useState({});
+	        const requestHeadersSignature = useMemo(() => JSON.stringify(requestHeaders || {}), [requestHeaders]);
+	        const evaluationRunHistoryCacheScopeKey = useMemo(() => (
+	          buildPlaygroundEvaluationRunHistoryCacheScope({
+	            backendUrl,
+	            requestHeaders,
+	            userId: currentUserId,
+	            userEmail: currentUserEmail,
+	          })
+	        ), [backendUrl, currentUserEmail, currentUserId, requestHeadersSignature]);
+	        const currentEvaluationCreator = normalizePlaygroundEvaluationPersonIdentity({
           id: currentUserId || currentUserEmail || "",
           userId: currentUserId || "",
           name: currentUserName || "",
           email: currentUserEmail || "",
           avatarUrl: currentUserAvatarUrl || "",
         });
-        const normalizedSets = (Array.isArray(evaluationSets) ? evaluationSets : []).map((set) => ensurePlaygroundEvaluationInitialVersion(normalizePlaygroundEvaluationSet(set)));
+        const normalizedSets = deduplicatePlaygroundEvaluationSets(evaluationSets);
         const agentOptions = Array.isArray(agents) ? agents : [];
         const environmentOptions = Array.isArray(environments) ? environments : [];
         const projectOptions = Array.isArray(projects) ? projects : [];
@@ -150,6 +194,43 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           .map((thread, index) => normalizePlaygroundEvaluationSourceThread(thread, index))
           .filter((thread) => thread.id);
         const environmentChoices = buildPlaygroundEvaluationEnvironmentChoices(environmentOptions, projectOptions);
+        const evaluationJsonlWorkspaceEnvironmentOptions = environmentOptions
+          .map((environment) => ({
+            ...environment,
+            id: String(environment?.id || environment?.environmentId || environment?.environment_id || "").trim(),
+            label: String(environment?.name || environment?.label || environment?.title || "Computer").trim() || "Computer",
+          }))
+          .filter((environment) => environment.id);
+        const activeEvaluationJsonlWorkspaceEnvironment = evaluationJsonlWorkspaceEnvironmentOptions.find(
+          (environment) => environment.id === evaluationJsonlWorkspaceEnvironmentId
+        ) || null;
+        const evaluationJsonlWorkspaceBrowsableInventory = useMemo(() => (
+          evaluationJsonlWorkspaceInventory.filter((entry) => entry?.isFolder || /\.jsonl$/i.test(String(entry?.name || entry?.path || "")))
+        ), [evaluationJsonlWorkspaceInventory]);
+        const evaluationJsonlWorkspaceTree = useMemo(() => (
+          buildPlaygroundEnvironmentTree(evaluationJsonlWorkspaceBrowsableInventory)
+        ), [evaluationJsonlWorkspaceBrowsableInventory]);
+        const evaluationJsonlWorkspaceExpandedSet = useMemo(() => (
+          new Set(evaluationJsonlWorkspaceExpandedFolders)
+        ), [evaluationJsonlWorkspaceExpandedFolders]);
+        const evaluationJsonlWorkspaceRows = useMemo(() => {
+          const searchValue = evaluationJsonlWorkspaceSearch.trim().toLowerCase();
+          if (searchValue) {
+            return buildPlaygroundEnvironmentSearchRows(evaluationJsonlWorkspaceBrowsableInventory, searchValue, {
+              filesOnly: true,
+            });
+          }
+          return buildPlaygroundEnvironmentVisibleRows(
+            evaluationJsonlWorkspaceTree,
+            "",
+            evaluationJsonlWorkspaceExpandedSet
+          ).map((row) => ({ ...row, searchMatch: false }));
+        }, [
+          evaluationJsonlWorkspaceBrowsableInventory,
+          evaluationJsonlWorkspaceExpandedSet,
+          evaluationJsonlWorkspaceSearch,
+          evaluationJsonlWorkspaceTree,
+        ]);
         const activeSet = normalizedSets.find((set) => set.id === selectedEvaluationSetId) || normalizedSets[0] || null;
         const activeRun = activeSet?.runs?.find((run) => run.id === selectedEvaluationRunId) || activeSet?.runs?.[0] || null;
         const activeCase = activeRun?.cases?.find((caseItem) => caseItem.id === selectedEvaluationCaseId) || null;
@@ -161,9 +242,14 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
               ? "detail"
               : "overview";
         const isEvaluationDetailPage = normalizedMode === "detail" && Boolean(activeSet);
+        const hasUnsavedEvaluationChanges = Boolean(
+          isEvaluationDetailPage
+          && activeSet
+          && hasSelectedEvaluationVersionChanges()
+        );
         const nowIso = new Date().toISOString();
 
-        async function requestEvaluationBackendJson(path, init = {}, fallbackMessage = "Evaluation request failed.") {
+	        async function requestEvaluationBackendJson(path, init = {}, fallbackMessage = "Evaluation request failed.") {
           const normalizedBackendUrl = String(backendUrl || "").replace(/\/+$/, "");
           if (!normalizedBackendUrl) {
             throw new Error("Evaluation backend is unavailable.");
@@ -178,8 +264,70 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
             ...init,
             headers,
           });
-          return await readPlaygroundEvaluationBackendJson(response, fallbackMessage);
-        }
+	          return await readPlaygroundEvaluationBackendJson(response, fallbackMessage);
+	        }
+
+	        async function requestBackendEvaluationRunHistory(path, options = {}) {
+	          const maxAttempts = Math.max(1, Number(options.maxAttempts) || 3);
+	          let lastError = null;
+	          for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+	            try {
+	              return await requestEvaluationBackendJson(
+	                path,
+	                { method: "GET" },
+	                "Failed to load evaluation runs."
+	              );
+	            } catch (error) {
+	              lastError = error;
+	              if (attempt + 1 < maxAttempts) {
+	                await sleepPlaygroundEvaluationFrontend(250 * (attempt + 1));
+	              }
+	            }
+	          }
+	          throw lastError || new Error("Failed to load evaluation runs.");
+	        }
+
+	        function clearEvaluationRunHistoryRetry() {
+	          const timer = evaluationRunHistoryRetryTimerRef.current;
+	          if (timer !== null) {
+	            if (typeof window !== "undefined") {
+	              window.clearTimeout(timer);
+	            } else {
+	              clearTimeout(timer);
+	            }
+	            evaluationRunHistoryRetryTimerRef.current = null;
+	          }
+	        }
+
+	        function markEvaluationRunHistoryLoaded(setIds = []) {
+	          (Array.isArray(setIds) ? setIds : []).forEach((setId) => {
+	            const normalizedSetId = String(setId || "").trim();
+	            if (normalizedSetId) evaluationRunHistoryLoadedRef.current.add(normalizedSetId);
+	          });
+	          evaluationRunHistoryRetryAttemptRef.current = 0;
+	          clearEvaluationRunHistoryRetry();
+	          setEvaluationRunHistorySyncState({ status: "idle", error: "" });
+	        }
+
+	        function scheduleEvaluationRunHistoryRetry() {
+	          if (evaluationRunHistoryRetryTimerRef.current !== null) return;
+	          const attempt = Math.max(0, Number(evaluationRunHistoryRetryAttemptRef.current) || 0);
+	          if (attempt >= 3) return;
+	          const retryDelays = [1500, 5000, 15000];
+	          evaluationRunHistoryRetryAttemptRef.current = attempt + 1;
+	          const schedule = typeof window !== "undefined" ? window.setTimeout.bind(window) : setTimeout;
+	          evaluationRunHistoryRetryTimerRef.current = schedule(() => {
+	            evaluationRunHistoryRetryTimerRef.current = null;
+	            void loadBackendEvaluationSets({ force: true, runHistoryRetry: true });
+	          }, retryDelays[attempt] || retryDelays[retryDelays.length - 1]);
+	        }
+
+	        function getCachedEvaluationRunsForSet(setId) {
+	          const normalizedSetId = String(setId || "").trim();
+	          if (!normalizedSetId) return [];
+	          const cachedRunsBySet = readPlaygroundEvaluationRunHistoryCache(evaluationRunHistoryCacheScopeKey);
+	          return deduplicatePlaygroundEvaluationRuns(cachedRunsBySet[normalizedSetId]);
+	        }
 
         async function fetchBackendEvaluationSetDetails(set, allRuns = [], options = {}) {
           const normalizedSet = normalizePlaygroundEvaluationSet(set);
@@ -202,30 +350,86 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         async function reloadBackendEvaluationSet(setId, options = {}) {
           const normalizedSetId = String(setId || "").trim();
           if (!normalizedSetId) return null;
-          const [setPayload, runsPayload] = await Promise.all([
+          const [setPayload, runsResult] = await Promise.all([
             requestEvaluationBackendJson(
               "/evaluations/" + encodeURIComponent(normalizedSetId),
               { method: "GET" },
               "Failed to load evaluation."
             ),
-            requestEvaluationBackendJson(
-              "/evaluations/runs?evaluationId=" + encodeURIComponent(normalizedSetId) + "&limit=1000",
-              { method: "GET" },
-              "Failed to load evaluation runs."
-            ).catch(() => ({ runs: [] })),
-          ]);
-          const backendSet = normalizePlaygroundEvaluationSet(setPayload?.evaluation || setPayload?.data || setPayload);
-          const backendRuns = readPlaygroundEvaluationListFromPayload(runsPayload || {}, ["runs", "evaluationRuns", "evaluation_runs"]);
+	            requestBackendEvaluationRunHistory(
+	              "/evaluations/runs?evaluationId=" + encodeURIComponent(normalizedSetId) + "&limit=1000",
+	              { maxAttempts: 3 }
+	            ).then((payload) => ({ payload, error: null })).catch((error) => ({ payload: null, error })),
+	          ]);
+	          const backendSet = normalizePlaygroundEvaluationSet(setPayload?.evaluation || setPayload?.data || setPayload);
+	          const existingSet = normalizedSets.find((set) => set.id === normalizedSetId) || null;
+	          const backendRuns = runsResult.error
+	            ? deduplicatePlaygroundEvaluationRuns([
+	                ...(Array.isArray(existingSet?.runs) ? existingSet.runs : []),
+	                ...getCachedEvaluationRunsForSet(normalizedSetId),
+	              ])
+	            : readPlaygroundEvaluationListFromPayload(runsResult.payload || {}, ["runs", "evaluationRuns", "evaluation_runs"])
+              .map((run, index) => {
+                const normalizedRun = normalizePlaygroundEvaluationRun(run, index);
+                return normalizedRun.evaluationSetId
+                  ? normalizedRun
+                  : normalizePlaygroundEvaluationRun({
+                      ...normalizedRun,
+                      evaluationId: normalizedSetId,
+                      evaluationSetId: normalizedSetId,
+                    }, index);
+              });
           const detailedSet = await fetchBackendEvaluationSetDetails(backendSet, backendRuns);
+          const requiredVersionId = String(options.requiredVersionId || "").trim();
+          const requiredVersion = requiredVersionId
+            ? playgroundEvaluationVersionController.readVersions(detailedSet).find((version) => (
+                String(version?.id || "").trim() === requiredVersionId
+              ))
+            : null;
+          const canApplyDetailedSet = !requiredVersionId || Boolean(
+            requiredVersion
+            && (
+              options.requirePublishedVersion !== true
+              || String(requiredVersion.status || "").trim().toLowerCase() === "active"
+            )
+          );
+          if (!canApplyDetailedSet) {
+            return null;
+          }
           if (detailedSet?.id && typeof setEvaluationSets === "function") {
-            evaluationDetailsLoadedRef.current.add(detailedSet.id);
-            replaceEvaluationSet(detailedSet, {
-              clearRunSelection: options.clearRunSelection !== false,
-              rememberBaseline: options.rememberBaseline !== false,
-              select: options.select !== false,
-              persist: false,
-            });
+	            evaluationDetailsLoadedRef.current.add(detailedSet.id);
+	            if (!runsResult.error) {
+	              markEvaluationRunHistoryLoaded([detailedSet.id]);
+	            } else {
+	              setEvaluationRunHistorySyncState({
+	                status: "error",
+	                error: runsResult.error?.message || String(runsResult.error),
+	              });
+	              scheduleEvaluationRunHistoryRetry();
+	              console.warn("[evaluations] Failed to hydrate evaluation run history", runsResult.error);
+	            }
             evaluationSetPersistSignaturesRef.current.set(detailedSet.id, JSON.stringify(buildPlaygroundEvaluationBackendPayload(detailedSet)));
+            if (options.preserveDirtyDraft === false || !evaluationVersionDraftTouchedRef.current) {
+              replaceEvaluationSet(detailedSet, {
+                clearRunSelection: options.clearRunSelection !== false,
+                rememberBaseline: options.rememberBaseline !== false,
+                select: options.select !== false,
+                persist: false,
+              });
+            } else {
+              setEvaluationSets((current) => (Array.isArray(current) ? current : []).map((item) => {
+                const currentSet = normalizePlaygroundEvaluationSet(item);
+                if (currentSet.id !== detailedSet.id) return currentSet;
+                const loadedRunIds = new Set(detailedSet.runs.map((run) => run.id));
+                return normalizePlaygroundEvaluationSet({
+                  ...currentSet,
+                  runs: [
+                    ...detailedSet.runs,
+                    ...currentSet.runs.filter((run) => !loadedRunIds.has(run.id)),
+                  ],
+                });
+              }));
+            }
           }
           return detailedSet;
         }
@@ -303,25 +507,49 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         async function loadBackendEvaluationSets(options = {}) {
           const normalizedBackendUrl = String(backendUrl || "").replace(/\/+$/, "");
           if (!normalizedBackendUrl || typeof setEvaluationSets !== "function") return [];
-          const loadKey = normalizedBackendUrl + "|" + requestHeadersSignature;
-          if (!options.force && evaluationBackendLoadRef.current === loadKey) return normalizedSets;
-          if (evaluationBackendLoadRef.current !== loadKey) {
-            evaluationDetailsLoadedRef.current = new Set();
-          }
-          evaluationBackendLoadRef.current = loadKey;
-          setEvaluationBackendSyncState({ status: "loading", error: "" });
-          try {
-            const [setsPayload, runsPayload] = await Promise.all([
-              requestEvaluationBackendJson("/evaluations?limit=500", { method: "GET" }, "Failed to load evaluations."),
-              requestEvaluationBackendJson("/evaluations/runs?limit=1000", { method: "GET" }, "Failed to load evaluation runs.").catch(() => ({ runs: [] })),
-            ]);
-            const backendSets = readPlaygroundEvaluationListFromPayload(setsPayload || {}, ["evaluations", "evaluationSets", "evaluation_sets"])
-              .map((set) => normalizePlaygroundEvaluationSet(set))
-              .filter((set) => set.id);
-            const backendRuns = readPlaygroundEvaluationListFromPayload(runsPayload || {}, ["runs", "evaluationRuns", "evaluation_runs"])
-              .map((run, index) => normalizePlaygroundEvaluationRun(run, index))
-              .filter((run) => run.id);
-            let detailedSets = await Promise.all(backendSets.map((set) => fetchBackendEvaluationSetDetails(set, backendRuns, { includeVersions: false })));
+	          const loadKey = normalizedBackendUrl + "|" + requestHeadersSignature + "|" + evaluationRunHistoryCacheScopeKey;
+	          if (!options.force && evaluationBackendLoadRef.current === loadKey) return normalizedSets;
+	          if (evaluationBackendLoadRef.current !== loadKey) {
+	            clearEvaluationRunHistoryRetry();
+	            evaluationRunHistoryRetryAttemptRef.current = 0;
+	            evaluationDetailsLoadedRef.current = new Set();
+            evaluationRunHistoryLoadedRef.current = new Set();
+            evaluationRunHistoryRequestTokenRef.current = new Map();
+            evaluationDetailEntryHydrationRef.current = "";
+	          }
+	          evaluationBackendLoadRef.current = loadKey;
+	          setEvaluationBackendSyncState({ status: "loading", error: "" });
+	          setEvaluationRunHistorySyncState((current) => (
+	            current.status === "error" && options.runHistoryRetry !== true
+	              ? current
+	              : { status: "loading", error: "" }
+	          ));
+	          try {
+	            const [setsPayload, runsResult] = await Promise.all([
+	              requestEvaluationBackendJson("/evaluations?limit=500", { method: "GET" }, "Failed to load evaluations."),
+	              requestBackendEvaluationRunHistory(
+	                "/evaluations/runs?limit=1000",
+	                { maxAttempts: 3 }
+	              ).then((payload) => ({ payload, error: null })).catch((error) => ({ payload: null, error })),
+	            ]);
+	            const backendSets = deduplicatePlaygroundEvaluationSets(
+	              readPlaygroundEvaluationListFromPayload(setsPayload || {}, ["evaluations", "evaluationSets", "evaluation_sets"])
+	                .map((set) => normalizePlaygroundEvaluationSet(set))
+	                .filter((set) => set.id)
+	            );
+	            const cachedRunsBySet = runsResult.error
+	              ? readPlaygroundEvaluationRunHistoryCache(evaluationRunHistoryCacheScopeKey)
+	              : {};
+	            const backendRuns = resolvePlaygroundEvaluationRunHistorySnapshot({
+	              historyLoadSucceeded: !runsResult.error,
+	              backendSets,
+	              currentSets: normalizedSets,
+	              cachedRunsBySet,
+	              backendRuns: readPlaygroundEvaluationListFromPayload(runsResult.payload || {}, ["runs", "evaluationRuns", "evaluation_runs"])
+	                .map((run, index) => normalizePlaygroundEvaluationRun(run, index))
+	                .filter((run) => run.id),
+	            });
+	            let detailedSets = await Promise.all(backendSets.map((set) => fetchBackendEvaluationSetDetails(set, backendRuns, { includeVersions: false })));
             if (!detailedSets.length && !evaluationBackendMigratedLocalRef.current) {
               evaluationBackendMigratedLocalRef.current = true;
               const localSets = readPlaygroundEvaluationSetsFromStorage()
@@ -340,17 +568,27 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
                 detailedSets = migratedSets;
               }
             }
-            detailedSets = detailedSets
+            detailedSets = deduplicatePlaygroundEvaluationSets(detailedSets)
               .map((set) => ensurePlaygroundEvaluationInitialVersion(normalizePlaygroundEvaluationSet(set)))
               .sort((left, right) => (Date.parse(right.updatedAt || 0) || 0) - (Date.parse(left.updatedAt || 0) || 0));
             setEvaluationSets(detailedSets);
             evaluationSetPersistSignaturesRef.current = new Map(detailedSets.map((set) => [
               set.id,
               JSON.stringify(buildPlaygroundEvaluationBackendPayload(set)),
-            ]));
-            evaluationBackendLoadedRef.current = true;
-            setEvaluationBackendSyncState({ status: "idle", error: "" });
-            const selectedStillExists = detailedSets.some((set) => set.id === selectedEvaluationSetId);
+	            ]));
+	            evaluationBackendLoadedRef.current = true;
+	            setEvaluationBackendSyncState({ status: "idle", error: "" });
+	            if (runsResult.error) {
+	              setEvaluationRunHistorySyncState({
+	                status: "error",
+	                error: runsResult.error?.message || String(runsResult.error),
+	              });
+	              scheduleEvaluationRunHistoryRetry();
+	            } else {
+	              markEvaluationRunHistoryLoaded(detailedSets.map((set) => set.id));
+	              writePlaygroundEvaluationRunHistoryCache(evaluationRunHistoryCacheScopeKey, detailedSets);
+	            }
+	            const selectedStillExists = detailedSets.some((set) => set.id === selectedEvaluationSetId);
             if (!selectedStillExists) {
               setSelectedEvaluationSetId(detailedSets[0]?.id || "");
               setSelectedEvaluationRunId("");
@@ -358,23 +596,40 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
               if (!detailedSets[0]?.id) setEvaluationsPageMode("overview");
             }
             return detailedSets;
-          } catch (error) {
-            evaluationBackendLoadRef.current = "";
-            setEvaluationBackendSyncState({ status: "error", error: error?.message || String(error) });
-            return normalizedSets;
-          }
-        }
+	          } catch (error) {
+	            evaluationBackendLoadRef.current = "";
+	            setEvaluationBackendSyncState({ status: "error", error: error?.message || String(error) });
+	            setEvaluationRunHistorySyncState({ status: "error", error: error?.message || String(error) });
+	            return normalizedSets;
+	          }
+	        }
 
-        useEffect(() => {
-          if (!shouldLoadData) {
-            return undefined;
+	        useEffect(() => {
+	          if (!shouldLoadData) {
+	            return undefined;
           }
           void loadBackendEvaluationSets({ force: false });
-          return undefined;
-        }, [backendUrl, requestHeadersSignature, shouldLoadData]);
+	          return undefined;
+	        }, [backendUrl, evaluationRunHistoryCacheScopeKey, requestHeadersSignature, shouldLoadData]);
 
-        useEffect(() => () => {
-          evaluationSetPersistTimersRef.current.forEach((timer) => {
+	        useEffect(() => {
+	          if (
+	            !evaluationRunHistoryCacheScopeKey
+	            || !evaluationBackendLoadedRef.current
+	            || evaluationRunHistorySyncState.status !== "idle"
+	          ) {
+	            return;
+	          }
+	          writePlaygroundEvaluationRunHistoryCache(evaluationRunHistoryCacheScopeKey, evaluationSets);
+	        }, [
+	          evaluationRunHistoryCacheScopeKey,
+	          evaluationRunHistorySyncState.status,
+	          evaluationSets,
+	        ]);
+
+	        useEffect(() => () => {
+	          clearEvaluationRunHistoryRetry();
+	          evaluationSetPersistTimersRef.current.forEach((timer) => {
             if (typeof window !== "undefined") {
               window.clearTimeout(timer);
             } else {
@@ -412,14 +667,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
               if (typeof setSelectedEvaluationSetId === "function" && runSetId !== normalizedSetId) {
                 setSelectedEvaluationSetId(runSetId);
               }
-              upsertEvaluationRun(runSetId, run, {
-                targetAgentId: run.targetAgentId,
-                environmentType: run.environmentType,
-                environmentId: run.environmentId,
-                projectId: run.projectId,
-                evaluator: run.evaluator,
-                passThreshold: run.passThreshold,
-              });
+              upsertEvaluationRun(runSetId, run);
             } catch (error) {
               console.warn("[evaluations] Failed to hydrate selected evaluation run", error);
             }
@@ -439,25 +687,27 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
 
         useEffect(() => {
           const normalizedSetId = String(activeSet?.id || selectedEvaluationSetId || "").trim();
-          const needsVersionSurface = evaluationVersionsSidebarOpen
-            || evaluationPublishMenuOpen
-            || evaluationVersionsHeaderMenuOpen
-            || Boolean(evaluationVersionChangesState)
-            || Boolean(evaluationVersionModal)
-            || Boolean(openEvaluationVersionMenuId);
-          if (!shouldLoadData || !backendUrl || !isEvaluationDetailPage || !normalizedSetId || !needsVersionSurface) {
+          if (!shouldLoadData || !backendUrl || !isEvaluationDetailPage || !normalizedSetId) {
+            evaluationDetailEntryHydrationRef.current = "";
             return undefined;
           }
-          if (evaluationDetailsLoadedRef.current.has(normalizedSetId)) {
+          if (evaluationDetailEntryHydrationRef.current === normalizedSetId) {
             return undefined;
           }
+          evaluationDetailEntryHydrationRef.current = normalizedSetId;
           let cancelled = false;
-          void reloadBackendEvaluationSet(normalizedSetId, {
-            clearRunSelection: false,
-            select: false,
-            rememberBaseline: !evaluationVersionDraftTouchedRef.current,
-          }).catch((error) => {
+          const hydrationRequest = evaluationDetailsLoadedRef.current.has(normalizedSetId)
+            ? reloadBackendEvaluationRunHistory(normalizedSetId)
+            : reloadBackendEvaluationSet(normalizedSetId, {
+                clearRunSelection: false,
+                select: false,
+                rememberBaseline: !evaluationVersionDraftTouchedRef.current,
+              });
+          void hydrationRequest.catch((error) => {
             if (cancelled) return;
+            if (evaluationDetailEntryHydrationRef.current === normalizedSetId) {
+              evaluationDetailEntryHydrationRef.current = "";
+            }
             setEvaluationBackendSyncState({ status: "error", error: error?.message || String(error) });
           });
           return () => {
@@ -466,13 +716,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         }, [
           activeSet?.id,
           backendUrl,
-          evaluationPublishMenuOpen,
-          evaluationVersionChangesState,
-          evaluationVersionModal,
-          evaluationVersionsHeaderMenuOpen,
-          evaluationVersionsSidebarOpen,
           isEvaluationDetailPage,
-          openEvaluationVersionMenuId,
           requestHeadersSignature,
           selectedEvaluationSetId,
           shouldLoadData,
@@ -485,6 +729,17 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           onVersionsSidebarOpenChange(Boolean(evaluationVersionsSidebarOpen));
           return () => onVersionsSidebarOpenChange(false);
         }, [evaluationVersionsSidebarOpen, onVersionsSidebarOpenChange]);
+
+        useEffect(() => {
+          const requestToken = Number(versionsSidebarRequestToken) || 0;
+          if (requestToken === evaluationVersionsSidebarRequestTokenRef.current) {
+            return;
+          }
+          evaluationVersionsSidebarRequestTokenRef.current = requestToken;
+          if (isEvaluationDetailPage) {
+            openEvaluationVersionsSidebar();
+          }
+        }, [versionsSidebarRequestToken, isEvaluationDetailPage, activeSet?.id]);
 
         useEffect(() => {
           if (!isEvaluationDetailPage) {
@@ -513,6 +768,35 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         ]);
 
         useEffect(() => {
+          if (typeof onNavigationGuardChange !== "function") {
+            return;
+          }
+          const evaluationName = String(activeSet?.name || "").trim() || "this evaluation";
+          onNavigationGuardChange(hasUnsavedEvaluationChanges
+            ? {
+                id: "evaluation-details-unsaved-changes",
+                active: true,
+                title: "Leave without saving?",
+                description: "Your changes to " + evaluationName + " have not been saved. If you leave now, they will be lost.",
+                onDiscard: discardUnsavedEvaluationDraft,
+              }
+            : null
+          );
+        }, [
+          activeSet?.id,
+          activeSet?.name,
+          hasUnsavedEvaluationChanges,
+          onNavigationGuardChange,
+        ]);
+
+        useEffect(() => {
+          if (typeof onNavigationGuardChange !== "function") {
+            return undefined;
+          }
+          return () => onNavigationGuardChange(null);
+        }, [onNavigationGuardChange]);
+
+        useEffect(() => {
           if (isEvaluationDetailPage) {
             return;
           }
@@ -520,6 +804,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           setEvaluationPublishMenuOpen(false);
           setEvaluationVersionsHeaderMenuOpen(false);
           setEvaluationVersionChangesState(null);
+          setEvaluationVersionSaveDialog(null);
           setOpenEvaluationVersionMenuId("");
           setEvaluationVersionModal(null);
           setEvaluationVersionModalVisible(false);
@@ -536,7 +821,98 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           setEvaluationAccessMenuOpen(false);
           setEvaluationAccessActionId("");
           setEvaluationOwnerSelectorOpen(false);
+          setEvaluationJsonlWorkspacePickerOpen(false);
+          setEvaluationJsonlWorkspaceSetId("");
         }, [activeSet?.id]);
+
+        useEffect(() => {
+          const normalizedDetailTab = evaluationDetailTab === "settings" || evaluationDetailTab === "data"
+            ? "settings"
+            : "general";
+          setEvaluationAccessMenuOpen(false);
+          if (normalizedDetailTab !== "settings") {
+            setEvaluationAccessTeamId("");
+            evaluationWorkspaceTeamsRequestRef.current = "";
+            return;
+          }
+          const activeSetId = String(activeSet?.id || "").trim();
+          const hasWorkspaceTeams = Array.isArray(workspaceTeams) && workspaceTeams.length > 0;
+          if (
+            activeSetId
+            && !workspaceTeamsLoading
+            && !hasWorkspaceTeams
+            && typeof onWorkspaceTeamsRequest === "function"
+            && evaluationWorkspaceTeamsRequestRef.current !== activeSetId
+          ) {
+            evaluationWorkspaceTeamsRequestRef.current = activeSetId;
+            onWorkspaceTeamsRequest({ selectedTeamId: "" });
+          }
+        }, [
+          evaluationDetailTab,
+          activeSet?.id,
+          workspaceTeamsLoading,
+          Array.isArray(workspaceTeams) ? workspaceTeams.length : 0,
+        ]);
+
+        useEffect(() => {
+          if (!evaluationJsonlWorkspacePickerOpen) {
+            return undefined;
+          }
+          const environmentId = String(evaluationJsonlWorkspaceEnvironmentId || "").trim();
+          if (!environmentId) {
+            setEvaluationJsonlWorkspaceInventory([]);
+            setEvaluationJsonlWorkspaceState({
+              status: "error",
+              error: "No computer is available for workspace imports.",
+            });
+            return undefined;
+          }
+
+          const controller = new AbortController();
+          setEvaluationJsonlWorkspaceState({ status: "loading", error: "" });
+          setEvaluationJsonlWorkspaceSelectedPaths([]);
+          setEvaluationJsonlWorkspaceExpandedFolders([]);
+          const listUrl = buildPlaygroundEnvironmentFilesListUrl(backendUrl, environmentId, "", -1);
+          if (!listUrl) {
+            setEvaluationJsonlWorkspaceInventory([]);
+            setEvaluationJsonlWorkspaceState({
+              status: "error",
+              error: "Workspace files are unavailable.",
+            });
+            return () => controller.abort();
+          }
+          void fetch(listUrl, {
+            method: "GET",
+            headers: requestHeaders,
+            signal: controller.signal,
+          })
+            .then(async (response) => {
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data?.message || data?.error || "Failed to load workspace files.");
+              }
+              if (controller.signal.aborted) return;
+              setEvaluationJsonlWorkspaceInventory(
+                normalizePlaygroundEnvironmentInventory(data?.files || data?.items || data)
+              );
+              setEvaluationJsonlWorkspaceState({ status: "ready", error: "" });
+            })
+            .catch((error) => {
+              if (controller.signal.aborted) return;
+              setEvaluationJsonlWorkspaceInventory([]);
+              setEvaluationJsonlWorkspaceState({
+                status: "error",
+                error: error instanceof Error ? error.message : "Failed to load workspace files.",
+              });
+            });
+
+          return () => controller.abort();
+        }, [
+          backendUrl,
+          evaluationJsonlWorkspaceEnvironmentId,
+          evaluationJsonlWorkspacePickerOpen,
+          requestHeadersSignature,
+        ]);
 
         useEffect(() => {
           if (!evaluationGuidanceEditingId || typeof window === "undefined") {
@@ -547,19 +923,6 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           });
           return () => window.cancelAnimationFrame(frame);
         }, [evaluationGuidanceEditingId, activeSet?.id, activeSet?.evaluationGuidance]);
-
-        useEffect(() => {
-          if (!evaluationCaseEditorMarkdownEditingKey || typeof window === "undefined") {
-            return undefined;
-          }
-          const frame = window.requestAnimationFrame(() => {
-            const textarea = evaluationCaseEditorTextareaRefs.current[evaluationCaseEditorMarkdownEditingKey];
-            if (!textarea) return;
-            textarea.focus();
-            resizeEvaluationGuidanceTextarea(textarea);
-          });
-          return () => window.cancelAnimationFrame(frame);
-        }, [evaluationCaseEditorMarkdownEditingKey]);
 
         useEffect(() => {
           if (!evaluationCreateModalOpen) {
@@ -661,6 +1024,46 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           };
         }, [topNavActionsPortalId, normalizedMode, activeSet?.id]);
 
+        useEffect(() => {
+          if (!breadcrumbActionsPortalId || typeof document === "undefined") {
+            setEvaluationBreadcrumbActionsContainer(null);
+            return undefined;
+          }
+          let disposed = false;
+          const updateContainer = () => {
+            if (disposed) return;
+            setEvaluationBreadcrumbActionsContainer(document.getElementById(breadcrumbActionsPortalId));
+          };
+          updateContainer();
+          const frameIds = [];
+          if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+            const scheduleLookup = () => {
+              const frameId = window.requestAnimationFrame(() => {
+                updateContainer();
+                const container = document.getElementById(breadcrumbActionsPortalId);
+                if (!container) {
+                  scheduleLookup();
+                }
+              });
+              frameIds.push(frameId);
+            };
+            scheduleLookup();
+          }
+          const observer = typeof MutationObserver !== "undefined"
+            ? new MutationObserver(updateContainer)
+            : null;
+          if (observer && document.body) {
+            observer.observe(document.body, { childList: true, subtree: true });
+          }
+          return () => {
+            disposed = true;
+            if (typeof window !== "undefined" && typeof window.cancelAnimationFrame === "function") {
+              frameIds.forEach((frameId) => window.cancelAnimationFrame(frameId));
+            }
+            if (observer) observer.disconnect();
+          };
+        }, [breadcrumbActionsPortalId, normalizedMode, activeSet?.id]);
+
         useEffect(() => () => {
           if (evaluationCaseEditorFrameRef.current && typeof window !== "undefined") {
             window.cancelAnimationFrame(evaluationCaseEditorFrameRef.current);
@@ -702,7 +1105,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           }
 
           function handleEvaluationVersionKeyboardShortcuts(event) {
-            if (event.defaultPrevented || evaluationVersionModal || evaluationVersionState.status === "loading") {
+            if (event.defaultPrevented || evaluationVersionModal || evaluationVersionSaveDialog || evaluationVersionState.status === "loading") {
               return;
             }
             const isCommand = event.metaKey || event.ctrlKey;
@@ -710,18 +1113,10 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
             const key = String(event.key || "").toLowerCase();
             if (key === "s") {
               event.preventDefault();
-              if (event.shiftKey) {
-                openCreateEvaluationVersionModal();
-              } else {
-                saveCurrentEvaluationVersion();
-              }
+              openEvaluationVersionSaveDialog({ mode: event.shiftKey ? "new" : undefined });
             } else if (key === "p" && !event.shiftKey) {
               event.preventDefault();
-              if (canPublishSelectedEvaluationVersion()) {
-                publishCurrentEvaluationVersion();
-              } else {
-                setEvaluationVersionsSidebarOpen(true);
-              }
+              openEvaluationVersionSaveDialog();
             }
           }
 
@@ -730,6 +1125,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         }, [
           activeSet,
           evaluationVersionModal,
+          evaluationVersionSaveDialog,
           evaluationVersionState.status,
           isEvaluationDetailPage,
         ]);
@@ -749,7 +1145,11 @@ export const EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
 
           function handleEvaluationActionsPopoverPointerDown(event) {
             const target = event?.target instanceof Node ? event.target : null;
-            if (!target || !evaluationActionsPopoverRef.current || evaluationActionsPopoverRef.current.contains(target)) {
+            if (
+              !target
+              || evaluationActionsPopoverRef.current?.contains(target)
+              || evaluationActionsPopoverSurfaceRef.current?.contains(target)
+            ) {
               return;
             }
             setEvaluationActionsPopoverOpen(false);

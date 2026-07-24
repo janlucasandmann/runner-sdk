@@ -63,6 +63,29 @@ export interface PlatformPermissionActionPresentation {
   description?: ReactNode;
 }
 
+export type PlatformPermissionsOverviewVariant = "default" | "compact";
+
+export interface PlatformPermissionsOverviewProps {
+  permissionSet?: PlatformPermissionSet | null;
+  accessOptions?: readonly PlatformPermissionAccessOption[];
+  ringDefinitions?: readonly PlatformPermissionRingDefinition[];
+  animationKey?: string | number;
+  disabled?: boolean;
+  ariaLabel?: string;
+  className?: string;
+  variant?: PlatformPermissionsOverviewVariant;
+  onRingAccessChange?: (ringId: string, access: PlatformPermissionAccess) => void;
+}
+
+export interface PlatformPermissionsSettingsSummaryProps
+  extends Omit<PlatformPermissionsOverviewProps, "disabled" | "onRingAccessChange"> {
+  title?: ReactNode;
+  tooltip?: string;
+  editLabel?: ReactNode;
+  editDisabled?: boolean;
+  onEdit?: () => void;
+}
+
 export interface PlatformPermissionsPageProps {
   permissionSet?: PlatformPermissionSet | null;
   accessOptions?: readonly PlatformPermissionAccessOption[];

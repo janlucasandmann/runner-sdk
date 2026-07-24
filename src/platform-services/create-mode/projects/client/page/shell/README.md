@@ -10,7 +10,7 @@ This directory contains application-shell state, lifecycle, and navigation integ
 
 - [`01-state-and-loading.mjs`](01-state-and-loading.mjs) — State and projection logic for 01 State And Loading.
 - [`02-editor-and-project-state.mjs`](02-editor-and-project-state.mjs) — State and projection logic for 02 Editor And Project State.
-- [`03-derived-task-state.mjs`](03-derived-task-state.mjs) — State and projection logic for 03 Derived Task State.
+- [`03-derived-task-state.mjs`](03-derived-task-state.mjs) — Derived task state plus durable attachment URL projection and inline-image reconciliation.
 - [`04-release-state-and-navigation.mjs`](04-release-state-and-navigation.mjs) — State and projection logic for 04 Release State And Navigation.
 
 ## Working in this directory

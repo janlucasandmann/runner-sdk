@@ -322,28 +322,37 @@ export const EVALUATIONS_STYLE_TABLES = String.raw`        line-height: 1.35;
         transform: translateY(0);
       }
 
-      .playground-evaluations-pass-threshold-inline .playground-evaluations-input {
-        width: 76px;
-        height: 28px;
-        padding: 0 10px;
-        border-radius: 999px;
+      .playground-evaluations-pass-threshold-inline .playground-evaluations-pass-threshold-input {
+        width: auto;
+        max-width: 50px;
+        height: 24px;
+        padding: 0;
+        border: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0;
         background: transparent;
         font-size: 12px;
-        text-align: center !important;
+        text-align: right !important;
       }
 
+      .playground-evaluations-description-section.playground-agents-detail-instructions-section,
       .playground-evaluations-dataset-guidance-section.playground-agents-detail-instructions-section {
-        margin-bottom: 16px;
+        margin-top: 0;
+        margin-bottom: 0;
+        padding-bottom: 3px;
       }
 
       .playground-evaluations-page .playground-agents-detail-instructions-section .playground-tasks-detail-section-header {
         background: transparent !important;
       }
 
+      .playground-evaluations-description-section .playground-tasks-detail-description-editor,
       .playground-evaluations-dataset-guidance-section .playground-tasks-detail-description-editor {
         min-height: 118px;
       }
 
+      .playground-evaluations-description-section .playground-tasks-detail-description-input,
+      .playground-evaluations-description-section .playground-tasks-detail-description-preview-scope.tb-runner-chat,
       .playground-evaluations-dataset-guidance-section .playground-tasks-detail-description-input,
       .playground-evaluations-dataset-guidance-section .playground-tasks-detail-description-preview-scope.tb-runner-chat {
         min-height: 118px;
@@ -362,6 +371,9 @@ export const EVALUATIONS_STYLE_TABLES = String.raw`        line-height: 1.35;
         align-items: center;
         justify-content: space-between;
         gap: 16px;
+        padding-bottom: 12px;
+        margin-bottom: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       .playground-evaluations-cases-title {
@@ -369,4 +381,3 @@ export const EVALUATIONS_STYLE_TABLES = String.raw`        line-height: 1.35;
         color: rgba(255, 255, 255, 0.96);
         font-size: 14px;
 `;
-

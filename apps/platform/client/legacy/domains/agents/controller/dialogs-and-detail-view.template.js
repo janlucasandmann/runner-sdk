@@ -1283,9 +1283,16 @@
                   : React.createElement(Copy, { width: 12, height: 12, strokeWidth: 1.45 })
               );
             };
-            const renderAgentFactRow = (label, control) => React.createElement("div", { className: "playground-project-overview-sidebar-row", key: label },
+            const renderAgentFactRow = (label, control, options = {}) => React.createElement("div", {
+                className: "playground-project-overview-sidebar-row"
+                  + (options.className ? " " + options.className : ""),
+                key: label,
+              },
               React.createElement("div", { className: "playground-project-overview-sidebar-row-label" }, label),
-              React.createElement("div", { className: "playground-project-overview-sidebar-row-value is-editable" }, control)
+              React.createElement("div", {
+                className: "playground-project-overview-sidebar-row-value is-editable"
+                  + (options.valueClassName ? " " + options.valueClassName : ""),
+              }, control)
             );
             const renderAgentFactValue = (value, extraClassName = "") =>
               React.createElement("span", {
@@ -1370,7 +1377,7 @@
                     )
                   )
                 ),
-                alignment: "start",
+                alignment: options.alignment || "start",
                 fullWidth: true,
                 loading: ownerOptions.length === 0 && (workspaceTeamsLoading || ownerMenuIsLoading),
                 loadingContent: "Loading team members...",
@@ -1503,80 +1510,20 @@
               )
             );
   
-            const renderAgentSidebarToggleButton = () => React.createElement("button", {
-                type: "button",
-                className: "playground-project-overview-sidebar-toggle",
-                onClick: () => setAgentDetailSidebarCollapsed((current) => !current),
-                title: agentDetailSidebarCollapsed ? "Show agent sidebar" : "Hide agent sidebar",
-                "aria-label": agentDetailSidebarCollapsed ? "Show agent sidebar" : "Hide agent sidebar",
-                "aria-pressed": agentDetailSidebarCollapsed ? "true" : "false",
-              },
-              React.createElement(PanelRight, {
-                width: 15,
-                height: 15,
-                strokeWidth: 1.8,
-              })
-            );
-  
             const agentSharedTeamIds = getAgentSharedTeamIds(draftAgent);
             const agentVisibilityLabel = agentSharedTeamIds.length > 0 ? "Public" : "Private";
-  	          const agentProfileSection = React.createElement("div", { className: "playground-agents-profile-section" },
-  	            React.createElement("div", { className: "profile-editor-avatar-wrap playground-agents-profile-avatar-wrap" },
-                React.createElement("div", {
-                    className: "profile-editor-avatar playground-agents-profile-avatar",
-                    ref: canEditAgentProfilePhoto && agentProfileAvatarPickerOpen ? agentProfileAvatarPickerRef : null,
-                  },
-                  React.createElement(canEditAgentProfilePhoto ? "button" : "div", canEditAgentProfilePhoto
-                    ? {
-                        type: "button",
-                        className: "profile-editor-avatar-surface playground-agents-detail-avatar-surface-button",
-                        onClick: () => setAgentProfileAvatarPickerOpen((current) => !current),
-                        "aria-label": "Choose agent profile picture",
-                        "aria-expanded": agentProfileAvatarPickerOpen ? "true" : "false",
-                      }
-                    : { className: "profile-editor-avatar-surface" },
-                    agentProfilePhotoUrl
-                      ? React.createElement("img", {
-                          className: "profile-editor-avatar-image",
-                          src: agentProfilePhotoUrl,
-                          alt: getAccountInitials(draftAgent.name || (isTeamAgent ? "Squad" : "Agent")),
-                          onError: () => setAgentProfileAvatarBroken(true),
-                        })
-                      : React.createElement("span", { className: "profile-editor-avatar-fallback" }, getAccountInitials(draftAgent.name || (isTeamAgent ? "Squad" : "Agent")))
-                  ),
-                  canEditAgentProfilePhoto
-                    ? React.createElement("div", {
-                      className: "playground-agents-avatar-picker-shell playground-tasks-toolbar-popup-shell" + (agentProfileAvatarPickerOpen ? " is-open" : ""),
-                    },
-                      agentProfileAvatarPickerOpen
-                        ? React.createElement(PlatformPopupSurface, {
-                            className: "playground-agents-avatar-picker-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                            onClick: (event) => event.stopPropagation(),
-                          },
-                            PLAYGROUND_AGENT_PROFILE_PRESET_OPTIONS.map((option) =>
-                              React.createElement("button", {
-                                  key: option.id,
-                                  type: "button",
-                                  className: "playground-agents-avatar-picker-option" + (agentProfilePhotoUrl === option.url ? " is-selected" : ""),
-                                  onClick: () => handleAgentProfilePhotoSelection(option.url),
-                                  title: option.label,
-                                  "aria-label": option.label,
-                                },
-                                React.createElement("div", { className: "playground-agents-avatar-picker-option-surface" },
-                                  React.createElement("img", {
-                                    className: "playground-agents-avatar-picker-option-image",
-                                    src: option.url,
-                                    alt: option.label,
-                                  })
-                                )
-                              )
-                            )
-                          )
-                        : null
-                    )
-                    : null
-                )
-              ),
+            const agentProfileSection = React.createElement("div", {
+                className: "playground-agents-profile-section playground-agent-detail-editor-profile",
+              },
+                React.createElement(PlatformProfileImagePicker, {
+                  value: agentProfilePhotoUrl,
+                  fallback: getAccountInitials(draftAgent.name || (isTeamAgent ? "Squad" : "Agent")),
+                  options: PLAYGROUND_AGENT_PROFILE_PRESET_OPTIONS,
+                  editable: canEditAgentProfilePhoto,
+                  ariaLabel: "Choose agent profile picture",
+                  className: "profile-editor-avatar playground-agents-profile-avatar playground-agents-detail-profile-image-picker",
+                  onChange: (url) => handleAgentProfilePhotoSelection(url),
+                }),
               React.createElement("div", { className: "playground-agents-profile-copy" },
                 React.createElement("div", { className: "playground-agents-profile-name-wrap" },
                   React.createElement("input", {
@@ -1596,8 +1543,6 @@
                 )
               )
             );
-            const agentDetailTabBarActions = null;
-            const agentDetailSidebarToggle = renderAgentSidebarToggleButton();
   
             const renderAgentReadonlyModelValue = (modelMeta) => {
               const providerIcon = getPlaygroundAgentModelProviderIcon(modelMeta);
@@ -2210,94 +2155,42 @@
                 React.createElement("span", { className: "playground-project-overview-sidebar-resource-label playground-agents-detail-about-value" }, content)
               );
             };
-            const agentPropertiesSidebar = React.createElement(React.Fragment, null,
-              React.createElement("section", {
-                  className: "playground-project-overview-sidebar-card playground-agents-detail-about-card",
-                },
-                React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
-                  React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "About")
+            const agentPropertiesSidebar = React.createElement(PlatformUiCard, {
+                as: "section",
+                variant: "sidebar",
+                cardTitle: "About",
+                className: "playground-agents-detail-about-card",
+              },
+              React.createElement("div", { className: "playground-agents-detail-sidebar-actions playground-agents-detail-about-list" },
+                renderAgentAboutRow(
+                  "email",
+                  React.createElement(Mail, { width: 14, height: 14, strokeWidth: 1.85 }),
+                  React.createElement("span", {
+                    className: "playground-agents-detail-about-email",
+                    title: agentEmailAddress || "No email address available",
+                  }, agentEmailAddress || "No email address available"),
+                  {
+                    extraClassName: "is-email",
+                    title: agentEmailAddress || "No email address available",
+                  }
                 ),
-                React.createElement("div", { className: "playground-agents-detail-sidebar-actions playground-agents-detail-about-list" },
-                  renderAgentAboutRow(
-                    "email",
-                    React.createElement(Mail, { width: 14, height: 14, strokeWidth: 1.85 }),
-                    React.createElement("span", {
-                      className: "playground-agents-detail-about-email",
-                      title: agentEmailAddress || "No email address available",
-                    }, agentEmailAddress || "No email address available"),
-                    {
-                      extraClassName: "is-email",
-                      title: agentEmailAddress || "No email address available",
-                    }
-                  ),
-  	                renderAgentAboutRow(
-  	                  "model",
-  	                  null,
-  	                  agentPrimaryModelControl,
-  	                  { extraClassName: "is-model" }
-  	                ),
-  	                renderAgentVoiceSelector()
-  	              )
-  	            ),
-              React.createElement("section", { className: "playground-project-overview-sidebar-card playground-agents-detail-actions-card" },
-                React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
-                  React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Actions")
-                ),
-                React.createElement("div", { className: "playground-agents-detail-sidebar-actions" },
-                  React.createElement("button", {
-                      type: "button",
-                      className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action",
-                      onClick: () => openAgentSendToTeamModal(draftAgent),
-                      disabled: !draftAgent?.id
-                        || draftAgent.id === PLAYGROUND_AGENT_DRAFT_ID
-                        || isDefaultAgentConfigurationLocked,
-                    },
-                    React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
-                      React.createElement(UsersRound, { width: 14, height: 14, strokeWidth: 1.85 })
-                    ),
-                    React.createElement("span", { className: "playground-project-overview-sidebar-resource-label" }, "Send to Team")
-                  ),
-                  React.createElement("button", {
-                      type: "button",
-                      className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action",
-                      onClick: openAgentApiModal,
-                      disabled: !draftAgent?.id || draftAgent.id === PLAYGROUND_AGENT_DRAFT_ID,
-                    },
-                    React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
-                      React.createElement(Code, { width: 14, height: 14, strokeWidth: 1.85 })
-                    ),
-                    React.createElement("span", { className: "playground-project-overview-sidebar-resource-label" }, "Use via API")
-                  ),
-                  React.createElement("button", {
-                      type: "button",
-                      className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action",
-                      onClick: openCurrentAgentCopyModal,
-                    },
-                    React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
-                      React.createElement(Split, { width: 14, height: 14, strokeWidth: 1.85 })
-                    ),
-                    React.createElement("span", { className: "playground-project-overview-sidebar-resource-label" }, "Copy Agent")
-                  )
+	                renderAgentAboutRow(
+	                  "model",
+	                  null,
+	                  agentPrimaryModelControl,
+	                  { extraClassName: "is-model" }
+	                ),
+                renderAgentVoiceSelector(),
+                renderAgentFactRow(
+                  "Owner",
+                  renderAgentOwnerRow({ compact: true, alignment: "end" }),
+                  {
+                    className: "playground-agents-detail-about-owner-row",
+                    valueClassName: "playground-agents-detail-about-owner-control",
+                  }
                 )
-              ),
-              React.createElement("section", { className: "playground-project-overview-sidebar-card playground-agents-detail-owner-card" },
-                React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
-                  React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Owner")
-                ),
-                React.createElement("div", { className: "playground-agents-detail-sidebar-actions playground-agents-detail-owner-section-body" },
-                  renderAgentOwnerRow({ compact: true })
-                )
-              ),
-              React.createElement("section", { className: "playground-project-overview-sidebar-card playground-agents-detail-permissions-card" },
-                React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
-                  React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Permissions")
-                ),
-                React.createElement(AgentPermissionMeters, {
-                  permissionSet: draftAgent.permissionSet,
-                  onOpenPermissions: () => setAgentDetailTab("permissions"),
-                })
-              )
-            );
+	              )
+	            );
   
   ${GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.page}          const agentDetailThreadFilterOptions = [
               { id: "all", label: "All Threads", description: "Show every agent thread" },
@@ -2797,6 +2690,33 @@
                 handleAgentsHomeThreadOpen(threadId, { threadRecord: safeThread });
               },
             };
+            const resolvedAgentInsightsTableMode = agentDetailTab === "evaluation"
+              ? "evaluations"
+              : agentDetailInsightsTableMode;
+            const agentInsightsTableTabs = React.createElement(PlatformDetailTabBar, {
+              ariaLabel: "Agent insight data",
+              value: resolvedAgentInsightsTableMode,
+              tabs: [
+                { id: "threads", label: "Threads" },
+                { id: "evaluations", label: "Evaluations" },
+              ],
+              onValueChange: (nextMode) => {
+                if (agentDetailTab === "evaluation") {
+                  setAgentDetailTab("insights");
+                }
+                setAgentDetailInsightsTableMode(nextMode);
+                if (nextMode === "evaluations") {
+                  setAgentDetailEvaluationSelectedSetId("");
+                }
+              },
+              variant: "minimal",
+              className: "agents-overview-tab-bar playground-agent-insights-table-tabs",
+            });
+            const emptyAgentThreadsState = React.createElement(PlatformEmptyState, {
+              icon: MessageCircle,
+              title: "No threads yet",
+              description: "Threads started with this agent will appear here.",
+            });
             const agentThreadsSection = React.createElement("section", {
                 className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section",
                 key: "threads",
@@ -2814,7 +2734,7 @@
                     onChange: setAgentDetailThreadSorting,
                   },
                   toolbar: {
-                    title: "Threads",
+                    leading: agentInsightsTableTabs,
                     search: {
                       value: agentDetailThreadSearchQuery,
                       onChange: setAgentDetailThreadSearchQuery,
@@ -2835,13 +2755,17 @@
                   loading: agentsHomeThreadsLoading && agentDetailAllThreadRows.length === 0,
                   error: agentsHomeThreadsError && agentDetailAllThreadRows.length === 0 ? agentsHomeThreadsError : undefined,
                   emptyState: agentDetailThreadFilterMode === "all"
-                    ? "No agent threads yet."
+                    ? emptyAgentThreadsState
                     : "No matching agent threads.",
                   noResultsState: "No matching agent threads.",
                 },
               })
             );
-  ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.view}          const normalizedAgentDetailTab = agentDetailTab === "threads" ? "insights" : agentDetailTab;
+  ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.view}          const normalizedAgentDetailTab = agentDetailTab === "threads" || agentDetailTab === "evaluation"
+              ? "insights"
+              : agentDetailTab === "guardrails"
+                ? "settings"
+                : agentDetailTab;
   
             const teamSection = isTeamAgent
               ? React.createElement("div", { className: "playground-environments-stack" },
@@ -2911,24 +2835,216 @@
             const instructionsSection = React.createElement(PlatformInstructionsEditor, {
               value: draftAgent.instructions || "",
               onChange: (value) => updateAgentField("instructions", value),
-              title: isTeamAgent ? "Squad Instructions" : "Instructions",
+              title: agentProfileSection,
               placeholder: isTeamAgent ? "Add Squad Instructions here" : "Add Instructions here",
               ariaLabel: isTeamAgent ? "Squad instructions" : "Agent instructions",
               readOnly: isDefaultAgentConfigurationLocked,
               stickyHeader: !isDefaultAgentConfigurationLocked,
               historyKey: draftAgent.id || "draft-agent",
+              variant: "minimalistic-ui",
+              className: "playground-agent-detail-instructions-editor",
             });
   
             const agentInsightsSection = React.createElement(React.Fragment, null,
               agentUsageChartSection,
-              agentThreadsSection
+              resolvedAgentInsightsTableMode === "evaluations"
+                ? agentEvaluationsSection
+                : agentThreadsSection
             );
+            const agentAccessTeams = agentSharedTeamIds.map((teamId) => (
+              agentShareTeamById.get(String(teamId))
+              || {
+                id: String(teamId),
+                name: "Team",
+                kind: "team",
+                roleId: "member",
+                roleLabel: "Member",
+                createdAt: "",
+              }
+            ));
+            const availableAgentAccessTeams = availableAgentShareTeams.filter(
+              (team) => !agentSharedTeamIdSet.has(String(team.id))
+            );
+            const agentAccessAddTeamsControl = !isDefaultAgentConfigurationLocked
+              ? React.createElement(PlatformButtonSelector, {
+                  mode: "popup",
+                  buttonVariant: "secondary",
+                  buttonSize: "small",
+                  label: "Add Teams",
+                  leading: React.createElement(Plus, {
+                    width: 14,
+                    height: 14,
+                    strokeWidth: 1.8,
+                    "aria-hidden": "true",
+                  }),
+                  open: agentAccessTeamMenuOpen,
+                  onOpenChange: (nextOpen) => {
+                    if (
+                      nextOpen
+                      && typeof onWorkspaceTeamsRequest === "function"
+                      && !workspaceTeamsLoading
+                    ) {
+                      requestAgentWorkspaceTeams();
+                    }
+                    setAgentAccessTeamMenuOpen(nextOpen);
+                  },
+                  closeOnSelect: true,
+                  popupAriaLabel: "Add teams with agent access",
+                  popupAlignment: "right",
+                  popupRole: "menu",
+                  popupVariant: "minimal",
+                  popupWidth: 240,
+                  disabled: Boolean(agentAccessState.action),
+                  className: "playground-project-teams-add-shell playground-agent-access-team-menu",
+                  popupClassName: "playground-project-teams-menu",
+                },
+                availableAgentAccessTeams.length
+                  ? availableAgentAccessTeams.map((team) => React.createElement("button", {
+                      key: team.id,
+                      type: "button",
+                      role: "menuitem",
+                      className: "platform-data-table__menu-item playground-project-teams-menu-row",
+                      onClick: () => void handleAddAgentTeamAccess(team),
+                    },
+                    React.createElement("span", { className: "platform-data-table__menu-icon" },
+                      React.createElement(Users, { width: 14, height: 14, strokeWidth: 1.8 })
+                    ),
+                    React.createElement("span", { className: "platform-data-table__menu-copy" }, team.name)
+                  ))
+                  : React.createElement("div", {
+                      className: "playground-project-teams-menu-empty",
+                    }, workspaceTeamsLoading ? "Loading teams..." : "All available teams have access.")
+              )
+              : null;
+            const selectedAgentSystemAccessPrincipal = getPlatformSystemAccessPrincipal(agentAccessPrincipalId);
+            const selectedAgentAccessTeam = agentAccessPrincipalId && !selectedAgentSystemAccessPrincipal
+              ? agentAccessTeams.find((team) => String(team.id) === String(agentAccessPrincipalId)) || null
+              : null;
+            const restoreAgentDetailSidebarAfterAccess = () => {
+              if (agentDetailSidebarCollapsedBeforeAccessRef.current === null) {
+                return;
+              }
+              const shouldRestoreCollapsed = Boolean(agentDetailSidebarCollapsedBeforeAccessRef.current);
+              agentDetailSidebarCollapsedBeforeAccessRef.current = null;
+              setAgentDetailSidebarCollapsed(shouldRestoreCollapsed);
+            };
+            const handleAgentAccessPrincipalChange = (principalId) => {
+              const normalizedPrincipalId = String(principalId || "").trim();
+              const needsRoleSidebar = Boolean(
+                normalizedPrincipalId
+                && (
+                  !isPlatformSystemAccessPrincipalId(normalizedPrincipalId)
+                  || isPlatformRoleScopedSystemAccessPrincipalId(normalizedPrincipalId)
+                )
+              );
+              if (needsRoleSidebar) {
+                if (agentDetailSidebarCollapsedBeforeAccessRef.current === null) {
+                  agentDetailSidebarCollapsedBeforeAccessRef.current = Boolean(agentDetailSidebarCollapsed);
+                }
+                if (!agentDetailSidebarCollapsed) {
+                  setAgentDetailSidebarCollapsed(true);
+                }
+              } else if (!normalizedPrincipalId) {
+                restoreAgentDetailSidebarAfterAccess();
+              }
+              setAgentAccessRoleId("member");
+              setAgentAccessPrincipalId(normalizedPrincipalId);
+            };
+            const agentSettingsPermissionsSummary = React.createElement(
+              PlatformPermissionsSettingsSummary,
+              {
+                permissionSet: normalizePlaygroundPermissionSet(
+                  draftAgent.permissionSet,
+                  "agent"
+                ),
+                animationKey: agentPermissionChartAnimationKey,
+                title: "Agent Permissions",
+                tooltip: "Controls the permissions this agent has when working.",
+                editLabel: "Manage",
+                ariaLabel: "Agent permissions overview",
+                className: "playground-agent-settings-permissions-summary",
+                variant: "default",
+                onEdit: () => setAgentDetailTab("permissions"),
+              }
+            );
+            const agentAccessSettingsSection = React.createElement(PlatformResourceAccessSettings, {
+              teams: agentAccessTeams,
+              resourceLabel: isTeamAgent ? "Squad" : "Agent",
+              selectedPrincipalId: agentAccessPrincipalId,
+              onSelectedPrincipalIdChange: handleAgentAccessPrincipalChange,
+              subjectType: "agent_resource",
+              teamSubjectType: "agent_team_role",
+              systemPermissionSet: getPlatformSystemPrincipalPermissionSet(
+                getAgentMetadataRecord(draftAgent),
+                selectedAgentSystemAccessPrincipal?.id || PLATFORM_ALL_AGENTS_PRINCIPAL_ID,
+                "agent_resource"
+              ),
+              onSystemPermissionSetChange: isDefaultAgentConfigurationLocked
+                ? undefined
+                : updateAgentSystemAccessPermissionSet,
+              systemRolePermissionSet:
+                selectedAgentSystemAccessPrincipal &&
+                isPlatformRoleScopedSystemAccessPrincipalId(
+                  selectedAgentSystemAccessPrincipal.id
+                )
+                  ? getAgentSystemRolePermissionSet(
+                      draftAgent,
+                      selectedAgentSystemAccessPrincipal.id,
+                      agentAccessRoleId
+                    )
+                  : null,
+              onSystemRolePermissionSetChange: isDefaultAgentConfigurationLocked
+                ? undefined
+                : updateAgentSystemRoleAccessPermissionSet,
+              roles: PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => ({
+                id: role.id,
+                label: role.label,
+                description: role.description,
+                meta: (isTeamAgent ? "Squad" : "Agent") + " access",
+              })),
+              selectedRoleId: agentAccessRoleId,
+              onSelectedRoleIdChange: setAgentAccessRoleId,
+              teamPermissionSet: selectedAgentAccessTeam
+                ? getAgentTeamRolePermissionSet(
+                    draftAgent,
+                    selectedAgentAccessTeam.id,
+                    agentAccessRoleId
+                  )
+                : null,
+              onTeamPermissionSetChange: isDefaultAgentConfigurationLocked
+                ? undefined
+                : updateAgentTeamRoleAccessPermissionSet,
+              animationKey: agentPermissionChartAnimationKey,
+              disabled: isDefaultAgentConfigurationLocked,
+              backLabel: "Settings",
+              className: "playground-agent-access-settings",
+              tableProps: {
+                className: "playground-agent-access-platform-data-table",
+                titleTooltip: "Controls the access levels and permissions users inside teams have when editing or managing this agent.",
+                trailing: agentAccessAddTeamsControl,
+                selectedIds: selectedAgentAccessTeamIds,
+                onSelectedIdsChange: setSelectedAgentAccessTeamIds,
+                busy: Boolean(agentAccessState.action),
+                onRemoveTeams: isDefaultAgentConfigurationLocked
+                  ? undefined
+                  : (teams) => void handleRemoveAgentTeamsAccess(teams),
+                formatCreatedAt: (value) => value ? formatPlaygroundFileDate(value) : "—",
+                error: agentAccessState.error || null,
+              },
+            });
+            const agentSettingsSection = agentAccessPrincipalId
+              ? agentAccessSettingsSection
+              : React.createElement(
+                  React.Fragment,
+                  null,
+                  agentSettingsPermissionsSummary,
+                  agentAccessSettingsSection,
+                  agentGuardrailsSection
+                );
             const agentDetailActiveSection = normalizedAgentDetailTab === "permissions"
               ? null
-              : normalizedAgentDetailTab === "guardrails"
-                ? agentGuardrailsSection
-              : normalizedAgentDetailTab === "evaluation"
-                ? agentEvaluationsSection
+              : normalizedAgentDetailTab === "settings"
+                ? agentSettingsSection
               : normalizedAgentDetailTab === "insights"
                 ? agentInsightsSection
                 : React.createElement(React.Fragment, null,
@@ -2936,19 +3052,17 @@
   	                    ? renderEditorSection("team", "Squad Setup", "", teamSection, null, false)
   	                    : null,
   		                  instructionsSection
-  		                );
+ 		                );
             const agentDetailWorkspaceSection = React.createElement(AgentDetailPage, {
-                header: agentProfileSection,
-                tabBarActions: agentDetailTabBarActions,
-                sidebarToggle: agentDetailSidebarToggle,
                 sidebar: agentPropertiesSidebar,
                 activeTab: normalizedAgentDetailTab,
-                onTabChange: setAgentDetailTab,
                 sidebarCollapsed: agentDetailSidebarCollapsed,
                 sidebarPopoverOpen: Boolean(agentModelPopover || agentOwnerPopoverOpen || agentVoicePopoverOpen),
                 permissions: {
                   permissionSet: draftAgent.permissionSet,
                   animationKey: agentPermissionChartAnimationKey,
+                  backLabel: "Settings",
+                  onBack: () => setAgentDetailTab("settings"),
                   onPermissionSetChange: (permissionSet) => {
                     updateDraftAgent((current) => ({ ...current, permissionSet }));
                   },
@@ -2959,13 +3073,13 @@
               agentDetailActiveSection
             );
   
-  	          return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: agentDetailMainRef },
-  	            React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
-  	              React.createElement("div", { className: "playground-agents-detail-content" + ((normalizedAgentDetailTab === "general" || normalizedAgentDetailTab === "insights" || normalizedAgentDetailTab === "permissions" || normalizedAgentDetailTab === "evaluation" || normalizedAgentDetailTab === "guardrails") ? " is-agent-overview-general" : "") },
-  	                agentDetailWorkspaceSection
-                ),
-  ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.modal}            )
-            );
+              return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: agentDetailMainRef },
+                React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
+                  React.createElement("div", { className: "playground-agents-detail-content" + ((normalizedAgentDetailTab === "general" || normalizedAgentDetailTab === "insights" || normalizedAgentDetailTab === "permissions" || normalizedAgentDetailTab === "evaluation" || normalizedAgentDetailTab === "guardrails" || normalizedAgentDetailTab === "settings") ? " is-agent-overview-general" : "") },
+                    agentDetailWorkspaceSection
+                  ),
+  ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.modal}              )
+              );
           }
   
           const shouldShowAgentsHome = isHomeViewActive || !selectedAgentId;
@@ -2990,7 +3104,6 @@
             && !agentCreationSetupOpen
             && draftAgent?.id
             && draftAgent.id !== PLAYGROUND_AGENT_DRAFT_ID
-            && !draftAgent.isSystem
           );
           const canShowAgentAssistant = Boolean(
             !shouldShowAgentsHome
@@ -3050,79 +3163,139 @@
             draftAgent,
             saveState.isSaving,
           ]);
+          const isAgentActionTargetConfigurationLocked =
+            isPlaygroundDefaultAgentConfigurationLocked(draftAgent);
+          const isProtectedAgentActionTarget = Boolean(
+            draftAgent?.isDefault
+            || draftAgent?.isSystem
+            || isAgentActionTargetConfigurationLocked
+          );
+          const agentsTitleActions = titleActionsContainer && canShowAgentActions
+            ? createPortal(
+                React.createElement(PlatformPopup, {
+                    open: agentActionsPopoverOpen,
+                    rootRef: agentActionsPopoverRef,
+                    surfaceRef: agentActionsPopoverSurfaceRef,
+                    rootClassName: "playground-agent-title-actions-shell",
+                    surfaceClassName: "playground-agent-title-actions-popup",
+                    surfaceProps: {
+                      role: "menu",
+                      "aria-label": "Agent actions",
+                      width: 360,
+                      maxWidth: "calc(100vw - 16px)",
+                    },
+                    animation: "down-in",
+                    variant: "minimal",
+                    portal: true,
+                    placement: "bottom-start",
+                    trigger: React.createElement(PlatformIconButton, {
+                      type: "button",
+                      size: "compact",
+                      active: agentActionsPopoverOpen,
+                      title: "Agent actions",
+                      "aria-label": "Agent actions",
+                      "aria-haspopup": "menu",
+                      "aria-expanded": agentActionsPopoverOpen ? "true" : "false",
+                      disabled: saveState.isSaving,
+                      onClick: (event) => {
+                        event.stopPropagation();
+                        setAgentActionsPopoverOpen((current) => !current);
+                      },
+                    }, React.createElement(Ellipsis, { width: 14, height: 14, strokeWidth: 1.8 }))
+                  },
+                  React.createElement("div", { className: "playground-agents-detail-action-menu-meta" },
+                    [
+                      ["ID", draftAgent.id || "Unsaved agent"],
+                      ["Created", formatPlaygroundFileDate(draftAgent.createdAt)],
+                      ["Updated", formatPlaygroundFileDate(draftAgent.updatedAt)],
+                    ].map(([label, value]) =>
+                      React.createElement("div", { key: label, className: "playground-agents-detail-action-menu-meta-row" },
+                        React.createElement("span", { className: "playground-agents-detail-action-menu-meta-label" }, label),
+                        React.createElement("span", {
+                          className: "playground-agents-detail-action-menu-meta-value"
+                            + (label === "ID" ? " is-id" : ""),
+                          title: value,
+                        }, value)
+                      )
+                    )
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    role: "menuitem",
+                    className: "tb-popup-row",
+                    onClick: () => {
+                      setAgentActionsPopoverOpen(false);
+                      openAgentSendToTeamModal(draftAgent);
+                    },
+                    disabled: saveState.isSaving || isAgentActionTargetConfigurationLocked,
+                  },
+                    React.createElement(UsersRound, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", { className: "tb-popup-label" }, "Send to Team")
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    role: "menuitem",
+                    className: "tb-popup-row",
+                    onClick: () => {
+                      setAgentActionsPopoverOpen(false);
+                      openAgentApiModal();
+                    },
+                    disabled: saveState.isSaving,
+                  },
+                    React.createElement(Code, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", { className: "tb-popup-label" }, "Use via API")
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    role: "menuitem",
+                    className: "tb-popup-row",
+                    onClick: () => {
+                      setAgentActionsPopoverOpen(false);
+                      openCurrentAgentCopyModal();
+                    },
+                    disabled: saveState.isSaving,
+                  },
+                    React.createElement(Split, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", { className: "tb-popup-label" }, "Copy Agent")
+                  ),
+                  React.createElement("div", { className: "playground-agent-title-actions-divider", "aria-hidden": "true" }),
+                  React.createElement("button", {
+                    type: "button",
+                    role: "menuitem",
+                    className: "tb-popup-row",
+                    onClick: () => {
+                      setAgentActionsPopoverOpen(false);
+                      openAgentRenameDialog(draftAgent);
+                    },
+                    disabled: saveState.isSaving || isProtectedAgentActionTarget,
+                  },
+                    React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", { className: "tb-popup-label" }, "Rename")
+                  ),
+                  React.createElement("button", {
+                    type: "button",
+                    role: "menuitem",
+                    className: "tb-popup-row",
+                    onClick: () => {
+                      setAgentActionsPopoverOpen(false);
+                      void handleDeleteAgent(draftAgent.id);
+                    },
+                    disabled: saveState.isSaving || isProtectedAgentActionTarget,
+                  },
+                    React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", { className: "tb-popup-label" }, "Delete")
+                  )
+                ),
+                titleActionsContainer
+              )
+            : null;
           const agentsTopNavActions = topNavActionsContainer
             && !shouldShowAgentsHome
             && !agentCreationSetupOpen
             ? createPortal(
-                React.createElement(React.Fragment, null,
-                  !agentVersionChangesState
-                    ? renderAgentPublishAction()
-                    : null,
-                  canShowAgentActions
-                    ? React.createElement("div", {
-                        className: "playground-tasks-toolbar-popup-shell",
-                        ref: agentActionsPopoverRef,
-                      },
-                        React.createElement("button", {
-  	                      type: "button",
-  	                      className: "playground-files-header-icon-button is-plain" + (agentActionsPopoverOpen ? " is-active" : ""),
-  	                        title: "Agent actions",
-  	                        "aria-label": "Agent actions",
-  	                        "aria-expanded": agentActionsPopoverOpen ? "true" : "false",
-  	                        onClick: () => setAgentActionsPopoverOpen((current) => !current),
-  	                        disabled: saveState.isSaving,
-  	                      }, React.createElement(Ellipsis, { width: 16, height: 16, strokeWidth: 1.8 })),
-  	                      agentActionsPopoverOpen
-  	                        ? React.createElement(PlatformPopupSurface, {
-  	                            className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-  	                            onClick: (event) => event.stopPropagation(),
-  	                          },
-                                React.createElement("div", { className: "playground-agents-detail-action-menu-meta" },
-                                  [
-                                    ["ID", draftAgent.id || "Unsaved agent"],
-                                    ["Created", formatPlaygroundFileDate(draftAgent.createdAt)],
-                                    ["Updated", formatPlaygroundFileDate(draftAgent.updatedAt)],
-                                  ].map(([label, value]) =>
-                                    React.createElement("div", { key: label, className: "playground-agents-detail-action-menu-meta-row" },
-                                      React.createElement("span", { className: "playground-agents-detail-action-menu-meta-label" }, label),
-                                      React.createElement("span", {
-                                        className: "playground-agents-detail-action-menu-meta-value",
-                                        title: value,
-                                      }, value)
-                                    )
-                                  )
-                                ),
-  		                            React.createElement("button", {
-  		                              type: "button",
-  		                              className: "tb-popup-row",
-  	                              onClick: () => {
-                                  setAgentActionsPopoverOpen(false);
-                                  openAgentRenameDialog(draftAgent);
-                                },
-                              },
-                                React.createElement(SquarePen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                  React.createElement("span", null, "Rename")
-                                )
-                              ),
-                              React.createElement("button", {
-                                type: "button",
-                                className: "tb-popup-row",
-                                onClick: () => {
-                                  setAgentActionsPopoverOpen(false);
-                                  void handleDeleteAgent(draftAgent.id);
-                                },
-                              },
-                                React.createElement(Trash2, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                                  React.createElement("span", null, "Delete")
-                                )
-                              )
-                            )
-                          : null
-                      )
-  	                  : null
-                ),
+                !agentVersionChangesState
+                  ? renderAgentPublishAction()
+                  : null,
                 topNavActionsContainer
               )
             : null;

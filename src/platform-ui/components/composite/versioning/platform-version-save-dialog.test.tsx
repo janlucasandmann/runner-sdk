@@ -2,6 +2,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@testing-library/user-event";
 import { PlatformVersionSaveDialog } from "./platform-version-save-dialog.js";
 
 beforeEach(() => {
@@ -10,6 +11,18 @@ beforeEach(() => {
     return 1;
   });
   vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => undefined);
+  Object.defineProperty(document, "elementFromPoint", {
+    configurable: true,
+    value: () => document.querySelector("[contenteditable='true']") || document.body,
+  });
+  Object.defineProperty(Range.prototype, "getClientRects", {
+    configurable: true,
+    value: () => [],
+  });
+  Object.defineProperty(Range.prototype, "getBoundingClientRect", {
+    configurable: true,
+    value: () => ({ left: 0, right: 0, top: 0, bottom: 0, width: 0, height: 0 }),
+  });
 });
 
 afterEach(() => {
@@ -19,6 +32,7 @@ afterEach(() => {
 
 describe("PlatformVersionSaveDialog", () => {
   it("reviews changes and submits the selected version destination", async () => {
+    const user = userEvent.setup({ delay: 1 });
     const onSubmit = vi.fn().mockResolvedValue(undefined);
 
     render(
@@ -52,20 +66,25 @@ describe("PlatformVersionSaveDialog", () => {
     expect(screen.getByText("Node diff")).not.toBeNull();
 
     fireEvent.click(screen.getByRole("radio", { name: "Current version" }));
-    const description = screen.getByRole("textbox", {
+    let description = screen.getByRole("textbox", {
       name: "Version description (optional)",
-    }) as HTMLTextAreaElement;
+    });
     expect(
       document.querySelector(".platform-version-save-dialog__description-editor")
         ?.classList.contains("is-minimalistic-ui"),
     ).toBe(true);
-    expect(description.value).toBe("Existing description");
-    fireEvent.change(description, { target: { value: "Updated production version" } });
+    expect(description.textContent).toBe("Existing description");
+    await user.click(description);
+    await user.keyboard("{Control>}a{/Control}");
+    await user.paste("Updated production version");
     fireEvent.click(screen.getByRole("radio", { name: "Create new version" }));
-    expect(description.value).toBe("");
-    fireEvent.change(description, { target: { value: "New version draft" } });
+    description = screen.getByRole("textbox", { name: "Version description (optional)" });
+    expect(description.textContent).toBe("");
+    await user.click(description);
+    await user.paste("New version draft");
     fireEvent.click(screen.getByRole("radio", { name: "Current version" }));
-    expect(description.value).toBe("Updated production version");
+    description = screen.getByRole("textbox", { name: "Version description (optional)" });
+    expect(description.textContent).toBe("Updated production version");
     fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
 
     await waitFor(() => {
@@ -93,7 +112,8 @@ describe("PlatformVersionSaveDialog", () => {
     expect(screen.getByRole("radio", { name: "Create new version" }).getAttribute("aria-checked")).toBe("true");
   });
 
-  it("hydrates version metadata that arrives after opening without replacing typed drafts", () => {
+  it("hydrates version metadata that arrives after opening without replacing typed drafts", async () => {
+    const user = userEvent.setup({ delay: 1 });
     const { rerender } = render(
       <PlatformVersionSaveDialog
         open
@@ -104,10 +124,11 @@ describe("PlatformVersionSaveDialog", () => {
       />,
     );
 
-    const description = screen.getByRole("textbox", {
+    let description = screen.getByRole("textbox", {
       name: "Version description (optional)",
-    }) as HTMLTextAreaElement;
-    fireEvent.change(description, { target: { value: "Unsaved new version description" } });
+    });
+    await user.click(description);
+    await user.paste("Unsaved new version description");
 
     rerender(
       <PlatformVersionSaveDialog
@@ -121,9 +142,11 @@ describe("PlatformVersionSaveDialog", () => {
     );
 
     fireEvent.click(screen.getByRole("radio", { name: "Current version" }));
-    expect(description.value).toBe("Loaded current version description");
+    description = screen.getByRole("textbox", { name: "Version description (optional)" });
+    expect(description.textContent).toBe("Loaded current version description");
     fireEvent.click(screen.getByRole("radio", { name: "Create new version" }));
-    expect(description.value).toBe("Unsaved new version description");
+    description = screen.getByRole("textbox", { name: "Version description (optional)" });
+    expect(description.textContent).toBe("Unsaved new version description");
   });
 
   it("keeps the dialog open and shows mutation failures", async () => {

@@ -10,6 +10,7 @@ This directory owns the Popup composite component, including its public API, pre
 
 - [`index.ts`](index.ts) — Public barrel or composition entry point.
 - [`platform-popup.test.tsx`](platform-popup.test.tsx) — Regression coverage for Platform Popup.
+- [`platform-popup-search-header.tsx`](platform-popup-search-header.tsx) — Reusable popup search row with optional icon and shortcut hint.
 - [`platform-popup.tsx`](platform-popup.tsx) — Focused implementation of Platform Popup.
 - [`popup.css`](popup.css) — Styles for Popup.
 
@@ -51,6 +52,10 @@ selectors, while action menus normally size to content.
 `PlatformPopupSurface` is the lower-level surface for context menus or hosts
 that already own positioning. `PlatformPopupDismissLayer` supplies canonical
 backdrop geometry but deliberately does not decide how state closes.
+
+`PlatformPopupSearchHeader` provides the standard searchable popup header. Put
+it in a selector's `popupHeader` slot and use the selector's
+`popupHeaderClassName="is-search-header"` to remove the host padding.
 
 ## Variants and animation
 

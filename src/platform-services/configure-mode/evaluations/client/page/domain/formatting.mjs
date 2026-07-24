@@ -82,10 +82,17 @@ export const EVALUATIONS_PAGE_FORMATTING_SCRIPT = String.raw`      function isEv
         const normalizedStatus = String(caseItem?.status || "").trim().toLowerCase();
         const score = Math.max(0, Math.min(1, Number(caseItem?.score || 0)));
         const parseStatus = String(caseItem?.evaluatorParseStatus || caseItem?.evaluator_parse_status || "").trim().toLowerCase();
+        const parsedEvaluatorResult = getPlaygroundEvaluationParsedEvaluatorResult(caseItem?.evaluatorOutput)
+          || getPlaygroundEvaluationParsedEvaluatorResult(caseItem?.evaluatorReason);
+        const hasScoredEvaluatorResult = parseStatus.startsWith("parsed")
+          || parseStatus === "code_numeric"
+          || Number.isFinite(parsedEvaluatorResult?.score);
         if (
           normalizedStatus === "error"
-          && score > 0
-          && (parseStatus.startsWith("parsed") || caseItem?.evaluatorThreadId || caseItem?.evaluatorOutput)
+          && (
+            hasScoredEvaluatorResult
+            || (score > 0 && (caseItem?.evaluatorThreadId || caseItem?.evaluatorOutput))
+          )
         ) {
           return score >= normalizePlaygroundEvaluationPassThreshold(passThreshold) ? "passed" : "failed";
         }
@@ -269,6 +276,12 @@ export const EVALUATIONS_PAGE_FORMATTING_SCRIPT = String.raw`      function isEv
           ?? parsed.confidence_score
           ?? parsed.score
         );
+        const score = normalizePlaygroundEvaluationConfidence(
+          parsed.score
+          ?? parsed.grade
+          ?? parsed.rating
+          ?? parsed.result?.score
+        );
         const cleanupTextFragment = (fragment) => {
           const fence = String.fromCharCode(96) + String.fromCharCode(96) + String.fromCharCode(96);
           return String(fragment || "")
@@ -281,6 +294,7 @@ export const EVALUATIONS_PAGE_FORMATTING_SCRIPT = String.raw`      function isEv
         return {
           reason,
           confidence,
+          score,
           beforeText,
           afterText,
         };
@@ -429,4 +443,3 @@ export const EVALUATIONS_PAGE_FORMATTING_SCRIPT = String.raw`      function isEv
       }
 
 `;
-

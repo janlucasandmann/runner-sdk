@@ -50,7 +50,11 @@ export function createCoreGateway(bindings) {
         const requestUrl = new URL(req.url || "/", `http://localhost:${port}`);
         const normalizedPath = upstreamPath.startsWith("/") ? upstreamPath : `/${upstreamPath}`;
         const targetUrl = new URL(`${aiosOrigin}/api/playground/cloud${normalizedPath}`);
-        targetUrl.search = requestUrl.search;
+        // Aggregate endpoints issue several upstream reads with independent query strings.
+        // Preserve those explicit queries instead of replacing them with the outer request.
+        if (!normalizedPath.includes("?")) {
+            targetUrl.search = requestUrl.search;
+        }
         return targetUrl;
     }
     async function fetchAiosCloud(req, upstreamPath, init = {}) {

@@ -3,7 +3,7 @@ export const API_KEYS_LOAD_LIFECYCLE_SCRIPT = `        useEffect(() => {
             return;
           }
 
-          if (activePage === "develop" || activePage === "develop-api-keys") {
+          if (activePage === "develop-api-keys") {
             void loadSettingsApiKeys();
           }
           if (activePage === "develop-webhooks") {

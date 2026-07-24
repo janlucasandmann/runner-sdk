@@ -12,7 +12,11 @@ platform API calls; `useSecurityServiceRepository` obtains the centralized
 ## Contents
 
 - [`security-repository.ts`](security-repository.ts) — Service contract and HTTP
-  endpoint mapping.
+  endpoint mapping, including repository version list/create/update/publish/
+  delete operations and the shared workspace-team resource-share lifecycle
+  used by repository Settings. It also exposes the centralized expanded
+  team-member lookup used to populate the repository Owner selector; raw
+  membership payloads are normalized in the domain layer.
 - [`use-security-repository.ts`](use-security-repository.ts) — Stable React
   adapter.
 - [`security-repository.test.ts`](security-repository.test.ts) — Endpoint and
@@ -36,4 +40,3 @@ npm run typecheck
 - [Client guide](../README.md)
 - [Service guide](../../README.md)
 - [Directory README standard](../../../../../../docs/development/readme-standard.md)
-

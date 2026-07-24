@@ -1,4 +1,11 @@
-import { useEffect, useId, useRef, useState } from "react";
+import {
+  forwardRef,
+  useEffect,
+  useId,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import { EllipsisVertical, Pencil, Trash2 } from "lucide-react";
 
 import {
@@ -7,7 +14,10 @@ import {
 } from "../../ui/button/index.js";
 import { PlatformIconButton } from "../../ui/icon-button/index.js";
 import { PlatformModal } from "../modal/index.js";
-import { PlatformPopup } from "../popup/index.js";
+import {
+  PlatformPopup,
+  type PlatformPopupAnchorPoint,
+} from "../popup/index.js";
 
 export interface PlatformAttachmentActionMenuProps {
   name: string;
@@ -18,6 +28,11 @@ export interface PlatformAttachmentActionMenuProps {
   triggerLabel?: string;
 }
 
+export interface PlatformAttachmentActionMenuHandle {
+  openAt: (point: PlatformPopupAnchorPoint) => void;
+  close: () => void;
+}
+
 function joinClassNames(...classNames: Array<string | false | null | undefined>) {
   return classNames
     .filter((className): className is string => typeof className === "string" && Boolean(className.trim()))
@@ -25,19 +40,27 @@ function joinClassNames(...classNames: Array<string | false | null | undefined>)
     .join(" ");
 }
 
-export function PlatformAttachmentActionMenu({
-  name,
-  onRename,
-  onDelete,
-  disabled = false,
-  className = "",
-  triggerLabel = `More actions for ${name}`,
-}: PlatformAttachmentActionMenuProps) {
+export const PlatformAttachmentActionMenu = forwardRef<
+  PlatformAttachmentActionMenuHandle,
+  PlatformAttachmentActionMenuProps
+>(function PlatformAttachmentActionMenu(
+  {
+    name,
+    onRename,
+    onDelete,
+    disabled = false,
+    className = "",
+    triggerLabel = `More actions for ${name}`,
+  },
+  forwardedRef,
+) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const surfaceRef = useRef<HTMLDivElement | null>(null);
   const renameInputRef = useRef<HTMLInputElement | null>(null);
   const renameInputId = useId();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [menuAnchorPoint, setMenuAnchorPoint] =
+    useState<PlatformPopupAnchorPoint | null>(null);
   const [renameOpen, setRenameOpen] = useState(false);
   const [renameDraft, setRenameDraft] = useState(name);
   const [renamePending, setRenamePending] = useState(false);
@@ -56,9 +79,13 @@ export function PlatformAttachmentActionMenu({
       if (!(target instanceof Node)) return;
       if (rootRef.current?.contains(target) || surfaceRef.current?.contains(target)) return;
       setMenuOpen(false);
+      setMenuAnchorPoint(null);
     };
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMenuOpen(false);
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+        setMenuAnchorPoint(null);
+      }
     };
     window.addEventListener("pointerdown", handlePointerDown, true);
     window.addEventListener("keydown", handleKeyDown);
@@ -68,10 +95,27 @@ export function PlatformAttachmentActionMenu({
     };
   }, [menuOpen]);
 
+  useImperativeHandle(
+    forwardedRef,
+    () => ({
+      openAt: (point) => {
+        if (disabled || (!onRename && !onDelete)) return;
+        setMenuAnchorPoint(point);
+        setMenuOpen(true);
+      },
+      close: () => {
+        setMenuOpen(false);
+        setMenuAnchorPoint(null);
+      },
+    }),
+    [disabled, onDelete, onRename],
+  );
+
   if (!onRename && !onDelete) return null;
 
   const openRenameDialog = () => {
     setMenuOpen(false);
+    setMenuAnchorPoint(null);
     setRenameDraft(name);
     setRenameError("");
     setRenameOpen(true);
@@ -114,7 +158,9 @@ export function PlatformAttachmentActionMenu({
         }}
         variant="minimal"
         portal
-        placement="bottom-end"
+        placement={menuAnchorPoint ? "bottom-start" : "bottom-end"}
+        portalAnchorPoint={menuAnchorPoint}
+        portalOffset={menuAnchorPoint ? 0 : 8}
         trigger={(
           <PlatformIconButton
             type="button"
@@ -123,6 +169,7 @@ export function PlatformAttachmentActionMenu({
             disabled={disabled}
             aria-haspopup="menu"
             aria-expanded={menuOpen}
+            onMouseDown={() => setMenuAnchorPoint(null)}
             onClick={(event) => {
               event.stopPropagation();
               setMenuOpen((current) => !current);
@@ -154,6 +201,7 @@ export function PlatformAttachmentActionMenu({
             onClick={(event) => {
               event.stopPropagation();
               setMenuOpen(false);
+              setMenuAnchorPoint(null);
               void onDelete();
             }}
           >
@@ -221,4 +269,4 @@ export function PlatformAttachmentActionMenu({
       </PlatformModal>
     </>
   );
-}
+});

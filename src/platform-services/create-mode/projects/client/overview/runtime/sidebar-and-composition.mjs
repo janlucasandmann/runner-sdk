@@ -1778,24 +1778,15 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	                return teamId && projectRemovedTeamIds.has(teamId) ? { ...team, id: teamId } : null;
 	              })
 	              .filter(Boolean);
-	            const projectPermissionTeams = [
-	              {
-	                id: "all_agents",
-	                name: "All Agents",
-	                meta: "Always included",
-	                permission: "Project default",
-	                createdAt: "",
-	                locked: true,
-	                permissionSet: projectPermissionSet,
-	              },
-	              ...availableWorkspaceTeams.map((team) => {
-	                const teamId = String(team?.id || "").trim();
-	                if (!teamId || projectRemovedTeamIds.has(teamId)) {
-	                  return null;
-	                }
+		            const projectSharedTeams = availableWorkspaceTeams.map((team) => {
+		                const teamId = String(team?.id || "").trim();
+		                if (!teamId || isPlatformSystemAccessPrincipalId(teamId) || projectRemovedTeamIds.has(teamId)) {
+		                  return null;
+		                }
 	                return {
 	                  id: teamId,
 	                  name: team?.name || "Untitled team",
+	                  profileImageUrl: getPlatformAccessPrincipalProfileImageUrl(team),
 	                  meta: team?.memberCount ? String(team.memberCount) + " members" : "Team workspace",
 	                  permission: projectTeamRolePermissionSets[teamId]
 	                    ? "Project role override"
@@ -1804,10 +1795,10 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	                      : "Role policies",
 	                  createdAt: team?.createdAt || "",
 	                  locked: false,
-	                  rolePermissionSets: getProjectTeamRolePermissionSets(projectOverviewDraft || selectedProject, teamId),
-	                };
-	              }).filter(Boolean),
-	            ];
+		                  rolePermissionSets: getProjectTeamRolePermissionSets(projectOverviewDraft || selectedProject, teamId),
+		                };
+		              }).filter(Boolean);
+		            const projectPermissionTeams = composePlatformAccessPrincipalRows(projectSharedTeams);
 	            const formatProjectTeamCreatedDate = (value) => {
 	              if (!value) {
 	                return "";
@@ -1978,7 +1969,7 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	                    disabled: true,
 	                  }, workspaceTeamsLoading ? "Loading teams..." : "All teams already have access");
 
-	            const renderProjectTeamTable = () => {
+	            const renderProjectAccessSettings = () => {
 	              const isAddTeamsMenuOpen = projectOverviewTeamMenuId === "add-teams";
 	              const addTeamsControl = hasRealAccess
 	                ? React.createElement(PlatformPopup, {
@@ -2022,138 +2013,87 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	                    renderAddProjectTeamsMenuContent()
 	                  )
 	                : null;
-	              const columns = [
-	                {
-	                  id: "team",
-	                  header: "Team",
-	                  accessor: (team) => team.name || "Untitled team",
-	                  sortable: true,
-	                  width: "minmax(220px, 1.45fr)",
-	                  cell: ({ row: team }) => React.createElement("div", null,
-	                    React.createElement("div", { className: "playground-team-table-title" }, team.name),
-	                    React.createElement("div", { className: "playground-team-table-meta" }, team.meta)
-	                  ),
+	              const systemPrincipal = getPlatformSystemAccessPrincipal(selectedPermissionTeam?.id);
+	              const selectedRoleDefinition = getPlaygroundTeamRoleDefinition(projectOverviewPermissionRoleId);
+	              return React.createElement(PlatformResourceAccessSettings, {
+	                teams: projectSharedTeams.map((team) => ({ ...team, description: team.meta })),
+	                resourceLabel: "Project",
+	                selectedPrincipalId: projectOverviewPermissionTeamId,
+	                onSelectedPrincipalIdChange: (principalId) => {
+	                  const normalizedPrincipalId = String(principalId || "").trim();
+	                  if (!normalizedPrincipalId) {
+	                    closeProjectOverviewPermissionDetail();
+	                    return;
+	                  }
+	                  const principal = projectPermissionTeams.find((team) =>
+	                    String(team.id) === normalizedPrincipalId
+	                  );
+	                  if (principal) {
+	                    openProjectOverviewPermissionDetail(principal, projectOverviewPermissionRoleId);
+	                  }
 	                },
-	                {
-	                  id: "policy",
-	                  header: "Policy",
-	                  accessor: (team) => team.permission || "",
-	                  sortable: true,
-	                  width: "minmax(145px, 0.85fr)",
-	                },
-	                {
-	                  id: "created",
-	                  header: "Created",
-	                  accessor: (team) => Date.parse(String(team.createdAt || "")) || 0,
-	                  sortable: true,
-	                  sortDescFirst: true,
-	                  width: "minmax(120px, 0.7fr)",
-	                  align: "end",
-	                  cell: ({ row: team }) => team.locked ? "Default" : (formatProjectTeamCreatedDate(team.createdAt) || "—"),
-	                },
-	              ];
-	              return React.createElement("section", { className: "playground-project-settings-access-section" },
-	                React.createElement(PlatformDataTable, {
-	                  rows: projectPermissionTeams,
-	                  columns,
-	                  getRowId: (team) => String(team.id || ""),
-	                  ariaLabel: "Project team access",
+	                subjectType: "project",
+	                teamSubjectType: "project_team_role",
+	                systemPermissionSet: getPlatformSystemPrincipalPermissionSet(
+	                  projectMetadata,
+	                  systemPrincipal?.id || PLATFORM_ALL_AGENTS_PRINCIPAL_ID,
+	                  "project",
+	                  projectPermissionSet
+	                ),
+	                onSystemPermissionSetChange: hasRealAccess
+	                  ? updateProjectPermissionSet
+	                  : undefined,
+	                systemRolePermissionSet:
+	                  systemPrincipal &&
+	                  isPlatformRoleScopedSystemAccessPrincipalId(systemPrincipal.id)
+	                    ? getProjectSystemRolePermissionSet(
+	                        projectOverviewDraft || selectedProject,
+	                        systemPrincipal.id,
+	                        selectedRoleDefinition.id
+	                      )
+	                    : null,
+	                onSystemRolePermissionSetChange: hasRealAccess
+	                  ? updateProjectSystemRolePermissionSet
+	                  : undefined,
+	                roles: PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => ({
+	                  id: role.id,
+	                  label: role.label,
+	                  description: role.description,
+	                  meta: "Project access",
+	                })),
+	                selectedRoleId: selectedRoleDefinition.id,
+	                onSelectedRoleIdChange: (roleId) => setProjectOverviewPermissionRoleId?.(roleId),
+	                teamPermissionSet: selectedPermissionTeam && !systemPrincipal
+	                  ? getProjectTeamRolePermissionSet(
+	                      projectOverviewDraft || selectedProject,
+	                      selectedPermissionTeam.id,
+	                      selectedRoleDefinition.id
+	                    )
+	                  : null,
+	                onTeamPermissionSetChange: hasRealAccess && selectedPermissionTeam && !systemPrincipal
+	                  ? (roleId, permissionSet) => updateProjectTeamRolePermissionSet(
+	                      selectedPermissionTeam.id,
+	                      roleId,
+	                      permissionSet
+	                    )
+	                  : undefined,
+	                animationKey: projectPermissionChartAnimationKey,
+	                disabled: !hasRealAccess,
+	                backLabel: "Settings",
+	                className: "playground-project-settings-access-section",
+	                tableProps: {
 	                  className: "playground-project-access-platform-data-table",
-	                  variant: "minimalistic-ui",
-	                  sorting: { defaultValue: { id: "team", direction: "asc" } },
-	                  toolbar: {
-	                    title: "Manage Project Access",
-	                    ...(addTeamsControl ? { trailing: addTeamsControl } : {}),
-	                  },
-	                  onRowActivate: openProjectOverviewPermissionDetail,
-	                  getRowActions: (team) => team.locked
-	                    ? []
-	                    : [
-	                        { id: "view-team", label: "View team", icon: ExternalLink, onSelect: () => handleOpenTeamDetails(team) },
-	                        ...(hasRealAccess ? [{ id: "remove", label: "Remove from project", icon: Trash2, danger: true, onSelect: () => handleRemoveProjectTeam(team) }] : []),
-	                      ],
-	                  emptyState: "No teams have project access.",
-	                })
-	              );
-	            };
+	                  trailing: addTeamsControl,
+	                  onRemoveTeams: hasRealAccess
+	                    ? (teams) => teams.forEach((team) => handleRemoveProjectTeam(team))
+	                    : undefined,
+	                  formatCreatedAt: (value) => formatProjectTeamCreatedDate(value) || "—",
+	                },
+	              });
+	            }
 
 	            if (selectedPermissionTeam) {
-	              const isAllAgentsTeam = selectedPermissionTeam.id === "all_agents";
-	              const selectedRoleDefinition = getPlaygroundTeamRoleDefinition(projectOverviewPermissionRoleId);
-	              const isSelectedOwnerRole = selectedRoleDefinition.id === "owner";
-	              const selectedRolePermissionSet = selectedPermissionTeam.rolePermissionSets
-	                ? normalizePlaygroundPermissionSet(
-	                    selectedPermissionTeam.rolePermissionSets[selectedRoleDefinition.id],
-	                    "project_team_role"
-	                  )
-	                : null;
-	              const renderProjectTeamRolePages = () =>
-	                React.createElement(PlatformRolePermissionsPage, {
-	                  roles: PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => ({
-	                    id: role.id,
-	                    label: role.label,
-	                    description: role.description,
-	                    meta: "Project access",
-	                  })),
-	                  value: selectedRoleDefinition.id,
-	                  onValueChange: (roleId) => {
-	                    if (typeof setProjectOverviewPermissionRoleId === "function") {
-	                      setProjectOverviewPermissionRoleId(roleId);
-	                    }
-	                  },
-	                  roleAriaLabel: "Project team roles",
-	                  roleKicker: "Project role",
-	                  roleDescription: "Project-scoped permissions for "
-	                    + selectedRoleDefinition.label.toLowerCase() + "s in "
-	                    + (selectedPermissionTeam.name || "this team") + ".",
-	                  readOnly: isSelectedOwnerRole,
-	                  className: "playground-project-team-role-pages",
-	                  roleListClassName: "playground-project-team-role-list",
-	                  permissionPageClassName: "playground-project-team-role-permission-page",
-	                  permissionHeaderClassName: "playground-project-team-role-permission-header",
-	                  permissionSet: selectedRolePermissionSet,
-	                  accessOptions: PLAYGROUND_PERMISSION_ACCESS_OPTIONS,
-	                  ringDefinitions: PLAYGROUND_PERMISSION_RING_DEFINITIONS,
-	                  actionDefinitions: PLAYGROUND_PERMISSION_ACTION_DEFINITIONS,
-	                  subjectType: "project_team_role",
-	                  animationKey: projectPermissionChartAnimationKey,
-	                  disabled: !hasRealAccess,
-	                  onRingAccessChange: (ringId, nextAccess) => updateProjectTeamRolePermissionRingAccess?.(selectedPermissionTeam.id, selectedRoleDefinition.id, ringId, nextAccess),
-	                  onActionRingChange: (actionId, nextRingId) => updateProjectTeamRolePermissionActionRing?.(selectedPermissionTeam.id, selectedRoleDefinition.id, actionId, nextRingId),
-	                  onActionAccessChange: (actionId, nextAccess) => updateProjectTeamRolePermissionActionAccess?.(selectedPermissionTeam.id, selectedRoleDefinition.id, actionId, nextAccess),
-	                });
-	              return React.createElement("section", {
-	                  className: "playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-permissions-section playground-project-teams-section",
-	                },
-	                React.createElement("div", { className: "playground-project-team-permissions-header" },
-	                  React.createElement("button", {
-	                    type: "button",
-	                    className: "playground-project-team-permissions-back",
-	                    onClick: () => closeProjectOverviewPermissionDetail(),
-	                  },
-	                    React.createElement(ArrowLeft, { width: 13, height: 13, strokeWidth: 1.9 }),
-	                    React.createElement("span", null, "Settings")
-	                  ),
-	                  React.createElement("div", { className: "playground-project-team-permissions-title" },
-	                    isAllAgentsTeam
-	                      ? (selectedPermissionTeam.name || "All Agents") + " Permissions"
-	                      : (selectedPermissionTeam.name || "Team") + " Project Access"
-	                  )
-	                ),
-	                isAllAgentsTeam
-	                  ? React.createElement(PlatformPermissionsPage, {
-	                      permissionSet: projectPermissionSet,
-	                      accessOptions: PLAYGROUND_PERMISSION_ACCESS_OPTIONS,
-	                      ringDefinitions: PLAYGROUND_PERMISSION_RING_DEFINITIONS,
-	                      actionDefinitions: PLAYGROUND_PERMISSION_ACTION_DEFINITIONS,
-	                      subjectType: "project",
-	                      animationKey: projectPermissionChartAnimationKey,
-	                      onRingAccessChange: updateProjectPermissionRingAccess,
-	                      onActionRingChange: updateProjectPermissionActionRing,
-	                      onActionAccessChange: updateProjectPermissionActionAccess,
-	                    })
-	                  : renderProjectTeamRolePages()
-	              );
+	              return renderProjectAccessSettings();
 	            }
 
 	            return React.createElement("section", {
@@ -2162,7 +2102,7 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	              renderProjectOverviewWallpaperSettingsSection(),
 	              renderProjectOverviewPluginsPanel(),
 	              renderProjectOverviewSettingsRulesSection(),
-	              renderProjectTeamTable()
+	              renderProjectAccessSettings()
 	            );
 	          }
 

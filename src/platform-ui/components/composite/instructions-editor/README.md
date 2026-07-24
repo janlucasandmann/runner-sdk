@@ -6,14 +6,59 @@
 
 `PlatformInstructionsEditor` is the canonical instruction-writing surface for agents and other configurable resources. It owns:
 
-- Markdown preview rendering and safe underline compatibility
-- Bold, italic, underline, list, ordered-list, code, and link controls
-- Undo and redo history
-- Keyboard shortcuts
-- Edit/preview behavior and textarea sizing
+- Rendered rich-text editing with Markdown-compatible persistence
+- Safe read-only Markdown rendering and underline compatibility
+- Native keyboard undo/redo plus a centralized Style menu for paragraphs, headings,
+  paragraph quotes, block quotes, and unboxed preformatted text
+- Bold, italic, underline, list, and ordered-list controls plus a centralized
+  insert menu for code, links, optional files, and dividers
+- A slash-anchored, scrollable `/` command menu that exposes the same formatting
+  and insert commands with shortcut hints, filtering, and full keyboard navigation
+- Explicit character deletion and deterministic link insertion for both text
+  selections and collapsed cursors
+- GFM table insertion from the toolbar, slash menu, or `Shift+Alt+T`, with a
+  three-column header-first default, native cell navigation, and a table-local
+  hover/focus ellipsis menu with grouped row, column, and whole-table actions
+  that preserve Markdown round trips
+- ProseMirror-backed selection, keyboard shortcuts, and undo/redo history
+- Optional multi-file upload, caret/drop-position insertion, and drag-and-drop handling
+- Inline image rendering with persisted small, medium, and full-width sizing,
+  durable attachment metadata, and hover actions for copy, rename, and removal,
+  plus reusable attachment rows for documents and other non-image files
 - Read-only presentation
 
-Consumers provide a controlled value and persist changes through `onChange`; they must not duplicate Markdown toolbar or renderer logic.
+Consumers provide a controlled Markdown value and persist changes through
+`onChange`; they must not duplicate toolbar, serialization, or renderer logic.
+Use `contentVariant="file-enabled"` with a `fileUpload.upload(files)` adapter
+when the owning resource can persist attachments. The adapter returns durable
+URLs plus file metadata and an optional attachment ID. Opaque adapter metadata
+is returned with the same upload transaction through the `onChange` context so
+resource owners can commit editor content and attachment records atomically; it
+is never serialized into Markdown. Images remain compatible Markdown images
+with an editor-owned title marker for display size and durable attachment
+identity; their destinations are canonicalized so spaces and parentheses cannot
+escape into visible document text. Other files use the editor-owned `:::attachment` Markdown
+node so editable and read-only views render the same attachment row. The editor
+never persists local blob or base64 URLs.
+
+Protected image integrations provide `fileUpload.resolvePreviewSource(file,
+signal)` and return an authenticated `Blob` (or a directly renderable URL).
+The editor owns the temporary object URL and revokes it when the image changes
+or unmounts; the protected durable URL remains the only value persisted in
+Markdown.
+
+`contentVariant="image-enabled"` and `imageUpload` remain compatibility aliases
+for existing image-only consumers. New resource integrations should use the
+generic file API.
+
+The toolbar popup behavior lives in `platform-instructions-editor-toolbar-popup.tsx`;
+the slash-command presentation lives in `platform-instructions-editor-slash-menu.tsx`.
+The Tiptap and read-only Markdown support for paragraph quotes lives in
+`paragraph-quote.ts`; keep its editor and renderer representations in sync.
+Generic file-node serialization, keyboard deletion, and read-only rendering
+live in `platform-instructions-editor-file-node.tsx`.
+Image serialization, metadata, sizing, actions, and malformed-destination repair
+live in `platform-instructions-editor-image-node.tsx`.
 
 Use `variant="minimalistic-ui"` for modal and compact composition surfaces that need the same editing behavior without the editor's framed header and body treatment. This variant uses transparent, zero-padding, square container surfaces while preserving the Markdown controls and interaction model.
 

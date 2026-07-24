@@ -37,4 +37,4 @@ export function createEvaluationsService(adapters = {}) {
 }
 
 export { createPlaygroundEvaluationsRuntime } from "./runtime.mjs";
-
+export { createEvaluationRunPersistenceCoordinator } from "./run-persistence.mjs";

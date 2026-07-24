@@ -12,6 +12,12 @@ export const EVALUATIONS_APP_PAGE_VIEW_SCRIPT = `        function renderEvaluati
             currentUserName: hasSessionAuth ? accountName : "Me",
             currentUserEmail: hasSessionAuth ? accountEmail : "",
             currentUserAvatarUrl: hasSessionAuth ? accountAvatarUrl : "",
+            workspaceTeams: teamPageTeams,
+            workspaceTeamsLoading: teamPageLoading,
+            onWorkspaceTeamsRequest: (options = {}) => {
+              const requestedTeamId = String(options?.selectedTeamId || options?.teamId || "").trim();
+              void loadTeamPageData({ selectedTeamId: requestedTeamId });
+            },
             evaluationRunModalOpen,
             setEvaluationRunModalOpen,
             evaluationRunForm,
@@ -34,7 +40,9 @@ export const EVALUATIONS_APP_PAGE_VIEW_SCRIPT = `        function renderEvaluati
               void refreshThreads(undefined, String(threadRecord?.id || "").trim(), { silent: true });
             },
             threadRecords: baseThreadItems,
-            onRefreshThreadRecords: () => refreshThreads(80, "", { silent: true }),
+            onRefreshThreadRecords: () => refreshThreads(40, "", { silent: true }),
+            onNavigationGuardChange: registerPlatformNavigationGuard,
+            onNavigationRequest: requestPlatformNavigation,
             versionsDrawerPortalId: "playground-agent-versions-drawer-root",
             onVersionsSidebarOpenChange: setIsAgentVersionsDetailOpen,
             evaluationSets,
@@ -74,7 +82,13 @@ export const EVALUATIONS_APP_PAGE_VIEW_SCRIPT = `        function renderEvaluati
             setEvaluationJsonlImportValue,
             evaluationJsonlImportError,
             setEvaluationJsonlImportError,
-            topNavActionsPortalId: "playground-evaluations-nav-actions",
+            versionsSidebarRequestToken: evaluationVersionsSidebarRequestToken,
+            topNavActionsPortalId: evaluationsPageMode === "detail"
+              ? "playground-evaluations-nav-actions"
+              : "",
+            breadcrumbActionsPortalId: evaluationsPageMode === "detail"
+              ? "playground-evaluations-breadcrumb-actions"
+              : "",
           });
         }
 

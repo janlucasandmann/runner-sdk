@@ -10,7 +10,6 @@ This directory separates the remaining legacy browser program by product domain 
 
 - [`agents/`](agents/) — This directory contains remaining legacy browser composition for Agents. Migrate behavior toward its typed owner without creating another application runtime.
 - [`compute-resources/`](compute-resources/) — This directory contains remaining legacy browser composition for Compute Resources. Migrate behavior toward its typed owner without creating another application runtime.
-- [`onboarding/`](onboarding/) — This directory contains remaining legacy browser composition for Onboarding. Migrate behavior toward its typed owner without creating another application runtime.
 - [`shell/`](shell/) — This directory contains remaining legacy browser composition for Shell. Migrate behavior toward its typed owner without creating another application runtime.
 - [`skills/`](skills/) — This directory contains remaining legacy browser composition for Skills. Migrate behavior toward its typed owner without creating another application runtime.
 - [`controller-fragments.test.mjs`](controller-fragments.test.mjs) — Regression coverage for Controller Fragments.

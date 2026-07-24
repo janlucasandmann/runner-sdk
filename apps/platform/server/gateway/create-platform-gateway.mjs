@@ -1,11 +1,17 @@
 import { createCoreGateway } from "./core-gateway.mjs";
 import { createResourceGateway } from "./resource-gateway.mjs";
+import { createServerDetailBootstrapGateway } from "./server-detail-bootstrap.mjs";
 import { createThreadGateway } from "./thread/index.mjs";
 import { createAdminGateway } from "./admin-gateway.mjs";
 import { createAiosGateway } from "./aios-gateway.mjs";
 export function createPlatformGateway(config) {
     const core = createCoreGateway(config);
     const resource = createResourceGateway({ ...config, ...core });
+    const sendServerDetailBootstrap = createServerDetailBootstrapGateway({
+        ...config,
+        ...core,
+        ...resource,
+    });
     const thread = createThreadGateway({ ...config, ...core, ...resource });
     const admin = createAdminGateway({ ...config, ...core });
     const aios = createAiosGateway({ ...config, ...core });
@@ -47,6 +53,7 @@ export function createPlatformGateway(config) {
         readOptionalApiKey: modules.readOptionalApiKey,
         readRequestBody: modules.readRequestBody,
         sendDatabaseBootstrap: modules.sendDatabaseBootstrap,
+        sendServerDetailBootstrap,
         sendJson: modules.sendJson,
         withProxyOrganizationHeader: modules.withProxyOrganizationHeader,
         setThreadPayloadEnricher: thread.setThreadPayloadEnricher,

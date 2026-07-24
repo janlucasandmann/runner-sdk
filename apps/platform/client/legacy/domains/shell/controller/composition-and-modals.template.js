@@ -261,7 +261,7 @@
               }
               if (isActiveThreadDisplayStatus(normalizedStatus) || normalizedStatus.includes("progress") || normalizedStatus.includes("work") || normalizedStatus.includes("stream")) {
                 return {
-                  label: "In progress",
+                  label: "In Progress",
                   className: "playground-thread-welcome-thread-status is-running",
                 };
               }
@@ -742,18 +742,16 @@
               preserveSidebarMode: true,
               serverKind: activeResourcesServerKind,
             });
-            const resourcesDetailPathItem = {
-              label: resourcesHeaderState.title || "Resource",
-              trailing: (
-                (
-                  activeResourcesView === "agents"
-                  || activeResourcesView === "computers"
-                  || isVersionedDevelopResource
-                )
-                && resourcesHeaderState.versionNumber !== null
-                && resourcesHeaderState.versionNumber !== undefined
+            const resourcesDetailVersionLabel = (
+              (
+                activeResourcesView === "agents"
+                || activeResourcesView === "computers"
+                || isVersionedDevelopResource
               )
-                ? React.createElement(PlatformVersionLabel, {
+              && resourcesHeaderState.versionNumber !== null
+              && resourcesHeaderState.versionNumber !== undefined
+            )
+              ? React.createElement(PlatformVersionLabel, {
                     version: resourcesHeaderState.versionNumber,
                     qualifier: resourcesHeaderState.versionIsLatest ? "Latest" : null,
                     className: "agent-breadcrumb-version-label",
@@ -775,6 +773,19 @@
                       }
                     },
                   })
+              : null;
+            const resourcesDetailPathItem = {
+              label: resourcesHeaderState.title || "Resource",
+              trailing: resourcesDetailVersionLabel || activeResourcesView === "agents"
+                ? React.createElement(React.Fragment, null,
+                    resourcesDetailVersionLabel,
+                    activeResourcesView === "agents"
+                      ? React.createElement("span", {
+                          id: "playground-agent-title-actions",
+                          className: "playground-agent-title-actions-root",
+                        })
+                      : null
+                  )
                 : null,
             };
             const resourcesPathItems = activeDevelopServerPageItem
@@ -809,6 +820,25 @@
             return renderAppHeader({
               className: "playground-resources-page",
               pathItems: resourcesPathItems,
+              center: isResourcesDetailView && activeResourcesView === "agents"
+                ? React.createElement(PlatformSwitch, {
+                    className: "playground-agent-detail-header-switch",
+                    value: ["general", "insights", "settings"].includes(resourcesHeaderState.activeSection)
+                      ? resourcesHeaderState.activeSection
+                      : "general",
+                    options: [
+                      { value: "general", label: "General" },
+                      { value: "insights", label: "Insights" },
+                      { value: "settings", label: "Settings" },
+                    ],
+                    onValueChange: (nextSection) => {
+                      if (typeof resourcesHeaderState.onSectionChange === "function") {
+                        resourcesHeaderState.onSectionChange(nextSection);
+                      }
+                    },
+                    ariaLabel: "Agent section",
+                  })
+                : null,
               includeSearchDivider: activeResourcesView === "agents"
                 || activeResourcesView === "computers"
                 || (activeResourcesView === "servers" && Boolean(activeResourcesServerKind)),
@@ -830,6 +860,17 @@
   
           function getTopNavIssueProjectId() {
             return String(tasksHeaderState.projectId || latestInteractedProjectId || "").trim();
+          }
+
+          function openProjectIssueComposerFromHeader() {
+            const registeredHandler = tasksProjectIssueCreateHandlerRef.current;
+            if (typeof registeredHandler === "function" && registeredHandler() !== false) {
+              return;
+            }
+            setTasksProjectIssueRequest({
+              action: "create",
+              token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+            });
           }
   
           function getDefaultTopNavIssueAssigneeId() {
@@ -1564,7 +1605,7 @@
                 ),
                 React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
                   React.createElement("span", null, "No review"),
-                  React.createElement("span", null, "Move directly to Finished when work is done.")
+                  React.createElement("span", null, "Move directly to Done when work is done.")
                 ),
                 React.createElement("span", { className: "tb-popup-check-slot" },
                   !topNavIssueDraft.reviewRequired
@@ -1578,7 +1619,7 @@
               const issueType = normalizePlaygroundTaskType(topNavIssueDraft.taskType) === "loop" ? "loop" : "task";
               const IssueTypeIcon = issueType === "loop" ? RefreshCw : Bookmark;
               const issueTypeLabel = PLAYGROUND_TASK_TYPE_OPTIONS.find((option) => option.id === issueType)?.label || "Task";
-              const issueStatusLabel = PLAYGROUND_TASK_STATUS_OPTIONS.find((option) => option.id === topNavIssueDraft.status)?.label || "To do";
+              const issueStatusLabel = PLAYGROUND_TASK_STATUS_OPTIONS.find((option) => option.id === topNavIssueDraft.status)?.label || "Todo";
               const issuePriorityPresentation = getPlaygroundTaskPriorityPresentation(topNavIssueDraft.priority);
               const selectedAssignee = topNavIssueDraft.assigneeAgentId ? assignableActors.find((actor) => actor.id === topNavIssueDraft.assigneeAgentId) || null : null;
               const assigneeLabel = selectedAssignee ? getTopNavIssueActorLabel(selectedAssignee.id, "Unassigned") : "Unassigned";
@@ -1770,11 +1811,32 @@
                 ? "backlog"
                 : "overview";
             const activeTicketNumber = String(tasksHeaderState.ticketNumber || "").trim();
+            const activeTicketType = tasksHeaderState.taskType === "subtask"
+              ? "subtask"
+              : tasksHeaderState.taskType === "loop"
+                ? "loop"
+                : "task";
+            const ActiveTicketTypeIcon = activeTicketType === "subtask"
+              ? Check
+              : activeTicketType === "loop"
+                ? RefreshCw
+                : Bookmark;
             const isProjectTaskDetailView = Boolean(
               isProjectDetailView
               && tasksHeaderState.detailMode === "task"
               && activeTicketNumber
             );
+            const activeTicketNavigation = isProjectTaskDetailView
+              && tasksHeaderState.ticketNavigation
+              && Number(tasksHeaderState.ticketNavigation.currentIndex) > 0
+              && Number(tasksHeaderState.ticketNavigation.totalCount) > 0
+                ? {
+                    currentIndex: Number(tasksHeaderState.ticketNavigation.currentIndex),
+                    totalCount: Number(tasksHeaderState.ticketNavigation.totalCount),
+                    previousTaskId: String(tasksHeaderState.ticketNavigation.previousTaskId || "").trim(),
+                    nextTaskId: String(tasksHeaderState.ticketNavigation.nextTaskId || "").trim(),
+                  }
+                : null;
             const activeProjectsHomeScope = tasksProjectsHomeScope === "created"
               ? "created"
               : tasksProjectsHomeScope === "shared"
@@ -1800,27 +1862,42 @@
                               token: Date.now().toString(36) + Math.random().toString(36).slice(2),
                             }),
                           },
-                          { label: activeTicketNumber },
+                          {
+                            label: activeTicketNumber,
+                            leading: React.createElement("span", {
+                              className: "playground-tasks-backlog-project-icon is-" + activeTicketType,
+                            }, React.createElement(ActiveTicketTypeIcon, {
+                              width: 12,
+                              height: 12,
+                              strokeWidth: 1.9,
+                            })),
+                            trailing: React.createElement("span", {
+                              id: "playground-ticket-breadcrumb-actions-root",
+                              className: "playground-tasks-ticket-breadcrumb-actions-root",
+                            }),
+                          },
                         ]
                       : [{ label: projectTitle }]),
                   ]
                 : [{ label: "Create" }, { label: "Projects" }],
               center: isProjectDetailView
-                ? React.createElement(PlatformSwitch, {
-                    className: "playground-tasks-nav playground-tasks-project-nav-switch",
-                    value: activeProjectView,
-                    options: PLAYGROUND_PROJECT_VIEW_OPTIONS
-                      .filter((item) => item.id === "overview" || item.id === "backlog" || item.id === "board")
-                      .map((item) => ({
-                        value: item.id,
-                        label: item.label,
-                      })),
-                    onValueChange: (nextView) => setTasksProjectViewRequest({
-                      view: nextView,
-                      token: Date.now().toString(36) + Math.random().toString(36).slice(2),
-                    }),
-                    ariaLabel: "Project view",
-                  })
+                ? isProjectTaskDetailView
+                  ? null
+                  : React.createElement(PlatformSwitch, {
+                      className: "playground-tasks-nav playground-tasks-project-nav-switch",
+                      value: activeProjectView,
+                      options: PLAYGROUND_PROJECT_VIEW_OPTIONS
+                        .filter((item) => item.id === "overview" || item.id === "backlog" || item.id === "board")
+                        .map((item) => ({
+                          value: item.id,
+                          label: item.label,
+                        })),
+                      onValueChange: (nextView) => setTasksProjectViewRequest({
+                        view: nextView,
+                        token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                      }),
+                      ariaLabel: "Project view",
+                    })
                 : React.createElement(PlatformSwitch, {
                     className: "playground-projects-home-scope-switch",
                     value: activeProjectsHomeScope,
@@ -1837,6 +1914,40 @@
                     (activeProjectView === "backlog" || activeProjectView === "board") && !isProjectTaskDetailView
                       ? tasksHeaderState.extraActions || null
                       : null,
+                    activeTicketNavigation
+                      ? React.createElement("div", {
+                          className: "playground-tasks-ticket-navigation",
+                          role: "group",
+                          "aria-label": "Open ticket navigation",
+                        },
+                          React.createElement("span", {
+                            className: "playground-tasks-ticket-navigation-count",
+                            "aria-live": "polite",
+                          }, activeTicketNavigation.currentIndex + " / " + activeTicketNavigation.totalCount),
+                          React.createElement(PlatformIconButton, {
+                            size: "compact",
+                            className: "playground-tasks-ticket-navigation-button",
+                            disabled: !activeTicketNavigation.nextTaskId,
+                            onClick: () => setTasksProjectTaskRequest({
+                              taskId: activeTicketNavigation.nextTaskId,
+                              token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                            }),
+                            title: "Next open ticket",
+                            "aria-label": "Next open ticket",
+                          }, React.createElement(ArrowDown, { width: 14, height: 14, strokeWidth: 2 })),
+                          React.createElement(PlatformIconButton, {
+                            size: "compact",
+                            className: "playground-tasks-ticket-navigation-button",
+                            disabled: !activeTicketNavigation.previousTaskId,
+                            onClick: () => setTasksProjectTaskRequest({
+                              taskId: activeTicketNavigation.previousTaskId,
+                              token: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                            }),
+                            title: "Previous open ticket",
+                            "aria-label": "Previous open ticket",
+                          }, React.createElement(ArrowUp, { width: 14, height: 14, strokeWidth: 2 }))
+                        )
+                      : null,
                     React.createElement(PlatformPrimaryButton, {
                       type: "button",
                       className: "playground-files-control-button is-backlog-sort playground-tasks-nav-issue-button",
@@ -1845,7 +1956,7 @@
                       onClick: (event) => {
                         event.preventDefault();
                         event.stopPropagation();
-                        openTopNavIssueComposer();
+                        openProjectIssueComposerFromHeader();
                       },
                     },
                       React.createElement(Plus, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
@@ -2075,6 +2186,7 @@
                     },
   ${MODELS_AGENT_SCRIPT_FRAGMENTS.hostProps}                  embeddedInResources: true,
                     topNavActionsPortalId: "playground-resources-nav-actions",
+                    titleActionsPortalId: "playground-agent-title-actions",
                     versionsDrawerPortalId: "playground-agent-versions-drawer-root",
                     onResourcesHeaderChange: setResourcesHeaderState,
                     onVersionsSidebarOpenChange: setIsAgentVersionsDetailOpen,
@@ -2207,6 +2319,8 @@
                   navigationResourceToken: resourcesNavigationTarget.token,
                   navigationTargetResourceType: resourcesNavigationTarget.resourceType,
                   navigationTargetResourceId: resourcesNavigationTarget.resourceId,
+                  serverCreationRequestToken: resourcesNavigationTarget.serverCreationToken,
+                  serverCreationRequestKind: resourcesNavigationTarget.serverCreationKind,
                   resourceTemplatePreviewResources,
                   topNavActionsPortalId: "playground-resources-nav-actions",
                   versionsDrawerPortalId: "playground-agent-versions-drawer-root",
@@ -2249,39 +2363,8 @@
   ${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.navigationItems}
   ${APP_SIDEBAR_APP_SCRIPT_FRAGMENTS.sidebar}
   ${PLATFORM_NAVIGATION_GUARD_APP_SCRIPT_FRAGMENTS.modal}
-          const renderedPlaygroundOnboarding = showPlaygroundOnboarding
-            ? React.createElement(PlaygroundOnboardingModal, {
-                open: showPlaygroundOnboarding,
-                sessionStatus: sessionState.status,
-                hasRealAccess,
-                backendUrl: proxyBackendBase,
-                requestHeaders,
-                existingAgentCount: realAgents.length,
-                environmentCount: realEnvironments.length,
-                defaultEnvironmentId: resolvedEnvironmentId,
-                defaultEnvironmentName: resolvedEnvironmentName,
-                skillCount: demoSkills.length,
-                currentPlanId: settingsCurrentTierId,
-                connectorStatuses: {
-                  github: githubStatus,
-                  gmail: gmailStatus,
-                  googleDrive: googleDriveStatus,
-                  oneDrive: oneDriveStatus,
-                  notion: notionStatus,
-                },
-                connectorActions: {
-                  github: handleGithubAuthConnect,
-                  gmail: handleGmailAuthConnect,
-                  googleDrive: handleGoogleDriveAuthConnect,
-                  oneDrive: handleOneDriveAuthConnect,
-                  notion: handleNotionAuthConnect,
-                },
-                onClose: closePlaygroundOnboarding,
-                onSignIn: handleSignInWithComputerAgents,
-                onUpgradeToIndividual: () => handleSettingsSubscribe("builder"),
-                onCreateProject: handleWelcomeWidgetCreateProject,
-              })
-            : null;
+  ${ONBOARDING_APP_SCRIPT_FRAGMENTS.host}
+          const renderedPlaygroundOnboarding = renderPlaygroundOnboardingHost();
           const subscriptionSuccessPlanLabel = settingsCurrentTierId && settingsCurrentTierId !== "sandbox"
             ? formatSubscriptionTier(settingsCurrentTierId)
             : "paid plan";
@@ -2324,7 +2407,6 @@
               renderThreadRenameModal(),
               renderThreadProjectPickerModal(),
               renderWelcomeProjectPickerModal(),
-              renderTopNavIssueComposerDialog(),
               renderSettingsModal(),
               renderAppHeaderAccountMenu(),
               profileEditorOpen
@@ -3314,6 +3396,7 @@
                               onProjectIssueCreateHandlerChange: handleProjectIssueCreateHandlerChange,
                               projectNavBackRequestToken: tasksProjectBackRequestToken,
                               projectNavViewRequest: tasksProjectViewRequest,
+                              projectNavTaskRequest: tasksProjectTaskRequest,
                               projectNavSettingsRequestToken: tasksProjectSettingsRequestToken,
                               projectNavIssueRequest: tasksProjectIssueRequest,
                             })

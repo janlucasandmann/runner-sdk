@@ -31,6 +31,7 @@ export interface PlatformAnalyticsModel {
   series: readonly PlatformAnalyticsSeries[];
   title?: string;
   ariaLabel?: string;
+  hasData?: boolean;
   loading?: boolean;
   error?: ReactNode;
 }

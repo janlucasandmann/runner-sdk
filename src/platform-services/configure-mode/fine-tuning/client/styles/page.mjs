@@ -140,6 +140,34 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
         min-width: 0;
       }
 
+      .playground-fine-tuning-description-section.playground-agents-detail-instructions-section,
+      .playground-fine-tuning-instructions-section.playground-agents-detail-instructions-section {
+        min-width: 0;
+        margin-top: 0;
+        margin-bottom: 0;
+        padding-bottom: 3px;
+      }
+
+      .playground-fine-tuning-description-section .playground-tasks-detail-description-editor,
+      .playground-fine-tuning-description-section .playground-tasks-detail-description-input,
+      .playground-fine-tuning-description-section .playground-tasks-detail-description-preview-scope.tb-runner-chat,
+      .playground-fine-tuning-instructions-section .playground-tasks-detail-description-editor,
+      .playground-fine-tuning-instructions-section .playground-tasks-detail-description-input,
+      .playground-fine-tuning-instructions-section .playground-tasks-detail-description-preview-scope.tb-runner-chat {
+        min-height: 118px;
+      }
+
+      .playground-fine-tuning-access-settings,
+      .playground-fine-tuning-access-detail {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .playground-fine-tuning-access-detail .platform-permissions-page,
+      .playground-fine-tuning-access-detail .platform-role-permissions-page {
+        margin-top: 12px;
+      }
+
       .playground-fine-tuning-detail-sidebar-list {
         min-width: 0;
         display: flex;
@@ -173,6 +201,49 @@ export const PLAYGROUND_FINE_TUNING_CSS = String.raw`
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+
+      .playground-fine-tuning-detail-owner-row {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-fine-tuning-owner-selector {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .playground-fine-tuning-owner-trigger.platform-selector__trigger {
+        width: 100%;
+        min-width: 0;
+        min-height: 24px;
+        justify-content: flex-start;
+        gap: 6px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+      }
+
+      .playground-fine-tuning-owner-trigger.platform-selector__trigger:hover,
+      .playground-fine-tuning-owner-trigger.platform-selector__trigger:focus-visible {
+        background: transparent;
+      }
+
+      .playground-fine-tuning-owner-value {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 7px;
+      }
+
+      .playground-fine-tuning-owner-avatar.playground-team-member-avatar {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 18px;
       }
 
       .playground-fine-tuning-detail-person,

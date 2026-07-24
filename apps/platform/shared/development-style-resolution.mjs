@@ -8,11 +8,14 @@ import { resolveLegacyBrowserSourcePath } from "./legacy-source-resolution.mjs";
  * exact file being edited.
  */
 export const PLATFORM_PAGE_STYLE_SOURCE_PATHS = Object.freeze([
+  "src/platform-ui/components/composite/activity-timeline/activity-timeline.css",
   "src/platform-ui/components/composite/popup/popup.css",
+  "src/platform-ui/components/composite/profile-image-picker/profile-image-picker.css",
   "src/platform-ui/components/ui/selector/selector.css",
   "src/platform-ui/components/ui/checkbox/checkbox.css",
   "src/platform-ui/components/composite/attachments/attachments.css",
   "src/platform-ui/components/composite/subtasks/subtasks.css",
+  "src/platform-ui/components/ui/ticket-item/ticket-item.css",
   "src/platform-ui/components/composite/data-table/data-table.css",
   "src/platform-ui/components/composite/analytics/analytics.css",
   "src/platform-ui/components/composite/empty-state/empty-state.css",
@@ -37,6 +40,7 @@ export const PLATFORM_PAGE_STYLE_SOURCE_PATHS = Object.freeze([
   "src/platform-services/develop-mode/security/client/page/security.css",
   "src/platform-ui/pages/permissions/permission-page.css",
   "src/platform-resources/agents/detail/agent-publish-control.css",
+  "src/platform-resources/access-control/page/platform-resource-access-table.css",
 ]);
 
 const AGGREGATE_STYLE_SOURCES = new Map([
@@ -47,8 +51,13 @@ export function resolveDevelopmentStyleSourcePaths(packageRoot, specifier) {
   const cleanSpecifier = String(specifier || "").split("?")[0];
   const aggregateSources = AGGREGATE_STYLE_SOURCES.get(cleanSpecifier);
   if (aggregateSources) {
-    return aggregateSources.map((relativePath) => path.resolve(packageRoot, relativePath));
+    return aggregateSources.map((relativePath) =>
+      path.resolve(packageRoot, relativePath),
+    );
   }
-  const directSource = resolveLegacyBrowserSourcePath(packageRoot, cleanSpecifier);
+  const directSource = resolveLegacyBrowserSourcePath(
+    packageRoot,
+    cleanSpecifier,
+  );
   return directSource ? [directSource] : [];
 }

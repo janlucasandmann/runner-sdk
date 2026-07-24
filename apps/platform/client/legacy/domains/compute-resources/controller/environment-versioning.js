@@ -1589,17 +1589,208 @@
             if (!normalizedTeamId) {
               return normalizedEnvironment;
             }
-            const metadata = getEnvironmentMetadataRecord(normalizedEnvironment);
-            const nextTeamIds = Array.from(new Set([
-              ...getEnvironmentSharedTeamIds(normalizedEnvironment),
-              normalizedTeamId,
-            ]));
-            metadata.sharedTeamIds = nextTeamIds;
-            metadata.teamAccessIds = nextTeamIds;
             return normalizePlaygroundEnvironmentRecord({
               ...normalizedEnvironment,
-              metadata,
+              metadata: buildPlatformTeamAccessMetadata(
+                getEnvironmentMetadataRecord(normalizedEnvironment),
+                normalizedTeamId,
+                true,
+                "computer_team_role",
+                PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => role.id)
+              ),
             });
+          }
+
+          function buildEnvironmentTeamAccessRecord(environmentRecord, teamId, shouldInclude) {
+            const normalizedEnvironment = normalizePlaygroundEnvironmentRecord(environmentRecord || buildPlaygroundDefaultEnvironmentDraft());
+            return normalizePlaygroundEnvironmentRecord({
+              ...normalizedEnvironment,
+              metadata: buildPlatformTeamAccessMetadata(
+                getEnvironmentMetadataRecord(normalizedEnvironment),
+                teamId,
+                shouldInclude,
+                "computer_team_role",
+                PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => role.id)
+              ),
+            });
+          }
+
+          function getEnvironmentTeamRolePermissionSet(environmentRecord, teamId, roleId) {
+            return getPlatformTeamRolePermissionSet(
+              getEnvironmentMetadataRecord(environmentRecord),
+              teamId,
+              roleId,
+              "computer_team_role",
+              PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => role.id)
+            );
+          }
+
+          function getEnvironmentSystemRolePermissionSet(environmentRecord, principalId, roleId) {
+            return getPlatformSystemPrincipalRolePermissionSet(
+              getEnvironmentMetadataRecord(environmentRecord),
+              principalId,
+              roleId,
+              "computer_team_role"
+            );
+          }
+
+          async function persistEnvironmentAccessRecord(environmentRecord) {
+            const savedEnvironment = await persistEnvironmentRecord(environmentRecord);
+            if (!savedEnvironment) {
+              throw new Error("Failed to save computer access.");
+            }
+            const mergedEnvironment = normalizePlaygroundEnvironmentRecord({
+              ...environmentRecord,
+              ...savedEnvironment,
+              metadata: {
+                ...getEnvironmentMetadataRecord(environmentRecord),
+                ...getEnvironmentMetadataRecord(savedEnvironment),
+              },
+            });
+            setEnvironmentDetailsById((current) => ({
+              ...current,
+              [mergedEnvironment.id]: mergedEnvironment,
+            }));
+            if (selectedEnvironmentIdRef.current === mergedEnvironment.id) {
+              setDraftEnvironment(mergedEnvironment);
+              rememberEnvironmentVersionBaseline(mergedEnvironment, { force: true });
+            }
+            return mergedEnvironment;
+          }
+
+          async function flushQueuedEnvironmentPermissionSave() {
+            if (environmentPermissionSaveInFlightRef.current) return;
+            environmentPermissionSaveInFlightRef.current = true;
+            try {
+              while (environmentPermissionSaveQueuedRef.current) {
+                const queuedSave = environmentPermissionSaveQueuedRef.current;
+                const environmentToSave = normalizePlaygroundEnvironmentRecord(queuedSave?.environment || queuedSave);
+                const teamIds = Array.from(new Set(
+                  (Array.isArray(queuedSave?.teamIds) ? queuedSave.teamIds : [queuedSave?.teamId])
+                    .map((teamId) => String(teamId || "").trim())
+                    .filter(Boolean)
+                ));
+                environmentPermissionSaveQueuedRef.current = null;
+                setSaveState({ isSaving: true, error: "", message: "" });
+                try {
+                  const savedEnvironment = await persistEnvironmentAccessRecord(environmentToSave);
+                  for (const teamId of teamIds) {
+                    await syncEnvironmentTeamResourceShare(savedEnvironment, teamId);
+                  }
+                } catch (error) {
+                  const message = error instanceof Error ? error.message : "Failed to save computer permissions.";
+                  setEnvironmentTeamAccessState({ teamId: "", action: "", error: message });
+                  setSaveState({ isSaving: false, error: message, message: "" });
+                  return;
+                }
+              }
+              setSaveState({ isSaving: false, error: "", message: "Saved" });
+            } finally {
+              environmentPermissionSaveInFlightRef.current = false;
+            }
+          }
+
+          function queueEnvironmentPermissionSave(environmentRecord, teamId = "") {
+            const normalizedEnvironment = normalizePlaygroundEnvironmentRecord(environmentRecord || buildPlaygroundDefaultEnvironmentDraft());
+            if (!normalizedEnvironment?.id || normalizedEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID) return;
+            const queuedTeamIds = Array.isArray(environmentPermissionSaveQueuedRef.current?.teamIds)
+              ? environmentPermissionSaveQueuedRef.current.teamIds
+              : [environmentPermissionSaveQueuedRef.current?.teamId];
+            const normalizedTeamId = String(teamId || "").trim();
+            environmentPermissionSaveQueuedRef.current = {
+              environment: normalizedEnvironment,
+              teamIds: Array.from(new Set([
+                ...queuedTeamIds.map((queuedTeamId) => String(queuedTeamId || "").trim()).filter(Boolean),
+                ...(normalizedTeamId ? [normalizedTeamId] : []),
+              ])),
+            };
+            setEnvironmentDetailsById((current) => ({
+              ...current,
+              [normalizedEnvironment.id]: normalizedEnvironment,
+            }));
+            if (selectedEnvironmentIdRef.current === normalizedEnvironment.id) {
+              setDraftEnvironment(normalizedEnvironment);
+            }
+            setEnvironmentTeamAccessState({ teamId: "", action: "saving", error: "" });
+            if (environmentPermissionSaveTimerRef.current) {
+              window.clearTimeout(environmentPermissionSaveTimerRef.current);
+            }
+            environmentPermissionSaveTimerRef.current = window.setTimeout(() => {
+              environmentPermissionSaveTimerRef.current = null;
+              void flushQueuedEnvironmentPermissionSave().finally(() => {
+                if (!environmentPermissionSaveQueuedRef.current) {
+                  setEnvironmentTeamAccessState((current) => current.error
+                    ? current
+                    : { teamId: "", action: "", error: "" });
+                }
+              });
+            }, 450);
+          }
+
+          function updateEnvironmentSystemAccessPermissionSet(permissionSet) {
+            const currentEnvironment = normalizePlaygroundEnvironmentRecord(draftEnvironment || selectedEnvironmentSnapshot || buildPlaygroundDefaultEnvironmentDraft());
+            const principalId = isPlatformSystemAccessPrincipalId(environmentPermissionPrincipalId)
+              ? normalizePlatformAccessPrincipalId(environmentPermissionPrincipalId)
+              : PLATFORM_ALL_AGENTS_PRINCIPAL_ID;
+            const metadata = getEnvironmentMetadataRecord(currentEnvironment);
+            const nextEnvironment = normalizePlaygroundEnvironmentRecord({
+              ...currentEnvironment,
+              metadata: buildPlatformSystemPrincipalPermissionMetadata(
+                metadata,
+                principalId,
+                normalizePlaygroundPermissionSet(permissionSet, "computer"),
+                "computer"
+              ),
+            });
+            queueEnvironmentPermissionSave(nextEnvironment);
+          }
+
+          function updateEnvironmentSystemRoleAccessPermissionSet(roleId, permissionSet) {
+            const principalId = normalizePlatformAccessPrincipalId(environmentPermissionPrincipalId);
+            const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
+            if (
+              !isPlatformRoleScopedSystemAccessPrincipalId(principalId)
+              || normalizedRoleId === "owner"
+            ) {
+              return;
+            }
+            const currentEnvironment = normalizePlaygroundEnvironmentRecord(
+              draftEnvironment ||
+              selectedEnvironmentSnapshot ||
+              buildPlaygroundDefaultEnvironmentDraft()
+            );
+            const nextEnvironment = normalizePlaygroundEnvironmentRecord({
+              ...currentEnvironment,
+              metadata: buildPlatformSystemPrincipalRolePermissionMetadata(
+                getEnvironmentMetadataRecord(currentEnvironment),
+                principalId,
+                normalizedRoleId,
+                normalizePlaygroundPermissionSet(permissionSet, "computer_team_role"),
+                "computer_team_role"
+              ),
+            });
+            queueEnvironmentPermissionSave(nextEnvironment);
+          }
+
+          function updateEnvironmentTeamRoleAccessPermissionSet(roleId, permissionSet) {
+            const normalizedTeamId = String(environmentPermissionPrincipalId || "").trim();
+            const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
+            if (!normalizedTeamId || isPlatformSystemAccessPrincipalId(normalizedTeamId) || normalizedRoleId === "owner") {
+              return;
+            }
+            const currentEnvironment = normalizePlaygroundEnvironmentRecord(draftEnvironment || selectedEnvironmentSnapshot || buildPlaygroundDefaultEnvironmentDraft());
+            const nextEnvironment = normalizePlaygroundEnvironmentRecord({
+              ...currentEnvironment,
+              metadata: buildPlatformTeamRolePermissionMetadata(
+                getEnvironmentMetadataRecord(currentEnvironment),
+                normalizedTeamId,
+                normalizedRoleId,
+                normalizePlaygroundPermissionSet(permissionSet, "computer_team_role"),
+                "computer_team_role",
+                PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => role.id)
+              ),
+            });
+            queueEnvironmentPermissionSave(nextEnvironment, normalizedTeamId);
           }
   
           function buildEnvironmentTeamSharePayload(environmentRecord, teamRecord) {
@@ -1626,10 +1817,161 @@
                 resourceKind: "computer",
                 sharedTeamId: normalizedTeam.id || "",
                 sharedTeamName: normalizedTeam.name || "",
+                permissionSet: getPlatformTeamPermissionSet(
+                  getEnvironmentMetadataRecord(normalizedEnvironment),
+                  normalizedTeam.id,
+                  "computer_team_role"
+                ),
+                rolePermissionSets: getPlatformTeamRolePermissionSets(
+                  getEnvironmentMetadataRecord(normalizedEnvironment),
+                  normalizedTeam.id,
+                  "computer_team_role",
+                  PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => role.id)
+                ),
                 computer: computerSnapshot,
                 environment: computerSnapshot,
               },
             };
+          }
+
+          async function syncEnvironmentTeamResourceShare(environmentRecord, teamId) {
+            const normalizedTeamId = String(teamId || "").trim();
+            if (!normalizedTeamId) return;
+            const teamRecord = availableEnvironmentShareTeams.find((team) => (
+              String(team?.id || "").trim() === normalizedTeamId
+            )) || { id: normalizedTeamId };
+            const { response, data } = await fetchJsonWithTimeout(
+              backendUrl + "/teams/" + encodeURIComponent(normalizedTeamId) + "/resource-shares",
+              {
+                method: "POST",
+                credentials: "include",
+                cache: "no-store",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(buildEnvironmentTeamSharePayload(environmentRecord, teamRecord)),
+              },
+              8000
+            );
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to update computer team permissions.");
+            }
+          }
+
+          async function findEnvironmentTeamResourceShare(teamId, environmentId) {
+            const { response, data } = await fetchJsonWithTimeout(
+              backendUrl + "/teams/" + encodeURIComponent(teamId) + "/resource-shares",
+              {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+                headers: requestHeaders,
+              },
+              8000
+            );
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load computer team access.");
+            }
+            const shares = Array.isArray(data?.data)
+              ? data.data
+              : Array.isArray(data?.shares)
+                ? data.shares
+                : [];
+            return shares.find((share) => (
+              String(share?.resourceType || share?.resource_type || "") === "computer"
+              && String(share?.resourceId || share?.resource_id || "") === String(environmentId || "")
+            )) || null;
+          }
+
+          async function handleAddEnvironmentTeamAccess(team) {
+            const teamId = String(team?.id || "").trim();
+            const currentEnvironment = normalizePlaygroundEnvironmentRecord(draftEnvironment || selectedEnvironmentSnapshot || buildPlaygroundDefaultEnvironmentDraft());
+            if (
+              !teamId
+              || !currentEnvironment.id
+              || currentEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID
+              || getEnvironmentSharedTeamIds(currentEnvironment).includes(teamId)
+            ) {
+              return;
+            }
+            const nextEnvironment = buildEnvironmentTeamAccessRecord(currentEnvironment, teamId, true);
+            setEnvironmentTeamAccessState({ teamId, action: "adding", error: "" });
+            setDraftEnvironment(nextEnvironment);
+            try {
+              const { response, data } = await fetchJsonWithTimeout(
+                backendUrl + "/teams/" + encodeURIComponent(teamId) + "/resource-shares",
+                {
+                  method: "POST",
+                  credentials: "include",
+                  cache: "no-store",
+                  headers: {
+                    ...requestHeaders,
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify(buildEnvironmentTeamSharePayload(nextEnvironment, team)),
+                },
+                8000
+              );
+              if (!response.ok && Number(response.status || 0) !== 409) {
+                throw new Error(data?.message || data?.error || "Failed to add computer team access.");
+              }
+              await persistEnvironmentAccessRecord(nextEnvironment);
+              setEnvironmentAccessTeamMenuOpen(false);
+            } catch (error) {
+              setDraftEnvironment(currentEnvironment);
+              setEnvironmentTeamAccessState({
+                teamId: "",
+                action: "",
+                error: error instanceof Error ? error.message : "Failed to add computer team access.",
+              });
+              return;
+            }
+            setEnvironmentTeamAccessState({ teamId: "", action: "", error: "" });
+          }
+
+          async function handleRemoveEnvironmentTeamsAccess(teams) {
+            const requestedTeams = (Array.isArray(teams) ? teams : [teams])
+              .filter((team) => team?.id && !isPlatformSystemAccessPrincipalId(team.id));
+            if (!requestedTeams.length) return;
+            const currentEnvironment = normalizePlaygroundEnvironmentRecord(draftEnvironment || selectedEnvironmentSnapshot || buildPlaygroundDefaultEnvironmentDraft());
+            let nextEnvironment = currentEnvironment;
+            requestedTeams.forEach((team) => {
+              nextEnvironment = buildEnvironmentTeamAccessRecord(nextEnvironment, team.id, false);
+            });
+            setEnvironmentTeamAccessState({ teamId: "", action: "removing", error: "" });
+            try {
+              await Promise.all(requestedTeams.map(async (team) => {
+                const share = await findEnvironmentTeamResourceShare(team.id, currentEnvironment.id);
+                if (!share?.id) return;
+                const { response, data } = await fetchJsonWithTimeout(
+                  backendUrl + "/teams/" + encodeURIComponent(team.id) + "/resource-shares/" + encodeURIComponent(share.id),
+                  {
+                    method: "DELETE",
+                    credentials: "include",
+                    cache: "no-store",
+                    headers: requestHeaders,
+                  },
+                  8000
+                );
+                if (!response.ok) {
+                  throw new Error(data?.message || data?.error || "Failed to remove computer team access.");
+                }
+              }));
+              await persistEnvironmentAccessRecord(nextEnvironment);
+              setSelectedEnvironmentAccessTeamIds(new Set());
+              if (requestedTeams.some((team) => String(team.id) === String(environmentPermissionPrincipalId))) {
+                setEnvironmentPermissionPrincipalId("");
+              }
+            } catch (error) {
+              setEnvironmentTeamAccessState({
+                teamId: "",
+                action: "",
+                error: error instanceof Error ? error.message : "Failed to remove computer team access.",
+              });
+              return;
+            }
+            setEnvironmentTeamAccessState({ teamId: "", action: "", error: "" });
           }
   
           function openEnvironmentShareTeamModal(environmentRecord = null, options = {}) {
@@ -1778,7 +2120,10 @@
                 const mergedEnvironment = normalizePlaygroundEnvironmentRecord({
                   ...nextEnvironment,
                   ...savedEnvironment,
-                  metadata: savedEnvironment?.metadata || nextEnvironment.metadata,
+                  metadata: {
+                    ...getEnvironmentMetadataRecord(nextEnvironment),
+                    ...getEnvironmentMetadataRecord(savedEnvironment),
+                  },
                 });
                 setEnvironmentDetailsById((current) => ({
                   ...current,

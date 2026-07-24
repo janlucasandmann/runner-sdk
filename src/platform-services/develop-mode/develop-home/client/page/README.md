@@ -4,7 +4,7 @@
 
 ## Purpose
 
-This directory contains page composition and page-local interaction behavior for the Develop Home service in Develop Mode. It remains subordinate to the service boundary and must not become a cross-service utility layer.
+This directory contains page composition and page-local interaction behavior for the Develop Home service in Develop Mode. Develop Home supplies service-specific links and callbacks to the centralized `PlatformHomePage`; shared Home layout belongs to `src/platform-ui/pages/home`. It remains subordinate to the service boundary and must not become a cross-service utility layer.
 
 ## Contents
 

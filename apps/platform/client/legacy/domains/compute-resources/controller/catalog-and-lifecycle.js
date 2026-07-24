@@ -17,24 +17,72 @@
             }
 
             const requestId = activeRequest.requestId + 1;
-            const requestUrl = backendUrl + "/servers"
-              + (requestedKind ? "?kind=" + encodeURIComponent(requestedKind) : "");
+            const useOverviewCatalog = Boolean(
+              embeddedInResources
+              && isHomeViewActive
+              && requestedKind
+            );
+            const requestedPeriod = normalizePlaygroundEnvironmentHomeChartPeriod(
+              developServerOperationalMetricsPeriod
+            );
+            const requestUrl = useOverviewCatalog
+              ? backendUrl + "/servers/analytics/overview?kind="
+                + encodeURIComponent(requestedKind)
+                + "&period="
+                + encodeURIComponent(requestedPeriod)
+              : backendUrl + "/servers"
+                + (requestedKind ? "?kind=" + encodeURIComponent(requestedKind) : "");
             setServerListLoading(true);
             const request = (async () => {
-              const data = await fetchPlaygroundCachedDatabaseResourceJson(
-                requestUrl,
-                requestHeaders,
-                {
-                  scopeKey: requestScopeKey,
-                  ttlMs: PLAYGROUND_DATABASE_LIST_CACHE_TTL_MS,
-                  force: options?.force === true,
-                  persist: true,
-                  // Catalog consumers need the revalidated payload so React receives fresh rows.
-                  staleWhileRevalidate: false,
-                  priority: "high",
-                }
-              );
-              const nextServers = parsePlaygroundServerListResponse(data);
+              let data = null;
+              try {
+                data = await fetchPlaygroundCachedDatabaseResourceJson(
+                  requestUrl,
+                  requestHeaders,
+                  {
+                    scopeKey: useOverviewCatalog ? databaseListScopeKey : requestScopeKey,
+                    ttlMs: useOverviewCatalog
+                      ? PLAYGROUND_DATABASE_ANALYTICS_CACHE_TTL_MS
+                      : PLAYGROUND_DATABASE_LIST_CACHE_TTL_MS,
+                    force: options?.force === true,
+                    persist: true,
+                    // Catalog consumers need the revalidated payload so React receives fresh rows.
+                    staleWhileRevalidate: false,
+                    priority: "high",
+                  }
+                );
+              } catch (error) {
+                if (!useOverviewCatalog) throw error;
+                data = await fetchPlaygroundCachedDatabaseResourceJson(
+                  backendUrl + "/servers?kind=" + encodeURIComponent(requestedKind),
+                  requestHeaders,
+                  {
+                    scopeKey: requestScopeKey,
+                    ttlMs: PLAYGROUND_DATABASE_LIST_CACHE_TTL_MS,
+                    force: options?.force === true,
+                    persist: true,
+                    staleWhileRevalidate: false,
+                    priority: "high",
+                  }
+                );
+              }
+              const overviewResources = useOverviewCatalog
+                ? Array.isArray(data?.analytics?.resources)
+                  ? data.analytics.resources
+                  : Array.isArray(data?.resources)
+                    ? data.resources
+                    : []
+                : [];
+              const nextServers = useOverviewCatalog && overviewResources.length > 0
+                ? overviewResources
+                  .map((resource) => normalizePlaygroundServerRecord(
+                    resource?.server || resource?.resource || resource
+                  ))
+                  .filter((server) => (
+                    server?.id
+                    && canonicalizePlaygroundServerKind(server.kind) === requestedKind
+                  ))
+                : parsePlaygroundServerListResponse(data);
               if (serverListRequestRef.current.requestId !== requestId) {
                 return nextServers;
               }
@@ -118,6 +166,7 @@
           }, [
             backendUrl,
             databaseListScopeKey,
+            developServerOperationalMetricsPeriod,
             embeddedInResources,
             environmentHomeChartTimescale,
             isHomeViewActive,
@@ -230,6 +279,231 @@
               }
             }
           }, [backendUrl, databaseListScopeKey, requestHeaders, resourceTemplatePreviewServerRecordById]);
+
+          const loadServerDetailBootstrap = useCallback(async (serverId, serverKind, options = {}) => {
+            const normalizedServerId = String(serverId || "").trim();
+            const normalizedKind = canonicalizePlaygroundServerKind(serverKind);
+            if (!normalizedServerId || normalizedServerId === PLAYGROUND_SERVER_DRAFT_ID) {
+              return null;
+            }
+            if (resourceTemplatePreviewServerRecordById[normalizedServerId]) {
+              return loadServerDetails(normalizedServerId, options);
+            }
+
+            const activeRequest = serverDetailBootstrapRequestRef.current.get(normalizedServerId);
+            if (options?.force !== true && activeRequest?.promise) {
+              return activeRequest.promise;
+            }
+            const includesByKind = {
+              api: ["bindings", "context"],
+              auth: ["auth-users"],
+              function: ["bindings", "context", "versions"],
+              secrets: ["secrets"],
+              web_app: ["bindings", "context", "versions"],
+            };
+            const includes = Array.isArray(options?.include)
+              ? options.include
+              : includesByKind[normalizedKind] || [];
+            const versionLoadKey = [
+              String(backendUrl || "").trim(),
+              JSON.stringify(requestHeaders || {}),
+              normalizedServerId,
+            ].join("|");
+            if (includes.includes("versions")) {
+              serverVersionsLoadedRef.current.add(versionLoadKey);
+              setServerVersionsLoadState({
+                serverId: normalizedServerId,
+                status: "loading",
+                error: "",
+              });
+            }
+            setLoadingServerId(normalizedServerId);
+            if (includes.includes("bindings")) setLoadingServerBindingsId(normalizedServerId);
+            if (includes.includes("context")) setLoadingServerContextId(normalizedServerId);
+            if (includes.includes("auth-users")) setLoadingServerAuthUsersId(normalizedServerId);
+            if (includes.includes("secrets")) setLoadingServerSecretsId(normalizedServerId);
+
+            const hydrateVersions = async (rawVersions, baseServer) => {
+              const sourceVersions = Array.isArray(rawVersions)
+                ? rawVersions
+                : Array.isArray(rawVersions?.versions)
+                  ? rawVersions.versions
+                  : Array.isArray(rawVersions?.data)
+                    ? rawVersions.data
+                    : [];
+              const versions = normalizeServerVersionApiList(sourceVersions);
+              if (versions.length === 0) return baseServer;
+              const activeVersion = versions.find((version) => version.status === "active")
+                || versions[0]
+                || null;
+              return preserveAuthoritativeServerOperationalState(
+                createPlaygroundServerWithVersionList(
+                  baseServer,
+                  versions,
+                  activeVersion?.id || ""
+                ),
+                baseServer
+              );
+            };
+
+            const request = (async () => {
+              try {
+                const query = new URLSearchParams({ kind: normalizedKind });
+                if (includes.length > 0) query.set("include", includes.join(","));
+                if (includes.includes("auth-users")) query.set("authUsersLimit", "50");
+                const response = await fetch(
+                  backendUrl + "/servers/" + encodeURIComponent(normalizedServerId)
+                    + "/bootstrap?" + query.toString(),
+                  {
+                    method: "GET",
+                    headers: requestHeaders,
+                    cache: "no-store",
+                    priority: "high",
+                  }
+                );
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                  throw new Error(data?.message || data?.error || "Failed to load resource details.");
+                }
+                const authoritativeServer = getPlaygroundServerResponseRecord(data?.server);
+                if (!authoritativeServer) throw new Error("Server response was empty.");
+
+                const resources = data?.resources && typeof data.resources === "object"
+                  ? data.resources
+                  : {};
+                const bindings = Array.isArray(resources?.bindings?.bindings)
+                  ? resources.bindings.bindings.map(normalizePlaygroundServerBindingRecord).filter(Boolean)
+                  : [];
+                const context = resources.context
+                  ? normalizePlaygroundServerContextRecord(resources.context)
+                  : null;
+                const authUsers = resources["auth-users"] && typeof resources["auth-users"] === "object"
+                  ? {
+                      users: Array.isArray(resources["auth-users"].users) ? resources["auth-users"].users : [],
+                      projectId: String(resources["auth-users"].projectId || ""),
+                      nextPageToken: String(resources["auth-users"].nextPageToken || ""),
+                      loadedAt: new Date().toISOString(),
+                    }
+                  : null;
+                const rawSecrets = Array.isArray(resources?.secrets?.secrets)
+                  ? resources.secrets.secrets
+                  : Array.isArray(resources?.secrets?.data)
+                    ? resources.secrets.data
+                    : [];
+                const secrets = rawSecrets.map(normalizePlaygroundSecretRecord).filter(Boolean);
+                const hydratedServer = includes.includes("versions") && !data?.errors?.versions
+                  ? await hydrateVersions(resources.versions, authoritativeServer)
+                  : authoritativeServer;
+
+                authoritativeServerDetailIdsRef.current.add(normalizedServerId);
+                if (includes.includes("bindings") && !data?.errors?.bindings) {
+                  authoritativeServerBindingIdsRef.current.add(normalizedServerId);
+                  setServerBindingsById((current) => ({ ...current, [normalizedServerId]: bindings }));
+                }
+                if (context && !data?.errors?.context) {
+                  setServerContextsById((current) => ({ ...current, [normalizedServerId]: context }));
+                  if (!includes.includes("bindings") && !authoritativeServerBindingIdsRef.current.has(normalizedServerId)) {
+                    setServerBindingsById((current) => ({
+                      ...current,
+                      [normalizedServerId]: Array.isArray(context.bindings) ? context.bindings : [],
+                    }));
+                  }
+                }
+                if (authUsers && !data?.errors?.["auth-users"]) {
+                  setServerAuthUsersById((current) => ({ ...current, [normalizedServerId]: authUsers }));
+                  setServerAuthUsersState({ error: "" });
+                }
+                if (includes.includes("secrets") && !data?.errors?.secrets) {
+                  setServerSecretsById((current) => ({ ...current, [normalizedServerId]: secrets }));
+                  setServerSecretsState({ error: "" });
+                }
+                setServerDetailsById((current) => ({
+                  ...current,
+                  [normalizedServerId]: mergeAuthoritativeServerRecordWithLoadedVersions(
+                    current[normalizedServerId],
+                    hydratedServer
+                  ),
+                }));
+                if (
+                  selectedServerIdRef.current === normalizedServerId
+                  && !serverEditorDirtyRef.current
+                ) {
+                  setDraftServer((current) => mergeAuthoritativeServerRecordWithLoadedVersions(
+                    current,
+                    hydratedServer
+                  ));
+                }
+                setServerSaveState((current) => ({ ...current, error: "" }));
+                if (includes.includes("versions")) {
+                  setServerVersionsLoadState({
+                    serverId: normalizedServerId,
+                    status: data?.errors?.versions ? "error" : "success",
+                    error: data?.errors?.versions?.message || "",
+                  });
+                }
+
+                if (data?.errors?.bindings) void loadServerBindings(normalizedServerId, { force: true });
+                if (data?.errors?.context) void loadServerContext(normalizedServerId, { force: true });
+                if (data?.errors?.["auth-users"]) void loadServerAuthUsers(normalizedServerId, { force: true, limit: 50 });
+                if (data?.errors?.secrets) void loadServerSecrets(normalizedServerId, { force: true });
+                if (data?.errors?.versions) {
+                  serverVersionsLoadedRef.current.delete(versionLoadKey);
+                  void fetchServerVersionsApi(normalizedServerId)
+                    .then((versions) => hydrateVersions(versions, authoritativeServer))
+                    .then((nextServer) => {
+                      markServerVersionsCacheLoaded(normalizedServerId);
+                      setServerDetailsById((current) => ({ ...current, [normalizedServerId]: nextServer }));
+                      if (selectedServerIdRef.current === normalizedServerId && !serverEditorDirtyRef.current) {
+                        setDraftServer(nextServer);
+                      }
+                      setServerVersionsLoadState({ serverId: normalizedServerId, status: "success", error: "" });
+                    })
+                    .catch(() => undefined);
+                }
+                return { server: hydratedServer, bindings, context, authUsers, secrets };
+              } catch (error) {
+                if (includes.includes("versions")) serverVersionsLoadedRef.current.delete(versionLoadKey);
+                const fallbackServer = await loadServerDetails(normalizedServerId, options);
+                if (includes.includes("bindings")) void loadServerBindings(normalizedServerId);
+                if (includes.includes("context")) void loadServerContext(normalizedServerId);
+                if (includes.includes("auth-users")) void loadServerAuthUsers(normalizedServerId, { limit: 50 });
+                if (includes.includes("secrets")) void loadServerSecrets(normalizedServerId);
+                if (includes.includes("versions")) {
+                  void fetchServerVersionsApi(normalizedServerId)
+                    .then((versions) => hydrateVersions(versions, fallbackServer))
+                    .then((nextServer) => {
+                      if (!nextServer) return;
+                      markServerVersionsCacheLoaded(normalizedServerId);
+                      setServerDetailsById((current) => ({ ...current, [normalizedServerId]: nextServer }));
+                      if (selectedServerIdRef.current === normalizedServerId && !serverEditorDirtyRef.current) {
+                        setDraftServer(nextServer);
+                      }
+                    })
+                    .catch(() => undefined);
+                }
+                return fallbackServer ? { server: fallbackServer } : null;
+              } finally {
+                setLoadingServerId((current) => current === normalizedServerId ? "" : current);
+                setLoadingServerBindingsId((current) => current === normalizedServerId ? "" : current);
+                setLoadingServerContextId((current) => current === normalizedServerId ? "" : current);
+                setLoadingServerAuthUsersId((current) => current === normalizedServerId ? "" : current);
+                setLoadingServerSecretsId((current) => current === normalizedServerId ? "" : current);
+              }
+            })();
+            serverDetailBootstrapRequestRef.current.set(normalizedServerId, { promise: request });
+            try {
+              return await request;
+            } finally {
+              if (serverDetailBootstrapRequestRef.current.get(normalizedServerId)?.promise === request) {
+                serverDetailBootstrapRequestRef.current.delete(normalizedServerId);
+              }
+            }
+          }, [
+            backendUrl,
+            loadServerDetails,
+            requestHeaders,
+            resourceTemplatePreviewServerRecordById,
+          ]);
 
           const loadServerFiles = useCallback(async (serverId) => {
             if (!serverId || serverId === PLAYGROUND_SERVER_DRAFT_ID) {
@@ -376,6 +650,9 @@
               return null;
             }
             const normalizedPeriod = normalizePlaygroundEnvironmentHomeChartPeriod(options?.period || "day");
+            const analyticsKind = canonicalizePlaygroundServerKind(
+              options?.kind || normalizedEmbeddedServerKind
+            );
             const analyticsStateKey = buildPlaygroundServerAnalyticsStateKey(normalizedServerId, normalizedPeriod);
 
             if (resourceTemplatePreviewServerRecordById[normalizedServerId]) {
@@ -423,7 +700,9 @@
               let data = null;
               try {
                 const overviewData = await fetchPlaygroundCachedDatabaseResourceJson(
-                  backendUrl + "/servers/analytics/overview?period=" + encodeURIComponent(normalizedPeriod),
+                  backendUrl + "/servers/analytics/overview?"
+                    + (analyticsKind ? "kind=" + encodeURIComponent(analyticsKind) + "&" : "")
+                    + "period=" + encodeURIComponent(normalizedPeriod),
                   requestHeaders,
                   {
                     scopeKey: databaseListScopeKey,
@@ -591,7 +870,7 @@
             } finally {
               setLoadingServerAnalyticsId((current) => current === analyticsStateKey ? "" : current);
             }
-          }, [backendUrl, databaseListScopeKey, requestHeaders, resourceTemplatePreviewServerRecordById]);
+          }, [backendUrl, databaseListScopeKey, normalizedEmbeddedServerKind, requestHeaders, resourceTemplatePreviewServerRecordById]);
 
           const loadServerAuthUsers = useCallback(async (serverId, options = {}) => {
             const normalizedServerId = String(serverId || "").trim();
@@ -1187,10 +1466,48 @@
             setDatabaseListLoading(true);
             const request = (async () => {
               try {
-                const nextDatabases = await fetchPlaygroundDatabaseList(backendUrl, databaseRequestHeadersRef.current, {
-                  force,
-                  identity: databaseListIdentity,
-                });
+                const useOverviewCatalog = options?.useOverviewCatalog === true;
+                let nextDatabases = [];
+                if (useOverviewCatalog) {
+                  try {
+                    const requestedPeriod = normalizePlaygroundEnvironmentHomeChartPeriod(
+                      options?.period || developServerOperationalMetricsPeriod
+                    );
+                    const data = await fetchPlaygroundCachedDatabaseResourceJson(
+                      backendUrl + "/databases/analytics/overview?period=" + encodeURIComponent(requestedPeriod),
+                      databaseRequestHeadersRef.current,
+                      {
+                        scopeKey: requestScopeKey,
+                        ttlMs: PLAYGROUND_DATABASE_ANALYTICS_CACHE_TTL_MS,
+                        force,
+                        persist: true,
+                        staleWhileRevalidate: false,
+                        priority: "high",
+                      }
+                    );
+                    const resources = Array.isArray(data?.analytics?.resources)
+                      ? data.analytics.resources
+                      : Array.isArray(data?.resources)
+                        ? data.resources
+                        : [];
+                    nextDatabases = resources
+                      .map((resource) => normalizePlaygroundDatabaseRecord(
+                        resource?.database || resource?.resource || resource
+                      ))
+                      .filter((database) => database?.id);
+                    writePlaygroundDatabaseListCache(requestScopeKey, nextDatabases);
+                  } catch {
+                    nextDatabases = await fetchPlaygroundDatabaseList(backendUrl, databaseRequestHeadersRef.current, {
+                      force,
+                      identity: databaseListIdentity,
+                    });
+                  }
+                } else {
+                  nextDatabases = await fetchPlaygroundDatabaseList(backendUrl, databaseRequestHeadersRef.current, {
+                    force,
+                    identity: databaseListIdentity,
+                  });
+                }
                 if (databaseListScopeKeyRef.current !== requestScopeKey || databaseListRequestRef.current.requestId !== requestId) {
                   return nextDatabases;
                 }
@@ -1245,7 +1562,12 @@
                   requestState.retryCount += 1;
                   requestState.retryTimer = window.setTimeout(() => {
                     requestState.retryTimer = null;
-                    void loadDatabases({ retry: true, force: true });
+                    void loadDatabases({
+                      retry: true,
+                      force: true,
+                      useOverviewCatalog: options?.useOverviewCatalog === true,
+                      period: options?.period,
+                    });
                   }, retryDelayMs);
                 }
                 return Array.isArray(staleItems) ? staleItems : [];
@@ -1262,7 +1584,7 @@
               }
             });
             return request;
-          }, [backendUrl, databaseListIdentity, databaseListScopeKey]);
+          }, [backendUrl, databaseListIdentity, databaseListScopeKey, developServerOperationalMetricsPeriod]);
 
           const loadDatabaseDetails = useCallback(async (databaseId, options = {}) => {
             if (!databaseId || databaseId === PLAYGROUND_DATABASE_DRAFT_ID) {
@@ -1958,7 +2280,7 @@
               return;
             }
 
-            // Analytics can make the first paint useful, but only /servers owns catalog readiness.
+            // Analytics can make the first paint useful, but the catalog loader owns readiness.
             setServers(metricServers);
             setServerDetailsById((current) => {
               const next = { ...current };
@@ -2018,18 +2340,6 @@
             normalizedEmbeddedServerKind,
             resourceMode,
           ]);
-
-          useEffect(() => {
-            if (
-              resourceMode !== "servers"
-              || normalizedEmbeddedServerKind === "database"
-              || serverAgentOptionsLoading
-              || serverAgentOptions.length > 0
-            ) {
-              return;
-            }
-            void loadServerAgentOptions();
-          }, [loadServerAgentOptions, normalizedEmbeddedServerKind, resourceMode, serverAgentOptions.length, serverAgentOptionsLoading]);
 
           useEffect(() => {
             if (!embeddedInResources || resourceMode !== "servers" || normalizedEmbeddedServerKind !== "voice_agent") {
@@ -2328,7 +2638,7 @@
             setEnvironmentDetailTab("general");
             const normalizedSeedEnvironment = seedEnvironment ? normalizePlaygroundEnvironmentRecord(seedEnvironment) : null;
             if (normalizedSeedEnvironment) {
-              rememberEnvironmentVersionBaseline(normalizedSeedEnvironment);
+              rememberEnvironmentVersionBaseline(normalizedSeedEnvironment, { force: true });
             }
             setDraftEnvironment(normalizedSeedEnvironment);
             void loadEnvironmentDetails(selectedEnvironmentId);
@@ -2359,15 +2669,17 @@
             resetServerEditorAuxiliaryState();
             setServerDetailsCollapsed(false);
             setDraftServer(seedServer ? normalizePlaygroundServerRecord(seedServer) : null);
-            const seedServerKind = canonicalizePlaygroundServerKind(seedServer?.kind);
-            void loadServerDetails(selectedServerId);
-            if (!["auth", "agent_runtime", "voice_agent", "secrets", "payments", "function", "web_app"].includes(seedServerKind)) {
-              void loadServerFiles(selectedServerId);
+            const seedServerKind = canonicalizePlaygroundServerKind(
+              seedServer?.kind || normalizedEmbeddedServerKind
+            );
+            if (["api", "auth", "agent_runtime", "function", "payments", "secrets", "web_app"].includes(seedServerKind)) {
+              void loadServerDetailBootstrap(selectedServerId, seedServerKind);
+            } else {
+              void loadServerDetails(selectedServerId);
+              if (seedServerKind !== "voice_agent") void loadServerFiles(selectedServerId);
+              if (seedServerKind !== "voice_agent") void loadServerBindings(selectedServerId);
             }
-            if (!["auth", "agent_runtime", "secrets", "payments"].includes(seedServerKind)) {
-              void loadServerBindings(selectedServerId);
-            }
-          }, [loadServerBindings, loadServerDetails, loadServerFiles, orderedServers, resourceMode, selectedServerId, serverDetailsById]);
+          }, [loadServerBindings, loadServerDetailBootstrap, loadServerDetails, loadServerFiles, normalizedEmbeddedServerKind, orderedServers, resourceMode, selectedServerId, serverDetailsById]);
 
           useEffect(() => {
             if (
@@ -2384,6 +2696,7 @@
             }
             if (
               serverContextsById[selectedServerId]
+              || serverDetailBootstrapRequestRef.current.get(selectedServerId)?.promise
               || loadingServerContextId === selectedServerId
             ) {
               return;
@@ -2415,8 +2728,14 @@
             if (serverAuthUsersById[selectedServerId]?.users) {
               return;
             }
+            if (
+              loadingServerAuthUsersId === selectedServerId
+              || serverDetailBootstrapRequestRef.current.get(selectedServerId)?.promise
+            ) {
+              return;
+            }
             void loadServerAuthUsers(selectedServerId);
-          }, [authDetailTab, draftServer, loadServerAuthUsers, resourceMode, selectedServerId, selectedServerSnapshot, serverAuthUsersById]);
+          }, [authDetailTab, draftServer, loadServerAuthUsers, loadingServerAuthUsersId, resourceMode, selectedServerId, selectedServerSnapshot, serverAuthUsersById]);
 
           useEffect(() => {
             if (resourceMode !== "servers") {
@@ -2435,8 +2754,14 @@
             if (Array.isArray(serverSecretsById[selectedServerId])) {
               return;
             }
+            if (
+              loadingServerSecretsId === selectedServerId
+              || serverDetailBootstrapRequestRef.current.get(selectedServerId)?.promise
+            ) {
+              return;
+            }
             void loadServerSecrets(selectedServerId);
-          }, [draftServer, loadServerSecrets, resourceMode, secretsDetailTab, selectedServerId, selectedServerSnapshot, serverSecretsById]);
+          }, [draftServer, loadServerSecrets, loadingServerSecretsId, resourceMode, secretsDetailTab, selectedServerId, selectedServerSnapshot, serverSecretsById]);
 
           useEffect(() => {
             if (resourceMode !== "servers") {
@@ -2455,8 +2780,11 @@
             if (Array.isArray(serverAgentRuntimeRunsById[selectedServerId])) {
               return;
             }
+            if (loadingServerAgentRuntimeRunsId === selectedServerId) {
+              return;
+            }
             void loadServerAgentRuntimeRuns(selectedServerId);
-          }, [agentRuntimeDetailTab, draftServer, loadServerAgentRuntimeRuns, resourceMode, selectedServerId, selectedServerSnapshot, serverAgentRuntimeRunsById]);
+          }, [agentRuntimeDetailTab, draftServer, loadServerAgentRuntimeRuns, loadingServerAgentRuntimeRunsId, resourceMode, selectedServerId, selectedServerSnapshot, serverAgentRuntimeRunsById]);
 
           useEffect(() => {
             if (resourceMode !== "servers") {
@@ -2641,8 +2969,16 @@
             setDatabases(cachedRecord?.items || []);
             setHasLoadedDatabases(Number(cachedRecord?.loadedAt || 0) > 0);
             databaseListInitialLoadScopeRef.current = databaseListScopeKey;
-            void loadDatabases({ retry: true });
-          }, [databaseListScopeKey, embeddedInResources, loadDatabases, normalizedEmbeddedServerKind, resourceMode]);
+            void loadDatabases({
+              retry: true,
+              useOverviewCatalog: Boolean(
+                embeddedInResources
+                && resourceMode === "servers"
+                && normalizedEmbeddedServerKind === "database"
+              ),
+              period: developServerOperationalMetricsPeriod,
+            });
+          }, [databaseListScopeKey, developServerOperationalMetricsPeriod, embeddedInResources, loadDatabases, normalizedEmbeddedServerKind, resourceMode]);
 
           useEffect(() => () => {
             const requestState = databaseListRequestRef.current;
@@ -3090,6 +3426,44 @@
               handled: true,
             };
           }, [embeddedInResources, embeddedResourcesView, navigationResourceToken, navigationTargetResourceId, navigationTargetResourceType, orderedDatabases, orderedServers]);
+
+          useEffect(() => {
+            const normalizedCreationKind = normalizePlaygroundServerOverviewKind(serverCreationRequestKind);
+            const previousRequest = serverCreationRequestRef.current || {
+              token: null,
+              kind: "",
+              handled: false,
+            };
+            const requestChanged =
+              previousRequest.token !== serverCreationRequestToken
+              || previousRequest.kind !== normalizedCreationKind;
+
+            if (requestChanged) {
+              serverCreationRequestRef.current = {
+                token: serverCreationRequestToken,
+                kind: normalizedCreationKind,
+                handled: false,
+              };
+            }
+
+            if (
+              !embeddedInResources
+              || embeddedResourcesView !== "servers"
+              || !serverCreationRequestToken
+              || !normalizedCreationKind
+              || normalizedCreationKind === "voice_agent"
+              || serverCreationRequestRef.current.handled
+            ) {
+              return;
+            }
+
+            openServerComposer(normalizedCreationKind);
+            serverCreationRequestRef.current = {
+              token: serverCreationRequestToken,
+              kind: normalizedCreationKind,
+              handled: true,
+            };
+          }, [embeddedInResources, embeddedResourcesView, serverCreationRequestKind, serverCreationRequestToken]);
 
           useEffect(() => {
             setServerAuthSearchQuery("");
@@ -3935,7 +4309,7 @@
                     versionItems,
                     activeVersion?.id || ""
                   );
-                  rememberEnvironmentVersionBaseline(selectedEnvironment);
+                  rememberEnvironmentVersionBaseline(selectedEnvironment, { force: true });
                   return selectedEnvironment;
                 });
               })

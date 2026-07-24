@@ -123,13 +123,13 @@ export const EVALUATIONS_STYLE_DETAIL = String.raw`        line-height: 1.35;
         outline: none;
       }
 
-      .playground-evaluations-jsonl-imports.playground-tasks-attachments {
-        margin-top: 14px;
+      .playground-evaluations-jsonl-imports.platform-attachments {
+        margin-top: 0;
         overflow: visible;
       }
 
-      .playground-evaluations-jsonl-imports .playground-tasks-attachments-toolbar,
-      .playground-evaluations-jsonl-imports .playground-tasks-detail-section-title {
+      .playground-evaluations-jsonl-imports .platform-attachments__header,
+      .playground-evaluations-jsonl-imports .platform-attachments__title {
         overflow: visible;
       }
 
@@ -172,180 +172,100 @@ export const EVALUATIONS_STYLE_DETAIL = String.raw`        line-height: 1.35;
         transform: translateY(0);
       }
 
-      .playground-evaluations-jsonl-imports .playground-environments-action-button.playground-tasks-attachments-environment-button {
-        min-height: 0 !important;
-        height: auto;
-        padding: 0 !important;
-        border: 0 !important;
-        border-radius: 0 !important;
-        background: transparent !important;
-        background-color: transparent !important;
-        box-shadow: none !important;
-        color: #66a6ff !important;
-        font-size: 12px !important;
-        font-weight: 400 !important;
-        line-height: 1.2;
-      }
-
-      .playground-evaluations-jsonl-imports .playground-environments-action-button.playground-tasks-attachments-environment-button::before {
-        content: none !important;
-        display: none !important;
-      }
-
-      .playground-evaluations-jsonl-imports .playground-environments-action-button.playground-tasks-attachments-environment-button:hover:not(:disabled),
-      .playground-evaluations-jsonl-imports .playground-environments-action-button.playground-tasks-attachments-environment-button:focus-visible {
-        background: transparent !important;
-        color: #66a6ff !important;
-        outline: none;
-      }
-
-      .playground-evaluations-jsonl-imports .playground-tasks-attachments-surface.tb-runner-chat {
-        min-height: 0;
-      }
-
-      .playground-evaluations-jsonl-imports .playground-tasks-attachments-dropzone {
+      .playground-evaluations-jsonl-imports .platform-attachments__drop-target.is-empty,
+      .playground-evaluations-jsonl-imports .platform-attachments__empty {
         min-height: 128px;
       }
 
-      .playground-evaluations-thread-case-modal.playground-evaluations-modal {
-        width: min(720px, calc(100vw - 48px));
-        gap: 14px;
-      }
-
-      .playground-evaluations-thread-picker-toolbar {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .playground-evaluations-thread-picker-search {
-        width: 100%;
-        min-width: 0;
-        height: 34px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.06);
-        color: rgba(255, 255, 255, 0.92);
-        font: inherit;
-        font-size: 12px;
-        outline: none;
-        padding: 0 10px;
-        box-sizing: border-box;
-      }
-
-      .playground-evaluations-thread-picker-list {
-        max-height: min(360px, calc(100vh - 320px));
-        overflow: auto;
+      .playground-evaluations-thread-case-modal {
+        width: min(760px, calc(100vw - 32px));
+        height: min(720px, calc(100dvh - 48px));
         display: flex;
         flex-direction: column;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       }
 
-      .playground-evaluations-thread-picker-row {
-        width: 100%;
+      .playground-evaluations-thread-case-modal-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        overflow: hidden;
+      }
+
+      .playground-evaluations-thread-picker-header-search.platform-search {
+        width: 300px;
+        min-width: 300px;
+      }
+
+      .playground-evaluations-thread-picker-table {
         min-width: 0;
-        border: 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        background: transparent;
-        color: inherit;
-        display: grid;
-        grid-template-columns: 24px minmax(0, 1fr) auto;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 0;
-        text-align: left;
-        cursor: pointer;
+        min-height: 0;
+        --platform-data-table-surface: transparent;
+        --platform-data-table-body-background: transparent;
+        --platform-data-table-row-background: transparent;
+        --platform-data-table-header-background: transparent;
+        --platform-data-table-sticky-background: transparent;
       }
 
-      .playground-evaluations-thread-picker-row:last-child {
-        border-bottom: 0;
+      .playground-evaluations-thread-picker-table.platform-data-table.is-fill-layout {
+        flex: 1 1 auto;
+        height: 100%;
+        max-height: 100%;
       }
 
-      .playground-evaluations-thread-picker-row:hover,
-      .playground-evaluations-thread-picker-row:focus-visible {
-        outline: none;
+      .playground-evaluations-thread-picker-table.platform-data-table,
+      .playground-evaluations-thread-picker-table .platform-data-table__surface,
+      .playground-evaluations-thread-picker-table .platform-data-table__table,
+      .playground-evaluations-thread-picker-table .platform-data-table__sticky,
+      .playground-evaluations-thread-picker-table .platform-data-table__header-group,
+      .playground-evaluations-thread-picker-table .platform-data-table__header,
+      .playground-evaluations-thread-picker-table .platform-data-table__scroll,
+      .playground-evaluations-thread-picker-table .platform-data-table__body,
+      .playground-evaluations-thread-picker-table .platform-data-table__row,
+      .playground-evaluations-thread-picker-table .platform-data-table__pagination {
+        background: transparent !important;
       }
 
-      .playground-evaluations-thread-picker-check {
-        width: 18px;
-        height: 18px;
-        border-radius: 999px;
-        border: 1px solid rgba(255, 255, 255, 0.22);
+      .playground-evaluations-thread-picker-table.platform-data-table.is-fill-layout > .platform-data-table__surface,
+      .playground-evaluations-thread-picker-table.platform-data-table.is-fill-layout .platform-data-table__table,
+      .playground-evaluations-thread-picker-table.platform-data-table.is-fill-layout .platform-data-table__scroll {
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+
+      .playground-evaluations-thread-picker-table .platform-data-table__scroll {
+        overflow-y: auto;
+        overscroll-behavior: contain;
+      }
+
+      .playground-evaluations-thread-picker-table .platform-data-table__pagination {
+        flex: 0 0 auto;
+      }
+
+      .playground-evaluations-thread-picker-cell {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-evaluations-thread-picker-cell.is-title,
+      .playground-evaluations-thread-picker-cell.is-agent-name {
+        color: #fff;
+      }
+
+      .playground-evaluations-thread-picker-agent-cell {
+        min-width: 0;
         display: inline-flex;
         align-items: center;
-        justify-content: center;
-        color: rgba(255, 255, 255, 0.92);
+        gap: 8px;
       }
 
-      .playground-evaluations-thread-picker-row.is-selected .playground-evaluations-thread-picker-check {
-        border-color: rgba(102, 166, 255, 0.95);
-        background: rgba(102, 166, 255, 0.18);
-      }
-
-      .playground-evaluations-thread-picker-main {
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-      }
-
-      .playground-evaluations-thread-picker-title {
-        min-width: 0;
-        color: rgba(255, 255, 255, 0.92);
-        font-size: 12px;
-        font-weight: 500;
-        line-height: 1.35;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .playground-evaluations-thread-picker-meta {
-        min-width: 0;
-        color: rgba(255, 255, 255, 0.48);
-        font-size: 11px;
-        line-height: 1.3;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .playground-evaluations-thread-picker-status {
-        color: rgba(255, 255, 255, 0.54);
-        font-size: 11px;
-        line-height: 1.2;
-        white-space: nowrap;
-      }
-
-      .playground-evaluations-thread-picker-empty {
-        padding: 24px 0;
-        color: rgba(255, 255, 255, 0.46);
-        font-size: 12px;
-      }
-
-      .playground-evaluations-thread-picker-status-line {
-        min-height: 16px;
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 12px;
-        line-height: 1.35;
-      }
-
-      .playground-evaluations-thread-picker-status-line.is-error {
-        color: rgba(255, 120, 120, 0.92);
-      }
-
-      .playground-evaluations-case-editor-modal.playground-project-overview-outcome-editor-modal {
-        width: min(720px, calc(100vw - 48px));
-        height: auto !important;
-        min-height: 0;
-        max-height: min(720px, calc(100vh - 48px));
-        overflow: auto;
-      }
-
-      .playground-evaluations-case-editor-body.playground-project-overview-outcome-editor-body {
-        gap: 14px;
+      .playground-evaluations-thread-picker-cell.is-muted {
+        color: rgba(255, 255, 255, 0.58);
       }
 
       .playground-evaluations-create-modal.playground-project-overview-outcome-editor-modal {
@@ -389,11 +309,13 @@ export const EVALUATIONS_STYLE_DETAIL = String.raw`        line-height: 1.35;
         min-width: 0;
         display: flex;
         align-items: center;
-        gap: 0;
+        gap: 12px;
       }
 
       .playground-evaluations-title-input {
         min-width: 0;
+        width: 100%;
+        max-width: min(680px, calc(100vw - 420px));
         flex: 1 1 auto;
         padding: 0;
         border: 0;
@@ -403,6 +325,18 @@ export const EVALUATIONS_STYLE_DETAIL = String.raw`        line-height: 1.35;
         line-height: 1.3;
         font-weight: 500;
         outline: none;
+      }
+
+      .playground-evaluations-run-title {
+        min-width: 0;
+        margin: 0;
+        overflow: hidden;
+        color: #fff;
+        font-size: 18px;
+        line-height: 1.3;
+        font-weight: 500;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .playground-evaluations-detail-inline-back-button {
@@ -468,6 +402,44 @@ export const EVALUATIONS_STYLE_DETAIL = String.raw`        line-height: 1.35;
       .playground-evaluations-detail-sidebar-row.is-owner .playground-evaluations-detail-sidebar-value {
         flex: 1 1 auto;
         overflow: visible;
+      }
+
+      .playground-evaluations-detail-sidebar-row.is-evaluator-selector .playground-evaluations-detail-sidebar-value {
+        flex: 1 1 auto;
+        overflow: visible;
+      }
+
+      .playground-evaluations-detail-evaluator-selector {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .playground-evaluations-detail-evaluator-trigger.platform-selector__trigger {
+        width: 100%;
+        min-width: 0;
+        min-height: 24px;
+        justify-content: flex-end;
+        gap: 6px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+      }
+
+      .playground-evaluations-detail-evaluator-trigger.platform-selector__trigger:hover,
+      .playground-evaluations-detail-evaluator-trigger.platform-selector__trigger:focus-visible {
+        background: transparent;
+      }
+
+      .playground-evaluations-detail-evaluator-value {
+        justify-content: flex-end;
+      }
+
+      .playground-evaluations-detail-sidebar-row.is-owner {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       .playground-evaluations-detail-owner-selector {
@@ -543,6 +515,7 @@ export const EVALUATIONS_STYLE_DETAIL = String.raw`        line-height: 1.35;
         width: 100%;
       }
 
+      .playground-evaluations-detail-overview-main .playground-evaluations-description-section,
       .playground-evaluations-detail-overview-main .playground-evaluations-dataset-guidance-section {
         min-width: 0;
       }

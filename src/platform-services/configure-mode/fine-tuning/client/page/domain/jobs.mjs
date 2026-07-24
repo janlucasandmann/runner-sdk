@@ -199,6 +199,11 @@ export const FINE_TUNING_PAGE_JOBS_SCRIPT = String.raw`      function normalizeP
           environmentId: normalizePlaygroundFineTuningString(source.environmentId || source.environment_id),
           environmentName: normalizePlaygroundFineTuningString(source.environmentName || source.environment_name || "Computer"),
           evaluationSets,
+          description: String(
+            Object.prototype.hasOwnProperty.call(source, "description")
+              ? source.description ?? ""
+              : metadata.description || ""
+          ),
           instructions: String(source.instructions || ""),
           verifyAfter: true,
           threadId,
@@ -248,6 +253,8 @@ export const FINE_TUNING_PAGE_JOBS_SCRIPT = String.raw`      function normalizeP
         const incomingHasExplicitStatus = Object.prototype.hasOwnProperty.call(incomingSource, "status")
           || Object.prototype.hasOwnProperty.call(incomingSource, "fineTuningStatus")
           || Object.prototype.hasOwnProperty.call(incomingSource, "fine_tuning_status");
+        const incomingHasExplicitDescription = Object.prototype.hasOwnProperty.call(incomingSource, "description");
+        const incomingHasExplicitInstructions = Object.prototype.hasOwnProperty.call(incomingSource, "instructions");
         const existing = normalizePlaygroundFineTuningJob(existingJob);
         const incoming = normalizePlaygroundFineTuningJob(incomingJob);
         const mergedVersion = mergePlaygroundFineTuningAgentVersionRecords(existing.createdAgentVersion, incoming.createdAgentVersion);
@@ -255,6 +262,8 @@ export const FINE_TUNING_PAGE_JOBS_SCRIPT = String.raw`      function normalizeP
           ...existing,
           ...incoming,
           status: incomingHasExplicitStatus ? incoming.status : existing.status || incoming.status,
+          description: incomingHasExplicitDescription ? incoming.description : existing.description,
+          instructions: incomingHasExplicitInstructions ? incoming.instructions : existing.instructions,
           metadata: {
             ...readPlaygroundFineTuningPlainObject(existing.metadata),
             ...readPlaygroundFineTuningPlainObject(incoming.metadata),
@@ -332,6 +341,7 @@ export const FINE_TUNING_PAGE_JOBS_SCRIPT = String.raw`      function normalizeP
           environmentName: normalizedJob.environmentName,
           evaluationSets: normalizedJob.evaluationSets,
           evaluationSetIds: normalizedJob.evaluationSets.map((set) => set.id).filter(Boolean),
+          description: truncatePlaygroundFineTuningReferenceText(normalizedJob.description, 4000),
           instructions: truncatePlaygroundFineTuningReferenceText(normalizedJob.instructions, 4000),
           verifyAfter: true,
           threadId: normalizedJob.threadId,
@@ -399,4 +409,3 @@ export const FINE_TUNING_PAGE_JOBS_SCRIPT = String.raw`      function normalizeP
       }
 
 `;
-

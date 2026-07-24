@@ -745,33 +745,31 @@ export const PROJECTS_PAGE_CONNECTORS_SCRIPT = `        function getProjectConne
           setTaskEnvironmentFilePickerOpen(true);
         }
 
-        async function appendTaskAttachmentFiles(files, options = {}) {
-          if (!draftTask?.id && !isCalendarScheduleDetailMode) {
-            return false;
-          }
-          const normalizedFiles = (Array.isArray(files) ? files : []).filter((file) =>
+        function normalizeTaskAttachmentUploadFiles(files) {
+          return (Array.isArray(files) ? files : []).filter((file) =>
             file
             && typeof file === "object"
             && typeof file.name === "string"
             && typeof file.size === "number"
             && typeof file.arrayBuffer === "function"
           );
+        }
+
+        async function uploadTaskAttachmentFiles(files, options = {}) {
+          const normalizedFiles = normalizeTaskAttachmentUploadFiles(files);
           if (normalizedFiles.length === 0) {
-            return false;
+            return [];
           }
 
-          const targetEnvironmentId = String(options.environmentId || activeTaskEnvironmentId || "").trim();
-          if (!targetEnvironmentId) {
+          const targetEnvironmentId = String(options.environmentId || "").trim();
+          if (!targetEnvironmentId && options.allowWithoutEnvironment !== true) {
+            const error = new Error("Select an environment before attaching files.");
             setTaskAttachmentTransferState((current) => ({
               ...current,
-              error: "Select an environment before attaching files.",
+              error: error.message,
             }));
-            return false;
+            throw error;
           }
-
-          const sourceTaskId = draftTask?.id || "";
-          let lastTask = null;
-          let lastSchedule = null;
 
           setTaskAttachmentTransferState((current) => ({
             ...current,
@@ -780,27 +778,19 @@ export const PROJECTS_PAGE_CONNECTORS_SCRIPT = `        function getProjectConne
           }));
 
           try {
+            const uploadedAttachments = [];
             for (let index = 0; index < normalizedFiles.length; index += 1) {
-              const uploadedAttachment = await uploadTaskAttachment(normalizedFiles[index], {
+              uploadedAttachments.push(await uploadTaskAttachment(normalizedFiles[index], {
                 environmentId: targetEnvironmentId,
                 sourcePath: Array.isArray(options.sourcePaths) ? options.sourcePaths[index] : "",
-              });
-              if (isCalendarScheduleDetailMode) {
-                lastSchedule = appendUploadedScheduleAttachments([uploadedAttachment]);
-                continue;
-              }
-              if (selectedTaskIdRef.current !== sourceTaskId) {
-                continue;
-              }
-              lastTask = appendUploadedTaskAttachments([uploadedAttachment]);
+              }));
             }
-
             setTaskAttachmentTransferState((current) => ({
               ...current,
               error: "",
               isProcessing: false,
             }));
-            return Boolean(lastTask || lastSchedule);
+            return uploadedAttachments;
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Failed to upload attachment.";
             setTaskAttachmentTransferState((current) => ({
@@ -813,8 +803,168 @@ export const PROJECTS_PAGE_CONNECTORS_SCRIPT = `        function getProjectConne
               error: errorMessage,
               message: "",
             }));
+            throw error;
+          }
+        }
+
+        async function appendTaskAttachmentFiles(files, options = {}) {
+          if (!draftTask?.id && !isCalendarScheduleDetailMode) {
             return false;
           }
+          const normalizedFiles = normalizeTaskAttachmentUploadFiles(files);
+          if (normalizedFiles.length === 0) {
+            return false;
+          }
+
+          const sourceTaskId = draftTask?.id || "";
+
+          try {
+            const uploadedAttachments = await uploadTaskAttachmentFiles(normalizedFiles, {
+              ...options,
+              environmentId: String(options.environmentId || activeTaskEnvironmentId || "").trim(),
+            });
+            if (isCalendarScheduleDetailMode) {
+              return Boolean(appendUploadedScheduleAttachments(uploadedAttachments));
+            }
+            if (selectedTaskIdRef.current !== sourceTaskId) {
+              return false;
+            }
+            return Boolean(appendUploadedTaskAttachments(uploadedAttachments));
+          } catch {
+            return false;
+          }
+        }
+
+        function buildTaskDescriptionUploadedFiles(attachments) {
+          return normalizePlaygroundTaskAttachmentList(attachments).map((attachment) => ({
+            src: resolveTaskAttachmentInlineImageUrl(attachment),
+            name: attachment.filename || "Attachment",
+            alt: attachment.filename || "Attachment",
+            size: Number(attachment.size) || 0,
+            mimeType: String(attachment.mimeType || ""),
+            attachmentId: attachment.id || "",
+            metadata: { taskAttachment: attachment },
+          })).filter((file) => Boolean(file.src));
+        }
+
+        async function resolveTaskDescriptionFilePreviewSource(file, signal) {
+          const rawSource = String(file?.src || "").trim();
+          if (!rawSource) {
+            throw new Error("Attachment preview is unavailable.");
+          }
+          const rawSourceLower = rawSource.toLowerCase();
+          if (rawSourceLower.startsWith("blob:") || rawSourceLower.startsWith("data:")) {
+            return rawSource;
+          }
+
+          const attachmentId = String(file?.attachmentId || "").trim();
+          const candidateSources = [
+            attachmentId ? getTaskAttachmentStableApiUrl(attachmentId) : "",
+            resolveTaskAttachmentApiUrl(rawSource, attachmentId),
+            rawSource,
+          ].filter((source, index, sources) =>
+            Boolean(source) && sources.indexOf(source) === index
+          );
+          let lastError = null;
+          for (const candidateSource of candidateSources) {
+            if (signal?.aborted) {
+              throw signal.reason || new DOMException("Preview loading was cancelled.", "AbortError");
+            }
+            let candidateUrl;
+            let backendOrigin = "";
+            try {
+              candidateUrl = new URL(candidateSource, window.location.origin);
+              backendOrigin = backendUrl
+                ? new URL(backendUrl, window.location.origin).origin
+                : "";
+            } catch {
+              continue;
+            }
+            const isAuthenticatedPlatformSource =
+              candidateUrl.origin === window.location.origin
+              || Boolean(backendOrigin && candidateUrl.origin === backendOrigin);
+            if (!isAuthenticatedPlatformSource) {
+              return candidateUrl.toString();
+            }
+            try {
+              const response = await fetch(candidateUrl.toString(), {
+                method: "GET",
+                headers: requestHeaders,
+                credentials: candidateUrl.origin === window.location.origin
+                  ? "same-origin"
+                  : "include",
+                signal,
+              });
+              if (!response.ok) {
+                throw new Error(
+                  "Failed to load attachment preview (" + response.status + ")."
+                );
+              }
+              return await response.blob();
+            } catch (error) {
+              if (signal?.aborted) throw error;
+              lastError = error;
+            }
+          }
+          throw lastError || new Error("Attachment preview is unavailable.");
+        }
+
+        async function uploadTaskDescriptionFiles(files) {
+          const sourceTaskId = String(draftTask?.id || "").trim();
+          if (!sourceTaskId) {
+            throw new Error("Ticket is unavailable.");
+          }
+          const uploadedAttachments = await uploadTaskAttachmentFiles(files, {
+            environmentId: activeTaskEnvironmentId,
+            allowWithoutEnvironment: true,
+          });
+          if (selectedTaskIdRef.current !== sourceTaskId) {
+            throw new Error("The selected ticket changed before the file upload completed.");
+          }
+          return buildTaskDescriptionUploadedFiles(uploadedAttachments);
+        }
+
+        async function uploadIssueComposerDescriptionFiles(files) {
+          const uploadedAttachments = await uploadTaskAttachmentFiles(files, {
+            environmentId: String(issueComposerDraft?.environmentId || "").trim(),
+            allowWithoutEnvironment: true,
+          });
+          return buildTaskDescriptionUploadedFiles(uploadedAttachments);
+        }
+
+        function handleRenameIssueComposerDescriptionFile(file, nextName) {
+          const attachmentId = String(file?.attachmentId || "").trim();
+          const normalizedName = String(nextName || "").trim();
+          if (!attachmentId || !normalizedName) return;
+          updateIssueComposerDraft((current) => ({
+            ...current,
+            attachments: normalizePlaygroundTaskAttachmentList(current.attachments).map((attachment) =>
+              attachment.id === attachmentId
+                ? { ...attachment, filename: normalizedName }
+                : attachment
+            ),
+          }));
+        }
+
+        function handleRemoveIssueComposerDescriptionFile(file) {
+          const attachmentId = String(file?.attachmentId || "").trim();
+          if (!attachmentId) return;
+          updateIssueComposerDraft((current) => {
+            const targetAttachment = normalizePlaygroundTaskAttachmentList(current.attachments)
+              .find((attachment) => attachment.id === attachmentId) || null;
+            if (!targetAttachment) return current;
+            revokeTaskAttachmentObjectUrl(targetAttachment.previewUrl);
+            revokeTaskAttachmentObjectUrl(targetAttachment.url);
+            return {
+              ...current,
+              description: removeTaskDescriptionAttachmentReference(
+                current.description,
+                targetAttachment
+              ),
+              attachments: normalizePlaygroundTaskAttachmentList(current.attachments)
+                .filter((attachment) => attachment.id !== attachmentId),
+            };
+          });
         }
 
         async function handleTaskAttachmentInputChange(event) {
@@ -1066,6 +1216,10 @@ export const PROJECTS_PAGE_CONNECTORS_SCRIPT = `        function getProjectConne
           }
           updateDraftTask((current) => ({
             ...current,
+            description: removeTaskDescriptionAttachmentReference(
+              current.description,
+              targetAttachment
+            ),
             attachments: current.attachments.filter((attachment) => attachment.id !== attachmentId),
             connectors: removePlaygroundAttachmentFromConnectorSelections(current.connectors, targetAttachment),
           }), { autosave: true });

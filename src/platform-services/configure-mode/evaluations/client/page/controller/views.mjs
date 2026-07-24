@@ -65,16 +65,8 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
           });
         }
 
-        function renderDetail() {
-          if (!activeSet) {
-            return renderOverview();
-          }
-          const activeDetailTab = evaluationDetailTab === "settings" || evaluationDetailTab === "data"
-            ? "settings"
-            : "general";
-          const creator = normalizePlaygroundEvaluationPersonIdentity(activeSet.creator || activeSet.createdBy || activeSet.created_by || {});
-          const creatorLabel = getPlaygroundEvaluationCreatorLabel(creator) || "Unknown";
-          const renderSidebarRow = (key, label, value, options = {}) => React.createElement("div", {
+        function renderEvaluationDetailSidebarRow(key, label, value, options = {}) {
+          return React.createElement("div", {
               key,
               className: "playground-evaluations-detail-sidebar-row" + (options.className ? " " + options.className : ""),
             },
@@ -84,28 +76,17 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
               title: options.title || (typeof value === "string" ? value : undefined),
             }, value)
           );
-          const detailHeader = React.createElement("div", { className: "playground-evaluations-detail-header-copy" },
-            React.createElement("button", {
-                type: "button",
-                className: "playground-files-header-icon-button is-plain playground-evaluations-detail-inline-back-button",
-                onClick: () => setEvaluationsPageMode("overview"),
-                title: "Back to evaluations",
-                "aria-label": "Back to evaluations",
-              },
-              React.createElement(ArrowLeft, { width: 16, height: 16, strokeWidth: 1.8, "aria-hidden": "true" })
-            ),
-            React.createElement("input", {
-              type: "text",
-              className: "playground-content-title playground-evaluations-title-input",
-              value: activeSet.name || "",
-              placeholder: "Untitled Evaluation",
-              onChange: (event) => updateEvaluationSet(activeSet.id, (current) => ({
-                ...current,
-                name: event.target.value,
-              })),
-              "aria-label": "Evaluation name",
-            })
-          );
+        }
+
+        function renderDetail() {
+          if (!activeSet) {
+            return renderOverview();
+          }
+          const activeDetailTab = evaluationDetailTab === "settings" || evaluationDetailTab === "data"
+            ? "settings"
+            : "general";
+          const creator = normalizePlaygroundEvaluationPersonIdentity(activeSet.creator || activeSet.createdBy || activeSet.created_by || {});
+          const creatorLabel = getPlaygroundEvaluationCreatorLabel(creator) || "Unknown";
           const creatorValue = React.createElement("span", {
               className: "playground-evaluations-detail-person",
               title: creatorLabel,
@@ -117,6 +98,72 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
             ),
             React.createElement("span", null, creatorLabel)
           );
+          const evaluator = normalizePlaygroundEvaluationEvaluator(activeSet.evaluator);
+          const evaluatorAgent = evaluator.type === "agent"
+            ? getPlaygroundEvaluationAgentRecord(agentOptions, evaluator.agentId)
+            : null;
+          const evaluatorAgentLabel = String(
+            evaluatorAgent?.name
+            || evaluatorAgent?.label
+            || evaluatorAgent?.title
+            || getPlaygroundEvaluationEvaluatorLabel(evaluator, agentOptions)
+            || "Agent evaluator"
+          ).trim();
+          const evaluatorAgentPhotoUrl = getPlaygroundEvaluationAgentPhotoUrl(evaluatorAgent);
+          const evaluatorAgentOptions = agentOptions
+            .filter((agent) => String(agent?.id || "").trim())
+            .map((agent) => {
+              const agentId = String(agent.id).trim();
+              const agentLabel = String(agent.name || agent.label || agent.title || agentId).trim();
+              const agentPhotoUrl = getPlaygroundEvaluationAgentPhotoUrl(agent);
+              return {
+                value: agentId,
+                label: agentLabel,
+                leading: React.createElement("span", {
+                    className: "playground-evaluations-run-agent-avatar",
+                    "aria-hidden": "true",
+                  }, agentPhotoUrl
+                    ? React.createElement("img", { src: agentPhotoUrl, alt: "" })
+                    : getPlaygroundEvaluationInitials(agentLabel)),
+              };
+            });
+          const evaluatorValue = evaluator.type === "agent"
+            ? React.createElement(PlatformSelector, {
+                value: evaluator.agentId,
+                options: evaluatorAgentOptions,
+                onValueChange: (nextAgentId) => updateEvaluationSet(activeSet.id, (current) => ({
+                  ...current,
+                  evaluator: {
+                    ...normalizePlaygroundEvaluationEvaluator(current.evaluator),
+                    type: "agent",
+                    agentId: nextAgentId,
+                  },
+                })),
+                ariaLabel: "Choose evaluator agent",
+                label: React.createElement("span", {
+                    className: "playground-evaluations-run-agent-cell playground-evaluations-detail-evaluator-value",
+                    title: evaluatorAgentLabel,
+                  },
+                  React.createElement("span", {
+                    className: "playground-evaluations-run-agent-avatar",
+                    "aria-hidden": "true",
+                  }, evaluatorAgentPhotoUrl
+                    ? React.createElement("img", { src: evaluatorAgentPhotoUrl, alt: "" })
+                    : getPlaygroundEvaluationInitials(evaluatorAgentLabel)),
+                  React.createElement("span", {
+                    className: "playground-evaluations-run-cell-label",
+                  }, evaluatorAgentLabel)
+                ),
+                alignment: "end",
+                popupAlignment: "right",
+                popupWidth: 260,
+                popupMaxHeight: "min(320px, calc(100vh - 180px))",
+                className: "playground-evaluations-detail-evaluator-selector",
+                triggerClassName: "playground-evaluations-detail-evaluator-trigger",
+                popupClassName: "playground-evaluations-detail-evaluator-menu",
+                optionClassName: "playground-evaluations-detail-evaluator-option",
+              })
+            : renderEvaluationSetEvaluatorCell(activeSet);
           const passThresholdLabel = React.createElement("span", {
               className: "playground-evaluations-pass-threshold-label-group",
             },
@@ -134,73 +181,31 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
             )
           );
           const properties = React.createElement("div", { className: "playground-evaluations-detail-sidebar-list" },
-            renderSidebarRow("evaluator", "Evaluator", renderEvaluationSetEvaluatorCell(activeSet)),
-            renderSidebarRow("pass-threshold", passThresholdLabel, renderEvaluationPassThresholdInline(activeSet, { showLabel: false }), {
+            renderEvaluationDetailSidebarRow("evaluator", "Evaluator", evaluatorValue, {
+              className: evaluator.type === "agent" ? "is-evaluator-selector" : "",
+              control: evaluator.type === "agent",
+            }),
+            renderEvaluationDetailSidebarRow("pass-threshold", passThresholdLabel, renderEvaluationPassThresholdInline(activeSet, { showLabel: false }), {
               className: "is-pass-threshold",
             }),
-            renderSidebarRow("creator", "Creator", creatorValue),
-            renderSidebarRow("cases", "Cases", String(Array.isArray(activeSet.dataRows) ? activeSet.dataRows.length : 0)),
-            renderSidebarRow("runs", "Runs", String(Array.isArray(activeSet.runs) ? activeSet.runs.length : 0)),
-            renderSidebarRow("created", "Created", formatPlaygroundEvaluationDate(activeSet.createdAt)),
-            renderSidebarRow("updated", "Updated", formatPlaygroundEvaluationDate(activeSet.updatedAt || activeSet.createdAt)),
-            renderSidebarRow("owner", "Owner", renderEvaluationOwnerSelector(activeSet), {
+            renderEvaluationDetailSidebarRow("creator", "Creator", creatorValue),
+            renderEvaluationDetailSidebarRow("cases", "Cases", String(Array.isArray(activeSet.dataRows) ? activeSet.dataRows.length : 0)),
+            renderEvaluationDetailSidebarRow("runs", "Runs", String(Array.isArray(activeSet.runs) ? activeSet.runs.length : 0)),
+            renderEvaluationDetailSidebarRow("created", "Created", formatPlaygroundEvaluationDate(activeSet.createdAt)),
+            renderEvaluationDetailSidebarRow("updated", "Updated", formatPlaygroundEvaluationDate(activeSet.updatedAt || activeSet.createdAt)),
+            renderEvaluationDetailSidebarRow("owner", "Owner", renderEvaluationOwnerSelector(activeSet), {
               className: "is-owner",
               control: true,
             })
           );
-          const actions = React.createElement("div", { className: "playground-evaluations-detail-sidebar-actions" },
-            React.createElement("button", {
-                type: "button",
-                className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action playground-evaluations-detail-sidebar-action",
-                onClick: () => openRunEvaluationModal(activeSet.id),
-                disabled: getEvaluationRunnableCaseCount(activeSet) === 0,
-              },
-              React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
-                React.createElement(Play, { width: 14, height: 14, strokeWidth: 1.85 })
-              ),
-              React.createElement("span", { className: "playground-project-overview-sidebar-resource-label" }, "Run Evaluation")
-            ),
-            React.createElement("button", {
-                type: "button",
-                className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action playground-evaluations-detail-sidebar-action",
-                onClick: () => {
-                  setEvaluationPublishMenuOpen(false);
-                  setEvaluationVersionsHeaderMenuOpen(false);
-                  setEvaluationVersionsSidebarOpen(true);
-                },
-              },
-              React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
-                React.createElement(History, { width: 14, height: 14, strokeWidth: 1.85 })
-              ),
-              React.createElement("span", { className: "playground-project-overview-sidebar-resource-label" }, "Version history")
-            )
-          );
-          const sidebarToggle = React.createElement("button", {
-              type: "button",
-              className: "playground-project-overview-sidebar-toggle",
-              onClick: () => setEvaluationDetailSidebarCollapsed((current) => !current),
-              title: evaluationDetailSidebarCollapsed ? "Show evaluation sidebar" : "Hide evaluation sidebar",
-              "aria-label": evaluationDetailSidebarCollapsed ? "Show evaluation sidebar" : "Hide evaluation sidebar",
-              "aria-pressed": evaluationDetailSidebarCollapsed ? "true" : "false",
-            },
-            React.createElement(PanelRight, { width: 15, height: 15, strokeWidth: 1.8, "aria-hidden": "true" })
-          );
-          const handleEvaluationDetailTabChange = (nextTab) => {
-            const normalizedTab = nextTab === "settings" ? "settings" : "general";
-            setEvaluationDetailTab(normalizedTab);
-            setEvaluationAccessMenuOpen(false);
-            if (normalizedTab !== "settings") {
-              setEvaluationAccessTeamId("");
-            } else if (!teamPageLoading && !evaluationWorkspaceTeams.length && typeof loadTeamPageData === "function") {
-              void loadTeamPageData({ selectedTeamId: "" });
-            }
-          };
           const detailContent = activeDetailTab === "settings"
             ? evaluationAccessTeamId
               ? renderEvaluationAccessSettings()
               : React.createElement(React.Fragment, null,
+                  renderEvaluationDescriptionEditor(activeSet),
                   renderEvaluationGuidanceEditor(activeSet),
                   renderDataTable(activeSet),
+                  renderEvaluationImportsSection(activeSet),
                   renderEvaluationAccessSettings()
                 )
             : React.createElement(React.Fragment, null,
@@ -208,13 +213,8 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
                 renderRunsTable(activeSet)
               );
           return React.createElement(EvaluationDetailPage, {
-              header: detailHeader,
-              activeTab: activeDetailTab,
-              onTabChange: handleEvaluationDetailTabChange,
-              sidebarToggle,
-              sidebarCollapsed: evaluationDetailSidebarCollapsed,
               properties,
-              actions,
+              sidebarCollapsed: evaluationDetailSidebarCollapsed,
             },
             detailContent
           );
@@ -224,8 +224,66 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
           if (!activeSet || !activeRun) {
             return renderDetail();
           }
-          return React.createElement("div", { className: "playground-guardrails-detail playground-evaluations-detail" },
-            React.createElement("div", { className: "playground-guardrails-editor" },
+          const runStatus = String(activeRun.status || "completed").trim().toLowerCase();
+          const runStatusVariant = runStatus === "completed"
+            ? "green"
+            : runStatus === "failed"
+              ? "red"
+              : runStatus === "running"
+                ? "blue"
+                : "gray";
+          const runVersionLabel = activeRun.targetAgentVersionLabel
+            || (activeRun.targetAgentVersionNumber ? "Version " + activeRun.targetAgentVersionNumber : "Current");
+          const runProperties = React.createElement("div", { className: "playground-evaluations-detail-sidebar-list" },
+            renderEvaluationDetailSidebarRow("evaluation", "Evaluation", activeSet.name || "Untitled Evaluation"),
+            renderEvaluationDetailSidebarRow("status", "Status", React.createElement(PlatformLabel, {
+              variant: runStatusVariant,
+            }, runStatus.replace(/_/g, " "))),
+            renderEvaluationDetailSidebarRow("agent", "Agent", renderRunAgentCell(activeRun, activeSet)),
+            renderEvaluationDetailSidebarRow("environment", "Environment", renderRunEnvironmentCell(activeRun, activeSet)),
+            renderEvaluationDetailSidebarRow("evaluator", "Evaluator", renderEvaluationSetEvaluatorCell({
+              ...activeSet,
+              evaluator: activeRun.evaluator,
+            })),
+            renderEvaluationDetailSidebarRow("version", "Agent Version", runVersionLabel),
+            renderEvaluationDetailSidebarRow("threshold", "Pass Threshold", formatPlaygroundEvaluationPercent(activeRun.passThreshold)),
+            renderEvaluationDetailSidebarRow("cases", "Cases", String(activeRun.totalCount || activeRun.cases?.length || 0)),
+            renderEvaluationDetailSidebarRow("created", "Started", formatPlaygroundEvaluationDate(activeRun.createdAt)),
+            renderEvaluationDetailSidebarRow("completed", "Completed", runStatus === "running" || runStatus === "queued"
+              ? "-"
+              : formatPlaygroundEvaluationDate(activeRun.completedAt || activeRun.createdAt))
+          );
+          const runActions = React.createElement("div", { className: "playground-evaluations-detail-sidebar-actions" },
+            React.createElement("button", {
+                type: "button",
+                className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action playground-evaluations-detail-sidebar-action",
+                onClick: () => openRunEvaluationModal(activeSet.id),
+                disabled: getEvaluationRunnableCaseCount(activeSet) === 0,
+              },
+              React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
+                React.createElement(Play, { width: 14, height: 14, strokeWidth: 1.85 })
+              ),
+              React.createElement("span", { className: "playground-project-overview-sidebar-resource-label" }, "Run Again")
+            ),
+            React.createElement("button", {
+                type: "button",
+                className: "playground-project-overview-sidebar-resource-row playground-agents-detail-sidebar-action playground-evaluations-detail-sidebar-action",
+                onClick: () => handleDeleteEvaluationRun(activeSet.id, activeRun.id),
+              },
+              React.createElement("span", { className: "playground-project-overview-sidebar-resource-icon", "aria-hidden": "true" },
+                React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.85 })
+              ),
+              React.createElement("span", { className: "playground-project-overview-sidebar-resource-label" }, "Delete Run")
+            )
+          );
+          return React.createElement(EvaluationDetailPage, {
+              variant: "run",
+              ariaLabel: "Evaluation run details",
+              className: "playground-evaluations-run-detail-page",
+              properties: runProperties,
+              actions: runActions,
+            },
+            React.createElement(React.Fragment, null,
               renderAnalyticsCard(activeSet, activeRun),
               renderRunCasesTable(activeSet, activeRun)
             )

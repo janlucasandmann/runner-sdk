@@ -6,6 +6,57 @@ export const EVALUATIONS_PAGE_CONTROLLER_THREAD_CASES_SCRIPT = String.raw`      
           }
         }
 
+        function openEvaluationJsonlWorkspacePicker(set = activeSet) {
+          const normalizedSetId = String(set?.id || activeSet?.id || "").trim();
+          if (!normalizedSetId) return;
+          const preferredEnvironmentId = String(
+            String(set?.environmentType || "computer").trim().toLowerCase() === "project"
+              ? defaultEnvironmentId || ""
+              : set?.environmentId || defaultEnvironmentId || ""
+          ).trim();
+          const selectedEnvironment = evaluationJsonlWorkspaceEnvironmentOptions.find(
+            (environment) => environment.id === preferredEnvironmentId
+          ) || evaluationJsonlWorkspaceEnvironmentOptions[0] || null;
+          setEvaluationJsonlFileImportError("");
+          setEvaluationJsonlFileImportMessage("");
+          setEvaluationJsonlWorkspaceSetId(normalizedSetId);
+          setEvaluationJsonlWorkspaceEnvironmentId(selectedEnvironment?.id || "");
+          setEvaluationJsonlWorkspaceSearch("");
+          setEvaluationJsonlWorkspaceSelectedPaths([]);
+          setEvaluationJsonlWorkspaceExpandedFolders([]);
+          setEvaluationJsonlWorkspaceState({ status: "idle", error: "" });
+          setEvaluationJsonlWorkspacePickerOpen(true);
+        }
+
+        function closeEvaluationJsonlWorkspacePicker() {
+          if (evaluationJsonlWorkspaceImporting) return;
+          setEvaluationJsonlWorkspacePickerOpen(false);
+          setEvaluationJsonlWorkspaceSetId("");
+          setEvaluationJsonlWorkspaceSearch("");
+          setEvaluationJsonlWorkspaceSelectedPaths([]);
+          setEvaluationJsonlWorkspaceExpandedFolders([]);
+        }
+
+        function toggleEvaluationJsonlWorkspaceFolder(path) {
+          const normalizedPath = normalizeHistoryPath(path);
+          if (!normalizedPath) return;
+          setEvaluationJsonlWorkspaceExpandedFolders((current) => (
+            current.includes(normalizedPath)
+              ? current.filter((value) => value !== normalizedPath)
+              : current.concat(normalizedPath)
+          ));
+        }
+
+        function toggleEvaluationJsonlWorkspaceSelection(path) {
+          const normalizedPath = normalizeHistoryPath(path);
+          if (!normalizedPath || !/\.jsonl$/i.test(normalizedPath)) return;
+          setEvaluationJsonlWorkspaceSelectedPaths((current) => (
+            current.includes(normalizedPath)
+              ? current.filter((value) => value !== normalizedPath)
+              : current.concat(normalizedPath)
+          ));
+        }
+
         function isEvaluationJsonlFile(file) {
           const fileName = String(file?.name || "").trim().toLowerCase();
           return fileName.endsWith(".jsonl");
@@ -14,13 +65,13 @@ export const EVALUATIONS_PAGE_CONTROLLER_THREAD_CASES_SCRIPT = String.raw`      
         async function handleEvaluationJsonlFiles(setId, fileList) {
           const normalizedSetId = String(setId || "").trim();
           const files = Array.from(fileList || []).filter(Boolean);
-          if (!normalizedSetId || files.length === 0) return;
+          if (!normalizedSetId || files.length === 0) return false;
           setEvaluationJsonlFileImportError("");
           setEvaluationJsonlFileImportMessage("");
           const invalidFiles = files.filter((file) => !isEvaluationJsonlFile(file));
           if (invalidFiles.length > 0) {
             setEvaluationJsonlFileImportError("Only .jsonl files can be imported.");
-            return;
+            return false;
           }
           try {
             const importedRows = [];
@@ -43,11 +94,11 @@ export const EVALUATIONS_PAGE_CONTROLLER_THREAD_CASES_SCRIPT = String.raw`      
             }
             if (importErrors.length > 0) {
               setEvaluationJsonlFileImportError(importErrors.join(" "));
-              return;
+              return false;
             }
             if (importedRows.length === 0) {
               setEvaluationJsonlFileImportError("No valid cases found in the selected JSONL file.");
-              return;
+              return false;
             }
             updateEvaluationSet(normalizedSetId, (set) => ({
               ...set,
@@ -57,21 +108,223 @@ export const EVALUATIONS_PAGE_CONTROLLER_THREAD_CASES_SCRIPT = String.raw`      
               "Imported " + importedRows.length + " " + (importedRows.length === 1 ? "case" : "cases") + "."
             );
             setEvaluationDetailTab("settings");
+            return true;
           } catch (error) {
             setEvaluationJsonlFileImportError(error?.message || String(error));
+            return false;
           }
         }
 
-        function closeEvaluationThreadCaseModal() {
+        async function handleImportEvaluationJsonlWorkspaceFiles() {
+          const normalizedSetId = String(evaluationJsonlWorkspaceSetId || activeSet?.id || "").trim();
+          const environmentId = String(evaluationJsonlWorkspaceEnvironmentId || "").trim();
+          const selectedEntries = evaluationJsonlWorkspaceInventory.filter((entry) => {
+            const normalizedPath = normalizeHistoryPath(entry?.path);
+            return !entry?.isFolder
+              && /\.jsonl$/i.test(normalizedPath)
+              && evaluationJsonlWorkspaceSelectedPaths.includes(normalizedPath);
+          });
+          if (!normalizedSetId || !environmentId || selectedEntries.length === 0 || evaluationJsonlWorkspaceImporting) {
+            return;
+          }
+
+          setEvaluationJsonlWorkspaceImporting(true);
+          setEvaluationJsonlWorkspaceState((current) => ({ ...current, error: "" }));
+          setEvaluationJsonlFileImportError("");
+          try {
+            const files = [];
+            for (const entry of selectedEntries) {
+              const downloadUrl = buildPlaygroundEnvironmentDownloadUrl(backendUrl, environmentId, entry.path);
+              const response = await fetch(downloadUrl, {
+                method: "GET",
+                headers: requestHeaders,
+                cache: "no-store",
+              });
+              if (!response.ok) {
+                throw new Error("Failed to load " + (entry.name || "JSONL file") + " (" + response.status + ")");
+              }
+              const contents = await response.text();
+              files.push({
+                name: entry.name || normalizeHistoryPath(entry.path).split("/").pop() || "cases.jsonl",
+                text: async () => contents,
+              });
+            }
+            const imported = await handleEvaluationJsonlFiles(normalizedSetId, files);
+            if (imported) {
+              setEvaluationJsonlWorkspacePickerOpen(false);
+              setEvaluationJsonlWorkspaceSetId("");
+              setEvaluationJsonlWorkspaceSearch("");
+              setEvaluationJsonlWorkspaceSelectedPaths([]);
+              setEvaluationJsonlWorkspaceExpandedFolders([]);
+            } else {
+              setEvaluationJsonlWorkspaceState((current) => ({
+                ...current,
+                status: "ready",
+                error: "The selected JSONL files could not be imported. Check their structure and try again.",
+              }));
+            }
+          } catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to import workspace files.";
+            setEvaluationJsonlFileImportError(message);
+            setEvaluationJsonlWorkspaceState((current) => ({ ...current, error: message }));
+          } finally {
+            setEvaluationJsonlWorkspaceImporting(false);
+          }
+        }
+
+        function renderEvaluationJsonlWorkspaceRow(row) {
+          const entry = row?.entry || {};
+          const normalizedPath = normalizeHistoryPath(entry.path);
+          const isSelected = evaluationJsonlWorkspaceSelectedPaths.includes(normalizedPath);
+          const isExpanded = evaluationJsonlWorkspaceExpandedFolders.includes(normalizedPath);
+          const metaValue = row?.searchMatch
+            ? getPlaygroundEntryParentPath(normalizedPath) || "Root"
+            : formatPlaygroundFileDate(entry.modifiedTime || entry.createdTime);
+          const activate = () => {
+            if (entry.isFolder && !row?.searchMatch) {
+              toggleEvaluationJsonlWorkspaceFolder(normalizedPath);
+              return;
+            }
+            toggleEvaluationJsonlWorkspaceSelection(normalizedPath);
+          };
+
+          return React.createElement("div", { key: normalizedPath || entry.id },
+            React.createElement("div", {
+                className: "tb-file-browser-item" + (isSelected ? " selected" : ""),
+                role: "button",
+                tabIndex: 0,
+                onClick: activate,
+                onKeyDown: (event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    activate();
+                  }
+                },
+                style: row?.searchMatch ? undefined : { paddingLeft: String(12 + Number(row?.level || 0) * 20) + "px" },
+              },
+              entry.isFolder && !row?.searchMatch
+                ? React.createElement("button", {
+                    type: "button",
+                    className: "tb-file-browser-item-leading",
+                    onClick: (event) => {
+                      event.stopPropagation();
+                      toggleEvaluationJsonlWorkspaceFolder(normalizedPath);
+                    },
+                    "aria-label": (isExpanded ? "Collapse " : "Expand ") + (entry.name || "folder"),
+                  },
+                    isExpanded
+                      ? React.createElement(ChevronDown, { className: "tb-file-browser-folder-chevron", strokeWidth: 1.75 })
+                      : React.createElement(ChevronRight, { className: "tb-file-browser-folder-chevron", strokeWidth: 1.75 })
+                  )
+                : React.createElement("div", {
+                    className: "tb-file-browser-check" + (isSelected ? " selected" : ""),
+                    onClick: (event) => {
+                      event.stopPropagation();
+                      toggleEvaluationJsonlWorkspaceSelection(normalizedPath);
+                    },
+                  }, isSelected ? React.createElement(Check, { className: "tb-file-browser-check-icon", strokeWidth: 2.2 }) : null),
+              entry.isFolder
+                ? React.createElement("img", {
+                    src: PLAYGROUND_FOLDER_ICON_URL,
+                    alt: "",
+                    draggable: false,
+                    className: "tb-file-browser-item-icon tb-file-browser-icon-asset",
+                  })
+                : React.createElement(FileText, {
+                    className: "tb-file-browser-item-icon tb-file-browser-item-icon-file",
+                    strokeWidth: 1.75,
+                  }),
+              React.createElement("span", { className: "tb-file-browser-item-name", title: entry.name }, entry.name),
+              React.createElement("span", { className: "tb-file-browser-item-meta", title: metaValue }, metaValue || "-"),
+              React.createElement("span", { className: "tb-file-browser-item-size" }, entry.isFolder ? "" : formatPlaygroundFileSize(entry.size))
+            )
+          );
+        }
+
+        function renderEvaluationJsonlWorkspacePicker() {
+          if (!evaluationJsonlWorkspacePickerOpen) return null;
+          const selectedFilesCount = evaluationJsonlWorkspaceInventory.filter((entry) => (
+            !entry?.isFolder
+            && /\.jsonl$/i.test(String(entry?.name || entry?.path || ""))
+            && evaluationJsonlWorkspaceSelectedPaths.includes(normalizeHistoryPath(entry.path))
+          )).length;
+          const sourceGroups = [{
+            id: "computers",
+            label: "Computers",
+            items: evaluationJsonlWorkspaceEnvironmentOptions.map((environment) => ({
+              id: environment.id,
+              label: environment.label,
+              active: environment.id === evaluationJsonlWorkspaceEnvironmentId,
+              onSelect: () => {
+                setEvaluationJsonlWorkspaceEnvironmentId(environment.id);
+                setEvaluationJsonlWorkspaceSearch("");
+              },
+            })),
+          }];
+
+          return React.createElement("div", { className: "tb-runner-chat playground-evaluations-jsonl-workspace-picker" },
+            React.createElement(PlatformFileExplorerBrowserModal, {
+              open: true,
+              visible: true,
+              portal: false,
+              size: "full",
+              title: "Import Cases",
+              backdropClassName: "tb-file-browser-scrim",
+              className: "tb-file-browser-modal playground-evaluations-jsonl-workspace-modal",
+              onClose: closeEvaluationJsonlWorkspacePicker,
+              closeButtonLabel: "Close workspace files",
+              sourceGroups,
+              breadcrumbs: activeEvaluationJsonlWorkspaceEnvironment
+                ? [{
+                    id: activeEvaluationJsonlWorkspaceEnvironment.id,
+                    label: activeEvaluationJsonlWorkspaceEnvironment.label,
+                    onSelect: () => {},
+                  }]
+                : [],
+              searchQuery: evaluationJsonlWorkspaceSearch,
+              onSearchQueryChange: setEvaluationJsonlWorkspaceSearch,
+              searchPlaceholder: "Search Files",
+              onBack: () => {},
+              onForward: () => {},
+              canGoBack: false,
+              canGoForward: false,
+              filterContextKey: "evaluation-jsonl:" + String(evaluationJsonlWorkspaceEnvironmentId || ""),
+              items: evaluationJsonlWorkspaceRows,
+              renderItem: renderEvaluationJsonlWorkspaceRow,
+              getItemKind: (row) => row?.entry?.isFolder ? "folder" : "file",
+              getItemTimestamp: (row) => row?.entry?.modifiedTime || row?.entry?.createdTime,
+              loading: evaluationJsonlWorkspaceState.status === "loading",
+              loadingMessage: "Loading workspace files...",
+              error: evaluationJsonlWorkspaceState.error || null,
+              emptyMessage: ({ hasSearchQuery }) => hasSearchQuery
+                ? "No JSONL files match your search"
+                : "No JSONL files are available on this computer",
+              confirmLabel: evaluationJsonlWorkspaceImporting
+                ? "Importing Cases..."
+                : "Import " + selectedFilesCount + " " + (selectedFilesCount === 1 ? "File" : "Files"),
+              confirmDisabled: selectedFilesCount === 0 || evaluationJsonlWorkspaceImporting,
+              onCancel: closeEvaluationJsonlWorkspacePicker,
+              onConfirm: handleImportEvaluationJsonlWorkspaceFiles,
+            })
+          );
+        }
+
+        function finishCloseEvaluationThreadCaseModal() {
           setEvaluationThreadCaseModalSetId("");
+          setEvaluationThreadCaseModalOpen(false);
           setEvaluationThreadCaseSearchQuery("");
           setEvaluationThreadCaseSelectedIds([]);
           setEvaluationThreadCaseStatus({ status: "idle", message: "", error: "" });
         }
 
+        function closeEvaluationThreadCaseModal() {
+          setEvaluationThreadCaseModalOpen(false);
+        }
+
         function openEvaluationThreadCaseModal(set) {
           if (!set?.id) return;
           setEvaluationThreadCaseModalSetId(set.id);
+          setEvaluationThreadCaseModalOpen(true);
           setEvaluationThreadCaseSearchQuery("");
           setEvaluationThreadCaseSelectedIds([]);
           setEvaluationThreadCaseStatus({ status: "idle", message: "", error: "" });
@@ -258,6 +511,100 @@ export const EVALUATIONS_PAGE_CONTROLLER_THREAD_CASES_SCRIPT = String.raw`      
           };
         }
 
+        function getEvaluationCaseEditorFieldDefinition(field) {
+          if (field === "expectedOutput") {
+            return {
+              field: "expectedOutput",
+              title: "Expected Output",
+              placeholder: "Reference output or expected behavior",
+              description: "Define the response or behavior that should be treated as correct.",
+            };
+          }
+          return {
+            field: "input",
+            title: "Input",
+            placeholder: "Input sent to the agent",
+            description: "Define the prompt or source text that will be sent to the agent.",
+          };
+        }
+
+        function openEvaluationCaseFocusedEditor(field) {
+          const definition = getEvaluationCaseEditorFieldDefinition(field);
+          const value = String(evaluationCaseEditorState?.draft?.[definition.field] || "");
+          setEvaluationCaseTextImportError("");
+          setEvaluationCaseFocusedEditor({
+            ...definition,
+            value,
+          });
+        }
+
+        function updateEvaluationCaseFocusedEditorValue(value) {
+          setEvaluationCaseFocusedEditor((current) => current
+            ? { ...current, value: String(value || "") }
+            : current
+          );
+        }
+
+        function closeEvaluationCaseFocusedEditor() {
+          setEvaluationCaseFocusedEditor(null);
+        }
+
+        function returnFromEvaluationCaseFocusedEditor() {
+          const focusedEditor = evaluationCaseFocusedEditor;
+          if (!focusedEditor?.field) return;
+          updateEvaluationCaseEditorDraft({
+            [focusedEditor.field]: String(focusedEditor.value || ""),
+          });
+          setEvaluationCaseFocusedEditor(null);
+        }
+
+        function saveEvaluationCaseFocusedEditor(event) {
+          if (event && typeof event.preventDefault === "function") {
+            event.preventDefault();
+          }
+          returnFromEvaluationCaseFocusedEditor();
+        }
+
+        function openEvaluationCaseTextFilePicker(field) {
+          setEvaluationCaseTextImportError("");
+          const inputRef = field === "expectedOutput"
+            ? evaluationCaseExpectedOutputFileRef
+            : evaluationCaseInputFileRef;
+          inputRef.current?.click();
+        }
+
+        function isEvaluationCaseTextFile(file) {
+          const fileName = String(file?.name || "").trim().toLowerCase();
+          const mimeType = String(file?.type || "").trim().toLowerCase();
+          return fileName.endsWith(".txt") || mimeType === "text/plain";
+        }
+
+        async function handleEvaluationCaseTextFile(field, event) {
+          const input = event?.currentTarget || event?.target || null;
+          const file = input?.files?.[0] || null;
+          if (input) input.value = "";
+          if (!file) return;
+          if (!isEvaluationCaseTextFile(file)) {
+            setEvaluationCaseTextImportError("Only .txt files can be imported into evaluation cases.");
+            return;
+          }
+          try {
+            const text = typeof file.text === "function"
+              ? await file.text()
+              : await new Promise((resolve, reject) => {
+                  const reader = new FileReader();
+                  reader.onload = () => resolve(String(reader.result || ""));
+                  reader.onerror = () => reject(reader.error || new Error("Failed to read " + file.name));
+                  reader.readAsText(file);
+                });
+            const definition = getEvaluationCaseEditorFieldDefinition(field);
+            updateEvaluationCaseEditorDraft({ [definition.field]: String(text || "") });
+            setEvaluationCaseTextImportError("");
+          } catch (error) {
+            setEvaluationCaseTextImportError(error?.message || "The selected text file could not be read.");
+          }
+        }
+
         function openEvaluationCaseEditor(setId, row = {}, index = 0, isNew = false) {
           const normalizedSetId = String(setId || "").trim();
           if (!normalizedSetId) return;
@@ -281,10 +628,10 @@ export const EVALUATIONS_PAGE_CONTROLLER_THREAD_CASES_SCRIPT = String.raw`      
           setEvaluationCaseEditorState({
             ...nextState,
           });
+          setEvaluationCaseFocusedEditor(null);
+          setEvaluationCaseTextImportError("");
           setEvaluationCaseEditorVisible(false);
           setEvaluationCaseEditorClosing(false);
-          setEvaluationCaseEditorMarkdownHistoryByKey({});
-          setEvaluationCaseEditorMarkdownEditingKey(buildEvaluationCaseEditorFieldKey(nextState, "input"));
           if (typeof window !== "undefined") {
             evaluationCaseEditorFrameRef.current = window.requestAnimationFrame(() => {
               evaluationCaseEditorFrameRef.current = window.requestAnimationFrame(() => {
@@ -320,10 +667,10 @@ export const EVALUATIONS_PAGE_CONTROLLER_THREAD_CASES_SCRIPT = String.raw`      
             }
           }
           setEvaluationCaseEditorState(null);
+          setEvaluationCaseFocusedEditor(null);
+          setEvaluationCaseTextImportError("");
           setEvaluationCaseEditorVisible(false);
           setEvaluationCaseEditorClosing(false);
-          setEvaluationCaseEditorMarkdownEditingKey("");
-          setEvaluationCaseEditorMarkdownHistoryByKey({});
         }
 
         function closeEvaluationCaseEditor(options = {}) {

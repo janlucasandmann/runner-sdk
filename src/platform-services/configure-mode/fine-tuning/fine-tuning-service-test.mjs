@@ -22,12 +22,17 @@ assert.doesNotThrow(() => new Function(PLAYGROUND_FINE_TUNING_SCRIPT));
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.foundation, /createPlaygroundFineTuningId/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.jobs, /normalizePlaygroundFineTuningJob/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.evaluations, /normalizePlaygroundFineTuningEvaluationSet/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.access, /function renderFineTuningAccessSettings/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.access, /subjectType: "fine_tuning"/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.verification, /startFineTuningVerificationRuns/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.createModal, /renderCreateModal/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.overview, /React\.createElement\(FineTuningOverviewPage/);
 assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.overview, /React\.createElement\(PlatformDataTable/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /React\.createElement\(FineTuningDetailPage/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /React\.createElement\(PlatformAnalyticsSection/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /function renderFineTuningDescriptionEditor/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /function renderFineTuningInstructionsEditor/);
+assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /renderFineTuningAccessSettings\(job\)/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /variant: "minimalistic-ui"/);
 assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /PlaygroundFineTuningPerformanceChart/);
 assert.equal(
@@ -79,11 +84,26 @@ const compactJob = compactFineTuningJobRecord({
   agentId: "agent_1",
   evaluationSetIds: ["evaluation_1"],
   costUsd: 1.25,
+  description: "Improve response quality without changing supported workflows.",
+  metadata: {
+    owner: { id: "user_1", name: "Ada" },
+    teamAccessIds: ["team_1"],
+  },
 });
 assert.equal(compactJob.id, "job_1");
 assert.equal(compactJob.targetAgentId, "agent_1");
 assert.equal(compactJob.evaluationSets[0]?.id, "evaluation_1");
 assert.equal(compactJob.costUsd, 1.25);
+assert.equal(compactJob.description, "Improve response quality without changing supported workflows.");
+assert.equal(compactJob.metadata.owner.name, "Ada");
+assert.deepEqual(compactJob.metadata.teamAccessIds, ["team_1"]);
+
+const clearedDescriptionJob = compactFineTuningJobRecord({
+  id: "job_clear_description",
+  description: "",
+  metadata: { description: "Legacy metadata description" },
+});
+assert.equal(clearedDescriptionJob.description, "");
 
 const evaluationSet = normalizeEvaluationSet({
   id: "evaluation_1",

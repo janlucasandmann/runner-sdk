@@ -1,9 +1,9 @@
-import { ChartColumnIncreasing, FileDiff, LayoutGrid } from "lucide-react";
+import { ChartColumnIncreasing, FileDiff, LayoutGrid, Settings } from "lucide-react";
 import type { ReactNode } from "react";
 import { PlatformUiCard } from "../../../../../../platform-ui/components/composite/ui-card/index.js";
 import { ResourceDetailPage } from "../../../../../../platform-ui/pages/details/index.js";
 
-export type FineTuningDetailTab = "general" | "analysis" | "changes";
+export type FineTuningDetailTab = "general" | "analysis" | "changes" | "settings";
 
 export interface FineTuningDetailPageProps {
   header: ReactNode;
@@ -25,6 +25,7 @@ const FINE_TUNING_DETAIL_TABS = [
   { id: "general", label: "General", icon: LayoutGrid },
   { id: "analysis", label: "Analysis", icon: ChartColumnIncreasing },
   { id: "changes", label: "Agent Changes", icon: FileDiff },
+  { id: "settings", label: "Settings", icon: Settings },
 ] as const;
 
 export function FineTuningDetailPage({

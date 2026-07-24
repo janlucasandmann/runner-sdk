@@ -5,8 +5,10 @@ export {
   inferPlatformPopupAnimation,
   joinPlatformPopupClassNames,
 } from "./platform-popup.js";
+export { PlatformPopupSearchHeader } from "./platform-popup-search-header.js";
 
 export type {
+  PlatformPopupAnchorPoint,
   PlatformPopupAnimation,
   PlatformPopupDismissLayerProps,
   PlatformPopupMode,
@@ -15,3 +17,4 @@ export type {
   PlatformPopupSurfaceProps,
   PlatformPopupVariant,
 } from "./platform-popup.js";
+export type { PlatformPopupSearchHeaderProps } from "./platform-popup-search-header.js";

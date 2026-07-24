@@ -256,7 +256,7 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
 	        grid-template-columns: minmax(0, 1fr) 0 auto;
 	        gap: 0;
 	        padding-bottom: 12px;
-	        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	        border-bottom: 0;
 	      }
 
 	      .playground-tasks-ticket-screen-panel .playground-tasks-detail-navbar-actions {
@@ -285,26 +285,6 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
         gap: 12px;
       }
 
-      .playground-tasks-ticket-page-nav-title {
-        min-width: 0;
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-        gap: 6px;
-      }
-
-      .playground-tasks-ticket-page-back-link {
-        flex: 0 0 auto;
-        color: rgba(255, 255, 255, 0.7);
-      }
-
-      .playground-tasks-ticket-screen-panel .playground-tasks-ticket-page-nav-title-input {
-        font-size: 18px;
-        font-weight: 500;
-        line-height: 1.18;
-      }
-
       .playground-tasks-ticket-screen-panel .playground-tasks-comment-dock {
         margin-top: auto;
         padding-bottom: 0;
@@ -330,9 +310,14 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
       .playground-ticket-detail-page {
         height: 100%;
         min-height: 0;
-        grid-template-rows: auto minmax(0, 1fr);
-        row-gap: 24px;
+        grid-template-rows: minmax(0, 1fr);
+        row-gap: 0;
         align-items: stretch;
+      }
+
+      .playground-ticket-detail-page.has-header {
+        grid-template-rows: auto minmax(0, 1fr);
+        row-gap: 12px;
       }
 
       .playground-ticket-detail-page.is-sidebar-collapsed {
@@ -358,6 +343,32 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
         margin-top: 0;
         margin-bottom: 0;
         padding-bottom: 3px;
+      }
+
+      .playground-ticket-detail-content
+        .platform-instructions-editor.is-minimalistic-ui
+        .platform-instructions-editor__header {
+        background: #000;
+      }
+
+      .playground-ticket-detail-content .platform-instructions-editor__title {
+        flex: 1 1 auto;
+        font-size: 18px;
+      }
+
+      .playground-tasks-ticket-editor-title-input {
+        box-sizing: border-box;
+        display: block;
+        width: 100%;
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        line-height: inherit;
       }
 
       .playground-ticket-detail-content > .playground-tasks-detail-main {
@@ -423,6 +434,27 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
         display: none;
       }
 
+      .playground-ticket-detail-sidebar .playground-tasks-detail-fact.is-assignee {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-ticket-detail-sidebar .playground-tasks-detail-work-control,
+      .playground-ticket-detail-sidebar .playground-tasks-detail-work-selector,
+      .playground-ticket-detail-sidebar .playground-tasks-detail-work-selector .platform-button-selector__group {
+        width: 100%;
+      }
+
+      .playground-ticket-detail-sidebar .playground-tasks-detail-work-control {
+        margin-top: 8px;
+      }
+
+      .playground-ticket-detail-sidebar .playground-tasks-detail-work-selector .platform-button-selector__action {
+        flex: 1 1 auto;
+        justify-content: center;
+      }
+
       .playground-ticket-detail-sidebar .playground-tasks-detail-threads-section.is-centralized-sidebar-content {
         gap: 0;
       }
@@ -437,10 +469,6 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
       .playground-ticket-detail-attachment-sidebar-body > .playground-tasks-detail-preview-host {
         width: 100%;
         height: 100%;
-      }
-
-      .playground-tasks-ticket-sidebar-toggle-button {
-        flex: 0 0 auto;
       }
 
       .playground-tasks-ticket-controls-card {
@@ -481,15 +509,29 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
         font-weight: 400;
       }
 
-      .playground-tasks-ticket-attachments {
-        margin-top: 12px;
-      }
-
       .playground-tasks-ticket-subtasks {
         margin-top: 12px;
       }
 
-      .playground-tasks-ticket-screen-panel .playground-tasks-connectors-header,
+      .playground-tasks-ticket-screen-panel .playground-tasks-activity {
+        box-sizing: border-box;
+        align-self: stretch;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        margin-top: 0;
+        padding-top: 24px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-tasks-activity-comment-attachments {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
       .playground-tasks-ticket-screen-panel .playground-tasks-comments-toolbar {
         display: flex;
         align-items: center;
@@ -497,10 +539,6 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
         gap: 12px;
         padding-bottom: 12px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      .playground-tasks-ticket-screen-panel .playground-tasks-connectors-header {
-        margin-bottom: 12px;
       }
 
       .playground-tasks-ticket-screen-panel .playground-tasks-comments-toolbar {
@@ -511,7 +549,6 @@ export const PROJECTS_CORE_CSS_01_FRAGMENT = `
         gap: 24px;
       }
 
-      .playground-tasks-ticket-screen-panel .playground-tasks-connectors-header .playground-tasks-detail-section-title,
       .playground-tasks-ticket-screen-panel .playground-tasks-comments-toolbar .playground-tasks-detail-section-title {
         margin: 0;
       }

@@ -11,6 +11,8 @@ const rows: readonly TeamOverviewRow[] = [
   {
     id: "team-platform",
     name: "Platform Team",
+    profileImageUrl: "/img/team-platform.webp",
+    profileFallback: "PT",
     roleLabel: "Owner",
     ownerLabel: "Jan",
     ownership: "owned",
@@ -61,6 +63,11 @@ describe("TeamsOverviewPage", () => {
     expect(screen.getByRole("heading", { name: "Coordinate work across teams" })).not.toBeNull();
     expect(container.querySelectorAll(".platform-ui-card")).toHaveLength(2);
     expect(screen.getByRole("table", { name: "Teams" })).not.toBeNull();
+    expect(
+      container.querySelector<HTMLImageElement>(
+        'img[src="/img/team-platform.webp"]',
+      ),
+    ).not.toBeNull();
     expect(container.querySelector(".platform-data-table.is-minimalistic-ui")).not.toBeNull();
     expect(container.querySelector(".platform-data-table__footer")).toBeNull();
     expect(screen.getByText("All Teams")).not.toBeNull();

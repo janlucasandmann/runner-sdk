@@ -31,5 +31,6 @@ describe("FineTuningDetailPage", () => {
     expect(screen.getByRole("tab", { name: "General" })).toBeTruthy();
     expect(screen.getByRole("tab", { name: "Analysis" })).toBeTruthy();
     expect(screen.getByRole("tab", { name: "Agent Changes" })).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "Settings" })).toBeTruthy();
   });
 });

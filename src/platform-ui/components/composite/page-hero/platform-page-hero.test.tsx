@@ -34,12 +34,29 @@ describe("PlatformPageHero", () => {
     expect(
       screen.getByRole("heading", { name: "Workspace Studio", level: 1 }),
     ).not.toBeNull();
-    expect(screen.getByText("Create and manage intelligent services.")).not.toBeNull();
     expect(
-      screen.getByRole("button", { name: "Documentation" }).querySelector("svg"),
+      screen.getByText("Create and manage intelligent services."),
+    ).not.toBeNull();
+    expect(
+      screen
+        .getByRole("button", { name: "Documentation" })
+        .querySelector("svg"),
     ).not.toBeNull();
 
     await user.click(screen.getByRole("button", { name: "Documentation" }));
     expect(onOpenDocumentation).toHaveBeenCalledOnce();
+  });
+
+  it("accepts centralized custom action controls", () => {
+    render(
+      <PlatformPageHero
+        title="Security Agents"
+        actionsContent={<button type="button">Connected account</button>}
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Connected account" }),
+    ).not.toBeNull();
   });
 });

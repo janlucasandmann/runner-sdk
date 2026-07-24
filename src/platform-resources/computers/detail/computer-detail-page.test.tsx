@@ -29,16 +29,20 @@ describe("ComputerDetailPage", () => {
     expect(container.querySelectorAll("[data-platform-detail-sidebar='true']")).toHaveLength(1);
     expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual([
       "General",
-      "Advanced Settings",
+      "Runtime",
+      "Settings",
       "Filebase",
     ]);
 
-    fireEvent.click(screen.getByRole("tab", { name: "Advanced Settings" }));
-    expect(onTabChange).toHaveBeenCalledWith("advanced");
+    fireEvent.click(screen.getByRole("tab", { name: "Runtime" }));
+    expect(onTabChange).toHaveBeenCalledWith("runtime");
+
+    fireEvent.click(screen.getByRole("tab", { name: "Settings" }));
+    expect(onTabChange).toHaveBeenCalledWith("settings");
 
     fireEvent.click(screen.getByRole("tab", { name: "Open Filebase" }));
     expect(onOpenFilebase).toHaveBeenCalledOnce();
-    expect(onTabChange).toHaveBeenCalledTimes(1);
+    expect(onTabChange).toHaveBeenCalledTimes(2);
   });
 
   it("disables Filebase when the computer has not been saved", () => {

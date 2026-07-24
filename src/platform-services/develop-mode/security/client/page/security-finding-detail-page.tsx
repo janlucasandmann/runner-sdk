@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 import { PlatformUiCard } from "../../../../../platform-ui/components/composite/ui-card/index.js";
 import { PlatformPrimaryButton, PlatformSecondaryButton } from "../../../../../platform-ui/components/ui/button/index.js";
 import { PlatformSelector } from "../../../../../platform-ui/components/ui/selector/index.js";
-import { ResourceDetailPage } from "../../../../../platform-ui/pages/details/index.js";
 import type { SecurityFindingDetail, SecurityFindingStatus } from "../domain/index.js";
 import { formatSecurityTimestamp } from "../domain/index.js";
+import { SecurityResourceDetailPage } from "./security-detail-layout.js";
 import {
   SecurityBackHeader,
   SecurityFindingStatusLabel,
@@ -100,15 +100,12 @@ export function SecurityFindingDetailPage({ detail, busy = false, onBack, onOpen
   );
 
   return (
-    <ResourceDetailPage<SecurityFindingTab>
+    <SecurityResourceDetailPage<SecurityFindingTab>
       header={<SecurityBackHeader eyebrow="Security finding" title={finding.title} description={finding.repositoryFullName} onBack={onBack} />}
       tabs={FINDING_TABS}
       activeTab={activeTab}
       onTabChange={setActiveTab}
       ariaLabel={`Security finding ${finding.title}`}
-      className="develop-security-resource-detail"
-      contentClassName="develop-security-detail-content"
-      sidebarClassName="develop-security-detail-sidebar"
       sidebar={(
         <PlatformUiCard as="section" variant="sidebar" cardTitle="Finding properties">
           <SecurityPropertyList items={[
@@ -125,6 +122,6 @@ export function SecurityFindingDetailPage({ detail, busy = false, onBack, onOpen
       )}
     >
       {content}
-    </ResourceDetailPage>
+    </SecurityResourceDetailPage>
   );
 }

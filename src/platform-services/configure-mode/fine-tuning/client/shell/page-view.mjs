@@ -7,6 +7,12 @@ export const FINE_TUNING_APP_PAGE_VIEW_SCRIPT = String.raw`        function rend
             environments: runtimeEnvironments,
             evaluationSets,
             setEvaluationSets,
+            workspaceTeams: teamPageTeams,
+            workspaceTeamsLoading: teamPageLoading,
+            onWorkspaceTeamsRequest: (options = {}) => {
+              const requestedTeamId = String(options?.selectedTeamId || "").trim();
+              void loadTeamPageData({ selectedTeamId: requestedTeamId });
+            },
             fineTuningJobs,
             setFineTuningJobs,
             selectedFineTuningJobId,

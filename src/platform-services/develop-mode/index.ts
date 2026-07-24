@@ -5,10 +5,8 @@ export * from "./authentication/index.js";
 export * from "./databases/index.js";
 export {
   DevelopHomeOverviewPage,
-  type DevelopHomeConceptCard,
   type DevelopHomeOverviewPageProps,
   type DevelopHomeQuickLink,
-  type DevelopHomeQuickstartLanguage,
   type DevelopHomeResourceRow,
   type DevelopHomeSupplementaryContent,
 } from "./develop-home/client/page/develop-home-overview-page.js";

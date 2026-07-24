@@ -1,62 +1,43 @@
-import { LayoutGrid, Settings2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { PlatformUiCard } from "../../../../../../platform-ui/components/composite/ui-card/index.js";
 import { ResourceDetailPage } from "../../../../../../platform-ui/pages/details/index.js";
 
 export type EvaluationDetailTab = "general" | "settings";
+export type EvaluationDetailVariant = "evaluation" | "run";
 
 export interface EvaluationDetailPageProps {
-  header: ReactNode;
-  headerActions?: ReactNode;
-  tabBarActions?: ReactNode;
-  sidebarToggle?: ReactNode;
   children: ReactNode;
   properties: ReactNode;
   actions?: ReactNode;
-  activeTab: EvaluationDetailTab;
-  onTabChange: (tab: EvaluationDetailTab) => void;
   sidebarCollapsed?: boolean;
   sidebarPopoverOpen?: boolean;
   ariaLabel?: string;
   className?: string;
+  variant?: EvaluationDetailVariant;
 }
 
-const EVALUATION_DETAIL_TABS = [
-  { id: "general", label: "General", icon: LayoutGrid },
-  { id: "settings", label: "Settings", icon: Settings2 },
-] as const;
-
 export function EvaluationDetailPage({
-  header,
-  headerActions,
-  tabBarActions,
-  sidebarToggle,
   children,
   properties,
   actions,
-  activeTab,
-  onTabChange,
   sidebarCollapsed = false,
   sidebarPopoverOpen = false,
   ariaLabel = "Evaluation details",
   className = "",
+  variant = "evaluation",
 }: EvaluationDetailPageProps) {
+  const isRun = variant === "run";
+
   return (
     <ResourceDetailPage<EvaluationDetailTab>
-      header={header}
-      headerActions={headerActions}
-      tabs={EVALUATION_DETAIL_TABS}
-      activeTab={activeTab}
-      onTabChange={onTabChange}
-      tabBarActions={tabBarActions}
-      sidebarToggle={sidebarToggle}
+      tabs={[]}
       sidebarCollapsed={sidebarCollapsed}
       sidebar={(
         <>
           <PlatformUiCard
             as="section"
             variant="sidebar"
-            cardTitle="Properties"
+            cardTitle={isRun ? "Run Properties" : "Properties"}
             className="playground-evaluations-detail-sidebar-card"
           >
             {properties}
@@ -74,9 +55,9 @@ export function EvaluationDetailPage({
         </>
       )}
       ariaLabel={ariaLabel}
-      tabAriaLabel="Evaluation sections"
-      sidebarAriaLabel="Evaluation information and actions"
-      className={`playground-project-overview-layout playground-agents-detail-overview-layout playground-evaluations-detail-overview-layout${className ? ` ${className}` : ""}`}
+      tabAriaLabel={isRun ? "Evaluation run sections" : "Evaluation sections"}
+      sidebarAriaLabel={isRun ? "Evaluation run information and actions" : "Evaluation information and actions"}
+      className={`playground-project-overview-layout playground-agents-detail-overview-layout playground-evaluations-detail-overview-layout${isRun ? " is-run-detail" : ""}${className ? ` ${className}` : ""}`}
       headerClassName="playground-evaluations-detail-page-header"
       tabBarClassName="playground-agents-overview-tabs playground-agents-detail-tabs playground-evaluations-detail-tabs"
       tabBarActionsClassName="playground-agents-detail-tab-actions playground-evaluations-detail-tab-actions"

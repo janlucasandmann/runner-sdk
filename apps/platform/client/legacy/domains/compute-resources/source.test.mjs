@@ -12,6 +12,16 @@ const domainRoot = path.dirname(fileURLToPath(import.meta.url));
 
 assert.equal(COMPUTE_RESOURCES_CONTROLLER_FRAGMENT_PATHS.length, 12);
 assert.match(COMPUTE_RESOURCES_PAGE_SCRIPT, /function PlaygroundEnvironmentsPage/);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /serverCreationRequestToken = 0,[\s\S]{0,100}serverCreationRequestKind = ""/,
+  "Develop Home creation actions must enter compute resources through an explicit request contract.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /serverCreationRequestRef[\s\S]{0,1800}openServerComposer\(normalizedCreationKind\)/,
+  "Tokenized server creation requests must open the existing resource composer exactly once.",
+);
 assert.match(COMPUTE_RESOURCES_PAGE_SCRIPT, /function renderCurrentServerEditor/);
 assert.match(COMPUTE_RESOURCES_PAGE_SCRIPT, /function renderCurrentDatabaseEditor/);
 assert.match(COMPUTE_RESOURCES_PAGE_SCRIPT, /function renderCurrentEnvironmentEditor/);
@@ -30,6 +40,16 @@ assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
   /disabled: isServerPublishControlDisabled,[\s\S]{0,100}menuDisabled: isServerPublishControlDisabled/,
   "Resource save controls must disable their action and menu halves together.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /function updateDraftEnvironment\(updater\)[\s\S]{0,800}stringifyPlaygroundVersionComparableValue\(next\)[\s\S]{0,300}editorDirtyRef\.current = true;[\s\S]{0,120}environmentVersionDraftTouchedRef\.current = true;/,
+  "Computer draft callbacks must only mark a resource dirty when they change its hydrated value.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /rememberEnvironmentVersionBaseline\(nextEnvironment, \{ force: true \}\)[\s\S]*?rememberEnvironmentVersionBaseline\(normalizedSeedEnvironment, \{ force: true \}\)[\s\S]*?rememberEnvironmentVersionBaseline\(selectedEnvironment, \{ force: true \}\)/,
+  "Computer detail, seed, and version hydration must replace provisional baselines.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
@@ -88,12 +108,22 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /const requestUrl = backendUrl \+ "\/servers"[\s\S]{0,700}staleWhileRevalidate: false/,
-  "Server catalogs must await stale-cache revalidation so fresh rows reach React.",
+  /const useOverviewCatalog = Boolean\([\s\S]{0,500}\/servers\/analytics\/overview\?kind=[\s\S]{0,1800}staleWhileRevalidate: false/,
+  "Server catalogs must reuse overview analytics while awaiting revalidation for fresh rows.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /const authoritativeCatalogReady =[\s\S]{0,300}if \(authoritativeCatalogReady \|\| metricServers\.length === 0\) \{[\s\S]{0,500}Analytics can make the first paint useful, but only \/servers owns catalog readiness\./,
+  /const requestUrl = useOverviewCatalog[\s\S]{0,300}\/servers\/analytics\/overview\?kind=[\s\S]{0,2200}const overviewResources = useOverviewCatalog/,
+  "Develop server overviews must hydrate their table and analytics from one aggregate response.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /const useOverviewCatalog = options\?\.useOverviewCatalog === true;[\s\S]{0,700}\/databases\/analytics\/overview\?period=/,
+  "Database overviews must hydrate their table and analytics from one aggregate response.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /const authoritativeCatalogReady =[\s\S]{0,300}if \(authoritativeCatalogReady \|\| metricServers\.length === 0\) \{[\s\S]{0,500}Analytics can make the first paint useful, but the catalog loader owns readiness\./,
   "Empty analytics snapshots must not mark a resource catalog as loaded.",
 );
 assert.equal(
@@ -102,7 +132,8 @@ assert.equal(
   "Only the authoritative server-list response may mark the catalog as loaded.",
 );
 assert.equal(
-  (COMPUTE_RESOURCES_PAGE_SCRIPT.match(/setLoadedServerListScope\(requestScopeKey\)/g) || []).length,
+  (COMPUTE_RESOURCES_PAGE_SCRIPT.match(/setLoadedServerListScope\(requestScopeKey\)/g) || [])
+    .length,
   1,
   "Only the authoritative server-list response may commit a loaded catalog scope.",
 );
@@ -120,6 +151,26 @@ assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
   /void loadServerDetails\(selectedServerId\);[\s\S]{0,500}void loadServerBindings\(selectedServerId\);/,
   "Server details and bindings must start independently on resource selection.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /if \(\["api", "auth", "agent_runtime", "function", "payments", "secrets", "web_app"\]\.includes\(seedServerKind\)\) \{\s*void loadServerDetailBootstrap\(selectedServerId, seedServerKind\);/,
+  "Managed Develop details must use the shared bootstrap request instead of serial resource calls.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /\/servers\/" \+ encodeURIComponent\(normalizedServerId\)[\s\S]{0,120}\/bootstrap\?" \+ query\.toString\(\)/,
+  "The shared detail bootstrap must request only the selected resource bundle.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /if \(isSourceDeployableServer && serverDetailTab !== "usage"\) \{\s*return;\s*\}[\s\S]{0,1400}void loadServerAnalytics\(selectedServerId, \{ period: analyticsPeriod \}\);/,
+  "Operational analytics must remain lazy until the Usage tab is visible.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /onOpenChange: \(nextOpen\) => \{[\s\S]{0,500}popoverId === "server-connection-database"[\s\S]{0,300}void loadDatabases\(\);[\s\S]{0,500}popoverId === "agent-runtime-agent"[\s\S]{0,300}void loadServerAgentOptions\(\);/,
+  "Connection catalogs must load on selector demand instead of every detail-page visit.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
@@ -158,8 +209,33 @@ assert.doesNotMatch(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /ariaLabel: serverKindLabel \+ " team access",[\s\S]{0,900}variant: "minimalistic-ui",[\s\S]{0,180}pagination: false/,
-  "Managed Develop resource access management must use the embedded minimal PlatformDataTable.",
+  /const serverTeamAccessTable = React\.createElement\(PlatformResourceAccessTable, \{[\s\S]{0,240}resourceLabel: serverKindLabel/,
+  "Managed Develop resource access management must use the centralized resource access table.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /React\.createElement\(PlatformResourceAccessSettings, \{[\s\S]{0,800}resourceLabel: "Computer"[\s\S]{0,800}subjectType: "computer",[\s\S]{0,120}teamSubjectType: "computer_team_role"/,
+  "Computer access settings must render team-role permissions through the Computer resource catalog.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /const handleEnvironmentAccessPrincipalChange[\s\S]{0,700}isPlatformSystemAccessPrincipalId[\s\S]{0,700}setEnvironmentDetailsCollapsed\(true\)/,
+  "Opening a physical Computer access team must make room for the centralized role sidebar.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /const restoreEnvironmentDetailSidebarAfterAccess[\s\S]{0,500}environmentDetailsCollapsedBeforeAccessRef\.current = null/,
+  "Leaving Computer team permissions must restore the previous detail-sidebar state.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /function updateEnvironmentTeamRoleAccessPermissionSet[\s\S]{0,900}normalizePlaygroundPermissionSet\(permissionSet, "computer_team_role"\)[\s\S]{0,500}queueEnvironmentPermissionSave\(nextEnvironment, normalizedTeamId\)/,
+  "Computer role edits must queue the affected team with the resource permission update.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /async function flushQueuedEnvironmentPermissionSave[\s\S]{0,1300}for \(const teamId of teamIds\) \{\s*await syncEnvironmentTeamResourceShare\(savedEnvironment, teamId\)/,
+  "Computer permission saves must synchronize every affected team resource share.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
@@ -183,12 +259,12 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /React\.createElement\(PlatformPermissionsPage, \{[\s\S]{0,180}subjectType: serverPermissionSubjectType/,
+  /selectedServerSystemPrincipal[\s\S]{0,120}React\.createElement\(PlatformPermissionsPage, \{[\s\S]{0,520}subjectType: serverPermissionSubjectType/,
   "Managed resource permission pages must render the concrete resource catalog.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /const renderServerDetailSelectControl = \([\s\S]{0,1800}React\.createElement\(PlatformSelector,[\s\S]{0,900}popupClassName: "playground-server-detail-selector-popup"/,
+  /const renderServerDetailSelectControl = \([\s\S]{0,1800}React\.createElement\(PlatformSelector,[\s\S]{0,2400}popupClassName: "playground-server-detail-selector-popup"/,
   "Function connection controls must use the centralized selector and its minimal popup.",
 );
 assert.match(
@@ -218,8 +294,13 @@ assert.doesNotMatch(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /toolbar: isAuthServer[\s\S]{0,800}title: usesCentralServerAccessTable \? "Manage " \+ serverKindLabel \+ " Access" : null,[\s\S]{0,4000}const serverTeamAccessPlatformSection = usesCentralServerAccessTable\s*\? serverTeamAccessTable/,
+  /const usesCentralServerAccessTable = isOperationalDetailServer;[\s\S]{0,160}const serverTeamAccessTable = React\.createElement\(PlatformResourceAccessTable/,
   "Function, web app, authentication, and Secrets access management must share the centralized table without legacy wrappers.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /const serverTeamAccessPlatformSection = usesCentralServerAccessTable\s*\? serverTeamAccessTable/,
+  "Managed Develop resource access surfaces must render the centralized table directly.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
@@ -228,18 +309,22 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /selection: \{\s*enabled: true,[\s\S]{0,300}onChange: \(\{ selectedIds \}\) => setSelectedServerAccessTeamIds\(new Set\(selectedIds\)\)/,
+  /selectedIds: selectedServerAccessTeamIds,[\s\S]{0,100}onSelectedIdsChange: setSelectedServerAccessTeamIds/,
   "Function and web app access tables must delegate row selection to the centralized table checkbox component.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /renderSourceServerSidebarRow\("Creator", serverCreatorValue,[\s\S]{0,220}renderSourceServerSidebarRow\("Owner", serverOwnerSelectorControl/,
-  "Function and web app Properties sidebars must keep immutable creator provenance separate from ownership.",
+  /const sourceServerPropertiesSidebar =[\s\S]{0,7000}renderSourceServerSidebarRow\("Creator", serverCreatorValue,[\s\S]{0,5000}renderSourceServerSidebarRow\("Updated",[\s\S]{0,400}renderSourceServerSidebarRow\("Owner", serverOwnerSelectorControl/,
+  "Function and web app Properties sidebars must keep creator provenance separate and place Owner last.",
 );
 assert.equal(
-  (COMPUTE_RESOURCES_PAGE_SCRIPT.match(/renderSourceServerSidebarRow\("Creator", serverCreatorValue/g) || []).length,
+  (
+    COMPUTE_RESOURCES_PAGE_SCRIPT.match(
+      /renderSourceServerSidebarRow\("Creator", serverCreatorValue/g,
+    ) || []
+  ).length,
   5,
-  "Every managed server detail sidebar must expose Creator before Owner.",
+  "Every managed server detail sidebar must expose Creator provenance.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
@@ -258,8 +343,8 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /const authDetailSidebar = React\.createElement\(PlatformUiCard,[\s\S]{0,700}renderSourceServerSidebarRow\("Owner", serverOwnerSelectorControl/,
-  "Authentication details must expose ownership in the shared Properties sidebar.",
+  /const authDetailSidebar = React\.createElement\(PlatformUiCard,[\s\S]{0,1800}renderSourceServerSidebarRow\("Updated",[\s\S]{0,400}renderSourceServerSidebarRow\("Owner", serverOwnerSelectorControl/,
+  "Authentication details must place ownership last in the shared Properties sidebar.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
@@ -293,7 +378,7 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /const usesCentralServerAccessTable = isOperationalDetailServer;[\s\S]{0,7000}toolbar: isAuthServer\s*\? \{\s*title: "Manage " \+ serverKindLabel \+ " Access",\s*trailing: serverAddTeamsControl/,
+  /const serverTeamAccessTable = React\.createElement\(PlatformResourceAccessTable, \{[\s\S]{0,2800}trailing: serverAddTeamsControl/,
   "Managed Develop resource access management must use the shared embedded table and Add Teams control.",
 );
 assert.match(
@@ -303,8 +388,8 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /const secretsDetailSidebar = React\.createElement\(PlatformUiCard,[\s\S]{0,800}renderSourceServerSidebarRow\("Creator", serverCreatorValue[\s\S]{0,240}renderSourceServerSidebarRow\("Owner", serverOwnerSelectorControl/,
-  "Secrets details must expose immutable creator and transferable owner identities in the shared Properties sidebar.",
+  /const secretsDetailSidebar = React\.createElement\(PlatformUiCard,[\s\S]{0,1800}renderSourceServerSidebarRow\("Creator", serverCreatorValue[\s\S]{0,1500}renderSourceServerSidebarRow\("Updated",[\s\S]{0,400}renderSourceServerSidebarRow\("Owner", serverOwnerSelectorControl/,
+  "Secrets details must expose creator provenance and place transferable ownership last.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
@@ -338,8 +423,8 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /const paymentsDetailSidebar = React\.createElement\(PlatformUiCard,[\s\S]{0,800}renderSourceServerSidebarRow\("Creator", serverCreatorValue[\s\S]{0,240}renderSourceServerSidebarRow\("Owner", serverOwnerSelectorControl/,
-  "Payments details must expose immutable creator and transferable owner identities in the shared Properties sidebar.",
+  /const paymentsDetailSidebar = React\.createElement\(PlatformUiCard,[\s\S]{0,2600}renderSourceServerSidebarRow\("Creator", serverCreatorValue[\s\S]{0,2200}renderSourceServerSidebarRow\("Updated",[\s\S]{0,400}renderSourceServerSidebarRow\("Owner", serverOwnerSelectorControl/,
+  "Payments details must expose creator provenance and place transferable ownership last.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
@@ -368,8 +453,8 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /const agentRuntimeDetailSidebar = React\.createElement\(PlatformUiCard,[\s\S]{0,650}renderSourceServerSidebarRow\("Owner", serverOwnerSelectorControl/,
-  "Agent Runtime details must expose ownership in the shared Properties sidebar.",
+  /const agentRuntimeDetailSidebar = React\.createElement\(PlatformUiCard,[\s\S]{0,3200}renderSourceServerSidebarRow\("Updated",[\s\S]{0,400}renderSourceServerSidebarRow\("Owner", serverOwnerSelectorControl/,
+  "Agent Runtime details must place ownership last in the shared Properties sidebar.",
 );
 assert.doesNotMatch(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
@@ -393,8 +478,8 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /renderDatabaseSidebarRow\("Creator", databaseCreatorValue,[\s\S]{0,220}renderDatabaseSidebarRow\("Owner", databaseOwnerSelectorControl/,
-  "Database details must keep immutable creator provenance separate from ownership.",
+  /renderDatabaseSidebarRow\("Creator", databaseCreatorValue,[\s\S]{0,1800}renderDatabaseSidebarRow\("Updated",[\s\S]{0,400}renderDatabaseSidebarRow\("Owner", databaseOwnerSelectorControl/,
+  "Database details must keep creator provenance separate and place Owner last.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
@@ -408,13 +493,13 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /ariaLabel: "Database team access",[\s\S]{0,180}variant: "minimalistic-ui"/,
-  "Database access management must use the same embedded minimal table and toolbar title as project access management.",
+  /React\.createElement\(PlatformResourceAccessTable, \{\s*teams: databasePermissionTeams\.filter[\s\S]{0,180}resourceLabel: "Database"/,
+  "Database access management must use the centralized resource access table.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /className: "playground-database-access-platform-data-table",[\s\S]{0,1000}toolbar: \{\s*title: "Manage Database Access"/,
-  "Database access management must keep its title in the shared table toolbar.",
+  /className: "playground-database-access-platform-data-table",[\s\S]{0,220}selectedIds: selectedDatabaseAccessTeamIds,[\s\S]{0,180}trailing: databaseAddTeamsControl/,
+  "Database access management must retain selection and Add Teams controls through the shared table.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
@@ -428,7 +513,7 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /selection: \{\s*enabled: true,[\s\S]{0,300}onChange: \(\{ selectedIds \}\) => setSelectedDatabaseAccessTeamIds\(new Set\(selectedIds\)\)/,
+  /selectedIds: selectedDatabaseAccessTeamIds,[\s\S]{0,100}onSelectedIdsChange: setSelectedDatabaseAccessTeamIds/,
   "Database access management must preserve centralized row selection for bulk access removal.",
 );
 assert.doesNotMatch(
@@ -443,8 +528,8 @@ assert.doesNotMatch(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /renderEnvironmentSidebarRow\("Creator", renderDevelopResourceIdentityValue\(environmentCreatorIdentity\)[\s\S]{0,320}renderEnvironmentSidebarRow\("Owner", renderDevelopResourceIdentityValue\(environmentOwnerIdentity\)/,
-  "Computer details must expose Creator and Owner in their shared Properties sidebar.",
+  /renderEnvironmentSidebarRow\("Creator", renderDevelopResourceIdentityValue\(environmentCreatorIdentity\)[\s\S]{0,5200}renderEnvironmentSidebarRow\("Owner", renderDevelopResourceIdentityValue\(environmentOwnerIdentity\)/,
+  "Computer details must expose Creator and place Owner last in their shared Properties sidebar.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
@@ -459,8 +544,8 @@ const authoritativeServerVersioningIndex = COMPUTE_RESOURCES_CONTROLLER_FRAGMENT
   "controller/server-authoritative-versioning.js",
 );
 assert.ok(
-  serverVersionControllerIndex >= 0
-  && authoritativeServerVersioningIndex > serverVersionControllerIndex,
+  serverVersionControllerIndex >= 0 &&
+    authoritativeServerVersioningIndex > serverVersionControllerIndex,
   "Authoritative server hooks must run after serverVersionController is initialized.",
 );
 
@@ -474,6 +559,6 @@ for (const relativePath of COMPUTE_RESOURCES_CONTROLLER_FRAGMENT_PATHS) {
 }
 
 console.log(
-  `Compute compatibility controller assembled from `
-  + `${COMPUTE_RESOURCES_CONTROLLER_FRAGMENT_PATHS.length} bounded fragments.`,
+  `Compute compatibility controller assembled from ` +
+    `${COMPUTE_RESOURCES_CONTROLLER_FRAGMENT_PATHS.length} bounded fragments.`,
 );

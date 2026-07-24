@@ -190,6 +190,19 @@ export const APP_HEADER_CSS = `      .playground-top-nav-search-divider {
         color: rgba(255, 255, 255, 0.94);
       }
 
+      .playground-top-nav-path-leading {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: currentColor;
+      }
+
+      .playground-top-nav-path-leading > svg {
+        width: 14px;
+        height: 14px;
+      }
+
       .playground-top-nav-path-item-group {
         min-width: 0;
         display: inline-flex;

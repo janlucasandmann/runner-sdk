@@ -34,6 +34,24 @@ const distPlatformAttachmentsCssPath = path.join(
   "attachments",
   "attachments.css",
 );
+const platformActivityTimelineCssPath = path.join(
+  packageRoot,
+  "src",
+  "platform-ui",
+  "components",
+  "composite",
+  "activity-timeline",
+  "activity-timeline.css",
+);
+const distPlatformActivityTimelineCssPath = path.join(
+  packageRoot,
+  "dist",
+  "platform-ui",
+  "components",
+  "composite",
+  "activity-timeline",
+  "activity-timeline.css",
+);
 const platformSubtasksCssPath = path.join(
   packageRoot,
   "src",
@@ -358,6 +376,24 @@ const distPlatformComponentsLabelCssPath = path.join(
   "label",
   "label.css",
 );
+const platformTicketItemCssPath = path.join(
+  packageRoot,
+  "src",
+  "platform-ui",
+  "components",
+  "ui",
+  "ticket-item",
+  "ticket-item.css",
+);
+const distPlatformComponentsTicketItemCssPath = path.join(
+  packageRoot,
+  "dist",
+  "platform-ui",
+  "components",
+  "ui",
+  "ticket-item",
+  "ticket-item.css",
+);
 const platformVersionLabelCssPath = path.join(
   packageRoot,
   "src",
@@ -429,6 +465,24 @@ const distPlatformComponentsPopupCssPath = path.join(
   "composite",
   "popup",
   "popup.css",
+);
+const platformProfileImagePickerCssPath = path.join(
+  packageRoot,
+  "src",
+  "platform-ui",
+  "components",
+  "composite",
+  "profile-image-picker",
+  "profile-image-picker.css",
+);
+const distPlatformProfileImagePickerCssPath = path.join(
+  packageRoot,
+  "dist",
+  "platform-ui",
+  "components",
+  "composite",
+  "profile-image-picker",
+  "profile-image-picker.css",
 );
 const platformSettingsSectionCssPath = path.join(
   packageRoot,
@@ -628,6 +682,14 @@ const agentDetailCssPath = path.join(
   "detail",
   "agent-publish-control.css",
 );
+const platformResourceAccessTableCssPath = path.join(
+  packageRoot,
+  "src",
+  "platform-resources",
+  "access-control",
+  "page",
+  "platform-resource-access-table.css",
+);
 const distPlatformPagesCssPath = path.join(
   packageRoot,
   "dist",
@@ -671,6 +733,7 @@ async function copy() {
   const [
     cssText,
     platformAttachmentsCssText,
+    platformActivityTimelineCssText,
     platformSubtasksCssText,
     platformFileExplorerCssText,
     platformDataTableCssText,
@@ -689,10 +752,12 @@ async function copy() {
     platformCheckboxCssText,
     platformIconButtonCssText,
     platformLabelCssText,
+    platformTicketItemCssText,
     platformVersionLabelCssText,
     platformSearchCssText,
     platformSelectorCssText,
     platformPopupCssText,
+    platformProfileImagePickerCssText,
     platformSettingsSectionCssText,
     platformUiCardCssText,
     platformPageHeroCssText,
@@ -706,9 +771,11 @@ async function copy() {
     securityPageCssText,
     platformPermissionsPageCssText,
     agentDetailCssText,
+    platformResourceAccessTableCssText,
   ] = await Promise.all([
     loadBundledCss(),
     fs.readFile(platformAttachmentsCssPath, "utf8"),
+    fs.readFile(platformActivityTimelineCssPath, "utf8"),
     fs.readFile(platformSubtasksCssPath, "utf8"),
     fs.readFile(platformFileExplorerCssPath, "utf8"),
     fs.readFile(platformDataTableCssPath, "utf8"),
@@ -727,10 +794,12 @@ async function copy() {
     fs.readFile(platformCheckboxCssPath, "utf8"),
     fs.readFile(platformIconButtonCssPath, "utf8"),
     fs.readFile(platformLabelCssPath, "utf8"),
+    fs.readFile(platformTicketItemCssPath, "utf8"),
     fs.readFile(platformVersionLabelCssPath, "utf8"),
     fs.readFile(platformSearchCssPath, "utf8"),
     fs.readFile(platformSelectorCssPath, "utf8"),
     fs.readFile(platformPopupCssPath, "utf8"),
+    fs.readFile(platformProfileImagePickerCssPath, "utf8"),
     fs.readFile(platformSettingsSectionCssPath, "utf8"),
     fs.readFile(platformUiCardCssPath, "utf8"),
     fs.readFile(platformPageHeroCssPath, "utf8"),
@@ -744,122 +813,287 @@ async function copy() {
     fs.readFile(securityPageCssPath, "utf8"),
     fs.readFile(platformPermissionsPageCssPath, "utf8"),
     fs.readFile(agentDetailCssPath, "utf8"),
+    fs.readFile(platformResourceAccessTableCssPath, "utf8"),
   ]);
   await fs.mkdir(path.dirname(distCssPath), { recursive: true });
   await fs.writeFile(distCssPath, cssText, "utf8");
-  await fs.mkdir(path.dirname(distPlatformAttachmentsCssPath), { recursive: true });
-  await fs.writeFile(distPlatformAttachmentsCssPath, platformAttachmentsCssText, "utf8");
-  await fs.mkdir(path.dirname(distPlatformSubtasksCssPath), { recursive: true });
-  await fs.writeFile(distPlatformSubtasksCssPath, platformSubtasksCssText, "utf8");
-  await fs.mkdir(path.dirname(distPlatformFileExplorerCssPath), { recursive: true });
+  await fs.mkdir(path.dirname(distPlatformAttachmentsCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformAttachmentsCssPath,
+    platformAttachmentsCssText,
+    "utf8",
+  );
+  await fs.mkdir(path.dirname(distPlatformActivityTimelineCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformActivityTimelineCssPath,
+    platformActivityTimelineCssText,
+    "utf8",
+  );
+  await fs.mkdir(path.dirname(distPlatformSubtasksCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformSubtasksCssPath,
+    platformSubtasksCssText,
+    "utf8",
+  );
+  await fs.mkdir(path.dirname(distPlatformFileExplorerCssPath), {
+    recursive: true,
+  });
   await fs.writeFile(
     distPlatformFileExplorerCssPath,
     `${platformModalCssText}\n\n${platformFileExplorerCssText}`,
     "utf8",
   );
-  await fs.mkdir(path.dirname(distPlatformComponentsDataTableCssPath), { recursive: true });
+  await fs.mkdir(path.dirname(distPlatformComponentsDataTableCssPath), {
+    recursive: true,
+  });
   await fs.writeFile(
     distPlatformComponentsDataTableCssPath,
     `${platformCheckboxCssText}\n\n${platformDataTableCssText}`,
     "utf8",
   );
-  await fs.mkdir(path.dirname(distPlatformDetailSidebarCssPath), { recursive: true });
-  await fs.writeFile(distPlatformDetailSidebarCssPath, platformDetailSidebarCssText, "utf8");
-  await fs.mkdir(path.dirname(distPlatformFloatingSidebarCssPath), { recursive: true });
-  await fs.writeFile(distPlatformFloatingSidebarCssPath, platformFloatingSidebarCssText, "utf8");
-  await fs.mkdir(path.dirname(distPlatformVersionHistorySidebarCssPath), { recursive: true });
+  await fs.mkdir(path.dirname(distPlatformDetailSidebarCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformDetailSidebarCssPath,
+    platformDetailSidebarCssText,
+    "utf8",
+  );
+  await fs.mkdir(path.dirname(distPlatformFloatingSidebarCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformFloatingSidebarCssPath,
+    platformFloatingSidebarCssText,
+    "utf8",
+  );
+  await fs.mkdir(path.dirname(distPlatformVersionHistorySidebarCssPath), {
+    recursive: true,
+  });
   await fs.writeFile(
     distPlatformVersionHistorySidebarCssPath,
     platformVersionHistorySidebarCssText,
     "utf8",
   );
-  await fs.mkdir(path.dirname(distPlatformVersionSaveDialogCssPath), { recursive: true });
+  await fs.mkdir(path.dirname(distPlatformVersionSaveDialogCssPath), {
+    recursive: true,
+  });
   await fs.writeFile(
     distPlatformVersionSaveDialogCssPath,
     platformVersionSaveDialogCssText,
     "utf8",
   );
-  await fs.mkdir(path.dirname(distPlatformDetailTabBarCssPath), { recursive: true });
-  await fs.writeFile(distPlatformDetailTabBarCssPath, platformDetailTabBarCssText, "utf8");
-  await fs.mkdir(path.dirname(distPlatformEmptyStateCssPath), { recursive: true });
-  await fs.writeFile(distPlatformEmptyStateCssPath, platformEmptyStateCssText, "utf8");
-  await fs.mkdir(path.dirname(distPlatformLoadingStateCssPath), { recursive: true });
-  await fs.writeFile(distPlatformLoadingStateCssPath, platformLoadingStateCssText, "utf8");
-  await fs.mkdir(path.dirname(distPlatformInstructionsEditorCssPath), { recursive: true });
+  await fs.mkdir(path.dirname(distPlatformDetailTabBarCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformDetailTabBarCssPath,
+    platformDetailTabBarCssText,
+    "utf8",
+  );
+  await fs.mkdir(path.dirname(distPlatformEmptyStateCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformEmptyStateCssPath,
+    platformEmptyStateCssText,
+    "utf8",
+  );
+  await fs.mkdir(path.dirname(distPlatformLoadingStateCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformLoadingStateCssPath,
+    platformLoadingStateCssText,
+    "utf8",
+  );
+  await fs.mkdir(path.dirname(distPlatformInstructionsEditorCssPath), {
+    recursive: true,
+  });
   await fs.writeFile(
     distPlatformInstructionsEditorCssPath,
     platformInstructionsEditorCssText,
     "utf8",
   );
-  await fs.mkdir(path.dirname(distPlatformComponentsAnalyticsCssPath), { recursive: true });
-  await fs.writeFile(distPlatformComponentsAnalyticsCssPath, platformAnalyticsCssText, "utf8");
-  await fs.mkdir(path.dirname(distPlatformCodeEditorWorkspaceCssPath), { recursive: true });
+  await fs.mkdir(path.dirname(distPlatformComponentsAnalyticsCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformComponentsAnalyticsCssPath,
+    platformAnalyticsCssText,
+    "utf8",
+  );
+  await fs.mkdir(path.dirname(distPlatformCodeEditorWorkspaceCssPath), {
+    recursive: true,
+  });
   await fs.writeFile(
     distPlatformCodeEditorWorkspaceCssPath,
     platformCodeEditorWorkspaceCssText,
     "utf8",
   );
-  await fs.mkdir(path.dirname(distPlatformCodePreviewBoxCssPath), { recursive: true });
-  await fs.writeFile(distPlatformCodePreviewBoxCssPath, platformCodePreviewBoxCssText, "utf8");
-  await fs.mkdir(path.dirname(distPlatformComponentsButtonCssPath), { recursive: true });
-  await fs.writeFile(distPlatformComponentsButtonCssPath, platformButtonCssText, "utf8");
-  await fs.mkdir(path.dirname(distPlatformComponentsCheckboxCssPath), { recursive: true });
+  await fs.mkdir(path.dirname(distPlatformCodePreviewBoxCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformCodePreviewBoxCssPath,
+    platformCodePreviewBoxCssText,
+    "utf8",
+  );
+  await fs.mkdir(path.dirname(distPlatformComponentsButtonCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformComponentsButtonCssPath,
+    platformButtonCssText,
+    "utf8",
+  );
+  await fs.mkdir(path.dirname(distPlatformComponentsCheckboxCssPath), {
+    recursive: true,
+  });
   await fs.writeFile(
     distPlatformComponentsCheckboxCssPath,
     platformCheckboxCssText,
     "utf8",
   );
-  await fs.mkdir(path.dirname(distPlatformComponentsIconButtonCssPath), { recursive: true });
-  await fs.writeFile(distPlatformComponentsIconButtonCssPath, platformIconButtonCssText, "utf8");
-  await fs.mkdir(path.dirname(distPlatformComponentsLabelCssPath), { recursive: true });
-  await fs.writeFile(distPlatformComponentsLabelCssPath, platformLabelCssText, "utf8");
-  await fs.mkdir(path.dirname(distPlatformComponentsVersionLabelCssPath), { recursive: true });
+  await fs.mkdir(path.dirname(distPlatformComponentsIconButtonCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformComponentsIconButtonCssPath,
+    platformIconButtonCssText,
+    "utf8",
+  );
+  await fs.mkdir(path.dirname(distPlatformComponentsLabelCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformComponentsLabelCssPath,
+    platformLabelCssText,
+    "utf8",
+  );
+  await fs.mkdir(path.dirname(distPlatformComponentsTicketItemCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformComponentsTicketItemCssPath,
+    platformTicketItemCssText,
+    "utf8",
+  );
+  await fs.mkdir(path.dirname(distPlatformComponentsVersionLabelCssPath), {
+    recursive: true,
+  });
   await fs.writeFile(
     distPlatformComponentsVersionLabelCssPath,
     platformVersionLabelCssText,
     "utf8",
   );
-  await fs.mkdir(path.dirname(distPlatformComponentsSearchCssPath), { recursive: true });
-  await fs.writeFile(distPlatformComponentsSearchCssPath, platformSearchCssText, "utf8");
-  await fs.mkdir(path.dirname(distPlatformComponentsSelectorCssPath), { recursive: true });
+  await fs.mkdir(path.dirname(distPlatformComponentsSearchCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformComponentsSearchCssPath,
+    platformSearchCssText,
+    "utf8",
+  );
+  await fs.mkdir(path.dirname(distPlatformComponentsSelectorCssPath), {
+    recursive: true,
+  });
   await fs.writeFile(
     distPlatformComponentsSelectorCssPath,
     `${platformPopupCssText}\n\n${platformSelectorCssText}`,
     "utf8",
   );
-  await fs.mkdir(path.dirname(distPlatformComponentsPopupCssPath), { recursive: true });
-  await fs.writeFile(distPlatformComponentsPopupCssPath, platformPopupCssText, "utf8");
-  await fs.mkdir(path.dirname(distPlatformSettingsSectionCssPath), { recursive: true });
-  await fs.writeFile(distPlatformSettingsSectionCssPath, platformSettingsSectionCssText, "utf8");
+  await fs.mkdir(path.dirname(distPlatformComponentsPopupCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformComponentsPopupCssPath,
+    platformPopupCssText,
+    "utf8",
+  );
+  await fs.mkdir(path.dirname(distPlatformProfileImagePickerCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformProfileImagePickerCssPath,
+    platformProfileImagePickerCssText,
+    "utf8",
+  );
+  await fs.mkdir(path.dirname(distPlatformSettingsSectionCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformSettingsSectionCssPath,
+    platformSettingsSectionCssText,
+    "utf8",
+  );
   await fs.mkdir(path.dirname(distPlatformUiCardCssPath), { recursive: true });
   await fs.writeFile(distPlatformUiCardCssPath, platformUiCardCssText, "utf8");
-  await fs.mkdir(path.dirname(distPlatformPageHeroCssPath), { recursive: true });
-  await fs.writeFile(distPlatformPageHeroCssPath, platformPageHeroCssText, "utf8");
-  await fs.mkdir(path.dirname(distPlatformComponentsSwitchCssPath), { recursive: true });
-  await fs.writeFile(distPlatformComponentsSwitchCssPath, platformSwitchCssText, "utf8");
-  await fs.mkdir(path.dirname(distPlatformComponentsModalCssPath), { recursive: true });
-  await fs.writeFile(distPlatformComponentsModalCssPath, platformModalCssText, "utf8");
-  await fs.mkdir(path.dirname(distPlatformGlobalSearchModalCssPath), { recursive: true });
+  await fs.mkdir(path.dirname(distPlatformPageHeroCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformPageHeroCssPath,
+    platformPageHeroCssText,
+    "utf8",
+  );
+  await fs.mkdir(path.dirname(distPlatformComponentsSwitchCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformComponentsSwitchCssPath,
+    platformSwitchCssText,
+    "utf8",
+  );
+  await fs.mkdir(path.dirname(distPlatformComponentsModalCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformComponentsModalCssPath,
+    platformModalCssText,
+    "utf8",
+  );
+  await fs.mkdir(path.dirname(distPlatformGlobalSearchModalCssPath), {
+    recursive: true,
+  });
   await fs.writeFile(
     distPlatformGlobalSearchModalCssPath,
     `${platformLoadingStateCssText}\n\n${platformGlobalSearchModalCssText}`,
     "utf8",
   );
-  await fs.mkdir(path.dirname(distPlatformHomePageCssPath), { recursive: true });
+  await fs.mkdir(path.dirname(distPlatformHomePageCssPath), {
+    recursive: true,
+  });
   await fs.writeFile(
     distPlatformHomePageCssPath,
     `${platformPageHeroCssText}\n\n${platformUiCardCssText}\n\n${platformHomePageCssText}`,
     "utf8",
   );
-  await fs.mkdir(path.dirname(distPlatformOverviewPageCssPath), { recursive: true });
+  await fs.mkdir(path.dirname(distPlatformOverviewPageCssPath), {
+    recursive: true,
+  });
   await fs.writeFile(
     distPlatformOverviewPageCssPath,
     `${platformAnalyticsCssText}\n\n${platformEmptyStateCssText}\n\n${platformLoadingStateCssText}\n\n${platformPageHeroCssText}\n\n${platformUiCardCssText}\n\n${platformOverviewPageCssText}`,
     "utf8",
   );
-  await fs.mkdir(path.dirname(distPlatformDetailPageCssPath), { recursive: true });
-  await fs.writeFile(distPlatformDetailPageCssPath, platformDetailPageCssText, "utf8");
-  await fs.mkdir(path.dirname(distPlatformPermissionsPageCssPath), { recursive: true });
+  await fs.mkdir(path.dirname(distPlatformDetailPageCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformDetailPageCssPath,
+    platformDetailPageCssText,
+    "utf8",
+  );
+  await fs.mkdir(path.dirname(distPlatformPermissionsPageCssPath), {
+    recursive: true,
+  });
   await fs.writeFile(
     distPlatformPermissionsPageCssPath,
     `${platformPopupCssText}\n\n${platformSelectorCssText}\n\n${platformCheckboxCssText}\n\n${platformDataTableCssText}\n\n${platformSettingsSectionCssText}\n\n${platformPermissionsPageCssText}`,
@@ -868,7 +1102,7 @@ async function copy() {
   await fs.mkdir(path.dirname(distPlatformPagesCssPath), { recursive: true });
   await fs.writeFile(
     distPlatformPagesCssPath,
-    `${platformPopupCssText}\n\n${platformSelectorCssText}\n\n${platformCheckboxCssText}\n\n${platformAttachmentsCssText}\n\n${platformSubtasksCssText}\n\n${platformFileExplorerCssText}\n\n${platformDataTableCssText}\n\n${platformAnalyticsCssText}\n\n${platformEmptyStateCssText}\n\n${platformLoadingStateCssText}\n\n${platformCodeEditorWorkspaceCssText}\n\n${platformCodePreviewBoxCssText}\n\n${platformPageHeroCssText}\n\n${platformUiCardCssText}\n\n${platformVersionLabelCssText}\n\n${platformHomePageCssText}\n\n${platformOverviewPageCssText}\n\n${platformDetailTabBarCssText}\n\n${platformDetailSidebarCssText}\n\n${platformFloatingSidebarCssText}\n\n${platformVersionHistorySidebarCssText}\n\n${platformVersionSaveDialogCssText}\n\n${platformInstructionsEditorCssText}\n\n${platformSettingsSectionCssText}\n\n${platformDetailPageCssText}\n\n${developServerDetailPageCssText}\n\n${securityPageCssText}\n\n${platformPermissionsPageCssText}\n\n${agentDetailCssText}`,
+    `${platformPopupCssText}\n\n${platformProfileImagePickerCssText}\n\n${platformSelectorCssText}\n\n${platformCheckboxCssText}\n\n${platformAttachmentsCssText}\n\n${platformActivityTimelineCssText}\n\n${platformSubtasksCssText}\n\n${platformTicketItemCssText}\n\n${platformFileExplorerCssText}\n\n${platformDataTableCssText}\n\n${platformAnalyticsCssText}\n\n${platformEmptyStateCssText}\n\n${platformLoadingStateCssText}\n\n${platformCodeEditorWorkspaceCssText}\n\n${platformCodePreviewBoxCssText}\n\n${platformPageHeroCssText}\n\n${platformUiCardCssText}\n\n${platformVersionLabelCssText}\n\n${platformHomePageCssText}\n\n${platformOverviewPageCssText}\n\n${platformDetailTabBarCssText}\n\n${platformDetailSidebarCssText}\n\n${platformFloatingSidebarCssText}\n\n${platformVersionHistorySidebarCssText}\n\n${platformVersionSaveDialogCssText}\n\n${platformInstructionsEditorCssText}\n\n${platformSettingsSectionCssText}\n\n${platformDetailPageCssText}\n\n${developServerDetailPageCssText}\n\n${securityPageCssText}\n\n${platformPermissionsPageCssText}\n\n${agentDetailCssText}\n\n${platformResourceAccessTableCssText}`,
     "utf8",
   );
   await fs.mkdir(distAssetsDir, { recursive: true });
@@ -877,7 +1111,10 @@ async function copy() {
   await Promise.all(
     assets.map(async (assetName) => {
       await Promise.all([
-        fs.copyFile(path.join(assetsSourceDir, assetName), path.join(distAssetsDir, assetName)),
+        fs.copyFile(
+          path.join(assetsSourceDir, assetName),
+          path.join(distAssetsDir, assetName),
+        ),
         fs.copyFile(
           path.join(assetsSourceDir, assetName),
           path.join(distPlatformThreadAssetsDir, assetName),
@@ -894,5 +1131,7 @@ if (mode === "prepare") {
 } else if (mode === "copy") {
   await copy();
 } else {
-  throw new Error(`Unknown mode: ${mode || "<empty>"}. Use "prepare" or "copy".`);
+  throw new Error(
+    `Unknown mode: ${mode || "<empty>"}. Use "prepare" or "copy".`,
+  );
 }

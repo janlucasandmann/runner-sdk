@@ -6,17 +6,15 @@ import {
   FunctionSquare,
   Globe,
   ReceiptText,
-  Shield,
   UsersRound,
+  Vault,
 } from "lucide-react";
 
 import type {
   ResourceOverviewAnalyticsModel,
   ResourceOverviewPeriod,
 } from "../../../../../platform-ui/pages/overview/index.js";
-import type {
-  DevelopHomeResourceRow,
-} from "../page/develop-home-overview-page.js";
+import type { DevelopHomeResourceRow } from "../page/develop-home-overview-page.js";
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -158,7 +156,7 @@ const RESOURCE_DEFINITIONS: readonly ResourceDefinition[] = Object.freeze([
     kind: "secrets",
     label: "Secrets",
     description: "Store credentials for deployed resources.",
-    icon: Shield,
+    icon: Vault,
     activityKeys: ["secretReads"],
   },
   {
@@ -173,7 +171,7 @@ const RESOURCE_DEFINITIONS: readonly ResourceDefinition[] = Object.freeze([
 
 function asRecord(value: unknown): UnknownRecord {
   return value && typeof value === "object" && !Array.isArray(value)
-    ? value as UnknownRecord
+    ? (value as UnknownRecord)
     : {};
 }
 
@@ -217,10 +215,7 @@ function unwrapResources(value: unknown): unknown[] {
 function unwrapResourceRecord(value: unknown): UnknownRecord {
   const envelope = asRecord(value);
   return asRecord(
-    envelope.server
-      || envelope.database
-      || envelope.resource
-      || envelope,
+    envelope.server || envelope.database || envelope.resource || envelope,
   );
 }
 
@@ -262,13 +257,13 @@ function readFirstNumber(
 
 function getBucketTimestamp(bucket: UnknownRecord): string {
   return String(
-    bucket.bucketStart
-      || bucket.bucket_start
-      || bucket.timestamp
-      || bucket.time
-      || bucket.createdAt
-      || bucket.created_at
-      || "",
+    bucket.bucketStart ||
+      bucket.bucket_start ||
+      bucket.timestamp ||
+      bucket.time ||
+      bucket.createdAt ||
+      bucket.created_at ||
+      "",
   ).trim();
 }
 
@@ -290,15 +285,24 @@ function formatBucketLabel(
 
 function getMetricKeyForKind(kind: string): MetricKey | null {
   switch (kind) {
-    case "web_app": return "hostingRequests";
-    case "api": return "apiRequests";
-    case "function": return "functionCalls";
-    case "agent_runtime": return "agentRuntimeRuns";
-    case "voice_agent": return "voiceCalls";
-    case "secrets": return "secretReads";
-    case "auth": return "authEvents";
-    case "payments": return "paymentCheckoutSessions";
-    default: return null;
+    case "web_app":
+      return "hostingRequests";
+    case "api":
+      return "apiRequests";
+    case "function":
+      return "functionCalls";
+    case "agent_runtime":
+      return "agentRuntimeRuns";
+    case "voice_agent":
+      return "voiceCalls";
+    case "secrets":
+      return "secretReads";
+    case "auth":
+      return "authEvents";
+    case "payments":
+      return "paymentCheckoutSessions";
+    default:
+      return null;
   }
 }
 
@@ -323,14 +327,13 @@ function readChartBuckets(value: unknown): unknown[] {
 }
 
 function createEmptyMetricMap(): Record<MetricKey, number> {
-  return Object.fromEntries(
-    METRIC_KEYS.map((key) => [key, 0]),
-  ) as Record<MetricKey, number>;
+  return Object.fromEntries(METRIC_KEYS.map((key) => [key, 0])) as Record<
+    MetricKey,
+    number
+  >;
 }
 
-function readDirectMetricAggregate(
-  value: unknown,
-): {
+function readDirectMetricAggregate(value: unknown): {
   labels: string[];
   series: Partial<Record<MetricKey, number[]>>;
   totals: Partial<Record<MetricKey, number>>;
@@ -359,11 +362,7 @@ function aggregateMetrics(
 ): MetricAggregate {
   const labelOrder: string[] = [];
   const byTimestamp = new Map<string, Record<MetricKey, number>>();
-  const addMetric = (
-    timestamp: string,
-    key: MetricKey,
-    value: unknown,
-  ) => {
+  const addMetric = (timestamp: string, key: MetricKey, value: unknown) => {
     if (!timestamp) return;
     if (!byTimestamp.has(timestamp)) {
       byTimestamp.set(timestamp, createEmptyMetricMap());
@@ -380,36 +379,36 @@ function aggregateMetrics(
       const bucket = asRecord(rawBucket);
       const timestamp = getBucketTimestamp(bucket);
       if (metricKey) {
-        addMetric(timestamp, metricKey, readFirstNumber(bucket, [
-          "total",
-          "requests",
-          "requestCount",
-          "request_count",
-          "invocations",
-          "invocationCount",
-        ]));
+        addMetric(
+          timestamp,
+          metricKey,
+          readFirstNumber(bucket, [
+            "total",
+            "requests",
+            "requestCount",
+            "request_count",
+            "invocations",
+            "invocationCount",
+          ]),
+        );
       }
-      addMetric(timestamp, "computeTokens", readFirstNumber(bucket, [
+      addMetric(
+        timestamp,
         "computeTokens",
-        "compute_tokens",
-        "costCT",
-        "cost_ct",
-        "ct",
-      ]));
+        readFirstNumber(bucket, [
+          "computeTokens",
+          "compute_tokens",
+          "costCT",
+          "cost_ct",
+          "ct",
+        ]),
+      );
       addMetric(
         timestamp,
         "errors",
-        readFirstNumber(bucket, [
-          "errors",
-          "errorCount",
-          "error_count",
-        ]) + readFirstNumber(bucket, [
-          "clientErrors",
-          "client_errors",
-        ]) + readFirstNumber(bucket, [
-          "serverErrors",
-          "server_errors",
-        ]),
+        readFirstNumber(bucket, ["errors", "errorCount", "error_count"]) +
+          readFirstNumber(bucket, ["clientErrors", "client_errors"]) +
+          readFirstNumber(bucket, ["serverErrors", "server_errors"]),
       );
     });
   });
@@ -418,30 +417,42 @@ function aggregateMetrics(
     readChartBuckets(entry).forEach((rawBucket) => {
       const bucket = asRecord(rawBucket);
       const timestamp = getBucketTimestamp(bucket);
-      addMetric(timestamp, "databaseReads", readFirstNumber(bucket, [
-        "reads",
-        "readCount",
-        "read_count",
-        "selects",
-      ]));
-      addMetric(timestamp, "databaseWrites", readFirstNumber(bucket, [
-        "writes",
-        "writeCount",
-        "write_count",
-        "mutations",
-      ]));
-      addMetric(timestamp, "computeTokens", readFirstNumber(bucket, [
+      addMetric(
+        timestamp,
+        "databaseReads",
+        readFirstNumber(bucket, [
+          "reads",
+          "readCount",
+          "read_count",
+          "selects",
+        ]),
+      );
+      addMetric(
+        timestamp,
+        "databaseWrites",
+        readFirstNumber(bucket, [
+          "writes",
+          "writeCount",
+          "write_count",
+          "mutations",
+        ]),
+      );
+      addMetric(
+        timestamp,
         "computeTokens",
-        "compute_tokens",
-        "costCT",
-        "cost_ct",
-        "ct",
-      ]));
-      addMetric(timestamp, "errors", readFirstNumber(bucket, [
+        readFirstNumber(bucket, [
+          "computeTokens",
+          "compute_tokens",
+          "costCT",
+          "cost_ct",
+          "ct",
+        ]),
+      );
+      addMetric(
+        timestamp,
         "errors",
-        "errorCount",
-        "error_count",
-      ]));
+        readFirstNumber(bucket, ["errors", "errorCount", "error_count"]),
+      );
     });
   });
 
@@ -474,10 +485,12 @@ function aggregateMetrics(
       ? leftTime - rightTime
       : 0;
   });
-  const series = Object.fromEntries(METRIC_KEYS.map((key) => [
-    key,
-    labelOrder.map((label) => byTimestamp.get(label)?.[key] || 0),
-  ])) as Record<MetricKey, number[]>;
+  const series = Object.fromEntries(
+    METRIC_KEYS.map((key) => [
+      key,
+      labelOrder.map((label) => byTimestamp.get(label)?.[key] || 0),
+    ]),
+  ) as Record<MetricKey, number[]>;
   const totals = createEmptyMetricMap();
   METRIC_KEYS.forEach((key) => {
     totals[key] = series[key].reduce((sum, value) => sum + value, 0);
@@ -507,9 +520,9 @@ function sumSeries(
   keys: readonly MetricKey[],
   length: number,
 ): number[] {
-  return Array.from({ length }, (_, index) => (
-    keys.reduce((sum, key) => sum + asNumber(series[key][index]), 0)
-  ));
+  return Array.from({ length }, (_, index) =>
+    keys.reduce((sum, key) => sum + asNumber(series[key][index]), 0),
+  );
 }
 
 export function createDevelopHomeOverviewModel({
@@ -537,9 +550,10 @@ export function createDevelopHomeOverviewModel({
     period,
   );
   const rows = RESOURCE_DEFINITIONS.map((definition) => {
-    const resourceCount = definition.kind === "database"
-      ? activeDatabases.length
-      : serverKindCounts[definition.kind] || 0;
+    const resourceCount =
+      definition.kind === "database"
+        ? activeDatabases.length
+        : serverKindCounts[definition.kind] || 0;
     const operationCount = sumMetrics(
       aggregate.totals,
       definition.activityKeys,
@@ -561,10 +575,7 @@ export function createDevelopHomeOverviewModel({
     (sum, row) => sum + row.resourceCount,
     0,
   );
-  const serverOperations = sumMetrics(
-    aggregate.totals,
-    SERVER_ACTIVITY_KEYS,
-  );
+  const serverOperations = sumMetrics(aggregate.totals, SERVER_ACTIVITY_KEYS);
   const databaseOperations = sumMetrics(
     aggregate.totals,
     DATABASE_ACTIVITY_KEYS,

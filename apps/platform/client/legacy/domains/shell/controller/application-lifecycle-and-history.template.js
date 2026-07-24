@@ -1115,10 +1115,11 @@
           const isResourcesPage = activePage === "resources" || activePage === "agents" || activePage === "environments";
           const hasGuardrailsVersionsDrawerSlot = activePage === "guardrails";
           const hasEvaluationsVersionsDrawerSlot = activePage === "evaluations";
+          const hasSecurityVersionsDrawerSlot = activePage === "develop-security";
           const hasResourcesVersionsDrawerSlot = (
             isResourcesPage
             && (activeResourcesView === "agents" || activeResourcesView === "computers" || activeResourcesView === "servers")
-          ) || hasGuardrailsVersionsDrawerSlot || hasEvaluationsVersionsDrawerSlot;
+          ) || hasGuardrailsVersionsDrawerSlot || hasEvaluationsVersionsDrawerSlot || hasSecurityVersionsDrawerSlot;
           const selectedGlobalGuardrailSet = allGuardrailSets.find((set) => set?.id === selectedGuardrailSetId) || null;
           const isGuardrailsVersionsDrawerOpen = Boolean(
             hasGuardrailsVersionsDrawerSlot
@@ -1133,6 +1134,9 @@
             && isAgentVersionsDetailOpen
           ) || isGuardrailsVersionsDrawerOpen || (
             hasEvaluationsVersionsDrawerSlot
+            && isAgentVersionsDetailOpen
+          ) || (
+            hasSecurityVersionsDrawerSlot
             && isAgentVersionsDetailOpen
           );
   

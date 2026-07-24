@@ -131,6 +131,61 @@
   display: none;
 }
 
+.platform-popup-search-header {
+  min-width: 0;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 12px;
+}
+
+.platform-popup-search-header__icon {
+  flex: 0 0 14px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.platform-popup-search-header__input {
+  min-width: 0;
+  flex: 1 1 auto;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.platform-popup-search-header__input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.platform-popup-search-header__input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+  opacity: 1;
+}
+
+.platform-popup-search-header__shortcut {
+  min-width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding: 0 6px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.025);
+  color: rgba(255, 255, 255, 0.58);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1;
+}
+
 .platform-popup-surface::before {
   content: "";
   pointer-events: none;

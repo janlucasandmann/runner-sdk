@@ -10,7 +10,11 @@ persistence logic.
 
 ## Contents
 
-- [`security-types.ts`](security-types.ts) — API and workspace contracts.
+- [`security-types.ts`](security-types.ts) — API, workspace, and coherent
+  repository-version snapshot contracts.
+- [`security-access.ts`](security-access.ts) — Team-access and nested
+  team-member identity normalization, owner-candidate merging, role-permission
+  presets, and immutable repository metadata transforms.
 - [`security-model.ts`](security-model.ts) — Formatting and URL route helpers.
 - [`security-model.test.ts`](security-model.test.ts) — Route precedence and
   severity regression coverage.
@@ -34,4 +38,3 @@ npm run typecheck
 - [Client guide](../README.md)
 - [Service guide](../../README.md)
 - [Directory README standard](../../../../../../docs/development/readme-standard.md)
-

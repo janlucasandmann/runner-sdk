@@ -46,6 +46,12 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
             attachments: mergedTask.attachments,
             enabledSkills: mergedTask.enabledSkills,
             connectors: mergedTask.connectors,
+            ...(Object.prototype.hasOwnProperty.call(overrides, "comments")
+              ? { comments: mergedTask.comments }
+              : {}),
+            ...(Object.prototype.hasOwnProperty.call(overrides, "activity")
+              ? { activity: mergedTask.activity }
+              : {}),
           });
           const nextAssigneeAgentId = isPlaygroundHumanAssigneeId(mergedTask.assigneeAgentId)
             ? null
@@ -177,13 +183,18 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
               throw new Error("Issue creation failed.");
             }
 
+            const shouldKeepParentTaskSelected = nextTaskType === "subtask" && Boolean(nextParentTaskId);
             commitLocalTaskRecord(createdTask, {
-              selectTask: true,
-              syncDraft: true,
-              markClean: true,
+              selectTask: !shouldKeepParentTaskSelected,
+              syncDraft: !shouldKeepParentTaskSelected,
+              markClean: !shouldKeepParentTaskSelected,
             });
-            setTaskView("backlog");
-            setProjectTaskDetailScreenOpen(true);
+            if (shouldKeepParentTaskSelected) {
+              handleSelectTask(nextParentTaskId, { screen: true });
+            } else {
+              setTaskView("backlog");
+              setProjectTaskDetailScreenOpen(true);
+            }
             finishCloseProjectIssueComposer();
           } catch (error) {
             setIssueComposerSaveState({

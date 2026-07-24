@@ -4,12 +4,10 @@ import { PlatformUiCard } from "../../../../../platform-ui/components/composite/
 import { ResourceDetailPage } from "../../../../../platform-ui/pages/details/index.js";
 
 export interface TicketDetailPageProps {
-  header: ReactNode;
+  header?: ReactNode;
   headerActions?: ReactNode;
   children: ReactNode;
   details: ReactNode;
-  detailsActions?: ReactNode;
-  threads: ReactNode;
   preview?: ReactNode;
   previewTitle?: ReactNode;
   previewHeaderActions?: ReactNode;
@@ -26,8 +24,6 @@ export function TicketDetailPage({
   headerActions,
   children,
   details,
-  detailsActions,
-  threads,
   preview,
   previewTitle = "Attachment preview",
   previewHeaderActions,
@@ -54,24 +50,14 @@ export function TicketDetailPage({
             <PlatformUiCard
               as="section"
               variant="sidebar"
-              cardTitle="Details"
-              headerActions={detailsActions}
               className="playground-ticket-detail-sidebar-section playground-ticket-detail-sidebar-details"
             >
               {details}
             </PlatformUiCard>
-            <PlatformUiCard
-              as="section"
-              variant="sidebar"
-              cardTitle="Threads"
-              className="playground-ticket-detail-sidebar-section playground-ticket-detail-sidebar-threads"
-            >
-              {threads}
-            </PlatformUiCard>
           </>
         )}
         ariaLabel={ariaLabel}
-        sidebarAriaLabel="Ticket settings and threads"
+        sidebarAriaLabel="Ticket settings"
         className="playground-project-overview-layout playground-agents-detail-overview-layout playground-ticket-detail-page"
         headerClassName="playground-ticket-detail-header"
         contentClassName="playground-project-overview-main playground-agents-detail-overview-main playground-ticket-detail-content"

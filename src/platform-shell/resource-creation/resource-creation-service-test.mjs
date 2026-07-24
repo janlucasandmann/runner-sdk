@@ -80,7 +80,7 @@ assert.doesNotMatch(
 
 const computerCreationLifecycleSource = await fs.readFile(
   new URL(
-    "../../../apps/platform/client/legacy/domains/compute-resources/controller/bootstrap-and-effects.js",
+    "../../../apps/platform/client/legacy/domains/compute-resources/controller/catalog-and-lifecycle.js",
     import.meta.url,
   ),
   "utf8",

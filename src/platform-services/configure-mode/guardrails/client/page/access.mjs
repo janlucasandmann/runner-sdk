@@ -3,17 +3,19 @@ export const GUARDRAILS_PAGE_ACCESS_SCRIPT = `          const getGuardrailAccess
               ? set.metadata
               : {}
           );
-          const getGuardrailPermissionSet = (set = selectedGuardrailSet) => normalizePlaygroundPermissionSet(
-            set?.permissionSet || getGuardrailAccessMetadata(set).permissionSet,
-            "guardrail"
+          const getGuardrailPermissionSet = (
+            set = selectedGuardrailSet,
+            principalId = PLATFORM_ALL_AGENTS_PRINCIPAL_ID
+          ) => getPlatformSystemPrincipalPermissionSet(
+            getGuardrailAccessMetadata(set),
+            principalId,
+            "guardrail",
+            set?.permissionSet || getGuardrailAccessMetadata(set).permissionSet
           );
-          const getGuardrailAccessTeamIds = (set = selectedGuardrailSet) => Array.from(new Set(
-            (Array.isArray(getGuardrailAccessMetadata(set).teamAccessIds)
-              ? getGuardrailAccessMetadata(set).teamAccessIds
-              : [])
-              .map((value) => String(value || "").trim())
-              .filter(Boolean)
-          ));
+          const getGuardrailAccessTeamIds = (set = selectedGuardrailSet) => getPlatformSharedTeamIds({
+            ...getGuardrailAccessMetadata(set),
+            sharedTeamIds: getGuardrailAccessMetadata(set).teamAccessIds,
+          });
           const getGuardrailPersonIdentitySources = (record) => {
             const source = record && typeof record === "object" && !Array.isArray(record) ? record : {};
             const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
@@ -243,12 +245,20 @@ export const GUARDRAILS_PAGE_ACCESS_SCRIPT = `          const getGuardrailAccess
             }), { markVersionTouched: false });
           };
           const updateGuardrailPermissionSet = (updater) => {
-            const currentPermissionSet = getGuardrailPermissionSet();
+            const principalId = isPlatformSystemAccessPrincipalId(guardrailAccessTeamId)
+              ? normalizePlatformAccessPrincipalId(guardrailAccessTeamId)
+              : PLATFORM_ALL_AGENTS_PRINCIPAL_ID;
+            const currentPermissionSet = getGuardrailPermissionSet(selectedGuardrailSet, principalId);
             const nextPermissionSet = normalizePlaygroundPermissionSet(
               typeof updater === "function" ? updater(currentPermissionSet) : updater,
               "guardrail"
             );
-            updateGuardrailAccessMetadata({ permissionSet: nextPermissionSet });
+            updateGuardrailAccessMetadata((metadata) => buildPlatformSystemPrincipalPermissionMetadata(
+              metadata,
+              principalId,
+              nextPermissionSet,
+              "guardrail"
+            ));
           };
           const updateGuardrailPermissionRingAccess = (ringId, nextAccess) => {
             const ring = getPlaygroundPermissionRingDefinition(ringId);
@@ -372,22 +382,13 @@ export const GUARDRAILS_PAGE_ACCESS_SCRIPT = `          const getGuardrailAccess
             return {
               id: teamId,
               name: team?.name || "Shared team",
+              profileImageUrl: getPlatformAccessPrincipalProfileImageUrl(team),
               createdAt: team?.createdAt || selectedGuardrailSet?.updatedAt || "",
               meta: "Team role permissions",
               locked: false,
             };
           });
-          const guardrailAccessRows = [
-            {
-              id: "all_agents",
-              name: "All Agents",
-              meta: "Always included",
-              permission: "Guardrail default",
-              createdAt: "",
-              locked: true,
-            },
-            ...guardrailSharedTeams,
-          ];
+          const guardrailAccessRows = composePlatformAccessPrincipalRows(guardrailSharedTeams);
           const availableGuardrailTeams = guardrailWorkspaceTeams.filter((team) => !guardrailAccessTeamIds.includes(String(team.id)));
           const closeGuardrailShareTeamModal = () => {
             if (guardrailShareTeamState.status === "sharing") return;
@@ -592,7 +593,7 @@ export const GUARDRAILS_PAGE_ACCESS_SCRIPT = `          const getGuardrailAccess
           const renderGuardrailAccessSettings = () => {
             const selectedAccessRow = guardrailAccessRows.find((row) => row.id === guardrailAccessTeamId) || null;
             if (selectedAccessRow) {
-              const isAllAgentsTeam = selectedAccessRow.id === "all_agents";
+              const systemPrincipal = getPlatformSystemAccessPrincipal(selectedAccessRow.id);
               const selectedRole = getPlaygroundTeamRoleDefinition(guardrailAccessRoleId);
               return React.createElement("section", { className: "playground-guardrails-access-detail" },
                 React.createElement("div", { className: "playground-project-team-permissions-header" },
@@ -605,12 +606,12 @@ export const GUARDRAILS_PAGE_ACCESS_SCRIPT = `          const getGuardrailAccess
                     React.createElement("span", null, "Settings")
                   ),
                   React.createElement("div", { className: "playground-project-team-permissions-title" },
-                    isAllAgentsTeam ? "All Agents Permissions" : selectedAccessRow.name + " Access"
+                    systemPrincipal ? systemPrincipal.name + " Permissions" : selectedAccessRow.name + " Access"
                   )
                 ),
-                isAllAgentsTeam
+                systemPrincipal
                   ? React.createElement(PlatformPermissionsPage, {
-                      permissionSet: getGuardrailPermissionSet(),
+                      permissionSet: getGuardrailPermissionSet(selectedGuardrailSet, systemPrincipal.id),
                       accessOptions: PLAYGROUND_PERMISSION_ACCESS_OPTIONS,
                       ringDefinitions: PLAYGROUND_PERMISSION_RING_DEFINITIONS,
                       actionDefinitions: PLAYGROUND_PERMISSION_ACTION_DEFINITIONS,
@@ -684,54 +685,16 @@ export const GUARDRAILS_PAGE_ACCESS_SCRIPT = `          const getGuardrailAccess
                       )
                 );
             return React.createElement("section", { className: "playground-guardrails-access-settings" },
-              React.createElement(PlatformDataTable, {
-                rows: guardrailAccessRows,
-                columns: [
-                  {
-                    id: "team",
-                    header: "Team",
-                    accessor: (row) => row.name,
-                    sortable: true,
-                    width: "minmax(220px, 1.5fr)",
-                    cell: ({ row }) => React.createElement("div", null,
-                      React.createElement("div", { className: "playground-team-table-title" }, row.name),
-                      React.createElement("div", { className: "playground-team-table-meta" }, row.meta)
-                    ),
-                  },
-                  {
-                    id: "policy",
-                    header: "Policy",
-                    accessor: (row) => row.permission || (row.locked ? "Guardrail default" : "Role policies"),
-                    sortable: true,
-                    width: "minmax(130px, 0.75fr)",
-                  },
-                  {
-                    id: "updated",
-                    header: "Added",
-                    accessor: (row) => row.createdAt || "",
-                    sortable: true,
-                    width: "minmax(110px, 0.65fr)",
-                    align: "end",
-                    cell: ({ row }) => row.locked ? "Default" : formatGuardrailDate(row.createdAt),
-                  },
-                ],
-                getRowId: (row) => row.id,
-                getRowAriaLabel: (row) => "Open permissions for " + row.name,
-                ariaLabel: "Guardrail access",
-                variant: "minimalistic-ui",
-                toolbar: {
-                  title: "Manage Guardrail Access",
-                  ...(addTeamsControl ? { trailing: addTeamsControl } : {}),
-                },
-                onRowActivate: openGuardrailAccessDetail,
-                getRowActions: (row) => row.locked || selectedGuardrailSetReadonly
-                  ? []
-                  : [{
-                      id: "remove",
-                      label: "Remove access",
-                      icon: Trash2,
-                      onSelect: () => removeGuardrailTeamAccess(row.id),
-                    }],
+              React.createElement(PlatformResourceAccessTable, {
+                teams: guardrailSharedTeams.map((team) => ({ ...team, description: team.meta })),
+                resourceLabel: "Guardrail",
+                trailing: addTeamsControl,
+                busy: selectedGuardrailSetReadonly,
+                onOpenPermissions: openGuardrailAccessDetail,
+                onRemoveTeams: selectedGuardrailSetReadonly
+                  ? undefined
+                  : (teams) => teams.forEach((team) => removeGuardrailTeamAccess(team.id)),
+                formatCreatedAt: formatGuardrailDate,
               })
             );
           };

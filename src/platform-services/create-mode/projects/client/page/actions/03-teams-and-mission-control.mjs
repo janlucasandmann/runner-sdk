@@ -32,20 +32,35 @@ export const PROJECTS_ACTIONS_03_FRAGMENT = `            leadUserId: normalizedP
 		          };
 		        }
 
-	        function applyProjectPermissionSetLocally(projectId, permissionSet) {
+		        function applyProjectPermissionSetLocally(
+		          projectId,
+		          permissionSet,
+		          principalId = PLATFORM_ALL_AGENTS_PRINCIPAL_ID
+		        ) {
 	          const normalizedProjectId = String(projectId || "").trim();
 	          if (!normalizedProjectId) {
 	            return;
 	          }
 	          const normalizedPermissionSet = normalizePlaygroundPermissionSet(permissionSet, "project");
-	          const mergePermissionSet = (project) => normalizePlaygroundProjectRecord({
-	            ...(project && typeof project === "object" ? project : {}),
-	            permissionSet: normalizedPermissionSet,
-	            metadata: {
-	              ...(project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata) ? project.metadata : {}),
-	              permissionSet: normalizedPermissionSet,
-	            },
-	          });
+		          const normalizedPrincipalId = normalizePlatformAccessPrincipalId(principalId);
+		          const mergePermissionSet = (project) => {
+		            const currentMetadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+		              ? project.metadata
+		              : {};
+		            const nextMetadata = buildPlatformSystemPrincipalPermissionMetadata(
+		              currentMetadata,
+		              normalizedPrincipalId,
+		              normalizedPermissionSet,
+		              "project"
+		            );
+		            return normalizePlaygroundProjectRecord({
+		              ...(project && typeof project === "object" ? project : {}),
+		              ...(normalizedPrincipalId === PLATFORM_ALL_AGENTS_PRINCIPAL_ID
+		                ? { permissionSet: normalizedPermissionSet }
+		                : {}),
+		              metadata: nextMetadata,
+		            });
+		          };
 
 	          setProjects((current) => current.map((project) =>
 	            project.id === normalizedProjectId ? mergePermissionSet(project) : project
@@ -64,24 +79,31 @@ export const PROJECTS_ACTIONS_03_FRAGMENT = `            leadUserId: normalizedP
 	          });
 	        }
 
-	        async function persistProjectPermissionSet(nextPermissionSet) {
+		        async function persistProjectPermissionSet(
+		          nextPermissionSet,
+		          principalId = PLATFORM_ALL_AGENTS_PRINCIPAL_ID
+		        ) {
 	          const normalizedProject = normalizePlaygroundProjectRecord(selectedProject);
 	          const normalizedProjectId = String(normalizedProject.id || "").trim();
 	          if (!normalizedProjectId) {
 	            return null;
-	          }
-	          const normalizedPermissionSet = normalizePlaygroundPermissionSet(nextPermissionSet, "project");
-	          const nextProjectRecord = normalizePlaygroundProjectRecord({
-	            ...normalizedProject,
-	            permissionSet: normalizedPermissionSet,
-	            metadata: {
-	              ...(normalizedProject.metadata && typeof normalizedProject.metadata === "object" ? normalizedProject.metadata : {}),
-	              permissionSet: normalizedPermissionSet,
-	            },
-	          });
-	          const savePayload = buildPlaygroundProjectSavePayload(nextProjectRecord, {
-	            permissionSet: normalizedPermissionSet,
-	          });
+		          }
+		          const normalizedPermissionSet = normalizePlaygroundPermissionSet(nextPermissionSet, "project");
+		          const normalizedPrincipalId = normalizePlatformAccessPrincipalId(principalId);
+		          const nextMetadata = buildPlatformSystemPrincipalPermissionMetadata(
+		            normalizedProject.metadata,
+		            normalizedPrincipalId,
+		            normalizedPermissionSet,
+		            "project"
+		          );
+		          const nextProjectRecord = normalizePlaygroundProjectRecord({
+		            ...normalizedProject,
+		            ...(normalizedPrincipalId === PLATFORM_ALL_AGENTS_PRINCIPAL_ID
+		              ? { permissionSet: normalizedPermissionSet }
+		              : {}),
+		            metadata: nextMetadata,
+		          });
+		          const savePayload = buildPlaygroundProjectSavePayload(nextProjectRecord, nextMetadata);
 
 	          const response = await fetch(backendUrl + "/projects/" + encodeURIComponent(normalizedProjectId), {
 	            method: "PATCH",
@@ -108,21 +130,26 @@ export const PROJECTS_ACTIONS_03_FRAGMENT = `            leadUserId: normalizedP
 	          return updatedProject;
 	        }
 
-	        function updateProjectPermissionSet(updater) {
-	          const normalizedProject = normalizePlaygroundProjectRecord(selectedProject);
-	          const normalizedProjectId = String(normalizedProject.id || "").trim();
-	          const currentPermissionSet = normalizePlaygroundPermissionSet(
-	            normalizedProject.permissionSet || normalizedProject.metadata?.permissionSet,
-	            "project"
-	          );
+		        function updateProjectPermissionSet(updater) {
+		          const normalizedProject = normalizePlaygroundProjectRecord(selectedProject);
+		          const normalizedProjectId = String(normalizedProject.id || "").trim();
+		          const principalId = isPlatformSystemAccessPrincipalId(projectOverviewPermissionTeamId)
+		            ? normalizePlatformAccessPrincipalId(projectOverviewPermissionTeamId)
+		            : PLATFORM_ALL_AGENTS_PRINCIPAL_ID;
+		          const currentPermissionSet = getPlatformSystemPrincipalPermissionSet(
+		            normalizedProject.metadata,
+		            principalId,
+		            "project",
+		            normalizedProject.permissionSet || normalizedProject.metadata?.permissionSet
+		          );
 	          const nextPermissionSet = normalizePlaygroundPermissionSet(
 	            typeof updater === "function" ? updater(currentPermissionSet) : updater,
 	            "project"
-	          );
-	          if (normalizedProjectId) {
-	            applyProjectPermissionSetLocally(normalizedProjectId, nextPermissionSet);
-	          }
-	          void persistProjectPermissionSet(nextPermissionSet).catch((error) => {
+		          );
+		          if (normalizedProjectId) {
+		            applyProjectPermissionSetLocally(normalizedProjectId, nextPermissionSet, principalId);
+		          }
+		          void persistProjectPermissionSet(nextPermissionSet, principalId).catch((error) => {
 	            console.warn("Failed to save project permissions", error);
 	            setProjectSaveState({
 	              isSaving: false,
@@ -318,6 +345,15 @@ export const PROJECTS_ACTIONS_03_FRAGMENT = `            leadUserId: normalizedP
 	          );
 	        }
 
+	        function getProjectSystemRolePermissionSet(project, principalId, roleId) {
+	          return getPlatformSystemPrincipalRolePermissionSet(
+	            project?.metadata,
+	            principalId,
+	            roleId,
+	            "project_team_role"
+	          );
+	        }
+
 	        function getProjectRemovedTeamIds(project) {
 	          const metadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
 	            ? project.metadata
@@ -391,7 +427,7 @@ export const PROJECTS_ACTIONS_03_FRAGMENT = `            leadUserId: normalizedP
 	          const normalizedProjectId = String(projectId || "").trim();
 	          const normalizedTeamId = String(teamId || "").trim();
 	          const normalizedAction = action === "add" ? "add" : "remove";
-	          if (!normalizedProjectId || !normalizedTeamId || normalizedTeamId === "all_agents") {
+	          if (!normalizedProjectId || !normalizedTeamId || isPlatformSystemAccessPrincipalId(normalizedTeamId)) {
 	            return;
 	          }
 	          const mergeTeamMembership = (project) => {
@@ -447,7 +483,7 @@ export const PROJECTS_ACTIONS_03_FRAGMENT = `            leadUserId: normalizedP
 	          const normalizedProjectId = String(normalizedProject.id || "").trim();
 	          const normalizedTeamId = String(teamId || "").trim();
 	          const normalizedAction = action === "add" ? "add" : "remove";
-	          if (!normalizedProjectId || !normalizedTeamId || normalizedTeamId === "all_agents") {
+	          if (!normalizedProjectId || !normalizedTeamId || isPlatformSystemAccessPrincipalId(normalizedTeamId)) {
 	            return null;
 	          }
 	          const currentTeamPermissionSets = getProjectTeamPermissionSets(normalizedProject);
@@ -514,7 +550,7 @@ export const PROJECTS_ACTIONS_03_FRAGMENT = `            leadUserId: normalizedP
 	          const normalizedProjectId = String(normalizedProject.id || "").trim();
 	          const normalizedTeamId = String(teamId || "").trim();
 	          const normalizedAction = action === "add" ? "add" : "remove";
-	          if (!hasRealAccess || !normalizedProjectId || !normalizedTeamId || normalizedTeamId === "all_agents") {
+	          if (!hasRealAccess || !normalizedProjectId || !normalizedTeamId || isPlatformSystemAccessPrincipalId(normalizedTeamId)) {
 	            return;
 	          }
 	          const previousTeamPermissionSets = getProjectTeamPermissionSets(normalizedProject);
@@ -713,6 +749,159 @@ export const PROJECTS_ACTIONS_03_FRAGMENT = `            leadUserId: normalizedP
 	                [actionDefinition.id]: nextPolicy,
 	              },
 	            };
+	          });
+	        }
+
+	        function applyProjectSystemRolePermissionSetLocally(projectId, principalId, roleId, permissionSet) {
+	          const normalizedProjectId = String(projectId || "").trim();
+	          const normalizedPrincipalId = normalizePlatformAccessPrincipalId(principalId);
+	          const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
+	          if (
+	            !normalizedProjectId
+	            || !isPlatformRoleScopedSystemAccessPrincipalId(normalizedPrincipalId)
+	            || normalizedRoleId === "owner"
+	          ) {
+	            return;
+	          }
+	          const normalizedPermissionSet = normalizePlaygroundPermissionSet(
+	            permissionSet,
+	            "project_team_role"
+	          );
+	          const mergeSystemRolePermissionSet = (project) => {
+	            const metadata = project?.metadata && typeof project.metadata === "object" && !Array.isArray(project.metadata)
+	              ? project.metadata
+	              : {};
+	            return normalizePlaygroundProjectRecord({
+	              ...(project && typeof project === "object" ? project : {}),
+	              metadata: buildPlatformSystemPrincipalRolePermissionMetadata(
+	                metadata,
+	                normalizedPrincipalId,
+	                normalizedRoleId,
+	                normalizedPermissionSet,
+	                "project_team_role"
+	              ),
+	            });
+	          };
+
+	          setProjects((current) => current.map((project) =>
+	            project.id === normalizedProjectId ? mergeSystemRolePermissionSet(project) : project
+	          ));
+	          setProjectDraft((current) =>
+	            current?.id === normalizedProjectId ? mergeSystemRolePermissionSet(current) : current
+	          );
+	          setSelectedProjectDetail((current) => {
+	            if (current?.project?.id !== normalizedProjectId) {
+	              return current;
+	            }
+	            return {
+	              ...current,
+	              project: mergeSystemRolePermissionSet(current.project),
+	            };
+	          });
+	        }
+
+	        async function persistProjectSystemRolePermissionSet(principalId, roleId, nextPermissionSet) {
+	          const normalizedProject = normalizePlaygroundProjectRecord(selectedProject);
+	          const normalizedProjectId = String(normalizedProject.id || "").trim();
+	          const normalizedPrincipalId = normalizePlatformAccessPrincipalId(principalId);
+	          const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
+	          if (
+	            !normalizedProjectId
+	            || !isPlatformRoleScopedSystemAccessPrincipalId(normalizedPrincipalId)
+	            || normalizedRoleId === "owner"
+	          ) {
+	            return null;
+	          }
+	          const normalizedPermissionSet = normalizePlaygroundPermissionSet(
+	            nextPermissionSet,
+	            "project_team_role"
+	          );
+	          const nextMetadata = buildPlatformSystemPrincipalRolePermissionMetadata(
+	            normalizedProject.metadata,
+	            normalizedPrincipalId,
+	            normalizedRoleId,
+	            normalizedPermissionSet,
+	            "project_team_role"
+	          );
+	          const nextProjectRecord = normalizePlaygroundProjectRecord({
+	            ...normalizedProject,
+	            metadata: nextMetadata,
+	          });
+	          const savePayload = buildPlaygroundProjectSavePayload(
+	            nextProjectRecord,
+	            nextMetadata
+	          );
+
+	          const response = await fetch(backendUrl + "/projects/" + encodeURIComponent(normalizedProjectId), {
+	            method: "PATCH",
+	            headers: {
+	              ...requestHeaders,
+	              "Content-Type": "application/json",
+	            },
+	            body: JSON.stringify(savePayload),
+	          });
+	          const data = await response.json().catch(() => ({}));
+	          if (!response.ok) {
+	            throw new Error(data?.message || data?.error || "Failed to update organization member role permissions.");
+	          }
+	          const updatedProject = getPlaygroundProjectResponseRecord(data, nextProjectRecord);
+	          if (updatedProject?.id) {
+	            commitLocalProjectRecord(updatedProject, {
+	              summary: updatedProject.summary || selectedProjectSummary,
+	              environments: selectedProjectEnvironments,
+	              recentThreads: selectedProjectRecentThreads,
+	              threads: selectedProjectRecentThreads,
+	              selectImmediately: true,
+	            });
+	          }
+	          return updatedProject;
+	        }
+
+	        function updateProjectSystemRolePermissionSet(roleId, updater) {
+	          const normalizedProject = normalizePlaygroundProjectRecord(selectedProject);
+	          const normalizedProjectId = String(normalizedProject.id || "").trim();
+	          const normalizedPrincipalId = normalizePlatformAccessPrincipalId(
+	            projectOverviewPermissionTeamId
+	          );
+	          const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
+	          if (
+	            !normalizedProjectId
+	            || !isPlatformRoleScopedSystemAccessPrincipalId(normalizedPrincipalId)
+	            || normalizedRoleId === "owner"
+	          ) {
+	            return;
+	          }
+	          const currentPermissionSet = getProjectSystemRolePermissionSet(
+	            normalizedProject,
+	            normalizedPrincipalId,
+	            normalizedRoleId
+	          );
+	          const nextPermissionSet = normalizePlaygroundPermissionSet(
+	            typeof updater === "function" ? updater(currentPermissionSet) : updater,
+	            "project_team_role"
+	          );
+	          applyProjectSystemRolePermissionSetLocally(
+	            normalizedProjectId,
+	            normalizedPrincipalId,
+	            normalizedRoleId,
+	            nextPermissionSet
+	          );
+	          void persistProjectSystemRolePermissionSet(
+	            normalizedPrincipalId,
+	            normalizedRoleId,
+	            nextPermissionSet
+	          ).catch((error) => {
+	            console.warn("Failed to save organization member role permissions", error);
+	            applyProjectSystemRolePermissionSetLocally(
+	              normalizedProjectId,
+	              normalizedPrincipalId,
+	              normalizedRoleId,
+	              currentPermissionSet
+	            );
+	            setProjectSaveState({
+	              isSaving: false,
+	              error: error?.message || "Failed to save organization member role permissions.",
+	            });
 	          });
 	        }
 

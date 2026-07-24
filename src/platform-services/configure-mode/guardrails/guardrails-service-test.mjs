@@ -33,9 +33,10 @@ assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.versionActions, /saveAndPu
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.versionViews, /renderGuardrailVersionsSidebar/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.versionViews, /React\.createElement\(PlatformVersionHistorySidebar/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.versionViews, /React\.createElement\(PlatformVersionPublishControl/);
-assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /Manage Guardrail Access/);
-assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /name: "All Agents"/);
-assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /id: "all_agents"/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /React\.createElement\(PlatformResourceAccessTable/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /composePlatformAccessPrincipalRows\(guardrailSharedTeams\)/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /getPlatformSystemAccessPrincipal/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /buildPlatformSystemPrincipalPermissionMetadata/);
 assert.doesNotMatch(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /name: "Default Access"/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /React\.createElement\(PlatformPermissionsPage/);
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.access, /React\.createElement\(PlatformRolePermissionsPage/);

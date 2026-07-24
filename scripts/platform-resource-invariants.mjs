@@ -364,7 +364,24 @@ if (agentAnalyticsSource.includes('className: "playground-project-overview-progr
 if (agentAnalyticsSource.includes("headerActions:") || agentAnalyticsSource.includes("chartContent:")) {
   failures.push("agent detail Insights analytics must use the shared PlatformAnalyticsSection header and chart renderer");
 }
-if (!/const agentInsightsSection = React\.createElement\(React\.Fragment, null,\s*agentUsageChartSection,\s*agentThreadsSection/.test(platformEntrySource)) {
+const agentInsightsSectionStart = platformEntrySource.indexOf(
+  "const agentInsightsSection = React.createElement(React.Fragment, null,"
+);
+const agentInsightsSectionEnd = agentInsightsSectionStart >= 0
+  ? platformEntrySource.indexOf("const agentAccessTeams =", agentInsightsSectionStart)
+  : -1;
+const agentInsightsSectionSource =
+  agentInsightsSectionStart >= 0 && agentInsightsSectionEnd > agentInsightsSectionStart
+    ? platformEntrySource.slice(agentInsightsSectionStart, agentInsightsSectionEnd)
+    : "";
+if (
+  !agentInsightsSectionSource.includes("agentUsageChartSection,")
+  || !agentInsightsSectionSource.includes("resolvedAgentInsightsTableMode")
+  || !agentInsightsSectionSource.includes("agentEvaluationsSection")
+  || !agentInsightsSectionSource.includes("agentThreadsSection")
+  || agentInsightsSectionSource.indexOf("agentUsageChartSection,")
+    > agentInsightsSectionSource.indexOf("resolvedAgentInsightsTableMode")
+) {
   failures.push("agent detail Insights must render the centralized analytics section above the threads table");
 }
 for (const retiredPermissionRenderer of [
@@ -579,6 +596,21 @@ const projectNavSource = projectNavStart >= 0
   : "";
 if (!projectNavSource.includes("React.createElement(PlatformSwitch")) {
   failures.push("the project app header must use PlatformSwitch for overview, backlog, and board");
+}
+if (!projectAppHeaderSource.includes("function openProjectIssueComposerFromHeader()")) {
+  failures.push("the project app header must delegate issue creation to the projects page composer");
+}
+if (!projectAppHeaderSource.includes("const registeredHandler = tasksProjectIssueCreateHandlerRef.current;")) {
+  failures.push("the project app header must invoke the registered projects page issue composer");
+}
+if (!projectNavSource.includes("openProjectIssueComposerFromHeader();")) {
+  failures.push("the project app header New Issue button must use the canonical issue composer bridge");
+}
+if (projectNavSource.includes("openTopNavIssueComposer();")) {
+  failures.push("the project app header must not invoke the retired shell issue composer");
+}
+if (projectAppHeaderSource.includes("renderTopNavIssueComposerDialog(),")) {
+  failures.push("the shell render tree must not mount the retired shell issue composer");
 }
 
 const packageJson = JSON.parse(await fs.readFile(path.join(packageRoot, "package.json"), "utf8"));

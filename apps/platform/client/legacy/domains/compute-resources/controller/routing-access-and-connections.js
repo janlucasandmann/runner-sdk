@@ -770,15 +770,33 @@
             const currentDatabase = normalizePlaygroundDatabaseRecord(
               draftDatabase || selectedDatabaseSnapshot || buildPlaygroundDefaultDatabaseDraft()
             );
-            const currentPermissionSet = normalizePlaygroundPermissionSet(currentDatabase.permissionSet, "database");
+            const principalId = isPlatformSystemAccessPrincipalId(databasePermissionTeamId)
+              ? normalizePlatformAccessPrincipalId(databasePermissionTeamId)
+              : PLATFORM_ALL_AGENTS_PRINCIPAL_ID;
+            const currentPermissionSet = getPlatformSystemPrincipalPermissionSet(
+              currentDatabase.metadata,
+              principalId,
+              "database",
+              currentDatabase.permissionSet
+            );
             const nextPermissionSet = normalizePlaygroundPermissionSet(
               typeof updater === "function" ? updater(currentPermissionSet) : updater,
               "database"
             );
-            const nextDatabase = {
-              ...currentDatabase,
-              permissionSet: nextPermissionSet,
-            };
+            const nextDatabase = principalId === PLATFORM_ALL_AGENTS_PRINCIPAL_ID
+              ? {
+                  ...currentDatabase,
+                  permissionSet: nextPermissionSet,
+                }
+              : {
+                  ...currentDatabase,
+                  metadata: buildPlatformSystemPrincipalPermissionMetadata(
+                    currentDatabase.metadata,
+                    principalId,
+                    nextPermissionSet,
+                    "database"
+                  ),
+                };
             updateDraftDatabase(nextDatabase);
             queueDatabasePermissionSave(nextDatabase);
           }
@@ -1524,9 +1542,6 @@
   
           function openServerComposer(serverKind = "") {
             void commitDraftServerIfDirty();
-            if (!hasLoadedDatabases && !databaseListLoading) {
-              void loadDatabases();
-            }
             resetServerEditorAuxiliaryState();
             setToolbarPopover("");
             setSearchPopupQuery("");
@@ -1567,11 +1582,8 @@
             if (!resource?.id) {
               return;
             }
-  
+
             void commitDraftServerIfDirty();
-            if (!hasLoadedDatabases && !databaseListLoading) {
-              void loadDatabases();
-            }
             resetServerEditorAuxiliaryState();
             setToolbarPopover("");
             setSearchPopupQuery("");
@@ -1617,9 +1629,6 @@
             void commitDraftServerIfDirty();
             if (!serverAgentOptionsLoading && serverAgentOptions.length === 0) {
               void loadServerAgentOptions();
-            }
-            if (!hasLoadedDatabases && !databaseListLoading) {
-              void loadDatabases();
             }
             resetServerEditorAuxiliaryState();
             setToolbarPopover("");
@@ -1924,15 +1933,31 @@
           function updateServerPermissionSet(updater) {
             if (isSelectedServerTemplatePreview) return;
             const currentServer = normalizePlaygroundServerRecord(draftServer || selectedServerSnapshot || buildPlaygroundDefaultServerDraft());
-            const currentPermissionSet = getServerPermissionSet(currentServer);
             const subjectType = getServerPermissionSubjectType(currentServer);
+            const principalId = isPlatformSystemAccessPrincipalId(serverPermissionTeamId)
+              ? normalizePlatformAccessPrincipalId(serverPermissionTeamId)
+              : PLATFORM_ALL_AGENTS_PRINCIPAL_ID;
+            const currentMetadata = getServerAccessMetadataRecord(currentServer);
+            const currentPermissionSet = getPlatformSystemPrincipalPermissionSet(
+              currentMetadata,
+              principalId,
+              subjectType,
+              getServerPermissionSet(currentServer)
+            );
             const nextPermissionSet = normalizePlaygroundPermissionSet(
               typeof updater === "function" ? updater(currentPermissionSet) : updater,
               subjectType
             );
             const nextServer = normalizePlaygroundServerRecord({
               ...currentServer,
-              metadata: { ...getServerAccessMetadataRecord(currentServer), permissionSet: nextPermissionSet },
+              metadata: principalId === PLATFORM_ALL_AGENTS_PRINCIPAL_ID
+                ? { ...currentMetadata, permissionSet: nextPermissionSet }
+                : buildPlatformSystemPrincipalPermissionMetadata(
+                    currentMetadata,
+                    principalId,
+                    nextPermissionSet,
+                    subjectType
+                  ),
             });
             updateDraftServer(nextServer);
             queueServerPermissionSave(nextServer);
@@ -2210,7 +2235,7 @@
   
           async function handleRemoveServerTeamsAccess(teams) {
             const requestedTeams = (Array.isArray(teams) ? teams : [teams])
-              .filter((team) => team?.id && String(team.id) !== "all-agents");
+              .filter((team) => team?.id && !isPlatformSystemAccessPrincipalId(team.id));
             if (!requestedTeams.length) return;
             const currentServer = normalizePlaygroundServerRecord(draftServer);
             let nextServer = currentServer;

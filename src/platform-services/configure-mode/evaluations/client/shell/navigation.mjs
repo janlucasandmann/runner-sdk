@@ -46,4 +46,20 @@ export const EVALUATIONS_APP_NAVIGATION_SCRIPT = `        function openEvaluatio
           openEvaluationsPage({ mode: "overview" });
         }
 
+        function openEvaluationDetailPage(evaluationId) {
+          const normalizedEvaluationId = String(evaluationId || "").trim();
+          if (!normalizedEvaluationId) {
+            openEvaluationsOverviewPage();
+            return;
+          }
+          setSelectedEvaluationRunId("");
+          setSelectedEvaluationCaseId("");
+          setEvaluationRunReturnTarget(null);
+          setEvaluationDetailTab("general");
+          openEvaluationsPage({
+            mode: "detail",
+            evaluationId: normalizedEvaluationId,
+          });
+        }
+
 `;

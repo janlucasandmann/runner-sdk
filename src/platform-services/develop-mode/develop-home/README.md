@@ -4,13 +4,15 @@
 
 ## Purpose
 
-Owns the Develop mode landing surface, navigation projection,
-operational-metrics loader, responsive page styling, and the browser renderer
-used by the platform host.
+Owns the Develop mode landing composition, navigation projection,
+resource-level operational-metrics loader, responsive service styling, and the
+browser renderer used by the platform host. The landing surface composes the
+centralized `PlatformHomePage` instead of maintaining a parallel overview,
+analytics, or table implementation.
 
-The host supplies shared transport, chart, resource, settings, and shell
-primitives. This package retains ordered browser-script fragments while the
-single platform document migrates toward typed page composition.
+The host supplies shared transport, resource, settings, and shell primitives.
+This package retains ordered browser-script fragments while the single
+platform document migrates toward typed page composition.
 
 ## Working in this directory
 

@@ -14,6 +14,7 @@ This directory contains interaction controllers and effect orchestration for the
 - [`dialogs.mjs`](dialogs.mjs) — Focused implementation of Dialogs.
 - [`editors.mjs`](editors.mjs) — Focused implementation of Editors.
 - [`index.mjs`](index.mjs) — Public barrel or composition entry point.
+- [`run-history.mjs`](run-history.mjs) — Per-evaluation run-history hydration and stale-response protection.
 - [`setup.mjs`](setup.mjs) — Initialization for this layer.
 - [`tables.mjs`](tables.mjs) — Focused implementation of Tables.
 - [`thread-cases.mjs`](thread-cases.mjs) — Focused implementation of Thread Cases.

@@ -12,13 +12,14 @@
         import Chart from "chart.js/auto";
         import { addEdge, Background, BaseEdge, Controls, EdgeLabelRenderer, getSimpleBezierPath, Handle, MarkerType, NodeResizer, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from "@xyflow/react";
         import { browserLocalPersistence, getApps, getAuth, GoogleAuthProvider, initializeApp, onIdTokenChanged, setPersistence, signInWithEmailAndPassword, signInWithPopup, signOutFirebaseAuth } from "/api/platform/auth/browser-module.js";
-        import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheckBig, CircleHelp, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, KeyRound, LassoSelect, Layers, LayoutDashboard, LayoutGrid, LibraryBig, Lightbulb, Link2, List, ListFilter, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Underline, Undo2, Unlink, User, UserRound, Users, UsersRound, Wand2, Webhook, X, Zap } from "lucide-react";
+        import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheck, CircleCheckBig, CircleDashed, CircleEllipsis, CircleHelp, CircleMinus, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flag, Flame, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, KeyRound, LassoSelect, Layers, LayoutDashboard, LayoutGrid, LibraryBig, Lightbulb, Link2, List, ListFilter, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plus, ReceiptText, Redo2, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, Search, Server, Settings, Settings2, Shield, Slash, SlidersHorizontal, Sparkles, Split, Square, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Underline, Undo2, Unlink, User, UserRound, Users, UsersRound, Vault, Wand2, Webhook, X, Zap } from "lucide-react";
 	      import { RunnerClient } from "/dist/index.js";
 	      import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileDiffSurface, RunnerImagePreviewSurface } from "/dist/react/index.js";
 	      import { PlatformAnalyticsSection } from "/dist/platform-ui/components/composite/analytics/index.js";
         import { PlatformAttachmentActionMenu, PlatformAttachments } from "/dist/platform-ui/components/composite/attachments/index.js";
         import { PlatformFileExplorerBrowserModal, PlatformFileExplorerModal } from "/dist/platform-ui/components/composite/file-explorer/index.js";
         import { PlatformSubtasks } from "/dist/platform-ui/components/composite/subtasks/index.js";
+        import { PlatformActivityTimeline } from "/dist/platform-ui/components/composite/activity-timeline/index.js";
         import { PlatformCodeEditorWorkspace } from "/dist/platform-ui/components/composite/code-editor-workspace/index.js";
   	      import { PlatformCodePreviewBox } from "/dist/platform-ui/components/composite/code-preview-box/index.js";
   	      import { PlatformDataTable } from "/dist/platform-ui/components/composite/data-table/index.js";
@@ -26,22 +27,26 @@
         import { PlatformDiffViewer } from "/dist/platform-ui/components/composite/diff-viewer/index.js";
   	      import { PlatformEmptyState } from "/dist/platform-ui/components/composite/empty-state/index.js";
         import { PlatformVersionHistorySidebar, PlatformVersionLabel, PlatformVersionPublishControl, PlatformVersionSaveDialog, formatPlatformVersionLabel, normalizePlatformVersionNumber } from "/dist/platform-ui/components/composite/versioning/index.js";
-  	      import { PlatformInstructionsEditor } from "/dist/platform-ui/components/composite/instructions-editor/index.js";
+        import { PlatformInstructionsEditor, normalizePlatformInstructionsEditorImageSource, replacePlatformInstructionsEditorImageMarkdown, serializePlatformInstructionsEditorFileMarkdown, serializePlatformInstructionsEditorImageMarkdown } from "/dist/platform-ui/components/composite/instructions-editor/index.js";
   	      import { PlatformLoadingState } from "/dist/platform-ui/components/composite/loading-state/index.js";
         import { PlatformSettingsSection, PlatformSettingsSectionList } from "/dist/platform-ui/components/composite/settings-section/index.js";
         import { PlatformUiCard } from "/dist/platform-ui/components/composite/ui-card/index.js";
   	      import { PlatformButton, PlatformPrimaryButton, PlatformSecondaryButton } from "/dist/platform-ui/components/ui/button/index.js";
+        import { PlatformIconButton } from "/dist/platform-ui/components/ui/icon-button/index.js";
   	      import { PlatformLabel } from "/dist/platform-ui/components/ui/label/index.js";
   	      import { PlatformSearch } from "/dist/platform-ui/components/ui/search/index.js";
   	      import { PlatformButtonSelector, PlatformSelector } from "/dist/platform-ui/components/ui/selector/index.js";
-  	      import { PlatformPopup, PlatformPopupDismissLayer, PlatformPopupSurface } from "/dist/platform-ui/components/composite/popup/index.js";
+        import { PlatformPopup, PlatformPopupDismissLayer, PlatformPopupSearchHeader, PlatformPopupSurface } from "/dist/platform-ui/components/composite/popup/index.js";
+        import { PLATFORM_PROFILE_IMAGE_PRESET_OPTIONS, PlatformProfileImagePicker, getPlatformProfileImageInitials } from "/dist/platform-ui/components/composite/profile-image-picker/index.js";
   	      import { PlatformModal, PlatformModalBackdrop, PlatformModalBody, PlatformModalFooter, PlatformModalHeader, PlatformModalSurface, PlatformUnsavedChangesModal } from "/dist/platform-ui/components/composite/modal/index.js";
         import { PlatformGlobalSearchModal } from "/dist/platform-shell/app-header/global-search-modal/index.js";
-  	      import { PlatformSwitch } from "/dist/platform-ui/components/ui/switch/index.js";
-  	      import { PlatformCalendarWidget, PlatformProjectWidget, PlatformProjectWidgetEmpty, PlatformProjectWidgetEmptyState, PlatformProjectWidgetTask, PlatformProjectWidgetTaskList, PlatformUsageWidget } from "/dist/platform-ui/components/composite/widgets/index.js";
+	      import { PlatformSwitch } from "/dist/platform-ui/components/ui/switch/index.js";
+        import { PlatformTicketItem } from "/dist/platform-ui/components/ui/ticket-item/index.js";
+	      import { PlatformCalendarWidget, PlatformProjectWidget, PlatformProjectWidgetEmpty, PlatformProjectWidgetEmptyState, PlatformProjectWidgetTask, PlatformProjectWidgetTaskList, PlatformUsageWidget } from "/dist/platform-ui/components/composite/widgets/index.js";
   	      import {
   	        PlatformPermissionMiniRingIcon,
   	        PlatformPermissionsPage,
+          PlatformPermissionsSettingsSummary,
   	        PlatformRolePermissionsPage,
   	        PLATFORM_PERMISSION_ACCESS_OPTIONS as PLAYGROUND_PERMISSION_ACCESS_OPTIONS,
   	        PLATFORM_PERMISSION_ACTION_DEFINITIONS as PLAYGROUND_PERMISSION_ACTION_DEFINITIONS,
@@ -65,9 +70,11 @@
   	        normalizePlatformPermissionSet as normalizePlaygroundPermissionSet,
   	      } from "/dist/platform-ui/pages/permissions/index.js";
   	      import { PlatformApplicationBoundary } from "/dist/platform-runtime/platform-application-boundary.js";
-        import { AgentPermissionMeters, AgentPermissionRingIcons, AgentPublishControl, AgentsOverviewAnalyticsRequestError, ComputersOverviewAnalyticsRequestError, buildPlatformAgentListScopeKey as buildPlaygroundAgentListScopeKey, createAgentsOverviewAnalytics, createComputersOverviewAnalytics, deleteComputerResource, fetchAgentsOverviewAnalytics, fetchComputersOverviewAnalytics, getAgentPermissionSummary, invalidateAgentsOverviewAnalytics, invalidateComputersOverviewAnalytics, normalizeComputerOverviewRows, normalizePlatformAgentListRecords, readCachedAgentsOverviewAnalytics, readCachedComputersOverviewAnalytics, readCachedPlatformAgentList as readCachedPlaygroundAgentList, saveComputerResource, writeCachedPlatformAgentList as writeCachedPlaygroundAgentList } from "/dist/platform-shell/presentation/platform-resource-api.js";
+        import { AgentPermissionRingIcons, AgentPublishControl, AgentsOverviewAnalyticsRequestError, ComputersOverviewAnalyticsRequestError, buildPlatformAgentListScopeKey as buildPlaygroundAgentListScopeKey, createAgentsOverviewAnalytics, createComputersOverviewAnalytics, deleteComputerResource, fetchAgentsOverviewAnalytics, fetchComputersOverviewAnalytics, getAgentPermissionSummary, invalidateAgentsOverviewAnalytics, invalidateComputersOverviewAnalytics, normalizeComputerOverviewRows, normalizePlatformAgentListRecords, readCachedAgentsOverviewAnalytics, readCachedComputersOverviewAnalytics, readCachedPlatformAgentList as readCachedPlaygroundAgentList, saveComputerResource, writeCachedPlatformAgentList as writeCachedPlaygroundAgentList } from "/dist/platform-shell/presentation/platform-resource-api.js";
 	      import { ApiKeysOverviewAnalyticsRequestError, createApiKeysOverviewAnalytics, createDevelopResourceOverviewRows, createDevelopVoiceAgentOverviewRows, deleteDevelopResource, fetchApiKeysOverviewAnalytics, getDevelopResourceCreatorIdentity, getDevelopResourceOwnerIdentity, initializeDevelopResourceIdentityMetadata, invalidateApiKeysOverviewAnalytics, readCachedApiKeysOverviewAnalytics, saveDevelopResource } from "/dist/platform-shell/presentation/platform-develop-api.js";
-        import { AgentDetailPage, AgentPermissionsPage, AgentsOverviewPage, ComputerDetailPage, ComputersOverviewPage, ConfigureHomeOverviewPage, DevelopApiKeysOverviewPage, DevelopHomeOverviewPage, DevelopResourceOverviewRoute, DevelopSecurityWorkspacePage, DevelopServerDetailPage, DevelopVoiceAgentsOverviewPage, DevelopWebhooksOverviewPage, EvaluationDetailPage, EvaluationsOverviewPage, FineTuningDetailPage, FineTuningOverviewPage, GuardrailDetailPage, GuardrailsOverviewPage, InferenceEndpointDetailPage, InferenceOverviewPage, MarketplaceOverviewPage, MetronomesOverviewPage, ModelsFeaturedSection, ModelsOverviewPage, NotificationsOverviewPage, OrganizationsOverviewPage, ProjectDetailPage, SkillsOverviewPage, TagDetailPage, TagsOverviewPage, TeamsOverviewPage, TicketDetailPage } from "/dist/platform-shell/presentation/platform-pages.js";
+        import { AgentDetailPage, AgentPermissionsPage, AgentsOverviewPage, ComputerDetailPage, ComputersOverviewPage, ConfigureHomeOverviewPage, DevelopApiKeysOverviewPage, DevelopHomeOverviewPage, DevelopResourceOverviewRoute, DevelopSecurityWorkspacePage, DevelopServerDetailPage, DevelopVoiceAgentsOverviewPage, DevelopWebhooksOverviewPage, EvaluationDetailPage, EvaluationsOverviewPage, FineTuningDetailPage, FineTuningOverviewPage, GuardrailDetailPage, GuardrailsOverviewPage, InferenceEndpointDetailPage, InferenceOverviewPage, MarketplaceOverviewPage, MetronomesOverviewPage, ModelsFeaturedSection, ModelsOverviewPage, NotificationsOverviewPage, OrganizationsOverviewPage, ProjectDetailPage, SkillsOverviewPage, TagDetailPage, TagsOverviewPage, TeamDetailPage, TeamsOverviewPage, TicketDetailPage } from "/dist/platform-shell/presentation/platform-pages.js";
+	      import { beginPlatformPluginConnection, clearPlatformPluginConnectionRedirectState, disconnectPlatformPluginConnection, fetchPlatformPluginConnectionStatus, getPlatformPluginConnectionDefinition, getPlatformPluginConnectionIdentity, readCachedPlatformPluginConnectionStatus, readPlatformPluginConnectionRedirectState, writeCachedPlatformPluginConnectionStatus, writePlatformPluginConnectionRedirectState } from "/dist/platform-resources/plugins/connections/index.js";
+	      import { PLATFORM_ALL_AGENTS_PRINCIPAL_ID, PLATFORM_ALL_ORGANIZATION_MEMBERS_PRINCIPAL_ID, PlatformResourceAccessSettings, PlatformResourceAccessTable, buildPlatformSystemPrincipalPermissionMetadata, buildPlatformSystemPrincipalRolePermissionMetadata, buildPlatformTeamAccessMetadata, buildPlatformTeamRolePermissionMetadata, composePlatformAccessPrincipalRows, createPlatformSystemAccessPrincipalRows, getPlatformAccessPrincipalProfileImageUrl, getPlatformSharedTeamIds, getPlatformSystemAccessPrincipal, getPlatformSystemPrincipalPermissionSet, getPlatformSystemPrincipalRolePermissionSet, getPlatformTeamPermissionSet, getPlatformTeamRolePermissionSet, getPlatformTeamRolePermissionSets, isPlatformRoleScopedSystemAccessPrincipalId, isPlatformSystemAccessPrincipalId, normalizePlatformAccessPrincipalId } from "/dist/platform-resources/access-control/index.js";
   	      import { openGoogleDrivePicker } from "/dist/platform-integrations/google-drive/google-drive-picker.js";
   
   	      function getPlaygroundSafeIconComponent(Icon, fallbackIcon = Circle) {
@@ -803,24 +810,19 @@
         }
   
         const STATUS_INDICATOR_PENDING_STORAGE_KEY = "runner_demo_pending_status_indicators_v1";
-        const INTEGRATION_STATUS_STORAGE_KEY = "runner_demo_integration_status_v1";
         const HISTORY_MONACO_THEME_NAME = "runner-history-diff";
         const RUNNER_TRANSPARENT_LOGO_URL = "https://computer-agents.com/img/logos/runnertransparent.png";
         const COMPUTER_AGENTS_CREATOR_PROFILE_URL = "/img/agent-profile-pics/ca-profilepic.jpg";
-        const PLAYGROUND_GITHUB_LOGO_URL = "https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg";
+        const PLAYGROUND_GITHUB_LOGO_URL = getPlatformPluginConnectionDefinition("github").logoUrl;
         const PLAYGROUND_GITLAB_LOGO_URL = "https://upload.wikimedia.org/wikipedia/commons/e/e1/GitLab_logo.svg";
-        const PLAYGROUND_GOOGLE_DRIVE_LOGO_URL = "https://upload.wikimedia.org/wikipedia/commons/1/12/Google_Drive_icon_%282020%29.svg";
-        const PLAYGROUND_ONEDRIVE_LOGO_URL = "https://upload.wikimedia.org/wikipedia/commons/5/59/Microsoft_Office_OneDrive_%282019%E2%80%932025%29.svg";
-        const PLAYGROUND_NOTION_LOGO_URL = "https://upload.wikimedia.org/wikipedia/commons/e/e9/Notion-logo.svg";
-        const PLAYGROUND_GMAIL_LOGO_URL = "https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg";
-        const PLAYGROUND_ONBOARDING_QUERY_PARAM = "showOnboarding";
-        const PLAYGROUND_ONBOARDING_STEP_QUERY_PARAM = "onboardingStep";
+        const PLAYGROUND_GOOGLE_DRIVE_LOGO_URL = getPlatformPluginConnectionDefinition("google-drive").logoUrl;
+        const PLAYGROUND_ONEDRIVE_LOGO_URL = getPlatformPluginConnectionDefinition("one-drive").logoUrl;
+        const PLAYGROUND_NOTION_LOGO_URL = getPlatformPluginConnectionDefinition("notion").logoUrl;
+        const PLAYGROUND_GMAIL_LOGO_URL = getPlatformPluginConnectionDefinition("gmail").logoUrl;
         const PLAYGROUND_SUBSCRIPTION_SUCCESS_QUERY_PARAM = "showSubscriptionSuccess";
         const PLAYGROUND_INITIAL_PROMPT_QUERY_PARAM = "initialPrompt";
-        const PLAYGROUND_ONBOARDING_STATE_KEY = "runner_demo_playground_onboarding_v1";
         const PLAYGROUND_AUTH_REDIRECT_STATE_KEY = "runner_demo_auth_redirect_v1";
         const PLAYGROUND_AUTH_SESSION_MARKER_KEY = "runner_demo_auth_session_marker_v1";
-        const PLAYGROUND_INTEGRATION_REDIRECT_STATE_KEY = "runner_demo_integration_redirect_v1";
         const PLAYGROUND_CONNECTOR_BROWSER_RESTORE_STATE_KEY = "runner_demo_connector_browser_restore_v1";
         const PLAYGROUND_PROJECT_COMPOSER_CONNECTOR_RESTORE_STATE_KEY = "runner_demo_project_composer_connector_restore_v1";
   __PLATFORM_COMPATIBILITY_BINDING_064__      const PLAYGROUND_CONNECTOR_BROWSER_RESTORE_QUERY_PARAMS = [
@@ -1058,42 +1060,12 @@
   __PLATFORM_COMPATIBILITY_BINDING_083__
   __PLATFORM_COMPATIBILITY_BINDING_084__
   __PLATFORM_COMPATIBILITY_BINDING_085__
-        function readCachedIntegrationStatuses() {
-          try {
-            const raw = localStorage.getItem(INTEGRATION_STATUS_STORAGE_KEY);
-            const parsed = raw ? JSON.parse(raw) : {};
-            return parsed && typeof parsed === "object" ? parsed : {};
-          } catch {
-            return {};
-          }
-        }
-  
         function readCachedIntegrationStatus(id) {
-          const cachedStatuses = readCachedIntegrationStatuses();
-          const cachedStatus = cachedStatuses[id];
-          if (!cachedStatus || typeof cachedStatus !== "object") {
-            return { connected: false };
-          }
-  
-          return {
-            connected: Boolean(cachedStatus.connected),
-            profile: cachedStatus.profile && typeof cachedStatus.profile === "object" ? cachedStatus.profile : undefined,
-          };
+          return readCachedPlatformPluginConnectionStatus(id);
         }
   
         function writeCachedIntegrationStatus(id, status) {
-          try {
-            const cachedStatuses = readCachedIntegrationStatuses();
-            if (status?.connected) {
-              cachedStatuses[id] = {
-                connected: true,
-                profile: status.profile && typeof status.profile === "object" ? status.profile : undefined,
-              };
-            } else {
-              delete cachedStatuses[id];
-            }
-            localStorage.setItem(INTEGRATION_STATUS_STORAGE_KEY, JSON.stringify(cachedStatuses));
-          } catch {}
+          writeCachedPlatformPluginConnectionStatus(id, status);
         }
   
   __PLATFORM_COMPATIBILITY_BINDING_086__
@@ -1116,28 +1088,6 @@
             .join(String.fromCharCode(10))
             .trim()
             .slice(0, 5000);
-        }
-  
-        function readPlaygroundOnboardingState() {
-          try {
-            const raw = sessionStorage.getItem(PLAYGROUND_ONBOARDING_STATE_KEY);
-            const parsed = raw ? JSON.parse(raw) : null;
-            return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : null;
-          } catch {
-            return null;
-          }
-        }
-  
-        function writePlaygroundOnboardingState(value) {
-          try {
-            sessionStorage.setItem(PLAYGROUND_ONBOARDING_STATE_KEY, JSON.stringify(value || {}));
-          } catch {}
-        }
-  
-        function clearPlaygroundOnboardingState() {
-          try {
-            sessionStorage.removeItem(PLAYGROUND_ONBOARDING_STATE_KEY);
-          } catch {}
         }
   
         function readPlaygroundAuthRedirectState() {
@@ -1185,25 +1135,15 @@
         }
   
         function readPlaygroundIntegrationRedirectState() {
-          try {
-            const raw = sessionStorage.getItem(PLAYGROUND_INTEGRATION_REDIRECT_STATE_KEY);
-            const parsed = raw ? JSON.parse(raw) : null;
-            return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : null;
-          } catch {
-            return null;
-          }
+          return readPlatformPluginConnectionRedirectState();
         }
   
         function writePlaygroundIntegrationRedirectState(value) {
-          try {
-            sessionStorage.setItem(PLAYGROUND_INTEGRATION_REDIRECT_STATE_KEY, JSON.stringify(value || {}));
-          } catch {}
+          writePlatformPluginConnectionRedirectState(value);
         }
   
         function clearPlaygroundIntegrationRedirectState() {
-          try {
-            sessionStorage.removeItem(PLAYGROUND_INTEGRATION_REDIRECT_STATE_KEY);
-          } catch {}
+          clearPlatformPluginConnectionRedirectState();
         }
   
         function normalizePlaygroundConnectorBrowserRestoreState(value) {
@@ -4146,17 +4086,7 @@
   
         const PLAYGROUND_AGENT_TEAM_EXECUTION_MODE = "claude_subagents_v1";
         const PLAYGROUND_AGENT_EMAIL_DOMAIN = "agent.computer-agents.com";
-        const PLAYGROUND_AGENT_PROFILE_PRESET_OPTIONS = [
-          { id: "spark", label: "Spark", url: PLAYGROUND_SPARK_AGENT_PROFILE_URL },
-          { id: "forge", label: "Forge", url: PLAYGROUND_FORGE_AGENT_PROFILE_URL },
-          { id: "foundry", label: "Foundry", url: PLAYGROUND_FOUNDRY_AGENT_PROFILE_URL },
-          { id: "assistantastro", label: "Assistant Astro", url: "/img/agent-profile-pics/assistantastro-1.webp" },
-          { id: "devastro", label: "Developer Astro", url: "/img/agent-profile-pics/devastro.webp" },
-          { id: "researchastro", label: "Research Astro", url: "/img/agent-profile-pics/researchastro.webp" },
-          { id: "blueastro", label: "Blue Astro", url: "/img/agent-profile-pics/blueastro.webp" },
-          { id: "orangeastro", label: "Orange Astro", url: "/img/agent-profile-pics/orangeastro.webp" },
-          { id: "suitastro", label: "Suit Astro", url: "/img/agent-profile-pics/suitastro.webp" },
-        ];
+        const PLAYGROUND_AGENT_PROFILE_PRESET_OPTIONS = PLATFORM_PROFILE_IMAGE_PRESET_OPTIONS;
         const PLAYGROUND_AGENTS_SHELL_BACKGROUND = "#000000";
         const PLAYGROUND_AGENT_SKILL_OPTIONS = [
           {
@@ -9490,8 +9420,8 @@
         function formatHistoryResourceStatusLabel(value) {
           const normalized = String(value || "").trim().toLowerCase();
           if (!normalized) return "";
-          if (normalized === "todo") return "To do";
-          if (normalized === "in_progress") return "In progress";
+          if (normalized === "todo") return "Todo";
+          if (normalized === "in_progress") return "In Progress";
           if (normalized === "done") return "Done";
           return normalized
             .split(/[_\s-]+/)

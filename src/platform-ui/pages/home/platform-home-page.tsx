@@ -5,6 +5,8 @@ import { PlatformUiCard } from "../../components/composite/ui-card/index.js";
 import type {
   PlatformHomeAction,
   PlatformHomeFeatureCard,
+  PlatformHomeFeatureGridProps,
+  PlatformHomeFeatureLink,
   PlatformHomeIconTone,
   PlatformHomeLink,
   PlatformHomePageProps,
@@ -31,7 +33,25 @@ function renderIcon(icon: PlatformHomeAction["icon"], size: number): ReactNode {
   });
 }
 
-function PlatformHomeFeatureLink({ link }: { link: PlatformHomeLink }) {
+function PlatformHomeFeatureLinkRow({ link }: { link: PlatformHomeFeatureLink }) {
+  const content = (
+    <>
+      <span className="platform-ui-card__feature-link-label">{link.label}</span>
+      <span className="platform-ui-card__feature-link-end">
+        {link.meta ? (
+          <span className="platform-ui-card__feature-link-meta">{link.meta}</span>
+        ) : null}
+        {link.onClick ? (
+          <ArrowRight width={14} height={14} strokeWidth={1.8} aria-hidden="true" />
+        ) : null}
+      </span>
+    </>
+  );
+
+  if (!link.onClick) {
+    return <div className="platform-ui-card__feature-link is-static">{content}</div>;
+  }
+
   return (
     <button
       type="button"
@@ -39,13 +59,7 @@ function PlatformHomeFeatureLink({ link }: { link: PlatformHomeLink }) {
       aria-label={link.ariaLabel || link.label}
       onClick={link.onClick}
     >
-      <span className="platform-ui-card__feature-link-label">{link.label}</span>
-      <span className="platform-ui-card__feature-link-end">
-        {link.meta ? (
-          <span className="platform-ui-card__feature-link-meta">{link.meta}</span>
-        ) : null}
-        <ArrowRight width={14} height={14} strokeWidth={1.8} aria-hidden="true" />
-      </span>
+      {content}
     </button>
   );
 }
@@ -54,11 +68,7 @@ function PlatformHomeFeature({ card }: { card: PlatformHomeFeatureCard }) {
   const iconTone: PlatformHomeIconTone = card.iconTone || "blue";
 
   return (
-    <PlatformUiCard
-      as="article"
-      variant="feature"
-      className="platform-home-page__feature-card"
-    >
+    <PlatformUiCard as="article" variant="feature" className="platform-home-page__feature-card">
       <span className={`platform-ui-card__feature-icon is-${iconTone}`} aria-hidden="true">
         {renderIcon(card.icon, 34)}
       </span>
@@ -66,10 +76,27 @@ function PlatformHomeFeature({ card }: { card: PlatformHomeFeatureCard }) {
       <p className="platform-ui-card__feature-description">{card.description}</p>
       <div className="platform-ui-card__feature-links">
         {card.links.map((link) => (
-          <PlatformHomeFeatureLink key={link.id} link={link} />
+          <PlatformHomeFeatureLinkRow key={link.id} link={link} />
         ))}
       </div>
     </PlatformUiCard>
+  );
+}
+
+export function PlatformHomeFeatureGrid({
+  cards,
+  ariaLabel = "Featured areas",
+  className = "",
+}: PlatformHomeFeatureGridProps) {
+  return (
+    <section
+      className={joinClassNames("platform-home-page__features", className)}
+      aria-label={ariaLabel}
+    >
+      {cards.map((card) => (
+        <PlatformHomeFeature key={card.id} card={card} />
+      ))}
+    </section>
   );
 }
 
@@ -147,17 +174,9 @@ export function PlatformHomePage({
       data-platform-home-page="true"
     >
       <div className="platform-home-page__inner">
-        <PlatformPageHero
-          title={title}
-          description={description}
-          actions={headerActions}
-        />
+        <PlatformPageHero title={title} description={description} actions={headerActions} />
 
-        <section className="platform-home-page__features" aria-label="Featured areas">
-          {featureCards.map((card) => (
-            <PlatformHomeFeature key={card.id} card={card} />
-          ))}
-        </section>
+        <PlatformHomeFeatureGrid cards={featureCards} />
 
         <div className="platform-home-page__sections">
           {sections.map((section) => (

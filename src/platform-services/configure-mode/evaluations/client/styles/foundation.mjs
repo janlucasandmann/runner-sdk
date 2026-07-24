@@ -35,6 +35,21 @@ export const EVALUATIONS_STYLE_FOUNDATION = String.raw`
         gap: 8px;
       }
 
+      .playground-evaluations-breadcrumb-actions,
+      .playground-evaluations-breadcrumb-actions-root,
+      .playground-evaluations-breadcrumb-action-menu {
+        display: inline-flex;
+        align-items: center;
+      }
+
+      .playground-evaluations-breadcrumb-actions {
+        gap: 4px;
+      }
+
+      .playground-evaluations-breadcrumb-action-popup {
+        width: min(280px, calc(100vw - 32px));
+      }
+
       .playground-evaluations-version-changes-page {
         padding-top: 24px;
       }
@@ -169,112 +184,6 @@ export const EVALUATIONS_STYLE_FOUNDATION = String.raw`
         text-align: left;
       }
 
-      .playground-evaluations-cases-table {
-        width: 100%;
-        max-width: 100%;
-        min-width: 0;
-        overflow: visible !important;
-      }
-
-      .playground-evaluations-cases-table-inner {
-        width: 100%;
-        min-width: 100%;
-        display: flex;
-        flex-direction: column;
-        overflow: visible !important;
-      }
-
-      .playground-evaluations-cases-header,
-      .playground-evaluations-cases-row {
-        display: grid;
-        grid-template-columns: minmax(0, 1.16fr) minmax(0, 1.16fr) minmax(70px, 0.36fr) minmax(86px, 0.46fr) 28px;
-        gap: 12px;
-        width: 100%;
-        min-width: 100%;
-        align-items: center;
-        box-sizing: border-box;
-      }
-
-      .playground-evaluations-cases-header {
-        min-height: 34px;
-        padding: 0 0 8px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        color: rgba(255, 255, 255, 0.45);
-        font-size: 11px;
-        line-height: 1.4;
-        font-weight: 500;
-        letter-spacing: 0.02em;
-      }
-
-      .playground-evaluations-cases-row {
-        min-height: 50px;
-        padding: 10px 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-        cursor: pointer;
-        overflow: visible !important;
-      }
-
-      .playground-evaluations-cases-section,
-      .playground-evaluations-cases-section.playground-plugins-section,
-      .playground-evaluations-cases-section.playground-project-overview-panel-plain,
-      .playground-evaluations-cases-section .playground-project-overview-thread-list {
-        overflow: visible !important;
-      }
-
-      .playground-evaluations-cases-row:has(.playground-tasks-toolbar-popup-menu) {
-        position: relative;
-        z-index: 180;
-      }
-
-      .playground-evaluations-cases-row:hover {
-        background: rgba(255, 255, 255, 0.02);
-      }
-
-      .playground-evaluations-cases-row:focus-visible {
-        outline: 1px solid rgba(255, 255, 255, 0.16);
-        outline-offset: 0;
-      }
-
-      .playground-evaluations-cases-header-cell,
-      .playground-evaluations-cases-cell {
-        font-size: 12px;
-        line-height: 1.35;
-        min-width: 0;
-        white-space: nowrap;
-      }
-
-      .playground-evaluations-cases-cell {
-        color: rgba(255, 255, 255, 0.9);
-      }
-
-      .playground-evaluations-cases-cell.is-thread,
-      .playground-evaluations-cases-cell.is-evaluator {
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .playground-evaluations-cases-cell.is-actions {
-        position: relative;
-        z-index: 20;
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-      }
-
-      .playground-evaluations-cases-cell.is-actions .playground-tasks-toolbar-popup-shell {
-        position: relative;
-        z-index: 30;
-      }
-
-      .playground-evaluations-cases-cell.is-actions .playground-tasks-toolbar-popup-menu {
-        top: auto;
-        bottom: calc(100% + 6px);
-        right: 0;
-        left: auto;
-        z-index: 1200;
-      }
-
-      .playground-evaluations-cases-cell.is-score,
       .playground-evaluations-case-score {
         color: rgba(255, 255, 255, 0.92);
         font-weight: 400;
@@ -379,4 +288,3 @@ export const EVALUATIONS_STYLE_FOUNDATION = String.raw`
         color: rgba(255, 255, 255, 0.94);
         font-size: 14px;
 `;
-

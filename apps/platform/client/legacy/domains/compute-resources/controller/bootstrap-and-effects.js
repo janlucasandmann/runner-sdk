@@ -8,6 +8,8 @@
           navigationResourceToken = 0,
           navigationTargetResourceType = "",
           navigationTargetResourceId = "",
+          serverCreationRequestToken = 0,
+          serverCreationRequestKind = "",
           onEnvironmentMutated,
           onRequestSidebarCollapse,
           apiKey = "",
@@ -110,6 +112,7 @@
           const environmentVersionsLoadedRef = useRef(new Set());
           const environmentVersionsDrawerContainerRef = useRef(null);
           const environmentDetailsCollapsedBeforeVersionsRef = useRef(null);
+          const environmentDetailsCollapsedBeforeAccessRef = useRef(null);
           const environmentShareTeamModalCloseTimerRef = useRef(null);
           const environmentShareTeamModalFrameRef = useRef(null);
           const environmentApiModalCloseTimerRef = useRef(null);
@@ -138,6 +141,9 @@
           const serverPermissionSaveTimerRef = useRef(null);
           const serverPermissionSaveQueuedRef = useRef(null);
           const serverPermissionSaveInFlightRef = useRef(false);
+          const environmentPermissionSaveTimerRef = useRef(null);
+          const environmentPermissionSaveQueuedRef = useRef(null);
+          const environmentPermissionSaveInFlightRef = useRef(false);
           const databaseListRequestRef = useRef({
             promise: null,
             requestId: 0,
@@ -151,6 +157,9 @@
           });
           const authoritativeServerListScopesRef = useRef(new Set());
           const serverDetailsRequestRef = useRef(new Map());
+          const serverDetailBootstrapRequestRef = useRef(new Map());
+          const serverAgentOptionsRequestRef = useRef(null);
+          const voiceAgentsRequestRef = useRef(null);
           const authoritativeServerDetailIdsRef = useRef(new Set());
           const authoritativeServerBindingIdsRef = useRef(new Set());
           const databaseListScopeKeyRef = useRef(databaseListScopeKey);
@@ -171,6 +180,11 @@
             token: navigationResourceToken,
             targetType: String(navigationTargetResourceType || "").trim(),
             targetId: String(navigationTargetResourceId || "").trim(),
+            handled: false,
+          });
+          const serverCreationRequestRef = useRef({
+            token: serverCreationRequestToken,
+            kind: String(serverCreationRequestKind || "").trim(),
             handled: false,
           });
           const selectedServerIdRef = useRef("");
@@ -349,6 +363,16 @@
           }, [onDevelopServerOperationalMetricsPeriodChange]);
           const [environmentDetailChartTimescale, setEnvironmentDetailChartTimescale] = useState("day");
           const [environmentDetailTab, setEnvironmentDetailTab] = useState("general");
+          const [environmentPermissionChartAnimationKey, setEnvironmentPermissionChartAnimationKey] = useState(0);
+          const [environmentPermissionPrincipalId, setEnvironmentPermissionPrincipalId] = useState("");
+          const [environmentPermissionRoleId, setEnvironmentPermissionRoleId] = useState("member");
+          const [selectedEnvironmentAccessTeamIds, setSelectedEnvironmentAccessTeamIds] = useState(() => new Set());
+          const [environmentAccessTeamMenuOpen, setEnvironmentAccessTeamMenuOpen] = useState(false);
+          const [environmentTeamAccessState, setEnvironmentTeamAccessState] = useState({
+            teamId: "",
+            action: "",
+            error: "",
+          });
           const [serverDetailChartTimescale, setServerDetailChartTimescale] = useState("day");
   	        const [serverPermissionChartAnimationKey, setServerPermissionChartAnimationKey] = useState(0);
   	        const [serverPermissionTeamId, setServerPermissionTeamId] = useState("");
@@ -1264,13 +1288,12 @@
   
           function getEnvironmentSharedTeamIds(environmentRecord) {
             const metadata = getEnvironmentMetadataRecord(environmentRecord);
-            const source = Array.isArray(metadata.sharedTeamIds)
-              ? metadata.sharedTeamIds
-              : Array.isArray(metadata.teamAccessIds)
-                ? metadata.teamAccessIds
-                : Array.isArray(environmentRecord?.sharedTeamIds)
-                  ? environmentRecord.sharedTeamIds
-                  : [];
+            const metadataTeamIds = getPlatformSharedTeamIds(metadata);
+            const source = metadataTeamIds.length > 0
+              ? metadataTeamIds
+              : Array.isArray(environmentRecord?.sharedTeamIds)
+                ? environmentRecord.sharedTeamIds
+                : [];
             return Array.from(new Set(
               source.map((teamId) => String(teamId || "").trim()).filter(Boolean)
             ));
@@ -1703,6 +1726,9 @@
           useEffect(() => {
             authoritativeServerListScopesRef.current.clear();
             serverDetailsRequestRef.current.clear();
+            serverDetailBootstrapRequestRef.current.clear();
+            serverAgentOptionsRequestRef.current = null;
+            voiceAgentsRequestRef.current = null;
             authoritativeServerDetailIdsRef.current.clear();
             authoritativeServerBindingIdsRef.current.clear();
             setLoadingServerId("");
@@ -1768,6 +1794,15 @@
           function resetEditorAuxiliaryState() {
             editorDirtyRef.current = false;
             environmentVersionDraftTouchedRef.current = false;
+            if (environmentDetailsCollapsedBeforeAccessRef.current !== null) {
+              setEnvironmentDetailsCollapsed(Boolean(environmentDetailsCollapsedBeforeAccessRef.current));
+              environmentDetailsCollapsedBeforeAccessRef.current = null;
+            }
+            if (environmentPermissionSaveTimerRef.current) {
+              window.clearTimeout(environmentPermissionSaveTimerRef.current);
+              environmentPermissionSaveTimerRef.current = null;
+            }
+            environmentPermissionSaveQueuedRef.current = null;
             setEnvironmentRuntimePopover("");
             setEnvironmentActionsPopoverOpen(false);
             setEnvironmentPublishMenuOpen(false);
@@ -1790,6 +1825,11 @@
             });
             setModifiedSecrets({});
             setModifiedMcpTokens({});
+            setEnvironmentPermissionPrincipalId("");
+            setEnvironmentPermissionRoleId("member");
+            setSelectedEnvironmentAccessTeamIds(new Set());
+            setEnvironmentAccessTeamMenuOpen(false);
+            setEnvironmentTeamAccessState({ teamId: "", action: "", error: "" });
             setSaveState({
               isSaving: false,
               error: "",
@@ -2379,10 +2419,18 @@
           function updateDraftEnvironment(updater) {
             setDraftEnvironment((current) => {
               const base = current || normalizePlaygroundEnvironmentRecord(selectedEnvironmentSnapshot || buildPlaygroundDefaultEnvironmentDraft());
-              return typeof updater === "function" ? updater(base) : updater;
+              const next = typeof updater === "function" ? updater(base) : updater;
+              if (
+                next === base
+                || stringifyPlaygroundVersionComparableValue(next)
+                  === stringifyPlaygroundVersionComparableValue(base)
+              ) {
+                return current || next;
+              }
+              editorDirtyRef.current = true;
+              environmentVersionDraftTouchedRef.current = true;
+              return next;
             });
-            editorDirtyRef.current = true;
-            environmentVersionDraftTouchedRef.current = true;
             setSaveState((current) => ({
               ...current,
               error: "",
@@ -2612,7 +2660,10 @@
                         currentSelectedVersion?.id || ""
                       )
                     : normalized;
-                  rememberEnvironmentVersionBaseline(nextEnvironment);
+                  if (editorDirtyRef.current) {
+                    return current;
+                  }
+                  rememberEnvironmentVersionBaseline(nextEnvironment, { force: true });
                   return nextEnvironment;
                 });
               }
@@ -2889,34 +2940,47 @@
           }, [backendUrl, requestHeaders]);
   
           const loadServerAgentOptions = useCallback(async (options = {}) => {
+            if (serverAgentOptionsRequestRef.current && !options?.force) {
+              return serverAgentOptionsRequestRef.current;
+            }
             if (serverAgentOptionsLoading && !options?.force) {
               return serverAgentOptions;
             }
-  
-            setServerAgentOptionsLoading(true);
-            try {
-              const response = await fetch(backendUrl + "/agents?limit=200", {
-                method: "GET",
-                headers: requestHeaders,
-              });
-              const data = await response.json().catch(() => ({}));
-              if (!response.ok) {
-                throw new Error(data?.message || data?.error || "Failed to load agents.");
+
+            const request = (async () => {
+              setServerAgentOptionsLoading(true);
+              try {
+                const response = await fetch(backendUrl + "/agents?limit=200", {
+                  method: "GET",
+                  headers: requestHeaders,
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                  throw new Error(data?.message || data?.error || "Failed to load agents.");
+                }
+                const items = Array.isArray(data?.data)
+                  ? data.data
+                  : Array.isArray(data?.agents)
+                    ? data.agents
+                    : [];
+                const nextAgents = items
+                  .map((agent) => normalizePlaygroundAgentRecord(agent))
+                  .filter((agent) => agent?.id);
+                setServerAgentOptions(nextAgents);
+                return nextAgents;
+              } catch {
+                return [];
+              } finally {
+                setServerAgentOptionsLoading(false);
               }
-              const items = Array.isArray(data?.data)
-                ? data.data
-                : Array.isArray(data?.agents)
-                  ? data.agents
-                  : [];
-              const nextAgents = items
-                .map((agent) => normalizePlaygroundAgentRecord(agent))
-                .filter((agent) => agent?.id);
-              setServerAgentOptions(nextAgents);
-              return nextAgents;
-            } catch {
-              return [];
+            })();
+            serverAgentOptionsRequestRef.current = request;
+            try {
+              return await request;
             } finally {
-              setServerAgentOptionsLoading(false);
+              if (serverAgentOptionsRequestRef.current === request) {
+                serverAgentOptionsRequestRef.current = null;
+              }
             }
           }, [backendUrl, requestHeaders, serverAgentOptions, serverAgentOptionsLoading]);
   
@@ -2984,6 +3048,9 @@
           }
   
           const loadVoiceAgents = useCallback(async (options = {}) => {
+            if (voiceAgentsRequestRef.current && !options?.force) {
+              return voiceAgentsRequestRef.current;
+            }
             if (voiceAgentsLoading && !options?.force) {
               return [];
             }
@@ -2991,51 +3058,61 @@
               return [];
             }
   
-            setVoiceAgentsLoading(true);
-            setVoiceAgentsState((current) => ({
-              ...current,
-              error: "",
-            }));
-            try {
-              const response = await fetch(buildPlaygroundVoiceAgentsUrl(backendUrl), {
-                method: "GET",
-                headers: requestHeaders,
-              });
-              const data = await response.json().catch(() => ({}));
-              if (!response.ok) {
-                throw new Error(data?.message || data?.error || "Failed to load voice agents.");
-              }
-              const items = Array.isArray(data?.voiceAgents)
-                ? data.voiceAgents
-                : Array.isArray(data?.data)
-                  ? data.data
-                  : Array.isArray(data?.items)
-                    ? data.items
-                    : [];
-              const nextRecordsById = {};
-              const nextDraftsById = {};
-              const nextRecords = items
-                .map((item) => normalizePlaygroundVoiceAgentRecord(item))
-                .filter((record) => record?.agent?.id);
-              nextRecords.forEach((record) => {
-                const agentId = String(record.agent.id || "").trim();
-                if (!agentId) return;
-                nextRecordsById[agentId] = record;
-                nextDraftsById[agentId] = buildPlaygroundVoiceAgentDraft(record);
-              });
-              setVoiceAgentRecordsById(nextRecordsById);
-              setVoiceAgentDraftsById(nextDraftsById);
-              setHasLoadedVoiceAgents(true);
-              return nextRecords;
-            } catch (error) {
+            const request = (async () => {
+              setVoiceAgentsLoading(true);
               setVoiceAgentsState((current) => ({
                 ...current,
-                error: error instanceof Error ? error.message : "Failed to load voice agents.",
+                error: "",
               }));
-              setHasLoadedVoiceAgents(true);
-              return [];
+              try {
+                const response = await fetch(buildPlaygroundVoiceAgentsUrl(backendUrl), {
+                  method: "GET",
+                  headers: requestHeaders,
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                  throw new Error(data?.message || data?.error || "Failed to load voice agents.");
+                }
+                const items = Array.isArray(data?.voiceAgents)
+                  ? data.voiceAgents
+                  : Array.isArray(data?.data)
+                    ? data.data
+                    : Array.isArray(data?.items)
+                      ? data.items
+                      : [];
+                const nextRecordsById = {};
+                const nextDraftsById = {};
+                const nextRecords = items
+                  .map((item) => normalizePlaygroundVoiceAgentRecord(item))
+                  .filter((record) => record?.agent?.id);
+                nextRecords.forEach((record) => {
+                  const agentId = String(record.agent.id || "").trim();
+                  if (!agentId) return;
+                  nextRecordsById[agentId] = record;
+                  nextDraftsById[agentId] = buildPlaygroundVoiceAgentDraft(record);
+                });
+                setVoiceAgentRecordsById(nextRecordsById);
+                setVoiceAgentDraftsById(nextDraftsById);
+                setHasLoadedVoiceAgents(true);
+                return nextRecords;
+              } catch (error) {
+                setVoiceAgentsState((current) => ({
+                  ...current,
+                  error: error instanceof Error ? error.message : "Failed to load voice agents.",
+                }));
+                setHasLoadedVoiceAgents(true);
+                return [];
+              } finally {
+                setVoiceAgentsLoading(false);
+              }
+            })();
+            voiceAgentsRequestRef.current = request;
+            try {
+              return await request;
             } finally {
-              setVoiceAgentsLoading(false);
+              if (voiceAgentsRequestRef.current === request) {
+                voiceAgentsRequestRef.current = null;
+              }
             }
           }, [backendUrl, hasLoadedVoiceAgents, requestHeaders, voiceAgentsLoading]);
   

@@ -208,82 +208,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_EDITORS_SCRIPT = String.raw`        fun
           return "case:" + String(source.setId || "") + ":" + String(baseId || "case") + ":" + String(field || "");
         }
 
-        function updateEvaluationCaseEditorMarkdownValue(editorKey, field, value, options = {}) {
-          const normalizedField = String(field || "");
-          if (!normalizedField) return;
-          const nextValue = String(value ?? "");
-          const previousValue = String(evaluationCaseEditorState?.draft?.[normalizedField] ?? "");
-          if (previousValue === nextValue) return;
-          if (options.recordHistory !== false) {
-            setEvaluationCaseEditorMarkdownHistoryByKey((current) => {
-              const currentHistory = current[editorKey] || { past: [], future: [] };
-              return {
-                ...current,
-                [editorKey]: {
-                  past: [...(Array.isArray(currentHistory.past) ? currentHistory.past : []), previousValue].slice(-80),
-                  future: [],
-                },
-              };
-            });
-          }
-          updateEvaluationCaseEditorDraft({ [normalizedField]: nextValue });
-        }
-
-        function focusEvaluationCaseEditorTextarea(editorKey, value) {
-          if (typeof window === "undefined") return;
-          window.requestAnimationFrame(() => {
-            const textarea = evaluationCaseEditorTextareaRefs.current[editorKey];
-            if (!textarea) return;
-            const nextCaret = String(value || "").length;
-            textarea.focus();
-            textarea.setSelectionRange(nextCaret, nextCaret);
-            resizeEvaluationGuidanceTextarea(textarea);
-          });
-        }
-
-        function applyEvaluationCaseEditorMarkdownSelection(editorKey, field, nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
-          updateEvaluationCaseEditorMarkdownValue(editorKey, field, nextValue);
-          if (typeof window === "undefined") return;
-          window.requestAnimationFrame(() => {
-            const textarea = evaluationCaseEditorTextareaRefs.current[editorKey];
-            if (!textarea) return;
-            const maxLength = String(nextValue || "").length;
-            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
-            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
-            textarea.focus();
-            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
-            resizeEvaluationGuidanceTextarea(textarea);
-          });
-        }
-
-        function handleEvaluationCaseEditorMarkdownFormat(editorKey, field, formatType) {
-          const textarea = evaluationCaseEditorTextareaRefs.current[editorKey];
-          const value = String(evaluationCaseEditorState?.draft?.[field] ?? "");
-          if (!textarea) return;
-          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
-          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
-          let edit = null;
-          if (formatType === "bold") {
-            edit = buildEvaluationMarkdownWrappedEdit(value, selectionStart, selectionEnd, "**");
-          } else if (formatType === "italic") {
-            edit = buildEvaluationMarkdownWrappedEdit(value, selectionStart, selectionEnd, "*");
-          } else if (formatType === "underline") {
-            edit = buildEvaluationMarkdownWrappedEdit(value, selectionStart, selectionEnd, "++");
-          } else if (formatType === "list") {
-            edit = buildEvaluationMarkdownListEdit(value, selectionStart, selectionEnd, "unordered");
-          } else if (formatType === "ordered-list") {
-            edit = buildEvaluationMarkdownListEdit(value, selectionStart, selectionEnd, "ordered");
-          } else if (formatType === "code") {
-            edit = buildEvaluationMarkdownWrappedEdit(value, selectionStart, selectionEnd, String.fromCharCode(96));
-          } else if (formatType === "link") {
-            edit = buildEvaluationMarkdownLinkEdit(value, selectionStart, selectionEnd);
-          }
-          if (!edit) return;
-          applyEvaluationCaseEditorMarkdownSelection(editorKey, field, edit.value, edit.selectionStart, edit.selectionEnd);
-        }
-
         function updateEvaluationRunCase(setId, runId, caseId, patch) {
-          evaluationVersionDraftTouchedRef.current = true;
           setEvaluationSets((current) => (Array.isArray(current) ? current : []).map((item) => {
             const normalized = normalizePlaygroundEvaluationSet(item);
             if (normalized.id !== setId) return normalized;
@@ -315,7 +240,6 @@ export const EVALUATIONS_PAGE_CONTROLLER_EDITORS_SCRIPT = String.raw`        fun
             return normalizePlaygroundEvaluationSet({
               ...normalized,
               runs,
-              updatedAt: new Date().toISOString(),
             });
           }));
         }
@@ -363,7 +287,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_EDITORS_SCRIPT = String.raw`        fun
           });
         }
 
-        function upsertEvaluationRun(setId, run, setPatch = {}) {
+        function upsertEvaluationRun(setId, run) {
           const normalizedIncomingRun = normalizePlaygroundEvaluationRun(run);
           const normalizedRun = normalizePlaygroundEvaluationRun({
             ...normalizedIncomingRun,
@@ -376,7 +300,6 @@ export const EVALUATIONS_PAGE_CONTROLLER_EDITORS_SCRIPT = String.raw`        fun
             targetAgentVersionRevisionId: normalizedIncomingRun.targetAgentVersionRevisionId,
           });
           if (!normalizedRun.id) return;
-          evaluationVersionDraftTouchedRef.current = true;
           setEvaluationSets((current) => (Array.isArray(current) ? current : []).map((item) => {
             const normalized = normalizePlaygroundEvaluationSet(item);
             if (normalized.id !== setId) return normalized;
@@ -396,9 +319,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_EDITORS_SCRIPT = String.raw`        fun
               : normalizedRun;
             const nextSet = normalizePlaygroundEvaluationSet({
               ...normalized,
-              ...setPatch,
               runs: [nextRun, ...normalized.runs.filter((itemRun) => itemRun.id !== normalizedRun.id)],
-              updatedAt: new Date().toISOString(),
             });
             const versions = readSelectedEvaluationVersions(nextSet);
             const activeVersion = getSelectedEvaluationActiveVersion(nextSet);
@@ -412,8 +333,6 @@ export const EVALUATIONS_PAGE_CONTROLLER_EDITORS_SCRIPT = String.raw`        fun
               const nextVersionRuns = [nextRun, ...versionRuns.filter((itemRun) => itemRun.id !== nextRun.id)];
               return normalizePlaygroundEvaluationVersion({
                 ...version,
-                updatedAt: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
                 runs: nextVersionRuns,
                 runCount: nextVersionRuns.length,
                 snapshot: {
@@ -433,7 +352,6 @@ export const EVALUATIONS_PAGE_CONTROLLER_EDITORS_SCRIPT = String.raw`        fun
           if (!normalizedSetId || !normalizedRunId || typeof setEvaluationSets !== "function") {
             return;
           }
-          evaluationVersionDraftTouchedRef.current = true;
           const errorMessage = error?.message || String(error || "Failed to load evaluation run.");
           let runToAnnounce = null;
           setEvaluationSets((current) => (Array.isArray(current) ? current : []).map((item) => {
@@ -476,7 +394,6 @@ export const EVALUATIONS_PAGE_CONTROLLER_EDITORS_SCRIPT = String.raw`        fun
             return normalizePlaygroundEvaluationSet({
               ...normalizedSet,
               runs: [nextRun, ...normalizedSet.runs.filter((run) => run.id !== normalizedRunId)],
-              updatedAt: new Date().toISOString(),
             });
           }));
           if (runToAnnounce) {
@@ -536,4 +453,3 @@ export const EVALUATIONS_PAGE_CONTROLLER_EDITORS_SCRIPT = String.raw`        fun
         }
 
 `;
-

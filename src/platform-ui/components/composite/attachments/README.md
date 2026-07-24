@@ -9,6 +9,10 @@ pages. It owns the shared card surface, upload actions, hidden file input,
 drag-and-drop behavior, empty state, add-file row, attachment list, and shared
 rename/delete controls.
 
+`PlatformAttachmentListItem` is the reusable row primitive. Inline resource
+editors should compose this row instead of recreating attachment name, metadata,
+hover action, rename, or remove behavior.
+
 Callers provide normalized rows and domain callbacks. Preview retrieval,
 authorization headers, persistence, and resource-specific upload targets remain
 outside this component.

@@ -6,6 +6,9 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           environments = [],
           evaluationSets = [],
           setEvaluationSets,
+          workspaceTeams = [],
+          workspaceTeamsLoading = false,
+          onWorkspaceTeamsRequest,
           fineTuningJobs = [],
           setFineTuningJobs,
           selectedFineTuningJobId = "",
@@ -38,6 +41,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         const fineTuningRuntimeHydrationRef = useRef(new Set());
         const fineTuningThreadNotificationRef = useRef(new Set());
         const fineTuningJobListLoadRef = useRef("");
+        const fineTuningPersistTimersRef = useRef(new Map());
         const [modalVisible, setModalVisible] = useState(false);
         const [modalClosing, setModalClosing] = useState(false);
         const [createError, setCreateError] = useState("");
@@ -45,6 +49,12 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         const [fineTuningJobsLoading, setFineTuningJobsLoading] = useState(false);
         const [fineTuningDetailTab, setFineTuningDetailTab] = useState("general");
         const [fineTuningDetailSidebarCollapsed, setFineTuningDetailSidebarCollapsed] = useState(false);
+        const [fineTuningAccessTeamId, setFineTuningAccessTeamId] = useState("");
+        const [fineTuningAccessRoleId, setFineTuningAccessRoleId] = useState("member");
+        const [fineTuningAccessMenuOpen, setFineTuningAccessMenuOpen] = useState(false);
+        const [fineTuningAccessActionId, setFineTuningAccessActionId] = useState("");
+        const [fineTuningOwnerSelectorOpen, setFineTuningOwnerSelectorOpen] = useState(false);
+        const [fineTuningOwnerCandidatesByJobId, setFineTuningOwnerCandidatesByJobId] = useState({});
         const [fineTuningStopJobId, setFineTuningStopJobId] = useState("");
         const [evaluationSetPickerOpen, setEvaluationSetPickerOpen] = useState(false);
         const [isFineTuningInstructionsEditing, setIsFineTuningInstructionsEditing] = useState(false);
@@ -185,6 +195,13 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
           avatarUrl: currentUserAvatarUrl || "",
         }), [currentUserId, currentUserName, currentUserEmail, currentUserAvatarUrl]);
         const selectedJob = scoredJobs.find((job) => job.id === selectedFineTuningJobId) || scoredJobs[0] || null;
+
+        useEffect(() => {
+          setFineTuningAccessTeamId("");
+          setFineTuningAccessRoleId("member");
+          setFineTuningAccessMenuOpen(false);
+          setFineTuningOwnerSelectorOpen(false);
+        }, [selectedJob?.id]);
 
         function isDefaultFineTuningTargetAgent(agent) {
           const metadata = agent?.metadata && typeof agent.metadata === "object" && !Array.isArray(agent.metadata) ? agent.metadata : {};
@@ -420,6 +437,8 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
               id: normalizePlaygroundFineTuningString(setId || "evaluation_" + (index + 1)),
               name: "Evaluation " + (index + 1),
             })),
+            description: normalizePlaygroundFineTuningString(metadata.description),
+            instructions: String(metadata.instructions || ""),
             threadId: normalizePlaygroundFineTuningString(metadata.threadId || metadata.thread_id || metadata.fineTuningThreadId || metadata.fine_tuning_thread_id),
             threadTitle: normalizePlaygroundFineTuningString(metadata.threadTitle || metadata.thread_title || "Fine-Tuning Thread"),
             beforeScore: normalizePlaygroundFineTuningScore(metadata.beforeScore ?? metadata.before_score ?? 0),
@@ -486,6 +505,10 @@ export const FINE_TUNING_PAGE_CONTROLLER_SETUP_SCRIPT = String.raw`      functio
         useEffect(() => () => {
           if (modalFrameRef.current && typeof window !== "undefined") window.cancelAnimationFrame(modalFrameRef.current);
           if (modalCloseTimerRef.current && typeof window !== "undefined") window.clearTimeout(modalCloseTimerRef.current);
+          if (typeof window !== "undefined") {
+            fineTuningPersistTimersRef.current.forEach((timerId) => window.clearTimeout(timerId));
+            fineTuningPersistTimersRef.current.clear();
+          }
         }, []);
 
         useEffect(() => {

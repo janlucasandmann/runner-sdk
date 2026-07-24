@@ -1110,7 +1110,7 @@ export const PROJECTS_ACTIONS_04_FRAGMENT = `          updateMissionControlStrat
 
         function openProjectSubtaskIssueComposer(parentTaskId) {
           const normalizedParentTaskId = normalizePlaygroundParentTaskId(parentTaskId);
-          if (!normalizedParentTaskId || !selectedProjectId) {
+          if (!normalizedParentTaskId || (!selectedProjectId && !selectedProject?.id)) {
             return false;
           }
           const parentTask = tasks.find((task) => task?.id === normalizedParentTaskId);

@@ -31,6 +31,61 @@ export const TEAMS_MEMBER_IDENTITY_SCRIPT = `        function getTeamPageApiErro
           };
         }
 
+        function getTeamPageProfileImageUrl(team) {
+          const source = team && typeof team === "object" && !Array.isArray(team) ? team : {};
+          const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
+            ? source.metadata
+            : {};
+          const profile = metadata.profile && typeof metadata.profile === "object" && !Array.isArray(metadata.profile)
+            ? metadata.profile
+            : {};
+          const rawUrl = String(
+            source.profileImageUrl
+            || source.profile_image_url
+            || source.avatarUrl
+            || source.avatar_url
+            || profile.photoURL
+            || profile.photoUrl
+            || profile.imageUrl
+            || metadata.profileImageUrl
+            || metadata.profile_image_url
+            || metadata.avatarUrl
+            || metadata.avatar_url
+            || ""
+          ).trim();
+          const normalizedUrl = normalizeSessionPhotoUrl(rawUrl);
+          return canRenderAvatarImage(normalizedUrl) ? normalizedUrl : "";
+        }
+
+        function buildTeamPageMetadataWithProfileImage(team, profileImageUrl) {
+          const source = team && typeof team === "object" && !Array.isArray(team) ? team : {};
+          const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
+            ? { ...source.metadata }
+            : {};
+          const profile = metadata.profile && typeof metadata.profile === "object" && !Array.isArray(metadata.profile)
+            ? { ...metadata.profile }
+            : {};
+          const normalizedUrl = String(profileImageUrl || "").trim();
+          if (normalizedUrl) {
+            profile.photoURL = normalizedUrl;
+            delete profile.photoUrl;
+            metadata.profile = profile;
+            metadata.profileImageUrl = normalizedUrl;
+            delete metadata.profile_image_url;
+          } else {
+            delete profile.photoURL;
+            delete profile.photoUrl;
+            delete profile.imageUrl;
+            if (Object.keys(profile).length > 0) metadata.profile = profile;
+            else delete metadata.profile;
+            delete metadata.profileImageUrl;
+            delete metadata.profile_image_url;
+            delete metadata.avatarUrl;
+            delete metadata.avatar_url;
+          }
+          return metadata;
+        }
+
         function getTeamPageIdentitySources(record) {
           const source = record && typeof record === "object" && !Array.isArray(record) ? record : {};
           const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata) ? source.metadata : {};
@@ -339,4 +394,3 @@ export const TEAMS_MEMBER_IDENTITY_SCRIPT = `        function getTeamPageApiErro
           return null;
         }
 `;
-

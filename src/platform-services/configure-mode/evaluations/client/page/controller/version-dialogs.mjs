@@ -6,77 +6,136 @@ export const EVALUATIONS_PAGE_CONTROLLER_VERSION_DIALOGS_SCRIPT = String.raw`   
           const draft = buildEvaluationCaseEditorDraft(state.draft || {}, Number(state.index || 0));
           const runCountValue = String(state.draft?.runCount ?? draft.runCount ?? "1");
           const isNew = state.isNew === true;
-          return React.createElement(PlatformModalBackdrop, {
-              className: "playground-tasks-project-modal-backdrop playground-tasks-project-issue-backdrop playground-project-overview-outcome-editor-backdrop playground-evaluations-case-editor-backdrop"
-                + (evaluationCaseEditorVisible ? " is-visible" : "")
-                + (evaluationCaseEditorClosing ? " is-closing" : ""),
-              role: "dialog",
-              "aria-modal": "true",
-              onClick: closeEvaluationCaseEditor,
-            },
-            React.createElement(PlatformModalSurface, {
+          const focusedEditor = evaluationCaseFocusedEditor;
+          if (focusedEditor?.field) {
+            return React.createElement(PlatformModal, {
+                open: evaluationCaseEditorVisible && !evaluationCaseEditorClosing,
+                visible: evaluationCaseEditorVisible,
+                closing: evaluationCaseEditorClosing,
+                animationDurationMs: 75,
+                portal: true,
                 as: "form",
-                className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal playground-mission-control-modal playground-project-overview-outcome-editor-modal playground-evaluations-case-editor-modal"
-                  + (evaluationCaseEditorVisible ? " is-visible" : "")
-                  + (evaluationCaseEditorClosing ? " is-closing" : ""),
-                onClick: (event) => event.stopPropagation(),
-                onSubmit: saveEvaluationCaseEditor,
-              },
-              React.createElement("div", { className: "playground-tasks-project-modal-top" },
-                React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
-                  React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
-                    React.createElement(FilePlus2, { width: 18, height: 18, strokeWidth: 1.8 })
+                size: "large",
+                maxHeight: "min(760px, calc(100vh - 48px))",
+                scrollable: true,
+                title: React.createElement(React.Fragment, null,
+                  React.createElement("button", {
+                      type: "button",
+                      className: "playground-files-header-icon-button is-plain playground-evaluations-case-focused-back-button",
+                      title: "Back to case editor",
+                      "aria-label": "Back to case editor",
+                      onClick: returnFromEvaluationCaseFocusedEditor,
+                    },
+                    React.createElement(ArrowLeft, { width: 16, height: 16, strokeWidth: 1.8, "aria-hidden": "true" })
                   ),
-	                  React.createElement("div", {
-	                    className: "playground-content-title playground-tasks-project-modal-name-input",
-	                    style: { display: "flex", alignItems: "center" },
-	                  }, isNew ? "New Case" : "Edit Case")
-	                ),
-	                React.createElement("div", { className: "playground-evaluations-case-editor-top-actions" },
-	                  React.createElement("label", { className: "playground-evaluations-case-editor-run-field" },
-	                    React.createElement("span", { className: "playground-tasks-project-modal-label" }, "Runs per Evaluation"),
-	                    React.createElement("input", {
-	                      type: "number",
-	                      min: "1",
-	                      max: "50",
-	                      step: "1",
-	                      className: "playground-environments-input playground-evaluations-case-editor-run-input",
-	                      value: runCountValue,
-	                      onChange: (event) => updateEvaluationCaseEditorDraft({ runCount: event.target.value }),
-	                    })
-	                  ),
-	                  React.createElement("button", {
-	                    type: "button",
-	                    className: "playground-settings-icon-button playground-tasks-project-modal-close",
-	                    onClick: closeEvaluationCaseEditor,
-	                    title: "Close",
-	                    "aria-label": "Close case editor",
-	                  }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-	                )
-	              ),
-	              React.createElement("div", { className: "playground-project-overview-outcome-editor-body playground-evaluations-case-editor-body" },
-	                renderEvaluationCaseEditorMarkdownSection("input", "Input", "Input sent to the agent"),
-	                renderEvaluationCaseEditorMarkdownSection("expectedOutput", "Expected Output", "Reference output or expected behavior"),
-	                renderEvaluationCaseEditorMarkdownSection("evaluationGuidance", "Evaluator Guidance", "Optional scoring guidance for this case"),
-	                React.createElement("div", { className: "playground-tasks-project-modal-actions" },
-                  React.createElement("button", {
+                  React.createElement("span", null, focusedEditor.title)
+                ),
+                headerClassName: "playground-evaluations-case-focused-editor-header",
+                titleClassName: "playground-evaluations-case-focused-editor-title",
+                onClose: closeEvaluationCaseFocusedEditor,
+                closeButtonLabel: "Return to case editor",
+                ariaLabel: "Edit evaluation case " + focusedEditor.title,
+                className: "playground-evaluations-case-editor-modal is-focused-editor",
+                backdropClassName: "playground-evaluations-case-editor-backdrop",
+                bodyClassName: "playground-evaluations-case-editor-body playground-evaluations-case-focused-editor-body",
+                footerClassName: "playground-evaluations-case-editor-footer",
+                surfaceProps: { onSubmit: saveEvaluationCaseFocusedEditor },
+                footer: React.createElement(React.Fragment, null,
+                  React.createElement(PlatformSecondaryButton, {
+                    size: "medium",
                     type: "button",
-                    className: "playground-environments-action-button playground-project-overview-outcome-delete-button",
-                    onClick: deleteEvaluationCaseEditor,
-                  }, isNew ? "Discard" : "Delete"),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-environments-action-button",
-                    onClick: closeEvaluationCaseEditor,
-	                  }, "Cancel"),
-	                  React.createElement(PlatformPrimaryButton, {
-	                    size: "medium",
-	                    type: "button",
-	                    className: "playground-environments-action-button is-primary",
-	                    onClick: saveEvaluationCaseEditor,
-	                  }, "Save Case")
-                )
+                    onClick: closeEvaluationCaseFocusedEditor,
+                  }, "Cancel"),
+                  React.createElement(PlatformPrimaryButton, {
+                    size: "medium",
+                    type: "submit",
+                  }, "Save Content")
+                ),
+              },
+              renderEvaluationCaseEditorMarkdownSection(
+                focusedEditor.field,
+                focusedEditor.title,
+                focusedEditor.placeholder,
+                {
+                  value: focusedEditor.value,
+                  onChange: updateEvaluationCaseFocusedEditorValue,
+                  historyKey: buildEvaluationCaseEditorFieldKey(state, focusedEditor.field) + ":focused",
+                  className: "playground-evaluations-case-focused-editor",
+                  autoFocus: true,
+                }
               )
+            );
+          }
+          return React.createElement(PlatformModal, {
+              open: evaluationCaseEditorVisible && !evaluationCaseEditorClosing,
+              visible: evaluationCaseEditorVisible,
+              closing: evaluationCaseEditorClosing,
+              animationDurationMs: 75,
+              portal: true,
+              as: "form",
+              size: "medium",
+              maxHeight: "min(720px, calc(100vh - 48px))",
+              scrollable: true,
+              title: isNew ? "New Case" : "Edit Case",
+              headerActions: React.createElement("label", { className: "playground-evaluations-case-editor-run-field" },
+                React.createElement("span", { className: "playground-evaluations-case-editor-run-label" }, "Runs per Evaluation"),
+                React.createElement("input", {
+                  type: "text",
+                  inputMode: "numeric",
+                  pattern: "[0-9]*",
+                  className: "playground-evaluations-case-editor-run-input",
+                  value: runCountValue,
+                  onChange: (event) => {
+                    const nextValue = String(event.target.value || "");
+                    if (nextValue && !/^\d{0,2}$/.test(nextValue)) return;
+                    if (nextValue && Number(nextValue) > 50) return;
+                    updateEvaluationCaseEditorDraft({ runCount: nextValue });
+                  },
+                })
+              ),
+              onClose: closeEvaluationCaseEditor,
+              closeButtonLabel: "Close case editor",
+              ariaLabel: isNew ? "New evaluation case" : "Edit evaluation case",
+              className: "playground-evaluations-case-editor-modal",
+              backdropClassName: "playground-evaluations-case-editor-backdrop",
+              bodyClassName: "playground-evaluations-case-editor-body",
+              footerClassName: "playground-evaluations-case-editor-footer",
+              surfaceProps: { onSubmit: saveEvaluationCaseEditor },
+              footer: React.createElement(React.Fragment, null,
+                !isNew
+                  ? React.createElement(PlatformSecondaryButton, {
+                      size: "medium",
+                      type: "button",
+                      className: "playground-evaluations-case-editor-delete-button",
+                      onClick: deleteEvaluationCaseEditor,
+                    }, "Delete")
+                  : null,
+                React.createElement(PlatformSecondaryButton, {
+                  size: "medium",
+                  type: "button",
+                  onClick: closeEvaluationCaseEditor,
+                }, "Cancel"),
+                React.createElement(PlatformPrimaryButton, {
+                  size: "medium",
+                  type: "submit",
+                }, "Save Case")
+              ),
+            },
+            React.createElement("div", { className: "playground-evaluations-case-source-grid" },
+              renderEvaluationCaseEditorSourceCard("input"),
+              renderEvaluationCaseEditorSourceCard("expectedOutput")
+            ),
+            evaluationCaseTextImportError
+              ? React.createElement("div", {
+                  className: "playground-evaluations-case-text-import-error",
+                  role: "alert",
+                }, evaluationCaseTextImportError)
+              : null,
+            renderEvaluationCaseEditorMarkdownSection(
+              "evaluationGuidance",
+              renderEvaluationCaseGuidanceTitle(),
+              "Optional scoring guidance for this case",
+              { ariaLabel: "Evaluator Guidance" }
             )
           );
         }
@@ -87,6 +146,13 @@ export const EVALUATIONS_PAGE_CONTROLLER_VERSION_DIALOGS_SCRIPT = String.raw`   
           }
           const displayStatus = getPlaygroundEvaluationCaseDisplayStatus(activeCase, activeRun.passThreshold);
           const isActiveCase = isPlaygroundEvaluationCaseActive(activeCase);
+          const displayStatusVariant = displayStatus === "passed"
+            ? "green"
+            : displayStatus === "error"
+              ? "red"
+              : isActiveCase
+                ? "blue"
+                : "gray";
           const scoreLabel = isActiveCase ? activeCase.status.replace(/_/g, " ") : formatPlaygroundEvaluationPercent(activeCase.score);
           const reasoningDisplay = getPlaygroundEvaluationCaseDisplayReasoning(activeCase);
           const reasoning = reasoningDisplay.text || "";
@@ -108,7 +174,9 @@ export const EVALUATIONS_PAGE_CONTROLLER_VERSION_DIALOGS_SCRIPT = String.raw`   
                   renderCaseKpi("Environment", renderRunEnvironmentCell(activeRun, activeSet)),
                   renderCaseKpi("Score", React.createElement("span", { className: "playground-evaluations-case-score" }, scoreLabel)),
                   renderCaseKpi("Confidence", confidenceLabel),
-                  renderCaseKpi("Status", React.createElement("span", { className: "playground-evaluations-status-pill" + (displayStatus === "failed" || displayStatus === "error" ? " is-failed" : "") }, displayStatus.replace(/_/g, " ")))
+                  renderCaseKpi("Status", React.createElement(PlatformLabel, {
+                    variant: displayStatusVariant,
+                  }, displayStatus.replace(/_/g, " ")))
                 ),
                 React.createElement("div", { className: "playground-evaluations-case-detail-grid" },
                   renderCaseDetailField("Reasoning", renderEvaluationCaseMarkdown(reasoning), { wide: true, reasoning: true }),
@@ -120,7 +188,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_VERSION_DIALOGS_SCRIPT = String.raw`   
           );
         }
 
-        function renderEvaluationVersionsSidebar() {
+        function renderEvaluationVersionsSidebar(options = {}) {
           if (!isEvaluationDetailPage || !activeSet || !evaluationVersionsSidebarOpen) {
             return null;
           }
@@ -134,173 +202,161 @@ export const EVALUATIONS_PAGE_CONTROLLER_VERSION_DIALOGS_SCRIPT = String.raw`   
             || activeVersionId
             || ""
           ).trim();
-          return React.createElement(PlaygroundVersionSidebar, {
+          const normalizedSetId = String(activeSet.id || "").trim();
+          const versionsLoaded = !String(backendUrl || "").trim()
+            || evaluationDetailsLoadedRef.current.has(normalizedSetId);
+          const versionsError = !versionsLoaded && evaluationBackendSyncState.status === "error"
+            ? evaluationBackendSyncState.error
+            : "";
+          const mutationStateContent = evaluationVersionState.status === "loading"
+            ? React.createElement("div", { className: "platform-version-history-sidebar__state" },
+                evaluationVersionState.message || "Saving evaluation version..."
+              )
+            : evaluationVersionState.status === "error" && evaluationVersionState.error
+              ? React.createElement("div", {
+                  className: "platform-version-history-sidebar__state is-error",
+                  role: "alert",
+                }, evaluationVersionState.error)
+              : null;
+          return React.createElement(PlatformVersionHistorySidebar, {
             className: "playground-evaluations-versions-sidebar",
             open: evaluationVersionsSidebarOpen,
-            title: "Publish Evaluation",
+            title: "Version history",
+            sectionTitle: "All Versions",
+            width: "var(--playground-thread-task-detail-width)",
+            portal: Boolean(options.portal),
+            portalTarget: options.portalTarget || null,
             versions,
             activeVersionId,
             selectedVersionId,
-            state: evaluationVersionState,
+            loading: !versionsLoaded && !versionsError,
+            loadingMessage: "Loading versions",
+            error: versionsError || null,
+            emptyDescription: "Save changes to create this evaluation's first version.",
             busy: evaluationVersionState.status === "loading",
-            openMenuId: openEvaluationVersionMenuId,
-            onOpenMenuIdChange: setOpenEvaluationVersionMenuId,
-            headerMenuOpen: evaluationVersionsHeaderMenuOpen,
-            headerMenuActions: getEvaluationVersionPopupActions({ includeVersionHistory: false }),
-            headerMenuDisabled: evaluationVersionState.status === "loading",
-            onHeaderMenuOpenChange: setEvaluationVersionsHeaderMenuOpen,
-            onClose: closeEvaluationVersionsSidebar,
-            onSaveVersion: () => openCreateEvaluationVersionModal({ force: true }),
-            onRestoreVersion: (versionId) => restoreEvaluationVersion(versionId),
-            onPublishVersion: (versionId) => publishEvaluationVersion(versionId),
+            stateContent: mutationStateContent,
+            onClose: () => {
+              setEvaluationVersionChangesState(null);
+              closeEvaluationVersionsSidebar();
+            },
+            onSelectVersion: (versionId) => void restoreEvaluationVersion(versionId),
+            onPublishVersion: (versionId) => void publishEvaluationVersion(versionId),
             canPublishVersion: (version) => canPublishEvaluationVersion(version),
-            onDeleteVersion: (versionId) => deleteEvaluationVersion(versionId),
-            versionsSectionFooter: React.createElement("div", { className: "playground-metronome-publish-section-footer playground-agents-version-compare-footer" },
-              React.createElement(PlatformSecondaryButton, {
-                size: "large",
-                type: "button",
-                className: "playground-metronome-secondary-button playground-metronome-publish-new-button playground-agents-version-compare-button",
-                disabled: evaluationVersionState.status === "loading" || !versions.length,
-                onClick: () => openEvaluationVersionChangesPage(),
-              },
-                React.createElement(Code2, { width: 13, height: 13, strokeWidth: 1.8 }),
-                React.createElement("span", null, "View Changes")
-              )
-            ),
-            getRowMenuItems: (version) => [
+            onViewChanges: () => openEvaluationVersionChangesPage(),
+            getVersionCreatedAt: (version) => {
+              const timestamp = version.createdAt || version.updatedAt || version.publishedAt;
+              return timestamp ? formatPlaygroundEvaluationDate(timestamp) : "-";
+            },
+            getVersionActions: (version) => [
               {
                 id: "edit",
-                label: "Edit version",
+                label: "Edit description",
                 icon: SquarePen,
-                onClick: () => openEditEvaluationVersionModal(version.id),
+                onSelect: () => openEditEvaluationVersionModal(version.id),
               },
               {
                 id: "compare",
                 label: "View Changes",
                 icon: Code2,
-                onClick: () => openEvaluationVersionChangesPage(version.id),
-              },
-              {
-                id: "restore",
-                label: "Restore version",
-                icon: RotateCcw,
-                onClick: () => restoreEvaluationVersion(version.id),
+                onSelect: () => openEvaluationVersionChangesPage(version.id),
               },
               {
                 id: "delete",
                 label: "Delete version",
                 icon: Trash2,
                 danger: true,
-                onClick: () => deleteEvaluationVersion(version.id),
+                disabled: version.status === "active" || versions.length <= 1,
+                onSelect: () => void deleteEvaluationVersion(version.id),
               },
             ],
-            getVersionTitle: (version) => String(version.label || ("Version " + version.version)).trim(),
-            getVersionDescription: () => "",
-            getVersionMeta: (version) => {
-              const lifecycleLabel = version.status === "active"
-                ? "Published"
-                : version.status === "superseded"
-                  ? "Superseded"
-                  : version.status === "unpublished"
-                    ? "Unpublished"
-                    : "Saved";
-              return lifecycleLabel + " " + formatPlaygroundEvaluationDate(version.publishedAt || version.updatedAt || version.createdAt);
-            },
           });
         }
 
         function renderEvaluationVersionsSidebarPortal() {
-          const sidebar = renderEvaluationVersionsSidebar();
-          if (!sidebar) {
-            return null;
-          }
           const drawerContainer = typeof document !== "undefined" && versionsDrawerPortalId
             ? document.getElementById(versionsDrawerPortalId)
             : null;
-          if (drawerContainer && typeof createPortal === "function") {
-            return createPortal(sidebar, drawerContainer);
+          if (drawerContainer) {
+            return renderEvaluationVersionsSidebar({
+              portal: true,
+              portalTarget: drawerContainer,
+            });
           }
-          return React.createElement("aside", {
-              className: "playground-metronome-node-drawer playground-agent-versions-inline-drawer is-open",
-            },
-            sidebar
-          );
+          if (versionsDrawerPortalId) return null;
+          return renderEvaluationVersionsSidebar();
         }
 
         function renderEvaluationPublishSplitButton() {
           const isBusy = evaluationVersionState.status === "loading";
+          const normalizedSetId = String(activeSet?.id || "").trim();
+          const versionsLoaded = !String(backendUrl || "").trim()
+            || evaluationDetailsLoadedRef.current.has(normalizedSetId);
+          const versionHasChanges = hasSelectedEvaluationVersionChanges();
+          const isPublishControlDisabled = Boolean(isBusy || !versionsLoaded || !versionHasChanges);
           const actions = getEvaluationVersionPopupActions();
-          return renderPlaygroundPlatformPopup({
+          return React.createElement(PlatformVersionPublishControl, {
             open: evaluationPublishMenuOpen,
-            shellRef: evaluationPublishMenuRef,
-            shellClassName: "playground-agents-detail-publish-split-shell playground-evaluations-publish-split-shell",
-            menuClassName: "playground-agents-detail-publish-menu playground-evaluations-publish-menu",
-            trigger: React.createElement("div", {
-                className: "playground-metronome-create-button playground-metronome-publish-button playground-guardrails-publish-button playground-evaluations-publish-button playground-agents-detail-publish-split-control"
-                  + (evaluationVersionsSidebarOpen ? " is-active" : "")
-                  + (isBusy ? " is-disabled" : ""),
-              },
-              React.createElement("button", {
-                  type: "button",
-                  className: "playground-agents-detail-publish-main",
-                  title: "Open evaluation versions",
-                  "aria-label": "Open evaluation versions",
-                  "aria-expanded": evaluationVersionsSidebarOpen ? "true" : "false",
-                  disabled: isBusy,
-                  onClick: () => {
-                    setEvaluationPublishMenuOpen(false);
-                    setEvaluationVersionsHeaderMenuOpen(false);
-                    setEvaluationVersionsSidebarOpen(true);
-                  },
-                },
-                React.createElement(Rocket, { width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("span", null, "Publish")
-              ),
-              React.createElement("span", { className: "playground-agents-detail-publish-divider", "aria-hidden": "true" }),
-              React.createElement("button", {
-                  type: "button",
-                  className: "playground-agents-detail-publish-chevron",
-                  title: "Version save options",
-                  "aria-label": "Version save options",
-                  "aria-haspopup": "menu",
-                  "aria-expanded": evaluationPublishMenuOpen ? "true" : "false",
-                  disabled: isBusy,
-                  onClick: (event) => {
-                    event.stopPropagation();
-                    setEvaluationPublishMenuOpen((current) => !current);
-                  },
-                },
-                React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
-              )
-            ),
-            menuProps: {
-              role: "menu",
-              onClick: (event) => event.stopPropagation(),
+            actions,
+            rootRef: evaluationPublishMenuRef,
+            active: evaluationPublishMenuOpen,
+            disabled: isPublishControlDisabled,
+            menuDisabled: isPublishControlDisabled,
+            label: "Save Changes",
+            leading: React.createElement(Bookmark, { strokeWidth: 1.8 }),
+            publishAriaLabel: "Save evaluation changes",
+            className: "playground-evaluations-publish-control",
+            popupClassName: "playground-evaluations-publish-menu",
+            onOpenChange: (nextOpen) => {
+              setEvaluationVersionsHeaderMenuOpen(false);
+              setEvaluationPublishMenuOpen(nextOpen);
             },
-            children: React.createElement(React.Fragment, null,
-              actions.map((action) => React.createElement("button", {
-                  key: action.id,
-                  type: "button",
-                  className: "tb-popup-row",
-                  role: "menuitem",
-                  disabled: isBusy || action.disabled,
-                  onClick: () => {
-                    setEvaluationPublishMenuOpen(false);
-                    action.onClick();
-                  },
-                },
-                React.createElement(action.Icon, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 2.15 }),
-                React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                  React.createElement("span", null, action.label)
-                ),
-                action.shortcut
-                  ? React.createElement("span", {
-                      className: "playground-agents-detail-publish-menu-shortcut",
-                      "aria-hidden": "true",
-                    }, action.shortcut)
-                  : null
-              ))
-            )
+            onPublish: () => openEvaluationVersionSaveDialog(),
+          });
+        }
+
+        function renderEvaluationVersionSaveDialog() {
+          if (!evaluationVersionSaveDialog) {
+            return null;
+          }
+          const versionData = buildEvaluationVersionSaveDialogData();
+          const isBusy = evaluationVersionState.status === "loading";
+          return React.createElement(PlatformVersionSaveDialog, {
+            open: true,
+            title: "Review changes",
+            currentVersion: versionData.currentVersion,
+            nextVersion: versionData.nextVersion,
+            currentDescription: versionData.currentDescription,
+            initialMode: evaluationVersionSaveDialog.initialMode || "new",
+            canSaveCurrent: versionData.canSaveCurrent,
+            instanceKey: evaluationVersionSaveDialog.key,
+            pending: isBusy,
+            error: evaluationVersionState.status === "error"
+              ? evaluationVersionState.error
+              : null,
+            changes: versionData.diffFiles.map((file) => ({
+              id: file.id,
+              label: file.label || file.filePath,
+              content: React.createElement(PlatformDiffViewer, {
+                filePath: file.filePath,
+                diffContent: file.diffContent || "",
+                fileContent: file.fileContent || "",
+                additions: file.additions,
+                deletions: file.deletions,
+                hideTopbar: true,
+                embedded: true,
+                defaultExpanded: true,
+                maxHeight: 330,
+              }),
+            })),
+            emptyChanges: "No changes were found between the editor and the selected version.",
+            onClose: closeEvaluationVersionSaveDialog,
+            onSubmit: async (details) => {
+              const savedSet = await saveAndPublishCurrentEvaluationVersion(details);
+              if (!savedSet) {
+                throw new Error("The evaluation could not be saved and published. Review the details and try again.");
+              }
+              setEvaluationVersionSaveDialog(null);
+            },
           });
         }
 
@@ -493,4 +549,3 @@ export const EVALUATIONS_PAGE_CONTROLLER_VERSION_DIALOGS_SCRIPT = String.raw`   
         }
 
 `;
-

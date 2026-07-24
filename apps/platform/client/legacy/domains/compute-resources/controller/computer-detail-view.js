@@ -801,7 +801,7 @@
               ? environmentSystemIdentity
               : getDevelopResourceOwnerIdentity(draftEnvironment, environmentIdentityFallback);
             const environmentSidebar = React.createElement(React.Fragment, null,
-              React.createElement("section", { className: "playground-project-overview-sidebar-card playground-computer-detail-properties-card" },
+              React.createElement("section", { className: "playground-project-overview-sidebar-card playground-server-detail-properties-card playground-computer-detail-properties-card" },
                 React.createElement("div", { className: "playground-project-overview-sidebar-card-header" },
                   React.createElement("h2", { className: "playground-project-overview-sidebar-title" }, "Properties")
                 ),
@@ -810,9 +810,6 @@
                     valueClassName: "playground-computer-detail-sidebar-status-value",
                   }),
                   renderEnvironmentSidebarRow("Creator", renderDevelopResourceIdentityValue(environmentCreatorIdentity), {
-                    valueClassName: "playground-server-detail-sidebar-identity-cell",
-                  }),
-                  renderEnvironmentSidebarRow("Owner", renderDevelopResourceIdentityValue(environmentOwnerIdentity), {
                     valueClassName: "playground-server-detail-sidebar-identity-cell",
                   }),
                   renderEnvironmentSidebarRow("Computer Profile",
@@ -859,7 +856,11 @@
                     : null,
                   draftEnvironment.isSystem
                     ? renderEnvironmentSidebarRow("Type", renderEnvironmentSidebarValue("System"))
-                    : null
+                    : null,
+                  renderEnvironmentSidebarRow("Owner", renderDevelopResourceIdentityValue(environmentOwnerIdentity), {
+                    className: "playground-server-detail-sidebar-owner-row",
+                    valueClassName: "playground-server-detail-sidebar-identity-cell playground-server-detail-sidebar-owner-cell",
+                  })
                 )
               ),
               React.createElement("section", { className: "playground-project-overview-sidebar-card playground-agents-detail-actions-card playground-computer-detail-actions-card" },
@@ -918,7 +919,12 @@
                 isFolder: true,
               });
             };
-            const normalizedEnvironmentDetailTab = environmentDetailTab === "advanced" ? "advanced" : "general";
+            const normalizedEnvironmentDetailTab =
+              environmentDetailTab === "settings"
+                ? "settings"
+                : environmentDetailTab === "runtime" || environmentDetailTab === "advanced"
+                  ? "runtime"
+                  : "general";
             const environmentDetailGeneralSection = React.createElement(React.Fragment, null,
               environmentAnalyticsSection,
               descriptionSection
@@ -957,7 +963,171 @@
               },
               content
             );
-            const environmentDetailAdvancedSection = React.createElement(PlatformSettingsSectionList, {
+            const environmentAccessTeams = environmentSharedTeamIds.map((teamId) => (
+              environmentShareTeamById.get(String(teamId))
+              || {
+                id: String(teamId),
+                name: "Team",
+                kind: "team",
+                roleId: "member",
+                roleLabel: "Member",
+                createdAt: "",
+              }
+            ));
+            const availableEnvironmentAccessTeams = availableEnvironmentShareTeams.filter(
+              (team) => !environmentSharedTeamIdSet.has(String(team.id))
+            );
+            const environmentAccessAddTeamsControl = canMutateEnvironmentRecord
+              ? React.createElement(PlatformButtonSelector, {
+                  mode: "popup",
+                  buttonVariant: "secondary",
+                  buttonSize: "small",
+                  label: "Add Teams",
+                  leading: React.createElement(Plus, {
+                    width: 14,
+                    height: 14,
+                    strokeWidth: 1.8,
+                    "aria-hidden": "true",
+                  }),
+                  open: environmentAccessTeamMenuOpen,
+                  onOpenChange: (nextOpen) => {
+                    if (
+                      nextOpen
+                      && typeof onWorkspaceTeamsRequest === "function"
+                      && !workspaceTeamsLoading
+                    ) {
+                      onWorkspaceTeamsRequest({});
+                    }
+                    setEnvironmentAccessTeamMenuOpen(nextOpen);
+                  },
+                  closeOnSelect: true,
+                  popupAriaLabel: "Add teams with computer access",
+                  popupAlignment: "right",
+                  popupRole: "menu",
+                  popupVariant: "minimal",
+                  popupWidth: 240,
+                  disabled: Boolean(environmentTeamAccessState.action),
+                  className: "playground-project-teams-add-shell playground-computer-access-team-menu",
+                  popupClassName: "playground-project-teams-menu",
+                },
+                availableEnvironmentAccessTeams.length
+                  ? availableEnvironmentAccessTeams.map((team) => React.createElement("button", {
+                      key: team.id,
+                      type: "button",
+                      role: "menuitem",
+                      className: "platform-data-table__menu-item playground-project-teams-menu-row",
+                      onClick: () => void handleAddEnvironmentTeamAccess(team),
+                    },
+                    React.createElement("span", { className: "platform-data-table__menu-icon" },
+                      React.createElement(Users, { width: 14, height: 14, strokeWidth: 1.8 })
+                    ),
+                    React.createElement("span", { className: "platform-data-table__menu-copy" }, team.name)
+                  ))
+                  : React.createElement("div", {
+                      className: "playground-project-teams-menu-empty",
+                    }, workspaceTeamsLoading ? "Loading teams..." : "All available teams have access.")
+              )
+              : null;
+            const selectedEnvironmentSystemAccessPrincipal = getPlatformSystemAccessPrincipal(environmentPermissionPrincipalId);
+            const selectedEnvironmentAccessTeam = environmentPermissionPrincipalId && !selectedEnvironmentSystemAccessPrincipal
+              ? environmentAccessTeams.find((team) => String(team.id) === String(environmentPermissionPrincipalId)) || null
+              : null;
+            const restoreEnvironmentDetailSidebarAfterAccess = () => {
+              if (environmentDetailsCollapsedBeforeAccessRef.current === null) {
+                return;
+              }
+              const shouldRestoreCollapsed = Boolean(environmentDetailsCollapsedBeforeAccessRef.current);
+              environmentDetailsCollapsedBeforeAccessRef.current = null;
+              setEnvironmentDetailsCollapsed(shouldRestoreCollapsed);
+            };
+            const handleEnvironmentAccessPrincipalChange = (principalId) => {
+              const normalizedPrincipalId = String(principalId || "").trim();
+              const needsRoleSidebar = Boolean(
+                normalizedPrincipalId
+                && (
+                  !isPlatformSystemAccessPrincipalId(normalizedPrincipalId)
+                  || isPlatformRoleScopedSystemAccessPrincipalId(normalizedPrincipalId)
+                )
+              );
+              if (needsRoleSidebar) {
+                if (environmentDetailsCollapsedBeforeAccessRef.current === null) {
+                  environmentDetailsCollapsedBeforeAccessRef.current = Boolean(environmentDetailsCollapsed);
+                }
+                if (!environmentDetailsCollapsed) {
+                  setEnvironmentDetailsCollapsed(true);
+                }
+              } else if (!normalizedPrincipalId) {
+                restoreEnvironmentDetailSidebarAfterAccess();
+              }
+              setEnvironmentPermissionRoleId("member");
+              setEnvironmentPermissionPrincipalId(normalizedPrincipalId);
+            };
+            const environmentAccessSettingsSection = React.createElement(PlatformResourceAccessSettings, {
+              teams: environmentAccessTeams,
+              resourceLabel: "Computer",
+              selectedPrincipalId: environmentPermissionPrincipalId,
+              onSelectedPrincipalIdChange: handleEnvironmentAccessPrincipalChange,
+              subjectType: "computer",
+              teamSubjectType: "computer_team_role",
+              systemPermissionSet: getPlatformSystemPrincipalPermissionSet(
+                getEnvironmentMetadataRecord(draftEnvironment),
+                selectedEnvironmentSystemAccessPrincipal?.id || PLATFORM_ALL_AGENTS_PRINCIPAL_ID,
+                "computer",
+                getEnvironmentMetadataRecord(draftEnvironment).permissionSet
+              ),
+              onSystemPermissionSetChange: canMutateEnvironmentRecord
+                ? updateEnvironmentSystemAccessPermissionSet
+                : undefined,
+              systemRolePermissionSet:
+                selectedEnvironmentSystemAccessPrincipal &&
+                isPlatformRoleScopedSystemAccessPrincipalId(
+                  selectedEnvironmentSystemAccessPrincipal.id
+                )
+                  ? getEnvironmentSystemRolePermissionSet(
+                      draftEnvironment,
+                      selectedEnvironmentSystemAccessPrincipal.id,
+                      environmentPermissionRoleId
+                    )
+                  : null,
+              onSystemRolePermissionSetChange: canMutateEnvironmentRecord
+                ? updateEnvironmentSystemRoleAccessPermissionSet
+                : undefined,
+              roles: PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => ({
+                id: role.id,
+                label: role.label,
+                description: role.description,
+                meta: "Computer access",
+              })),
+              selectedRoleId: environmentPermissionRoleId,
+              onSelectedRoleIdChange: setEnvironmentPermissionRoleId,
+              teamPermissionSet: selectedEnvironmentAccessTeam
+                ? getEnvironmentTeamRolePermissionSet(
+                    draftEnvironment,
+                    selectedEnvironmentAccessTeam.id,
+                    environmentPermissionRoleId
+                  )
+                : null,
+              onTeamPermissionSetChange: canMutateEnvironmentRecord
+                ? updateEnvironmentTeamRoleAccessPermissionSet
+                : undefined,
+              animationKey: environmentPermissionChartAnimationKey,
+              disabled: !canMutateEnvironmentRecord,
+              backLabel: "Settings",
+              className: "playground-computer-access-settings",
+              tableProps: {
+                className: "playground-computer-access-platform-data-table",
+                trailing: environmentAccessAddTeamsControl,
+                selectedIds: selectedEnvironmentAccessTeamIds,
+                onSelectedIdsChange: setSelectedEnvironmentAccessTeamIds,
+                busy: Boolean(environmentTeamAccessState.action),
+                onRemoveTeams: canMutateEnvironmentRecord
+                  ? (teams) => void handleRemoveEnvironmentTeamsAccess(teams)
+                  : undefined,
+                formatCreatedAt: (value) => value ? formatPlaygroundFileDate(value) : "—",
+                error: environmentTeamAccessState.error || null,
+              },
+            });
+            const environmentDetailAdvancedSettingsList = React.createElement(PlatformSettingsSectionList, {
                 className: "playground-computer-detail-advanced-tab",
                 "aria-label": "Advanced computer settings",
               },
@@ -1017,9 +1187,12 @@
                 renderEnvironmentAddIconButton("Add Script", addSetupScript)
               )
             );
-            const environmentDetailActiveSection = normalizedEnvironmentDetailTab === "advanced"
-              ? environmentDetailAdvancedSection
-              : environmentDetailGeneralSection;
+            const environmentDetailActiveSection =
+              normalizedEnvironmentDetailTab === "runtime"
+                ? environmentDetailAdvancedSettingsList
+                : normalizedEnvironmentDetailTab === "settings"
+                  ? environmentAccessSettingsSection
+                  : environmentDetailGeneralSection;
   
             function renderEnvironmentVersionsSidebar() {
               if (!canShowEnvironmentDetailHeaderPublish || !environmentVersionsSidebarOpen) {
@@ -1570,7 +1743,21 @@
                 sidebarToggle: environmentDetailSidebarToggle,
                 sidebar: environmentSidebar,
                 activeTab: normalizedEnvironmentDetailTab,
-                onTabChange: setEnvironmentDetailTab,
+                onTabChange: (tab) => {
+                  if (tab !== "settings" && environmentPermissionPrincipalId) {
+                    handleEnvironmentAccessPrincipalChange("");
+                  }
+                  setEnvironmentDetailTab(tab);
+                  if (tab === "settings") {
+                    setEnvironmentPermissionChartAnimationKey((current) => current + 1);
+                    if (
+                      typeof onWorkspaceTeamsRequest === "function"
+                      && !workspaceTeamsLoading
+                    ) {
+                      onWorkspaceTeamsRequest({});
+                    }
+                  }
+                },
                 onOpenFilebase: openEnvironmentFilebase,
                 filebaseDisabled: !draftEnvironment?.id
                   || draftEnvironment.id === PLAYGROUND_ENVIRONMENT_DRAFT_ID

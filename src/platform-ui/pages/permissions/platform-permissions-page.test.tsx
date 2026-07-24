@@ -3,7 +3,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { PlatformPermissionsPage } from "./platform-permissions-page.js";
+import {
+  PlatformPermissionsPage,
+  PlatformPermissionsSettingsSummary,
+} from "./platform-permissions-page.js";
 import { PlatformRolePermissionsPage } from "./platform-role-permissions-page.js";
 import { PLATFORM_PERMISSION_ACCESS_OPTIONS } from "./permission-model.js";
 
@@ -74,6 +77,37 @@ afterEach(() => {
 });
 
 describe("PlatformPermissionsPage", () => {
+  it("renders a compact read-only settings summary with a primary edit action", async () => {
+    const user = userEvent.setup();
+    const onEdit = vi.fn();
+    const { container } = render(
+      <PlatformPermissionsSettingsSummary
+        title="Agent Permissions"
+        tooltip="Explains Agent permissions."
+        permissionSet={{
+          subjectType: "agent",
+          rings: {
+            ring_1: { defaultAccess: "full_access" },
+            ring_2: { defaultAccess: "ask_for_permission" },
+          },
+        }}
+        accessOptions={PLATFORM_PERMISSION_ACCESS_OPTIONS}
+        ringDefinitions={rings}
+        onEdit={onEdit}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "Agent Permissions" })).not.toBeNull();
+    expect(screen.getByRole("button", { name: "About Agent Permissions" })).not.toBeNull();
+    expect(container.querySelector("[data-platform-permissions-overview='compact']")).not.toBeNull();
+    const editButton = screen.getByRole("button", { name: "Edit" });
+    expect(editButton.getAttribute("data-platform-button-variant")).toBe("primary");
+    expect(screen.getByRole("button", { name: "Ring 1 default permissions" }).hasAttribute("disabled")).toBe(true);
+
+    await user.click(editButton);
+    expect(onEdit).toHaveBeenCalledTimes(1);
+  });
+
   it("renders the canonical ring and action editor and emits changes", async () => {
     const user = userEvent.setup();
     const onRingAccessChange = vi.fn();

@@ -36,6 +36,7 @@ describe("PlatformHomePage", () => {
             links: [
               { id: "agents", label: "Agents", meta: "4", onClick: onOpenAgents },
               { id: "computers", label: "Computers", meta: "2", onClick: onOpenComputers },
+              { id: "status", label: "Status", meta: "Healthy" },
             ],
           },
         ]}
@@ -82,6 +83,13 @@ describe("PlatformHomePage", () => {
     expect(screen.getByRole("heading", { name: "Workspace Studio", level: 1 })).not.toBeNull();
     expect(screen.getByRole("region", { name: "Featured areas" })).not.toBeNull();
     expect(screen.getByText("4")).not.toBeNull();
+    expect(
+      screen
+        .getByText("Healthy")
+        .closest(".platform-ui-card__feature-link")
+        ?.classList.contains("is-static"),
+    ).toBe(true);
+    expect(screen.queryByRole("button", { name: "Status" })).toBeNull();
     expect(screen.getAllByRole("heading", { name: "Documentation", level: 2 })).toHaveLength(1);
 
     await user.click(screen.getByRole("button", { name: "Agents" }));

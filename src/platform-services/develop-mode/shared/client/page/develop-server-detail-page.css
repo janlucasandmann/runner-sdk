@@ -124,6 +124,42 @@
   white-space: nowrap;
 }
 
+.playground-server-detail-properties-card
+.playground-develop-resource-identity-value
+.playground-team-member-avatar,
+.playground-server-detail-properties-card
+.playground-server-detail-sidebar-owner-cell
+.playground-team-member-avatar,
+.playground-server-detail-properties-card
+.resource-overview-identity__visual {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  border-radius: 50%;
+  font-size: 8px;
+}
+
+.playground-server-detail-properties-card
+.playground-develop-resource-identity-value
+.playground-team-member-avatar-image,
+.playground-server-detail-properties-card
+.playground-server-detail-sidebar-owner-cell
+.playground-team-member-avatar-image,
+.playground-server-detail-properties-card
+.resource-overview-identity__visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.playground-server-detail-properties-card
+.playground-server-detail-sidebar-owner-row {
+  width: 100%;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 .playground-source-server-detail-main .playground-server-detail-properties-card {
   position: relative;
   z-index: 2;

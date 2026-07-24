@@ -114,6 +114,8 @@ export function normalizeRunCase(rawCase = {}, fallbackIndex = 0) {
     evaluatorReason: String(source.evaluatorReason || source.evaluator_reason || ""),
     evaluatorParseStatus: String(source.evaluatorParseStatus || source.evaluator_parse_status || ""),
     snapshotVersion: String(source.snapshotVersion || source.snapshot_version || ""),
+    executionStage: normalizeString(source.executionStage || source.execution_stage),
+    failureStage: normalizeString(source.failureStage || source.failure_stage),
     score: score === null ? 0 : score,
     costTokens: readComputeTokenValue(source),
     costUsd: readUsdCostValue(source),
@@ -230,4 +232,3 @@ export function createEvaluationRun(evaluationSet, options = {}) {
   };
   return recomputeRun(run);
 }
-

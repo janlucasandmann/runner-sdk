@@ -1,4 +1,5 @@
-import type { CSSProperties } from "react";
+import { ArrowLeft } from "lucide-react";
+import type { CSSProperties, ReactNode } from "react";
 import {
   getPlatformPermissionAccessLabel,
   getPlatformPermissionAccessProgress,
@@ -23,6 +24,8 @@ export interface AgentPermissionsPageProps {
   showEffectiveAccess?: boolean;
   ariaLabel?: string;
   className?: string;
+  backLabel?: ReactNode;
+  onBack?: () => void;
   actionPresentation?: Readonly<Record<string, PlatformPermissionActionPresentation | undefined>>;
   onPermissionSetChange?: (permissionSet: PlatformPermissionSet) => void;
 }
@@ -131,6 +134,8 @@ export function AgentPermissionsPage({
   showEffectiveAccess = false,
   ariaLabel = "Agent permissions",
   className = "",
+  backLabel = "Settings",
+  onBack,
   actionPresentation,
   onPermissionSetChange,
 }: AgentPermissionsPageProps) {
@@ -138,37 +143,54 @@ export function AgentPermissionsPage({
   const canEdit = !disabled && Boolean(onPermissionSetChange);
 
   return (
-    <PlatformPermissionsPage
-      permissionSet={normalizedPermissionSet}
-      subjectType="agent"
-      animationKey={animationKey}
-      disabled={!canEdit}
-      showOverview={showOverview}
-      showEffectiveAccess={showEffectiveAccess}
-      ariaLabel={ariaLabel}
-      className={className}
-      actionPresentation={actionPresentation}
-      onRingAccessChange={canEdit
-        ? (ringId, access) => {
-            onPermissionSetChange?.(
-              updatePlatformPermissionRingAccess(normalizedPermissionSet, ringId, access, "agent"),
-            );
-          }
-        : undefined}
-      onActionRingChange={canEdit
-        ? (actionId, ringId) => {
-            onPermissionSetChange?.(
-              updatePlatformPermissionActionRing(normalizedPermissionSet, actionId, ringId, "agent"),
-            );
-          }
-        : undefined}
-      onActionAccessChange={canEdit
-        ? (actionId, access) => {
-            onPermissionSetChange?.(
-              updatePlatformPermissionActionAccess(normalizedPermissionSet, actionId, access, "agent"),
-            );
-          }
-        : undefined}
-    />
+    <section
+      className="platform-agent-permissions-page"
+      data-platform-agent-permissions-page="true"
+    >
+      {onBack ? (
+        <div className="playground-project-team-permissions-header">
+          <button
+            type="button"
+            className="playground-project-team-permissions-back"
+            onClick={onBack}
+          >
+            <ArrowLeft width={13} height={13} strokeWidth={1.9} />
+            <span>{backLabel}</span>
+          </button>
+        </div>
+      ) : null}
+      <PlatformPermissionsPage
+        permissionSet={normalizedPermissionSet}
+        subjectType="agent"
+        animationKey={animationKey}
+        disabled={!canEdit}
+        showOverview={showOverview}
+        showEffectiveAccess={showEffectiveAccess}
+        ariaLabel={ariaLabel}
+        className={className}
+        actionPresentation={actionPresentation}
+        onRingAccessChange={canEdit
+          ? (ringId, access) => {
+              onPermissionSetChange?.(
+                updatePlatformPermissionRingAccess(normalizedPermissionSet, ringId, access, "agent"),
+              );
+            }
+          : undefined}
+        onActionRingChange={canEdit
+          ? (actionId, ringId) => {
+              onPermissionSetChange?.(
+                updatePlatformPermissionActionRing(normalizedPermissionSet, actionId, ringId, "agent"),
+              );
+            }
+          : undefined}
+        onActionAccessChange={canEdit
+          ? (actionId, access) => {
+              onPermissionSetChange?.(
+                updatePlatformPermissionActionAccess(normalizedPermissionSet, actionId, access, "agent"),
+              );
+            }
+          : undefined}
+      />
+    </section>
   );
 }

@@ -67,6 +67,13 @@ export const TeamsOverviewPage = lazyNamed(
     ),
   "TeamsOverviewPage",
 );
+export const TeamDetailPage = lazyNamed(
+  () =>
+    import(
+      "../../platform-services/configure-mode/teams/client/page/detail/team-detail-page.js"
+    ),
+  "TeamDetailPage",
+);
 export const OrganizationsOverviewPage = lazyNamed(
   () =>
     import(

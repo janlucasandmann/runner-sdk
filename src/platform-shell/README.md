@@ -14,6 +14,7 @@ dedicated subdirectory. Product pages remain under `src/platform-services`.
 - `app-sidebar` owns expanded and collapsed navigation, platform mode selection, thread-list UI, and sidebar layout styles.
 - `resource-creation` owns cross-page Agent and Computer creation overlay lifecycle.
 - `settings-modal` owns the settings experience opened from the Account Menu.
+- `onboarding` owns first-run flow state, modal presentation, restoration, and shell orchestration.
 
 ## Working in this directory
 

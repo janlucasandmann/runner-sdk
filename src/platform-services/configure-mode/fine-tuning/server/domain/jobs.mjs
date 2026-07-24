@@ -122,6 +122,12 @@ export function compactFineTuningJobRecord(job) {
     environmentName: normalizeString(source.environmentName || source.environment_name || metadata.environmentName || metadata.environment_name || "Computer"),
     evaluationSets,
     evaluationSetIds: evaluationSets.map((set) => set.id),
+    description: sanitizeReferenceText(
+      Object.prototype.hasOwnProperty.call(source, "description")
+        ? source.description ?? ""
+        : metadata.description || "",
+      4000,
+    ),
     instructions: sanitizeReferenceText(source.instructions, 4000),
     verifyAfter: true,
     threadId: normalizeString(source.threadId || source.thread_id || metadata.threadId || metadata.thread_id || metadata.fineTuningThreadId || metadata.fine_tuning_thread_id),
@@ -157,6 +163,8 @@ export function mergeFineTuningJobRecords(existingJob, incomingJob) {
     || Object.prototype.hasOwnProperty.call(incomingSource, "fine_tuning_status")
     || Object.prototype.hasOwnProperty.call(incomingMetadata, "fineTuningStatus")
     || Object.prototype.hasOwnProperty.call(incomingMetadata, "fine_tuning_status");
+  const incomingHasExplicitDescription = Object.prototype.hasOwnProperty.call(incomingSource, "description");
+  const incomingHasExplicitInstructions = Object.prototype.hasOwnProperty.call(incomingSource, "instructions");
   const existing = compactFineTuningJobRecord(existingJob);
   const incoming = compactFineTuningJobRecord(incomingJob);
   if (!existing.id) return incoming;
@@ -167,6 +175,8 @@ export function mergeFineTuningJobRecords(existingJob, incomingJob) {
     ...existing,
     ...incoming,
     status: incomingHasExplicitStatus ? incoming.status : existing.status || incoming.status,
+    description: incomingHasExplicitDescription ? incoming.description : existing.description,
+    instructions: incomingHasExplicitInstructions ? incoming.instructions : existing.instructions,
     metadata: {
       ...readPlainObject(existing.metadata),
       ...readPlainObject(incoming.metadata),
@@ -190,4 +200,3 @@ export function mergeFineTuningJobRecords(existingJob, incomingJob) {
     createdAgentVersionId: incoming.createdAgentVersionId || existing.createdAgentVersionId,
   });
 }
-

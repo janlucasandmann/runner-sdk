@@ -33,6 +33,38 @@ export const FINE_TUNING_PAGE_CONTROLLER_DETAIL_SCRIPT = String.raw`        func
           });
         }
 
+        function renderFineTuningDescriptionEditor(job) {
+          return React.createElement(PlatformInstructionsEditor, {
+            value: String(job?.description || ""),
+            onChange: (value) => patchFineTuningJob(job.id, (current) => ({
+              ...current,
+              description: String(value || ""),
+            }), { persist: true, delayMs: 450 }),
+            title: "Description",
+            placeholder: "Describe the purpose, scope, and expected outcome of this fine-tuning job.",
+            ariaLabel: "Fine-tuning description",
+            stickyHeader: true,
+            historyKey: "fine-tuning-description:" + job.id,
+            className: "playground-fine-tuning-description-section",
+          });
+        }
+
+        function renderFineTuningInstructionsEditor(job) {
+          return React.createElement(PlatformInstructionsEditor, {
+            value: String(job?.instructions || ""),
+            onChange: (value) => patchFineTuningJob(job.id, (current) => ({
+              ...current,
+              instructions: String(value || ""),
+            }), { persist: true, delayMs: 450 }),
+            title: "Fine-Tuning Instructions",
+            placeholder: "Add instructions that guide how the target agent should be improved.",
+            ariaLabel: "Fine-tuning instructions",
+            stickyHeader: true,
+            historyKey: "fine-tuning-instructions:" + job.id,
+            className: "playground-fine-tuning-instructions-section",
+          });
+        }
+
         function renderEvaluationRunReferences(job) {
           return React.createElement(PlatformDataTable, {
               rows: job.evaluationRuns,
@@ -223,7 +255,10 @@ export const FINE_TUNING_PAGE_CONTROLLER_DETAIL_SCRIPT = String.raw`        func
             renderSidebarRow("sets", "Evaluation Sets", String(Array.isArray(job.evaluationSets) ? job.evaluationSets.length : 0)),
             renderSidebarRow("cost", "Cost", formatPlaygroundFineTuningUsdCost(job.costUsd)),
             renderSidebarRow("created", "Created", formatPlaygroundFineTuningDateTime(job.createdAt)),
-            renderSidebarRow("updated", "Updated", formatPlaygroundFineTuningDateTime(job.updatedAt || job.createdAt))
+            renderSidebarRow("updated", "Updated", formatPlaygroundFineTuningDateTime(job.updatedAt || job.createdAt)),
+            renderSidebarRow("owner", "Owner", renderFineTuningOwnerSelector(job), {
+              className: "playground-fine-tuning-detail-owner-row",
+            })
           );
           const showStopButton = canStopPlaygroundFineTuningJob(job);
           const isStopping = fineTuningStopJobId === job.id;
@@ -270,15 +305,28 @@ export const FINE_TUNING_PAGE_CONTROLLER_DETAIL_SCRIPT = String.raw`        func
             ? renderAnalysis(analysisSummary)
             : fineTuningDetailTab === "changes"
               ? renderDiff(job, { showHeader: false })
-              : React.createElement(React.Fragment, null,
-                  renderKpiCard(job),
-                  renderEvaluationRunReferences(job)
-                );
+              : fineTuningDetailTab === "settings"
+                ? (fineTuningAccessTeamId
+                    ? renderFineTuningAccessSettings(job)
+                    : React.createElement(React.Fragment, null,
+                        renderFineTuningDescriptionEditor(job),
+                        renderFineTuningInstructionsEditor(job),
+                        renderFineTuningAccessSettings(job)
+                      ))
+                : React.createElement(React.Fragment, null,
+                    renderKpiCard(job),
+                    renderEvaluationRunReferences(job)
+                  );
           return React.createElement(FineTuningDetailPage, {
               header,
               headerActions: React.createElement(PlatformLabel, { variant: statusVariant }, statusLabel),
-              activeTab: fineTuningDetailTab === "analysis" || fineTuningDetailTab === "changes" ? fineTuningDetailTab : "general",
-              onTabChange: setFineTuningDetailTab,
+              activeTab: ["analysis", "changes", "settings"].includes(fineTuningDetailTab) ? fineTuningDetailTab : "general",
+              onTabChange: (nextTab) => {
+                setFineTuningDetailTab(nextTab);
+                if (nextTab === "settings" && !(Array.isArray(workspaceTeams) && workspaceTeams.length) && typeof onWorkspaceTeamsRequest === "function") {
+                  onWorkspaceTeamsRequest({ selectedTeamId: "" });
+                }
+              },
               sidebarToggle,
               sidebarCollapsed: fineTuningDetailSidebarCollapsed,
               properties,

@@ -19,8 +19,10 @@
             token: 0,
             resourceType: "",
             resourceId: "",
+            serverCreationToken: 0,
+            serverCreationKind: "",
           });
-  ${MARKETPLACE_APP_SCRIPT_FRAGMENTS.previewResources}${APP_HEADER_APP_SCRIPT_FRAGMENTS.state}        const [showPlaygroundOnboarding, setShowPlaygroundOnboarding] = useState(() => readCurrentSearchParam(PLAYGROUND_ONBOARDING_QUERY_PARAM) === "true");
+  ${MARKETPLACE_APP_SCRIPT_FRAGMENTS.previewResources}${APP_HEADER_APP_SCRIPT_FRAGMENTS.state}${ONBOARDING_APP_SCRIPT_FRAGMENTS.state}
           const [showSubscriptionSuccessModal, setShowSubscriptionSuccessModal] = useState(() => readCurrentSearchParam(PLAYGROUND_SUBSCRIPTION_SUCCESS_QUERY_PARAM) === "true");
           const [profileEditorOpen, setProfileEditorOpen] = useState(false);
           const [threadListMode, setThreadListMode] = useState("threads");
@@ -379,6 +381,7 @@
           });
           const [tasksProjectBackRequestToken, setTasksProjectBackRequestToken] = useState(0);
           const [tasksProjectViewRequest, setTasksProjectViewRequest] = useState(null);
+          const [tasksProjectTaskRequest, setTasksProjectTaskRequest] = useState(null);
           const [tasksProjectsHomeScope, setTasksProjectsHomeScope] = useState("all");
           const [tasksProjectSettingsRequestToken, setTasksProjectSettingsRequestToken] = useState(0);
           const [tasksProjectIssueRequest, setTasksProjectIssueRequest] = useState(null);
@@ -1145,29 +1148,7 @@
             }
           }
   
-          function closePlaygroundOnboarding() {
-            clearPlaygroundOnboardingState();
-            removeCurrentSearchParam(PLAYGROUND_ONBOARDING_QUERY_PARAM);
-            removeCurrentSearchParam(PLAYGROUND_ONBOARDING_STEP_QUERY_PARAM);
-            setShowPlaygroundOnboarding(false);
-            if (sessionState.status === "authenticated" && sessionState.onboardingCompleted === false) {
-              setSessionState((current) => ({
-                ...current,
-                onboardingCompleted: true,
-              }));
-              void fetchJsonWithTimeout("/api/aios/user/profile", {
-                method: "PATCH",
-                credentials: "include",
-                cache: "no-store",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  onboardingCompleted: true,
-                }),
-              }, 15000).catch(() => {});
-            }
-          }
+  ${ONBOARDING_APP_SCRIPT_FRAGMENTS.navigation}
   
           function closeSubscriptionSuccessModal() {
             removeCurrentSearchParam(PLAYGROUND_SUBSCRIPTION_SUCCESS_QUERY_PARAM);
@@ -1224,15 +1205,16 @@
           }, [sessionState.status]);
   
           useEffect(() => {
-            function syncPlaygroundOnboardingFromUrl() {
-              setShowPlaygroundOnboarding(readCurrentSearchParam(PLAYGROUND_ONBOARDING_QUERY_PARAM) === "true");
+            function syncPlatformEntryStateFromUrl() {
               setShowSubscriptionSuccessModal(readCurrentSearchParam(PLAYGROUND_SUBSCRIPTION_SUCCESS_QUERY_PARAM) === "true");
               setInitialLandingPrompt(normalizePlaygroundInitialPrompt(readCurrentSearchParam(PLAYGROUND_INITIAL_PROMPT_QUERY_PARAM)));
             }
   
-            window.addEventListener("popstate", syncPlaygroundOnboardingFromUrl);
-            return () => window.removeEventListener("popstate", syncPlaygroundOnboardingFromUrl);
+            window.addEventListener("popstate", syncPlatformEntryStateFromUrl);
+            return () => window.removeEventListener("popstate", syncPlatformEntryStateFromUrl);
           }, []);
+
+  ${ONBOARDING_APP_SCRIPT_FRAGMENTS.lifecycle}
   
           useEffect(() => {
             if (!initialLandingPrompt) {
@@ -1240,19 +1222,6 @@
             }
             removeCurrentSearchParam(PLAYGROUND_INITIAL_PROMPT_QUERY_PARAM);
           }, [initialLandingPrompt]);
-  
-          useEffect(() => {
-            if (!showPlaygroundOnboarding) {
-              return;
-            }
-            setAccountMenuOpen(false);
-            setThreadSearchOpen(false);
-            setNotificationsOpen(false);
-            setProfileEditorOpen(false);
-            setThreadActionMenuState(null);
-            setThreadNavMenuOpen(false);
-            setThreadTaskListMenuOpen(false);
-          }, [showPlaygroundOnboarding]);
   
           useEffect(() => {
             if (!showSubscriptionSuccessModal) {
@@ -1266,19 +1235,6 @@
             setThreadNavMenuOpen(false);
             setThreadTaskListMenuOpen(false);
           }, [showSubscriptionSuccessModal]);
-  
-          useEffect(() => {
-            if (sessionState.status !== "authenticated") {
-              return;
-            }
-            if (sessionState.onboardingCompleted !== false) {
-              return;
-            }
-            if (showPlaygroundOnboarding) {
-              return;
-            }
-            setShowPlaygroundOnboarding(true);
-          }, [sessionState.onboardingCompleted, sessionState.status, showPlaygroundOnboarding]);
   
   ${SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS.navigation}
   
@@ -1903,7 +1859,7 @@
   	              directResponseTask ? "- This is a response-only ticket. Reply directly, do not call tools, do not inspect projects/tasks, do not update task status, and obey wording constraints such as nothing more." : "",
   	              "- If the ticket creates or changes deployable web apps, functions, databases, or integrations, deploy and smoke-test the affected resource unless the ticket explicitly excludes deployment.",
   	              "- If you need user-owned inputs such as API keys, credentials, billing decisions, repository access, or product decisions, create a focused human-assigned resource request ticket instead of guessing.",
-  	              "- Do not update this ticket's own status directly. The platform will move it to In Review or Finished after the run. Only update subtasks, add comments, or create resource-request tickets when that is genuinely part of the work.",
+	              "- Do not update this ticket's own status directly. The platform will move it to In Review or Done after the run. Only update subtasks, add comments, or create resource-request tickets when that is genuinely part of the work.",
   	              independentReviewerId ? "- When implementation is complete, leave the ticket ready for the configured reviewer; do not perform the review yourself." : "",
   		            ].filter(Boolean).join(newline),
   	            normalizedTask.description
@@ -2919,140 +2875,36 @@
             }
           }
   
-          async function refreshGithubStatus(options = {}) {
+          async function refreshPluginConnectionStatus(provider, setStatus, options = {}) {
             const { clearPendingOnFailure = false } = options;
             try {
-              const response = await fetch("/api/aios/github/user", {
-                method: "GET",
-                credentials: "include",
-              });
-  
-              if (!response.ok) {
-                setGithubStatus({ connected: false });
-                if (clearPendingOnFailure) {
-                  removePendingStatusIndicatorId("github");
-                }
-                return;
-              }
-  
-              const data = await response.json();
-              setGithubStatus({ connected: !!data.connected, profile: data.profile });
+              setStatus(await fetchPlatformPluginConnectionStatus(provider));
             } catch {
-              setGithubStatus({ connected: false });
+              setStatus({ connected: false });
               if (clearPendingOnFailure) {
-                removePendingStatusIndicatorId("github");
+                removePendingStatusIndicatorId(provider);
               }
             }
+          }
+
+          async function refreshGithubStatus(options = {}) {
+            return refreshPluginConnectionStatus("github", setGithubStatus, options);
           }
   
           async function refreshGoogleDriveStatus(options = {}) {
-            const { clearPendingOnFailure = false } = options;
-            try {
-              const response = await fetch("/api/aios/google-drive/user", {
-                method: "GET",
-                credentials: "include",
-              });
-  
-              if (!response.ok) {
-                setGoogleDriveStatus({ connected: false });
-                if (clearPendingOnFailure) {
-                  removePendingStatusIndicatorId("google-drive");
-                }
-                return;
-              }
-  
-              const data = await response.json();
-              setGoogleDriveStatus({ connected: !!data.connected, profile: data.profile });
-            } catch {
-              setGoogleDriveStatus({ connected: false });
-              if (clearPendingOnFailure) {
-                removePendingStatusIndicatorId("google-drive");
-              }
-            }
+            return refreshPluginConnectionStatus("google-drive", setGoogleDriveStatus, options);
           }
   
           async function refreshOneDriveStatus(options = {}) {
-            const { clearPendingOnFailure = false } = options;
-            try {
-              const response = await fetch("/api/aios/onedrive/user", {
-                method: "GET",
-                credentials: "include",
-              });
-  
-              if (!response.ok) {
-                setOneDriveStatus({ connected: false });
-                if (clearPendingOnFailure) {
-                  removePendingStatusIndicatorId("one-drive");
-                }
-                return;
-              }
-  
-              const data = await response.json();
-              setOneDriveStatus({ connected: !!data.connected, profile: data.profile });
-            } catch {
-              setOneDriveStatus({ connected: false });
-              if (clearPendingOnFailure) {
-                removePendingStatusIndicatorId("one-drive");
-              }
-            }
+            return refreshPluginConnectionStatus("one-drive", setOneDriveStatus, options);
           }
   
           async function refreshGmailStatus(options = {}) {
-            const { clearPendingOnFailure = false } = options;
-            try {
-              const response = await fetch("/api/aios/gmail/user", {
-                method: "GET",
-                credentials: "include",
-              });
-  
-              if (!response.ok) {
-                setGmailStatus({ connected: false });
-                if (clearPendingOnFailure) {
-                  removePendingStatusIndicatorId("gmail");
-                }
-                return;
-              }
-  
-              const data = await response.json();
-              setGmailStatus({ connected: !!data.connected, profile: data.profile });
-            } catch {
-              setGmailStatus({ connected: false });
-              if (clearPendingOnFailure) {
-                removePendingStatusIndicatorId("gmail");
-              }
-            }
+            return refreshPluginConnectionStatus("gmail", setGmailStatus, options);
           }
   
           async function refreshNotionStatus(options = {}) {
-            const { clearPendingOnFailure = false } = options;
-            try {
-              const response = await fetch("/api/aios/notion/user", {
-                method: "GET",
-                credentials: "include",
-              });
-  
-              if (!response.ok) {
-                setNotionStatus({ connected: false });
-                if (clearPendingOnFailure) {
-                  removePendingStatusIndicatorId("notion");
-                }
-                return;
-              }
-  
-              const data = await response.json();
-              setNotionStatus({
-                connected: !!data.connected,
-                profile: {
-                  ...(data.profile || {}),
-                  workspaceName: data.workspace?.name || "",
-                },
-              });
-            } catch {
-              setNotionStatus({ connected: false });
-              if (clearPendingOnFailure) {
-                removePendingStatusIndicatorId("notion");
-              }
-            }
+            return refreshPluginConnectionStatus("notion", setNotionStatus, options);
           }
   
           const loadSettingsEmailStatus = useCallback(async function loadSettingsEmailStatus() {
@@ -3233,7 +3085,7 @@
             };
           }
   
-          async function handleConnectorAuthConnect(provider, loginPath, label, options = {}) {
+          async function handleConnectorAuthConnect(provider, label, options = {}) {
             const authState = buildProjectConnectorBrowserAuthState(provider, options);
             const pendingId = authState.provider || provider;
             const projectComposerConnectorRestoreState = authState.connectorBrowserMode === "project-composer"
@@ -3308,76 +3160,45 @@
                 redirectTo,
                 projectConnectorBrowserRestoreState: authState.projectConnectorBrowserRestoreState,
               });
-              const response = await fetch(loginPath, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                credentials: "include",
-                body: JSON.stringify({
-                  redirectTo,
-                }),
+              const connection = await beginPlatformPluginConnection(provider, {
+                redirectTo,
+                ...(typeof options?.scope === "string" && options.scope.trim()
+                  ? { scope: options.scope.trim() }
+                  : {}),
               });
-  
-              if (response.status === 401) {
-                clearPlaygroundIntegrationRedirectState();
-                clearPlaygroundConnectorBrowserRestoreState();
-                clearPlaygroundProjectComposerConnectorRestoreState();
-                handleSignInWithComputerAgents();
-                return;
-              }
-  
-              if (!response.ok) {
-                removePendingStatusIndicatorId(pendingId);
-                clearPlaygroundIntegrationRedirectState();
-                clearPlaygroundConnectorBrowserRestoreState();
-                clearPlaygroundProjectComposerConnectorRestoreState();
-                const data = await response.json().catch(() => ({}));
-                console.error(label + " login failed:", data.error || response.status);
-                return;
-              }
-  
-              const data = await response.json();
-              if (!data.authUrl) {
-                removePendingStatusIndicatorId(pendingId);
-                clearPlaygroundIntegrationRedirectState();
-                clearPlaygroundConnectorBrowserRestoreState();
-                clearPlaygroundProjectComposerConnectorRestoreState();
-                console.error(label + " auth URL is missing.");
-                return;
-              }
               console.info("[connector-debug] connector auth redirecting to provider", {
                 provider: authState.provider,
-                hasAuthUrl: Boolean(data.authUrl),
+                hasAuthUrl: Boolean(connection.authUrl),
                 redirectTo,
                 projectConnectorBrowserRestoreState: authState.projectConnectorBrowserRestoreState,
               });
-              window.location.href = data.authUrl;
+              window.location.href = connection.authUrl;
             } catch (error) {
-              removePendingStatusIndicatorId(pendingId);
               clearPlaygroundIntegrationRedirectState();
               clearPlaygroundConnectorBrowserRestoreState();
               clearPlaygroundProjectComposerConnectorRestoreState();
+              if (error?.status === 401) {
+                handleSignInWithComputerAgents();
+                return;
+              }
+              removePendingStatusIndicatorId(pendingId);
               console.error("Failed to initiate " + label + " auth:", error);
             }
           }
   
           async function handleGoogleDriveAuthConnect(options = {}) {
-            return handleConnectorAuthConnect("google-drive", "/api/aios/google-drive/login", "Google Drive", options);
+            return handleConnectorAuthConnect("google-drive", "Google Drive", options);
           }
   
           async function handleGoogleDriveAuthDisconnect() {
-            await fetch("/api/aios/google-drive/disconnect", {
-              method: "POST",
-              credentials: "include",
-            });
+            await disconnectPlatformPluginConnection("google-drive");
             removePendingStatusIndicatorId("google-drive");
             setGoogleDriveStatus({ connected: false });
             setStatusIndicatorItems((current) => current.filter((item) => item.id !== "google-drive"));
           }
   
           async function handleGithubAuthConnect(options = {}) {
-            return handleConnectorAuthConnect("github", "/api/aios/github/login", "GitHub", options);
+            return handleConnectorAuthConnect("github", "GitHub", options);
           }
   
           async function handleGithubAuthDisconnect() {
@@ -3392,10 +3213,7 @@
                 }
               })(),
             });
-            await fetch("/api/aios/github/disconnect", {
-              method: "POST",
-              credentials: "include",
-            });
+            await disconnectPlatformPluginConnection("github");
             removePendingStatusIndicatorId("github");
             clearPlaygroundIntegrationRedirectState();
             clearPlaygroundConnectorBrowserRestoreState();
@@ -3405,42 +3223,33 @@
           }
   
           async function handleOneDriveAuthConnect(options = {}) {
-            return handleConnectorAuthConnect("one-drive", "/api/aios/onedrive/login", "OneDrive", options);
+            return handleConnectorAuthConnect("one-drive", "OneDrive", options);
           }
   
           async function handleOneDriveAuthDisconnect() {
-            await fetch("/api/aios/onedrive/disconnect", {
-              method: "POST",
-              credentials: "include",
-            });
+            await disconnectPlatformPluginConnection("one-drive");
             removePendingStatusIndicatorId("one-drive");
             setOneDriveStatus({ connected: false });
             setStatusIndicatorItems((current) => current.filter((item) => item.id !== "one-drive"));
           }
   
           async function handleGmailAuthConnect(options = {}) {
-            return handleConnectorAuthConnect("gmail", "/api/aios/gmail/login", "Gmail", options);
+            return handleConnectorAuthConnect("gmail", "Gmail", options);
           }
   
           async function handleGmailAuthDisconnect() {
-            await fetch("/api/aios/gmail/disconnect", {
-              method: "POST",
-              credentials: "include",
-            });
+            await disconnectPlatformPluginConnection("gmail");
             removePendingStatusIndicatorId("gmail");
             setGmailStatus({ connected: false });
             setStatusIndicatorItems((current) => current.filter((item) => item.id !== "gmail"));
           }
   
           async function handleNotionAuthConnect(options = {}) {
-            return handleConnectorAuthConnect("notion", "/api/aios/notion/login", "Notion", options);
+            return handleConnectorAuthConnect("notion", "Notion", options);
           }
   
           async function handleNotionAuthDisconnect() {
-            await fetch("/api/aios/notion/disconnect", {
-              method: "POST",
-              credentials: "include",
-            });
+            await disconnectPlatformPluginConnection("notion");
             removePendingStatusIndicatorId("notion");
             setNotionStatus({ connected: false });
             setNotionDatabases([]);
@@ -5777,21 +5586,7 @@
               return;
             }
   
-            const onboardingContext = redirectState.onboarding && typeof redirectState.onboarding === "object" && !Array.isArray(redirectState.onboarding)
-              ? redirectState.onboarding
-              : null;
-            if (onboardingContext) {
-              const onboardingStepIndex = Number.isFinite(Number(onboardingContext.stepIndex))
-                ? Math.max(0, Math.min(4, Math.round(Number(onboardingContext.stepIndex))))
-                : 0;
-              writePlaygroundOnboardingState({ stepIndex: onboardingStepIndex });
-              try {
-                const url = new URL(window.location.href);
-                url.searchParams.set(PLAYGROUND_ONBOARDING_QUERY_PARAM, "true");
-                url.searchParams.set(PLAYGROUND_ONBOARDING_STEP_QUERY_PARAM, String(onboardingStepIndex));
-                window.history.replaceState({}, "", url.toString());
-              } catch {}
-              setShowPlaygroundOnboarding(true);
+            if (restorePlaygroundOnboardingFromConnectorRedirect(redirectState)) {
               clearPlaygroundIntegrationRedirectState();
               return;
             }

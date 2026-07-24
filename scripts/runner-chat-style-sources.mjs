@@ -30,20 +30,21 @@ export const RUNNER_CHAT_STYLE_SOURCE_PATHS = Object.freeze([
   "src/platform-ui/components/ui/button/button.css",
   "src/platform-ui/components/ui/icon-button/icon-button.css",
   "src/platform-ui/components/ui/label/label.css",
+  "src/platform-ui/components/ui/ticket-item/ticket-item.css",
   "src/platform-ui/components/ui/version-label/version-label.css",
 ]);
 
 export function resolveRunnerChatStyleSourcePaths(packageRoot) {
-  return RUNNER_CHAT_STYLE_SOURCE_PATHS.map((relativePath) => (
-    path.resolve(packageRoot, relativePath)
-  ));
+  return RUNNER_CHAT_STYLE_SOURCE_PATHS.map((relativePath) =>
+    path.resolve(packageRoot, relativePath),
+  );
 }
 
 export async function loadRunnerChatCssBundle(packageRoot) {
   const sources = await Promise.all(
-    resolveRunnerChatStyleSourcePaths(packageRoot).map((sourcePath) => (
-      fs.readFile(sourcePath, "utf8")
-    )),
+    resolveRunnerChatStyleSourcePaths(packageRoot).map((sourcePath) =>
+      fs.readFile(sourcePath, "utf8"),
+    ),
   );
   return sources.join("\n\n");
 }

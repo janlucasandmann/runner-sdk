@@ -177,15 +177,6 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
           return null;
         }
 
-        function renderIssueComposerField(label, control, options = {}) {
-          return React.createElement("label", {
-              className: "playground-tasks-project-modal-field playground-tasks-issue-modal-field" + (options.full ? " is-full" : ""),
-            },
-            React.createElement("div", { className: "playground-tasks-project-modal-label" }, label),
-            control
-          );
-        }
-
         function renderProjectIssueComposerDialog() {
           if (!issueComposerOpen) {
             return null;
@@ -195,7 +186,10 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
           const issueComposerTitle = normalizedIssueType === "subtask" ? "Create Subtask" : "Create Issue";
           const selectedDependencyId = normalizePlaygroundIdList(issueComposerDraft.dependencyIds)[0] || "";
           const parentTicketCandidates = tasks
-            .filter((task) => task?.id && !isPlaygroundSubtaskRecord(task))
+            .filter((task) => {
+              const taskType = normalizePlaygroundTaskType(task?.taskType || task?.type);
+              return task?.id && ["task", "loop"].includes(taskType) && !isPlaygroundTaskTerminalStatus(task.status);
+            })
             .slice()
             .sort((left, right) => {
               const leftTicketNumber = parsePlaygroundTaskTicketNumber(taskTicketNumbersById[left.id] || left.ticketNumber);
@@ -227,186 +221,83 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
             ? ((selectedIssueEnvironment.name || selectedIssueEnvironment.id) + (selectedIssueEnvironment.isDefault ? " (Default)" : ""))
             : (availableBacklogEnvironments.length > 0 ? "Select environment" : "No environments");
 
-          function renderIssueComposerEnvironmentOptionRow(environment) {
-            const isSelected = selectedIssueEnvironment?.id === environment.id;
-            return React.createElement("button", {
-                key: environment.id,
-                type: "button",
-                className: "tb-popup-row tb-popup-row-select" + (isSelected ? " selected" : ""),
-                onClick: () => {
-                  updateIssueComposerField("environmentId", environment.id);
-                  setIssueComposerEnvironmentPopoverOpen(false);
-                },
-              },
-              React.createElement("span", { className: "tb-popup-check-slot" },
-                isSelected
-                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                  : null
-              ),
-              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                React.createElement("span", null, (environment.name || environment.id) + (environment.isDefault ? " (Default)" : "")),
-                React.createElement("span", null, "Use this computer for this issue.")
-              )
-            );
-          }
-
-          function renderIssueComposerComputerSelector() {
-            return React.createElement("div", { className: "playground-tasks-project-modal-environment-picker playground-tasks-issue-modal-computer-picker" },
-              renderPlaygroundPlatformPopup({
-                open: issueComposerEnvironmentPopoverOpen,
-                shellRef: issueComposerEnvironmentPopoverRef,
-                shellClassName: "playground-environments-runtime-popup-shell playground-tasks-detail-select-shell",
-                menuClassName: "playground-tasks-toolbar-popup-menu-environment",
-                trigger: React.createElement("button", {
-                  type: "button",
-                  className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger playground-tasks-project-modal-environment-button" + (selectedIssueEnvironment ? "" : " is-empty") + (issueComposerEnvironmentPopoverOpen ? " is-active" : ""),
-                  onClick: () => {
-                    setIssueComposerDetailSelectPopover("");
-                    setIssueComposerEnvironmentPopoverOpen((current) => !current);
-                  },
-                  title: issueEnvironmentLabel,
-                  "aria-expanded": issueComposerEnvironmentPopoverOpen ? "true" : "false",
-                  disabled: availableBacklogEnvironments.length === 0,
-                },
-                  React.createElement(Monitor, { className: "playground-tasks-project-modal-environment-icon", strokeWidth: 1.8 }),
-                  React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, issueEnvironmentLabel),
-                  React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", strokeWidth: 1.8 })
-                ),
-                children: availableBacklogEnvironments.length > 0
-                  ? availableBacklogEnvironments.map((environment) => renderIssueComposerEnvironmentOptionRow(environment))
-                  : React.createElement("div", { className: "tb-popup-empty-state" }, "No environments available."),
-              })
-            );
-          }
-
-          function renderIssueComposerTitleField() {
-            return renderIssueComposerField("Title",
-              React.createElement("input", {
-                type: "text",
-                className: "playground-environments-input playground-new-issue-modal__title-input",
-                value: issueComposerDraft.title || "",
-                placeholder: "Issue title",
-                "aria-label": "Issue title",
-                autoComplete: "off",
-                onChange: (event) => updateIssueComposerField("title", event.target.value),
-              }),
-              { full: true }
-            );
-          }
-
           function renderIssueComposerDescriptionField() {
-            return React.createElement("div", { className: "playground-tasks-detail-description playground-tasks-project-initial-setup-goal-editor playground-tasks-issue-description-editor" },
-              React.createElement("div", { className: "playground-tasks-detail-section-header" },
-                React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Description"),
-                React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                  [
-                    { id: "bold", label: "Bold", icon: Bold },
-                    { id: "italic", label: "Italic", icon: Italic },
-                    { id: "underline", label: "Underline", icon: Underline },
-                    { id: "list", label: "List", icon: List },
-                  ].map((action) =>
-                    React.createElement("button", {
-                      key: action.id,
-                      type: "button",
-                      className: "playground-tasks-detail-format-button",
-                      title: action.label,
-                      "aria-label": action.label,
-                      onMouseDown: (event) => event.preventDefault(),
-                      onClick: () => handleIssueComposerDescriptionFormat(action.id),
-                    }, React.createElement(action.icon, { width: 14, height: 14, strokeWidth: 1.8 }))
-                  )
-                )
+            return React.createElement(PlatformInstructionsEditor, {
+              value: resolveTaskDescriptionAttachmentFiles(
+                issueComposerDraft.description || "",
+                issueComposerDraft.attachments
               ),
-              React.createElement("div", { className: "playground-tasks-detail-description-editor" + (isIssueComposerDescriptionEditing ? " is-editing" : " is-preview") },
-                !isIssueComposerDescriptionEditing
-                  ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                      String(issueComposerDraft.description || "").trim()
-                        ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                            content: issueComposerDraft.description,
-                            className: "playground-tasks-detail-description-preview tb-message-markdown",
-                          })
-                        : React.createElement("div", {
-                            className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                          }, "Describe the expected outcome, context, constraints, and acceptance criteria.")
-                    )
-                  : null,
-                React.createElement("textarea", {
-                  ref: issueComposerDescriptionTextareaRef,
-                  className: "playground-tasks-detail-description-input " + (isIssueComposerDescriptionEditing ? "is-editing" : "is-preview"),
-                  rows: 1,
-                  placeholder: isIssueComposerDescriptionEditing ? "Describe the expected outcome, context, constraints, and acceptance criteria." : "",
-                  value: issueComposerDraft.description || "",
-                  onFocus: (event) => {
-                    setIsIssueComposerDescriptionEditing(true);
-                    resizeTaskDescriptionTextarea(event.currentTarget);
-                  },
-                  onChange: (event) => {
-                    updateIssueComposerField("description", event.target.value);
-                    resizeTaskDescriptionTextarea(event.currentTarget);
-                  },
-                  onBlur: () => setIsIssueComposerDescriptionEditing(false),
-                })
-              )
-            );
-          }
-
-          function toggleIssueComposerDetailSelectPopover(nextPopoverId) {
-            setIssueComposerEnvironmentPopoverOpen(false);
-            setIssueComposerDetailSelectPopover((current) => current === nextPopoverId ? "" : nextPopoverId);
-          }
-
-          function renderIssueComposerDetailSelectOptionRow({ key, label, description, selected, onClick, disabled = false }) {
-            return React.createElement("button", {
-                key,
-                type: "button",
-                className: "tb-popup-row tb-popup-row-select" + (selected ? " selected" : ""),
-                onClick,
-                disabled,
+              onChange: handleIssueComposerDescriptionEditorChange,
+              title: "Description",
+              placeholder: "Describe the expected outcome, context, constraints, and acceptance criteria.",
+              ariaLabel: "Issue description",
+              editorRef: issueComposerDescriptionTextareaRef,
+              historyKey: "new-issue-description:" + String(selectedProjectId || selectedProject?.id || "project"),
+              stickyHeader: false,
+              variant: "minimalistic-ui",
+              contentVariant: "file-enabled",
+              fileUpload: {
+                upload: uploadIssueComposerDescriptionFiles,
+                resolvePreviewSource: resolveTaskDescriptionFilePreviewSource,
+                disabled: issueComposerSaveState.isSaving || taskAttachmentTransferState.isProcessing,
+                onRename: handleRenameIssueComposerDescriptionFile,
+                onRemove: handleRemoveIssueComposerDescriptionFile,
               },
-              React.createElement("span", { className: "tb-popup-check-slot" },
-                selected
-                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                  : null
-              ),
-              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                React.createElement("span", null, label),
-                description
-                  ? React.createElement("span", null, description)
-                  : null
-              )
-            );
+              className: "playground-new-issue-modal__description",
+            });
+          }
+
+          function createIssueComposerSelectorOption({ value, label, description, leading = null, onSelect, disabled = false }) {
+            return {
+              value: String(value || ""),
+              label,
+              description: description || undefined,
+              leading: leading || undefined,
+              disabled,
+              onSelect,
+            };
           }
 
           function renderIssueComposerDetailSelectControl({
             popoverId,
+            value,
             valueLabel,
             disabled = false,
             isEmpty = false,
             buttonContent = null,
-            menuClassName = "",
-            children,
+            popupClassName = "",
+            popupWidth = "min(300px, calc(100vw - 48px))",
+            popupMaxHeight = "min(320px, calc(100vh - 120px))",
+            options = [],
+            emptyContent = "No options available.",
           }) {
-            const isOpen = issueComposerDetailSelectPopover === popoverId;
-            return renderPlaygroundPlatformPopup({
-              open: isOpen,
-              shellRef: isOpen ? issueComposerDetailSelectPopoverRef : null,
-              shellClassName: "playground-environments-runtime-popup-shell playground-tasks-detail-select-shell",
-              menuClassName,
-              trigger: React.createElement("button", {
-                type: "button",
-                className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger" + (isEmpty ? " is-empty" : "") + (isOpen ? " is-active" : ""),
-                disabled,
-                onClick: () => {
-                  if (disabled) return;
-                  toggleIssueComposerDetailSelectPopover(popoverId);
-                },
-                title: valueLabel,
-                "aria-expanded": isOpen ? "true" : "false",
+            const normalizedPopoverId = String(popoverId || "").trim();
+            const selectorOptions = Array.isArray(options) ? options.filter((option) => option?.value) : [];
+            return React.createElement(PlatformSelector, {
+              value: String(value || ""),
+              options: selectorOptions,
+              onValueChange: (_nextValue, option) => {
+                if (typeof option?.onSelect === "function") {
+                  option.onSelect();
+                }
+                setIssueComposerDetailSelectPopover("");
               },
-                buttonContent || React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, valueLabel),
-                React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", strokeWidth: 1.8 })
-              ),
-              children,
+              ariaLabel: "Select issue " + normalizedPopoverId.replace(/-/g, " "),
+              label: buttonContent || React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, valueLabel),
+              placeholder: valueLabel,
+              disabled,
+              open: issueComposerDetailSelectPopover === normalizedPopoverId,
+              onOpenChange: (nextOpen) => setIssueComposerDetailSelectPopover(nextOpen ? normalizedPopoverId : ""),
+              alignment: "end",
+              popupAlignment: "right",
+              fullWidth: true,
+              emptyContent,
+              popupWidth,
+              popupMaxWidth: "calc(100vw - 48px)",
+              popupMaxHeight,
+              className: "playground-tasks-detail-central-selector" + (isEmpty ? " is-empty" : ""),
+              triggerClassName: "playground-tasks-detail-central-selector-trigger",
+              popupClassName: ("playground-tasks-detail-central-selector-popup " + popupClassName).trim(),
             });
           }
 
@@ -425,20 +316,18 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
             );
           }
 
-          function renderIssueComposerAgentRow(actor, options = {}) {
+          function createIssueComposerActorSelectorOption(actor, options = {}) {
             const mode = getPlaygroundTaskAssigneePopupMode(actor);
             const actorLabel = getTaskAssigneeName(actor.id, actor.name || "Unknown");
             const actorDescription = options.reviewer
               ? (mode === "humans" ? "Human reviewer" : (mode === "teams" ? "Agent squad reviewer" : "Agent reviewer"))
               : (mode === "humans" ? "Human" : (mode === "teams" ? "Agent squad" : "Agent"));
-            const isSelected = options.reviewer
-              ? (issueComposerDraft.reviewRequired && issueComposerDraft.reviewerAgentId === actor.id)
-              : issueComposerDraft.assigneeAgentId === actor.id;
-            return React.createElement("button", {
-                key: actor.id,
-                type: "button",
-                className: "tb-popup-row tb-popup-row-select tb-popup-row-agent" + (isSelected ? " selected" : ""),
-                onClick: () => {
+            return createIssueComposerSelectorOption({
+              value: actor.id,
+              label: actorLabel,
+              description: actorDescription,
+              leading: renderTaskActorAvatar(actor.id, "playground-tasks-detail-person-menu-avatar"),
+              onSelect: () => {
                   if (options.reviewer) {
                     updateIssueComposerDraft((current) => ({
                       ...current,
@@ -448,60 +337,25 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
                   } else {
                     updateIssueComposerField("assigneeAgentId", actor.id);
                   }
-                  setIssueComposerDetailSelectPopover("");
                 },
-              },
-              renderTaskActorAvatar(actor.id, "playground-tasks-detail-person-menu-avatar"),
-              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                React.createElement("span", null, actorLabel),
-                React.createElement("span", null, actorDescription)
-              ),
-              React.createElement("span", { className: "tb-popup-check-slot" },
-                isSelected
-                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                  : null
-              )
-            );
-          }
-
-          function renderIssueComposerReviewerNoneRow() {
-            return React.createElement("button", {
-                key: "__none__",
-                type: "button",
-                className: "tb-popup-row tb-popup-row-select tb-popup-row-agent" + (!issueComposerDraft.reviewRequired ? " selected" : ""),
-                onClick: () => {
-                  updateIssueComposerDraft((current) => ({
-                    ...current,
-                    reviewRequired: false,
-                    reviewerAgentId: null,
-                  }));
-                  setIssueComposerDetailSelectPopover("");
-                },
-              },
-              React.createElement("span", { className: "playground-tasks-detail-person-menu-avatar", "aria-hidden": "true" },
-                React.createElement("span", { className: "playground-tasks-detail-person-menu-avatar-fallback" }, "No")
-              ),
-              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                React.createElement("span", null, "No review"),
-                React.createElement("span", null, "Move directly to Finished when work is done.")
-              ),
-              React.createElement("span", { className: "tb-popup-check-slot" },
-                !issueComposerDraft.reviewRequired
-                  ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                  : null
-              )
-            );
+            });
           }
 
           function renderIssueComposerDetailsSection() {
             const issueType = normalizePlaygroundTaskType(issueComposerDraft.taskType);
             const IssueTypeIcon = issueType === "subtask" ? Check : (issueType === "loop" ? RefreshCw : Bookmark);
             const issueTypeLabel = PLAYGROUND_TASK_TYPE_OPTIONS.find((option) => option.id === issueType)?.label || "Task";
-            const issueStatusLabel = PLAYGROUND_TASK_STATUS_OPTIONS.find((option) => option.id === issueComposerDraft.status)?.label || "To do";
+            const issueStatus = issueComposerDraft.status === "blocked" ? "blocked" : "todo";
+            const issueStatusPresentation = getPlaygroundTaskStatusPresentation(issueStatus);
+            const issueStatusLabel = issueStatusPresentation.label;
             const issuePriorityPresentation = getPlaygroundTaskPriorityPresentation(issueComposerDraft.priority);
             const issueColorPresentation = getPlaygroundTaskColorPresentation(issueComposerDraft.taskColor);
             const selectedRelease = issueComposerDraft.releaseId ? releases.find((release) => release.id === issueComposerDraft.releaseId) || null : null;
-            const selectedSprint = issueComposerDraft.sprintId ? sprints.find((sprint) => sprint.id === issueComposerDraft.sprintId) || null : null;
+            const selectedParentTaskId = normalizePlaygroundParentTaskId(issueComposerDraft.parentTaskId);
+            const selectedParentTask = selectedParentTaskId ? tasks.find((task) => task.id === selectedParentTaskId) || null : null;
+            const parentTaskLabel = selectedParentTask
+              ? ((taskTicketNumbersById[selectedParentTask.id] || selectedParentTask.ticketNumber || "000") + " - " + (selectedParentTask.title || "Untitled Task"))
+              : "Select ticket";
             const selectedAssignee = issueComposerDraft.assigneeAgentId ? assignableActors.find((actor) => actor.id === issueComposerDraft.assigneeAgentId) || null : null;
             const assigneeLabel = selectedAssignee ? getTaskAssigneeOptionLabel(selectedAssignee) : "Unassigned";
             const selectedReviewer = issueComposerDraft.reviewRequired && issueComposerDraft.reviewerAgentId
@@ -519,73 +373,130 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
             return React.createElement("div", {
                 className: "playground-tasks-detail-facts playground-tasks-issue-details-section" + (issueComposerDetailSelectPopover ? " is-popover-open" : ""),
               },
-              React.createElement("div", { className: "playground-tasks-detail-facts-header" },
-                React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Details"),
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-tasks-detail-facts-toggle" + (issueComposerDetailsCollapsed ? " is-collapsed" : ""),
-                  onClick: () => setIssueComposerDetailsCollapsed((current) => !current),
-                  title: issueComposerDetailsCollapsed ? "Expand details" : "Collapse details",
-                  "aria-label": issueComposerDetailsCollapsed ? "Expand details" : "Collapse details",
-                  "aria-expanded": issueComposerDetailsCollapsed ? "false" : "true",
-                }, React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.9 }))
-              ),
-              !issueComposerDetailsCollapsed
-                ? React.createElement("div", { className: "playground-tasks-detail-facts-body" },
-                    renderIssueComposerDetailFact("Computer", renderIssueComposerComputerSelector()),
+              React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                    renderIssueComposerDetailFact("Computer",
+                      renderIssueComposerDetailSelectControl({
+                        popoverId: "computer",
+                        value: selectedIssueEnvironment?.id || "",
+                        valueLabel: issueEnvironmentLabel,
+                        isEmpty: !selectedIssueEnvironment,
+                        disabled: availableBacklogEnvironments.length === 0,
+                        buttonContent: React.createElement("span", { className: "playground-tasks-detail-person-value" },
+                          React.createElement(Monitor, { className: "playground-tasks-project-modal-environment-icon", strokeWidth: 1.8 }),
+                          React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, issueEnvironmentLabel)
+                        ),
+                        options: availableBacklogEnvironments.map((environment) =>
+                          createIssueComposerSelectorOption({
+                            value: environment.id,
+                            label: (environment.name || environment.id) + (environment.isDefault ? " (Default)" : ""),
+                            description: "Use this computer for this issue.",
+                            onSelect: () => updateIssueComposerField("environmentId", environment.id),
+                          })
+                        ),
+                        emptyContent: "No computers available.",
+                      })
+                    ),
                     renderIssueComposerDetailFact("Type",
                       React.createElement("div", { className: "playground-tasks-type-control" },
                         renderIssueComposerDetailSelectControl({
                           popoverId: "type",
+                          value: issueType,
                           valueLabel: issueTypeLabel,
                           buttonContent: React.createElement("span", { className: "playground-tasks-detail-type-value" },
                             React.createElement(IssueTypeIcon, { className: "playground-tasks-detail-type-icon", strokeWidth: 1.9 }),
                             React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, issueTypeLabel)
                           ),
-                          children: PLAYGROUND_TASK_TYPE_OPTIONS.map((option) =>
-                            renderIssueComposerDetailSelectOptionRow({
-                              key: option.id,
+                          options: PLAYGROUND_TASK_TYPE_OPTIONS.map((option) => {
+                            const OptionIcon = option.id === "subtask" ? Check : (option.id === "loop" ? RefreshCw : Bookmark);
+                            return createIssueComposerSelectorOption({
+                              value: option.id,
                               label: option.label,
-                              selected: issueType === option.id,
-                              onClick: () => {
+                              leading: React.createElement(OptionIcon, { width: 16, height: 16, strokeWidth: 1.9 }),
+                              onSelect: () => {
                                 const nextType = normalizePlaygroundTaskType(option.id);
                                 updateIssueComposerDraft((current) => ({
                                   ...current,
                                   taskType: nextType,
                                   parentTaskId: nextType === "subtask" ? current.parentTaskId : null,
                                 }));
-                                setIssueComposerDetailSelectPopover("");
                               },
-                            })
-                          ),
+                            });
+                          }),
                         })
                       )
                     ),
+                    issueType === "subtask"
+                      ? renderIssueComposerDetailFact("Subtask to",
+                          renderIssueComposerDetailSelectControl({
+                            popoverId: "subtask-to",
+                            value: selectedParentTaskId || "",
+                            valueLabel: parentTaskLabel,
+                            isEmpty: !selectedParentTaskId,
+                            popupWidth: "min(380px, calc(100vw - 48px))",
+                            options: parentTicketCandidates.map((task) =>
+                              createIssueComposerSelectorOption({
+                                value: task.id,
+                                label: (taskTicketNumbersById[task.id] || task.ticketNumber || "000") + " - " + (task.title || "Untitled Task"),
+                                description: getPlaygroundTaskTypeLabel(task.taskType || task.type),
+                                onSelect: () => updateIssueComposerField("parentTaskId", task.id),
+                              })
+                            ),
+                            emptyContent: "No unfinished tasks or loops available.",
+                          })
+                        )
+                      : null,
                     renderIssueComposerDetailFact("Status",
                       renderIssueComposerDetailSelectControl({
                         popoverId: "status",
+                        value: issueStatus,
                         valueLabel: issueStatusLabel,
-                        children: PLAYGROUND_TASK_STATUS_OPTIONS.map((option) =>
-                          renderIssueComposerDetailSelectOptionRow({
-                            key: option.id,
+                        buttonContent: renderPlaygroundTaskStatusValue(issueStatus, "playground-tasks-detail-status-value"),
+                        options: PLAYGROUND_TASK_STATUS_OPTIONS
+                          .filter((option) => ["todo", "blocked"].includes(option.id))
+                          .map((option) => createIssueComposerSelectorOption({
+                            value: option.id,
                             label: option.label,
-                            selected: issueComposerDraft.status === option.id,
-                            onClick: () => {
+                            leading: renderPlaygroundTaskStatusGlyph(option.id),
+                            onSelect: () => {
                               updateIssueComposerDraft((current) => ({
                                 ...current,
                                 status: option.id,
                                 dependencyIds: option.id === "blocked" ? normalizePlaygroundIdList(current.dependencyIds) : [],
-                                completedAt: option.id === "done" ? (current.completedAt || new Date().toISOString()) : null,
+                                completedAt: null,
                               }));
-                              setIssueComposerDetailSelectPopover("");
                             },
-                          })
-                        ),
+                          })),
                       })
                     ),
+                    issueStatus === "blocked"
+                      ? renderIssueComposerDetailFact("Blocked by",
+                          renderIssueComposerDetailSelectControl({
+                            popoverId: "blocked-by",
+                            value: selectedDependencyId || "__none__",
+                            valueLabel: dependencyLabel,
+                            isEmpty: !selectedDependencyId,
+                            popupWidth: "min(380px, calc(100vw - 48px))",
+                            options: [
+                              createIssueComposerSelectorOption({
+                                value: "__none__",
+                                label: "None",
+                                onSelect: () => updateIssueComposerField("dependencyIds", []),
+                              }),
+                              ...dependencyCandidates.map((task) =>
+                                createIssueComposerSelectorOption({
+                                  value: task.id,
+                                  label: (taskTicketNumbersById[task.id] || task.ticketNumber || "000") + " - " + (task.title || "Untitled Task"),
+                                  onSelect: () => updateIssueComposerField("dependencyIds", [task.id]),
+                                })
+                              ),
+                            ],
+                          })
+                        )
+                      : null,
                     renderIssueComposerDetailFact("Priority",
                       renderIssueComposerDetailSelectControl({
                         popoverId: "priority",
+                        value: issueComposerDraft.priority,
                         valueLabel: issuePriorityPresentation.label,
                         buttonContent: React.createElement("span", {
                             className: "playground-tasks-priority-value playground-tasks-detail-priority-value " + issuePriorityPresentation.toneClassName,
@@ -593,15 +504,12 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
                           renderPlaygroundTaskPriorityGlyph(issueComposerDraft.priority),
                           React.createElement("span", { className: "playground-tasks-priority-value-text playground-tasks-detail-select-trigger-label" }, issuePriorityPresentation.label)
                         ),
-                        children: PLAYGROUND_TASK_PRIORITY_OPTIONS.map((option) =>
-                          renderIssueComposerDetailSelectOptionRow({
-                            key: option.id,
+                        options: PLAYGROUND_TASK_PRIORITY_OPTIONS.map((option) =>
+                          createIssueComposerSelectorOption({
+                            value: option.id,
                             label: getPlaygroundTaskPriorityPresentation(option.id).label,
-                            selected: issueComposerDraft.priority === option.id,
-                            onClick: () => {
-                              updateIssueComposerField("priority", option.id);
-                              setIssueComposerDetailSelectPopover("");
-                            },
+                            leading: renderPlaygroundTaskPriorityGlyph(option.id),
+                            onSelect: () => updateIssueComposerField("priority", option.id),
                           })
                         ),
                       })
@@ -609,6 +517,7 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
                     renderIssueComposerDetailFact("Color",
                       renderIssueComposerDetailSelectControl({
                         popoverId: "color",
+                        value: getPlaygroundTaskColorId(issueComposerDraft.taskColor),
                         valueLabel: issueColorPresentation.label,
                         buttonContent: React.createElement("span", {
                             className: "playground-tasks-detail-color-value",
@@ -617,9 +526,9 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
                           React.createElement("span", { className: "playground-tasks-detail-color-swatch", "aria-hidden": "true" }),
                           React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, issueColorPresentation.label)
                         ),
-                        children: PLAYGROUND_TASK_COLOR_OPTIONS.map((option) =>
-                          renderIssueComposerDetailSelectOptionRow({
-                            key: option.id,
+                        options: PLAYGROUND_TASK_COLOR_OPTIONS.map((option) =>
+                          createIssueComposerSelectorOption({
+                            value: option.id,
                             label: React.createElement("span", {
                                 className: "playground-tasks-detail-select-popup-label-slot",
                                 style: getPlaygroundTaskColorStyle(option.id),
@@ -627,11 +536,7 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
                               React.createElement("span", { className: "playground-tasks-detail-color-swatch", "aria-hidden": "true" }),
                               React.createElement("span", null, option.label)
                             ),
-                            selected: getPlaygroundTaskColorId(issueComposerDraft.taskColor) === option.id,
-                            onClick: () => {
-                              updateIssueComposerField("taskColor", option.id);
-                              setIssueComposerDetailSelectPopover("");
-                            },
+                            onSelect: () => updateIssueComposerField("taskColor", option.id),
                           })
                         ),
                       })
@@ -639,63 +544,24 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
                     renderIssueComposerDetailFact("Milestone",
                       renderIssueComposerDetailSelectControl({
                         popoverId: "release",
+                        value: selectedRelease?.id || "__none__",
                         valueLabel: selectedRelease ? (selectedRelease.name || "Untitled Milestone") : "None",
                         isEmpty: !selectedRelease,
-                        children: [
-                          renderIssueComposerDetailSelectOptionRow({
-                            key: "__none__",
+                        options: [
+                          createIssueComposerSelectorOption({
+                            value: "__none__",
                             label: "None",
-                            selected: !selectedRelease,
-                            onClick: () => {
-                              updateIssueComposerField("releaseId", null);
-                              setIssueComposerDetailSelectPopover("");
-                            },
+                            onSelect: () => updateIssueComposerField("releaseId", null),
                           }),
                           ...releases
                             .slice()
                             .sort((left, right) => String(left.name || "").localeCompare(String(right.name || "")))
                             .map((release) =>
-                              renderIssueComposerDetailSelectOptionRow({
-                                key: release.id,
+                              createIssueComposerSelectorOption({
+                                value: release.id,
                                 label: release.name || "Untitled Milestone",
                                 description: release.description || formatPlaygroundTaskReleaseDateRange(release),
-                                selected: issueComposerDraft.releaseId === release.id,
-                                onClick: () => {
-                                  updateIssueComposerField("releaseId", release.id);
-                                  setIssueComposerDetailSelectPopover("");
-                                },
-                              })
-                            ),
-                        ],
-                      })
-                    ),
-                    renderIssueComposerDetailFact("Sprint",
-                      renderIssueComposerDetailSelectControl({
-                        popoverId: "sprint",
-                        valueLabel: selectedSprint ? (selectedSprint.name || "Untitled Sprint") : "None",
-                        isEmpty: !selectedSprint,
-                        children: [
-                          renderIssueComposerDetailSelectOptionRow({
-                            key: "__none__",
-                            label: "None",
-                            selected: !selectedSprint,
-                            onClick: () => {
-                              updateIssueComposerField("sprintId", null);
-                              setIssueComposerDetailSelectPopover("");
-                            },
-                          }),
-                          ...sprints
-                            .slice()
-                            .sort((left, right) => String(left.name || "").localeCompare(String(right.name || "")))
-                            .map((sprint) =>
-                              renderIssueComposerDetailSelectOptionRow({
-                                key: sprint.id,
-                                label: sprint.name || "Untitled Sprint",
-                                selected: issueComposerDraft.sprintId === sprint.id,
-                                onClick: () => {
-                                  updateIssueComposerField("sprintId", sprint.id);
-                                  setIssueComposerDetailSelectPopover("");
-                                },
+                                onSelect: () => updateIssueComposerField("releaseId", release.id),
                               })
                             ),
                         ],
@@ -704,98 +570,75 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
                     renderIssueComposerDetailFact("Assignee",
                       renderIssueComposerDetailSelectControl({
                         popoverId: "assignee",
+                        value: issueComposerDraft.assigneeAgentId || "__none__",
                         valueLabel: assigneeLabel,
                         isEmpty: !selectedAssignee,
                         buttonContent: renderIssueComposerPersonValue(issueComposerDraft.assigneeAgentId, assigneeLabel),
-                        menuClassName: "tb-popup-menu-inline-agent",
-                        children: assignableActors.length > 0
-                          ? assignableActors.map((actor) => renderIssueComposerAgentRow(actor))
-                          : React.createElement("div", { className: "tb-popup-empty-state" }, "No assignees yet."),
+                        popupClassName: "tb-popup-menu-inline-agent",
+                        options: [
+                          createIssueComposerSelectorOption({
+                            value: "__none__",
+                            label: "Unassigned",
+                            onSelect: () => updateIssueComposerField("assigneeAgentId", null),
+                          }),
+                          ...assignableActors.map((actor) => createIssueComposerActorSelectorOption(actor)),
+                        ],
+                        emptyContent: "No assignees available.",
                       })
                     ),
                     renderIssueComposerDetailFact("Reviewer",
                       renderIssueComposerDetailSelectControl({
                         popoverId: "reviewer",
+                        value: issueComposerDraft.reviewRequired ? (issueComposerDraft.reviewerAgentId || "") : "__none__",
                         valueLabel: reviewerLabel,
                         isEmpty: !issueComposerDraft.reviewRequired,
                         buttonContent: renderIssueComposerPersonValue(issueComposerDraft.reviewRequired ? issueComposerDraft.reviewerAgentId : "", reviewerLabel),
-                        menuClassName: "tb-popup-menu-inline-agent",
-                        children: [
-                          renderIssueComposerReviewerNoneRow(),
-                          ...assignableActors.map((actor) => renderIssueComposerAgentRow(actor, { reviewer: true })),
-                        ],
-                      })
-                    ),
-                    renderIssueComposerDetailFact("Blocked by",
-                      renderIssueComposerDetailSelectControl({
-                        popoverId: "blocked-by",
-                        valueLabel: dependencyLabel,
-                        isEmpty: !selectedDependencyId,
-                        menuClassName: "playground-tasks-toolbar-popup-menu-wide",
-                        children: [
-                          renderIssueComposerDetailSelectOptionRow({
-                            key: "__none__",
-                            label: "None",
-                            selected: !selectedDependencyId,
-                            onClick: () => {
-                              updateIssueComposerDraft((current) => ({
-                                ...current,
-                                dependencyIds: [],
-                                status: current.status === "blocked" ? "todo" : current.status,
-                              }));
-                              setIssueComposerDetailSelectPopover("");
-                            },
+                        popupClassName: "tb-popup-menu-inline-agent",
+                        options: [
+                          createIssueComposerSelectorOption({
+                            value: "__none__",
+                            label: "No review",
+                            description: "Move directly to Done when work is done.",
+                            onSelect: () => updateIssueComposerDraft((current) => ({
+                              ...current,
+                              reviewRequired: false,
+                              reviewerAgentId: null,
+                            })),
                           }),
-                          ...dependencyCandidates.map((task) =>
-                            renderIssueComposerDetailSelectOptionRow({
-                              key: task.id,
-                              label: (taskTicketNumbersById[task.id] || task.ticketNumber || "000") + " - " + (task.title || "Untitled Task"),
-                              selected: selectedDependencyId === task.id,
-                              onClick: () => {
-                                updateIssueComposerDraft((current) => ({
-                                  ...current,
-                                  dependencyIds: [task.id],
-                                  status: "blocked",
-                                }));
-                                setIssueComposerDetailSelectPopover("");
-                              },
-                            })
-                          ),
+                          ...assignableActors.map((actor) => createIssueComposerActorSelectorOption(actor, { reviewer: true })),
                         ],
                       })
                     ),
                     renderIssueComposerDetailFact("Schedule",
                       renderIssueComposerDetailSelectControl({
                         popoverId: "schedule",
+                        value: scheduleMode,
                         valueLabel: scheduleLabel,
                         isEmpty: scheduleMode === "none",
-                        children: [
+                        options: [
                           { id: "none", label: "None" },
                           { id: "one-time", label: "One-time" },
                           { id: "recurring", label: "Recurring" },
                         ].map((option) =>
-                          renderIssueComposerDetailSelectOptionRow({
-                            key: option.id,
+                          createIssueComposerSelectorOption({
+                            value: option.id,
                             label: option.label,
-                            selected: scheduleMode === option.id,
-                            onClick: () => {
+                            onSelect: () => {
                               updateIssueComposerDraft((current) => ({
                                 ...current,
-                                scheduledStartAt: option.id === "none" ? null : current.scheduledStartAt,
+                                scheduledStartAt: option.id === "none" ? null : (current.scheduledStartAt || new Date().toISOString()),
                                 scheduledEndAt: option.id === "none" ? null : current.scheduledEndAt,
                                 scheduleType: option.id === "recurring" ? "recurring" : "one-time",
                                 cronExpression: option.id === "recurring"
                                   ? (current.cronExpression || buildPlaygroundCronExpressionForPreset("daily", current.scheduledStartAt || Date.now()))
                                   : null,
                               }));
-                              setIssueComposerDetailSelectPopover("");
                             },
                           })
                         ),
                       })
                     )
                   )
-                : null
             );
           }
 
@@ -807,7 +650,34 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
 	            onClose: () => closeProjectIssueComposer(),
 	            as: "form",
 	            size: "medium",
+	            maxHeight: "80vh",
 	            title: issueComposerTitle,
+	            headerVariant: "search",
+	            headerSearchProps: {
+	              icon: Bookmark,
+	              value: issueComposerDraft.title || "",
+	              placeholder: "Issue title",
+	              "aria-label": "Issue title",
+	              autoComplete: "off",
+	              onChange: (event) => updateIssueComposerField("title", event.target.value),
+	              onKeyDown: (event) => {
+	                if (
+	                  event.key !== "Tab"
+	                  || event.shiftKey
+	                  || event.altKey
+	                  || event.ctrlKey
+	                  || event.metaKey
+	                ) {
+	                  return;
+	                }
+	                const descriptionTextarea = issueComposerDescriptionTextareaRef.current;
+	                if (!descriptionTextarea) {
+	                  return;
+	                }
+	                event.preventDefault();
+	                descriptionTextarea.focus({ preventScroll: true });
+	              },
+	            },
 	            className: "playground-new-issue-modal",
 	            bodyClassName: "playground-new-issue-modal__body",
 	            footerClassName: "playground-new-issue-modal__footer",
@@ -830,7 +700,6 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function renderTaskCard(task,
 	              }, issueComposerSaveState.isSaving ? "Creating..." : issueComposerTitle)
 	            ),
 	          },
-	            renderIssueComposerTitleField(),
 	            renderIssueComposerDescriptionField(),
 	            renderIssueComposerDetailsSection(),
 	            issueComposerSaveState.error

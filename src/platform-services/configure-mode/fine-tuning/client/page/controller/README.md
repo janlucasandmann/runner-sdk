@@ -8,6 +8,7 @@ This directory contains interaction controllers and effect orchestration for the
 
 ## Contents
 
+- [`access.mjs`](access.mjs) — Fine-tuning ownership, team sharing, and resource-specific permission-page orchestration.
 - [`actions.mjs`](actions.mjs) — Focused implementation of Actions.
 - [`create-modal.mjs`](create-modal.mjs) — Focused implementation of Create Modal.
 - [`detail.mjs`](detail.mjs) — Focused implementation of Detail.

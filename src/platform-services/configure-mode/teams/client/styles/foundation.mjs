@@ -25,14 +25,6 @@ export const TEAMS_FOUNDATION_CSS = `      .playground-team-page {
         gap: 0;
       }
 
-      .playground-team-page:has(.playground-team-resources-panel) {
-        padding-top: 0;
-      }
-
-      .playground-team-page:has(.playground-team-resources-panel) .playground-team-shell {
-        padding-top: 42px;
-      }
-
       .playground-team-page::-webkit-scrollbar {
         display: none;
       }
@@ -52,6 +44,167 @@ export const TEAMS_FOUNDATION_CSS = `      .playground-team-page {
         padding: 0;
         align-items: center;
         justify-content: center;
+      }
+
+      .playground-team-detail-content {
+        width: min(100%, var(--platform-page-content-max-width, 87.5rem));
+        max-width: var(--platform-page-content-max-width, 87.5rem);
+        gap: 0;
+      }
+
+      .playground-team-detail-profile-section .playground-team-detail-title {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.96);
+        font-size: 18px;
+        line-height: 1;
+        font-weight: 500;
+        letter-spacing: 0;
+      }
+
+      .playground-team-detail-role-label {
+        min-height: 22px;
+        padding: 0 9px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+        color: #fff;
+        font-size: 12px;
+        line-height: 1;
+        font-weight: 400;
+      }
+
+      .playground-team-detail-sidebar-card.platform-ui-card.is-sidebar {
+        padding: 16px;
+      }
+
+      .playground-team-detail-sidebar-facts,
+      .playground-team-detail-sidebar-actions,
+      .playground-team-detail-sidebar-access {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .playground-team-detail-sidebar-fact {
+        min-width: 0;
+        min-height: 26px;
+        display: grid;
+        grid-template-columns: minmax(80px, 0.8fr) minmax(0, 1.2fr);
+        align-items: center;
+        gap: 12px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 12px;
+        font-weight: 400;
+      }
+
+      .playground-team-detail-sidebar-fact-label {
+        min-width: 0;
+      }
+
+      .playground-team-detail-sidebar-fact-value {
+        min-width: 0;
+        overflow: hidden;
+        color: #fff;
+        text-align: right;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-team-detail-sidebar-action.platform-button {
+        justify-content: flex-start;
+      }
+
+      .playground-team-detail-owner {
+        min-width: 0;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+
+      .playground-team-detail-owner-avatar.playground-team-member-avatar {
+        width: 20px;
+        height: 20px;
+        flex-basis: 20px;
+      }
+
+      .playground-team-detail-sidebar-owner-row {
+        width: 100%;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .playground-team-detail-sidebar-owner-cell,
+      .playground-team-detail-owner-selector,
+      .playground-team-detail-owner-trigger {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+      }
+
+      .playground-team-detail-sidebar-owner-cell {
+        overflow: visible;
+      }
+
+      .playground-team-detail-owner-trigger {
+        justify-content: flex-end;
+        text-align: right;
+      }
+
+      .playground-team-detail-owner-trigger .playground-team-member-cell {
+        min-width: 0;
+        overflow: hidden;
+      }
+
+      .playground-team-detail-owner-trigger .playground-team-table-title {
+        min-width: 0;
+        overflow: hidden;
+        color: rgba(255, 255, 255, 0.88);
+        font-size: 12px;
+        font-weight: 400;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .playground-team-detail-owner-option-avatar {
+        width: 24px;
+        height: 24px;
+        flex: 0 0 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 10px;
+        font-weight: 500;
+      }
+
+      .playground-team-detail-owner-popup {
+        width: 260px;
+      }
+
+      .playground-team-create-profile-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .playground-team-create-profile-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .playground-team-create-profile-description {
+        color: rgba(255, 255, 255, 0.56);
+        font-size: 12px;
+        line-height: 1.4;
+        font-weight: 400;
       }
 
       .playground-team-plan-empty {

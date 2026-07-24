@@ -925,6 +925,51 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
               || ""
             ).trim()
           : "";
+        const selectedTaskHeaderType = selectedTaskId
+          ? normalizePlaygroundTaskType(selectedTaskSnapshot?.taskType || selectedTaskSnapshot?.type)
+          : "";
+        const openTaskHeaderNavigationIds = useMemo(() => (
+          tasks
+            .filter((task) => (
+              typeof task?.id === "string"
+              && task.id.trim()
+              && !isPlaygroundTaskTerminalStatus(task.status)
+            ))
+            .slice()
+            .sort((left, right) => {
+              const leftTicketNumber = parsePlaygroundTaskTicketNumber(
+                taskTicketNumbersById[left.id] || left.ticketNumber
+              );
+              const rightTicketNumber = parsePlaygroundTaskTicketNumber(
+                taskTicketNumbersById[right.id] || right.ticketNumber
+              );
+              if (leftTicketNumber !== rightTicketNumber) {
+                if (!leftTicketNumber) return 1;
+                if (!rightTicketNumber) return -1;
+                return leftTicketNumber - rightTicketNumber;
+              }
+              return String(left.id || "").localeCompare(String(right.id || ""));
+            })
+            .map((task) => task.id)
+        ), [taskTicketNumbersById, tasks]);
+        const selectedTaskHeaderNavigation = useMemo(() => {
+          const currentIndex = selectedTaskId
+            ? openTaskHeaderNavigationIds.indexOf(selectedTaskId)
+            : -1;
+          if (currentIndex < 0) {
+            return null;
+          }
+          return {
+            currentIndex: currentIndex + 1,
+            totalCount: openTaskHeaderNavigationIds.length,
+            previousTaskId: currentIndex > 0
+              ? openTaskHeaderNavigationIds[currentIndex - 1]
+              : "",
+            nextTaskId: currentIndex < openTaskHeaderNavigationIds.length - 1
+              ? openTaskHeaderNavigationIds[currentIndex + 1]
+              : "",
+          };
+        }, [openTaskHeaderNavigationIds, selectedTaskId]);
 
         useEffect(() => {
           if (typeof onTasksHeaderChange !== "function") {
@@ -941,6 +986,8 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
               projectId: selectedProject.id,
               taskId: selectedTaskId,
               ticketNumber: selectedTaskHeaderTicketNumber,
+              taskType: selectedTaskHeaderType,
+              ticketNavigation: selectedTaskHeaderNavigation,
               scheduleId: selectedScheduleId,
               detailMode: selectedTaskId
                 ? "task"
@@ -959,6 +1006,8 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
               projectId: selectedProjectId,
               taskId: selectedTaskId,
               ticketNumber: selectedTaskHeaderTicketNumber,
+              taskType: selectedTaskHeaderType,
+              ticketNavigation: selectedTaskHeaderNavigation,
               scheduleId: selectedScheduleId,
               detailMode: selectedTaskId
                 ? "task"
@@ -979,6 +1028,8 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
           selectedScheduleId,
           selectedTaskId,
           selectedTaskHeaderTicketNumber,
+          selectedTaskHeaderNavigation,
+          selectedTaskHeaderType,
           scheduleViewMode,
           sortedReleaseOptions,
           taskView,
@@ -1012,6 +1063,19 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
           setDraftTask(null);
           setProjectSidebarPopover("");
         }, [projectNavViewRequest, useUnifiedProjectNav]);
+
+        useEffect(() => {
+          const requestToken = String(projectNavTaskRequest?.token || "").trim();
+          if (!useUnifiedProjectNav || !requestToken || handledProjectNavTaskRequestTokenRef.current === requestToken) {
+            return;
+          }
+          handledProjectNavTaskRequestTokenRef.current = requestToken;
+          const requestedTaskId = String(projectNavTaskRequest?.taskId || "").trim();
+          if (!requestedTaskId || !tasksById[requestedTaskId]) {
+            return;
+          }
+          handleSelectTask(requestedTaskId, { screen: true });
+        }, [projectNavTaskRequest, tasksById, useUnifiedProjectNav]);
 
         useEffect(() => {
           const nextToken = Number(projectNavSettingsRequestToken || 0);
@@ -1189,7 +1253,7 @@ export const PROJECTS_DATA_02_FRAGMENT = `          const normalizedPath = norma
             ...buildEmptyPlaygroundProjectSummary(),
             ...(summarySeed && typeof summarySeed === "object" ? summarySeed : {}),
             tasksCount: nextTasks.length,
-            openTasksCount: nextTasks.filter((task) => task.status !== "done").length,
+            openTasksCount: nextTasks.filter((task) => !isPlaygroundTaskTerminalStatus(task.status)).length,
             releaseCount: nextReleases.length,
             activeReleaseCount: nextReleases.filter((release) => getPlaygroundTaskReleaseStatus(release) === "active").length,
             sprintCount: nextSprints.length,

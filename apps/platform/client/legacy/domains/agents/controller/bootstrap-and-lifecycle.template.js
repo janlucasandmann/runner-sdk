@@ -41,6 +41,7 @@
           onUpgradeToIndividual,
   ${MODELS_AGENT_SCRIPT_FRAGMENTS.props}        embeddedInResources = false,
           topNavActionsPortalId = "",
+          titleActionsPortalId = "",
           versionsDrawerPortalId = "",
           onResourcesHeaderChange,
           onVersionsSidebarOpenChange,
@@ -59,16 +60,19 @@
           const agentAutosaveTimerRef = useRef(0);
           const agentAutosaveQueuedRef = useRef(null);
           const agentAutosaveInFlightRef = useRef(false);
+          const agentAccessPermissionSaveTimerRef = useRef(null);
+          const agentAccessPermissionSaveQueuedRef = useRef(null);
+          const agentAccessPermissionSaveInFlightRef = useRef(false);
           const agentDetailMainRef = useRef(null);
           const agentResourcesDetailScrollRef = useRef(null);
           const agentComposerInstructionsTextareaRef = useRef(null);
-          const agentProfileAvatarPickerRef = useRef(null);
-          const agentProfileAvatarPickerSurfaceRef = useRef(null);
           const agentActionsPopoverRef = useRef(null);
+          const agentActionsPopoverSurfaceRef = useRef(null);
           const agentVersionDescriptionTextareaRef = useRef(null);
           const agentVersionModalCloseTimerRef = useRef(null);
           const agentVersionModalFrameRef = useRef(null);
           const agentDetailSidebarCollapsedBeforeVersionsRef = useRef(null);
+          const agentDetailSidebarCollapsedBeforeAccessRef = useRef(null);
           const agentVersionBaselineRef = useRef({ key: "", signature: "" });
           const agentVersionDraftTouchedRef = useRef(false);
           const agentVersionsLoadedRef = useRef(new Set());
@@ -115,6 +119,15 @@
           const [agentDetailSidebarCollapsed, setAgentDetailSidebarCollapsed] = useState(false);
           const [agentDetailCopiedFact, setAgentDetailCopiedFact] = useState("");
           const [agentPermissionChartAnimationKey, setAgentPermissionChartAnimationKey] = useState(0);
+          const [agentAccessPrincipalId, setAgentAccessPrincipalId] = useState("");
+          const [agentAccessRoleId, setAgentAccessRoleId] = useState("member");
+          const [selectedAgentAccessTeamIds, setSelectedAgentAccessTeamIds] = useState(() => new Set());
+          const [agentAccessTeamMenuOpen, setAgentAccessTeamMenuOpen] = useState(false);
+          const [agentAccessState, setAgentAccessState] = useState({
+            teamId: "",
+            action: "",
+            error: "",
+          });
           const [agentsOverviewToolbarPopover, setAgentsOverviewToolbarPopover] = useState("");
           const [agentsOverviewToolbarPopoverClosing, setAgentsOverviewToolbarPopoverClosing] = useState("");
           const agentsOverviewToolbarPopoverCloseTimerRef = useRef(null);
@@ -129,6 +142,7 @@
           const [agentDetailThreadSearchQuery, setAgentDetailThreadSearchQuery] = useState("");
           const [agentDetailThreadSorting, setAgentDetailThreadSorting] = useState(() => ({ id: "date", direction: "desc" }));
           const [agentDetailThreadFilterMode, setAgentDetailThreadFilterMode] = useState("all");
+          const [agentDetailInsightsTableMode, setAgentDetailInsightsTableMode] = useState("threads");
   ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.state}${GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.state}        const [selectedAgentsObservabilityThreadId, setSelectedAgentsObservabilityThreadId] = useState("");
           const [agentsObservabilityThreadDetailsById, setAgentsObservabilityThreadDetailsById] = useState({});
           const [loadingAgentId, setLoadingAgentId] = useState("");
@@ -275,6 +289,7 @@
           const [agentCreationAssistantPreparing, setAgentCreationAssistantPreparing] = useState(false);
           const [agentCreationAssistantError, setAgentCreationAssistantError] = useState("");
           const [topNavActionsContainer, setTopNavActionsContainer] = useState(null);
+          const [titleActionsContainer, setTitleActionsContainer] = useState(null);
           const [agentVersionsDrawerContainer, setAgentVersionsDrawerContainer] = useState(null);
   ${MODELS_AGENT_SCRIPT_FRAGMENTS.catalogState}        const [isAgentComposerInstructionsEditing, setIsAgentComposerInstructionsEditing] = useState(false);
           const [agentComposerModelPopover, setAgentComposerModelPopover] = useState("");
@@ -738,13 +753,12 @@
           }
           function getAgentSharedTeamIds(agentRecord) {
             const metadata = getAgentMetadataRecord(agentRecord);
-            const source = Array.isArray(metadata.sharedTeamIds)
-              ? metadata.sharedTeamIds
-              : Array.isArray(metadata.teamAccessIds)
-                ? metadata.teamAccessIds
-                : Array.isArray(agentRecord?.sharedTeamIds)
-                  ? agentRecord.sharedTeamIds
-                  : [];
+            const metadataTeamIds = getPlatformSharedTeamIds(metadata);
+            const source = metadataTeamIds.length > 0
+              ? metadataTeamIds
+              : Array.isArray(agentRecord?.sharedTeamIds)
+                ? agentRecord.sharedTeamIds
+                : [];
             return Array.from(new Set(
               source.map((teamId) => String(teamId || "").trim()).filter(Boolean)
             ));
@@ -1483,6 +1497,19 @@
             const frame = window.requestAnimationFrame(updateContainer);
             return () => window.cancelAnimationFrame(frame);
           }, [topNavActionsPortalId]);
+
+          useLayoutEffect(() => {
+            if (!titleActionsPortalId || typeof document === "undefined") {
+              setTitleActionsContainer((current) => current === null ? current : null);
+              return;
+            }
+            const nextContainer = document.getElementById(titleActionsPortalId);
+            setTitleActionsContainer((current) => current === nextContainer ? current : nextContainer);
+          });
+
+          useEffect(() => {
+            setAgentActionsPopoverOpen(false);
+          }, [selectedAgentId]);
   
           useLayoutEffect(() => {
             if (!versionsDrawerPortalId || typeof document === "undefined") {
@@ -1583,7 +1610,7 @@
                     : agentWithVersions;
                 });
                 if (!editorDirtyRef.current && selectedAgentIdRef.current === normalizedAgentId) {
-                  rememberAgentVersionBaseline(agentWithVersions);
+                  rememberAgentVersionBaseline(agentWithVersions, { force: true });
                 }
               })
               .catch((error) => {
@@ -1624,6 +1651,13 @@
               (highest, version) => Math.max(highest, Number(version?.version) || 0),
               -1
             );
+            const activeHeaderSection = agentDetailTab === "threads" || agentDetailTab === "evaluation"
+              ? "insights"
+              : agentDetailTab === "permissions" || agentDetailTab === "guardrails"
+                ? "settings"
+                : ["general", "insights", "settings"].includes(agentDetailTab)
+                  ? agentDetailTab
+                  : "general";
             onResourcesHeaderChange(
               isHomeViewActive || (agentCreationSetupOpen && !agentCreationSetupDraft)
                 ? { mode: "overview", title: "", resourceType: "agent", resourceId: "" }
@@ -1636,6 +1670,23 @@
                     versionIsLatest: Number.isFinite(selectedVersionNumber)
                       && selectedVersionNumber === latestVersionNumber,
                     versionBusy: saveState.isSaving || agentVersionState.status === "loading",
+                    activeSection: activeHeaderSection,
+                    onSectionChange: (nextSection) => {
+                      const normalizedSection = ["general", "insights", "settings"].includes(nextSection)
+                        ? nextSection
+                        : "general";
+                      if (normalizedSection !== "settings" && agentAccessPrincipalId) {
+                        setAgentAccessPrincipalId("");
+                        setAgentAccessRoleId("member");
+                        if (agentDetailSidebarCollapsedBeforeAccessRef.current !== null) {
+                          setAgentDetailSidebarCollapsed(
+                            Boolean(agentDetailSidebarCollapsedBeforeAccessRef.current)
+                          );
+                          agentDetailSidebarCollapsedBeforeAccessRef.current = null;
+                        }
+                      }
+                      setAgentDetailTab(normalizedSection);
+                    },
                     onVersionClick: () => {
                       if (canLoadAgentVersions) {
                         openAgentVersionsSidebar();
@@ -1646,6 +1697,8 @@
           }, [
             agentCreationSetupOpen,
             agentCreationSetupDraft,
+            agentAccessPrincipalId,
+            agentDetailTab,
             agentVersionState.status,
             agentVersionsSidebarOpen,
             canLoadAgentVersions,
@@ -1986,10 +2039,18 @@
           function updateDraftAgent(updater) {
             setDraftAgent((current) => {
               const base = current || normalizePlaygroundAgentRecord(selectedAgentSnapshot || buildPlaygroundDefaultAgentDraft());
-              return typeof updater === "function" ? updater(base) : updater;
+              const next = typeof updater === "function" ? updater(base) : updater;
+              if (
+                next === base
+                || stringifyPlaygroundVersionComparableValue(next)
+                  === stringifyPlaygroundVersionComparableValue(base)
+              ) {
+                return current || next;
+              }
+              editorDirtyRef.current = true;
+              agentVersionDraftTouchedRef.current = true;
+              return next;
             });
-            editorDirtyRef.current = true;
-            agentVersionDraftTouchedRef.current = true;
             setSaveState((current) => ({
               ...current,
               error: "",
@@ -2434,7 +2495,10 @@
                           currentSelectedVersion?.id || ""
                         )
                       : normalized;
-                    rememberAgentVersionBaseline(nextAgent);
+                    if (editorDirtyRef.current) {
+                      return current;
+                    }
+                    rememberAgentVersionBaseline(nextAgent, { force: true });
                     return nextAgent;
                   });
               }
@@ -3125,69 +3189,18 @@
               },
               React.createElement("div", { className: "playground-agents-creation-modal-identity" },
                 React.createElement("div", { className: "profile-editor-avatar-wrap playground-agents-profile-avatar-wrap playground-agents-creation-modal-avatar-wrap" },
-                  React.createElement("div", { className: "profile-editor-avatar playground-agents-profile-avatar" },
-                    React.createElement("div", { className: "profile-editor-avatar-surface" },
-                      avatarPhotoUrl
-                        ? React.createElement("img", {
-                            className: "profile-editor-avatar-image",
-                            src: avatarPhotoUrl,
-                            alt: getAccountInitials(setupDraft.name || "Agent"),
-                            onError: () => setAgentProfileAvatarBroken(true),
-                          })
-                        : React.createElement("span", { className: "profile-editor-avatar-fallback" }, getAccountInitials(setupDraft.name || "Agent"))
-                    ),
-                    React.createElement(PlatformPopup, {
-                        open: agentProfileAvatarPickerOpen,
-                        variant: "minimal",
-                        rootRef: agentProfileAvatarPickerOpen ? agentProfileAvatarPickerRef : undefined,
-                        surfaceRef: agentProfileAvatarPickerSurfaceRef,
-                        portal: true,
-                        placement: "bottom-start",
-                        portalOffset: 8,
-                        portalCollisionPadding: 12,
-                        rootClassName: "playground-agents-avatar-picker-shell playground-tasks-toolbar-popup-shell",
-                        surfaceClassName: "playground-agents-avatar-picker-menu playground-agents-creation-avatar-picker-menu",
-                        animation: "down-in",
-                        surfaceProps: {
-                          role: "dialog",
-                          "aria-label": "Choose agent profile picture",
-                          onMouseDown: (event) => event.stopPropagation(),
-                          onClick: (event) => event.stopPropagation(),
-                        },
-                        trigger: React.createElement("button", {
-                        type: "button",
-                        className: "profile-editor-avatar-trigger",
-                        onClick: () => setAgentProfileAvatarPickerOpen((current) => !current),
-                        disabled: isSubmitting,
-                        "aria-label": "Choose agent profile picture",
-                        "aria-expanded": agentProfileAvatarPickerOpen ? "true" : "false",
-                      }, React.createElement(Camera, { className: "profile-editor-camera-icon", strokeWidth: 1.9 })),
-                      },
-                      PLAYGROUND_AGENT_PROFILE_PRESET_OPTIONS.map((option) =>
-                        React.createElement("button", {
-                            key: option.id,
-                            type: "button",
-                            className: "playground-agents-avatar-picker-option" + (avatarPhotoUrl === option.url ? " is-selected" : ""),
-                            onClick: () => {
-                              setAgentProfileAvatarBroken(false);
-                              setAgentProfileAvatarPickerOpen(false);
-                              updateAgentCreationSetupProfilePhotoUrl(option.url);
-                            },
-                            disabled: isSubmitting,
-                            title: option.label,
-                            "aria-label": option.label,
-                          },
-                          React.createElement("div", { className: "playground-agents-avatar-picker-option-surface" },
-                            React.createElement("img", {
-                              className: "playground-agents-avatar-picker-option-image",
-                              src: option.url,
-                              alt: option.label,
-                            })
-                          )
-                        )
-                      )
-                    )
-                  )
+                  React.createElement(PlatformProfileImagePicker, {
+                    value: avatarPhotoUrl,
+                    fallback: getAccountInitials(setupDraft.name || "Agent"),
+                    options: PLAYGROUND_AGENT_PROFILE_PRESET_OPTIONS,
+                    editable: !isSubmitting,
+                    disabled: isSubmitting,
+                    size: 82,
+                    ariaLabel: "Choose agent profile picture",
+                    className: "playground-agents-profile-avatar playground-agents-creation-modal-profile-image-picker",
+                    onChange: (url) => updateAgentCreationSetupProfilePhotoUrl(url),
+                    onOpenChange: setAgentProfileAvatarPickerOpen,
+                  })
                 ),
                 React.createElement("div", { className: "playground-agents-profile-name-wrap playground-agents-creation-modal-name-wrap" },
                   React.createElement("input", {
@@ -3267,8 +3280,8 @@
                     setAgentCreationSetupDraft(null);
                     setAgentCreationSetupError("");
                     setAgentCreationPermissionModalOpen(false);
-                    closeAgentModelPicker({ animate: false });
                     setAgentProfileAvatarPickerOpen(false);
+                    closeAgentModelPicker({ animate: false });
                   } else {
                     performShowAgentsHome();
                   }
@@ -3388,14 +3401,25 @@
           }, [selectedAgentId]);
   
           useEffect(() => {
+            if (agentDetailSidebarCollapsedBeforeAccessRef.current !== null) {
+              setAgentDetailSidebarCollapsed(Boolean(agentDetailSidebarCollapsedBeforeAccessRef.current));
+              agentDetailSidebarCollapsedBeforeAccessRef.current = null;
+            }
             setAgentDetailTab("general");
             setAgentDetailThreadSearchQuery("");
             setAgentDetailThreadSorting({ id: "date", direction: "desc" });
             setAgentDetailThreadFilterMode("all");
+            setAgentDetailInsightsTableMode("threads");
+            setAgentDetailEvaluationSelectedSetId("");
+            setAgentAccessPrincipalId("");
+            setAgentAccessRoleId("member");
+            setSelectedAgentAccessTeamIds(new Set());
+            setAgentAccessTeamMenuOpen(false);
+            setAgentAccessState({ teamId: "", action: "", error: "" });
           }, [selectedAgentId]);
   
           useEffect(() => {
-            if (agentDetailTab !== "permissions" || !selectedAgentId || selectedAgentId === PLAYGROUND_AGENT_DRAFT_ID) {
+            if (!["permissions", "settings"].includes(agentDetailTab) || !selectedAgentId || selectedAgentId === PLAYGROUND_AGENT_DRAFT_ID) {
               return undefined;
             }
             const frameId = window.requestAnimationFrame(() => {
@@ -3404,9 +3428,18 @@
                 scrollNode.scrollTop = 0;
               }
               setAgentPermissionChartAnimationKey((current) => current + 1);
+              if (
+                agentDetailTab === "settings"
+                && typeof onWorkspaceTeamsRequest === "function"
+                && !workspaceTeamsLoading
+                && !agentWorkspaceTeamsRequestedRef.current
+              ) {
+                agentWorkspaceTeamsRequestedRef.current = true;
+                onWorkspaceTeamsRequest({});
+              }
             });
             return () => window.cancelAnimationFrame(frameId);
-          }, [agentDetailTab, selectedAgentId]);
+          }, [agentDetailTab, onWorkspaceTeamsRequest, selectedAgentId, workspaceTeamsLoading]);
   
           useEffect(() => {
             if (isHomeViewActive || !selectedAgentId || selectedAgentId === PLAYGROUND_AGENT_DRAFT_ID) {
@@ -3595,17 +3628,17 @@
               lastInitializedAgentSelectionRef.current = normalizedSelectedAgentId;
               resetEditorAuxiliaryState();
             }
-  		          if (seedAgent?.isSystem || seedAgent?.isDefault) {
-  		            setAgentAssistantOpen(false);
-  		          }
-  		          const normalizedSeedAgent = seedAgent ? normalizePlaygroundAgentRecord(seedAgent) : null;
-  		          if (normalizedSeedAgent) {
-  		            rememberAgentVersionBaseline(normalizedSeedAgent);
-  		          }
-  		          if (isNewAgentSelection || !editorDirtyRef.current) {
-  		            setDraftAgent(normalizedSeedAgent);
-  		          }
-  		          void loadAgentDetails(normalizedSelectedAgentId);
+            if (seedAgent?.isSystem || seedAgent?.isDefault) {
+              setAgentAssistantOpen(false);
+            }
+            const normalizedSeedAgent = seedAgent ? normalizePlaygroundAgentRecord(seedAgent) : null;
+            if (normalizedSeedAgent) {
+              rememberAgentVersionBaseline(normalizedSeedAgent, { force: isNewAgentSelection });
+            }
+            if (isNewAgentSelection || !editorDirtyRef.current) {
+              setDraftAgent(normalizedSeedAgent);
+            }
+            void loadAgentDetails(normalizedSelectedAgentId);
           }, [loadAgentDetails, orderedAgents, selectedAgentId]);
   
           useEffect(() => {
@@ -3662,37 +3695,6 @@
             agentWorkspaceTeamMembersRequestedRef.current = new Set();
             setAgentWorkspaceTeamMembersById({});
           }, [requestHeaders]);
-  
-          useEffect(() => {
-            if (!agentProfileAvatarPickerOpen) {
-              return undefined;
-            }
-  
-            function handleAgentAvatarPickerPointerDown(event) {
-              const target = event?.target instanceof Node ? event.target : null;
-              if (
-                !target
-                || agentProfileAvatarPickerRef.current?.contains(target)
-                || agentProfileAvatarPickerSurfaceRef.current?.contains(target)
-              ) {
-                return;
-              }
-              setAgentProfileAvatarPickerOpen(false);
-            }
-  
-            function handleAgentAvatarPickerEscape(event) {
-              if (event.key === "Escape") {
-                setAgentProfileAvatarPickerOpen(false);
-              }
-            }
-  
-            document.addEventListener("mousedown", handleAgentAvatarPickerPointerDown);
-            window.addEventListener("keydown", handleAgentAvatarPickerEscape);
-            return () => {
-              document.removeEventListener("mousedown", handleAgentAvatarPickerPointerDown);
-              window.removeEventListener("keydown", handleAgentAvatarPickerEscape);
-            };
-          }, [agentProfileAvatarPickerOpen]);
   
           useEffect(() => {
             const normalizedTeamId = String(workspaceTeamMembersTeamId || "").trim();
@@ -4026,6 +4028,11 @@
                 window.cancelAnimationFrame(agentVersionModalFrameRef.current);
                 agentVersionModalFrameRef.current = null;
               }
+              if (agentAccessPermissionSaveTimerRef.current) {
+                window.clearTimeout(agentAccessPermissionSaveTimerRef.current);
+                agentAccessPermissionSaveTimerRef.current = null;
+              }
+              agentAccessPermissionSaveQueuedRef.current = null;
             };
           }, []);
   
@@ -4094,7 +4101,11 @@
   
             function handleAgentActionsPopoverPointerDown(event) {
               const target = event?.target instanceof Node ? event.target : null;
-              if (!target || !agentActionsPopoverRef.current || agentActionsPopoverRef.current.contains(target)) {
+              if (
+                !target
+                || agentActionsPopoverRef.current?.contains(target)
+                || agentActionsPopoverSurfaceRef.current?.contains(target)
+              ) {
                 return;
               }
               setAgentActionsPopoverOpen(false);

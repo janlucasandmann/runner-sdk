@@ -7,6 +7,7 @@ export const TEAMS_STATE_PRIMARY_SCRIPT = `        const teamPageRef = useRef(nu
         const [teamPageTeams, setTeamPageTeams] = useState([]);
         const [teamPageSelectedTeamId, setTeamPageSelectedTeamId] = useState("");
         const [teamPageActiveTab, setTeamPageActiveTab] = useState("members");
+        const [teamPageDetailSidebarCollapsed, setTeamPageDetailSidebarCollapsed] = useState(false);
         const [teamPageSelectedRoleId, setTeamPageSelectedRoleId] = useState("member");
         const [teamPageRoleMembersPopover, setTeamPageRoleMembersPopover] = useState("");
         const [teamPermissionChartAnimationKey, setTeamPermissionChartAnimationKey] = useState(0);

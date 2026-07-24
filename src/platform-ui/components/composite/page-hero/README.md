@@ -9,6 +9,10 @@ for platform content pages. It owns the shared typography, spacing, responsive
 layout, and action treatment while leaving page-specific content with the
 consumer.
 
+Use `actions` for the standard lightweight hero actions. Use `actionsContent`
+when the right side requires another centralized control, such as a selector
+button, while retaining the shared hero layout.
+
 ```tsx
 <PlatformPageHero
   title="Tags"

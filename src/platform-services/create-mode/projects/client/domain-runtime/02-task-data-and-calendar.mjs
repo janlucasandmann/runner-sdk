@@ -389,6 +389,21 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
           }
         }
 
+        if (Object.prototype.hasOwnProperty.call(overrides, "activity")) {
+          const nextActivity = normalizePlaygroundTaskActivityList(overrides.activity);
+          if (nextActivity.length > 0) {
+            nextRunnerPlayground.activity = nextActivity;
+            currentMetadata.runnerPlayground = nextRunnerPlayground;
+          } else {
+            delete nextRunnerPlayground.activity;
+            if (Object.keys(nextRunnerPlayground).length > 0) {
+              currentMetadata.runnerPlayground = nextRunnerPlayground;
+            } else {
+              delete currentMetadata.runnerPlayground;
+            }
+          }
+        }
+
         if (Object.prototype.hasOwnProperty.call(overrides, "scheduleType")) {
           const nextScheduleType = overrides.scheduleType === "recurring" ? "recurring" : "one-time";
           if (nextScheduleType === "recurring") {
@@ -637,16 +652,16 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
             ? task.dependencyIds
             : (Array.isArray(runnerPlaygroundMetadata?.dependencyIds) ? runnerPlaygroundMetadata.dependencyIds : [])
         );
-        const rawStatus = task.status === "backlog"
-          ? "todo"
-          : (PLAYGROUND_TASK_STATUS_OPTIONS.some((option) => option.id === task.status) ? task.status : draft.status);
+        const rawStatus = PLAYGROUND_TASK_STATUS_OPTIONS.some((option) => option.id === task.status)
+          ? task.status
+          : draft.status;
         const baseStatus = rawStatus === "in_progress"
           && !isPlaygroundHumanAssigneeId(normalizedAssigneeAgentId)
           && !normalizedLastStartedThreadId
           && normalizedLinkedThreadIds.length === 0
           ? "todo"
           : rawStatus;
-        const status = normalizedDependencyIds.length > 0 && baseStatus !== "done"
+        const status = normalizedDependencyIds.length > 0 && !isPlaygroundTaskTerminalStatus(baseStatus)
           ? "blocked"
           : baseStatus;
         const priority = PLAYGROUND_TASK_PRIORITY_OPTIONS.some((option) => option.id === task.priority) ? task.priority : draft.priority;
@@ -708,9 +723,18 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
           : metadataConnectors;
         const directComments = normalizePlaygroundTaskCommentList(task.comments);
         const metadataComments = normalizePlaygroundTaskCommentList(runnerPlaygroundMetadata?.comments);
-        const comments = directComments.length > 0
+        const hasDirectComments = Object.prototype.hasOwnProperty.call(task, "comments")
+          && Array.isArray(task.comments);
+        const comments = hasDirectComments
           ? directComments
           : metadataComments;
+        const directActivity = normalizePlaygroundTaskActivityList(task.activity);
+        const metadataActivity = normalizePlaygroundTaskActivityList(runnerPlaygroundMetadata?.activity);
+        const hasDirectActivity = Object.prototype.hasOwnProperty.call(task, "activity")
+          && Array.isArray(task.activity);
+        const activity = hasDirectActivity
+          ? directActivity
+          : metadataActivity;
 
         return {
           ...draft,
@@ -737,6 +761,7 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
           enabledSkills,
           connectors,
           comments,
+          activity,
           dependencyIds: normalizedDependencyIds,
           linkedThreadIds: normalizedLinkedThreadIds,
           lastStartedThreadId: normalizedLastStartedThreadId,
@@ -747,7 +772,9 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
           scheduleTimezone: taskScheduleTimezone,
           scheduleEnabled: taskScheduleEnabled,
           dueAt: typeof task.dueAt === "string" && task.dueAt ? task.dueAt : null,
-          completedAt: typeof task.completedAt === "string" && task.completedAt ? task.completedAt : (status === "done" ? updatedAt : null),
+          completedAt: typeof task.completedAt === "string" && task.completedAt
+            ? task.completedAt
+            : (isPlaygroundTaskTerminalStatus(status) ? updatedAt : null),
           sortOrder: Number.isFinite(task.sortOrder) ? Number(task.sortOrder) : draft.sortOrder,
           metadata: task.metadata && typeof task.metadata === "object" && !Array.isArray(task.metadata) ? task.metadata : null,
           createdAt,
@@ -1012,6 +1039,11 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
               comments: Array.isArray(data?.comments)
                 ? data.comments
                 : source.comments,
+              activity: normalizePlaygroundTaskActivityList([
+                ...(Array.isArray(source.activity) ? source.activity : []),
+                ...(Array.isArray(data?.activity) ? data.activity : []),
+                ...(Array.isArray(data?.activityEvents) ? data.activityEvents : []),
+              ]),
             })
           : null;
       }
@@ -1575,10 +1607,43 @@ export const PROJECTS_DOMAIN_RUNTIME_02_FRAGMENT = `            : typeof item?.i
 
 \${CALENDAR_DOMAIN_RUNTIME_SCRIPT}
       function getPlaygroundTaskStatusLabel(status) {
-        if (status === "backlog") {
-          return "To do";
-        }
-        return PLAYGROUND_TASK_STATUS_OPTIONS.find((option) => option.id === status)?.label || "To do";
+        return getPlaygroundTaskStatusPresentation(status).label;
+      }
+
+      function getPlaygroundTaskStatusPresentation(status) {
+        const normalized = String(status || "").trim().toLowerCase();
+        return PLAYGROUND_TASK_STATUS_OPTIONS.find((option) => option.id === normalized)
+          || PLAYGROUND_TASK_STATUS_OPTIONS.find((option) => option.id === "todo");
+      }
+
+      function renderPlaygroundTaskStatusGlyph(status, className) {
+        const presentation = getPlaygroundTaskStatusPresentation(status);
+        const StatusIcon = presentation.icon || Circle;
+        return React.createElement(StatusIcon, {
+          className: [
+            "playground-tasks-status-icon",
+            presentation.toneClassName,
+            className,
+          ].filter(Boolean).join(" "),
+          strokeWidth: presentation.id === "in_progress" ? 1.7 : 2,
+          "aria-hidden": "true",
+        });
+      }
+
+      function renderPlaygroundTaskStatusValue(status, className) {
+        const presentation = getPlaygroundTaskStatusPresentation(status);
+        return React.createElement("span", {
+            className: [
+              "playground-tasks-status-value",
+              presentation.toneClassName,
+              className,
+            ].filter(Boolean).join(" "),
+          },
+          renderPlaygroundTaskStatusGlyph(status),
+          React.createElement("span", {
+            className: "playground-tasks-status-value-label playground-tasks-detail-select-trigger-label",
+          }, presentation.label)
+        );
       }
 
       function getPlaygroundTaskPriorityLabel(priority) {

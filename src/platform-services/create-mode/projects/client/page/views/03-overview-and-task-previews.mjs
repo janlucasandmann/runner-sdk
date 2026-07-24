@@ -126,13 +126,27 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
             const TaskTypeIcon = isSubtask ? Check : Bookmark;
             const taskTicketNumber = taskTicketNumbersById[task.id] || task.ticketNumber || "001";
             const taskDescription = String(task.description || "").trim() || "No description";
-            const assigneeName = getTaskAssigneeName(task.assigneeAgentId, "");
             const isDraggable = canDropTaskOnBoardLane(task, "blocked") || canDropTaskOnBoardLane(task, "in_progress") || canDropTaskOnBoardLane(task, "todo");
-            return React.createElement("button", {
+            return React.createElement(PlatformTicketItem, {
                 key: task.id,
-                type: "button",
-                className: "playground-tasks-lane-card"
-                  + (selectedTaskId === task.id ? " is-active" : "")
+                variant: "card",
+                title: task.title || "Untitled Task",
+                description: React.createElement(PlaygroundTaskDescriptionMarkdown, {
+                  content: taskDescription,
+                  className: "tb-message-markdown",
+                }),
+                taskType: isSubtask ? "subtask" : "task",
+                typeIcon: React.createElement(TaskTypeIcon, { width: 14, height: 14, strokeWidth: 1.9 }),
+                priority: renderPlaygroundTaskPriorityIcon(task.priority, "playground-tasks-lane-card-priority"),
+                ticketNumber: taskTicketNumber,
+                status: React.createElement("span", {
+                  className: "playground-tasks-lane-card-status",
+                  title: statusLabel,
+                }, statusLabel),
+                assignee: renderTaskAssigneeAvatar(task, "playground-tasks-board-assignee-avatar"),
+                completed: task.status === "done",
+                active: selectedTaskId === task.id,
+                className: ""
                   + (isDraggable ? " is-draggable" : "")
                   + (boardDraggingTaskId === task.id ? " is-dragging" : ""),
                 style: getPlaygroundTaskColorStyle(task.taskColor),
@@ -153,31 +167,7 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                 onDragEnd: () => {
                   clearBoardDragState();
                 },
-              },
-                React.createElement("div", { className: "playground-tasks-lane-card-header" },
-                  React.createElement("div", {
-                    className: "playground-tasks-lane-card-title" + (task.status === "done" ? " is-complete" : ""),
-                  }, task.title || "Untitled Task"),
-                  renderTaskAssigneeAvatar(task, "playground-tasks-board-assignee-avatar")
-                ),
-                React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                  content: taskDescription,
-                  className: "playground-tasks-lane-card-copy tb-message-markdown",
-                }),
-                React.createElement("div", { className: "playground-tasks-lane-card-bottom" },
-                  React.createElement("div", { className: "playground-tasks-lane-card-meta-left" },
-                    React.createElement("div", {
-                      className: "playground-tasks-lane-card-type-badge " + (isSubtask ? "is-subtask" : "is-task"),
-                      "aria-hidden": "true",
-                    },
-                      React.createElement(TaskTypeIcon, { width: 14, height: 14, strokeWidth: 1.9 })
-                    ),
-                    renderPlaygroundTaskPriorityIcon(task.priority, "playground-tasks-lane-card-priority"),
-                    React.createElement("span", { className: "playground-tasks-lane-card-status", title: statusLabel }, statusLabel)
-                  ),
-                  React.createElement("span", { className: "playground-tasks-lane-card-ticket" }, taskTicketNumber)
-                )
-              );
+              });
           }
 
           function renderBoardReleaseLane(section, lane) {
@@ -1000,14 +990,14 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
               },
               {
                 key: "in-progress",
-                label: "In progress",
+                label: "In Progress",
                 count: Number(selectedProjectTaskStatusOverview.inProgress) || 0,
                 Icon: Zap,
                 toneClassName: "is-in-progress",
               },
               {
                 key: "done",
-                label: "Finished",
+                label: "Done",
                 count: Number(selectedProjectTaskStatusOverview.done) || 0,
                 Icon: Sparkles,
                 toneClassName: "is-done",
@@ -1329,7 +1319,6 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
             };
           });
           const activeTaskPriorityPresentation = getPlaygroundTaskPriorityPresentation(draftTask.priority);
-          const activeTaskColorPresentation = getPlaygroundTaskColorPresentation(draftTask.taskColor);
           const ActiveTaskTypeIcon = activeTaskType === "subtask" ? Check : (activeTaskType === "loop" ? RefreshCw : Bookmark);
           const startedThreadRecord = startedThreadId
             ? selectedProjectRecentThreads.find((thread) => thread.id === startedThreadId) || null
@@ -1349,14 +1338,6 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
 	          const activeReviewerLabel = draftTask.reviewRequired
 	            ? (resolvedTaskReviewerId ? getTaskAssigneeName(resolvedTaskReviewerId, "Reviewer") : "Review required")
 	            : "No review";
-	          const activeEnvironmentDisplay = resolvePlaygroundTaskEnvironmentDisplay(draftTask, {
-            projectRecord: selectedProject,
-          });
-          const activeEnvironmentLabel = activeEnvironmentDisplay.label;
-          const projectDefaultEnvironmentId = getPlaygroundProjectDefaultEnvironmentId(selectedProject);
-          const projectDefaultEnvironment = projectDefaultEnvironmentId
-            ? availableBacklogEnvironments.find((environment) => environment.id === projectDefaultEnvironmentId) || null
-            : null;
           const activeBlockedByTask = blockedByTaskId ? (tasksById[blockedByTaskId] || null) : null;
           const activeBlockedByLabel = activeBlockedByTask
             ? ((taskTicketNumbersById[activeBlockedByTask.id] || activeBlockedByTask.ticketNumber || "000") + " - " + (activeBlockedByTask.title || "Untitled Task"))
@@ -1368,12 +1349,13 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
             ? getPlaygroundTaskAssigneePopupMode(activeAssigneeActor)
             : (taskDetailAvailableAssigneePopupModes[0] || "agents");
 
-          function createTaskDetailSelectorOption({ value, label, description, leading = null, onSelect, disabled = false }) {
+          function createTaskDetailSelectorOption({ value, label, description, leading = null, trailing = null, onSelect, disabled = false }) {
             return {
               value: String(value || ""),
               label,
               description: description || undefined,
               leading: leading || undefined,
+              trailing: trailing || undefined,
               disabled,
               onSelect,
             };
@@ -1388,6 +1370,7 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
             buttonContent = null,
             popupClassName = "",
             popupHeader = null,
+            popupHeaderClassName = "",
             popupContent = null,
             popupAriaLabel = "",
             open = null,

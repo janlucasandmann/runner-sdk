@@ -1,4 +1,7 @@
 export const TEAMS_STATE_DIALOGS_SCRIPT = `	        const [teamPageCreateName, setTeamPageCreateName] = useState("");
+        const [teamPageCreateProfileImageUrl, setTeamPageCreateProfileImageUrl] = useState(
+          () => PLATFORM_PROFILE_IMAGE_PRESET_OPTIONS[0]?.url || ""
+        );
         const [teamPageCreateModalOpen, setTeamPageCreateModalOpen] = useState(false);
         const [teamPageCreateInviteEmails, setTeamPageCreateInviteEmails] = useState("");
         const [teamPageCreateInviteRole, setTeamPageCreateInviteRole] = useState("member");
@@ -25,4 +28,3 @@ export const TEAMS_STATE_DIALOGS_SCRIPT = `	        const [teamPageCreateName, s
         const teamPageShareModalCloseTimerRef = useRef(null);
         const teamPageProjectResourceIndexLoadKeyRef = useRef("");
 `;
-

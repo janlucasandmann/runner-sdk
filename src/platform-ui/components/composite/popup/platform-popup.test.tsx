@@ -7,6 +7,7 @@ import {
   PlatformPopupDismissLayer,
   PlatformPopupSurface,
 } from "./platform-popup.js";
+import { PlatformPopupSearchHeader } from "./platform-popup-search-header.js";
 
 afterEach(() => {
   cleanup();
@@ -14,6 +15,21 @@ afterEach(() => {
 });
 
 describe("PlatformPopup", () => {
+  it("provides a reusable, autofocusable search header with a shortcut hint", () => {
+    render(
+      <PlatformPopupSearchHeader
+        aria-label="Search statuses"
+        placeholder="Change status..."
+        shortcut="S"
+        autoFocus
+      />,
+    );
+
+    const input = screen.getByRole("searchbox", { name: "Search statuses" });
+    expect(input).toBe(document.activeElement);
+    expect(screen.getByText("S").tagName).toBe("KBD");
+  });
+
   it("keeps the trigger mounted while the controlled popup is closed", () => {
     const { container } = render(
       <PlatformPopup open={false} trigger={<button type="button">Open</button>}>
@@ -153,6 +169,56 @@ describe("PlatformPopup", () => {
     expect(surface?.style.top).toBe("492px");
     expect(surface?.style.width).toBe("180px");
     expect(surface?.style.visibility).toBe("");
+  });
+
+  it("anchors context menus to an explicit viewport point", () => {
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
+      function (this: HTMLElement) {
+        if (this.classList.contains("platform-popup-surface")) {
+          return {
+            x: 0,
+            y: 0,
+            width: 160,
+            height: 120,
+            top: 0,
+            right: 160,
+            bottom: 120,
+            left: 0,
+            toJSON: () => ({}),
+          } as DOMRect;
+        }
+        return {
+          x: 12,
+          y: 16,
+          width: 32,
+          height: 32,
+          top: 16,
+          right: 44,
+          bottom: 48,
+          left: 12,
+          toJSON: () => ({}),
+        } as DOMRect;
+      },
+    );
+
+    render(
+      <PlatformPopup
+        open
+        portal
+        portalAnchorPoint={{ x: 420, y: 240 }}
+        portalOffset={0}
+        placement="bottom-start"
+        trigger={<button type="button">Context target</button>}
+      >
+        Context actions
+      </PlatformPopup>,
+    );
+
+    const surface = document.body.querySelector<HTMLElement>(
+      ".platform-popup-surface.is-portaled",
+    );
+    expect(surface?.style.left).toBe("420px");
+    expect(surface?.style.top).toBe("240px");
   });
 
   it("normalizes legacy transition classes onto the central animation contract", () => {

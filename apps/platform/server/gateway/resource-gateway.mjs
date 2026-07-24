@@ -8,7 +8,7 @@ import {
 
 export function createResourceGateway(bindings) {
     const { aiosOrigin, defaultUpstreamOrigin, fetchAiosCloud, hasAiosSession, normalizeBackendUrl, parseUpstreamUrl, readHeader, readOptionalApiKey, readRequestBody, sendJson, withProxyOrganizationHeader, } = bindings;
-    async function fetchUpstreamOverviewJson(req, upstreamPath) {
+    async function fetchUpstreamOverviewJson(req, upstreamPath, options = {}) {
         const upstreamUrl = parseUpstreamUrl(req, {});
         const apiKey = readOptionalApiKey(req, {});
         if (apiKey) {
@@ -18,6 +18,7 @@ export function createResourceGateway(bindings) {
                 headers: withProxyOrganizationHeader(req, {}, {
                     "X-API-Key": apiKey,
                 }),
+                signal: options.signal,
             });
             const parsed = await readResponseJson(upstream);
             return { status: upstream.status, data: parsed };
@@ -30,6 +31,7 @@ export function createResourceGateway(bindings) {
                     cookie: req.headers.cookie || "",
                     authorization: req.headers.authorization || "",
                 }),
+                signal: options.signal,
             });
             const parsed = await readResponseJson(upstream);
             return { status: upstream.status, data: parsed };

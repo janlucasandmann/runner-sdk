@@ -334,6 +334,12 @@ export function createTaskBacklogService({
       const runKind = requestedRunKind === "review" ? "review" : "implementation";
       const isReviewRun = runKind === "review";
       const currentStatus = typeof taskRecord.status === "string" ? taskRecord.status.trim() : "";
+      if (currentStatus === "canceled") {
+        return sendJson(res, 409, {
+          error: "Canceled task cannot start thread",
+          message: "Reopen the task before starting work.",
+        });
+      }
 
       const taskMetadata = getServerBacklogTaskRunnerMetadata(taskRecord) || {};
       const environmentId = String(body?.environmentId || taskRecord.environmentId || taskMetadata.environmentId || "").trim();

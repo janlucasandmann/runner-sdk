@@ -4,7 +4,7 @@
 
 ## Purpose
 
-This directory contains page composition and page-local interaction behavior for the Fine Tuning service in Configure Mode. It remains subordinate to the service boundary and must not become a cross-service utility layer.
+This directory contains page composition and page-local interaction behavior for the Fine Tuning service in Configure Mode, including persisted detail settings, ownership, team access, and fine-tuning-specific permissions. It remains subordinate to the service boundary and must not become a cross-service utility layer.
 
 ## Contents
 

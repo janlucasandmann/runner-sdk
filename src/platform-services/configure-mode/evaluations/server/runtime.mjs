@@ -31,9 +31,11 @@ import {
   normalizeCaseRefinementResult,
   normalizeResponseArray,
   normalizeSourceThreadRecord,
+  readRecordText,
   takeSourceThreadContext,
 } from "./domain/records.mjs";
 import {
+  compactSnapshotRecord,
   extractThreadCostTokens,
   extractThreadCostUsd,
 } from "./domain/costs.mjs";
@@ -52,6 +54,7 @@ import {
   buildProxyPromptAdaptationsFromGuardrails,
   normalizeProxyGuardrailSets,
 } from "../../guardrails/server/enrichment.mjs";
+import { createEvaluationRunPersistenceCoordinator } from "./run-persistence.mjs";
 
 export function createPlaygroundEvaluationsRuntime(deps = {}) {
   const {
@@ -66,12 +69,22 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
     enrichThreadPayloadWithAgentGuardrails,
   } = deps;
   const runsById = new Map();
+  const runPersistence = createEvaluationRunPersistenceCoordinator({
+    persist: (record, run) => persistBackendEvaluationRun(record, run),
+    onError(error, context) {
+      console.error("[evaluations] Failed to persist evaluation run", {
+        runId: context?.runId || "",
+        message: error instanceof Error ? error.message : String(error),
+      });
+    },
+  });
 
   function pruneRuns() {
     const now = Date.now();
     for (const [runId, record] of runsById.entries()) {
       if (now - Number(record.updatedAtMs || 0) > EVALUATION_RUN_TTL_MS) {
         runsById.delete(runId);
+        runPersistence.forget(runId);
       }
     }
   }
@@ -81,7 +94,6 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       ...record,
       updatedAtMs: Date.now(),
     });
-    void persistBackendEvaluationRun(record, record.run).catch(() => {});
   }
 
   function patchRun(runId, updater) {
@@ -90,8 +102,19 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
     const nextRun = recomputeRun(typeof updater === "function" ? updater(record.run) : record.run);
     const nextRecord = { ...record, run: nextRun, updatedAtMs: Date.now() };
     runsById.set(runId, nextRecord);
-    void persistBackendEvaluationRun(nextRecord, nextRun).catch(() => {});
+    void runPersistence.enqueue(nextRecord, nextRun).catch(() => {});
     return nextRecord;
+  }
+
+  async function ensureRunPersisted(record) {
+    const runId = normalizeString(record?.run?.id);
+    if (!runId) return;
+    try {
+      await runPersistence.waitForIdle(runId);
+    } catch {
+      const latestRecord = runsById.get(runId) || record;
+      await runPersistence.enqueue(latestRecord, latestRecord.run);
+    }
   }
 
   function patchRunCase(runId, caseId, patch) {
@@ -165,6 +188,10 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       id: normalizedRun.id,
       runId: normalizedRun.id,
       run_id: normalizedRun.id,
+      evaluationId: normalizedRun.evaluationSetId,
+      evaluation_id: normalizedRun.evaluationSetId,
+      evaluationSetId: normalizedRun.evaluationSetId,
+      evaluation_set_id: normalizedRun.evaluationSetId,
       agentId: normalizedRun.targetAgentId,
       agent_id: normalizedRun.targetAgentId,
       environmentId: normalizedRun.environmentId,
@@ -782,12 +809,18 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       patchRunCase(run.id, caseRun.id, {
         status: "error",
         error: "Evaluation data row could not be resolved.",
+        executionStage: "",
+        failureStage: "resolving_case",
         completedAt: new Date().toISOString(),
       });
       return;
     }
     const title = `${evaluationSet.name || "Evaluation"} · ${run.label || "Run"} · Case ${index + 1}`;
     const startedAt = Date.now();
+    patchRunCase(run.id, caseRun.id, {
+      executionStage: "creating_case_thread",
+      failureStage: "",
+    });
     const caseThread = await createHiddenThread(record, {
       title,
       agentId: run.targetAgentId,
@@ -799,11 +832,13 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
     patchRunCase(run.id, caseRun.id, {
       threadId: caseThread.id,
       status: "running_case",
+      executionStage: "running_case",
       actualOutput: "Thread started.",
     });
     const actualOutput = await runThreadMessage(record, caseThread.id, row.input);
     patchRunCase(run.id, caseRun.id, {
       status: "waiting_for_case_summary",
+      executionStage: "collecting_case_summary",
       actualOutput: actualOutput || "Thread completed. Open the thread to inspect the run summary.",
     });
     const snapshot = await buildThreadSnapshot(record, {
@@ -824,12 +859,13 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
     let costTokens = normalizeTokenCount(snapshot.costTokens);
     let costUsd = normalizeUsdCost(snapshot.costUsd) || (costTokens > 0 ? costTokens / EVALUATION_CT_PER_DOLLAR : 0);
     if (evaluator.type === "exact") {
+      patchRunCase(run.id, caseRun.id, { executionStage: "scoring" });
       score = snapshot.finalSummary && expected.trim()
         ? (normalizeComparable(snapshot.finalSummary) === normalizeComparable(expected) ? 1 : 0)
         : 0;
       status = expected.trim() ? (score >= passThreshold ? "passed" : "failed") : "completed";
     } else if (evaluator.type === "code") {
-      patchRunCase(run.id, caseRun.id, { status: "scoring" });
+      patchRunCase(run.id, caseRun.id, { status: "scoring", executionStage: "scoring" });
       try {
         const evaluatorFn = new Function("input", "expected", "actual", "guidance", "snapshot", String(evaluator.code || "return 0;"));
         const rawScore = evaluatorFn(
@@ -857,6 +893,7 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       if (!evaluatorAgentId) {
         throw createRuntimeError("Select an evaluator agent before running this evaluation.", 400);
       }
+      patchRunCase(run.id, caseRun.id, { executionStage: "creating_evaluator_thread" });
       const evaluatorThread = await createHiddenThread(record, {
         title: `${title} · Evaluator`,
         agentId: evaluatorAgentId,
@@ -868,6 +905,7 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       patchRunCase(run.id, caseRun.id, {
         evaluatorThreadId,
         status: "running_evaluator",
+        executionStage: "running_evaluator",
       });
       const evaluatorMessageSummary = await runThreadMessage(record, evaluatorThreadId, buildEvaluatorPrompt({
         evaluationSet,
@@ -878,9 +916,10 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       }));
       costTokens += await fetchThreadCostTokens(record, evaluatorThreadId).catch(() => 0);
       costUsd += await fetchThreadCostUsd(record, evaluatorThreadId).catch(() => 0);
+      patchRunCase(run.id, caseRun.id, { executionStage: "collecting_evaluator_result" });
       const evaluatorResult = await waitForEvaluatorResult(record, evaluatorThreadId, evaluatorMessageSummary);
       evaluatorOutput = evaluatorResult.output || evaluatorMessageSummary;
-      patchRunCase(run.id, caseRun.id, { status: "scoring", evaluatorOutput });
+      patchRunCase(run.id, caseRun.id, { status: "scoring", executionStage: "scoring", evaluatorOutput });
       const parsed = evaluatorResult.parsed || parseEvaluatorResult(evaluatorOutput);
       score = parsed.score;
       evaluatorReason = parsed.reason || "";
@@ -902,6 +941,8 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       costUsd,
       costSource: "thread_usage_ct",
       status,
+      executionStage: "",
+      failureStage: "",
       latencyMs: Date.now() - startedAt,
       error: status === "error" ? (evaluatorOutput || "Evaluation scoring failed.") : "",
       completedAt: new Date().toISOString(),
@@ -916,21 +957,43 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       const caseRun = latestRecord?.run?.cases?.[index];
       if (!latestRecord || !caseRun) continue;
       try {
-        patchRunCase(runId, caseRun.id, { status: "running", error: "" });
+        patchRunCase(runId, caseRun.id, {
+          status: "running",
+          error: "",
+          executionStage: "resolving_case",
+          failureStage: "",
+        });
         await runEvaluationCase(latestRecord, caseRun, index);
       } catch (error) {
+        const failedRecord = runsById.get(runId);
+        const failedCase = failedRecord?.run?.cases?.find((item) => item.id === caseRun.id);
+        const failureStage = normalizeString(failedCase?.executionStage) || "executing_case";
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error("[evaluations] Evaluation case execution failed", {
+          runId,
+          caseId: caseRun.id,
+          stage: failureStage,
+          threadId: normalizeString(failedCase?.threadId),
+          evaluatorThreadId: normalizeString(failedCase?.evaluatorThreadId),
+          message: errorMessage,
+        });
         patchRunCase(runId, caseRun.id, {
           status: "error",
           score: 0,
-          error: error instanceof Error ? error.message : String(error),
+          error: errorMessage,
+          executionStage: "",
+          failureStage,
           completedAt: new Date().toISOString(),
         });
       }
     }
-    patchRun(runId, (run) => ({
+    const finalRecord = patchRun(runId, (run) => ({
       ...run,
       completedAt: new Date().toISOString(),
     }));
+    if (finalRecord) {
+      await ensureRunPersisted(finalRecord);
+    }
   }
 
   async function recalculateRunCosts(record, rawRun) {
@@ -1095,6 +1158,7 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
       const run = createEvaluationRun(evaluationSet, runOptions);
       const existingRecord = runsById.get(run.id);
       if (existingRecord) {
+        await ensureRunPersisted(existingRecord);
         return sendJson(res, 200, {
           object: "evaluation_run",
           run: existingRecord.run,
@@ -1130,6 +1194,16 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
         targetGuardrail,
       };
       storeRun(record);
+      try {
+        await runPersistence.enqueue(record, run);
+      } catch (error) {
+        runsById.delete(run.id);
+        runPersistence.forget(run.id);
+        throw createRuntimeError(
+          `The evaluation run could not be durably created: ${error instanceof Error ? error.message : String(error)}`,
+          Number(error?.status || 502) >= 500 ? Number(error?.status || 502) : 502,
+        );
+      }
       setTimeout(() => {
         executeRun(run.id).catch((error) => {
           patchRun(run.id, (currentRun) => ({
@@ -1186,6 +1260,14 @@ export function createPlaygroundEvaluationsRuntime(deps = {}) {
           message: error instanceof Error ? error.message : "The evaluation run is no longer available in the local runtime.",
         });
       }
+    }
+    try {
+      await ensureRunPersisted(record);
+    } catch (error) {
+      return sendJson(res, 503, {
+        error: "Evaluation run persistence is temporarily unavailable",
+        message: error instanceof Error ? error.message : String(error),
+      });
     }
     return sendJson(res, 200, {
       object: "evaluation_run",

@@ -2,7 +2,7 @@ import {
   createLegacyPlatformShellScript,
 } from "../domains/shell/source.mjs";
 
-export const PLATFORM_COMPATIBILITY_BINDING_COUNT = 134;
+export const PLATFORM_COMPATIBILITY_BINDING_COUNT = 135;
 
 export function createPlatformCompatibilityTemplateBindings(bindings) {
   const PLATFORM_SHELL_SCRIPT = createLegacyPlatformShellScript(bindings);
@@ -73,6 +73,7 @@ export function createPlatformCompatibilityTemplateBindings(bindings) {
     ORGANIZATIONS_PAGE_SCRIPT_FRAGMENTS,
     ORGANIZATIONS_RUNTIME_SCRIPT_FRAGMENTS,
     ORGANIZATIONS_STYLE_FRAGMENTS,
+    ONBOARDING_CSS,
     ONBOARDING_SCRIPT,
     PLATFORM_NAVIGATION_GUARD_APP_SCRIPT_FRAGMENTS,
     PLATFORM_UI_PRIMITIVES_CSS,
@@ -239,5 +240,6 @@ export function createPlatformCompatibilityTemplateBindings(bindings) {
     JSON.stringify(aiosOrigin),
     JSON.stringify(process.env.NODE_ENV === "development" ? "development" : "production"),
     JSON.stringify(identityProvider),
+    ONBOARDING_CSS,
   ]);
 }

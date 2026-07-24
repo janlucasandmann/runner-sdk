@@ -22,3 +22,9 @@ export {
 export {
   RESOURCE_CREATION_APP_SCRIPT_FRAGMENTS,
 } from "./resource-creation/index.mjs";
+
+export {
+  ONBOARDING_APP_SCRIPT_FRAGMENTS,
+  ONBOARDING_CSS,
+  ONBOARDING_PAGE_SCRIPT,
+} from "./onboarding/index.mjs";

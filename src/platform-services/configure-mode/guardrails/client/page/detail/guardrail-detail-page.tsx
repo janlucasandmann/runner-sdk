@@ -1,4 +1,4 @@
-import { ChartColumnIncreasing, LayoutGrid, Settings2 } from "lucide-react";
+import { ChartColumnIncreasing, LayoutGrid, Settings } from "lucide-react";
 import type { ReactNode } from "react";
 import { PlatformUiCard } from "../../../../../../platform-ui/components/composite/ui-card/index.js";
 import { ResourceDetailPage } from "../../../../../../platform-ui/pages/details/index.js";
@@ -24,7 +24,7 @@ export interface GuardrailDetailPageProps {
 const GUARDRAIL_DETAIL_TABS = [
   { id: "general", label: "General", icon: LayoutGrid },
   { id: "evaluation", label: "Evaluation", icon: ChartColumnIncreasing },
-  { id: "settings", label: "Settings", icon: Settings2 },
+  { id: "settings", label: "Settings", icon: Settings },
 ] as const;
 
 export function GuardrailDetailPage({

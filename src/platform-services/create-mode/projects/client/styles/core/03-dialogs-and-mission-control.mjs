@@ -1,25 +1,28 @@
 export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
 		      }
 
+		      .playground-new-issue-modal.platform-modal-surface {
+		        display: flex;
+		        flex-direction: column;
+		      }
+
 		      .playground-new-issue-modal__body.platform-modal-body {
 		        min-height: 0;
+		        flex: 1 1 auto;
 		        display: flex;
 		        flex-direction: column;
 		        gap: 20px;
-		        overflow: auto;
+		        overflow-x: hidden;
+		        overflow-y: auto;
 		      }
 
-		      .playground-new-issue-modal__title-input {
-		        width: 100%;
-		        min-width: 0;
-		      }
-
-		      .playground-new-issue-modal .playground-tasks-issue-description-editor {
-		        margin: 0;
-		        padding: 0;
+		      .playground-new-issue-modal > .platform-modal-header,
+		      .playground-new-issue-modal > .platform-modal-footer {
+		        flex: 0 0 auto;
 		      }
 
 		      .playground-new-issue-modal .playground-tasks-issue-details-section {
+		        margin-top: 0;
 		        padding: 0;
 		        border: 0;
 		        border-radius: 0;
@@ -28,15 +31,37 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
 		        backdrop-filter: none;
 		      }
 
-		      .playground-new-issue-modal .playground-tasks-issue-modal-computer-picker {
-		        width: 100%;
-		        min-width: 0;
-		        flex: 0 1 auto;
+		      .playground-new-issue-modal .playground-tasks-issue-details-section > .playground-tasks-detail-facts-body {
+		        margin-top: 0;
+		        padding-top: 0;
+		        border-top: 0;
 		      }
 
-		      .playground-new-issue-modal .playground-tasks-issue-modal-computer-picker .playground-tasks-detail-select-shell {
-		        width: 100%;
-		        max-width: 100%;
+		      .playground-new-issue-modal .playground-new-issue-modal__description.platform-instructions-editor {
+		        margin-top: 0;
+		        margin-bottom: 0;
+		        min-height: 0;
+		        flex: 1 1 auto;
+		        display: flex;
+		        flex-direction: column;
+		        padding: 12px;
+		        border: 1px solid rgba(255, 255, 255, 0.075);
+		        border-radius: 10px;
+		        background: rgba(255, 255, 255, 0.075);
+		        overflow: hidden;
+		      }
+
+		      .playground-new-issue-modal .playground-new-issue-modal__description.platform-instructions-editor > .platform-instructions-editor__header {
+		        flex: 0 0 auto;
+		        margin-bottom: 12px;
+		      }
+
+		      .playground-new-issue-modal .playground-new-issue-modal__description.platform-instructions-editor > .platform-instructions-editor__body {
+		        min-height: 36px;
+		        flex: 1 1 auto;
+		        overflow-x: hidden;
+		        overflow-y: auto;
+		        overscroll-behavior: contain;
 		      }
 
 		      .playground-database-access-table-section,
@@ -1011,6 +1036,7 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
         display: flex;
         flex-direction: column;
         gap: 10px;
+        margin-top: 0;
         padding-top: 0;
       }
 
@@ -1026,7 +1052,7 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
 
       .playground-tasks-comment-modal-instructions .platform-instructions-editor__body,
       .playground-tasks-comment-modal-instructions .platform-instructions-editor__preview,
-      .playground-tasks-comment-modal-instructions .platform-instructions-editor__input {
+      .playground-tasks-comment-modal-instructions .platform-instructions-editor__prosemirror {
         min-height: 140px;
       }
 
@@ -1110,6 +1136,78 @@ export const PROJECTS_CORE_CSS_03_FRAGMENT = `	        margin-bottom: 24px;
 
       .playground-tasks-detail-central-selector .platform-selector__value {
         justify-content: flex-end;
+      }
+
+      .playground-tasks-detail-type-badge {
+        width: 18px;
+        height: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 18px;
+        border-radius: 5px;
+        color: #fff;
+      }
+
+      .playground-tasks-detail-type-badge svg {
+        width: 10px;
+        height: 10px;
+        filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.28));
+      }
+
+      .playground-tasks-detail-type-badge.is-task {
+        background: linear-gradient(180deg, #39b877 0%, #2b8b59 100%);
+      }
+
+      .playground-tasks-detail-type-badge.is-subtask {
+        background: linear-gradient(180deg, #4f7fc5 0%, #1e4585 100%);
+      }
+
+      .playground-tasks-detail-type-badge.is-loop {
+        background: linear-gradient(180deg, #9a72df 0%, #6542a8 100%);
+      }
+
+      .playground-tasks-status-value {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: rgba(255, 255, 255, 0.86);
+      }
+
+      .playground-tasks-status-icon {
+        width: 16px;
+        height: 16px;
+        flex: 0 0 auto;
+      }
+
+      .playground-tasks-status-icon.is-backlog,
+      .playground-tasks-status-icon.is-canceled {
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .playground-tasks-status-icon.is-todo {
+        color: #fff;
+      }
+
+      .playground-tasks-status-icon.is-in-progress {
+        color: #f5c518;
+      }
+
+      .playground-tasks-status-icon.is-done {
+        color: #747ce8;
+      }
+
+      .playground-tasks-status-icon.is-blocked {
+        color: #ff6b6b;
+      }
+
+      .playground-tasks-status-icon.is-in-review {
+        color: #4da3ff;
+      }
+
+      .playground-tasks-status-value-label {
+        min-width: 0;
       }
 
       .playground-tasks-detail-creator-value .playground-tasks-detail-select-trigger-label {

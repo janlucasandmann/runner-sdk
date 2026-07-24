@@ -546,7 +546,9 @@ export const PROJECT_OVERVIEW_FILES_ACTIVITY_FRAGMENT = String.raw`
             const isSubtask = typeof isPlaygroundSubtaskRecord === "function" ? isPlaygroundSubtaskRecord(task) : false;
             const TaskTypeIcon = isSubtask ? Check : Bookmark;
             const isLaunchLocked = typeof isTaskThreadLaunchLocked === "function" ? isTaskThreadLaunchLocked(task) : false;
-            const isRunDisabled = Boolean(saveState?.isSaving) || isLaunchLocked;
+            const isRunDisabled = Boolean(saveState?.isSaving)
+              || isLaunchLocked
+              || isPlaygroundTaskTerminalStatus(task?.status);
             const openTaskDetail = () => {
               if (!taskId) {
                 return;
@@ -560,50 +562,24 @@ export const PROJECT_OVERVIEW_FILES_ACTIVITY_FRAGMENT = String.raw`
               }
             };
 
-            return React.createElement("div", {
+            return React.createElement(PlatformTicketItem, {
                 key: taskId || ticketNumber,
-                className: "playground-tasks-backlog-item"
-                  + (typeof isTaskPreviewStatusMenuOpen === "function" && isTaskPreviewStatusMenuOpen(taskId) ? " is-status-menu-open" : ""),
-                role: "button",
-                tabIndex: 0,
-                style: typeof getPlaygroundTaskColorStyle === "function" ? getPlaygroundTaskColorStyle(task?.taskColor) : undefined,
-                onClick: openTaskDetail,
-                onKeyDown: (event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    openTaskDetail();
-                  }
-                },
-              },
-              React.createElement("div", { className: "playground-tasks-backlog-item-content" },
-                React.createElement("div", { className: "playground-tasks-backlog-leading" },
-                  React.createElement("div", {
-                    className: "playground-tasks-backlog-project-icon " + (isSubtask ? "is-subtask" : "is-task"),
-                    "aria-hidden": "true",
-                  },
-                    React.createElement(TaskTypeIcon, { width: 14, height: 14, strokeWidth: 1.9 })
-                  ),
-                  React.createElement("div", { className: "playground-tasks-backlog-main" },
-                    typeof renderPlaygroundTaskPriorityIcon === "function"
-                      ? renderPlaygroundTaskPriorityIcon(task?.priority, "playground-tasks-backlog-priority")
-                      : null,
-                    React.createElement("span", { className: "playground-tasks-backlog-ticket" }, ticketNumber),
-                    React.createElement("span", {
-                      className: "playground-tasks-backlog-title" + (String(task?.status || "").trim() === "done" ? " is-complete" : ""),
-                    }, task?.title || "Untitled Task")
-                  )
-                ),
-                React.createElement("div", { className: "playground-tasks-backlog-meta" },
-                  typeof renderTaskPreviewStatusControl === "function"
-                    ? renderTaskPreviewStatusControl(task)
-                    : null,
-                  React.createElement("div", { className: "playground-tasks-backlog-assignee-shell" },
-                    typeof renderTaskAssigneeAvatar === "function"
-                      ? renderTaskAssigneeAvatar(task, "playground-tasks-backlog-assignee-avatar")
-                      : null
-                  )
-                ),
-                React.createElement("button", {
+                variant: "list",
+                taskType: isSubtask ? "subtask" : "task",
+                typeIcon: React.createElement(TaskTypeIcon, { width: 14, height: 14, strokeWidth: 1.9 }),
+                priority: typeof renderPlaygroundTaskPriorityIcon === "function"
+                  ? renderPlaygroundTaskPriorityIcon(task?.priority, "playground-tasks-backlog-priority")
+                  : null,
+                ticketNumber,
+                title: task?.title || "Untitled Task",
+                completed: String(task?.status || "").trim() === "done",
+                status: typeof renderTaskPreviewStatusControl === "function"
+                  ? renderTaskPreviewStatusControl(task)
+                  : null,
+                assignee: typeof renderTaskAssigneeAvatar === "function"
+                  ? renderTaskAssigneeAvatar(task, "playground-tasks-backlog-assignee-avatar")
+                  : null,
+                action: React.createElement("button", {
                   type: "button",
                   className: "playground-tasks-backlog-run-button",
                   "aria-label": "Run task thread",
@@ -625,9 +601,21 @@ export const PROJECT_OVERVIEW_FILES_ACTIVITY_FRAGMENT = String.raw`
                     fill: "currentColor",
                     "aria-hidden": "true",
                   })
-                )
-              )
-            );
+                ),
+                className: typeof isTaskPreviewStatusMenuOpen === "function" && isTaskPreviewStatusMenuOpen(taskId)
+                  ? "is-status-menu-open"
+                  : "",
+                role: "button",
+                tabIndex: 0,
+                style: typeof getPlaygroundTaskColorStyle === "function" ? getPlaygroundTaskColorStyle(task?.taskColor) : undefined,
+                onClick: openTaskDetail,
+                onKeyDown: (event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    openTaskDetail();
+                  }
+                },
+              });
           }
 
           function getProjectOverviewThreadRecordObject(value) {

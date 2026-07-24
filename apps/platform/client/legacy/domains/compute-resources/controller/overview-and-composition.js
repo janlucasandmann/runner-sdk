@@ -1110,14 +1110,12 @@
   		              },
   		            ];
   		          };
-  		          const prefetchOverviewResource = (item) => {
-  		            if (!isServersMode) return;
-  		            if (item?.resourceType === "database") {
-  		              prefetchDatabaseBootstrap(item.id);
-  		            } else if (["function", "web_app", "auth", "agent_runtime", "secrets", "payments"].includes(canonicalizePlaygroundServerKind(item?.kind))) {
-  		              void loadServerAnalytics(item.id, { period: "day" });
-  		            }
-  		          };
+		          const prefetchOverviewResource = (item) => {
+		            if (!isServersMode) return;
+		            if (item?.resourceType === "database") {
+		              prefetchDatabaseBootstrap(item.id);
+		            }
+		          };
   		          const overviewResourceTable = React.createElement(PlatformDataTable, {
   		            rows: overviewItems,
   		            columns: overviewResourceColumns,

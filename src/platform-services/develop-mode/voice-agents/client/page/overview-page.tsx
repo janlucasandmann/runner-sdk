@@ -57,9 +57,9 @@ function getVoiceModeLabel(mode: string, modeOptions: readonly DevelopVoiceAgent
   return modeOptions.find((option) => option.id === mode)?.label || "Off";
 }
 
-function renderVoiceAgentSidebarRow(label: ReactNode, value: ReactNode) {
+function renderVoiceAgentSidebarRow(label: ReactNode, value: ReactNode, className = "") {
   return (
-    <div className="playground-project-overview-sidebar-row">
+    <div className={`playground-project-overview-sidebar-row${className ? ` ${className}` : ""}`}>
       <span className="playground-project-overview-sidebar-row-label">{label}</span>
       <div className="playground-project-overview-sidebar-row-value">{value}</div>
     </div>
@@ -174,18 +174,18 @@ function VoiceAgentDetailPage({
             fallback={(creator.name || creator.email || "?").slice(0, 1).toUpperCase()}
             size="compact"
           />)}
-          {renderVoiceAgentSidebarRow("Owner", <ResourceOverviewIdentityCell
-            title={owner.name || owner.email || "Unknown"}
-            imageUrl={owner.avatarUrl}
-            fallback={(owner.name || owner.email || "?").slice(0, 1).toUpperCase()}
-            size="compact"
-          />)}
           {renderVoiceAgentSidebarRow("Mode", modeLabel)}
           {renderVoiceAgentSidebarRow("Model", row.model)}
           {renderVoiceAgentSidebarRow("Voice", row.voiceId || "Default")}
           {renderVoiceAgentSidebarRow("Language", row.languageHint || "Automatic")}
           {renderVoiceAgentSidebarRow("Phone", row.phoneNumber || "Not provisioned")}
           {renderVoiceAgentSidebarRow("Agent ID", <span className="is-id" title={row.id}>{row.id}</span>)}
+          {renderVoiceAgentSidebarRow("Owner", <ResourceOverviewIdentityCell
+            title={owner.name || owner.email || "Unknown"}
+            imageUrl={owner.avatarUrl}
+            fallback={(owner.name || owner.email || "?").slice(0, 1).toUpperCase()}
+            size="compact"
+          />, "playground-server-detail-sidebar-owner-row")}
         </div>
       </PlatformUiCard>
       <PlatformUiCard

@@ -10,8 +10,23 @@ export const EVALUATIONS_PAGE_CONTROLLER_VERSIONS_SCRIPT = String.raw`        fu
               return normalized;
             }
             const nextSet = typeof updater === "function" ? updater(normalized) : normalized;
-            nextSetForPersistence = ensurePlaygroundEvaluationInitialVersion(normalizePlaygroundEvaluationSet({ ...nextSet, updatedAt: new Date().toISOString() }));
-            return nextSetForPersistence;
+            const normalizedNextSet = ensurePlaygroundEvaluationInitialVersion(normalizePlaygroundEvaluationSet({
+              ...nextSet,
+              updatedAt: new Date().toISOString(),
+            }));
+            if (options.persist === true || (options.persist !== false && options.markVersionTouched === false)) {
+              const versions = playgroundEvaluationVersionController.readVersions(normalizedNextSet);
+              const selectedVersion = playgroundEvaluationVersionController.getSelectedVersion(normalizedNextSet);
+              nextSetForPersistence = options.markVersionTouched === false && selectedVersion
+                ? createPlaygroundEvaluationFromVersionSnapshot(
+                    normalizedNextSet,
+                    selectedVersion,
+                    versions,
+                    selectedVersion.id
+                  )
+                : normalizedNextSet;
+            }
+            return normalizedNextSet;
           }));
           if (nextSetForPersistence) {
             schedulePersistEvaluationSet(nextSetForPersistence, options);
@@ -148,7 +163,34 @@ export const EVALUATIONS_PAGE_CONTROLLER_VERSIONS_SCRIPT = String.raw`        fu
           };
         }
 
+        function hasEvaluationDraftChanges(set = activeSet) {
+          const normalizedSetId = String(set?.id || "").trim();
+          const activeSetId = String(activeSet?.id || "").trim();
+          return Boolean(
+            normalizedSetId
+            && normalizedSetId === activeSetId
+            && hasSelectedEvaluationVersionChanges()
+          );
+        }
+
         function getEvaluationRunnableCaseCount(set = activeSet) {
+          const normalizedSet = set ? normalizePlaygroundEvaluationSet(set) : null;
+          if (normalizedSet && hasEvaluationDraftChanges(normalizedSet)) {
+            const draftCaseCount = Array.isArray(normalizedSet.dataRows) ? normalizedSet.dataRows.length : 0;
+            const publishedRunSource = getEvaluationPublishedRunSource(normalizedSet);
+            const publishedCaseCount = Array.isArray(publishedRunSource?.set?.dataRows)
+              ? publishedRunSource.set.dataRows.length
+              : 0;
+            return Math.max(draftCaseCount, publishedCaseCount);
+          }
+          if (
+            normalizedSet
+            && String(backendUrl || "").trim()
+            && normalizedSet.id
+            && !evaluationDetailsLoadedRef.current.has(normalizedSet.id)
+          ) {
+            return Array.isArray(normalizedSet.dataRows) ? normalizedSet.dataRows.length : 0;
+          }
           const runSource = getEvaluationPublishedRunSource(set);
           return Array.isArray(runSource?.set?.dataRows) ? runSource.set.dataRows.length : 0;
         }
@@ -157,6 +199,111 @@ export const EVALUATIONS_PAGE_CONTROLLER_VERSIONS_SCRIPT = String.raw`        fu
           return playgroundEvaluationVersionController.hasDraftChanges(activeSet, evaluationVersionBaselineRef, {
             touched: evaluationVersionDraftTouchedRef.current,
           });
+        }
+
+        function requestEvaluationNavigation(continuation) {
+          if (typeof continuation !== "function") {
+            return false;
+          }
+          if (typeof onNavigationRequest === "function") {
+            return onNavigationRequest(continuation);
+          }
+          continuation();
+          return true;
+        }
+
+        function discardUnsavedEvaluationDraft() {
+          const normalizedSetId = String(activeSet?.id || "").trim();
+          if (!normalizedSetId) {
+            evaluationVersionDraftTouchedRef.current = false;
+            return;
+          }
+          const versions = readSelectedEvaluationVersions(activeSet);
+          const selectedVersion = getSelectedEvaluationVersion(activeSet)
+            || getSelectedEvaluationActiveVersion(activeSet)
+            || versions[0]
+            || null;
+          setEvaluationVersionSaveDialog(null);
+          if (!selectedVersion) {
+            evaluationVersionDraftTouchedRef.current = false;
+            return;
+          }
+          const restoredSet = createPlaygroundEvaluationFromVersionSnapshot(
+            activeSet,
+            selectedVersion,
+            versions,
+            selectedVersion.id
+          );
+          replaceEvaluationSet(restoredSet, {
+            clearRunSelection: false,
+            rememberBaseline: true,
+            persist: false,
+          });
+        }
+
+        function returnToEvaluationsOverview() {
+          return requestEvaluationNavigation(() => {
+            setSelectedEvaluationSetId("");
+            setSelectedEvaluationRunId("");
+            if (typeof setSelectedEvaluationCaseId === "function") setSelectedEvaluationCaseId("");
+            setEvaluationsPageMode("overview");
+          });
+        }
+
+        function buildEvaluationVersionSaveDialogData() {
+          const versions = readSelectedEvaluationVersions();
+          const selectedVersion = getSelectedEvaluationVersion()
+            || getSelectedEvaluationActiveVersion()
+            || versions[0]
+            || null;
+          const baseSnapshot = selectedVersion?.snapshot
+            || buildPlaygroundEvaluationVersionSnapshot(activeSet);
+          const currentSnapshot = buildPlaygroundEvaluationVersionSnapshot(activeSet);
+          const latestVersion = versions.reduce((highest, version) => {
+            const parsedVersion = Number(version?.version);
+            return Number.isFinite(parsedVersion)
+              ? Math.max(highest, parsedVersion)
+              : highest;
+          }, -1);
+          return {
+            canSaveCurrent: Boolean(selectedVersion),
+            currentVersion: selectedVersion ? Number(selectedVersion.version) : null,
+            nextVersion: latestVersion + 1,
+            currentDescription: String(selectedVersion?.description || "").trim(),
+            diffFiles: buildPlaygroundEvaluationVersionDiffFilesFromSnapshots(baseSnapshot, currentSnapshot),
+          };
+        }
+
+        function openEvaluationVersionSaveDialog(options = {}) {
+          const normalizedSetId = String(activeSet?.id || "").trim();
+          const versionsLoaded = !String(backendUrl || "").trim()
+            || evaluationDetailsLoadedRef.current.has(normalizedSetId);
+          if (
+            !normalizedSetId
+            || evaluationVersionState.status === "loading"
+            || !versionsLoaded
+            || !hasSelectedEvaluationVersionChanges()
+          ) {
+            return false;
+          }
+          setEvaluationActionsPopoverOpen(false);
+          setEvaluationPublishMenuOpen(false);
+          setEvaluationVersionsHeaderMenuOpen(false);
+          setEvaluationVersionState((current) => current.status === "loading"
+            ? current
+            : { status: "idle", message: "", error: "" }
+          );
+          setEvaluationVersionSaveDialog({
+            initialMode: options.mode === "current" ? "current" : "new",
+            key: Date.now().toString(36) + Math.random().toString(36).slice(2),
+          });
+          return true;
+        }
+
+        function closeEvaluationVersionSaveDialog() {
+          if (evaluationVersionState.status !== "loading") {
+            setEvaluationVersionSaveDialog(null);
+          }
         }
 
         function canPublishSelectedEvaluationVersion() {
@@ -267,6 +414,150 @@ export const EVALUATIONS_PAGE_CONTROLLER_VERSIONS_SCRIPT = String.raw`        fu
           }
         }
 
+        async function saveAndPublishCurrentEvaluationVersion(details = {}) {
+          if (!activeSet || evaluationVersionState.status === "loading") {
+            return null;
+          }
+          if (!hasSelectedEvaluationVersionChanges()) {
+            return null;
+          }
+          const selectedVersion = getSelectedEvaluationVersion();
+          const saveToCurrentVersion = details.mode === "current" && Boolean(selectedVersion);
+          const versionDescription = String(details.description || "").trim().slice(0, 240);
+          const sourceSet = normalizePlaygroundEvaluationSet({
+            ...activeSet,
+            updatedAt: new Date().toISOString(),
+          });
+          const currentSnapshot = buildPlaygroundEvaluationVersionSnapshot(sourceSet);
+          setEvaluationPublishMenuOpen(false);
+          setEvaluationVersionsHeaderMenuOpen(false);
+          setEvaluationVersionState({
+            status: "loading",
+            message: "Saving evaluation changes...",
+            error: "",
+          });
+          try {
+            await persistEvaluationSetToBackend(sourceSet);
+            let version = selectedVersion;
+            if (!saveToCurrentVersion) {
+              const versionPayload = await requestEvaluationBackendJson(
+                "/evaluations/" + encodeURIComponent(sourceSet.id) + "/versions",
+                {
+                  method: "POST",
+                  body: JSON.stringify({
+                    description: versionDescription,
+                    snapshot: currentSnapshot,
+                    metadata: buildPlaygroundEvaluationBackendMetadata(sourceSet),
+                  }),
+                },
+                "Failed to create evaluation version."
+              );
+              const createdVersionPayload = versionPayload?.version || versionPayload?.data || versionPayload;
+              const createdVersionId = String(
+                createdVersionPayload?.id
+                || createdVersionPayload?.versionId
+                || createdVersionPayload?.version_id
+                || ""
+              ).trim();
+              if (!createdVersionId) {
+                throw new Error("Created evaluation version did not include an ID.");
+              }
+              version = normalizePlaygroundEvaluationVersion(createdVersionPayload);
+            } else if (selectedVersion?.status !== "active") {
+              const versionPayload = await requestEvaluationBackendJson(
+                "/evaluations/" + encodeURIComponent(sourceSet.id) + "/versions/" + encodeURIComponent(selectedVersion.id),
+                {
+                  method: "PATCH",
+                  body: JSON.stringify({
+                    label: selectedVersion.label,
+                    name: selectedVersion.label,
+                    description: versionDescription,
+                    snapshot: currentSnapshot,
+                    metadata: buildPlaygroundEvaluationBackendMetadata(sourceSet),
+                  }),
+                },
+                "Failed to update evaluation version."
+              );
+              const updatedVersionPayload = versionPayload?.version || versionPayload?.data || versionPayload;
+              const updatedVersionId = String(
+                updatedVersionPayload?.id
+                || updatedVersionPayload?.versionId
+                || updatedVersionPayload?.version_id
+                || ""
+              ).trim();
+              version = normalizePlaygroundEvaluationVersion(updatedVersionId
+                ? updatedVersionPayload
+                : {
+                    ...selectedVersion,
+                    description: versionDescription,
+                    snapshot: currentSnapshot,
+                  }
+              );
+            }
+            if (!version?.id) {
+              throw new Error("Evaluation version could not be resolved.");
+            }
+            await requestEvaluationBackendJson(
+              "/evaluations/" + encodeURIComponent(sourceSet.id) + "/versions/" + encodeURIComponent(version.id) + "/publish",
+              {
+                method: "POST",
+                body: JSON.stringify({
+                  snapshot: currentSnapshot,
+                  description: versionDescription,
+                }),
+              },
+              "Failed to publish evaluation version."
+            );
+            const stagedVersions = [
+              normalizePlaygroundEvaluationVersion({
+                ...version,
+                description: versionDescription,
+                snapshot: currentSnapshot,
+              }),
+              ...readSelectedEvaluationVersions(sourceSet).filter((item) => item.id !== version.id),
+            ];
+            const stagedSet = createPlaygroundEvaluationWithVersionList(
+              sourceSet,
+              stagedVersions,
+              version.id
+            );
+            const publishResult = playgroundEvaluationVersionController.buildPublishVersionResource(
+              stagedSet,
+              version.id,
+              {
+                snapshot: currentSnapshot,
+                updateFromResource: true,
+              }
+            );
+            const committedSet = publishResult?.resource
+              ? replaceEvaluationSet(publishResult.resource, {
+                  clearRunSelection: false,
+                  rememberBaseline: true,
+                  persist: false,
+                })
+              : stagedSet;
+            setOpenEvaluationVersionMenuId("");
+            setEvaluationVersionsHeaderMenuOpen(false);
+            const updatedSet = await reloadBackendEvaluationSet(sourceSet.id, {
+              clearRunSelection: false,
+              select: false,
+              rememberBaseline: true,
+              preserveDirtyDraft: false,
+              requiredVersionId: version.id,
+              requirePublishedVersion: true,
+            }).catch((reconciliationError) => {
+              console.warn("[evaluations] Saved evaluation version but could not reconcile it immediately.", reconciliationError);
+              return null;
+            });
+            setEvaluationVersionState({ status: "idle", message: "", error: "" });
+            return updatedSet || committedSet;
+          } catch (error) {
+            const errorMessage = error?.message || String(error);
+            setEvaluationVersionState({ status: "error", message: "", error: errorMessage });
+            return null;
+          }
+        }
+
         async function updateEvaluationVersionDetails(versionId, versionDetails = {}) {
           if (!activeSet || evaluationVersionState.status === "loading") return null;
           const normalizedVersionId = String(versionId || "").trim();
@@ -361,39 +652,38 @@ export const EVALUATIONS_PAGE_CONTROLLER_VERSIONS_SCRIPT = String.raw`        fu
           const selectedVersion = getSelectedEvaluationVersion();
           const targetVersion = readSelectedEvaluationVersions().find((version) => version.id === normalizedVersionId);
           const hasChanges = hasSelectedEvaluationVersionChanges();
-          const shouldRepublishCurrentEditor = Boolean(
+          const isChangedActiveVersion = Boolean(
             targetVersion
             && targetVersion.status === "active"
             && selectedVersion?.id === targetVersion.id
             && hasChanges
           );
-          if (hasChanges && !shouldRepublishCurrentEditor) {
+          if (isChangedActiveVersion) {
+            openEvaluationVersionSaveDialog({ mode: "current" });
+            return null;
+          }
+          if (hasChanges) {
             setEvaluationVersionState({
               status: "error",
               message: "",
-              error: "Save this version before publishing.",
+              error: "Save the current version before publishing.",
             });
             return null;
           }
           if (!canPublishEvaluationVersion(targetVersion)) return null;
-          const sourceSet = shouldRepublishCurrentEditor ? buildEvaluationSetForRepublish() : activeSet;
+          const sourceSet = activeSet;
           setEvaluationVersionState({ status: "loading", message: "", error: "" });
           try {
-            if (shouldRepublishCurrentEditor) {
-              await persistEvaluationSetToBackend(sourceSet);
-            }
             await requestEvaluationBackendJson(
               "/evaluations/" + encodeURIComponent(sourceSet.id) + "/versions/" + encodeURIComponent(normalizedVersionId) + "/publish",
               {
                 method: "POST",
-                body: JSON.stringify({
-                  snapshot: shouldRepublishCurrentEditor ? buildPlaygroundEvaluationVersionSnapshot(sourceSet) : undefined,
-                }),
+                body: JSON.stringify({}),
               },
               "Failed to publish evaluation version."
             );
             const result = playgroundEvaluationVersionController.buildPublishVersionResource(sourceSet, normalizedVersionId, {
-              updateFromResource: shouldRepublishCurrentEditor,
+              updateFromResource: false,
             });
             const nextSet = applyEvaluationVersionResult(result, { clearRunSelection: true, persist: false });
             setEvaluationVersionState({ status: "idle", message: "", error: "" });
@@ -409,6 +699,18 @@ export const EVALUATIONS_PAGE_CONTROLLER_VERSIONS_SCRIPT = String.raw`        fu
           if (readSelectedEvaluationVersions().length <= 1) return null;
           const normalizedVersionId = String(versionId || "").trim();
           if (!normalizedVersionId) return null;
+          const targetVersion = readSelectedEvaluationVersions().find((version) => version.id === normalizedVersionId);
+          if (!targetVersion || targetVersion.status === "active") return null;
+          if (hasSelectedEvaluationVersionChanges() && getSelectedEvaluationVersion()?.id === normalizedVersionId) {
+            setEvaluationVersionState({
+              status: "error",
+              message: "",
+              error: "Revert or save the current changes before deleting this version.",
+            });
+            return null;
+          }
+          const confirmed = typeof window === "undefined" || window.confirm("Delete this evaluation version?");
+          if (!confirmed) return null;
           setEvaluationVersionState({ status: "loading", message: "", error: "" });
           try {
             await requestEvaluationBackendJson(
@@ -433,55 +735,30 @@ export const EVALUATIONS_PAGE_CONTROLLER_VERSIONS_SCRIPT = String.raw`        fu
           return await restoreEvaluationVersion(selectedVersion.id);
         }
 
-        function getEvaluationVersionPopupActions(options = {}) {
+        function getEvaluationVersionPopupActions() {
           const hasChanges = hasSelectedEvaluationVersionChanges();
-          const canPublish = canPublishSelectedEvaluationVersion();
-          const includeVersionHistory = options.includeVersionHistory !== false;
           return [
             {
-              id: "publish",
-              label: "Publish",
-              Icon: Rocket,
-              shortcut: "⌘P",
-              disabled: !canPublish,
-              onClick: publishCurrentEvaluationVersion,
-            },
-            {
-              id: "save",
-              label: "Save",
-              Icon: Save,
-              shortcut: "⌘S",
-              disabled: !hasChanges,
-              onClick: saveCurrentEvaluationVersion,
-            },
-            {
-              id: "save-new",
-              label: "Save to new Version",
-              Icon: GitBranchPlus,
-              shortcut: "⇧⌘S",
-              disabled: !hasChanges,
-              onClick: () => openCreateEvaluationVersionModal(),
-            },
-            {
               id: "revert",
-              label: "Revert to last saved Version",
-              Icon: Undo2,
+              label: "Revert Changes",
+              icon: Undo2,
               disabled: !hasChanges,
               onClick: revertEvaluationVersionDraft,
             },
-            includeVersionHistory
-              ? {
-                  id: "history",
-                  label: "Open version history",
-                  Icon: History,
-                  onClick: () => {
-                    setEvaluationPublishMenuOpen(false);
-                    setEvaluationVersionsHeaderMenuOpen(false);
-                    openEvaluationVersionChangesPage();
-                  },
-                }
-              : null,
-          ].filter(Boolean);
+          ];
+        }
+
+        function openEvaluationVersionsSidebar() {
+          if (!isEvaluationDetailPage || !activeSet) return;
+          setEvaluationActionsPopoverOpen(false);
+          setEvaluationPublishMenuOpen(false);
+          setEvaluationVersionsHeaderMenuOpen(false);
+          setOpenEvaluationVersionMenuId("");
+          setEvaluationVersionState((current) => current.status === "loading"
+            ? current
+            : { status: "idle", message: "", error: "" }
+          );
+          setEvaluationVersionsSidebarOpen(true);
         }
 
         function cancelEvaluationVersionModalAnimation() {
@@ -686,4 +963,3 @@ export const EVALUATIONS_PAGE_CONTROLLER_VERSIONS_SCRIPT = String.raw`        fu
         }
 
 `;
-

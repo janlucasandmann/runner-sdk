@@ -21,6 +21,7 @@ Resource modules may compose `platform-ui` components and pages. Generic UI code
 
 ```text
 platform-resources/
+  access-control/
   agents/
   computers/
   plugins/
@@ -33,6 +34,10 @@ platform-resources/
 Each resource owns a directory so overview and detail pages, adapters, tests, and future resource-specific behavior can evolve without increasing the main platform file.
 
 `shared` is reserved for behavior that is genuinely shared by multiple resource domains. It must not become a second generic component directory; reusable UI primitives belong in `platform-ui/components`.
+
+`access-control` owns the cross-resource principal contract and canonical
+Manage Access composition. Resource modules must use its immutable system
+principals instead of defining local `All Agents` or organization-member rows.
 
 ## Public API
 

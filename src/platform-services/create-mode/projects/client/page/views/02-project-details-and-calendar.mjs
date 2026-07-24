@@ -918,6 +918,7 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
 
           function renderBacklogTaskRow(task, depth = 0, parentTaskId = null, visibleSiblingTasks = [], siblingIndex = 0, releaseSectionId = undefined) {
             const isHumanTask = isHumanAssignedTask(task);
+            const isCanceledTask = task.status === "canceled";
             const taskTicketNumber = taskTicketNumbersById[task.id] || task.ticketNumber || "001";
             const visibleChildTasks = (childrenByParentId[task.id] || []).filter((childTask) => visibleTaskIds.has(childTask.id));
             const isSubtask = isPlaygroundSubtaskRecord(task);
@@ -964,12 +965,99 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
                 key: task.id,
                 className: "playground-tasks-backlog-tree-node" + (depth > 0 ? " is-subtask-node" : ""),
               },
-              React.createElement("div", {
+              React.createElement(PlatformTicketItem, {
+                  variant: "list",
                   role: "button",
                   tabIndex: 0,
-                className: "playground-tasks-backlog-item"
-                    + (selectedTaskId === task.id ? " is-active" : "")
-                    + (depth > 0 ? " is-subtask" : "")
+                  taskType: isSubtask ? "subtask" : "task",
+                  typeIcon: React.createElement(TaskTypeIcon, { width: 14, height: 14, strokeWidth: 1.9 }),
+                  priority: renderPlaygroundTaskPriorityIcon(task.priority, "playground-tasks-backlog-priority"),
+                  ticketNumber: taskTicketNumber,
+                  title: task.title || "Untitled Task",
+                  titleEditor: isTitleEditable
+                    ? React.createElement("input", {
+                        type: "text",
+                        className: "playground-tasks-backlog-title playground-tasks-backlog-title-input",
+                        value: backlogEditingTaskId === task.id ? backlogTitleInputValue : (task.title || ""),
+                        placeholder: "Untitled Task",
+                        "aria-label": "Task title",
+                        onFocus: (event) => {
+                          event.stopPropagation();
+                          handleSelectTask(task.id);
+                          beginBacklogTitleEdit(task);
+                        },
+                        onClick: (event) => event.stopPropagation(),
+                        onMouseDown: (event) => event.stopPropagation(),
+                        onChange: (event) => {
+                          if (backlogEditingTaskId !== task.id) {
+                            beginBacklogTitleEdit(task);
+                          }
+                          setBacklogTitleInputValue(event.target.value);
+                        },
+                        onBlur: () => {
+                          void commitBacklogTaskTitle(task);
+                        },
+                        onKeyDown: (event) => {
+                          event.stopPropagation();
+                          if (event.key === "Enter") {
+                            event.preventDefault();
+                            event.currentTarget.blur();
+                            return;
+                          }
+                          if (event.key === "Escape") {
+                            event.preventDefault();
+                            backlogTitleSkipCommitRef.current = task.id;
+                            cancelBacklogTitleEdit(task);
+                            event.currentTarget.blur();
+                          }
+                        },
+                      })
+                    : null,
+                  completed: task.status === "done",
+                  status: renderTaskPreviewStatusControl(task),
+                  assignee: renderTaskAssigneeAvatar(task, "playground-tasks-backlog-assignee-avatar"),
+                  action: React.createElement("button", {
+                    type: "button",
+                    className: "playground-tasks-backlog-run-button" + (isHumanTask && !isPlaygroundTaskTerminalStatus(task.status) ? " is-human-unchecked" : ""),
+                    "aria-label": isCanceledTask
+                      ? "Canceled task"
+                      : (isHumanTask ? (task.status === "done" ? "Reopen task" : "Complete task") : "Run task"),
+                    title: isCanceledTask
+                      ? "Canceled"
+                      : (isHumanTask ? (task.status === "done" ? "Reopen task" : "Complete task") : "Run task"),
+                    onClick: (event) => {
+                      if (isHumanTask) {
+                        void handleToggleTaskDone(task, event);
+                        return;
+                      }
+                      event.stopPropagation();
+                      void handleStartTaskThread(task);
+                    },
+                    disabled: isCanceledTask || (isHumanTask
+                      ? saveState.isSaving
+                      : saveState.isSaving || isTaskThreadLaunchLocked(task)),
+                  },
+                    isHumanTask
+                      ? (
+                        task.status === "done"
+                          ? React.createElement(Check, {
+                              width: 13,
+                              height: 13,
+                              strokeWidth: 2,
+                              "aria-hidden": "true",
+                            })
+                          : null
+                      )
+                      : React.createElement(Play, {
+                          width: 13,
+                          height: 13,
+                          strokeWidth: 1.9,
+                          fill: "currentColor",
+                          "aria-hidden": "true",
+                        })
+                  ),
+                  active: selectedTaskId === task.id,
+                  className: (depth > 0 ? "is-subtask" : "")
                     + (isDraggable ? " is-draggable" : "")
                     + (isTaskPreviewStatusMenuOpen(task.id) ? " is-status-menu-open" : "")
                     + (backlogDraggingTaskId === task.id ? " is-dragging" : "")
@@ -1043,105 +1131,7 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
                       releaseSectionId
                     );
                   },
-                },
-                  React.createElement("div", { className: "playground-tasks-backlog-item-content" },
-                    React.createElement("div", { className: "playground-tasks-backlog-leading" },
-                      React.createElement("div", {
-                        className: "playground-tasks-backlog-project-icon " + (isSubtask ? "is-subtask" : "is-task"),
-                        "aria-hidden": "true",
-                      },
-                        React.createElement(TaskTypeIcon, { width: 14, height: 14, strokeWidth: 1.9 })
-                      ),
-                      React.createElement("div", { className: "playground-tasks-backlog-main" },
-                        renderPlaygroundTaskPriorityIcon(task.priority, "playground-tasks-backlog-priority"),
-                        React.createElement("span", { className: "playground-tasks-backlog-ticket" }, taskTicketNumber),
-                        isTitleEditable
-                          ? React.createElement("input", {
-                              type: "text",
-                              className: "playground-tasks-backlog-title playground-tasks-backlog-title-input",
-                              value: backlogEditingTaskId === task.id ? backlogTitleInputValue : (task.title || ""),
-                              placeholder: "Untitled Task",
-                              "aria-label": "Task title",
-                              onFocus: (event) => {
-                                event.stopPropagation();
-                                handleSelectTask(task.id);
-                                beginBacklogTitleEdit(task);
-                              },
-                              onClick: (event) => event.stopPropagation(),
-                              onMouseDown: (event) => event.stopPropagation(),
-                              onChange: (event) => {
-                                if (backlogEditingTaskId !== task.id) {
-                                  beginBacklogTitleEdit(task);
-                                }
-                                setBacklogTitleInputValue(event.target.value);
-                              },
-                              onBlur: () => {
-                                void commitBacklogTaskTitle(task);
-                              },
-                              onKeyDown: (event) => {
-                                event.stopPropagation();
-                                if (event.key === "Enter") {
-                                  event.preventDefault();
-                                  event.currentTarget.blur();
-                                  return;
-                                }
-                                if (event.key === "Escape") {
-                                  event.preventDefault();
-                                  backlogTitleSkipCommitRef.current = task.id;
-                                  cancelBacklogTitleEdit(task);
-                                  event.currentTarget.blur();
-                                }
-                              },
-                            })
-                          : React.createElement("span", {
-                              className: "playground-tasks-backlog-title" + (task.status === "done" ? " is-complete" : ""),
-                            }, task.title || "Untitled Task")
-                      )
-                    ),
-                    React.createElement("div", { className: "playground-tasks-backlog-meta" },
-                      renderTaskPreviewStatusControl(task),
-                      React.createElement("div", { className: "playground-tasks-backlog-assignee-shell" },
-                        renderTaskAssigneeAvatar(task, "playground-tasks-backlog-assignee-avatar")
-                      )
-                    ),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-tasks-backlog-run-button" + (isHumanTask && task.status !== "done" ? " is-human-unchecked" : ""),
-                      "aria-label": isHumanTask ? (task.status === "done" ? "Reopen task" : "Complete task") : "Run task",
-                      title: isHumanTask ? (task.status === "done" ? "Reopen task" : "Complete task") : "Run task",
-                      onClick: (event) => {
-                        if (isHumanTask) {
-                          void handleToggleTaskDone(task, event);
-                          return;
-                        }
-                        event.stopPropagation();
-                        void handleStartTaskThread(task);
-                      },
-                      disabled: isHumanTask
-                        ? saveState.isSaving
-                        : saveState.isSaving || isTaskThreadLaunchLocked(task),
-                    },
-                      isHumanTask
-                        ? (
-                          task.status === "done"
-                            ? React.createElement(Check, {
-                                width: 13,
-                                height: 13,
-                                strokeWidth: 2,
-                                "aria-hidden": "true",
-                              })
-                            : null
-                        )
-                        : React.createElement(Play, {
-                            width: 13,
-                            height: 13,
-                            strokeWidth: 1.9,
-                            fill: "currentColor",
-                            "aria-hidden": "true",
-                          })
-                    )
-                  )
-              ),
+                }),
               visibleChildTasks.length > 0
                 ? React.createElement("div", { className: "playground-tasks-backlog-children" },
                     renderBacklogTaskTree(visibleChildTasks, task.id, depth + 1)
@@ -1269,7 +1259,7 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
         function renderBacklogView() {
           const isReleaseBacklogView = Boolean(selectedRelease);
           const scopedBacklogTasks = isReleaseBacklogView ? projectReleaseTasks : tasks;
-          const openScopedBacklogTaskCount = scopedBacklogTasks.filter((task) => task.status !== "done").length;
+          const openScopedBacklogTaskCount = scopedBacklogTasks.filter((task) => !isPlaygroundTaskTerminalStatus(task.status)).length;
           const activeBacklogFilterValue = isReleaseBacklogView ? releaseBacklogFilterMode : backlogFilterMode;
           const activeBacklogFilterOptionValue = isReleaseBacklogView ? activeReleaseBacklogFilterOption : activeBacklogFilterOption;
           const activeTaskRoots = isReleaseBacklogView ? releaseTaskRoots : backlogTaskRoots;

@@ -112,4 +112,31 @@ describe("PlatformAnalyticsChart", () => {
       backgroundColor: "transparent",
     });
   });
+
+  it("renders recorded all-zero datasets when data availability is explicit", () => {
+    render(
+      <PlatformAnalyticsChart
+        chartType="line"
+        analytics={{
+          metrics: [],
+          labels: ["Case 1", "Case 2"],
+          hasData: true,
+          series: [
+            {
+              id: "score",
+              label: "Case score",
+              color: "#8fc4ff",
+              values: [0, 0],
+              valueKind: "percent",
+            },
+          ],
+        }}
+      />,
+    );
+
+    expect(chartConfigurations.at(-1)).toBeDefined();
+    expect(chartConfigurations.at(-1)?.data.datasets[0]).toMatchObject({
+      data: [0, 0],
+    });
+  });
 });

@@ -4,17 +4,20 @@
 
 ## Purpose
 
-This directory is the shared resource boundary for Plugins. It currently owns
-the plugin overview page and its public export.
+This directory is the shared resource boundary for Plugins. It owns plugin
+connection contracts and lifecycle behavior as well as the plugin overview.
 
 ## Usage
 
-Import `PluginsOverviewPage` through `platform-resources/plugins`. The host
-provides plugin records, actions, and navigation; shared overview and table
-behavior remains in `src/platform-ui`.
+Import plugin connection helpers and `PluginsOverviewPage` through
+`platform-resources/plugins`. The host provides navigation and page-specific
+return context; provider registration, connection requests, and status caching
+remain centralized here. Shared overview and table behavior remains in
+`src/platform-ui`.
 
 ## Contents
 
+- [`connections/`](connections/) — Typed provider registry and reusable browser connection lifecycle.
 - [`overview/`](overview/) — This directory contains overview models, analytics, tables, and page composition for the shared Plugins resource. Resource-independent UI belongs in `src/platform-ui`.
 - [`index.ts`](index.ts) — Public barrel or composition entry point.
 

@@ -1,5 +1,5 @@
 export function createComputeResourceRoutes(bindings) {
-    const { fetchUpstreamOverviewJson, proxyEnvironmentGuiSession, proxyEnvironmentStart, proxyUpstreamBinaryGet, proxyUpstreamGet, proxyUpstreamJsonRequest, sendJson, } = bindings;
+    const { fetchUpstreamOverviewJson, proxyEnvironmentGuiSession, proxyEnvironmentStart, proxyUpstreamBinaryGet, proxyUpstreamGet, proxyUpstreamJsonRequest, sendJson, sendServerDetailBootstrap, } = bindings;
     return function handleComputeResourceRoutes(req, res, url) {
         if (req.method === "GET" && url.pathname === "/api/real/environments") {
             void proxyUpstreamGet(req, res, "/environments");
@@ -83,6 +83,22 @@ export function createComputeResourceRoutes(bindings) {
         }
         if (req.method === "POST" && url.pathname === "/api/real/servers/templates/ai-chat-app") {
             void proxyUpstreamJsonRequest(req, res, "/servers/templates/ai-chat-app", "POST");
+            return true;
+        }
+        const serverBootstrapMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/bootstrap$/);
+        if (req.method === "GET" && serverBootstrapMatch) {
+            void sendServerDetailBootstrap(
+                req,
+                res,
+                decodeURIComponent(serverBootstrapMatch[1]),
+                {
+                    kind: url.searchParams.get("kind") || "",
+                    include: url.searchParams.get("include") || "",
+                    authUsersLimit: url.searchParams.get("authUsersLimit") || "",
+                    runsLimit: url.searchParams.get("runsLimit") || "",
+                    period: url.searchParams.get("period") || "day",
+                },
+            );
             return true;
         }
         const serverDetailMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)$/);
@@ -208,7 +224,7 @@ export function createComputeResourceRoutes(bindings) {
         }
         const serverAuthUsersMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/auth-users$/);
         if (req.method === "GET" && serverAuthUsersMatch) {
-            void proxyUpstreamGet(req, res, `/servers/${encodeURIComponent(decodeURIComponent(serverAuthUsersMatch[1]))}/auth-users`);
+            void proxyUpstreamGet(req, res, `/servers/${encodeURIComponent(decodeURIComponent(serverAuthUsersMatch[1]))}/auth-users${url.search || ""}`);
             return true;
         }
         if (req.method === "POST" && serverAuthUsersMatch) {
@@ -239,7 +255,7 @@ export function createComputeResourceRoutes(bindings) {
         }
         const serverRunsMatch = url.pathname.match(/^\/api\/real\/servers\/([^/]+)\/runs$/);
         if (req.method === "GET" && serverRunsMatch) {
-            void proxyUpstreamGet(req, res, `/servers/${encodeURIComponent(decodeURIComponent(serverRunsMatch[1]))}/runs`);
+            void proxyUpstreamGet(req, res, `/servers/${encodeURIComponent(decodeURIComponent(serverRunsMatch[1]))}/runs${url.search || ""}`);
             return true;
         }
         if (req.method === "POST" && serverRunsMatch) {

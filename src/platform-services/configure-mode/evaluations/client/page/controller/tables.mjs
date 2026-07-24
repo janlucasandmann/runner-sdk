@@ -64,6 +64,9 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
                 return completedCases.length ? Math.round((passedCases.length / completedCases.length) * 100) : 0;
               })
             : chartRuns.map((item) => item.totalCount ? Math.round((Number(item.passedCount || 0) / item.totalCount) * 100) : 0);
+          const hasRecordedChartData = run
+            ? runCases.some((caseItem) => !isPlaygroundEvaluationCaseActive(caseItem))
+            : chartRuns.length > 0;
           const analytics = {
             ariaLabel: run ? "Evaluation run analytics" : "Evaluation analytics",
             metrics: values.map((item, index) => ({
@@ -71,6 +74,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
               color: ["#8fc4ff", "#7657ff", "#7effff", "#9ff6ce"][index] || "#fff",
             })),
             labels,
+            hasData: hasRecordedChartData,
             series: [
               {
                 id: "score",
@@ -89,7 +93,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
             ],
           };
           return React.createElement(PlatformAnalyticsSection, {
-            variant: "framed",
+            variant: run ? "framed" : "default",
             title: "Analytics",
             analytics,
             className: "playground-evaluations-analytics-card",
@@ -249,132 +253,82 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
           const visibleRuns = filteredRuns.slice(0, visibleCount);
           const hasMoreRuns = filteredRuns.length > visibleRuns.length;
           const hasFilters = Boolean(normalizedSearch || filterMode !== "all");
-          const activeSortOption = sortOptions.find((option) => option.id === sortMode) || sortOptions[0];
-          const activeFilterOption = filterOptions.find((option) => option.id === filterMode) || filterOptions[0];
-          const closeToolbarPopover = () => {
-            if (typeof setEvaluationRunsToolbarPopover === "function") {
-              setEvaluationRunsToolbarPopover("");
-            }
-          };
-          function renderToolbarOption({ option, active, onClick }) {
-            return React.createElement("button", {
-                key: option.id,
-                type: "button",
-                className: "tb-popup-row tb-popup-row-select" + (active ? " selected" : ""),
-                onClick,
-              },
-              React.createElement("span", { className: "tb-popup-check-slot" },
-                active ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 }) : null
-              ),
-              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                React.createElement("span", null, option.label),
-                option.description ? React.createElement("span", null, option.description) : null
-              )
-            );
-          }
-          return React.createElement("section", {
-              className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section",
-            },
-            React.createElement("div", { className: "playground-plugins-section-header" },
-              React.createElement("div", { className: "playground-plugins-section-copy" },
-                React.createElement("h3", { className: "playground-plugins-section-title" }, "Runs")
-              )
-            ),
-            React.createElement("div", { className: "playground-plugins-search-row" },
-              React.createElement("div", { className: "playground-plugins-search-shell" },
-                React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("input", {
-                  type: "search",
-                  value: evaluationRunsSearchQuery || "",
-                  onChange: (event) => {
-                    if (typeof setEvaluationRunsSearchQuery === "function") setEvaluationRunsSearchQuery(event.target.value);
-                    if (typeof setEvaluationRunsVisibleCount === "function") setEvaluationRunsVisibleCount(5);
-                  },
-                  className: "playground-plugins-search",
-                  placeholder: "Search runs",
-                  "aria-label": "Search evaluation runs",
-                })
-              ),
-              React.createElement("div", { className: "playground-plugins-toolbar-controls" },
-                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-control-button is-bare is-backlog-sort" + (evaluationRunsToolbarPopover === "sort" || sortMode !== "recent-desc" ? " is-active" : ""),
-                    onClick: () => {
-                      if (typeof setEvaluationRunsToolbarPopover === "function") setEvaluationRunsToolbarPopover((current) => current === "sort" ? "" : "sort");
-                    },
-                    title: activeSortOption.label,
-                  },
-                    React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Sort")
-                  ),
-                  evaluationRunsToolbarPopover === "sort"
-                    ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                        sortOptions.map((option) => renderToolbarOption({
-                          option,
-                          active: sortMode === option.id,
-                          onClick: () => {
-                            if (typeof setEvaluationRunsSortMode === "function") setEvaluationRunsSortMode(option.id);
-                            if (typeof setEvaluationRunsVisibleCount === "function") setEvaluationRunsVisibleCount(5);
-                            closeToolbarPopover();
-                          },
-                        }))
-                      )
-                    : null
-                ),
-                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-control-button is-bare is-backlog-filter" + (evaluationRunsToolbarPopover === "filter" || filterMode !== "all" ? " is-active" : ""),
-                    onClick: () => {
-                      if (typeof setEvaluationRunsToolbarPopover === "function") setEvaluationRunsToolbarPopover((current) => current === "filter" ? "" : "filter");
-                    },
-                    title: activeFilterOption.label,
-                  },
-                    React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Filter")
-                  ),
-                  evaluationRunsToolbarPopover === "filter"
-                    ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                        filterOptions.map((option) => renderToolbarOption({
-                          option,
-                          active: filterMode === option.id,
-                          onClick: () => {
-                            if (typeof setEvaluationRunsFilterMode === "function") setEvaluationRunsFilterMode(option.id);
-                            if (typeof setEvaluationRunsVisibleCount === "function") setEvaluationRunsVisibleCount(5);
-                            closeToolbarPopover();
-                          },
-                        }))
-                      )
-                    : null
-                )
-              ),
-              React.createElement("button", {
-                type: "button",
-                className: "playground-files-control-button playground-project-overview-toolbar-action",
-                onClick: () => {
-                  if (typeof setEvaluationRunsVisibleCount === "function") setEvaluationRunsVisibleCount((current) => Math.max(5, Number(current) || 5) + 10);
-                },
-                disabled: !hasMoreRuns,
-                style: !hasMoreRuns ? { opacity: 0.5 } : undefined,
-              },
-                React.createElement(List, { width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("span", null, "Show more")
-              )
-            ),
-            React.createElement(PlatformDataTable, {
+          const runHistoryUnavailable = runs.length === 0 && evaluationRunHistorySyncState.status === "error";
+          return React.createElement(PlatformDataTable, {
               rows: visibleRuns,
               getRowId: (run) => run.id,
               ariaLabel: "Evaluation runs",
-              className: "playground-evaluation-runs-platform-table",
+              className: "playground-evaluation-runs-platform-table playground-evaluations-runs-section",
               surface: "plain",
+              variant: "minimalistic-ui",
               sticky: false,
-              emptyState: runs.length > 0 && hasFilters ? "No matching evaluation runs." : "No runs yet.",
+              pagination: false,
+              emptyState: runs.length > 0 && hasFilters
+                ? React.createElement(PlatformEmptyState, {
+                    icon: Search,
+                    title: "No matching runs",
+                    description: "Adjust the search or filter to find an evaluation run.",
+                  })
+                : runHistoryUnavailable
+                  ? React.createElement(PlatformEmptyState, {
+                      icon: ChartColumnIncreasing,
+                      title: "Run history is unavailable",
+                      description: "Existing evaluation runs could not be loaded. Your run history has not been cleared.",
+                      primaryAction: {
+                        label: "Retry",
+                        onClick: () => {
+                          void reloadBackendEvaluationRunHistory(set?.id, { maxAttempts: 3 }).catch(() => {});
+                        },
+                      },
+                    })
+                : React.createElement(PlatformEmptyState, {
+                    icon: ChartColumnIncreasing,
+                    title: "No evaluation runs yet",
+                    description: "Run this evaluation to measure performance across its cases.",
+                  }),
+              toolbar: {
+                title: "Runs",
+                search: {
+                  value: evaluationRunsSearchQuery || "",
+                  onChange: (value) => {
+                    if (typeof setEvaluationRunsSearchQuery === "function") setEvaluationRunsSearchQuery(value);
+                    if (typeof setEvaluationRunsVisibleCount === "function") setEvaluationRunsVisibleCount(5);
+                  },
+                  placeholder: "Search runs",
+                  ariaLabel: "Search evaluation runs",
+                  manual: true,
+                },
+                filters: [{
+                  id: "run-status",
+                  label: "Filter",
+                  value: filterMode,
+                  options: filterOptions,
+                  onChange: (value) => {
+                    if (typeof setEvaluationRunsFilterMode === "function") setEvaluationRunsFilterMode(value);
+                    if (typeof setEvaluationRunsVisibleCount === "function") setEvaluationRunsVisibleCount(5);
+                  },
+                }],
+                trailing: hasMoreRuns
+                  ? React.createElement(PlatformSecondaryButton, {
+                      type: "button",
+                      size: "small",
+                      onClick: () => {
+                        if (typeof setEvaluationRunsVisibleCount === "function") {
+                          setEvaluationRunsVisibleCount((current) => Math.max(5, Number(current) || 5) + 10);
+                        }
+                      },
+                    },
+                      React.createElement(List, { width: 14, height: 14, strokeWidth: 1.8 }),
+                      React.createElement("span", null, "Show more")
+                    )
+                  : null,
+              },
               columns: [
                 {
                   id: "run",
                   header: "Run",
                   accessor: (run) => run.label || "Run",
+                  sortable: true,
                   width: "minmax(170px, 1.5fr)",
                   cell: ({ row: run }) => React.createElement("div", { className: "playground-plugin-row-title" }, run.label || "Run"),
                 },
@@ -382,6 +336,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
                   id: "agent",
                   header: "Agent",
                   accessor: getRunAgentLabel,
+                  sortable: true,
                   width: "minmax(130px, 1fr)",
                   cell: ({ row: run }) => renderRunAgentCell(run, set),
                 },
@@ -389,6 +344,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
                   id: "environment",
                   header: "Environment",
                   accessor: getRunEnvironmentLabel,
+                  sortable: true,
                   width: "minmax(140px, 1.1fr)",
                   hideBelow: 760,
                   cell: ({ row: run }) => renderRunEnvironmentCell(run, set),
@@ -397,17 +353,19 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
                   id: "score",
                   header: "Score",
                   accessor: (run) => Number(run.averageScore || 0),
+                  sortable: true,
                   width: "minmax(80px, 0.65fr)",
                   cell: ({ row: run }) => {
                     const status = String(run?.status || "").trim().toLowerCase();
                     return status === "queued" || status === "running" ? "running" : formatPlaygroundEvaluationPercent(run.averageScore);
                   },
                 },
-                { id: "cases", header: "Cases", accessor: (run) => Number(run.totalCount || 0), width: "minmax(70px, 0.55fr)", hideBelow: 680 },
+                { id: "cases", header: "Cases", accessor: (run) => Number(run.totalCount || 0), sortable: true, width: "minmax(70px, 0.55fr)", hideBelow: 680 },
                 {
                   id: "date",
                   header: "Date",
                   accessor: getRunTimestamp,
+                  sortable: true,
                   width: "minmax(110px, 0.9fr)",
                   align: "end",
                   cell: ({ row: run }) => formatPlaygroundEvaluationDate(run.completedAt || run.createdAt),
@@ -419,8 +377,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
                 { id: "rename", label: "Rename", icon: SquarePen, onSelect: () => openEvaluationRunRenameDialog(set, run) },
                 { id: "delete", label: "Delete", icon: Trash2, danger: true, separatorBefore: true, onSelect: () => handleDeleteEvaluationRun(set.id, run.id) },
               ],
-            })
-          );
+            });
         }
 
         function renderDataTable(set) {
@@ -433,14 +390,14 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
             React.createElement("div", { className: "playground-evaluations-cases-editor-header" },
               React.createElement("h2", { className: "playground-evaluations-cases-title" }, "Cases"),
               React.createElement("div", { className: "playground-evaluations-cases-actions" },
-                React.createElement("button", {
+                React.createElement(PlatformSecondaryButton, {
                   type: "button",
-                  className: "playground-files-library-new-button playground-guardrails-prompt-add-button",
+                  size: "small",
                   onClick: () => openEvaluationThreadCaseModal(set),
                 }, React.createElement(MessageSquare, { width: 15, height: 15, strokeWidth: 1.8 }), React.createElement("span", null, "From Threads")),
-                React.createElement("button", {
+                React.createElement(PlatformPrimaryButton, {
                   type: "button",
-                  className: "playground-files-library-new-button playground-guardrails-prompt-add-button",
+                  size: "small",
                   onClick: () => openNewEvaluationCaseEditor(set),
                 }, React.createElement(Plus, { width: 15, height: 15, strokeWidth: 1.8 }), React.createElement("span", null, "Case"))
               )
@@ -548,85 +505,52 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
                     );
                   })
                 )
-		              : React.createElement("div", { className: "playground-guardrails-empty" },
-		                  React.createElement("div", { className: "playground-guardrails-empty-title" }, "No cases yet")
-		                ),
-            React.createElement("div", { className: "playground-tasks-attachments playground-evaluations-jsonl-imports" },
-              React.createElement("div", { className: "playground-tasks-attachments-toolbar" },
-                React.createElement("div", { className: "playground-tasks-detail-section-title" },
-                  React.createElement("span", { className: "playground-evaluations-imports-title" },
-                    React.createElement("span", null, "Imports"),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-evaluations-imports-help",
-                      "aria-label": "JSONL import format",
-                      onClick: (event) => event.preventDefault(),
-                    },
-                      React.createElement(CircleHelp, { width: 12, height: 12, strokeWidth: 1.8 }),
-                      React.createElement("span", {
-                        className: "playground-evaluations-pass-threshold-tooltip playground-evaluations-imports-tooltip",
-                        role: "tooltip",
-                      },
-                        "Upload .jsonl files with one JSON object per line. Each object should include input and expectedOutput, and can optionally include evaluatorGuidance and runCount."
-                      )
-                    )
-                  )
-                ),
-                React.createElement("div", { className: "playground-tasks-attachments-actions" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-environments-action-button playground-tasks-attachments-environment-button",
-                    onClick: openEvaluationJsonlFilePicker,
-                  }, "Upload from Computer")
-                )
-              ),
-              React.createElement("input", {
-                ref: evaluationJsonlFileInputRef,
-                type: "file",
-                accept: ".jsonl",
-                multiple: true,
-                hidden: true,
-                onChange: (event) => {
-                  void handleEvaluationJsonlFiles(set.id, event.target.files);
-                  event.target.value = "";
-                },
-              }),
-              React.createElement("div", { className: "playground-tasks-attachments-surface tb-runner-chat" },
-                React.createElement("div", {
-                  className: "tb-popup-dropzone playground-tasks-attachments-dropzone" + (evaluationJsonlFileDragging ? " dragging" : ""),
-                  onDragOver: (event) => {
-                    event.preventDefault();
-                    setEvaluationJsonlFileDragging(true);
-                  },
-                  onDragLeave: (event) => {
-                    if (event.currentTarget.contains(event.relatedTarget)) return;
-                    setEvaluationJsonlFileDragging(false);
-                  },
-                  onDrop: (event) => {
-                    event.preventDefault();
-                    setEvaluationJsonlFileDragging(false);
-                    void handleEvaluationJsonlFiles(set.id, event.dataTransfer.files);
-                  },
-                },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-tasks-attachments-empty-button",
-                    onClick: openEvaluationJsonlFilePicker,
-                  },
-                    React.createElement(ArrowUpFromLine, { className: "tb-popup-dropzone-icon", strokeWidth: 1.75 }),
-                    React.createElement("span", { className: "tb-popup-dropzone-title" }, evaluationJsonlFileDragging ? "Drop JSONL files here" : "Drag & drop JSONL files here"),
-                    React.createElement("span", { className: "tb-popup-dropzone-copy" }, "or click to browse")
-                  )
-                )
-              ),
-              evaluationJsonlFileImportMessage
-                ? React.createElement("div", { className: "playground-tasks-attachments-status" }, evaluationJsonlFileImportMessage)
-                : null,
-              evaluationJsonlFileImportError
-                ? React.createElement("div", { className: "playground-environments-error" }, evaluationJsonlFileImportError)
-                : null
-            )
+		              : React.createElement(PlatformEmptyState, {
+		                  icon: ListTodo,
+		                  title: "No cases yet",
+		                  description: "Add a case or refine an existing thread to build this evaluation dataset.",
+		                })
 		          );
+        }
+
+        function renderEvaluationImportsSection(set) {
+          return React.createElement(PlatformAttachments, {
+              className: "playground-evaluations-jsonl-imports",
+              title: React.createElement("span", { className: "playground-evaluations-imports-title" },
+                React.createElement("span", null, "Imports"),
+                React.createElement("button", {
+                  type: "button",
+                  className: "playground-evaluations-imports-help",
+                  "aria-label": "JSONL import format",
+                  onClick: (event) => event.preventDefault(),
+                },
+                  React.createElement(CircleHelp, { width: 12, height: 12, strokeWidth: 1.8 }),
+                  React.createElement("span", {
+                    className: "playground-evaluations-pass-threshold-tooltip playground-evaluations-imports-tooltip",
+                    role: "tooltip",
+                  },
+                    "Upload .jsonl files with one JSON object per line. Each object should include input and expectedOutput, and can optionally include evaluatorGuidance and runCount."
+                  )
+                )
+              ),
+              inputRef: evaluationJsonlFileInputRef,
+              accept: ".jsonl,application/x-ndjson,application/jsonl",
+              multiple: true,
+              dragging: evaluationJsonlFileDragging,
+              uploadFromComputerLabel: "From Workspace",
+              emptyTitle: evaluationJsonlFileDragging ? "Drop JSONL files here" : "Drag & drop JSONL files here",
+              emptyDescription: "or click to browse",
+              statusMessage: evaluationJsonlFileImportMessage || null,
+              errorMessage: evaluationJsonlFileImportError || null,
+              onUploadFromComputer: () => openEvaluationJsonlWorkspacePicker(set),
+              onBrowse: openEvaluationJsonlFilePicker,
+              onInputChange: (event) => {
+                void handleEvaluationJsonlFiles(set.id, event.target.files);
+                event.target.value = "";
+              },
+              onDraggingChange: setEvaluationJsonlFileDragging,
+              onFilesDrop: (files) => void handleEvaluationJsonlFiles(set.id, files),
+            });
         }
 
         function renderEvaluationThreadButton(threadId, label) {
@@ -637,7 +561,8 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
           return React.createElement("button", {
               type: "button",
               className: "playground-evaluations-thread-link",
-              onClick: () => {
+              onClick: (event) => {
+                event?.stopPropagation?.();
                 if (typeof onOpenThread === "function") {
                   onOpenThread(normalizedThreadId);
                 }
@@ -650,11 +575,14 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
 
         function renderRunCasesTable(set, run) {
           const cases = Array.isArray(run?.cases) ? run.cases : [];
-          const sortOptions = [
-            { id: "case-asc", label: "Case Order", description: "Show cases in dataset order" },
-            { id: "score-desc", label: "Highest Score", description: "Show strongest cases first" },
-            { id: "score-asc", label: "Lowest Score", description: "Show weakest cases first" },
-          ];
+          const normalizedRunEvaluator = normalizePlaygroundEvaluationEvaluator(run?.evaluator);
+          const runEvaluator = normalizedRunEvaluator.type === "agent" && !normalizedRunEvaluator.agentId
+            ? normalizePlaygroundEvaluationEvaluator(set?.evaluator)
+            : normalizedRunEvaluator;
+          const runEvaluatorLabel = getPlaygroundEvaluationEvaluatorLabel(runEvaluator, agentOptions);
+          const renderRunEvaluatorCell = () => renderEvaluationSetEvaluatorCell({
+            evaluator: runEvaluator,
+          });
           const filterOptions = [
             { id: "all", label: "All Cases", description: "Show every case" },
             { id: "running", label: "Running", description: "Only show active cases" },
@@ -662,11 +590,8 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
             { id: "failed", label: "Failed", description: "Only show failed cases" },
             { id: "error", label: "Error", description: "Only show errored cases" },
           ];
-          const sortMode = sortOptions.some((option) => option.id === evaluationCasesSortMode) ? evaluationCasesSortMode : "case-asc";
           const filterMode = filterOptions.some((option) => option.id === evaluationCasesFilterMode) ? evaluationCasesFilterMode : "all";
           const normalizedSearch = String(evaluationCasesSearchQuery || "").trim().toLowerCase();
-          const activeSortOption = sortOptions.find((option) => option.id === sortMode) || sortOptions[0];
-          const activeFilterOption = filterOptions.find((option) => option.id === filterMode) || filterOptions[0];
           const getCaseDisplayStatus = (caseItem) => getPlaygroundEvaluationCaseDisplayStatus(caseItem, run.passThreshold);
           const getCaseScoreLabel = (caseItem) => isPlaygroundEvaluationCaseActive(caseItem)
             ? String(caseItem.status || "").replace(/_/g, " ")
@@ -681,6 +606,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
               const haystack = [
                 caseItem.threadId || "",
                 caseItem.evaluatorThreadId || "",
+                runEvaluatorLabel,
                 getCaseScoreLabel(caseItem),
                 displayStatus,
                 caseItem.input || "",
@@ -688,57 +614,35 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
                 caseItem.actualOutput || "",
               ].join(" ").toLowerCase();
               return haystack.includes(normalizedSearch);
-            })
-            .sort((left, right) => {
-              if (sortMode === "score-desc") {
-                return Number(right.caseItem?.score || 0) - Number(left.caseItem?.score || 0);
-              }
-              if (sortMode === "score-asc") {
-                return Number(left.caseItem?.score || 0) - Number(right.caseItem?.score || 0);
-              }
-              return left.index - right.index;
             });
           const visibleCount = Math.max(5, Number(evaluationCasesVisibleCount) || 10);
           const visibleCaseRecords = filteredCaseRecords.slice(0, visibleCount);
           const hasMoreCases = filteredCaseRecords.length > visibleCaseRecords.length;
           const hasFilters = Boolean(normalizedSearch || filterMode !== "all");
-          const closeCasesToolbarPopover = () => setEvaluationCasesToolbarPopover("");
-          function renderCasesToolbarOption({ option, active, onClick }) {
-            return React.createElement("button", {
-                key: option.id,
-                type: "button",
-                className: "tb-popup-row tb-popup-row-select" + (active ? " selected" : ""),
-                onClick,
-              },
-              React.createElement("span", { className: "tb-popup-check-slot" },
-                active ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 }) : null
-              ),
-              React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                React.createElement("span", null, option.label),
-                option.description ? React.createElement("span", null, option.description) : null
-              )
-            );
-          }
           const caseColumns = [
             {
               id: "thread",
               header: "Thread",
               accessor: (caseItem) => caseItem.threadId || "",
+              sortable: true,
               width: "minmax(160px, 1.2fr)",
-              cell: ({ row: caseItem }) => React.createElement("span", { title: caseItem.threadId || "" }, caseItem.threadId || "-"),
+              cell: ({ row: caseItem }) => renderEvaluationThreadButton(caseItem.threadId, caseItem.threadId),
             },
             {
               id: "evaluator",
               header: "Evaluator",
-              accessor: (caseItem) => caseItem.evaluatorThreadId || "",
+              accessor: () => runEvaluatorLabel,
+              sortable: true,
               width: "minmax(160px, 1.2fr)",
               hideBelow: 700,
-              cell: ({ row: caseItem }) => React.createElement("span", { title: caseItem.evaluatorThreadId || "" }, caseItem.evaluatorThreadId || "-"),
+              cell: () => renderRunEvaluatorCell(),
             },
             {
               id: "score",
               header: "Score",
               accessor: (caseItem) => Number(caseItem.score || 0),
+              sortable: true,
+              sortDescFirst: true,
               width: "minmax(72px, 0.45fr)",
               cell: ({ row: caseItem }) => getCaseScoreLabel(caseItem),
             },
@@ -746,128 +650,96 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
               id: "status",
               header: "Status",
               accessor: getCaseDisplayStatus,
+              sortable: true,
               width: "minmax(90px, 0.55fr)",
               cell: ({ row: caseItem }) => {
                 const displayStatus = getCaseDisplayStatus(caseItem);
-                return React.createElement("span", {
-                  className: "playground-evaluations-status-pill" + (displayStatus === "failed" || displayStatus === "error" ? " is-failed" : ""),
+                const statusVariant = displayStatus === "passed"
+                  ? "green"
+                  : displayStatus === "error"
+                    ? "red"
+                    : isPlaygroundEvaluationCaseActive(caseItem)
+                      ? "blue"
+                      : "gray";
+                return React.createElement(PlatformLabel, {
+                  variant: statusVariant,
                 }, displayStatus.replace(/_/g, " "));
               },
             },
           ];
-          return React.createElement("section", {
-              className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-evaluations-cases-section",
-            },
-            React.createElement("div", { className: "playground-plugins-section-header" },
-              React.createElement("div", { className: "playground-plugins-section-copy" },
-                React.createElement("h3", { className: "playground-plugins-section-title" }, "Cases")
-              )
-            ),
-            React.createElement("div", { className: "playground-plugins-search-row" },
-              React.createElement("div", { className: "playground-plugins-search-shell" },
-                React.createElement(Search, { className: "playground-plugins-search-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("input", {
-                  type: "search",
-                  value: evaluationCasesSearchQuery || "",
-                  onChange: (event) => {
-                    setEvaluationCasesSearchQuery(event.target.value);
-                    setEvaluationCasesVisibleCount(10);
-                  },
-                  className: "playground-plugins-search",
-                  placeholder: "Search cases",
-                  "aria-label": "Search evaluation cases",
+          return React.createElement(PlatformDataTable, {
+            rows: visibleCaseRecords.map((record) => record.caseItem),
+            columns: caseColumns,
+            getRowId: (caseItem) => caseItem.id,
+            ariaLabel: "Evaluation cases",
+            className: "playground-evaluation-cases-platform-table playground-evaluations-cases-section",
+            surface: "plain",
+            variant: "minimalistic-ui",
+            sticky: false,
+            pagination: false,
+            emptyState: hasFilters
+              ? React.createElement(PlatformEmptyState, {
+                  icon: Search,
+                  title: "No matching cases",
+                  description: "Adjust the search or filter to find an evaluation case.",
                 })
-              ),
-              React.createElement("div", { className: "playground-plugins-toolbar-controls" },
-                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-sort-shell" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-control-button is-bare is-backlog-sort" + (evaluationCasesToolbarPopover === "sort" || sortMode !== "case-asc" ? " is-active" : ""),
-                    onClick: () => setEvaluationCasesToolbarPopover((current) => current === "sort" ? "" : "sort"),
-                    title: activeSortOption.label,
-                  },
-                    React.createElement(ArrowUpDown, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Sort")
-                  ),
-                  evaluationCasesToolbarPopover === "sort"
-                    ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                        sortOptions.map((option) => renderCasesToolbarOption({
-                          option,
-                          active: sortMode === option.id,
-                          onClick: () => {
-                            setEvaluationCasesSortMode(option.id);
-                            setEvaluationCasesVisibleCount(10);
-                            closeCasesToolbarPopover();
-                          },
-                        }))
-                      )
-                    : null
-                ),
-                React.createElement("div", { className: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell" },
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-files-control-button is-bare is-backlog-filter" + (evaluationCasesToolbarPopover === "filter" || filterMode !== "all" ? " is-active" : ""),
-                    onClick: () => setEvaluationCasesToolbarPopover((current) => current === "filter" ? "" : "filter"),
-                    title: activeFilterOption.label,
-                  },
-                    React.createElement(SlidersHorizontal, { width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", null, "Filter")
-                  ),
-                  evaluationCasesToolbarPopover === "filter"
-                    ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-tasks-toolbar-popup-menu-animate-down-in" },
-                        filterOptions.map((option) => renderCasesToolbarOption({
-                          option,
-                          active: filterMode === option.id,
-                          onClick: () => {
-                            setEvaluationCasesFilterMode(option.id);
-                            setEvaluationCasesVisibleCount(10);
-                            closeCasesToolbarPopover();
-                          },
-                        }))
-                      )
-                    : null
-                )
-              ),
-              React.createElement("button", {
-                type: "button",
-                className: "playground-files-control-button playground-project-overview-toolbar-action",
-                onClick: () => setEvaluationCasesVisibleCount((current) => Math.max(5, Number(current) || 10) + 10),
-                disabled: !hasMoreCases,
-                style: !hasMoreCases ? { opacity: 0.5 } : undefined,
+              : React.createElement(PlatformEmptyState, {
+                  icon: ChartColumnIncreasing,
+                  title: "No evaluation cases yet",
+                  description: "Cases will appear here as this evaluation run progresses.",
+                }),
+            toolbar: {
+              title: "Cases",
+              search: {
+                value: evaluationCasesSearchQuery || "",
+                onChange: (value) => {
+                  setEvaluationCasesSearchQuery(value);
+                  setEvaluationCasesVisibleCount(10);
+                },
+                placeholder: "Search cases",
+                ariaLabel: "Search evaluation cases",
+                manual: true,
               },
-                React.createElement(List, { width: 14, height: 14, strokeWidth: 1.8 }),
-                React.createElement("span", null, "Show more")
-              )
-            ),
-            React.createElement(PlatformDataTable, {
-              rows: visibleCaseRecords.map((record) => record.caseItem),
-              columns: caseColumns,
-              getRowId: (caseItem) => caseItem.id,
-              ariaLabel: "Evaluation cases",
-              className: "playground-evaluation-cases-platform-table",
-              surface: "plain",
-              sticky: false,
-              emptyState: cases.length > 0 && hasFilters ? "No matching cases." : "No cases yet.",
-              getRowActions: (caseItem) => [
-                {
-                  id: "open",
-                  label: "Open",
-                  icon: SquarePen,
-                  onSelect: () => openCaseDetail(set.id, run.id, caseItem.id),
+              filters: [{
+                id: "case-status",
+                label: "Filter",
+                value: filterMode,
+                options: filterOptions,
+                onChange: (value) => {
+                  setEvaluationCasesFilterMode(value);
+                  setEvaluationCasesVisibleCount(10);
                 },
-                {
-                  id: "delete",
-                  label: "Delete",
-                  icon: Trash2,
-                  danger: true,
-                  separatorBefore: true,
-                  onSelect: () => deleteEvaluationRunCase(set.id, run.id, caseItem.id),
-                },
-              ],
-              getRowAriaLabel: (caseItem) => caseItem.threadId || "Evaluation case",
-              onRowActivate: (caseItem) => openCaseDetail(set.id, run.id, caseItem.id),
-            })
-          );
+              }],
+              trailing: hasMoreCases
+                ? React.createElement(PlatformSecondaryButton, {
+                    type: "button",
+                    size: "small",
+                    onClick: () => setEvaluationCasesVisibleCount((current) => Math.max(5, Number(current) || 10) + 10),
+                  },
+                    React.createElement(List, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, "Show more")
+                  )
+                : null,
+            },
+            getRowActions: (caseItem) => [
+              {
+                id: "open",
+                label: "Open",
+                icon: SquarePen,
+                onSelect: () => openCaseDetail(set.id, run.id, caseItem.id),
+              },
+              {
+                id: "delete",
+                label: "Delete",
+                icon: Trash2,
+                danger: true,
+                separatorBefore: true,
+                onSelect: () => deleteEvaluationRunCase(set.id, run.id, caseItem.id),
+              },
+            ],
+            getRowAriaLabel: (caseItem) => caseItem.threadId || "Evaluation case",
+            onRowActivate: (caseItem) => openCaseDetail(set.id, run.id, caseItem.id),
+          });
         }
 
 `;

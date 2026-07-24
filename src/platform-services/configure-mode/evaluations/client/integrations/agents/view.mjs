@@ -477,125 +477,181 @@ export const EVALUATIONS_AGENT_VIEW_SCRIPT = `          const agentEvaluationEnv
             const form = agentDetailEvaluationRunForm && typeof agentDetailEvaluationRunForm === "object" ? agentDetailEvaluationRunForm : {};
             const selectedSet = agentEvaluationSets.find((set) => set.id === String(form.setId || "").trim()) || null;
             const busy = agentDetailEvaluationRunState.status === "running";
-            return React.createElement(PlatformModalBackdrop, {
-                className: "playground-tasks-project-modal-backdrop playground-tasks-project-issue-backdrop playground-project-overview-outcome-editor-backdrop playground-evaluations-run-modal-backdrop playground-agents-detail-evaluation-modal-backdrop"
-                  + (agentDetailEvaluationRunModalVisible ? " is-visible" : "")
-                  + (agentDetailEvaluationRunModalClosing ? " is-closing" : ""),
-                role: "dialog",
-                "aria-modal": "true",
-                onClick: closeAgentEvaluationRunModal,
+            const selectedEnvironmentChoice = agentEvaluationEnvironmentChoices.find((choice) => choice.key === String(form.environmentKey || "").trim())
+              || getAgentEvaluationDefaultEnvironmentChoice(selectedSet);
+            const evaluationSelectorOptions = agentEvaluationSets
+              .filter((set) => String(set?.id || "").trim())
+              .map((set) => ({
+                value: set.id,
+                label: set.name || set.id,
+                description: (Array.isArray(set.dataRows) ? set.dataRows.length : 0) + " cases",
+              }));
+            const environmentSelectorOptions = agentEvaluationEnvironmentChoices
+              .filter((choice) => String(choice?.key || "").trim())
+              .map((choice) => {
+                const isProject = choice.type === "project";
+                return {
+                  value: choice.key,
+                  label: isProject
+                    ? (choice.projectName || choice.projectId || choice.key)
+                    : (choice.environmentName || choice.environmentId || choice.key),
+                  description: isProject
+                    ? (choice.disabled ? "Project · no default computer" : "Project")
+                    : "Computer",
+                  leading: React.createElement(isProject ? Rocket : Monitor, {
+                    width: 14,
+                    height: 14,
+                    strokeWidth: 1.8,
+                    "aria-hidden": "true",
+                  }),
+                  disabled: Boolean(choice.disabled),
+                };
+              });
+            const selectedEnvironmentLabel = selectedEnvironmentChoice
+              ? (selectedEnvironmentChoice.type === "project"
+                ? (selectedEnvironmentChoice.projectName || selectedEnvironmentChoice.projectId)
+                : (selectedEnvironmentChoice.environmentName || selectedEnvironmentChoice.environmentId))
+              : "Select environment";
+            const renderAgentRunSelector = ({
+              value,
+              options,
+              label,
+              ariaLabel,
+              onValueChange,
+              disabled = false,
+              emptyContent = "No options available.",
+            }) => React.createElement(PlatformSelector, {
+              value,
+              options,
+              onValueChange,
+              ariaLabel,
+              label,
+              placeholder: label,
+              disabled,
+              alignment: "end",
+              popupAlignment: "right",
+              fullWidth: true,
+              emptyContent,
+              popupWidth: "min(300px, calc(100vw - 48px))",
+              popupMaxWidth: "calc(100vw - 48px)",
+              popupMaxHeight: "min(320px, calc(100vh - 120px))",
+              className: "playground-tasks-detail-central-selector",
+              triggerClassName: "playground-tasks-detail-central-selector-trigger",
+              popupClassName: "playground-tasks-detail-central-selector-popup",
+            });
+            const renderAgentRunFact = (label, control) => React.createElement("div", {
+                className: "playground-tasks-detail-fact playground-evaluations-run-modal-fact",
               },
-              React.createElement(PlatformModalSurface, {
-                  as: "form",
-                  className: "playground-tasks-project-modal playground-tasks-issue-modal playground-tasks-project-issue-modal playground-mission-control-modal playground-project-overview-outcome-editor-modal playground-evaluations-run-modal playground-agents-detail-evaluation-modal"
-                    + (agentDetailEvaluationRunModalVisible ? " is-visible" : "")
-                    + (agentDetailEvaluationRunModalClosing ? " is-closing" : ""),
-                  onClick: (event) => event.stopPropagation(),
-                  onSubmit: handleAgentEvaluationRunSubmit,
+              React.createElement("div", { className: "playground-tasks-detail-fact-label" }, label),
+              React.createElement("div", { className: "playground-tasks-detail-fact-control" }, control)
+            );
+            return React.createElement(PlatformModal, {
+                open: agentDetailEvaluationRunModalOpen,
+                visible: agentDetailEvaluationRunModalVisible,
+                closing: agentDetailEvaluationRunModalClosing,
+                animationDurationMs: 75,
+                portal: true,
+                as: "form",
+                size: "medium",
+                maxHeight: "min(720px, calc(100vh - 48px))",
+                scrollable: true,
+                title: "Run Evaluation",
+                headerVariant: "search",
+                headerSearchProps: {
+                  icon: Play,
+                  value: form.name || "",
+                  placeholder: "Run name",
+                  "aria-label": "Run name",
+                  autoComplete: "off",
+                  disabled: busy,
+                  onChange: (event) => setAgentDetailEvaluationRunForm((current) => ({ ...(current || {}), name: event.target.value })),
                 },
-                React.createElement("div", { className: "playground-tasks-project-modal-top" },
-                  React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
-                    React.createElement("span", { className: "playground-tasks-project-modal-icon-trigger", "aria-hidden": "true" },
-                      React.createElement(Play, { width: 18, height: 18, strokeWidth: 1.8 })
-                    ),
-                    React.createElement("input", {
-                      className: "playground-tasks-project-modal-name-input playground-tasks-issue-modal-title-input",
-                      value: form.name || "",
-                      placeholder: "Run name",
-                      onChange: (event) => setAgentDetailEvaluationRunForm((current) => ({ ...(current || {}), name: event.target.value })),
-                      autoFocus: true,
-                      "aria-label": "Run name",
+                onClose: () => closeAgentEvaluationRunModal(),
+                closeOnBackdrop: !busy,
+                closeOnEscape: !busy,
+                closeButtonDisabled: busy,
+                closeButtonLabel: "Close run evaluation modal",
+                ariaLabel: "Run agent evaluation",
+                className: "playground-evaluations-run-modal playground-agents-detail-evaluation-modal",
+                backdropClassName: "playground-evaluations-run-modal-backdrop playground-agents-detail-evaluation-modal-backdrop",
+                bodyClassName: "playground-evaluations-run-modal-body playground-agents-detail-evaluation-modal-body",
+                footerClassName: "playground-evaluations-modal-actions",
+                surfaceProps: { onSubmit: handleAgentEvaluationRunSubmit },
+                footer: React.createElement(React.Fragment, null,
+                  React.createElement(PlatformSecondaryButton, {
+                    size: "medium",
+                    type: "button",
+                    onClick: () => closeAgentEvaluationRunModal(),
+                    disabled: busy,
+                  }, "Cancel"),
+                  React.createElement(PlatformPrimaryButton, {
+                    size: "medium",
+                    type: "submit",
+                    disabled: busy || !agentEvaluationSets.length,
+                    "aria-busy": busy || undefined,
+                  },
+                    busy
+                      ? React.createElement(Loader2, { className: "playground-files-state-loader", width: 14, height: 14, strokeWidth: 1.8 })
+                      : React.createElement(Play, { width: 14, height: 14, strokeWidth: 1.8 }),
+                    React.createElement("span", null, busy ? "Starting" : "Run Evaluation")
+                  )
+                ),
+              },
+              React.createElement("div", {
+                  className: "playground-tasks-detail-facts playground-tasks-issue-details-section playground-evaluations-run-modal-settings",
+                },
+                React.createElement("div", { className: "playground-tasks-detail-facts-body" },
+                  renderAgentRunFact("Evaluation",
+                    renderAgentRunSelector({
+                      value: form.setId || "",
+                      options: evaluationSelectorOptions,
+                      label: React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" },
+                        selectedSet?.name || selectedSet?.id || "Select evaluation"
+                      ),
+                      ariaLabel: "Select evaluation",
+                      onValueChange: (nextValue) => {
+                        const nextSet = agentEvaluationSets.find((set) => set.id === nextValue) || null;
+                        const nextEnvironment = getAgentEvaluationDefaultEnvironmentChoice(nextSet);
+                        setAgentDetailEvaluationRunForm((current) => ({
+                          ...(current || {}),
+                          setId: nextValue,
+                          name: current?.name || (nextSet?.name || ""),
+                          environmentKey: nextEnvironment?.key || current?.environmentKey || "",
+                        }));
+                      },
+                      disabled: evaluationSelectorOptions.length === 0 || busy,
+                      emptyContent: "No evaluation sets.",
                     })
                   ),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-settings-icon-button playground-tasks-project-modal-close",
-                    onClick: closeAgentEvaluationRunModal,
-                    title: "Close",
-                    "aria-label": "Close run evaluation modal",
-                    disabled: busy,
-                  }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-                ),
-                React.createElement("div", { className: "playground-mission-control-modal-body playground-project-overview-outcome-editor-shell playground-evaluations-run-modal-shell" },
-                  React.createElement("div", { className: "playground-mission-control-modal-context playground-project-overview-outcome-editor-body playground-evaluations-run-modal-body playground-agents-detail-evaluation-modal-body" },
-                    React.createElement("div", { className: "playground-tasks-issue-modal-grid" },
-                      React.createElement("label", { className: "playground-tasks-project-modal-field playground-tasks-issue-modal-field" },
-                        React.createElement("span", { className: "playground-tasks-project-modal-label" }, "Evaluation"),
-                        React.createElement("select", {
-                          className: "playground-tasks-issue-modal-select",
-                          value: form.setId || "",
-                          onChange: (event) => {
-                            const nextSet = agentEvaluationSets.find((set) => set.id === event.target.value) || null;
-                            const nextEnvironment = getAgentEvaluationDefaultEnvironmentChoice(nextSet);
-                            setAgentDetailEvaluationRunForm((current) => ({
-                              ...(current || {}),
-                              setId: event.target.value,
-                              name: current?.name || (nextSet?.name || ""),
-                              environmentKey: nextEnvironment?.key || current?.environmentKey || "",
-                            }));
-                          },
-                        },
-                          agentEvaluationSets.length > 0
-                            ? agentEvaluationSets.map((set) =>
-                                React.createElement("option", { key: set.id, value: set.id }, set.name || set.id)
-                              )
-                            : React.createElement("option", { value: "" }, "No evaluation sets")
-                        )
+                  renderAgentRunFact("Environment",
+                    renderAgentRunSelector({
+                      value: form.environmentKey || "",
+                      options: environmentSelectorOptions,
+                      label: React.createElement("span", { className: "playground-tasks-detail-person-value" },
+                        React.createElement(selectedEnvironmentChoice?.type === "project" ? Rocket : Monitor, {
+                          width: 14,
+                          height: 14,
+                          strokeWidth: 1.8,
+                          "aria-hidden": "true",
+                        }),
+                        React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, selectedEnvironmentLabel)
                       ),
-                      React.createElement("label", { className: "playground-tasks-project-modal-field playground-tasks-issue-modal-field" },
-                        React.createElement("span", { className: "playground-tasks-project-modal-label" }, "Environment"),
-                        React.createElement("select", {
-                          className: "playground-tasks-issue-modal-select",
-                          value: form.environmentKey || "",
-                          onChange: (event) => setAgentDetailEvaluationRunForm((current) => ({ ...(current || {}), environmentKey: event.target.value })),
-                        },
-                          React.createElement("optgroup", { label: "Computers" },
-                            agentEvaluationEnvironmentChoices.filter((choice) => choice.type === "computer").length > 0
-                              ? agentEvaluationEnvironmentChoices.filter((choice) => choice.type === "computer").map((choice) =>
-                                  React.createElement("option", { key: choice.key, value: choice.key }, choice.environmentName || choice.environmentId)
-                                )
-                              : React.createElement("option", { value: "", disabled: true }, "No computers available")
-                          ),
-                          React.createElement("optgroup", { label: "Projects" },
-                            agentEvaluationEnvironmentChoices.filter((choice) => choice.type === "project").length > 0
-                              ? agentEvaluationEnvironmentChoices.filter((choice) => choice.type === "project").map((choice) =>
-                                  React.createElement("option", { key: choice.key, value: choice.key, disabled: choice.disabled },
-                                    (choice.projectName || choice.projectId) + (choice.disabled ? " · no default computer" : "")
-                                  )
-                                )
-                              : React.createElement("option", { value: "", disabled: true }, "No projects available")
-                          )
-                        )
-                      )
-                    ),
-                    selectedSet
-                      ? React.createElement("div", { className: "playground-tasks-secondary-copy" },
-                          "Agent: " + (draftAgent.name || "Current agent") + " · Pass threshold " + formatAgentEvaluationPercent(selectedSet.passThreshold) + " · " + (Array.isArray(selectedSet.dataRows) ? selectedSet.dataRows.length : 0) + " cases"
-                        )
-                      : null,
-                    agentDetailEvaluationRunState.error
-                      ? React.createElement("div", { className: "playground-agents-detail-evaluation-modal-error" }, agentDetailEvaluationRunState.error)
-                      : null
-                  ),
-                  React.createElement("div", { className: "playground-tasks-project-modal-actions" },
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-environments-action-button",
-                      onClick: closeAgentEvaluationRunModal,
-                      disabled: busy,
-                    }, "Cancel"),
-                    React.createElement(PlatformPrimaryButton, {
-                      size: "medium",
-                      type: "submit",
-                      className: "playground-environments-action-button is-primary",
-                      disabled: busy || !agentEvaluationSets.length,
-                    },
-                      busy ? React.createElement(Loader2, { className: "playground-files-state-loader", width: 14, height: 14, strokeWidth: 1.8 }) : React.createElement(Play, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement("span", null, busy ? "Starting" : "Run Evaluation")
-                    )
+                      ariaLabel: "Select evaluation environment",
+                      onValueChange: (nextValue) => setAgentDetailEvaluationRunForm((current) => ({ ...(current || {}), environmentKey: nextValue })),
+                      disabled: environmentSelectorOptions.length === 0 || busy,
+                      emptyContent: "No environments available.",
+                    })
                   )
                 )
-              )
+              ),
+              selectedSet
+                ? React.createElement("div", { className: "playground-tasks-secondary-copy" },
+                    "Agent: " + (draftAgent.name || "Current agent") + " · Pass threshold " + formatAgentEvaluationPercent(selectedSet.passThreshold) + " · " + (Array.isArray(selectedSet.dataRows) ? selectedSet.dataRows.length : 0) + " cases"
+                  )
+                : null,
+              agentDetailEvaluationRunState.error
+                ? React.createElement("div", { className: "playground-agents-detail-evaluation-modal-error" }, agentDetailEvaluationRunState.error)
+                : null
             );
           }
           function renderAgentEvaluationListSection() {
@@ -621,7 +677,7 @@ export const EVALUATIONS_AGENT_VIEW_SCRIPT = `          const agentEvaluationEnv
                   defaultValue: { id: "updated", direction: "desc" },
                 },
                 toolbar: {
-                  title: "Evaluation",
+                  leading: agentInsightsTableTabs,
                   search: {
                     value: agentDetailEvaluationSearchQuery,
                     onChange: setAgentDetailEvaluationSearchQuery,

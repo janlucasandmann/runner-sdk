@@ -1,3 +1,4 @@
+export * from "./activity-timeline/index.js";
 export * from "./analytics/index.js";
 export * from "./attachments/index.js";
 export * from "./code-editor-workspace/index.js";
@@ -14,6 +15,7 @@ export * from "./loading-state/index.js";
 export * from "./modal/index.js";
 export * from "./page-hero/index.js";
 export * from "./popup/index.js";
+export * from "./profile-image-picker/index.js";
 export * from "./settings-section/index.js";
 export * from "./subtasks/index.js";
 export * from "./ui-card/index.js";

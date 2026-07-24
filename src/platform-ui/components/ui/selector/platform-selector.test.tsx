@@ -88,6 +88,7 @@ describe("PlatformSelector", () => {
             label: "Andrea",
             description: "andrea@example.com",
             leading: <span data-testid="avatar">A</span>,
+            trailing: <span data-testid="shortcut">1</span>,
           },
         ]}
         label={<span data-testid="owner-label">Andrea</span>}
@@ -99,7 +100,28 @@ describe("PlatformSelector", () => {
     expect(screen.getByTestId("owner-label")).not.toBeNull();
     await user.click(screen.getByRole("button", { name: "Choose owner" }));
     expect(screen.getByTestId("avatar")).not.toBeNull();
+    expect(screen.getByTestId("shortcut")).not.toBeNull();
     expect(screen.getByText("andrea@example.com")).not.toBeNull();
+  });
+
+  it("keeps focus in an autofocus popup header instead of moving it to an option", async () => {
+    const user = userEvent.setup();
+    render(
+      <PlatformSelector
+        value="todo"
+        options={[
+          { value: "todo", label: "Todo" },
+          { value: "done", label: "Done" },
+        ]}
+        popupHeader={<input aria-label="Search statuses" autoFocus />}
+        ariaLabel="Choose status"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Choose status" }));
+    await new Promise((resolve) => window.setTimeout(resolve, 0));
+
+    expect(document.activeElement).toBe(screen.getByRole("textbox", { name: "Search statuses" }));
   });
 
   it("supports an interactive popup header outside the listbox", async () => {

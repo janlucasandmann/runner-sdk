@@ -1,5 +1,12 @@
 import { Ellipsis, Plus } from "lucide-react";
-import { createElement, isValidElement, useEffect, useState, type ElementType, type ReactNode } from "react";
+import {
+  createElement,
+  isValidElement,
+  useEffect,
+  useState,
+  type ElementType,
+  type ReactNode,
+} from "react";
 import { createPortal } from "react-dom";
 import { PlatformAnalyticsSection } from "../../components/composite/analytics/index.js";
 import {
@@ -9,7 +16,10 @@ import {
 } from "../../components/composite/data-table/index.js";
 import { PlatformPrimaryButton } from "../../components/ui/button/index.js";
 import { PlatformSwitch } from "../../components/ui/switch/index.js";
-import type { ResourceOverviewPageProps, ResourceOverviewPeriodOption } from "./resource-overview-types.js";
+import type {
+  ResourceOverviewPageProps,
+  ResourceOverviewPeriodOption,
+} from "./resource-overview-types.js";
 
 const DEFAULT_PERIOD_OPTIONS: readonly ResourceOverviewPeriodOption[] = [
   { id: "day", label: "24H" },
@@ -19,7 +29,9 @@ const DEFAULT_PERIOD_OPTIONS: readonly ResourceOverviewPeriodOption[] = [
 
 function renderHeaderActions(actions: ReactNode) {
   if (!actions) return null;
-  return <div className="resource-overview-page__header-actions">{actions}</div>;
+  return (
+    <div className="resource-overview-page__header-actions">{actions}</div>
+  );
 }
 
 function useOverviewControlsPortalTarget(portalId: string) {
@@ -32,7 +44,7 @@ function useOverviewControlsPortalTarget(portalId: string) {
     }
 
     const nextTarget = document.getElementById(portalId);
-    setTarget((current) => current === nextTarget ? current : nextTarget);
+    setTarget((current) => (current === nextTarget ? current : nextTarget));
     return undefined;
   }, [portalId]);
 
@@ -40,9 +52,11 @@ function useOverviewControlsPortalTarget(portalId: string) {
 }
 
 function renderActionIcon(icon: PlatformDataTableIcon | undefined): ReactNode {
-  const resolvedIcon = icon || Plus;
+  const resolvedIcon = icon === undefined ? Plus : icon;
+  if (!resolvedIcon) return null;
   if (isValidElement(resolvedIcon)) return resolvedIcon;
-  if (typeof resolvedIcon === "string" || typeof resolvedIcon === "number") return resolvedIcon;
+  if (typeof resolvedIcon === "string" || typeof resolvedIcon === "number")
+    return resolvedIcon;
   return createElement(resolvedIcon as ElementType, {
     width: 14,
     height: 14,
@@ -51,7 +65,9 @@ function renderActionIcon(icon: PlatformDataTableIcon | undefined): ReactNode {
   });
 }
 
-function renderPrimaryAction(action: PlatformDataTablePrimaryAction | undefined) {
+function renderPrimaryAction(
+  action: PlatformDataTablePrimaryAction | undefined,
+) {
   if (!action) return null;
   return (
     <PlatformPrimaryButton
@@ -83,36 +99,51 @@ export function ResourceOverviewPage<TData>({
   const resolvedTable = primaryAction
     ? { ...table, toolbar: { ...table.toolbar, primaryAction: undefined } }
     : table;
-  const hasHeaderControls = showPeriodSelector || Boolean(primaryAction) || Boolean(headerActions);
-  const controlsPortalTarget = useOverviewControlsPortalTarget(controlsPortalId);
-  const overviewControls = hasHeaderControls && controlsPortalTarget
-    ? createPortal(
-        <div className="resource-overview-page__controls" data-resource-overview-controls="true">
-          {showPeriodSelector ? (
-            <PlatformSwitch
-              ariaLabel="Analytics time frame"
-              value={period}
-              options={periodOptions.map((option) => ({ value: option.id, label: option.label }))}
-              onValueChange={(value) => {
-                const nextPeriod = periodOptions.find((option) => option.id === value);
-                if (nextPeriod) onPeriodChange(nextPeriod.id);
-              }}
-            />
-          ) : null}
-          {renderPrimaryAction(primaryAction)}
-          {renderHeaderActions(headerActions)}
-        </div>,
-        controlsPortalTarget,
-      )
-    : null;
+  const hasHeaderControls =
+    showPeriodSelector || Boolean(primaryAction) || Boolean(headerActions);
+  const controlsPortalTarget =
+    useOverviewControlsPortalTarget(controlsPortalId);
+  const overviewControls =
+    hasHeaderControls && controlsPortalTarget
+      ? createPortal(
+          <div
+            className="resource-overview-page__controls"
+            data-resource-overview-controls="true"
+          >
+            {showPeriodSelector ? (
+              <PlatformSwitch
+                ariaLabel="Analytics time frame"
+                value={period}
+                options={periodOptions.map((option) => ({
+                  value: option.id,
+                  label: option.label,
+                }))}
+                onValueChange={(value) => {
+                  const nextPeriod = periodOptions.find(
+                    (option) => option.id === value,
+                  );
+                  if (nextPeriod) onPeriodChange(nextPeriod.id);
+                }}
+              />
+            ) : null}
+            {renderPrimaryAction(primaryAction)}
+            {renderHeaderActions(headerActions)}
+          </div>,
+          controlsPortalTarget,
+        )
+      : null;
 
   return (
     <>
       {overviewControls}
-      <div className={`resource-overview-page${className ? ` ${className}` : ""}`}>
-        {heroContent === undefined
-          ? <PlatformAnalyticsSection analytics={analytics!} chartType="line" />
-          : heroContent}
+      <div
+        className={`resource-overview-page${className ? ` ${className}` : ""}`}
+      >
+        {heroContent === undefined ? (
+          <PlatformAnalyticsSection analytics={analytics!} chartType="line" />
+        ) : (
+          heroContent
+        )}
 
         <section className="resource-overview-page__table-section">
           <PlatformDataTable<TData>
@@ -120,7 +151,11 @@ export function ResourceOverviewPage<TData>({
             surface={resolvedTable.surface || "plain"}
             layout={resolvedTable.layout || "fill"}
             variant={resolvedTable.variant || "minimalistic-ui"}
-            pagination={resolvedTable.pagination === undefined ? {} : resolvedTable.pagination}
+            pagination={
+              resolvedTable.pagination === undefined
+                ? {}
+                : resolvedTable.pagination
+            }
           />
         </section>
       </div>

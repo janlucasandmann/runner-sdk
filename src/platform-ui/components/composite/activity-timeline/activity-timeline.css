@@ -1,0 +1,653 @@
+.platform-activity-timeline {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  color: #fff;
+}
+
+.platform-activity-timeline__header {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-width: 0;
+  min-height: 32px;
+  margin-bottom: 16px;
+}
+
+.platform-activity-timeline__title {
+  margin: 0;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.25;
+}
+
+.platform-activity-timeline__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.platform-activity-timeline__list {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.platform-activity-timeline__item {
+  box-sizing: border-box;
+  position: relative;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 38px;
+}
+
+.platform-activity-timeline__rail {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.platform-activity-timeline__marker {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-top: 7px;
+  overflow: hidden;
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.72);
+  background: transparent;
+}
+
+.platform-activity-timeline__marker > img,
+.platform-activity-timeline__marker > span,
+.platform-activity-timeline__marker > div {
+  width: 100%;
+  height: 100%;
+}
+
+.platform-activity-timeline__marker img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.platform-activity-timeline__item.is-status .platform-activity-timeline__marker {
+  color: #f3cc45;
+}
+
+.platform-activity-timeline__item.is-thread .platform-activity-timeline__marker {
+  color: #4da3ff;
+}
+
+.platform-activity-timeline__entry {
+  box-sizing: border-box;
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 8px 8px 8px 4px;
+  border-radius: 8px;
+}
+
+.platform-activity-timeline__item.is-interactive .platform-activity-timeline__entry {
+  cursor: pointer;
+}
+
+.platform-activity-timeline__item.is-interactive .platform-activity-timeline__entry:hover {
+  background: rgba(255, 255, 255, 0.0375);
+}
+
+.platform-activity-timeline__item.has-content {
+  grid-template-columns: minmax(0, 1fr);
+  margin: 8px 0;
+}
+
+.platform-activity-timeline__item.has-content .platform-activity-timeline__rail {
+  display: none;
+}
+
+.platform-activity-timeline__item.has-content .platform-activity-timeline__entry {
+  grid-column: 1 / -1;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.platform-activity-timeline__meta {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  gap: 8px;
+}
+
+.platform-activity-timeline__item.has-actions .platform-activity-timeline__meta {
+  padding-right: 28px;
+}
+
+.platform-activity-timeline__item-actions.platform-popup-anchor {
+  position: absolute;
+  z-index: 2;
+  top: 8px;
+  right: 8px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 120ms ease,
+    visibility 120ms ease;
+}
+
+.platform-activity-timeline__item.has-actions:hover
+  .platform-activity-timeline__item-actions,
+.platform-activity-timeline__item.has-actions:focus-within
+  .platform-activity-timeline__item-actions,
+.platform-activity-timeline__item-actions.platform-popup-anchor.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.platform-activity-timeline__item-actions-trigger.platform-icon-button {
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.58);
+  background: transparent;
+}
+
+.platform-activity-timeline__item-actions-trigger.platform-icon-button:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.platform-activity-timeline__item-actions-menu {
+  --platform-popup-radius: 10px;
+}
+
+.platform-activity-timeline__content-avatar {
+  display: inline-flex;
+  flex: 0 0 22px;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.platform-activity-timeline__content-avatar > img,
+.platform-activity-timeline__content-avatar > span,
+.platform-activity-timeline__content-avatar > div {
+  width: 100%;
+  height: 100%;
+}
+
+.platform-activity-timeline__content-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.platform-activity-timeline__summary {
+  min-width: 0;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.platform-activity-timeline__trailing {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+.platform-activity-timeline__summary strong {
+  color: #fff;
+  font-weight: 400;
+}
+
+.platform-activity-timeline__timestamp {
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.platform-activity-timeline__content {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin-top: 10px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 13px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.platform-activity-timeline__content > *,
+.platform-activity-timeline__content .playground-tasks-activity-comment-text {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.platform-activity-timeline__content > :first-child {
+  margin-top: 0;
+}
+
+.platform-activity-timeline__content > :last-child {
+  margin-bottom: 0;
+}
+
+.platform-activity-timeline__edit-form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  margin-top: 10px;
+}
+
+.platform-activity-timeline__edit-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 72px;
+  max-height: 240px;
+  padding: 10px 12px;
+  resize: none;
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  outline: 0;
+  color: #fff;
+  background: #000;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.55;
+  letter-spacing: 0;
+}
+
+.platform-activity-timeline__edit-input:focus {
+  border-color: rgba(77, 163, 255, 0.72);
+}
+
+.platform-activity-timeline__edit-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.platform-activity-timeline__edit-actions .platform-icon-button {
+  border-radius: 50%;
+}
+
+.platform-activity-timeline__edit-error {
+  margin-top: 6px;
+  color: #ff7777;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.platform-activity-timeline__replies {
+  box-sizing: border-box;
+  width: calc(100% + 32px);
+  min-width: 0;
+  margin: 14px -16px -14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.platform-activity-timeline__reply-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.platform-activity-timeline__reply {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  padding: 14px 16px;
+}
+
+.platform-activity-timeline__reply + .platform-activity-timeline__reply {
+  border-top: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.platform-activity-timeline__reply-avatar,
+.platform-activity-timeline__reply-composer-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.platform-activity-timeline__reply-avatar > img,
+.platform-activity-timeline__reply-avatar > span,
+.platform-activity-timeline__reply-avatar > div,
+.platform-activity-timeline__reply-composer-avatar > img,
+.platform-activity-timeline__reply-composer-avatar > span,
+.platform-activity-timeline__reply-composer-avatar > div {
+  width: 100%;
+  height: 100%;
+}
+
+.platform-activity-timeline__reply-avatar img,
+.platform-activity-timeline__reply-composer-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.platform-activity-timeline__reply-body {
+  min-width: 0;
+}
+
+.platform-activity-timeline__reply-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.platform-activity-timeline__reply-author {
+  min-width: 0;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.platform-activity-timeline__reply-timestamp {
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.platform-activity-timeline__reply-content {
+  width: 100%;
+  min-width: 0;
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.platform-activity-timeline__reply-content > :first-child {
+  margin-top: 0;
+}
+
+.platform-activity-timeline__reply-content > :last-child {
+  margin-bottom: 0;
+}
+
+.platform-activity-timeline__reply-composer {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.platform-activity-timeline__reply-composer-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 24px;
+  max-height: 96px;
+  resize: none;
+  overflow-y: auto;
+  border: 0;
+  outline: 0;
+  padding: 3px 0;
+  color: #fff;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+
+.platform-activity-timeline__reply-composer-input::placeholder {
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.platform-activity-timeline__reply-composer-error {
+  grid-column: 2 / -1;
+  color: #ff7777;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.platform-activity-timeline__empty {
+  min-height: 160px;
+}
+
+.platform-activity-timeline__composer {
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.075);
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease;
+}
+
+.platform-activity-timeline__composer.is-dragging-files {
+  border-color: rgba(77, 163, 255, 0.72);
+  background: rgba(77, 163, 255, 0.1);
+}
+
+.platform-activity-timeline__composer.has-avatar {
+  padding-left: 52px;
+}
+
+.platform-activity-timeline__composer-avatar {
+  position: absolute;
+  top: 18px;
+  left: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.platform-activity-timeline__composer-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.platform-activity-timeline__composer-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  max-height: 180px;
+  resize: none;
+  overflow-y: auto;
+  border: 0;
+  outline: 0;
+  padding: 0 72px 36px 0;
+  color: #fff;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+
+.platform-activity-timeline__composer-input::placeholder {
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.platform-activity-timeline__composer-actions {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.platform-activity-timeline__composer-actions .platform-icon-button {
+  border-radius: 50%;
+}
+
+.platform-activity-timeline__composer-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.platform-activity-timeline__composer-attach.platform-icon-button {
+  color: rgba(255, 255, 255, 0.58);
+  background: transparent;
+}
+
+.platform-activity-timeline__composer-submit.platform-icon-button {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.platform-activity-timeline__composer-submit.platform-icon-button:disabled {
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.platform-activity-timeline__composer-submit.platform-icon-button:not(:disabled):hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.platform-activity-timeline__composer-files {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  margin-top: 4px;
+  padding-right: 72px;
+}
+
+.platform-activity-timeline__composer-file {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: min(100%, 280px);
+  padding: 5px 6px;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(0, 0, 0, 0.32);
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.platform-activity-timeline__composer-file-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-activity-timeline__composer-file-remove {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: 4px;
+  padding: 0;
+  color: rgba(255, 255, 255, 0.58);
+  background: transparent;
+  cursor: pointer;
+}
+
+.platform-activity-timeline__composer-file-remove:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.platform-activity-timeline__composer-error {
+  margin-top: 8px;
+  padding-right: 72px;
+  color: #ff7777;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+@media (max-width: 680px) {
+  .platform-activity-timeline__item {
+    grid-template-columns: 24px minmax(0, 1fr);
+  }
+
+  .platform-activity-timeline__reply-composer {
+    grid-template-columns: 20px minmax(0, 1fr) 28px;
+    gap: 8px;
+  }
+}

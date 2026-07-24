@@ -10,6 +10,7 @@ export const TEAMS_MEMBERSHIP_ACTIONS_SCRIPT = `        async function handleCre
           setTeamPageActionId("create-team");
           setTeamPageError("");
           try {
+            const metadata = buildTeamPageMetadataWithProfileImage({}, teamPageCreateProfileImageUrl);
             const { response, data } = await fetchJsonWithTimeout(proxyBackendBase + "/teams", {
               method: "POST",
               credentials: "include",
@@ -18,12 +19,13 @@ export const TEAMS_MEMBERSHIP_ACTIONS_SCRIPT = `        async function handleCre
                 ...requestHeaders,
                 "Content-Type": "application/json",
               },
-              body: JSON.stringify({ name }),
+              body: JSON.stringify({ name, metadata }),
             }, 8000);
             if (!response.ok) {
               throw new Error(data?.message || data?.error || "Failed to create team.");
             }
             setTeamPageCreateName("");
+            setTeamPageCreateProfileImageUrl(PLATFORM_PROFILE_IMAGE_PRESET_OPTIONS[0]?.url || "");
             setTeamPageCreateInviteEmails("");
             setTeamPageCreateInviteRole("member");
             setTeamPageCreateModalOpen(false);
@@ -188,4 +190,3 @@ export const TEAMS_MEMBERSHIP_ACTIONS_SCRIPT = `        async function handleCre
         }
 
 `;
-

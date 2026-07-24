@@ -76,7 +76,9 @@ export function PlatformAnalyticsChart({ analytics, chartType }: PlatformAnalyti
     [analytics.series, labels.length],
   );
   const hasData =
-    labels.length > 0 && series.some((entry) => entry.values.some((value) => Number(value) !== 0));
+    typeof analytics.hasData === "boolean"
+      ? analytics.hasData && labels.length > 0 && series.length > 0
+      : labels.length > 0 && series.some((entry) => entry.values.some((value) => Number(value) !== 0));
 
   useEffect(() => {
     return () => {

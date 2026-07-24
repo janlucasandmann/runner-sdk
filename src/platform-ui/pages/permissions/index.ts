@@ -57,7 +57,12 @@ export {
   PlatformPermissionMiniRingIcon,
   PlatformPermissionRingsChart,
 } from "./permission-ring-visuals.js";
-export { PlatformPermissionsPage } from "./platform-permissions-page.js";
+export {
+  PlatformPermissionHelpTooltip,
+  PlatformPermissionsOverview,
+  PlatformPermissionsPage,
+  PlatformPermissionsSettingsSummary,
+} from "./platform-permissions-page.js";
 export { PlatformRolePermissionsPage } from "./platform-role-permissions-page.js";
 export type {
   PlatformPermissionAccess,
@@ -71,6 +76,9 @@ export type {
   PlatformPermissionRole,
   PlatformPermissionRule,
   PlatformPermissionSet,
+  PlatformPermissionsOverviewProps,
+  PlatformPermissionsOverviewVariant,
   PlatformPermissionsPageProps,
+  PlatformPermissionsSettingsSummaryProps,
   PlatformRolePermissionsPageProps,
 } from "./permission-types.js";

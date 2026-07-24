@@ -28,11 +28,11 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
         { id: "zap", label: "Automation", icon: Zap },
       ];
 	      const PLAYGROUND_TASK_BOARD_LANES = [
-	        { id: "todo", label: "To do", statuses: ["backlog", "todo"] },
-	        { id: "in_progress", label: "In doing", statuses: ["in_progress"] },
+	        { id: "todo", label: "Todo", statuses: ["backlog", "todo"] },
+	        { id: "in_progress", label: "In Progress", statuses: ["in_progress"] },
 	        { id: "blocked", label: "Blocked", statuses: ["blocked"] },
 	        { id: "in_review", label: "In Review", statuses: ["in_review"] },
-	        { id: "done", label: "Finished", statuses: ["done"] },
+	        { id: "done", label: "Done", statuses: ["done", "canceled"] },
 	      ];
 
 		      function isPlaygroundHumanAssigneeId(value) {
@@ -65,7 +65,7 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
 		      }
 
 		      function isPlaygroundHumanAttentionTask(task) {
-		        return task?.status !== "done"
+		        return !isPlaygroundTaskTerminalStatus(task?.status)
 		          && (
 		            isPlaygroundHumanAssigneeId(task?.assigneeAgentId)
 		            || (hasPlaygroundIndependentReviewer(task) && isPlaygroundHumanAssigneeId(task?.reviewerAgentId))
@@ -413,6 +413,7 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
           enabledSkills: [],
           connectors: buildPlaygroundDefaultTaskConnectors(),
           comments: [],
+          activity: [],
           dependencyIds: [],
           linkedThreadIds: [],
           lastStartedThreadId: null,
@@ -1543,6 +1544,20 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
           : typeof comment.threadId === "string" && comment.threadId.trim()
             ? comment.threadId.trim()
             : undefined;
+        const parentCommentId = readPlaygroundTaskCommentIdentityString(comment, [
+          "parentCommentId",
+          "parent_comment_id",
+          "replyToCommentId",
+          "reply_to_comment_id",
+        ]) || undefined;
+        const metadata = comment.metadata && typeof comment.metadata === "object" && !Array.isArray(comment.metadata)
+          ? { ...comment.metadata }
+          : {};
+        const attachments = normalizePlaygroundTaskAttachmentList(
+          Array.isArray(comment.attachments)
+            ? comment.attachments
+            : metadata.attachments
+        );
         const createdAt = typeof comment.createdAt === "string" && comment.createdAt.trim()
           ? comment.createdAt.trim()
           : typeof comment.updatedAt === "string" && comment.updatedAt.trim()
@@ -1558,6 +1573,9 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
           authorName,
           authorAvatarUrl,
           sourceThreadId,
+          parentCommentId,
+          metadata,
+          attachments,
           createdAt,
         };
       }
@@ -1574,6 +1592,94 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
           next.push(normalized);
         });
         return next;
+      }
+
+      function normalizePlaygroundTaskActivityRecord(event) {
+        if (!event || typeof event !== "object" || Array.isArray(event)) {
+          return null;
+        }
+        const validEventTypes = new Set([
+          "created",
+          "status_changed",
+          "field_changed",
+          "thread_started",
+          "comment_added",
+        ]);
+        const eventType = String(event.eventType || event.event_type || "").trim().toLowerCase();
+        if (!validEventTypes.has(eventType)) {
+          return null;
+        }
+        const sourceId = String(event.sourceId || event.source_id || event.commentId || event.threadId || event.id || "").trim();
+        const id = String(event.id || (eventType + ":" + sourceId)).trim();
+        if (!id || !sourceId) {
+          return null;
+        }
+        const actorAgentId = readPlaygroundTaskCommentIdentityString(event, ["actorAgentId", "actor_agent_id"]) || undefined;
+        const actorUserId = readPlaygroundTaskCommentIdentityString(event, ["actorUserId", "actor_user_id", "createdByUserId", "created_by_user_id"]) || undefined;
+        const actorType = ["user", "agent", "system"].includes(String(event.actorType || event.actor_type || "").trim().toLowerCase())
+          ? String(event.actorType || event.actor_type).trim().toLowerCase()
+          : actorAgentId
+            ? "agent"
+            : "user";
+        const actorName = readPlaygroundTaskCommentIdentityString(event, ["actorName", "actor_name", "authorName", "author_name", "name"]) || undefined;
+        const actorAvatarUrl = readPlaygroundTaskCommentIdentityString(event, [
+          "actorAvatarUrl",
+          "actor_avatar_url",
+          "authorAvatarUrl",
+          "author_avatar_url",
+          "photoUrl",
+          "photo_url",
+          "avatarUrl",
+          "avatar_url",
+          "picture",
+        ]) || undefined;
+        const createdAt = String(event.createdAt || event.created_at || "").trim();
+        const comment = normalizePlaygroundTaskCommentRecord(event.comment);
+        const thread = event.thread && typeof event.thread === "object" && !Array.isArray(event.thread)
+          ? { ...event.thread }
+          : null;
+
+        return {
+          id,
+          eventType,
+          sourceId,
+          actorType,
+          actorUserId,
+          actorAgentId,
+          actorName,
+          actorAvatarUrl,
+          fieldName: String(event.fieldName || event.field_name || "").trim() || null,
+          previousValue: event.previousValue ?? event.previous_value ?? null,
+          nextValue: event.nextValue ?? event.next_value ?? null,
+          threadId: String(event.threadId || event.thread_id || thread?.id || "").trim() || null,
+          commentId: String(event.commentId || event.comment_id || comment?.id || "").trim() || null,
+          thread,
+          comment,
+          metadata: event.metadata && typeof event.metadata === "object" && !Array.isArray(event.metadata)
+            ? event.metadata
+            : null,
+          createdAt,
+        };
+      }
+
+      function normalizePlaygroundTaskActivityList(items) {
+        const eventsByKey = new Map();
+        (Array.isArray(items) ? items : []).forEach((event) => {
+          const normalized = normalizePlaygroundTaskActivityRecord(event);
+          if (!normalized) {
+            return;
+          }
+          const key = normalized.eventType + ":" + normalized.sourceId;
+          const existing = eventsByKey.get(key);
+          eventsByKey.set(key, existing ? { ...existing, ...normalized } : normalized);
+        });
+        return Array.from(eventsByKey.values()).sort((left, right) => {
+          const leftTimestamp = Date.parse(String(left.createdAt || ""));
+          const rightTimestamp = Date.parse(String(right.createdAt || ""));
+          const timestampDifference = (Number.isFinite(leftTimestamp) ? leftTimestamp : 0)
+            - (Number.isFinite(rightTimestamp) ? rightTimestamp : 0);
+          return timestampDifference || String(left.id).localeCompare(String(right.id));
+        });
       }
 
       function createPlaygroundTaskCommentRecord(text, author = {}) {

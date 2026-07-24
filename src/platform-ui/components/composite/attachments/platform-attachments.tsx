@@ -7,26 +7,16 @@ import {
   type ReactNode,
   type Ref,
 } from "react";
-import { FileText, Plus, Upload, X } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
 
-import { PlatformIconButton } from "../../ui/icon-button/index.js";
 import { PlatformSecondaryButton } from "../../ui/button/index.js";
 import { PlatformUiCard } from "../ui-card/index.js";
-import { PlatformAttachmentActionMenu } from "./platform-attachment-action-menu.js";
+import {
+  PlatformAttachmentListItem,
+  type PlatformAttachmentItem,
+} from "./platform-attachment-list-item.js";
 
-export interface PlatformAttachmentItem {
-  id: string;
-  name: string;
-  metadata?: ReactNode;
-  preview?: ReactNode;
-  trailing?: ReactNode;
-  active?: boolean;
-  disabled?: boolean;
-  onActivate?: () => void;
-  onRename?: (nextName: string) => void | Promise<void>;
-  onRemove?: () => void;
-  removeLabel?: string;
-}
+export type { PlatformAttachmentItem } from "./platform-attachment-list-item.js";
 
 export interface PlatformAttachmentsProps
   extends Omit<HTMLAttributes<HTMLElement>, "children" | "onDrop" | "title"> {
@@ -229,69 +219,13 @@ export function PlatformAttachments({
               </span>
             </button>
 
-            {items.map((item) => {
-              const itemContent = (
-                <>
-                  <span className="platform-attachments__preview" aria-hidden="true">
-                    {item.preview || <FileText strokeWidth={1.7} />}
-                  </span>
-                  <span className="platform-attachments__copy">
-                    <span className="platform-attachments__name" title={item.name}>
-                      {item.name}
-                    </span>
-                    {item.metadata ? (
-                      <span className="platform-attachments__metadata">{item.metadata}</span>
-                    ) : null}
-                  </span>
-                </>
-              );
-
-              return (
-                <div
-                  key={item.id}
-                  className={joinClassNames(
-                    "platform-attachments__item",
-                    item.active && "is-active",
-                  )}
-                  role="listitem"
-                >
-                  {item.onActivate ? (
-                    <button
-                      type="button"
-                      className="platform-attachments__item-main"
-                      aria-label={item.name}
-                      disabled={item.disabled}
-                      onClick={item.onActivate}
-                    >
-                      {itemContent}
-                    </button>
-                  ) : (
-                    <div className="platform-attachments__item-main">{itemContent}</div>
-                  )}
-                  {item.trailing || item.onRename || item.onRemove ? (
-                    <div className="platform-attachments__item-actions">
-                      {item.trailing}
-                      <PlatformAttachmentActionMenu
-                        name={item.name}
-                        onRename={item.onRename}
-                        onDelete={item.onRemove}
-                        disabled={interactionDisabled || item.disabled}
-                      />
-                      {item.onRemove ? (
-                        <PlatformIconButton
-                          size="compact"
-                          aria-label={item.removeLabel || `Remove ${item.name}`}
-                          disabled={interactionDisabled || item.disabled}
-                          onClick={item.onRemove}
-                        >
-                          <X strokeWidth={1.8} />
-                        </PlatformIconButton>
-                      ) : null}
-                    </div>
-                  ) : null}
-                </div>
-              );
-            })}
+            {items.map((item) => (
+              <PlatformAttachmentListItem
+                key={item.id}
+                {...item}
+                interactionDisabled={interactionDisabled}
+              />
+            ))}
           </div>
         ) : (
           <button

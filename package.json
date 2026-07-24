@@ -91,9 +91,23 @@
     "./platform-ui/components/ui/switch/styles.css": {
       "default": "./dist/platform-ui/components/ui/switch/switch.css"
     },
+    "./platform-ui/components/ui/ticket-item": {
+      "types": "./dist/platform-ui/components/ui/ticket-item/index.d.ts",
+      "default": "./dist/platform-ui/components/ui/ticket-item/index.js"
+    },
+    "./platform-ui/components/ui/ticket-item/styles.css": {
+      "default": "./dist/platform-ui/components/ui/ticket-item/ticket-item.css"
+    },
     "./platform-ui/components/composite": {
       "types": "./dist/platform-ui/components/composite/index.d.ts",
       "default": "./dist/platform-ui/components/composite/index.js"
+    },
+    "./platform-ui/components/composite/activity-timeline": {
+      "types": "./dist/platform-ui/components/composite/activity-timeline/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/activity-timeline/index.js"
+    },
+    "./platform-ui/components/composite/activity-timeline/styles.css": {
+      "default": "./dist/platform-ui/components/composite/activity-timeline/activity-timeline.css"
     },
     "./platform-ui/components/composite/analytics": {
       "types": "./dist/platform-ui/components/composite/analytics/index.d.ts",
@@ -210,6 +224,13 @@
     },
     "./platform-ui/components/composite/popup/styles.css": {
       "default": "./dist/platform-ui/components/composite/popup/popup.css"
+    },
+    "./platform-ui/components/composite/profile-image-picker": {
+      "types": "./dist/platform-ui/components/composite/profile-image-picker/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/profile-image-picker/index.js"
+    },
+    "./platform-ui/components/composite/profile-image-picker/styles.css": {
+      "default": "./dist/platform-ui/components/composite/profile-image-picker/profile-image-picker.css"
     },
     "./platform-ui/components/composite/settings-section": {
       "types": "./dist/platform-ui/components/composite/settings-section/index.d.ts",
@@ -408,8 +429,8 @@
     "configure-home-service-test": "node ./src/platform-services/configure-mode/configure-home/configure-home-service-test.mjs && vitest run src/platform-services/configure-mode/configure-home/client/page",
     "develop-home-service-test": "node ./src/platform-services/develop-mode/develop-home/develop-home-service-test.mjs && vitest run src/platform-services/develop-mode/develop-home/client/page",
     "api-keys-service-test": "node ./src/platform-services/develop-mode/api-keys/api-keys-service-test.mjs",
-    "security-service-test": "node ./src/platform-services/develop-mode/security/security-service-test.mjs && vitest run src/platform-services/develop-mode/security/client/api src/platform-services/develop-mode/security/client/domain",
-    "evaluations-service-test": "node ./src/platform-services/configure-mode/evaluations/evaluations-service-test.mjs",
+    "security-service-test": "node ./src/platform-services/develop-mode/security/security-service-test.mjs && vitest run src/platform-resources/plugins/connections src/platform-services/develop-mode/security/client/api src/platform-services/develop-mode/security/client/domain src/platform-services/develop-mode/security/client/page/security-overview-page.test.tsx src/platform-services/develop-mode/security/client/page/security-repository-access-settings.test.tsx src/platform-services/develop-mode/security/client/page/security-detail-layout.test.tsx src/platform-services/develop-mode/security/client/page/security-repository-detail-page.test.tsx src/platform-services/develop-mode/security/client/page/security-repository-sidebar.test.tsx src/platform-services/develop-mode/security/client/page/security-repository-version-control.test.tsx",
+    "evaluations-service-test": "node ./src/platform-services/configure-mode/evaluations/evaluations-service-test.mjs && node --test ./src/platform-services/configure-mode/evaluations/server/run-persistence.test.mjs && vitest run ./src/platform-services/configure-mode/evaluations/client/page/detail",
     "files-service-test": "node ./src/platform-services/create-mode/files/files-service-test.mjs",
     "fine-tuning-service-test": "node ./src/platform-services/configure-mode/fine-tuning/fine-tuning-service-test.mjs",
     "guardrails-service-test": "node ./src/platform-services/configure-mode/guardrails/guardrails-service-test.mjs",
@@ -423,6 +444,7 @@
     "settings-modal-service-test": "node ./src/platform-shell/settings-modal/settings-modal-service-test.mjs",
     "app-header-service-test": "node ./src/platform-shell/app-header/app-header-service-test.mjs",
     "app-sidebar-service-test": "node ./src/platform-shell/app-sidebar/app-sidebar-service-test.mjs",
+    "onboarding-service-test": "node ./src/platform-shell/onboarding/onboarding-service-test.mjs",
     "navigation-guard-service-test": "node ./src/platform-shell/navigation-guard/navigation-guard-service-test.mjs && vitest run src/platform-ui/components/composite/modal/platform-unsaved-changes-modal.test.tsx",
     "projects-service-test": "node ./src/platform-services/create-mode/projects/projects-service-test.mjs",
     "teams-service-test": "node ./src/platform-services/configure-mode/teams/teams-service-test.mjs",
@@ -476,11 +498,20 @@
     "@git-diff-view/react": "^0.1.3",
     "@monaco-editor/react": "^4.7.0",
     "@tanstack/react-table": "^8.21.3",
+    "@tiptap/extension-image": "3.28.0",
+    "@tiptap/extension-placeholder": "3.28.0",
+    "@tiptap/extension-table": "3.28.0",
+    "@tiptap/extension-task-item": "3.28.0",
+    "@tiptap/extension-task-list": "3.28.0",
+    "@tiptap/markdown": "3.28.0",
+    "@tiptap/pm": "3.28.0",
+    "@tiptap/react": "3.28.0",
+    "@tiptap/starter-kit": "3.28.0",
     "chart.js": "^4.5.1",
     "docx-preview": "^0.3.7",
     "dompurify": "^3.4.12",
-    "jszip": "^3.10.1",
     "jose": "^6.2.3",
+    "jszip": "^3.10.1",
     "lucide-react": "^0.575.0",
     "novnc-next": "^1.0.0",
     "pdfjs-dist": "^5.4.624",

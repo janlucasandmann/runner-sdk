@@ -796,6 +796,61 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   display: none;
 }
 
+.platform-popup-search-header {
+  min-width: 0;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 12px;
+}
+
+.platform-popup-search-header__icon {
+  flex: 0 0 14px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.platform-popup-search-header__input {
+  min-width: 0;
+  flex: 1 1 auto;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.platform-popup-search-header__input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.platform-popup-search-header__input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+  opacity: 1;
+}
+
+.platform-popup-search-header__shortcut {
+  min-width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding: 0 6px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.025);
+  color: rgba(255, 255, 255, 0.58);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1;
+}
+
 .platform-popup-surface::before {
   content: "";
   pointer-events: none;
@@ -988,6 +1043,10 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   background: #1a1a1a;
 }
 
+.platform-selector__popup-header.is-search-header {
+  padding: 0;
+}
+
 .platform-selector__listbox {
   min-height: 0;
   min-inline-size: 0;
@@ -1013,7 +1072,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   width: 100%;
   min-height: 36px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 14px;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   padding: 8px 12px;
@@ -1026,7 +1085,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .platform-selector__option.has-leading {
-  grid-template-columns: auto minmax(0, 1fr) 14px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
 }
 
 .platform-selector__option:hover:not(:disabled),
@@ -1046,7 +1105,9 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .platform-selector__option-leading,
-.platform-selector__option-check {
+.platform-selector__option-end,
+.platform-selector__option-check,
+.platform-selector__option-trailing {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1084,6 +1145,24 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   width: 14px;
   height: 14px;
   color: #fff;
+}
+
+.platform-selector__option-end {
+  min-width: 14px;
+  gap: 8px;
+  margin-left: auto;
+  justify-self: end;
+  justify-content: flex-end;
+}
+
+.platform-selector__option-trailing {
+  min-width: 12px;
+  justify-content: flex-end;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1;
+  text-align: right;
 }
 
 .platform-selector__state {
@@ -17524,6 +17603,16 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 .platform-label.is-red {
   color: #ff8f8f;
   background: rgba(255, 143, 143, 0.1);
+}
+
+
+.platform-ticket-item.is-list.is-minimalistic-ui {
+  padding-left: 0;
+  padding-right: 0;
+  border: none;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 

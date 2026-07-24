@@ -62,6 +62,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         attachmentPreviewPortalId = "",
         projectNavBackRequestToken = 0,
         projectNavViewRequest = null,
+        projectNavTaskRequest = null,
         projectNavSettingsRequestToken = 0,
         projectNavIssueRequest = null,
         detailOnly,
@@ -89,7 +90,6 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         const projectOverviewThreadsToolbarRef = useRef(null);
         const projectOverviewFilesToolbarRef = useRef(null);
         const backlogTaskContextMenuRef = useRef(null);
-        const taskStatusMenuRef = useRef(null);
         const taskDetailActionsRef = useRef(null);
         const taskDetailThreadsToolbarRef = useRef(null);
         const taskSkillsActionsRef = useRef(null);
@@ -113,6 +113,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         const handledGithubDisconnectTokenRef = useRef("");
         const handledProjectNavBackRequestTokenRef = useRef(0);
         const handledProjectNavViewRequestTokenRef = useRef("");
+        const handledProjectNavTaskRequestTokenRef = useRef("");
         const handledProjectNavSettingsRequestTokenRef = useRef(0);
         const handledProjectNavIssueRequestTokenRef = useRef("");
         const taskConnectorBrowserOpenFrameRef = useRef(null);
@@ -223,7 +224,6 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         const [projectOverviewSidebarCollapsed, setProjectOverviewSidebarCollapsed] = useState(false);
         const projectOverviewSidebarAutoCollapsedForTaskRef = useRef(false);
         const projectOverviewSidebarAutoCollapsedForPermissionRef = useRef(false);
-        const [ticketDetailSidebarCollapsed, setTicketDetailSidebarCollapsed] = useState(false);
         const [projectOverviewPermissionTeamId, setProjectOverviewPermissionTeamId] = useState("");
         const [projectOverviewPermissionRoleId, setProjectOverviewPermissionRoleId] = useState("member");
         const [projectPermissionChartAnimationKey, setProjectPermissionChartAnimationKey] = useState(0);
@@ -378,6 +378,9 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         const [taskStatusMenuState, setTaskStatusMenuState] = useState(null);
         const [taskDetailPopover, setTaskDetailPopover] = useState("");
         const [taskDetailSelectPopover, setTaskDetailSelectPopover] = useState("");
+        const [taskDetailStatusSearchQuery, setTaskDetailStatusSearchQuery] = useState("");
+        const [taskDetailTypeSearchQuery, setTaskDetailTypeSearchQuery] = useState("");
+        const [taskDetailPrioritySearchQuery, setTaskDetailPrioritySearchQuery] = useState("");
         const [taskDetailThreadSearchQuery, setTaskDetailThreadSearchQuery] = useState("");
         const [taskDetailThreadSortMode, setTaskDetailThreadSortMode] = useState("recent-desc");
         const [taskDetailThreadFilterMode, setTaskDetailThreadFilterMode] = useState("all");
@@ -426,14 +429,9 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         const [issueComposerClosing, setIssueComposerClosing] = useState(false);
         const issueComposerCloseTimerRef = useRef(null);
         const issueComposerFrameRef = useRef(null);
-        const issueComposerAnimationMs = 75;
         const issueComposerDescriptionTextareaRef = useRef(null);
-        const [isIssueComposerDescriptionEditing, setIsIssueComposerDescriptionEditing] = useState(false);
-        const [issueComposerEnvironmentPopoverOpen, setIssueComposerEnvironmentPopoverOpen] = useState(false);
-        const issueComposerEnvironmentPopoverRef = useRef(null);
+        const issueComposerAnimationMs = 75;
         const [issueComposerDetailSelectPopover, setIssueComposerDetailSelectPopover] = useState("");
-        const issueComposerDetailSelectPopoverRef = useRef(null);
-        const [issueComposerDetailsCollapsed, setIssueComposerDetailsCollapsed] = useState(false);
         const [issueComposerDraft, setIssueComposerDraft] = useState(buildPlaygroundDefaultTaskDraft());
         const [issueComposerSaveState, setIssueComposerSaveState] = useState({
           isSaving: false,
@@ -453,6 +451,9 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         const [taskCommentInputValue, setTaskCommentInputValue] = useState("");
         const [taskCommentMode, setTaskCommentMode] = useState("");
         const [taskCommentComposerOpen, setTaskCommentComposerOpen] = useState(false);
+        const [taskActivityCommentValue, setTaskActivityCommentValue] = useState("");
+        const [taskActivityCommentPending, setTaskActivityCommentPending] = useState(false);
+        const [taskActivityCommentError, setTaskActivityCommentError] = useState("");
         const [previewedTaskAttachmentId, setPreviewedTaskAttachmentId] = useState("");
         const [taskLoadState, setTaskLoadState] = useState({
           status: "idle",
@@ -807,7 +808,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
 
           if (selectedProjectId && taskLoadState.status === "ready") {
             nextSummary.tasksCount = tasks.length;
-            nextSummary.openTasksCount = tasks.filter((task) => task.status !== "done").length;
+            nextSummary.openTasksCount = tasks.filter((task) => !isPlaygroundTaskTerminalStatus(task.status)).length;
             nextSummary.releaseCount = releases.length;
             nextSummary.activeReleaseCount = releases.filter((release) => getPlaygroundTaskReleaseStatus(release) === "active").length;
             nextSummary.sprintCount = sprints.length;
@@ -970,6 +971,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
             reviewerAgentId: null,
             environmentId: getDefaultIssueComposerEnvironmentId() || null,
             dependencyIds: [],
+            attachments: [],
             scheduledStartAt: null,
             scheduledEndAt: null,
             scheduleType: "one-time",
@@ -987,6 +989,8 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           return {
             ...normalizedDraft,
             title: "",
+            taskType: requestedTaskType,
+            parentTaskId: requestedTaskType === "subtask" ? requestedParentTaskId : null,
           };
         }
 
@@ -1008,10 +1012,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           setTaskDetailPopover("");
           setTaskDetailSelectPopover("");
           setTaskSkillsPopoverOpen(false);
-          setIsIssueComposerDescriptionEditing(false);
-          setIssueComposerEnvironmentPopoverOpen(false);
           setIssueComposerDetailSelectPopover("");
-          setIssueComposerDetailsCollapsed(false);
           setIssueComposerDraft(buildProjectIssueComposerDraft(options));
           setIssueComposerSaveState({
             isSaving: false,
@@ -1039,10 +1040,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           setIssueComposerVisible(false);
           setIssueComposerClosing(false);
           setIssueComposerOpen(false);
-          setIsIssueComposerDescriptionEditing(false);
-          setIssueComposerEnvironmentPopoverOpen(false);
           setIssueComposerDetailSelectPopover("");
-          setIssueComposerDetailsCollapsed(false);
           setIssueComposerDraft(buildPlaygroundDefaultTaskDraft());
           setIssueComposerSaveState({
             isSaving: false,
@@ -1073,9 +1071,19 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         }
 
         function updateIssueComposerDraft(updater) {
-          setIssueComposerDraft((current) => normalizePlaygroundTaskRecord(syncPlaygroundTaskRecordMetadata(
-            typeof updater === "function" ? updater(current) : updater
-          )));
+          setIssueComposerDraft((current) => {
+            const nextDraft = typeof updater === "function" ? updater(current) : updater;
+            const normalizedDraft = normalizePlaygroundTaskRecord(syncPlaygroundTaskRecordMetadata(nextDraft));
+            const requestedTaskType = normalizePlaygroundTaskType(nextDraft?.taskType);
+            return {
+              ...normalizedDraft,
+              title: typeof nextDraft?.title === "string" ? nextDraft.title : normalizedDraft.title,
+              taskType: requestedTaskType,
+              parentTaskId: requestedTaskType === "subtask"
+                ? normalizePlaygroundParentTaskId(nextDraft?.parentTaskId)
+                : null,
+            };
+          });
           setIssueComposerSaveState((current) => ({
             ...current,
             error: "",
@@ -1087,49 +1095,6 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
             ...current,
             [field]: value,
           }));
-        }
-
-        function applyIssueComposerDescriptionSelection(nextValue, nextSelectionStart, nextSelectionEnd = nextSelectionStart) {
-          updateIssueComposerField("description", nextValue);
-          window.requestAnimationFrame(() => {
-            const textarea = issueComposerDescriptionTextareaRef.current;
-            if (!textarea) {
-              return;
-            }
-            const maxLength = nextValue.length;
-            const safeSelectionStart = Math.max(0, Math.min(nextSelectionStart, maxLength));
-            const safeSelectionEnd = Math.max(safeSelectionStart, Math.min(nextSelectionEnd, maxLength));
-            textarea.focus();
-            textarea.setSelectionRange(safeSelectionStart, safeSelectionEnd);
-            resizeTaskDescriptionTextarea(textarea);
-          });
-        }
-
-        function handleIssueComposerDescriptionFormat(formatType) {
-          const textarea = issueComposerDescriptionTextareaRef.current;
-          if (!textarea) {
-            return;
-          }
-          const value = String(issueComposerDraft?.description || "");
-          const selectionStart = typeof textarea.selectionStart === "number" ? textarea.selectionStart : value.length;
-          const selectionEnd = typeof textarea.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
-          let edit = null;
-
-          if (formatType === "bold") {
-            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "**");
-          } else if (formatType === "italic") {
-            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "*");
-          } else if (formatType === "underline") {
-            edit = buildWrappedTaskDescriptionEdit(value, selectionStart, selectionEnd, "++");
-          } else if (formatType === "list") {
-            edit = buildTaskDescriptionListEdit(value, selectionStart, selectionEnd);
-          }
-
-          if (!edit) {
-            return;
-          }
-
-          applyIssueComposerDescriptionSelection(edit.value, edit.selectionStart, edit.selectionEnd);
         }
 
         useEffect(() => {

@@ -40,6 +40,20 @@ afterEach(() => {
 });
 
 describe("AgentPermissionsPage", () => {
+  it("provides Settings back navigation for the full permission editor", async () => {
+    const user = userEvent.setup();
+    const onBack = vi.fn();
+    render(
+      <AgentPermissionsPage
+        permissionSet={createPlatformDefaultPermissionSet("agent")}
+        onBack={onBack}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Settings" }));
+    expect(onBack).toHaveBeenCalledTimes(1);
+  });
+
   it("owns immutable agent permission updates", async () => {
     const user = userEvent.setup();
     const onPermissionSetChange = vi.fn();

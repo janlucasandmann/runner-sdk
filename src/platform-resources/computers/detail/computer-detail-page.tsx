@@ -1,8 +1,14 @@
-import { ExternalLink, FolderOpen, LayoutGrid, Settings2 } from "lucide-react";
+import {
+  ExternalLink,
+  FolderOpen,
+  LayoutGrid,
+  Package,
+  Settings,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import { ResourceDetailPage } from "../../../platform-ui/pages/details/index.js";
 
-export type ComputerDetailTab = "general" | "advanced";
+export type ComputerDetailTab = "general" | "runtime" | "settings";
 type ComputerDetailNavigationTab = ComputerDetailTab | "filebase";
 
 export interface ComputerDetailPageProps {
@@ -24,7 +30,8 @@ export interface ComputerDetailPageProps {
 
 const COMPUTER_DETAIL_TABS = [
   { id: "general", label: "General", icon: LayoutGrid },
-  { id: "advanced", label: "Advanced Settings", icon: Settings2 },
+  { id: "runtime", label: "Runtime", icon: Package },
+  { id: "settings", label: "Settings", icon: Settings },
   {
     id: "filebase",
     label: (

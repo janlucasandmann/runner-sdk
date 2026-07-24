@@ -27,6 +27,11 @@ export type PlatformPopupPlacement =
   | "top-start"
   | "top-end";
 
+export interface PlatformPopupAnchorPoint {
+  x: number;
+  y: number;
+}
+
 export interface PlatformPopupSurfaceProps extends HTMLAttributes<HTMLDivElement> {
   animation?: PlatformPopupAnimation | false;
   animateHeight?: boolean;
@@ -56,6 +61,7 @@ export interface PlatformPopupProps {
   portalOffset?: number;
   portalCollisionPadding?: number;
   portalMatchAnchorWidth?: boolean;
+  portalAnchorPoint?: PlatformPopupAnchorPoint | null;
 }
 
 export type PlatformPopupDismissLayerProps = HTMLAttributes<HTMLDivElement>;
@@ -93,6 +99,24 @@ const INITIAL_PLATFORM_POPUP_PORTAL_POSITION: PlatformPopupPortalPosition = {
 
 function clampPlatformPopupCoordinate(value: number, minimum: number, maximum: number) {
   return Math.min(Math.max(value, minimum), Math.max(minimum, maximum));
+}
+
+function getPlatformPopupPointRect(
+  point: PlatformPopupAnchorPoint,
+): DOMRect {
+  const x = Number.isFinite(point.x) ? point.x : 0;
+  const y = Number.isFinite(point.y) ? point.y : 0;
+  return {
+    x,
+    y,
+    width: 0,
+    height: 0,
+    top: y,
+    right: x,
+    bottom: y,
+    left: x,
+    toJSON: () => ({ x, y, width: 0, height: 0 }),
+  } as DOMRect;
 }
 
 function getPlatformPopupPortalPosition({
@@ -299,6 +323,7 @@ export function PlatformPopup({
   portalOffset = 8,
   portalCollisionPadding = 8,
   portalMatchAnchorWidth = false,
+  portalAnchorPoint = null,
 }: PlatformPopupProps) {
   const localRootRef = useRef<HTMLDivElement | null>(null);
   const localSurfaceRef = useRef<HTMLDivElement | null>(null);
@@ -318,7 +343,9 @@ export function PlatformPopup({
     const surface = localSurfaceRef.current;
     if (!portal || !open || !anchor || !surface) return;
     const nextPosition = getPlatformPopupPortalPosition({
-      anchorRect: anchor.getBoundingClientRect(),
+      anchorRect: portalAnchorPoint
+        ? getPlatformPopupPointRect(portalAnchorPoint)
+        : anchor.getBoundingClientRect(),
       surfaceRect: surface.getBoundingClientRect(),
       placement,
       offset: Math.max(0, portalOffset),
@@ -339,6 +366,7 @@ export function PlatformPopup({
     placement,
     portal,
     portalCollisionPadding,
+    portalAnchorPoint,
     portalMatchAnchorWidth,
     portalOffset,
   ]);

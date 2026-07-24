@@ -121,6 +121,11 @@ describe("DevelopVoiceAgentsOverviewPage", () => {
     expect(screen.getByText("Voice Agent Activity")).not.toBeNull();
     expect(screen.getByText("Creator Person")).not.toBeNull();
     expect(screen.getByText("Owner Person")).not.toBeNull();
+    const propertyRows = Array.from(
+      container.querySelectorAll(".playground-voice-agent-detail-properties-card .playground-project-overview-sidebar-row"),
+    );
+    expect(propertyRows.at(-1)?.textContent).toContain("Owner");
+    expect(propertyRows.at(-1)?.classList.contains("playground-server-detail-sidebar-owner-row")).toBe(true);
     expect(within(screen.getByTestId("voice-agent-controls")).getByRole("button", { name: /Save Changes/i })).not.toBeNull();
 
     await user.click(screen.getByRole("tab", { name: "Settings" }));

@@ -27,6 +27,17 @@ This keeps the page independent from agent, project, team, organization, databas
 
 Resource permission subjects are explicit catalogs. Projects, teams, organizations, databases, guardrails, web apps, functions, authentication, secrets, payments, and agent runtimes only persist actions from their own catalog. Managed resources migrate legacy `server_*` policies into their concrete action namespace during normalization.
 
+Agent permissions intentionally use two independent namespaces:
+
+- `agent` governs what an Agent may do while it works.
+- `agent_resource` and `agent_team_role` govern what system principals and
+  human team roles may do with an Agent resource.
+
+Computer access follows the same resource-policy boundary through `computer`
+and `computer_team_role`. These catalogs expose product operations such as
+use, edit, version, publish, transfer ownership, manage access, and delete
+instead of workspace or shell capabilities.
+
 The ring tables use the shared minimal table variant without a toolbar or pagination footer. Their column header remains visible so action, ring, and permission controls keep consistent table semantics across every resource.
 
 Every ring and access control uses the shared `PlatformSelector`, so labels, Lucide chevrons, popup behavior, keyboard interaction, and disabled states remain consistent across permission editors.

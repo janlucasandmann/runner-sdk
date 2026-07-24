@@ -6,10 +6,13 @@
 
 `PlatformSubtasks` is the canonical subtask card for resource detail pages. It
 owns the shared card surface, header action, empty state, interactive rows, and
-status labels while callers retain navigation and persistence behavior.
+status labels while callers retain navigation and persistence behavior. Use
+the `minimal` appearance when the section should sit directly in a detail-page
+content flow without a card surface.
 
 ```tsx
 <PlatformSubtasks
+  appearance="minimal"
   items={subtasks}
   onAdd={openSubtaskComposer}
 />

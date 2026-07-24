@@ -33,4 +33,5 @@ export const EVALUATIONS_APP_STATE_SCRIPT = `        const [evaluationSets, setE
         const [evaluationJsonlImportOpen, setEvaluationJsonlImportOpen] = useState(false);
         const [evaluationJsonlImportValue, setEvaluationJsonlImportValue] = useState("");
         const [evaluationJsonlImportError, setEvaluationJsonlImportError] = useState("");
+        const [evaluationVersionsSidebarRequestToken, setEvaluationVersionsSidebarRequestToken] = useState(0);
 `;

@@ -3,17 +3,19 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        cons
             ? set.metadata
             : {}
         );
-        const getEvaluationPermissionSet = (set = activeSet) => normalizePlaygroundPermissionSet(
-          set?.permissionSet || getEvaluationAccessMetadata(set).permissionSet,
-          "evaluation"
+        const getEvaluationPermissionSet = (
+          set = activeSet,
+          principalId = PLATFORM_ALL_AGENTS_PRINCIPAL_ID
+        ) => getPlatformSystemPrincipalPermissionSet(
+          getEvaluationAccessMetadata(set),
+          principalId,
+          "evaluation",
+          set?.permissionSet || getEvaluationAccessMetadata(set).permissionSet
         );
-        const getEvaluationAccessTeamIds = (set = activeSet) => Array.from(new Set(
-          (Array.isArray(getEvaluationAccessMetadata(set).teamAccessIds)
-            ? getEvaluationAccessMetadata(set).teamAccessIds
-            : [])
-            .map((value) => String(value || "").trim())
-            .filter(Boolean)
-        ));
+        const getEvaluationAccessTeamIds = (set = activeSet) => getPlatformSharedTeamIds({
+          ...getEvaluationAccessMetadata(set),
+          sharedTeamIds: getEvaluationAccessMetadata(set).teamAccessIds,
+        });
         const getEvaluationAccessShareIds = (set = activeSet) => {
           const source = getEvaluationAccessMetadata(set).teamAccessShareIds;
           return source && typeof source === "object" && !Array.isArray(source) ? source : {};
@@ -156,7 +158,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        cons
             ...current,
             [setId]: { signature, status: "loading", candidates: current?.[setId]?.candidates || [] },
           }));
-          const teamRecords = Array.isArray(teamPageTeams) ? teamPageTeams : [];
+          const teamRecords = Array.isArray(workspaceTeams) ? workspaceTeams : [];
           const memberGroups = await Promise.all(teamIds.map(async (teamId) => {
             try {
               const payload = await requestEvaluationBackendJson(
@@ -299,12 +301,20 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        cons
           );
         };
         const updateEvaluationPermissionSet = (updater) => {
-          const currentPermissionSet = getEvaluationPermissionSet();
+          const principalId = isPlatformSystemAccessPrincipalId(evaluationAccessTeamId)
+            ? normalizePlatformAccessPrincipalId(evaluationAccessTeamId)
+            : PLATFORM_ALL_AGENTS_PRINCIPAL_ID;
+          const currentPermissionSet = getEvaluationPermissionSet(activeSet, principalId);
           const nextPermissionSet = normalizePlaygroundPermissionSet(
             typeof updater === "function" ? updater(currentPermissionSet) : updater,
             "evaluation"
           );
-          updateEvaluationAccessMetadata({ permissionSet: nextPermissionSet });
+          updateEvaluationAccessMetadata((metadata) => buildPlatformSystemPrincipalPermissionMetadata(
+            metadata,
+            principalId,
+            nextPermissionSet,
+            "evaluation"
+          ));
         };
         const updateEvaluationPermissionRingAccess = (ringId, nextAccess) => {
           const ring = getPlaygroundPermissionRingDefinition(ringId);
@@ -418,7 +428,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        cons
           }));
         };
         const evaluationAccessTeamIds = getEvaluationAccessTeamIds();
-        const evaluationWorkspaceTeams = (Array.isArray(teamPageTeams) ? teamPageTeams : [])
+        const evaluationWorkspaceTeams = (Array.isArray(workspaceTeams) ? workspaceTeams : [])
           .filter((team) => String(team?.id || "").trim());
         const evaluationAccessShareIds = getEvaluationAccessShareIds();
         const evaluationSharedTeams = evaluationAccessTeamIds.map((teamId) => {
@@ -426,22 +436,13 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        cons
           return {
             id: teamId,
             name: team?.name || "Shared team",
+            profileImageUrl: getPlatformAccessPrincipalProfileImageUrl(team),
             createdAt: team?.createdAt || activeSet?.updatedAt || "",
             meta: "Team role permissions",
             locked: false,
           };
         });
-        const evaluationAccessRows = [
-          {
-            id: "all_agents",
-            name: "All Agents",
-            meta: "Always included",
-            permission: "Evaluation default",
-            createdAt: "",
-            locked: true,
-          },
-          ...evaluationSharedTeams,
-        ];
+        const evaluationAccessRows = composePlatformAccessPrincipalRows(evaluationSharedTeams);
         const availableEvaluationTeams = evaluationWorkspaceTeams.filter((team) => !evaluationAccessTeamIds.includes(String(team.id)));
         const buildEvaluationTeamSharePayload = (team) => {
           const owner = getEvaluationOwnerIdentity(activeSet);
@@ -580,7 +581,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        cons
         const renderEvaluationAccessSettings = () => {
           const selectedAccessRow = evaluationAccessRows.find((row) => row.id === evaluationAccessTeamId) || null;
           if (selectedAccessRow) {
-            const isAllAgentsTeam = selectedAccessRow.id === "all_agents";
+            const systemPrincipal = getPlatformSystemAccessPrincipal(selectedAccessRow.id);
             const selectedRole = getPlaygroundTeamRoleDefinition(evaluationAccessRoleId);
             return React.createElement("section", { className: "playground-evaluations-access-detail" },
               React.createElement("div", { className: "playground-project-team-permissions-header" },
@@ -593,12 +594,12 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        cons
                   React.createElement("span", null, "Settings")
                 ),
                 React.createElement("div", { className: "playground-project-team-permissions-title" },
-                  isAllAgentsTeam ? "All Agents Permissions" : selectedAccessRow.name + " Access"
+                  systemPrincipal ? systemPrincipal.name + " Permissions" : selectedAccessRow.name + " Access"
                 )
               ),
-              isAllAgentsTeam
+              systemPrincipal
                 ? React.createElement(PlatformPermissionsPage, {
-                    permissionSet: getEvaluationPermissionSet(),
+                    permissionSet: getEvaluationPermissionSet(activeSet, systemPrincipal.id),
                     accessOptions: PLAYGROUND_PERMISSION_ACCESS_OPTIONS,
                     ringDefinitions: PLAYGROUND_PERMISSION_RING_DEFINITIONS,
                     actionDefinitions: PLAYGROUND_PERMISSION_ACTION_DEFINITIONS,
@@ -644,8 +645,8 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        cons
               size: "small",
               disabled: Boolean(evaluationAccessActionId),
               onClick: () => {
-                if (!evaluationWorkspaceTeams.length && typeof loadTeamPageData === "function") {
-                  void loadTeamPageData({ selectedTeamId: "" });
+                if (!evaluationWorkspaceTeams.length && typeof onWorkspaceTeamsRequest === "function") {
+                  onWorkspaceTeamsRequest({ selectedTeamId: "" });
                 }
                 setEvaluationAccessMenuOpen((current) => !current);
               },
@@ -667,59 +668,18 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        cons
                   React.createElement("span", null, team.name || "Untitled team")
                 ))
               : React.createElement("button", { type: "button", role: "menuitem", className: "tb-popup-row", disabled: true },
-                  teamPageLoading ? "Loading teams..." : "All teams already have access"
+                  workspaceTeamsLoading ? "Loading teams..." : "All teams already have access"
                 )
           );
           return React.createElement("section", { className: "playground-evaluations-access-settings" },
-            React.createElement(PlatformDataTable, {
-              rows: evaluationAccessRows,
-              columns: [
-                {
-                  id: "team",
-                  header: "Team",
-                  accessor: (row) => row.name,
-                  sortable: true,
-                  width: "minmax(220px, 1.5fr)",
-                  cell: ({ row }) => React.createElement("div", null,
-                    React.createElement("div", { className: "playground-team-table-title" }, row.name),
-                    React.createElement("div", { className: "playground-team-table-meta" }, row.meta)
-                  ),
-                },
-                {
-                  id: "policy",
-                  header: "Policy",
-                  accessor: (row) => row.permission || (row.locked ? "Evaluation default" : "Role policies"),
-                  sortable: true,
-                  width: "minmax(130px, 0.75fr)",
-                },
-                {
-                  id: "updated",
-                  header: "Added",
-                  accessor: (row) => row.createdAt || "",
-                  sortable: true,
-                  width: "minmax(110px, 0.65fr)",
-                  align: "end",
-                  cell: ({ row }) => row.locked ? "Default" : formatPlaygroundEvaluationDate(row.createdAt),
-                },
-              ],
-              getRowId: (row) => row.id,
-              getRowAriaLabel: (row) => "Open permissions for " + row.name,
-              ariaLabel: "Evaluation access",
-              variant: "minimalistic-ui",
-              toolbar: {
-                title: "Manage Evaluation Access",
-                trailing: addTeamsControl,
-              },
-              onRowActivate: openEvaluationAccessDetail,
-              getRowActions: (row) => row.locked
-                ? []
-                : [{
-                    id: "remove",
-                    label: "Remove access",
-                    icon: Trash2,
-                    disabled: Boolean(evaluationAccessActionId),
-                    onSelect: () => void removeEvaluationTeamAccess(row.id),
-                  }],
+            React.createElement(PlatformResourceAccessTable, {
+              teams: evaluationSharedTeams.map((team) => ({ ...team, description: team.meta })),
+              resourceLabel: "Evaluation",
+              trailing: addTeamsControl,
+              busy: Boolean(evaluationAccessActionId),
+              onOpenPermissions: openEvaluationAccessDetail,
+              onRemoveTeams: (teams) => teams.forEach((team) => void removeEvaluationTeamAccess(team.id)),
+              formatCreatedAt: formatPlaygroundEvaluationDate,
             })
           );
         };

@@ -68,7 +68,7 @@ export const APP_HEADER_NAVIGATION_SCRIPT = `        function getThreadSearchMod
               return;
             }
             if (normalizedActionId === "create-ticket") {
-              openTopNavIssueComposer();
+              openProjectIssueComposerFromHeader();
               return;
             }
             if (normalizedActionId === "create-workflow") {

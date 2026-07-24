@@ -1,44 +1,111 @@
+import Placeholder from "@tiptap/extension-placeholder";
+import { TableKit } from "@tiptap/extension-table";
+import TaskItem from "@tiptap/extension-task-item";
+import TaskList from "@tiptap/extension-task-list";
+import { Markdown } from "@tiptap/markdown";
+import {
+  EditorContent,
+  useEditor,
+  type Editor as TiptapEditor,
+} from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
 import {
   Bold,
+  ChevronDown,
   CodeXml,
+  Heading1,
+  Heading2,
+  Heading3,
+  FilePlus2,
   Italic,
   Link2,
   List,
   ListOrdered,
-  Redo2,
+  ListTodo,
+  Minus,
+  Pilcrow,
+  Plus,
+  Quote,
+  SquareCode,
+  Table2,
+  TextQuote,
   Underline,
-  Undo2,
 } from "lucide-react";
-import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type DragEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent,
+  type ReactNode,
+  type Ref,
+} from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { visit } from "unist-util-visit";
+import { resolvePlatformFileExplorerFileKind } from "../file-explorer/index.js";
+import { ParagraphQuote, remarkParagraphQuotes } from "./paragraph-quote.js";
+import {
+  decodePlatformInstructionsEditorFile,
+  normalizePlatformInstructionsEditorFile,
+  PlatformInstructionsEditorFileNode,
+  PlatformInstructionsEditorFilePreview,
+  remarkPlatformInstructionsEditorFiles,
+  type PlatformInstructionsEditorFileUpload,
+  type PlatformInstructionsEditorUploadedFile,
+} from "./platform-instructions-editor-file-node.js";
+import {
+  normalizePlatformInstructionsEditorImageSource,
+  normalizePlatformInstructionsEditorMarkdownImages,
+  parsePlatformInstructionsEditorImageTitle,
+  PlatformInstructionsEditorImageNode,
+  PlatformInstructionsEditorImagePreview,
+} from "./platform-instructions-editor-image-node.js";
+import {
+  filterInstructionsEditorSlashCommands,
+  PlatformInstructionsEditorSlashMenu,
+  type InstructionsEditorSlashCommandOption,
+  type InstructionsEditorSlashMenuAnchor,
+} from "./platform-instructions-editor-slash-menu.js";
+import { PlatformInstructionsEditorTableNode } from "./platform-instructions-editor-table-node.js";
+import { InstructionsEditorToolbarPopup } from "./platform-instructions-editor-toolbar-popup.js";
 
 const HISTORY_LIMIT = 80;
-
-type MarkdownFormat = "bold" | "italic" | "underline" | "list" | "ordered-list" | "code" | "link";
-
-interface MarkdownEdit {
-  value: string;
-  selectionStart: number;
-  selectionEnd: number;
-}
-
-interface EditorHistory {
-  past: string[];
-  future: string[];
-}
 
 export interface PlatformMarkdownRendererProps {
   content: string;
   className?: string;
+  resolvePreviewSource?:
+    PlatformInstructionsEditorFileUpload["resolvePreviewSource"];
 }
 
 export type PlatformInstructionsEditorVariant = "default" | "minimalistic-ui";
+export type PlatformInstructionsEditorContentVariant =
+  | "text"
+  | "file-enabled"
+  | "image-enabled";
+
+/** @deprecated Use PlatformInstructionsEditorUploadedFile. */
+export type PlatformInstructionsEditorUploadedImage =
+  PlatformInstructionsEditorUploadedFile;
+/** @deprecated Use PlatformInstructionsEditorFileUpload. */
+export type PlatformInstructionsEditorImageUpload =
+  PlatformInstructionsEditorFileUpload;
+
+export interface PlatformInstructionsEditorChangeContext {
+  source: "edit" | "file-upload" | "image-upload";
+  uploadedFiles?: readonly PlatformInstructionsEditorUploadedFile[];
+}
 
 export interface PlatformInstructionsEditorProps {
   value: string;
-  onChange: (value: string) => void;
+  onChange: (
+    value: string,
+    context?: PlatformInstructionsEditorChangeContext,
+  ) => void;
   title?: ReactNode;
   placeholder?: string;
   ariaLabel?: string;
@@ -46,201 +113,457 @@ export interface PlatformInstructionsEditorProps {
   stickyHeader?: boolean;
   historyKey?: string | number;
   variant?: PlatformInstructionsEditorVariant;
+  contentVariant?: PlatformInstructionsEditorContentVariant;
+  fileUpload?: PlatformInstructionsEditorFileUpload;
+  /** @deprecated Use fileUpload. */
+  imageUpload?: PlatformInstructionsEditorImageUpload;
   className?: string;
+  editorRef?: Ref<HTMLElement>;
+  /** @deprecated Use editorRef. Kept for compatibility with existing focus flows. */
+  textareaRef?: Ref<HTMLTextAreaElement>;
+  autoFocus?: boolean;
   onEditingChange?: (editing: boolean) => void;
+}
+
+interface FileInsertionTarget {
+  from: number;
+  to: number;
+  append: boolean;
+}
+
+interface InstructionsEditorSlashMenuState {
+  from: number;
+  to: number;
+  query: string;
+  anchor: InstructionsEditorSlashMenuAnchor;
+}
+
+interface InstructionsEditorDeletionRange {
+  from: number;
+  to: number;
+}
+
+type InstructionsEditorToolbarMenu = "style" | "insert";
+
+type InstructionsEditorBlockStyle =
+  | "paragraph"
+  | "heading-1"
+  | "heading-2"
+  | "heading-3"
+  | "paragraph-quote"
+  | "block-quote"
+  | "preformatted";
+
+function getInstructionsEditorSlashMenuState(
+  editor: TiptapEditor,
+): InstructionsEditorSlashMenuState | null {
+  const { selection } = editor.state;
+  if (!selection.empty || !selection.$from.parent.isTextblock) return null;
+
+  const textBeforeCursor = selection.$from.parent.textBetween(
+    0,
+    selection.$from.parentOffset,
+    "\0",
+    "\0",
+  );
+  const match = /\/([^/]*)$/.exec(textBeforeCursor);
+  if (!match) return null;
+  const slashOffset = match.index;
+  if (slashOffset > 0 && !/\s/.test(textBeforeCursor.charAt(slashOffset - 1)))
+    return null;
+
+  const query = match[1] || "";
+  if (query.length > 80) return null;
+
+  const slashPosition = selection.$from.start() + slashOffset;
+
+  let anchor: InstructionsEditorSlashMenuAnchor;
+  try {
+    const coordinates = editor.view.coordsAtPos(slashPosition);
+    anchor = {
+      left: coordinates.left,
+      top: coordinates.top,
+      bottom: coordinates.bottom,
+    };
+  } catch {
+    const editorRect = editor.view.dom.getBoundingClientRect();
+    anchor = {
+      left: editorRect.left,
+      top: editorRect.top,
+      bottom: editorRect.top + 20,
+    };
+  }
+
+  return {
+    from: slashPosition,
+    to: selection.from,
+    query,
+    anchor,
+  };
+}
+
+function getNextEnabledSlashCommandIndex(
+  options: InstructionsEditorSlashCommandOption[],
+  currentIndex: number,
+  direction: 1 | -1,
+) {
+  if (!options.length) return 0;
+  for (let offset = 1; offset <= options.length; offset += 1) {
+    const index =
+      (currentIndex + offset * direction + options.length) % options.length;
+    if (!options[index]?.disabled) return index;
+  }
+  return Math.max(0, Math.min(currentIndex, options.length - 1));
+}
+
+function getInstructionsEditorDeletionRange(
+  editor: TiptapEditor,
+  direction: "backward" | "forward",
+): InstructionsEditorDeletionRange | null {
+  const { selection } = editor.state;
+  if (!selection.empty) {
+    return { from: selection.from, to: selection.to };
+  }
+
+  const adjacentNode =
+    direction === "backward"
+      ? selection.$from.nodeBefore
+      : selection.$from.nodeAfter;
+  if (!adjacentNode?.isText || !adjacentNode.text) return null;
+  const codePoints = Array.from(adjacentNode.text);
+  const adjacentCodePoint =
+    direction === "backward" ? codePoints.at(-1) : codePoints[0];
+  const deletionLength = adjacentCodePoint?.length || 0;
+  if (!deletionLength) return null;
+
+  return direction === "backward"
+    ? { from: selection.from - deletionLength, to: selection.from }
+    : { from: selection.from, to: selection.from + deletionLength };
+}
+
+const EMPTY_TOOLBAR_STATE = {
+  paragraph: false,
+  heading1: false,
+  heading2: false,
+  heading3: false,
+  paragraphQuote: false,
+  blockquote: false,
+  codeBlock: false,
+  bold: false,
+  italic: false,
+  underline: false,
+  bulletList: false,
+  orderedList: false,
+  taskList: false,
+  code: false,
+  link: false,
+  table: false,
+};
+
+function assignRef<T>(ref: Ref<T> | undefined, value: T | null) {
+  if (typeof ref === "function") {
+    ref(value);
+    return;
+  }
+  if (ref) {
+    (ref as { current: T | null }).current = value;
+  }
 }
 
 function remarkSoftbreaksToBreaks() {
   return (tree: unknown) => {
-    visit(tree as Parameters<typeof visit>[0], "text", (node: { value?: string }, index, parent: { children?: unknown[] } | undefined) => {
-      if (!parent?.children || typeof index !== "number" || typeof node.value !== "string" || !node.value.includes("\n")) return;
-      const parts = node.value.split("\n");
-      const replacement: Array<{ type: "text" | "break"; value?: string }> = [];
-      parts.forEach((part, partIndex) => {
-        if (part) replacement.push({ type: "text", value: part });
-        if (partIndex < parts.length - 1) replacement.push({ type: "break" });
-      });
-      parent.children.splice(index, 1, ...replacement);
-      return index + replacement.length;
-    });
+    visit(
+      tree as Parameters<typeof visit>[0],
+      "text",
+      (
+        node: { value?: string },
+        index,
+        parent: { children?: unknown[] } | undefined,
+      ) => {
+        if (
+          !parent?.children ||
+          typeof index !== "number" ||
+          typeof node.value !== "string" ||
+          !node.value.includes("\n")
+        )
+          return;
+        const parts = node.value.split("\n");
+        const replacement: Array<{ type: "text" | "break"; value?: string }> =
+          [];
+        parts.forEach((part, partIndex) => {
+          if (part) replacement.push({ type: "text", value: part });
+          if (partIndex < parts.length - 1) replacement.push({ type: "break" });
+        });
+        parent.children.splice(index, 1, ...replacement);
+        return index + replacement.length;
+      },
+    );
   };
 }
 
 function remarkUnderline() {
   return (tree: unknown) => {
-    visit(tree as Parameters<typeof visit>[0], "text", (node: { value?: string }, index, parent: { children?: unknown[] } | undefined) => {
-      if (!parent?.children || typeof index !== "number" || typeof node.value !== "string" || !node.value.includes("++")) return;
-      const pattern = /\+\+([\s\S]+?)\+\+/g;
-      const replacement: unknown[] = [];
-      let cursor = 0;
-      let match = pattern.exec(node.value);
-      while (match) {
-        if (match.index > cursor) replacement.push({ type: "text", value: node.value.slice(cursor, match.index) });
-        replacement.push({
-          type: "underline",
-          data: { hName: "u" },
-          children: [{ type: "text", value: match[1] || "" }],
-        });
-        cursor = match.index + match[0].length;
-        match = pattern.exec(node.value);
-      }
-      if (!replacement.length) return;
-      if (cursor < node.value.length) replacement.push({ type: "text", value: node.value.slice(cursor) });
-      parent.children.splice(index, 1, ...replacement);
-      return index + replacement.length;
-    });
+    visit(
+      tree as Parameters<typeof visit>[0],
+      "text",
+      (
+        node: { value?: string },
+        index,
+        parent: { children?: unknown[] } | undefined,
+      ) => {
+        if (
+          !parent?.children ||
+          typeof index !== "number" ||
+          typeof node.value !== "string" ||
+          !node.value.includes("++")
+        )
+          return;
+        const pattern = /\+\+([\s\S]+?)\+\+/g;
+        const replacement: unknown[] = [];
+        let cursor = 0;
+        let match = pattern.exec(node.value);
+        while (match) {
+          if (match.index > cursor)
+            replacement.push({
+              type: "text",
+              value: node.value.slice(cursor, match.index),
+            });
+          replacement.push({
+            type: "underline",
+            data: { hName: "u" },
+            children: [{ type: "text", value: match[1] || "" }],
+          });
+          cursor = match.index + match[0].length;
+          match = pattern.exec(node.value);
+        }
+        if (!replacement.length) return;
+        if (cursor < node.value.length)
+          replacement.push({ type: "text", value: node.value.slice(cursor) });
+        parent.children.splice(index, 1, ...replacement);
+        return index + replacement.length;
+      },
+    );
   };
 }
 
 const markdownComponents: Components = {
-  p: ({ node: _node, ...props }) => <p {...props} className="platform-markdown__paragraph tb-message-markdown-paragraph" />,
-  strong: ({ node: _node, ...props }) => <strong {...props} className="platform-markdown__strong tb-message-markdown-strong" />,
-  em: ({ node: _node, ...props }) => <em {...props} className="platform-markdown__em tb-message-markdown-em" />,
-  code: ({ node: _node, className, ...props }) => (
-    <code {...props} className={`${className ? "platform-markdown__code tb-message-markdown-code" : "platform-markdown__inline-code tb-message-markdown-inline-code"}${className ? ` ${className}` : ""}`} />
+  div: ({ node: _node, className = "", ...props }) => {
+    const encodedFile = (
+      props as typeof props & {
+        "data-platform-instructions-file"?: unknown;
+      }
+    )["data-platform-instructions-file"];
+    const file = decodePlatformInstructionsEditorFile(encodedFile);
+    if (file) {
+      return (
+        <div
+          className={`platform-instructions-editor__attachment-node is-readonly${className ? ` ${className}` : ""}`}
+        >
+          <PlatformInstructionsEditorFilePreview file={file} disabled />
+        </div>
+      );
+    }
+    return <div {...props} className={className} />;
+  },
+  p: ({ node: _node, className = "", ...props }) => (
+    <p
+      {...props}
+      className={`platform-markdown__paragraph tb-message-markdown-paragraph${className ? ` ${className}` : ""}`}
+    />
   ),
-  pre: ({ node: _node, ...props }) => <pre {...props} className="platform-markdown__pre tb-message-markdown-pre" />,
-  ul: ({ node: _node, ...props }) => <ul {...props} className="platform-markdown__list tb-message-markdown-list" />,
-  ol: ({ node: _node, ...props }) => <ol {...props} className="platform-markdown__list is-ordered tb-message-markdown-list tb-message-markdown-list-ordered" />,
-  li: ({ node: _node, ...props }) => <li {...props} className="platform-markdown__list-item tb-message-markdown-list-item" />,
-  h1: ({ node: _node, ...props }) => <h1 {...props} className="platform-markdown__heading tb-message-markdown-heading" />,
-  h2: ({ node: _node, ...props }) => <h2 {...props} className="platform-markdown__heading tb-message-markdown-heading" />,
-  h3: ({ node: _node, ...props }) => <h3 {...props} className="platform-markdown__heading tb-message-markdown-heading" />,
-  h4: ({ node: _node, ...props }) => <h4 {...props} className="platform-markdown__heading tb-message-markdown-heading" />,
-  a: ({ node: _node, ...props }) => <a {...props} className="platform-markdown__link tb-message-markdown-link" target="_blank" rel="noopener noreferrer" />,
-  blockquote: ({ node: _node, ...props }) => <blockquote {...props} className="platform-markdown__quote tb-message-markdown-quote" />,
-  table: ({ node: _node, ...props }) => <div className="platform-markdown__table-wrap tb-message-markdown-table-wrap"><table {...props} className="platform-markdown__table tb-message-markdown-table" /></div>,
-  thead: ({ node: _node, ...props }) => <thead {...props} className="platform-markdown__thead tb-message-markdown-thead" />,
+  strong: ({ node: _node, ...props }) => (
+    <strong
+      {...props}
+      className="platform-markdown__strong tb-message-markdown-strong"
+    />
+  ),
+  em: ({ node: _node, ...props }) => (
+    <em {...props} className="platform-markdown__em tb-message-markdown-em" />
+  ),
+  code: ({ node: _node, className, ...props }) => (
+    <code
+      {...props}
+      className={`${className ? "platform-markdown__code tb-message-markdown-code" : "platform-markdown__inline-code tb-message-markdown-inline-code"}${className ? ` ${className}` : ""}`}
+    />
+  ),
+  pre: ({ node: _node, ...props }) => (
+    <pre
+      {...props}
+      className="platform-markdown__pre tb-message-markdown-pre"
+    />
+  ),
+  ul: ({ node: _node, ...props }) => (
+    <ul
+      {...props}
+      className="platform-markdown__list tb-message-markdown-list"
+    />
+  ),
+  ol: ({ node: _node, ...props }) => (
+    <ol
+      {...props}
+      className="platform-markdown__list is-ordered tb-message-markdown-list tb-message-markdown-list-ordered"
+    />
+  ),
+  li: ({ node: _node, ...props }) => (
+    <li
+      {...props}
+      className="platform-markdown__list-item tb-message-markdown-list-item"
+    />
+  ),
+  h1: ({ node: _node, ...props }) => (
+    <h1
+      {...props}
+      className="platform-markdown__heading tb-message-markdown-heading"
+    />
+  ),
+  h2: ({ node: _node, ...props }) => (
+    <h2
+      {...props}
+      className="platform-markdown__heading tb-message-markdown-heading"
+    />
+  ),
+  h3: ({ node: _node, ...props }) => (
+    <h3
+      {...props}
+      className="platform-markdown__heading tb-message-markdown-heading"
+    />
+  ),
+  h4: ({ node: _node, ...props }) => (
+    <h4
+      {...props}
+      className="platform-markdown__heading tb-message-markdown-heading"
+    />
+  ),
+  a: ({ node: _node, ...props }) => (
+    <a
+      {...props}
+      className="platform-markdown__link tb-message-markdown-link"
+      target="_blank"
+      rel="noopener noreferrer"
+    />
+  ),
+  blockquote: ({ node: _node, ...props }) => (
+    <blockquote
+      {...props}
+      className="platform-markdown__quote tb-message-markdown-quote"
+    />
+  ),
+  table: ({ node: _node, ...props }) => (
+    <div className="platform-markdown__table-wrap tb-message-markdown-table-wrap">
+      <table
+        {...props}
+        className="platform-markdown__table tb-message-markdown-table"
+      />
+    </div>
+  ),
+  thead: ({ node: _node, ...props }) => (
+    <thead
+      {...props}
+      className="platform-markdown__thead tb-message-markdown-thead"
+    />
+  ),
   tbody: ({ node: _node, ...props }) => <tbody {...props} />,
-  tr: ({ node: _node, ...props }) => <tr {...props} className="platform-markdown__row tb-message-markdown-row" />,
-  th: ({ node: _node, ...props }) => <th {...props} className="platform-markdown__th tb-message-markdown-th" />,
-  td: ({ node: _node, ...props }) => <td {...props} className="platform-markdown__td tb-message-markdown-td" />,
-  hr: ({ node: _node, ...props }) => <hr {...props} className="platform-markdown__rule tb-message-markdown-rule" />,
-  img: ({ node: _node, ...props }) => <img {...props} className="platform-markdown__image tb-message-markdown-image" />,
-  u: ({ node: _node, ...props }) => <u {...props} className="platform-markdown__underline playground-tasks-detail-markdown-underline" />,
+  tr: ({ node: _node, ...props }) => (
+    <tr {...props} className="platform-markdown__row tb-message-markdown-row" />
+  ),
+  th: ({ node: _node, ...props }) => (
+    <th {...props} className="platform-markdown__th tb-message-markdown-th" />
+  ),
+  td: ({ node: _node, ...props }) => (
+    <td {...props} className="platform-markdown__td tb-message-markdown-td" />
+  ),
+  hr: ({ node: _node, ...props }) => (
+    <hr
+      {...props}
+      className="platform-markdown__rule tb-message-markdown-rule"
+    />
+  ),
+  u: ({ node: _node, ...props }) => (
+    <u
+      {...props}
+      className="platform-markdown__underline playground-tasks-detail-markdown-underline"
+    />
+  ),
 };
 
 function prepareMarkdown(content: string) {
-  return String(content || "")
+  const normalizedContent = String(content || "")
     .replace(/\\r\\n/g, "\n")
     .replace(/\\n/g, "\n")
     .replace(/\\r/g, "\n")
-    .replace(/<u>([\s\S]*?)<\/u>/gi, "++$1++")
+    .replace(/<u>([\s\S]*?)<\/u>/gi, "++$1++");
+  return normalizePlatformInstructionsEditorMarkdownImages(normalizedContent)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 }
 
-export function PlatformMarkdownRenderer({ content, className = "" }: PlatformMarkdownRendererProps) {
+export function PlatformMarkdownRenderer({
+  content,
+  className = "",
+  resolvePreviewSource,
+}: PlatformMarkdownRendererProps) {
+  const resolvePreviewSourceRef = useRef(resolvePreviewSource);
+  resolvePreviewSourceRef.current = resolvePreviewSource;
+  const hasPreviewResolver = Boolean(resolvePreviewSource);
+  const resolveStablePreviewSource = useCallback(
+    (
+      file: PlatformInstructionsEditorUploadedFile,
+      signal: AbortSignal,
+    ) => {
+      const resolver = resolvePreviewSourceRef.current;
+      return resolver
+        ? resolver(file, signal)
+        : Promise.resolve<string | null>(null);
+    },
+    [],
+  );
+  const components = useMemo<Components>(() => ({
+    ...markdownComponents,
+    img: ({ node: _node, className = "", src, alt, title, ...props }) => {
+      const imageMetadata = parsePlatformInstructionsEditorImageTitle(title);
+      const imageSource = normalizePlatformInstructionsEditorImageSource(src);
+      return (
+        <PlatformInstructionsEditorImagePreview
+          {...props}
+          image={{
+            src: imageSource,
+            name: String(alt || "Image"),
+            alt: String(alt || "Image"),
+            title: imageMetadata.title,
+            size: imageMetadata.fileSize,
+            mimeType: imageMetadata.mimeType,
+            attachmentId: imageMetadata.attachmentId,
+            displaySize: imageMetadata.displaySize,
+            alignment: imageMetadata.alignment,
+          }}
+          resolvePreviewSource={
+            hasPreviewResolver ? resolveStablePreviewSource : undefined
+          }
+          className={`platform-markdown__image tb-message-markdown-image is-size-${imageMetadata.displaySize} is-align-${imageMetadata.alignment}${className ? ` ${className}` : ""}`}
+          data-platform-image-size={imageMetadata.displaySize}
+          data-platform-image-alignment={imageMetadata.alignment}
+        />
+      );
+    },
+  }), [hasPreviewResolver, resolveStablePreviewSource]);
+
   return (
     <div className={`platform-markdown${className ? ` ${className}` : ""}`}>
       <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkUnderline, remarkSoftbreaksToBreaks]}
-        components={markdownComponents}
+        remarkPlugins={[
+          remarkGfm,
+          remarkPlatformInstructionsEditorFiles,
+          remarkParagraphQuotes,
+          remarkUnderline,
+          remarkSoftbreaksToBreaks,
+        ]}
+        components={components}
       >
         {prepareMarkdown(content)}
       </ReactMarkdown>
     </div>
   );
-}
-
-function buildWrappedEdit(value: string, selectionStart: number, selectionEnd: number, prefix: string, suffix = prefix): MarkdownEdit {
-  const start = Math.max(0, selectionStart);
-  const end = Math.max(start, selectionEnd);
-  const selected = value.slice(start, end);
-  if (start !== end) {
-    if (selected.startsWith(prefix) && selected.endsWith(suffix) && selected.length >= prefix.length + suffix.length) {
-      const unwrapped = selected.slice(prefix.length, selected.length - suffix.length);
-      return { value: value.slice(0, start) + unwrapped + value.slice(end), selectionStart: start, selectionEnd: start + unwrapped.length };
-    }
-    if (value.slice(Math.max(0, start - prefix.length), start) === prefix && value.slice(end, end + suffix.length) === suffix) {
-      return {
-        value: value.slice(0, start - prefix.length) + selected + value.slice(end + suffix.length),
-        selectionStart: start - prefix.length,
-        selectionEnd: start - prefix.length + selected.length,
-      };
-    }
-    return {
-      value: value.slice(0, start) + prefix + selected + suffix + value.slice(end),
-      selectionStart: start + prefix.length,
-      selectionEnd: start + prefix.length + selected.length,
-    };
-  }
-  return {
-    value: value.slice(0, start) + prefix + suffix + value.slice(end),
-    selectionStart: start + prefix.length,
-    selectionEnd: start + prefix.length,
-  };
-}
-
-function buildListEdit(value: string, selectionStart: number, selectionEnd: number, ordered: boolean): MarkdownEdit {
-  const start = Math.max(0, selectionStart);
-  const end = Math.max(start, selectionEnd);
-  const lineStart = value.lastIndexOf("\n", Math.max(0, start - 1)) + 1;
-  let lineEnd = value.indexOf("\n", end);
-  if (lineEnd === -1) lineEnd = value.length;
-  const lines = value.slice(lineStart, lineEnd).split("\n");
-  const nonEmpty = lines.filter((line) => line.trim());
-  const orderedPattern = /^(\s*)\d+\.\s+/;
-  const unorderedPattern = /^(\s*)-\s+/;
-  const pattern = ordered ? orderedPattern : unorderedPattern;
-  const remove = nonEmpty.length > 0 && nonEmpty.every((line) => pattern.test(line));
-  let orderedIndex = 1;
-  const nextLines = lines.map((line) => {
-    if (!line.trim()) return remove ? line : ordered ? `${orderedIndex++}. ` : "- ";
-    if (remove) return line.replace(pattern, "$1");
-    if (pattern.test(line)) {
-      if (ordered) orderedIndex += 1;
-      return line;
-    }
-    return line.replace(/^(\s*)(?:-\s+|\d+\.\s+)?/, (_match, indent: string) => `${indent || ""}${ordered ? `${orderedIndex++}. ` : "- "}`);
-  });
-  const nextBlock = nextLines.join("\n");
-  const nextValue = value.slice(0, lineStart) + nextBlock + value.slice(lineEnd);
-  const collapsed = start === end;
-  const markerLength = ordered ? 3 : 2;
-  const caretOffset = remove ? Math.max(0, start - lineStart - markerLength) : start - lineStart + markerLength;
-  return {
-    value: nextValue,
-    selectionStart: collapsed ? lineStart + caretOffset : lineStart,
-    selectionEnd: collapsed ? lineStart + caretOffset : lineStart + nextBlock.length,
-  };
-}
-
-function buildLinkEdit(value: string, selectionStart: number, selectionEnd: number): MarkdownEdit {
-  const start = Math.max(0, selectionStart);
-  const end = Math.max(start, selectionEnd);
-  const selected = value.slice(start, end);
-  const existing = selected.match(/^\[([^\]]+)\]\(([^)]*)\)$/);
-  if (existing) {
-    const label = existing[1] || "";
-    return { value: value.slice(0, start) + label + value.slice(end), selectionStart: start, selectionEnd: start + label.length };
-  }
-  const label = selected || "link text";
-  const url = "url";
-  const markdown = `[${label}](${url})`;
-  const urlStart = start + label.length + 3;
-  return {
-    value: value.slice(0, start) + markdown + value.slice(end),
-    selectionStart: urlStart,
-    selectionEnd: urlStart + url.length,
-  };
-}
-
-function buildMarkdownEdit(value: string, selectionStart: number, selectionEnd: number, format: MarkdownFormat) {
-  if (format === "bold") return buildWrappedEdit(value, selectionStart, selectionEnd, "**");
-  if (format === "italic") return buildWrappedEdit(value, selectionStart, selectionEnd, "*");
-  if (format === "underline") return buildWrappedEdit(value, selectionStart, selectionEnd, "++");
-  if (format === "list") return buildListEdit(value, selectionStart, selectionEnd, false);
-  if (format === "ordered-list") return buildListEdit(value, selectionStart, selectionEnd, true);
-  if (format === "code") return buildWrappedEdit(value, selectionStart, selectionEnd, "`");
-  return buildLinkEdit(value, selectionStart, selectionEnd);
-}
-
-function resizeTextarea(textarea: HTMLTextAreaElement | null) {
-  if (!textarea) return;
-  textarea.style.height = "auto";
-  textarea.style.height = `${Math.max(36, textarea.scrollHeight)}px`;
 }
 
 function findInstructionsEditorScrollContainer(element: HTMLElement | null) {
@@ -255,6 +578,59 @@ function findInstructionsEditorScrollContainer(element: HTMLElement | null) {
   return null;
 }
 
+function getUploadFiles(files: File[] | FileList | null | undefined) {
+  return Array.from(files || []).filter(
+    (file): file is File =>
+      file instanceof File &&
+      typeof file.name === "string" &&
+      typeof file.size === "number",
+  );
+}
+
+function hasFileTransfer(event: DragEvent<HTMLElement>) {
+  if (getUploadFiles(event.dataTransfer?.files).length > 0) return true;
+  return Array.from(event.dataTransfer?.items || []).some(
+    (item) => item.kind === "file",
+  );
+}
+
+function normalizeUploadedFiles(
+  uploadedFiles: PlatformInstructionsEditorUploadedFile[],
+  sourceFiles: File[],
+) {
+  return (Array.isArray(uploadedFiles) ? uploadedFiles : [])
+    .map((uploadedFile, index) =>
+      normalizePlatformInstructionsEditorFile({
+        ...uploadedFile,
+        name:
+          uploadedFile?.name ||
+          uploadedFile?.alt ||
+          sourceFiles[index]?.name ||
+          "Attachment",
+        size: uploadedFile?.size || sourceFiles[index]?.size || 0,
+        mimeType:
+          uploadedFile?.mimeType || sourceFiles[index]?.type || "",
+        alt:
+          uploadedFile?.alt ||
+          uploadedFile?.name ||
+          sourceFiles[index]?.name ||
+          "Attachment",
+      }),
+    )
+    .filter(
+      (uploadedFile): uploadedFile is PlatformInstructionsEditorUploadedFile =>
+        Boolean(uploadedFile),
+    );
+}
+
+function normalizeInstructionsEditorLinkHref(value: string) {
+  const href = String(value || "").trim();
+  if (!href) return "";
+  if (/^(?:https?:|mailto:|tel:|\/|#)/i.test(href)) return href;
+  if (/^[a-z][a-z\d+.-]*:/i.test(href)) return "";
+  return `https://${href}`;
+}
+
 export function PlatformInstructionsEditor({
   value,
   onChange,
@@ -265,66 +641,262 @@ export function PlatformInstructionsEditor({
   stickyHeader = true,
   historyKey = "default",
   variant = "default",
+  contentVariant = "text",
+  fileUpload,
+  imageUpload,
   className = "",
+  editorRef: forwardedEditorRef,
+  textareaRef: forwardedTextareaRef,
+  autoFocus = false,
   onEditingChange,
 }: PlatformInstructionsEditorProps) {
   const [editing, setEditing] = useState(false);
-  const [history, setHistory] = useState<EditorHistory>({ past: [], future: [] });
   const [headerStuck, setHeaderStuck] = useState(false);
-  const editorRef = useRef<HTMLElement>(null);
+  const [fileDragging, setFileDragging] = useState(false);
+  const [fileUploading, setFileUploading] = useState(false);
+  const [fileUploadError, setFileUploadError] = useState("");
+  const [toolbarState, setToolbarState] = useState(EMPTY_TOOLBAR_STATE);
+  const [activeToolbarMenu, setActiveToolbarMenu] =
+    useState<InstructionsEditorToolbarMenu | null>(null);
+  const [slashMenuState, setSlashMenuState] =
+    useState<InstructionsEditorSlashMenuState | null>(null);
+  const [slashMenuActiveIndex, setSlashMenuActiveIndex] = useState(0);
+  const shellRef = useRef<HTMLElement>(null);
   const headerRef = useRef<HTMLElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const valueRef = useRef(value);
-  const historyKeyRef = useRef(historyKey);
-  valueRef.current = value;
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const insertionTargetRef = useRef<FileInsertionTarget | null>(null);
+  const changeContextRef = useRef<PlatformInstructionsEditorChangeContext>({
+    source: "edit",
+  });
+  const uploadingRef = useRef(false);
+  const editingRef = useRef(false);
+  const userInteractionRef = useRef(false);
+  const interactionHistoryKeyRef = useRef(historyKey);
+  const externalValueRef = useRef(String(value || ""));
+  const onChangeRef = useRef(onChange);
+  const onEditingChangeRef = useRef(onEditingChange);
+  const fileUploadRef = useRef(fileUpload || imageUpload);
+  const slashMenuStateRef = useRef<InstructionsEditorSlashMenuState | null>(
+    null,
+  );
+  onChangeRef.current = onChange;
+  onEditingChangeRef.current = onEditingChange;
+  fileUploadRef.current = fileUpload || imageUpload;
+  if (interactionHistoryKeyRef.current !== historyKey) {
+    interactionHistoryKeyRef.current = historyKey;
+    userInteractionRef.current = false;
+  }
 
-  const setEditingState = (next: boolean) => {
+  const setEditingState = useCallback((next: boolean) => {
+    if (editingRef.current === next) return;
+    editingRef.current = next;
     setEditing(next);
-    onEditingChange?.(next);
-  };
+    onEditingChangeRef.current?.(next);
+  }, []);
+
+  const refreshToolbarState = useCallback((editor: TiptapEditor) => {
+    if (editor.isDestroyed) return;
+    const blockquote = editor.isActive("blockquote");
+    setToolbarState({
+      paragraph: editor.isActive("paragraph") && !blockquote,
+      heading1: editor.isActive("heading", { level: 1 }),
+      heading2: editor.isActive("heading", { level: 2 }),
+      heading3: editor.isActive("heading", { level: 3 }),
+      paragraphQuote: editor.isActive("paragraphQuote"),
+      blockquote,
+      codeBlock: editor.isActive("codeBlock"),
+      bold: editor.isActive("bold"),
+      italic: editor.isActive("italic"),
+      underline: editor.isActive("underline"),
+      bulletList: editor.isActive("bulletList"),
+      orderedList: editor.isActive("orderedList"),
+      taskList: editor.isActive("taskList"),
+      code: editor.isActive("code"),
+      link: editor.isActive("link"),
+      table: editor.isActive("table"),
+    });
+  }, []);
+
+  const refreshSlashMenuState = useCallback((editor: TiptapEditor) => {
+    const nextState = getInstructionsEditorSlashMenuState(editor);
+    const previousState = slashMenuStateRef.current;
+    const queryChanged =
+      previousState?.from !== nextState?.from ||
+      previousState?.query !== nextState?.query;
+    slashMenuStateRef.current = nextState;
+    if (queryChanged) setSlashMenuActiveIndex(0);
+    setSlashMenuState((currentState) => {
+      if (!currentState || !nextState)
+        return currentState === nextState ? currentState : nextState;
+      const unchanged =
+        currentState.from === nextState.from &&
+        currentState.to === nextState.to &&
+        currentState.query === nextState.query &&
+        currentState.anchor.left === nextState.anchor.left &&
+        currentState.anchor.top === nextState.anchor.top &&
+        currentState.anchor.bottom === nextState.anchor.bottom;
+      return unchanged ? currentState : nextState;
+    });
+  }, []);
+
+  const richTextEditor = useEditor(
+    {
+      extensions: [
+        StarterKit.configure({
+          link: {
+            openOnClick: false,
+            autolink: true,
+            defaultProtocol: "https",
+          },
+          undoRedo: { depth: HISTORY_LIMIT },
+        }),
+        Placeholder.configure({ placeholder }),
+        PlatformInstructionsEditorImageNode.configure({
+          allowBase64: false,
+          HTMLAttributes: {
+            class:
+              "platform-instructions-editor__image platform-markdown__image",
+          },
+          getFileUpload: () => fileUploadRef.current,
+        }),
+        PlatformInstructionsEditorFileNode.configure({
+          getFileUpload: () => fileUploadRef.current,
+        }),
+        PlatformInstructionsEditorTableNode.configure({
+          resizable: false,
+          cellMinWidth: 120,
+        }),
+        TableKit.configure({ table: false }),
+        TaskList,
+        TaskItem.configure({ nested: true }),
+        ParagraphQuote,
+        Markdown,
+      ],
+      content: normalizePlatformInstructionsEditorMarkdownImages(value),
+      contentType: "markdown",
+      editable: !readOnly,
+      immediatelyRender: true,
+      shouldRerenderOnTransaction: false,
+      editorProps: {
+        attributes: {
+          class: "platform-instructions-editor__prosemirror platform-markdown",
+          role: "textbox",
+          "aria-label": ariaLabel,
+          "aria-multiline": "true",
+          spellcheck: "true",
+        },
+      },
+      onUpdate: ({ editor }) => {
+        const nextValue = editor.getMarkdown();
+        if (externalValueRef.current === nextValue) return;
+        const changeContext = changeContextRef.current;
+        const isUserInitiated = changeContext.source !== "edit"
+          || userInteractionRef.current;
+        if (!isUserInitiated) {
+          externalValueRef.current = nextValue;
+          return;
+        }
+        externalValueRef.current = nextValue;
+        onChangeRef.current(nextValue, changeContext);
+      },
+      onCreate: ({ editor }) => {
+        refreshToolbarState(editor);
+        refreshSlashMenuState(editor);
+      },
+      onTransaction: ({ editor }) => {
+        refreshToolbarState(editor);
+        refreshSlashMenuState(editor);
+      },
+      onSelectionUpdate: ({ editor }) => {
+        refreshToolbarState(editor);
+        refreshSlashMenuState(editor);
+      },
+      onFocus: () => setEditingState(true),
+      onBlur: () => setEditingState(false),
+    },
+    [historyKey, placeholder, ariaLabel],
+  );
 
   useEffect(() => {
-    if (historyKeyRef.current === historyKey) return;
-    historyKeyRef.current = historyKey;
-    setHistory({ past: [], future: [] });
-    setEditingState(false);
-  }, [historyKey]);
+    if (richTextEditor.isDestroyed) return;
+    richTextEditor.setEditable(!readOnly);
+  }, [readOnly, richTextEditor]);
 
-  useLayoutEffect(() => {
-    resizeTextarea(textareaRef.current);
-  }, [editing, value]);
+  useEffect(() => {
+    if (richTextEditor.isDestroyed) return;
+    const nextValue = String(value || "");
+    if (externalValueRef.current === nextValue) return;
+    externalValueRef.current = nextValue;
+    richTextEditor.commands.setContent(
+      normalizePlatformInstructionsEditorMarkdownImages(nextValue),
+      {
+      contentType: "markdown",
+      emitUpdate: false,
+      },
+    );
+  }, [richTextEditor, value]);
+
+  useEffect(() => {
+    if (richTextEditor.isDestroyed) return undefined;
+    const element = richTextEditor.view.dom as HTMLElement;
+    assignRef(forwardedEditorRef, element);
+    assignRef(forwardedTextareaRef, element as unknown as HTMLTextAreaElement);
+    return () => {
+      assignRef(forwardedEditorRef, null);
+      assignRef(forwardedTextareaRef, null);
+    };
+  }, [forwardedEditorRef, forwardedTextareaRef, richTextEditor]);
+
+  useEffect(() => {
+    if (!autoFocus || readOnly || richTextEditor.isDestroyed) return undefined;
+    const focusEditor = () => {
+      if (richTextEditor.isDestroyed) return;
+      richTextEditor.commands.focus("end", { scrollIntoView: false });
+    };
+    if (typeof window.requestAnimationFrame === "function") {
+      const frame = window.requestAnimationFrame(focusEditor);
+      return () => window.cancelAnimationFrame(frame);
+    }
+    const timer = window.setTimeout(focusEditor, 0);
+    return () => window.clearTimeout(timer);
+  }, [autoFocus, historyKey, readOnly, richTextEditor]);
 
   useEffect(() => {
     if (!stickyHeader || readOnly) {
       setHeaderStuck(false);
       return undefined;
     }
-    const editor = editorRef.current;
+    const shell = shellRef.current;
     const header = headerRef.current;
-    if (!editor || !header) return undefined;
+    if (!shell || !header) return undefined;
 
-    const scrollContainer = findInstructionsEditorScrollContainer(editor);
+    const scrollContainer = findInstructionsEditorScrollContainer(shell);
     const updateStickyState = () => {
-      const editorRect = editor.getBoundingClientRect();
+      const editorRect = shell.getBoundingClientRect();
       const headerRect = header.getBoundingClientRect();
       const scrollTop = scrollContainer?.getBoundingClientRect().top || 0;
-      const stickyOffset = Number.parseFloat(window.getComputedStyle(header).top) || 0;
+      const stickyOffset =
+        Number.parseFloat(window.getComputedStyle(header).top) || 0;
       const pinnedTop = scrollTop + stickyOffset;
-      const nextHeaderStuck = (
-        editorRect.top < headerRect.top - 0.5
-        && Math.abs(headerRect.top - pinnedTop) <= 2
+      const nextHeaderStuck =
+        editorRect.top < headerRect.top - 0.5 &&
+        Math.abs(headerRect.top - pinnedTop) <= 2;
+      setHeaderStuck((current) =>
+        current === nextHeaderStuck ? current : nextHeaderStuck,
       );
-      setHeaderStuck((current) => current === nextHeaderStuck ? current : nextHeaderStuck);
     };
 
     const scrollTarget: HTMLElement | Window = scrollContainer || window;
     updateStickyState();
-    scrollTarget.addEventListener("scroll", updateStickyState, { passive: true });
+    scrollTarget.addEventListener("scroll", updateStickyState, {
+      passive: true,
+    });
     window.addEventListener("resize", updateStickyState);
-    const resizeObserver = typeof ResizeObserver === "undefined"
-      ? null
-      : new ResizeObserver(updateStickyState);
-    resizeObserver?.observe(editor);
+    const resizeObserver =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(updateStickyState);
+    resizeObserver?.observe(shell);
     if (scrollContainer) resizeObserver?.observe(scrollContainer);
 
     return () => {
@@ -334,88 +906,175 @@ export function PlatformInstructionsEditor({
     };
   }, [readOnly, stickyHeader]);
 
-  const commit = (nextValue: string, recordHistory = true) => {
-    const previousValue = valueRef.current;
-    if (previousValue === nextValue) return;
-    if (recordHistory) {
-      setHistory((current) => ({
-        past: [...current.past, previousValue].slice(-HISTORY_LIMIT),
-        future: [],
-      }));
+  const getInsertionTarget = useCallback(
+    (appendWhenBlurred = true): FileInsertionTarget => {
+      if (!richTextEditor.isFocused && appendWhenBlurred) {
+        return {
+          from: richTextEditor.state.doc.content.size,
+          to: richTextEditor.state.doc.content.size,
+          append: true,
+        };
+      }
+      return {
+        from: richTextEditor.state.selection.from,
+        to: richTextEditor.state.selection.to,
+        append: false,
+      };
+    },
+    [richTextEditor],
+  );
+
+  const insertUploadedFiles = useCallback(
+    (
+      uploadedFiles: PlatformInstructionsEditorUploadedFile[],
+      sourceFiles: File[],
+      target: FileInsertionTarget,
+    ) => {
+      const normalizedFiles = normalizeUploadedFiles(uploadedFiles, sourceFiles);
+      if (!normalizedFiles.length) {
+        throw new Error(
+          "The file upload completed without a usable file URL.",
+        );
+      }
+      const documentEnd = richTextEditor.state.doc.content.size;
+      const from = target.append
+        ? documentEnd
+        : Math.max(0, Math.min(target.from, documentEnd));
+      const to = target.append
+        ? from
+        : Math.max(from, Math.min(target.to, documentEnd));
+      const content = normalizedFiles.flatMap((uploadedFile, index) => {
+        const kind = resolvePlatformFileExplorerFileKind({
+          name: uploadedFile.name,
+          mimeType: uploadedFile.mimeType,
+        });
+        const node = kind === "image"
+          ? {
+              type: "image",
+              attrs: {
+                src: normalizePlatformInstructionsEditorImageSource(uploadedFile.src),
+                alt: uploadedFile.alt || uploadedFile.name || "",
+                title: uploadedFile.title || null,
+                displaySize: "medium",
+                alignment: "left",
+                attachmentId: uploadedFile.attachmentId || "",
+                fileSize: uploadedFile.size || 0,
+                mimeType: uploadedFile.mimeType || "",
+              },
+            }
+          : {
+              type: "attachment",
+              attrs: {
+                src: uploadedFile.src,
+                name: uploadedFile.name || "Attachment",
+                size: uploadedFile.size || 0,
+                mimeType: uploadedFile.mimeType || "",
+                attachmentId: uploadedFile.attachmentId || "",
+              },
+            };
+        return [
+          node,
+          ...(index === normalizedFiles.length - 1
+          ? [{ type: "paragraph" }]
+          : []),
+        ];
+      });
+      changeContextRef.current = {
+        source: fileUpload ? "file-upload" : "image-upload",
+        uploadedFiles: normalizedFiles,
+      };
+      try {
+        richTextEditor
+          .chain()
+          .focus()
+          .insertContentAt({ from, to }, content, { updateSelection: true })
+          .run();
+      } finally {
+        changeContextRef.current = { source: "edit" };
+      }
+    },
+    [fileUpload, richTextEditor],
+  );
+
+  const uploadFiles = useCallback(
+    async (files: File[], target: FileInsertionTarget) => {
+      const uploadConfig = fileUploadRef.current;
+      const normalizedFiles = getUploadFiles(files).filter((candidate) =>
+        fileUpload || !imageUpload
+          ? true
+          : String(candidate.type || "").toLowerCase().startsWith("image/"),
+      );
+      const upload = uploadConfig?.upload;
+      if (
+        !upload ||
+        normalizedFiles.length === 0 ||
+        uploadingRef.current ||
+        uploadConfig?.disabled
+      )
+        return;
+      uploadingRef.current = true;
+      setFileUploading(true);
+      setFileUploadError("");
+      try {
+        const uploadedFiles = await upload(normalizedFiles);
+        insertUploadedFiles(uploadedFiles, normalizedFiles, target);
+      } catch (error) {
+        setFileUploadError(
+          error instanceof Error ? error.message : "Failed to upload file.",
+        );
+      } finally {
+        uploadingRef.current = false;
+        setFileUploading(false);
+      }
+    },
+    [fileUpload, imageUpload, insertUploadedFiles],
+  );
+
+  const openFilePicker = () => {
+    if (fileUploading || fileUploadRef.current?.disabled) return;
+    insertionTargetRef.current = getInsertionTarget();
+    fileInputRef.current?.click();
+  };
+
+  const handleFileDrop = (event: DragEvent<HTMLElement>) => {
+    if (!hasFileTransfer(event) || !fileUploadRef.current) return;
+    event.preventDefault();
+    event.stopPropagation();
+    setFileDragging(false);
+    const files = getUploadFiles(event.dataTransfer?.files);
+    if (!files.length) return;
+    let dropPosition: number | undefined;
+    try {
+      dropPosition = richTextEditor.view.posAtCoords({
+        left: event.clientX,
+        top: event.clientY,
+      })?.pos;
+    } catch {
+      dropPosition = undefined;
     }
-    valueRef.current = nextValue;
-    onChange(nextValue);
+    const target =
+      typeof dropPosition === "number"
+        ? { from: dropPosition, to: dropPosition, append: false }
+        : getInsertionTarget();
+    void uploadFiles(files, target);
   };
 
-  const focusSelection = (selectionStart: number, selectionEnd = selectionStart) => {
-    window.requestAnimationFrame(() => {
-      const textarea = textareaRef.current;
-      if (!textarea) return;
-      const maxLength = valueRef.current.length;
-      const start = Math.max(0, Math.min(selectionStart, maxLength));
-      const end = Math.max(start, Math.min(selectionEnd, maxLength));
-      textarea.focus();
-      textarea.setSelectionRange(start, end);
-      resizeTextarea(textarea);
-    });
-  };
-
-  const undo = () => {
-    const previousValue = history.past[history.past.length - 1];
-    if (previousValue === undefined || readOnly) return;
-    const currentValue = valueRef.current;
-    setHistory((current) => ({ past: current.past.slice(0, -1), future: [currentValue, ...current.future].slice(0, HISTORY_LIMIT) }));
-    valueRef.current = previousValue;
-    onChange(previousValue);
-    setEditingState(true);
-    focusSelection(previousValue.length);
-  };
-
-  const redo = () => {
-    const nextValue = history.future[0];
-    if (nextValue === undefined || readOnly) return;
-    const currentValue = valueRef.current;
-    setHistory((current) => ({ past: [...current.past, currentValue].slice(-HISTORY_LIMIT), future: current.future.slice(1) }));
-    valueRef.current = nextValue;
-    onChange(nextValue);
-    setEditingState(true);
-    focusSelection(nextValue.length);
-  };
-
-  const applyFormat = (format: MarkdownFormat) => {
-    if (readOnly) return;
-    const textarea = textareaRef.current;
-    const currentValue = valueRef.current;
-    const selectionStart = editing && typeof textarea?.selectionStart === "number" ? textarea.selectionStart : currentValue.length;
-    const selectionEnd = editing && typeof textarea?.selectionEnd === "number" ? textarea.selectionEnd : selectionStart;
-    const edit = buildMarkdownEdit(currentValue, selectionStart, selectionEnd, format);
-    commit(edit.value);
-    setEditingState(true);
-    focusSelection(edit.selectionStart, edit.selectionEnd);
-  };
-
-  const handleShortcut = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (!(event.metaKey || event.ctrlKey)) return;
-    const key = event.key.toLowerCase();
-    if (key === "z") {
-      event.preventDefault();
-      if (event.shiftKey) redo();
-      else undo();
-    } else if (key === "b" || key === "i" || key === "u") {
-      event.preventDefault();
-      applyFormat(key === "b" ? "bold" : key === "i" ? "italic" : "underline");
-    }
-  };
-
-  const preserveEditorFocus = (event: MouseEvent<HTMLButtonElement>) => event.preventDefault();
-  const toolbarButton = (label: string, icon: ReactNode, onClick: () => void, disabled = false) => (
+  const preserveEditorFocus = (event: MouseEvent<HTMLButtonElement>) =>
+    event.preventDefault();
+  const toolbarButton = (
+    label: string,
+    icon: ReactNode,
+    onClick: () => void,
+    options: { disabled?: boolean; active?: boolean; className?: string } = {},
+  ) => (
     <button
       key={label}
       type="button"
-      className="platform-instructions-editor__toolbar-button playground-tasks-detail-format-button"
+      className={`platform-instructions-editor__toolbar-button playground-tasks-detail-format-button${options.active ? " is-active" : ""}${options.className ? ` ${options.className}` : ""}`}
       title={label}
       aria-label={label}
-      disabled={disabled}
+      aria-pressed={options.active || undefined}
+      disabled={options.disabled}
       onMouseDown={preserveEditorFocus}
       onClick={onClick}
     >
@@ -423,59 +1082,590 @@ export function PlatformInstructionsEditor({
     </button>
   );
 
+  const applyBlockStyle = (style: InstructionsEditorBlockStyle) => {
+    if (readOnly) return;
+    let chain = richTextEditor.chain().focus();
+    if (richTextEditor.isActive("blockquote")) chain = chain.unsetBlockquote();
+    chain = chain.setParagraph();
+    if (style === "heading-1") chain = chain.setHeading({ level: 1 });
+    if (style === "heading-2") chain = chain.setHeading({ level: 2 });
+    if (style === "heading-3") chain = chain.setHeading({ level: 3 });
+    if (style === "paragraph-quote") chain = chain.setNode("paragraphQuote");
+    if (style === "block-quote") chain = chain.setBlockquote();
+    if (style === "preformatted") chain = chain.setCodeBlock();
+    chain.run();
+  };
+
+  const updateLink = () => {
+    if (readOnly) return;
+    const currentHref = String(richTextEditor.getAttributes("link").href || "");
+    const selection = richTextEditor.state.selection;
+    const selectedText = richTextEditor.state.doc.textBetween(
+      selection.from,
+      selection.to,
+      " ",
+    );
+    const linkWasActive = richTextEditor.isActive("link");
+    const href = window.prompt("Link URL", currentHref || "https://");
+    if (href === null) return;
+    const normalizedHref = normalizeInstructionsEditorLinkHref(href);
+    if (!String(href || "").trim()) {
+      richTextEditor.chain().focus().extendMarkRange("link").unsetLink().run();
+      return;
+    }
+    if (!normalizedHref) return;
+    if (!selection.empty || linkWasActive) {
+      let chain = richTextEditor.chain().focus();
+      if (!selection.empty) {
+        chain = chain.setTextSelection({
+          from: selection.from,
+          to: selection.to,
+        });
+      } else {
+        chain = chain.extendMarkRange("link");
+      }
+      chain.setLink({ href: normalizedHref }).run();
+      return;
+    }
+    richTextEditor
+      .chain()
+      .focus()
+      .insertContent({
+        type: "text",
+        text: selectedText || String(href || "").trim() || normalizedHref,
+        marks: [{ type: "link", attrs: { href: normalizedHref } }],
+      })
+      .run();
+  };
+
+  const fileUploadConfig = fileUpload || imageUpload;
+  const fileUploadEnabled =
+    (contentVariant === "file-enabled" || contentVariant === "image-enabled") &&
+    Boolean(fileUploadConfig);
+  const insertTable = () => {
+    if (readOnly || richTextEditor.isActive("table")) return;
+    richTextEditor
+      .chain()
+      .focus()
+      .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+      .run();
+  };
+  const styleMenuOptions: InstructionsEditorSlashCommandOption[] = [
+    {
+      id: "paragraph",
+      label: "Paragraph",
+      group: "Style",
+      keywords: ["normal", "text"],
+      icon: <Pilcrow width={14} height={14} strokeWidth={1.8} />,
+      active: toolbarState.paragraph,
+      onSelect: () => applyBlockStyle("paragraph"),
+    },
+    {
+      id: "heading-1",
+      label: "Heading 1",
+      group: "Style",
+      keywords: ["h1", "title"],
+      icon: <Heading1 width={14} height={14} strokeWidth={1.8} />,
+      active: toolbarState.heading1,
+      onSelect: () => applyBlockStyle("heading-1"),
+    },
+    {
+      id: "heading-2",
+      label: "Heading 2",
+      group: "Style",
+      keywords: ["h2", "subtitle"],
+      icon: <Heading2 width={14} height={14} strokeWidth={1.8} />,
+      active: toolbarState.heading2,
+      onSelect: () => applyBlockStyle("heading-2"),
+    },
+    {
+      id: "heading-3",
+      label: "Heading 3",
+      group: "Style",
+      keywords: ["h3", "subtitle"],
+      icon: <Heading3 width={14} height={14} strokeWidth={1.8} />,
+      active: toolbarState.heading3,
+      onSelect: () => applyBlockStyle("heading-3"),
+    },
+    {
+      id: "paragraph-quote",
+      label: "Paragraph quote",
+      group: "Style",
+      keywords: ["quote", "callout"],
+      icon: <TextQuote width={14} height={14} strokeWidth={1.8} />,
+      active: toolbarState.paragraphQuote,
+      onSelect: () => applyBlockStyle("paragraph-quote"),
+    },
+    {
+      id: "block-quote",
+      label: "Block quote",
+      group: "Style",
+      keywords: ["quote", "citation"],
+      icon: <Quote width={14} height={14} strokeWidth={1.8} />,
+      active: toolbarState.blockquote,
+      onSelect: () => applyBlockStyle("block-quote"),
+    },
+    {
+      id: "preformatted",
+      label: "Preformatted",
+      group: "Style",
+      keywords: ["monospace", "plain code"],
+      icon: <SquareCode width={14} height={14} strokeWidth={1.8} />,
+      active: toolbarState.codeBlock,
+      onSelect: () => applyBlockStyle("preformatted"),
+    },
+  ];
+  const formattingMenuOptions: InstructionsEditorSlashCommandOption[] = [
+    {
+      id: "bold",
+      label: "Bold",
+      group: "Formatting",
+      keywords: ["strong"],
+      icon: <Bold width={14} height={14} strokeWidth={2.7} />,
+      active: toolbarState.bold,
+      onSelect: () => richTextEditor.chain().focus().toggleBold().run(),
+    },
+    {
+      id: "italic",
+      label: "Italic",
+      group: "Formatting",
+      keywords: ["emphasis"],
+      icon: <Italic width={14} height={14} strokeWidth={1.8} />,
+      active: toolbarState.italic,
+      onSelect: () => richTextEditor.chain().focus().toggleItalic().run(),
+    },
+    {
+      id: "underline",
+      label: "Underline",
+      group: "Formatting",
+      icon: <Underline width={14} height={14} strokeWidth={1.8} />,
+      active: toolbarState.underline,
+      onSelect: () => richTextEditor.chain().focus().toggleUnderline().run(),
+    },
+  ];
+  const listMenuOptions: InstructionsEditorSlashCommandOption[] = [
+    {
+      id: "bullet-list",
+      label: "Bulleted list",
+      group: "Lists",
+      keywords: ["unordered list", "list"],
+      icon: <List width={14} height={14} strokeWidth={1.8} />,
+      active: toolbarState.bulletList,
+      onSelect: () => richTextEditor.chain().focus().toggleBulletList().run(),
+    },
+    {
+      id: "ordered-list",
+      label: "Numbered list",
+      group: "Lists",
+      keywords: ["ordered list", "list"],
+      icon: <ListOrdered width={14} height={14} strokeWidth={1.8} />,
+      active: toolbarState.orderedList,
+      onSelect: () => richTextEditor.chain().focus().toggleOrderedList().run(),
+    },
+    {
+      id: "task-list",
+      label: "Checklist",
+      group: "Lists",
+      keywords: ["todo list", "task list", "check list"],
+      icon: <ListTodo width={14} height={14} strokeWidth={1.8} />,
+      active: toolbarState.taskList,
+      onSelect: () => richTextEditor.chain().focus().toggleTaskList().run(),
+    },
+  ];
+  const insertMenuOptions: InstructionsEditorSlashCommandOption[] = [
+    {
+      id: "code",
+      label: "Code",
+      group: "Insert",
+      keywords: ["inline code"],
+      icon: <CodeXml width={14} height={14} strokeWidth={1.8} />,
+      active: toolbarState.code,
+      onSelect: () => richTextEditor.chain().focus().toggleCode().run(),
+    },
+    {
+      id: "link",
+      label: "Link",
+      group: "Insert",
+      keywords: ["url", "hyperlink"],
+      icon: <Link2 width={14} height={14} strokeWidth={1.8} />,
+      active: toolbarState.link,
+      onSelect: updateLink,
+    },
+    {
+      id: "file",
+      label: "File",
+      group: "Insert",
+      keywords: ["attachment", "document", "media", "picture", "upload"],
+      icon: <FilePlus2 width={14} height={14} strokeWidth={1.8} />,
+      disabled: !fileUploadEnabled || fileUploading || fileUploadConfig?.disabled,
+      title: fileUploadEnabled
+        ? "Add file"
+        : "File upload is not available in this editor",
+      onSelect: openFilePicker,
+    },
+    {
+      id: "table",
+      label: "Table",
+      group: "Insert",
+      keywords: ["grid", "rows", "columns", "spreadsheet"],
+      icon: <Table2 width={14} height={14} strokeWidth={1.8} />,
+      disabled: toolbarState.table,
+      title: toolbarState.table
+        ? "Move outside the current table to insert another table"
+        : "Insert a 3 by 3 table",
+      onSelect: insertTable,
+    },
+    {
+      id: "divider",
+      label: "Divider",
+      group: "Insert",
+      keywords: ["horizontal rule", "separator", "line"],
+      icon: <Minus width={14} height={14} strokeWidth={1.8} />,
+      onSelect: () => richTextEditor.chain().focus().setHorizontalRule().run(),
+    },
+  ];
+  const slashCommandOptions = [
+    ...styleMenuOptions,
+    ...formattingMenuOptions,
+    ...listMenuOptions,
+    ...insertMenuOptions,
+  ];
+  const filteredSlashCommandOptions = filterInstructionsEditorSlashCommands(
+    slashCommandOptions,
+    slashMenuState?.query || "",
+  );
+
+  useEffect(() => {
+    setSlashMenuActiveIndex((currentIndex) => {
+      if (!filteredSlashCommandOptions.length) return 0;
+      if (
+        currentIndex < filteredSlashCommandOptions.length &&
+        !filteredSlashCommandOptions[currentIndex]?.disabled
+      ) {
+        return currentIndex;
+      }
+      const firstEnabledIndex = filteredSlashCommandOptions.findIndex(
+        (option) => !option.disabled,
+      );
+      return firstEnabledIndex >= 0 ? firstEnabledIndex : 0;
+    });
+  }, [filteredSlashCommandOptions.length, slashMenuState?.query]);
+
+  const dismissSlashMenu = () => {
+    slashMenuStateRef.current = null;
+    setSlashMenuState(null);
+    setSlashMenuActiveIndex(0);
+  };
+
+  const selectSlashCommand = (option: InstructionsEditorSlashCommandOption) => {
+    const commandState = slashMenuStateRef.current;
+    if (!commandState || option.disabled) return;
+    dismissSlashMenu();
+    richTextEditor
+      .chain()
+      .focus()
+      .deleteRange({ from: commandState.from, to: commandState.to })
+      .run();
+    option.onSelect();
+  };
+
+  const handleSlashMenuKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
+    if (!slashMenuState) return;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
+      dismissSlashMenu();
+      return;
+    }
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      event.stopPropagation();
+      setSlashMenuActiveIndex((currentIndex) =>
+        getNextEnabledSlashCommandIndex(
+          filteredSlashCommandOptions,
+          currentIndex,
+          event.key === "ArrowDown" ? 1 : -1,
+        ),
+      );
+      return;
+    }
+    if (event.key !== "Enter" && event.key !== "Tab") return;
+    const activeOption = filteredSlashCommandOptions[slashMenuActiveIndex];
+    if (!activeOption || activeOption.disabled) return;
+    event.preventDefault();
+    event.stopPropagation();
+    selectSlashCommand(activeOption);
+  };
+
+  const handleEditorKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
+    handleSlashMenuKeyDown(event);
+    if (
+      !event.defaultPrevented &&
+      event.altKey &&
+      event.shiftKey &&
+      !event.metaKey &&
+      !event.ctrlKey &&
+      event.key.toLowerCase() === "t"
+    ) {
+      event.preventDefault();
+      dismissSlashMenu();
+      insertTable();
+      return;
+    }
+    if (
+      event.defaultPrevented ||
+      (event.key !== "Backspace" && event.key !== "Delete") ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.altKey ||
+      event.nativeEvent.isComposing
+    ) {
+      return;
+    }
+
+    const deletionRange = getInstructionsEditorDeletionRange(
+      richTextEditor,
+      event.key === "Backspace" ? "backward" : "forward",
+    );
+    if (!deletionRange) return;
+    const deleted = richTextEditor
+      .chain()
+      .focus()
+      .deleteRange(deletionRange)
+      .run();
+    if (!deleted) return;
+    event.preventDefault();
+    event.stopPropagation();
+  };
+  const dragHandlers =
+    fileUploadEnabled && !readOnly
+      ? {
+          onDragEnterCapture: (event: DragEvent<HTMLElement>) => {
+            if (!hasFileTransfer(event)) return;
+            event.preventDefault();
+            setFileDragging(true);
+          },
+          onDragOverCapture: (event: DragEvent<HTMLElement>) => {
+            if (!hasFileTransfer(event)) return;
+            event.preventDefault();
+            event.dataTransfer.dropEffect = "copy";
+          },
+          onDragLeaveCapture: (event: DragEvent<HTMLElement>) => {
+            const nextTarget = event.relatedTarget;
+            if (
+              nextTarget instanceof Node &&
+              event.currentTarget.contains(nextTarget)
+            )
+              return;
+            setFileDragging(false);
+          },
+          onDropCapture: handleFileDrop,
+        }
+      : {};
+
   return (
     <section
-      ref={editorRef}
-      className={`platform-instructions-editor playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section${stickyHeader && !readOnly ? " is-sticky" : " is-static"}${readOnly ? " is-readonly" : ""}${variant === "minimalistic-ui" ? " is-minimalistic-ui" : ""}${className ? ` ${className}` : ""}`}
+      ref={shellRef}
+      className={`platform-instructions-editor playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section${stickyHeader && !readOnly ? " is-sticky" : " is-static"}${readOnly ? " is-readonly" : ""}${editing && !readOnly ? " is-editing" : ""}${variant === "minimalistic-ui" ? " is-minimalistic-ui" : ""}${fileUploadEnabled ? " is-file-enabled" : ""}${fileDragging ? " is-file-dragging" : ""}${fileUploading ? " is-file-uploading" : ""}${className ? ` ${className}` : ""}`}
       data-platform-instructions-editor="true"
       data-platform-instructions-editor-variant={variant}
+      data-platform-instructions-editor-content-variant={contentVariant}
+      aria-busy={fileUploading || undefined}
+      onPointerDownCapture={() => {
+        userInteractionRef.current = true;
+      }}
+      onClickCapture={() => {
+        userInteractionRef.current = true;
+      }}
+      onKeyDownCapture={() => {
+        userInteractionRef.current = true;
+      }}
+      {...dragHandlers}
     >
       <header
         ref={headerRef}
         className={`platform-instructions-editor__header playground-tasks-detail-section-header${stickyHeader && !readOnly ? "" : " is-static-transparent"}${headerStuck ? " is-stuck" : ""}`}
-        data-platform-instructions-editor-header-stuck={headerStuck ? "true" : undefined}
+        data-platform-instructions-editor-header-stuck={
+          headerStuck ? "true" : undefined
+        }
       >
-        <h2 className="platform-instructions-editor__title playground-tasks-detail-section-title">{title}</h2>
+        {typeof title === "string" || typeof title === "number" ? (
+          <h2 className="platform-instructions-editor__title playground-tasks-detail-section-title">
+            {title}
+          </h2>
+        ) : (
+          <div className="platform-instructions-editor__title playground-tasks-detail-section-title">
+            {title}
+          </div>
+        )}
         {!readOnly ? (
-          <div className="platform-instructions-editor__toolbar playground-tasks-detail-format-actions" role="toolbar" aria-label="Markdown formatting">
-            {toolbarButton("Undo", <Undo2 width={14} height={14} strokeWidth={1.8} />, undo, history.past.length === 0)}
-            {toolbarButton("Redo", <Redo2 width={14} height={14} strokeWidth={1.8} />, redo, history.future.length === 0)}
-            <span className="platform-instructions-editor__toolbar-divider playground-agents-detail-instructions-toolbar-divider" aria-hidden="true" />
-            {toolbarButton("Bold", <Bold width={14} height={14} strokeWidth={2.7} />, () => applyFormat("bold"))}
-            {toolbarButton("Italic", <Italic width={14} height={14} strokeWidth={1.8} />, () => applyFormat("italic"))}
-            {toolbarButton("Underline", <Underline width={14} height={14} strokeWidth={1.8} />, () => applyFormat("underline"))}
-            <span className="platform-instructions-editor__toolbar-divider playground-agents-detail-instructions-toolbar-divider" aria-hidden="true" />
-            {toolbarButton("List", <List width={14} height={14} strokeWidth={1.8} />, () => applyFormat("list"))}
-            {toolbarButton("Ordered list", <ListOrdered width={14} height={14} strokeWidth={1.8} />, () => applyFormat("ordered-list"))}
-            <span className="platform-instructions-editor__toolbar-divider playground-agents-detail-instructions-toolbar-divider" aria-hidden="true" />
-            {toolbarButton("Code", <CodeXml width={14} height={14} strokeWidth={1.8} />, () => applyFormat("code"))}
-            {toolbarButton("Link", <Link2 width={14} height={14} strokeWidth={1.8} />, () => applyFormat("link"))}
+          <div
+            className="platform-instructions-editor__toolbar playground-tasks-detail-format-actions"
+            role="toolbar"
+            aria-label="Markdown formatting"
+          >
+            <InstructionsEditorToolbarPopup
+              open={activeToolbarMenu === "style"}
+              onOpenChange={(open) =>
+                setActiveToolbarMenu(open ? "style" : null)
+              }
+              label="Style"
+              triggerClassName="is-style-trigger"
+              popupWidth={190}
+              trigger={
+                <>
+                  <span className="platform-instructions-editor__toolbar-menu-label">
+                    Style
+                  </span>
+                  <ChevronDown
+                    width={12}
+                    height={12}
+                    strokeWidth={1.8}
+                    aria-hidden="true"
+                  />
+                </>
+              }
+              options={styleMenuOptions}
+            />
+            <span
+              className="platform-instructions-editor__toolbar-divider playground-agents-detail-instructions-toolbar-divider"
+              aria-hidden="true"
+            />
+            {toolbarButton(
+              "Bold",
+              formattingMenuOptions[0].icon,
+              formattingMenuOptions[0].onSelect,
+              { active: toolbarState.bold },
+            )}
+            {toolbarButton(
+              "Italic",
+              formattingMenuOptions[1].icon,
+              formattingMenuOptions[1].onSelect,
+              { active: toolbarState.italic },
+            )}
+            {toolbarButton(
+              "Underline",
+              formattingMenuOptions[2].icon,
+              formattingMenuOptions[2].onSelect,
+              { active: toolbarState.underline },
+            )}
+            <span
+              className="platform-instructions-editor__toolbar-divider playground-agents-detail-instructions-toolbar-divider"
+              aria-hidden="true"
+            />
+            {toolbarButton(
+              "List",
+              listMenuOptions[0].icon,
+              listMenuOptions[0].onSelect,
+              { active: toolbarState.bulletList },
+            )}
+            {toolbarButton(
+              "Ordered list",
+              listMenuOptions[1].icon,
+              listMenuOptions[1].onSelect,
+              { active: toolbarState.orderedList },
+            )}
+            {toolbarButton(
+              "Checklist",
+              listMenuOptions[2].icon,
+              listMenuOptions[2].onSelect,
+              { active: toolbarState.taskList },
+            )}
+            <span
+              className="platform-instructions-editor__toolbar-divider playground-agents-detail-instructions-toolbar-divider"
+              aria-hidden="true"
+            />
+            <InstructionsEditorToolbarPopup
+              open={activeToolbarMenu === "insert"}
+              onOpenChange={(open) =>
+                setActiveToolbarMenu(open ? "insert" : null)
+              }
+              label="Insert"
+              triggerClassName="is-insert-trigger"
+              popupWidth={160}
+              trigger={
+                <>
+                  <Plus
+                    width={14}
+                    height={14}
+                    strokeWidth={1.8}
+                    aria-hidden="true"
+                  />
+                  <ChevronDown
+                    width={12}
+                    height={12}
+                    strokeWidth={1.8}
+                    aria-hidden="true"
+                  />
+                </>
+              }
+              options={insertMenuOptions}
+            />
+            {fileUploadEnabled ? (
+              <input
+                ref={fileInputRef}
+                className="platform-instructions-editor__file-input"
+                type="file"
+                accept={fileUploadConfig?.accept}
+                multiple
+                tabIndex={-1}
+                aria-hidden="true"
+                onChange={(event) => {
+                  const files = getUploadFiles(event.currentTarget.files);
+                  event.currentTarget.value = "";
+                  if (!files.length) return;
+                  const target =
+                    insertionTargetRef.current || getInsertionTarget();
+                  insertionTargetRef.current = null;
+                  void uploadFiles(files, target);
+                }}
+              />
+            ) : null}
           </div>
         ) : null}
       </header>
-      <div className={`platform-instructions-editor__body playground-tasks-detail-description-editor${editing && !readOnly ? " is-editing" : " is-preview"}`}>
-        <div className="platform-instructions-editor__preview-scope playground-tasks-detail-description-preview-scope tb-runner-chat" aria-hidden={editing && !readOnly ? "true" : undefined}>
-          {String(value || "").trim() ? (
-            <PlatformMarkdownRenderer content={value} className="platform-instructions-editor__preview playground-tasks-detail-description-preview tb-message-markdown" />
+      <div className="platform-instructions-editor__body playground-tasks-detail-description-editor">
+        {readOnly ? (
+          String(value || "").trim() ? (
+            <PlatformMarkdownRenderer
+              content={value}
+              className="platform-instructions-editor__readonly platform-instructions-editor__preview playground-tasks-detail-description-preview tb-message-markdown"
+              resolvePreviewSource={fileUploadConfig?.resolvePreviewSource}
+            />
           ) : (
-            <div className="platform-instructions-editor__preview playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder">{placeholder}</div>
-          )}
-        </div>
-        {!readOnly ? (
-          <textarea
-            ref={textareaRef}
-            className={`platform-instructions-editor__input playground-tasks-detail-description-input ${editing ? "is-editing" : "is-preview"}`}
-            rows={1}
-            value={value}
-            placeholder={editing ? placeholder : ""}
-            aria-label={ariaLabel}
-            onFocus={() => setEditingState(true)}
-            onBlur={() => setEditingState(false)}
-            onChange={(event) => commit(event.currentTarget.value)}
-            onKeyDown={handleShortcut}
+            <div className="platform-instructions-editor__readonly platform-instructions-editor__preview playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder">
+              {placeholder}
+            </div>
+          )
+        ) : (
+          <EditorContent
+            editor={richTextEditor}
+            className="platform-instructions-editor__content"
+            onKeyDownCapture={handleEditorKeyDown}
+            onKeyUpCapture={() => refreshSlashMenuState(richTextEditor)}
+            onMouseUpCapture={() => refreshSlashMenuState(richTextEditor)}
           />
+        )}
+        {fileUploadError ? (
+          <div
+            className="platform-instructions-editor__upload-error"
+            role="alert"
+          >
+            {fileUploadError}
+          </div>
         ) : null}
       </div>
+      {!readOnly ? (
+        <PlatformInstructionsEditorSlashMenu
+          open={Boolean(slashMenuState)}
+          anchor={slashMenuState?.anchor || null}
+          options={filteredSlashCommandOptions}
+          activeIndex={slashMenuActiveIndex}
+          onActiveIndexChange={setSlashMenuActiveIndex}
+          onSelect={selectSlashCommand}
+          onDismiss={dismissSlashMenu}
+        />
+      ) : null}
     </section>
   );
 }

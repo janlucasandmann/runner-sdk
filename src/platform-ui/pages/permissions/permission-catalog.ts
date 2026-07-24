@@ -36,6 +36,7 @@ export const PLATFORM_PERMISSION_RING_DEFINITIONS: readonly PlatformPermissionRi
 export const PLATFORM_PERMISSION_RING_IDS = PLATFORM_PERMISSION_RING_DEFINITIONS.map((ring) => ring.id);
 
 type ManagedResourcePermissionSubjectType =
+  | "computer"
   | "web_app"
   | "function"
   | "auth"
@@ -129,7 +130,183 @@ function createManagedResourcePermissionActions({
   ];
 }
 
+const PLATFORM_AGENT_RESOURCE_PERMISSION_ACTIONS: readonly PlatformPermissionActionDefinition[] = [
+  {
+    id: "agent_resource_view",
+    ringId: "ring_1",
+    label: "View agent",
+    description:
+      "View this agent's configuration, profile, model, instructions, versions, and access settings.",
+    subjectTypes: ["agent_resource", "agent_team_role"],
+  },
+  {
+    id: "agent_resource_invoke",
+    ringId: "ring_1",
+    label: "Use agent",
+    description:
+      "Start and continue threads with this agent through the platform, tags, or API.",
+    subjectTypes: ["agent_resource", "agent_team_role"],
+  },
+  {
+    id: "agent_resource_activity_view",
+    ringId: "ring_1",
+    label: "View threads and insights",
+    description:
+      "View this agent's threads, run summaries, analytics, evaluation results, and usage.",
+    subjectTypes: ["agent_resource", "agent_team_role"],
+  },
+  {
+    id: "agent_resource_manage",
+    ringId: "ring_2",
+    label: "Edit agent configuration",
+    description:
+      "Change this agent's name, profile, model, instructions, skills, tags, and default environment.",
+    subjectTypes: ["agent_resource", "agent_team_role"],
+  },
+  {
+    id: "agent_resource_guardrails_manage",
+    ringId: "ring_2",
+    label: "Manage guardrails",
+    description:
+      "Attach, configure, or remove guardrails that govern this agent's work.",
+    subjectTypes: ["agent_resource", "agent_team_role"],
+  },
+  {
+    id: "agent_resource_evaluations_run",
+    ringId: "ring_2",
+    label: "Run evaluations",
+    description:
+      "Run evaluation sets against this agent and inspect version-specific results.",
+    subjectTypes: ["agent_resource", "agent_team_role"],
+  },
+  {
+    id: "agent_resource_versions_manage",
+    ringId: "ring_2",
+    label: "Create and manage versions",
+    description:
+      "Create, compare, restore, rename, or remove saved versions of this agent.",
+    subjectTypes: ["agent_resource", "agent_team_role"],
+  },
+  {
+    id: "agent_resource_publish",
+    ringId: "ring_3",
+    label: "Publish versions",
+    description:
+      "Publish a version, change the active version, or roll this agent back.",
+    subjectTypes: ["agent_resource", "agent_team_role"],
+  },
+  {
+    id: "agent_resource_owner_transfer",
+    ringId: "ring_3",
+    label: "Transfer ownership",
+    description:
+      "Transfer permanent ownership of this agent to another eligible organization member.",
+    subjectTypes: ["agent_resource", "agent_team_role"],
+  },
+  {
+    id: "agent_resource_access_manage",
+    ringId: "ring_3",
+    label: "Manage access",
+    description:
+      "Share this agent with teams and change the permission policies assigned to their roles.",
+    subjectTypes: ["agent_resource", "agent_team_role"],
+  },
+  {
+    id: "agent_resource_delete",
+    ringId: "ring_3",
+    label: "Delete agent",
+    description:
+      "Permanently delete this agent, its saved versions, and its resource access assignments.",
+    subjectTypes: ["agent_resource", "agent_team_role"],
+  },
+];
+
+const PLATFORM_COMPUTER_RESOURCE_PERMISSION_ACTIONS: readonly PlatformPermissionActionDefinition[] = [
+  {
+    id: "computer_view",
+    ringId: "ring_1",
+    label: "View computer",
+    description:
+      "View this computer's profile, configuration, runtime versions, status, and access settings.",
+    subjectTypes: ["computer", "computer_team_role"],
+  },
+  {
+    id: "computer_invoke",
+    ringId: "ring_1",
+    label: "Use computer",
+    description:
+      "Run agent work on this computer and use it as a thread or project environment.",
+    subjectTypes: ["computer", "computer_team_role"],
+  },
+  {
+    id: "computer_activity_view",
+    ringId: "ring_1",
+    label: "View runs and usage",
+    description:
+      "View this computer's runs, activity history, analytics, compute usage, and operational status.",
+    subjectTypes: ["computer", "computer_team_role"],
+  },
+  {
+    id: "computer_manage",
+    ringId: "ring_2",
+    label: "Edit computer configuration",
+    description:
+      "Change this computer's profile, runtime versions, packages, setup scripts, and advanced settings.",
+    subjectTypes: ["computer", "computer_team_role"],
+  },
+  {
+    id: "computer_connections_manage",
+    ringId: "ring_2",
+    label: "Manage connections",
+    description:
+      "Connect or disconnect this computer from agents, projects, resources, and external services.",
+    subjectTypes: ["computer", "computer_team_role"],
+  },
+  {
+    id: "computer_versions_manage",
+    ringId: "ring_2",
+    label: "Create and manage versions",
+    description:
+      "Create, compare, restore, rename, or remove saved versions of this computer.",
+    subjectTypes: ["computer", "computer_team_role"],
+  },
+  {
+    id: "computer_publish",
+    ringId: "ring_3",
+    label: "Publish versions",
+    description:
+      "Publish a version, change the active version, or roll this computer back.",
+    subjectTypes: ["computer", "computer_team_role"],
+  },
+  {
+    id: "computer_owner_transfer",
+    ringId: "ring_3",
+    label: "Transfer ownership",
+    description:
+      "Transfer permanent ownership of this computer to another eligible organization member.",
+    subjectTypes: ["computer", "computer_team_role"],
+  },
+  {
+    id: "computer_access_manage",
+    ringId: "ring_3",
+    label: "Manage access",
+    description:
+      "Share this computer with teams and change the permission policies assigned to their roles.",
+    subjectTypes: ["computer", "computer_team_role"],
+  },
+  {
+    id: "computer_delete",
+    ringId: "ring_3",
+    label: "Delete computer",
+    description:
+      "Permanently delete this computer and revoke its resource access assignments.",
+    subjectTypes: ["computer", "computer_team_role"],
+  },
+];
+
 const PLATFORM_MANAGED_RESOURCE_PERMISSION_ACTIONS: readonly PlatformPermissionActionDefinition[] = [
+  ...PLATFORM_AGENT_RESOURCE_PERMISSION_ACTIONS,
+  ...PLATFORM_COMPUTER_RESOURCE_PERMISSION_ACTIONS,
   ...createManagedResourcePermissionActions({
     subjectType: "web_app",
     noun: "web app",
@@ -586,6 +763,62 @@ export const PLATFORM_PERMISSION_ACTION_DEFINITIONS: readonly PlatformPermission
     subjectTypes: ["evaluation", "evaluation_team_role"],
   },
   {
+    id: "fine_tuning_view",
+    ringId: "ring_1",
+    label: "View fine-tuning job",
+    description: "View the job configuration, target agent, environment, status, and fine-tuning metadata.",
+    subjectTypes: ["fine_tuning", "fine_tuning_team_role"],
+  },
+  {
+    id: "fine_tuning_results_view",
+    ringId: "ring_1",
+    label: "View results",
+    description: "Inspect evaluation scores, analysis, costs, related runs, and the fine-tuning thread.",
+    subjectTypes: ["fine_tuning", "fine_tuning_team_role"],
+  },
+  {
+    id: "fine_tuning_changes_view",
+    ringId: "ring_1",
+    label: "View agent changes",
+    description: "Inspect the generated agent configuration and instruction changes.",
+    subjectTypes: ["fine_tuning", "fine_tuning_team_role"],
+  },
+  {
+    id: "fine_tuning_stop",
+    ringId: "ring_2",
+    label: "Stop jobs",
+    description: "Stop an active fine-tuning or verification run.",
+    subjectTypes: ["fine_tuning", "fine_tuning_team_role"],
+  },
+  {
+    id: "fine_tuning_settings_manage",
+    ringId: "ring_2",
+    label: "Manage settings",
+    description: "Change the job description, instructions, and retained fine-tuning metadata.",
+    subjectTypes: ["fine_tuning", "fine_tuning_team_role"],
+  },
+  {
+    id: "fine_tuning_version_publish",
+    ringId: "ring_3",
+    label: "Publish generated version",
+    description: "Publish the generated configuration as a new version of the target agent.",
+    subjectTypes: ["fine_tuning", "fine_tuning_team_role"],
+  },
+  {
+    id: "fine_tuning_access_manage",
+    ringId: "ring_3",
+    label: "Manage access",
+    description: "Share this fine-tuning job with teams and change their role permission pages.",
+    subjectTypes: ["fine_tuning", "fine_tuning_team_role"],
+  },
+  {
+    id: "fine_tuning_delete",
+    ringId: "ring_3",
+    label: "Delete fine-tuning job",
+    description: "Permanently delete this fine-tuning job and its retained results.",
+    subjectTypes: ["fine_tuning", "fine_tuning_team_role"],
+  },
+  {
     id: "database_schema_read",
     ringId: "ring_1",
     label: "View schema",
@@ -875,12 +1108,16 @@ export const PLATFORM_PERMISSION_RESOURCE_TYPES = [
 
 export const PLATFORM_PERMISSION_SUBJECT_TYPES = [
   "agent",
+  "agent_resource",
+  "agent_team_role",
   "project",
   "project_team_role",
   "team",
   "team_role",
   "organization_role",
   "database",
+  "computer",
+  "computer_team_role",
   "server",
   "web_app",
   "function",
@@ -892,17 +1129,23 @@ export const PLATFORM_PERMISSION_SUBJECT_TYPES = [
   "guardrail_team_role",
   "evaluation",
   "evaluation_team_role",
+  "fine_tuning",
+  "fine_tuning_team_role",
   "security_repository",
   "human_user",
 ] as const;
 
 export const PLATFORM_SCOPED_PERMISSION_SUBJECT_TYPES = [
+  "agent_resource",
+  "agent_team_role",
   "project",
   "project_team_role",
   "team",
   "team_role",
   "organization_role",
   "database",
+  "computer",
+  "computer_team_role",
   "server",
   "web_app",
   "function",
@@ -914,6 +1157,8 @@ export const PLATFORM_SCOPED_PERMISSION_SUBJECT_TYPES = [
   "guardrail_team_role",
   "evaluation",
   "evaluation_team_role",
+  "fine_tuning",
+  "fine_tuning_team_role",
   "security_repository",
 ] as const;
 

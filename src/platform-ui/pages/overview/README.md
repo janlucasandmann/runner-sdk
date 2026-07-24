@@ -57,6 +57,7 @@ import "@computer-agents/platform/platform-ui/pages/styles.css";
 - Keep fetching, mutations, permissions, routing, and domain-specific state in the resource module or application adapter.
 - Use `heroContent` with `showPeriodSelector={false}` when an overview needs a task-oriented introduction instead of analytics.
 - Provide a stable app-header target through `controlsPortalId`; timeframe and primary actions must not be rendered in the page body.
+- Set a primary action's `icon` to `null` when the centralized button should be deliberately iconless; omit it to retain the default plus icon.
 - Use `PlatformDataTable` configuration instead of introducing resource-specific table markup.
 - Update the cross-resource test when adding a new overview page to ensure it renders the canonical shell.
 

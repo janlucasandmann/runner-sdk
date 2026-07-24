@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import type { PlatformPageHeroAction } from "../../components/composite/page-hero/index.js";
 
-export type PlatformHomeIconTone = "blue" | "cyan" | "green" | "violet";
+export type PlatformHomeIconTone = "blue" | "cyan" | "green" | "violet" | "white";
 
 export type PlatformHomeAction = PlatformPageHeroAction;
 
@@ -10,13 +10,24 @@ export interface PlatformHomeLink extends PlatformHomeAction {
   meta?: string;
 }
 
+export interface PlatformHomeFeatureLink extends Omit<PlatformHomeAction, "onClick"> {
+  meta?: string;
+  onClick?: () => void;
+}
+
 export interface PlatformHomeFeatureCard {
   id: string;
   title: string;
   description: string;
   icon: LucideIcon;
   iconTone?: PlatformHomeIconTone;
-  links: readonly PlatformHomeLink[];
+  links: readonly PlatformHomeFeatureLink[];
+}
+
+export interface PlatformHomeFeatureGridProps {
+  cards: readonly PlatformHomeFeatureCard[];
+  ariaLabel?: string;
+  className?: string;
 }
 
 export interface PlatformHomeSection {

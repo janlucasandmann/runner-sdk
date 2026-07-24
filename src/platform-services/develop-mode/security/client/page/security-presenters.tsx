@@ -66,11 +66,11 @@ export function SecurityFindingStatusLabel({ status }: { status: SecurityFinding
   return <PlatformLabel variant={variant}>{status.replace(/_/g, " ")}</PlatformLabel>;
 }
 
-export function SecurityPropertyList({ items }: { items: ReadonlyArray<{ label: string; value: ReactNode }> }) {
+export function SecurityPropertyList({ items }: { items: ReadonlyArray<{ label: string; value: ReactNode; className?: string }> }) {
   return (
     <dl className="develop-security-properties">
       {items.map((item) => (
-        <div key={item.label}>
+        <div key={item.label} className={item.className}>
           <dt>{item.label}</dt>
           <dd>{item.value}</dd>
         </div>

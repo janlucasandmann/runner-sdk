@@ -12,6 +12,7 @@ const primitiveComponents = [
   "search",
   "selector",
   "switch",
+  "ticket-item",
   "version-label",
 ];
 const compositeComponents = [
@@ -155,6 +156,10 @@ const canonicalExports = new Map([
   ["./platform-ui/components/ui/search", "./dist/platform-ui/components/ui/search/index.js"],
   ["./platform-ui/components/ui/selector", "./dist/platform-ui/components/ui/selector/index.js"],
   ["./platform-ui/components/ui/switch", "./dist/platform-ui/components/ui/switch/index.js"],
+  [
+    "./platform-ui/components/ui/ticket-item",
+    "./dist/platform-ui/components/ui/ticket-item/index.js",
+  ],
   [
     "./platform-ui/components/composite/analytics",
     "./dist/platform-ui/components/composite/analytics/index.js",

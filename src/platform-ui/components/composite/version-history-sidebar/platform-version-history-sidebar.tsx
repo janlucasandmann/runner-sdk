@@ -38,7 +38,7 @@ export interface PlatformVersionHistoryRecord {
   status?: string;
   createdAt?: string;
   updatedAt?: string;
-  publishedAt?: string;
+  publishedAt?: string | null;
   [key: string]: unknown;
 }
 

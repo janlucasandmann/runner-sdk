@@ -1,0 +1,8 @@
+.platform-ticket-item.is-list.is-minimalistic-ui {
+  padding-left: 0;
+  padding-right: 0;
+  border: none;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}

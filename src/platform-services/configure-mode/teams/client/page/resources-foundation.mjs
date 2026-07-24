@@ -6,6 +6,7 @@ export const TEAMS_PAGE_RESOURCES_FOUNDATION_SCRIPT = `          const getTeamRe
               agent: { label: "Agent", Icon: Bot },
               guardrail: { label: "Guardrail", Icon: Shield },
               evaluation: { label: "Evaluation", Icon: ChartColumnIncreasing },
+              security_repository: { label: "Security Agent repository", Icon: Shield },
               file: { label: "File", Icon: FileText },
               metronome: { label: "Metronome Workflow", Icon: Metronome },
               metronome_workflow: { label: "Metronome Workflow", Icon: Metronome },

@@ -7,6 +7,7 @@ export {
 } from "./platform-file-explorer-modal.js";
 export {
   PlatformFileExplorerFileIcon,
+  resolvePlatformFileExplorerFileKind,
 } from "./platform-file-explorer-file-icon.js";
 
 export type {
@@ -24,5 +25,6 @@ export type {
 } from "./platform-file-explorer-modal.js";
 export type {
   PlatformFileExplorerFileIconProps,
+  PlatformFileExplorerFileDescriptor,
   PlatformFileExplorerFileKind,
 } from "./platform-file-explorer-file-icon.js";

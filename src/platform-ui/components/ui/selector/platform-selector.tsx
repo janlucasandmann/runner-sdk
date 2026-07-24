@@ -23,6 +23,7 @@ export interface PlatformSelectorOption<TValue extends string = string> {
   label: ReactNode;
   description?: ReactNode;
   leading?: ReactNode;
+  trailing?: ReactNode;
   ariaLabel?: string;
   disabled?: boolean;
   title?: string;
@@ -197,6 +198,14 @@ export const PlatformSelector = forwardRef(function PlatformSelector<
   useEffect(() => {
     if (!resolvedOpen || loading || hasCustomPopupContent) return undefined;
     const timeout = window.setTimeout(() => {
+      const activeElement = document.activeElement;
+      if (
+        activeElement instanceof HTMLElement
+        && popupRef.current?.contains(activeElement)
+        && !activeElement.hasAttribute("data-platform-selector-option")
+      ) {
+        return;
+      }
       const selectedButton = Array.from(
         popupRef.current?.querySelectorAll<HTMLButtonElement>("[data-platform-selector-option]") || [],
       ).find((button) => button.dataset.platformSelectorOption === String(value));
@@ -323,6 +332,7 @@ export const PlatformSelector = forwardRef(function PlatformSelector<
                     "platform-selector__option",
                     "tb-popup-row",
                     Boolean(option.leading) && "has-leading",
+                    Boolean(option.trailing) && "has-trailing",
                     selected && "is-selected selected",
                     optionClassName,
                   )}
@@ -341,8 +351,15 @@ export const PlatformSelector = forwardRef(function PlatformSelector<
                       <span className="platform-selector__option-description">{option.description}</span>
                     ) : null}
                   </span>
-                  <span className="platform-selector__option-check" aria-hidden="true">
-                    {selected ? <Check width={13} height={13} strokeWidth={1.8} /> : null}
+                  <span className="platform-selector__option-end" aria-hidden="true">
+                    <span className="platform-selector__option-check">
+                      {selected ? <Check width={13} height={13} strokeWidth={1.8} /> : null}
+                    </span>
+                    {option.trailing ? (
+                      <span className="platform-selector__option-trailing">
+                        {option.trailing}
+                      </span>
+                    ) : null}
                   </span>
                 </button>
               );

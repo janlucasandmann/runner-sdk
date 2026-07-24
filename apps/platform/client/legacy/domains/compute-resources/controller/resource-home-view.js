@@ -439,13 +439,11 @@
   	                if (resource) openServerResourceCopyComposer(resource);
   	              },
   	              onDelete: (rows) => void deleteOverviewRows(rows),
-  	              onPrefetch: (row) => {
-  	                if (row.resourceType === "database") {
-  	                  prefetchDatabaseBootstrap(row.sourceId);
-  	                } else if (["function", "web_app", "auth", "agent_runtime", "secrets", "payments"].includes(row.kind)) {
-  	                  void loadServerAnalytics(row.sourceId, { period: "day" });
-  	                }
-  	              },
+	              onPrefetch: (row) => {
+	                if (row.resourceType === "database") {
+	                  prefetchDatabaseBootstrap(row.sourceId);
+	                }
+	              },
   	            });
   	          }
             const renderHomeResourceIcon = (item, className) => {

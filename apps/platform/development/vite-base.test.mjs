@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 import createPlatformViteConfig from "../vite.config.mjs";
 
@@ -12,9 +13,31 @@ assert.equal(developmentConfig.base, "/");
 assert.equal(developmentConfig.appType, "custom");
 assert.equal(developmentConfig.build, undefined);
 const developmentPlugins = developmentConfig.plugins.flat(Infinity);
-assert.equal(
-  developmentPlugins.some((plugin) => plugin?.name === "platform-remote-browser-imports"),
-  true,
+const remoteBrowserImportsPlugin = developmentPlugins.find(
+  (plugin) => plugin?.name === "platform-remote-browser-imports",
+);
+assert.ok(remoteBrowserImportsPlugin);
+assert.deepEqual(
+  remoteBrowserImportsPlugin.resolveId("@tiptap/react"),
+  {
+    id: "https://esm.sh/@tiptap/react@3.28.0?bundle&external=react,react-dom",
+    external: true,
+  },
+);
+assert.deepEqual(
+  remoteBrowserImportsPlugin.resolveId("@tiptap/extension-image"),
+  {
+    id: "https://esm.sh/@tiptap/extension-image@3.28.0?bundle",
+    external: true,
+  },
+);
+const platformShellTemplate = readFileSync(
+  new URL("../client/legacy/templates/platform-shell.template.html", import.meta.url),
+  "utf8",
+);
+assert.match(
+  platformShellTemplate,
+  /"@tiptap\/react":\s*"https:\/\/esm\.sh\/@tiptap\/react@3\.28\.0\?bundle&external=react,react-dom"/,
 );
 const navigationPlugin = developmentPlugins.find(
   (plugin) => plugin?.name === "platform-hmr-only-navigation",

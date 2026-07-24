@@ -4,6 +4,7 @@ export { EVALUATIONS_PAGE_CONTROLLER_CASE_DETAIL_SCRIPT } from "./case-detail.mj
 export { EVALUATIONS_PAGE_CONTROLLER_CHARTS_SCRIPT } from "./charts.mjs";
 export { EVALUATIONS_PAGE_CONTROLLER_DIALOGS_SCRIPT } from "./dialogs.mjs";
 export { EVALUATIONS_PAGE_CONTROLLER_EDITORS_SCRIPT } from "./editors.mjs";
+export { EVALUATIONS_PAGE_CONTROLLER_RUN_HISTORY_SCRIPT } from "./run-history.mjs";
 export { EVALUATIONS_PAGE_CONTROLLER_SETUP_SCRIPT } from "./setup.mjs";
 export { EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT } from "./tables.mjs";
 export { EVALUATIONS_PAGE_CONTROLLER_THREAD_CASES_SCRIPT } from "./thread-cases.mjs";

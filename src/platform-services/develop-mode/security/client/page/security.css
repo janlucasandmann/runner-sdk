@@ -1,9 +1,23 @@
 .resource-overview-page.is-develop-security,
+.develop-security-repository-modal,
 .develop-security-resource-detail {
   --develop-security-border: rgba(255, 255, 255, 0.075);
   --develop-security-muted: rgba(255, 255, 255, 0.55);
   color: #fff;
   color-scheme: dark;
+}
+
+.resource-overview-page.is-develop-security {
+  gap: 48px;
+}
+
+.develop-security-overview-hero {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.develop-security-overview-features {
+  margin-top: 44px;
 }
 
 .develop-security-metric-grid {
@@ -92,48 +106,21 @@
   color: #dc2626;
 }
 
-.develop-security-callout.is-success {
-  border-color: rgba(74, 222, 128, 0.27);
-  background: rgba(34, 197, 94, 0.08);
-}
-
-.develop-security-setup-panel {
-  display: grid;
-  gap: 16px;
-  margin-top: 14px;
-  padding: 18px;
-}
-
-.develop-security-setup-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 18px;
-}
-
-.develop-security-setup-header > div:first-child {
-  display: grid;
-  gap: 4px;
-}
-
-.develop-security-setup-header span,
 .develop-security-detail-heading > span {
   color: var(--develop-security-muted);
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: .08em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.develop-security-setup-header h2,
 .develop-security-detail-heading h1 {
   margin: 0;
   font-size: 17px;
   font-weight: 630;
-  letter-spacing: -.02em;
+  letter-spacing: -0.02em;
 }
 
-.develop-security-setup-header p,
 .develop-security-detail-heading p {
   margin: 0;
   color: var(--develop-security-muted);
@@ -141,43 +128,77 @@
   line-height: 1.5;
 }
 
-.develop-security-repository-picker {
-  display: grid;
-  gap: 8px;
+.develop-security-repository-modal__body {
+  min-height: 320px;
 }
 
-.develop-security-repository-picker article {
+.develop-security-repository-modal__search.platform-search {
+  width: min(320px, 42vw);
+  min-width: 220px;
+  height: 32px;
+}
+
+.develop-security-repository-management {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
+  align-content: start;
   gap: 12px;
-  padding: 11px 12px;
-  border: 1px solid var(--develop-security-border);
-  border-radius: 10px;
-}
-
-.develop-security-repository-picker article > div {
-  display: grid;
-  gap: 2px;
   min-width: 0;
 }
 
-.develop-security-repository-picker article strong,
-.develop-security-repository-picker article span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.develop-security-repository-management__table {
+  --platform-data-table-minimal-inline-padding: 10px;
+  --platform-data-table-surface: transparent;
+  --platform-data-table-body-background: transparent;
+  --platform-data-table-row-background: transparent;
+  --platform-data-table-header-background: transparent;
+  --platform-data-table-sticky-background: transparent;
+  min-width: 0;
+  background: transparent;
 }
 
-.develop-security-repository-picker article span {
+.develop-security-repository-management__table.is-minimalistic-ui
+  .platform-data-table__surface,
+.develop-security-repository-management__table.is-minimalistic-ui
+  .platform-data-table__table,
+.develop-security-repository-management__table.is-minimalistic-ui
+  .platform-data-table__sticky,
+.develop-security-repository-management__table.is-minimalistic-ui
+  .platform-data-table__header-group,
+.develop-security-repository-management__table.is-minimalistic-ui
+  .platform-data-table__header,
+.develop-security-repository-management__table.is-minimalistic-ui
+  .platform-data-table__scroll,
+.develop-security-repository-management__table.is-minimalistic-ui
+  .platform-data-table__body,
+.develop-security-repository-management__table.is-minimalistic-ui
+  .platform-data-table__row {
+  background: transparent;
+}
+
+.develop-security-repository-management__table .platform-selector__trigger {
+  justify-content: space-between;
+}
+
+.develop-security-repository-management__error {
+  padding: 10px 12px;
+}
+
+.develop-security-repository-modal__selection-summary {
+  margin-right: auto;
   color: var(--develop-security-muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .develop-security-inline-actions {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
+  gap: 7px;
+}
+
+.develop-security-version-controls {
+  display: inline-flex;
+  align-items: center;
   gap: 7px;
 }
 
@@ -246,18 +267,6 @@
   display: flex;
   align-items: center;
   gap: 5px;
-}
-
-.develop-security-detail-content {
-  min-width: 0;
-  padding: 16px 18px 28px;
-}
-
-.develop-security-detail-sidebar {
-  display: grid;
-  align-content: start;
-  gap: 10px;
-  padding: 12px;
 }
 
 .develop-security-detail-stack,
@@ -366,15 +375,6 @@
   text-overflow: ellipsis;
 }
 
-.develop-security-sidebar-copy {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 0;
-  color: var(--develop-security-muted);
-  font-size: 10px;
-}
-
 .develop-security-form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -425,10 +425,124 @@
   box-shadow: 0 0 0 3px rgb(37 99 235 / 10%);
 }
 
+.develop-security-version-description-field {
+  display: grid;
+  gap: 8px;
+  color: var(--develop-security-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.develop-security-version-description-field textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--develop-security-border);
+  border-radius: 8px;
+  outline: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font: inherit;
+  font-weight: 450;
+  resize: vertical;
+}
+
+.develop-security-version-description-field textarea:focus {
+  border-color: color-mix(in srgb, #2563eb 65%, var(--develop-security-border));
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 10%);
+}
+
+.develop-security-version-compare-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
 .develop-security-form-actions {
   display: flex;
   justify-content: flex-end;
   margin-top: 14px;
+}
+
+.develop-security-settings-root {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+
+.develop-security-access-table {
+  --platform-data-table-minimal-inline-padding: 10px;
+  --platform-data-table-surface: transparent;
+  --platform-data-table-body-background: transparent;
+  --platform-data-table-row-background: transparent;
+  --platform-data-table-header-background: transparent;
+  --platform-data-table-sticky-background: transparent;
+  min-width: 0;
+  background: transparent;
+}
+
+.develop-security-access-team-cell {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.develop-security-access-team-cell > strong,
+.develop-security-access-team-cell > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.develop-security-access-team-cell > span,
+.develop-security-access-menu-empty {
+  color: var(--develop-security-muted);
+  font-size: 10px;
+}
+
+.develop-security-access-team-option {
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.develop-security-access-menu-empty {
+  padding: 10px 12px;
+  line-height: 1.45;
+}
+
+.develop-security-access-editor {
+  display: grid;
+  gap: 22px;
+  min-width: 0;
+}
+
+.develop-security-access-editor__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.develop-security-access-editor__header > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.develop-security-access-editor__header span {
+  color: var(--develop-security-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.develop-security-access-editor__header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 640;
+  letter-spacing: -0.025em;
 }
 
 .develop-security-json {
@@ -440,7 +554,13 @@
   border-radius: 9px;
   background: rgba(0, 0, 0, 0.32);
   color: inherit;
-  font: 10px/1.6 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font:
+    10px / 1.6 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    monospace;
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -533,19 +653,43 @@
   font-size: 12px;
 }
 
+.develop-security-detail-loading-state.platform-loading-state {
+  min-height: max(320px, calc(100dvh - 148px));
+  color: var(--develop-security-muted, rgba(255, 255, 255, 0.55));
+}
+
 @media (max-width: 1000px) {
-  .develop-security-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .develop-security-timeline { grid-template-columns: repeat(5, minmax(0, 1fr)); row-gap: 18px; }
-  .develop-security-timeline > li:nth-child(6)::before { display: none; }
+  .develop-security-metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .develop-security-timeline {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    row-gap: 18px;
+  }
+  .develop-security-timeline > li:nth-child(6)::before {
+    display: none;
+  }
 }
 
 @media (max-width: 720px) {
+  .resource-overview-page.is-develop-security {
+    gap: 32px;
+  }
+  .develop-security-overview-features {
+    margin-top: 32px;
+  }
+  .develop-security-repository-modal__search.platform-search {
+    width: min(240px, 42vw);
+    min-width: 140px;
+  }
   .develop-security-metric-grid,
   .develop-security-card-grid,
   .develop-security-artifact-list,
-  .develop-security-form-grid { grid-template-columns: minmax(0, 1fr); }
+  .develop-security-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
   .develop-security-form-grid label.is-wide,
-  .develop-security-form-field.is-wide { grid-column: auto; }
-  .develop-security-setup-header { flex-direction: column; }
-  .develop-security-detail-content { padding-inline: 12px; }
+  .develop-security-form-field.is-wide {
+    grid-column: auto;
+  }
 }

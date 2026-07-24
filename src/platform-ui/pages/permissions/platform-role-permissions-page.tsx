@@ -29,6 +29,7 @@ export function PlatformRolePermissionsPage<TId extends string = string>({
         className={`platform-role-permissions-page__roles playground-team-role-list${roleListClassName ? ` ${roleListClassName}` : ""}`}
         role="tablist"
         aria-label={roleAriaLabel}
+        data-platform-role-sidebar="true"
       >
         {roles.map((role) => (
           <button

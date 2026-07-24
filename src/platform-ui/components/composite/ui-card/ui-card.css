@@ -69,6 +69,10 @@
   color: #b899ff;
 }
 
+.platform-ui-card__feature-icon.is-white {
+  color: #fff;
+}
+
 .platform-ui-card__feature-title {
   margin: 0;
   color: #fff;
@@ -124,9 +128,13 @@
     background-color 140ms ease;
 }
 
-.platform-ui-card__feature-link:hover {
+.platform-ui-card__feature-link:not(.is-static):hover {
   color: #fff;
   background: rgba(255, 255, 255, 0.1);
+}
+
+.platform-ui-card__feature-link.is-static {
+  cursor: default;
 }
 
 .platform-ui-card__feature-link:focus-visible {

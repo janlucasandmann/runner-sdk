@@ -23,6 +23,87 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
           }), options);
         }
 
+        function selectTaskDetailStatus(nextStatus) {
+          const normalizedStatus = String(nextStatus || "").trim().toLowerCase();
+          if (!PLAYGROUND_TASK_MANUAL_STATUS_OPTIONS.some((option) => option.id === normalizedStatus)) {
+            return;
+          }
+          updateDraftTask((current) => ({
+            ...current,
+            status: normalizedStatus,
+            dependencyIds: [],
+            completedAt: isPlaygroundTaskTerminalStatus(normalizedStatus)
+              ? (current.completedAt || new Date().toISOString())
+              : null,
+          }), { autosave: true });
+          setTaskDetailStatusSearchQuery("");
+          setTaskDetailSelectPopover("");
+        }
+
+        function selectTaskDetailPriority(nextPriority) {
+          const normalizedPriority = String(nextPriority || "").trim().toLowerCase();
+          if (!PLAYGROUND_TASK_PRIORITY_OPTIONS.some((option) => option.id === normalizedPriority)) {
+            return;
+          }
+          updateDraftField("priority", normalizedPriority, { autosave: true });
+          setTaskDetailPrioritySearchQuery("");
+          setTaskDetailSelectPopover("");
+        }
+
+        function getTaskDescriptionChangeUploadedAttachments(context) {
+          return normalizePlaygroundTaskAttachmentList(
+            (Array.isArray(context?.uploadedFiles) ? context.uploadedFiles : [])
+              .map((file) => file?.metadata?.taskAttachment)
+              .filter(Boolean)
+          );
+        }
+
+        function reconcileTaskDescriptionDraftRecord(taskRecord, nextDescription, context = {}) {
+          const currentAttachments = normalizePlaygroundTaskAttachmentList(taskRecord?.attachments);
+          const uploadedAttachments = getTaskDescriptionChangeUploadedAttachments(context);
+          const candidateAttachments = normalizePlaygroundTaskAttachmentList(
+            currentAttachments.concat(uploadedAttachments)
+          );
+          const nextAttachments = reconcileTaskDescriptionAttachments(
+            String(nextDescription || ""),
+            candidateAttachments
+          );
+          const retainedAttachmentIds = new Set(nextAttachments.map((attachment) => attachment.id));
+          const removedAttachments = currentAttachments.filter((attachment) =>
+            !retainedAttachmentIds.has(attachment.id)
+          );
+          const nextConnectors = removedAttachments.reduce(
+            (connectors, attachment) => removePlaygroundAttachmentFromConnectorSelections(connectors, attachment),
+            taskRecord?.connectors
+          );
+          return {
+            ...taskRecord,
+            description: String(nextDescription || ""),
+            attachments: nextAttachments,
+            connectors: nextConnectors,
+          };
+        }
+
+        function handleTaskDescriptionEditorChange(nextValue, context = {}) {
+          const previousAttachments = normalizePlaygroundTaskAttachmentList(draftTask?.attachments);
+          const nextTask = updateDraftTask(
+            (current) => reconcileTaskDescriptionDraftRecord(current, nextValue, context),
+            { autosave: context?.source === "file-upload" || context?.source === "image-upload" }
+          );
+          const retainedAttachmentIds = new Set(
+            normalizePlaygroundTaskAttachmentList(nextTask?.attachments).map((attachment) => attachment.id)
+          );
+          revokeTaskAttachmentListObjectUrls(
+            previousAttachments.filter((attachment) => !retainedAttachmentIds.has(attachment.id))
+          );
+        }
+
+        function handleIssueComposerDescriptionEditorChange(nextValue, context = {}) {
+          updateIssueComposerDraft((current) =>
+            reconcileTaskDescriptionDraftRecord(current, nextValue, context)
+          );
+        }
+
         function commitTaskTitleInput() {
           if (!draftTask?.id) {
             return;
@@ -212,7 +293,7 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
             commitLocalTaskRecord(updatedTask, {
               selectTask: selectedTaskIdRef.current === updatedTask.id,
             });
-            resetSaveState("Task moved to To do");
+            resetSaveState("Task moved to Todo");
           } catch (error) {
             setSaveState({
               isSaving: false,
@@ -242,7 +323,7 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
             commitLocalTaskRecord(updatedTask, {
               selectTask: selectedTaskIdRef.current === updatedTask.id,
             });
-            resetSaveState("Task moved to In doing");
+            resetSaveState("Task moved to In Progress");
           } catch (error) {
             setSaveState({
               isSaving: false,
@@ -298,14 +379,14 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
             });
             resetSaveState(
               normalizedTargetStatus === "done"
-                ? "Task moved to Finished"
+                ? "Task moved to Done"
                 : normalizedTargetStatus === "blocked"
                   ? "Task moved to Blocked"
                   : normalizedTargetStatus === "in_review"
                     ? "Task moved to In Review"
                     : normalizedTargetStatus === "in_progress"
-                      ? "Task moved to In doing"
-                      : "Task moved to To do"
+                      ? "Task moved to In Progress"
+                      : "Task moved to Todo"
 	            );
           } catch (error) {
             commitLocalTaskRecord(previousTask, {
@@ -858,20 +939,6 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
           };
         }
 
-        function renderTaskCreatorValue(task) {
-          const creator = getTaskCreatorIdentity(task);
-          const fallbackLabel = getTaskCommentAvatarLetter(creator.name);
-          return React.createElement("span", { className: "playground-tasks-detail-person-value playground-tasks-detail-creator-value" },
-            React.createElement(AccountAvatar, {
-              className: "playground-tasks-detail-person-avatar",
-              imageClassName: "playground-tasks-detail-person-avatar-image",
-              fallbackLabel,
-              photoUrl: creator.photoUrl,
-            }),
-            React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, creator.name)
-          );
-        }
-
         function renderAgentNameAvatar(name, className, photoUrl = "") {
           const normalizedName = String(name || "").trim() || "Computer Agents";
           const avatarLetter = getTaskCommentAvatarLetter(normalizedName);
@@ -956,23 +1023,64 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
           openTaskCommentComposer({ review: true });
         }
 
-        async function handleAddTaskComment() {
+        async function handleAddTaskComment(options = {}) {
           if (!draftTask?.id) {
             return;
           }
-          const commentSubmission = getTaskCommentSubmissionDraft(taskCommentInputValue);
+          const inline = options?.inline === true;
+          const parentCommentId = String(options?.parentCommentId || "").trim();
+          const isReply = Boolean(parentCommentId);
+          const submittedFiles = normalizeTaskAttachmentUploadFiles(options?.files);
+          const submittedBody = typeof options?.body === "string" ? options.body : taskCommentInputValue;
+          const commentSubmission = isReply
+            ? {
+                body: String(submittedBody || "").replaceAll(String.fromCharCode(13), "").trim(),
+                isReview: false,
+              }
+            : getTaskCommentSubmissionDraft(submittedBody);
           const nextCommentBody = commentSubmission.body;
           if (!nextCommentBody) {
             return;
           }
 
-          setSaveState({
-            isSaving: true,
-            error: "",
-            message: "",
-          });
+          if (inline && !isReply) {
+            setTaskActivityCommentPending(true);
+            setTaskActivityCommentError("");
+          } else if (!isReply) {
+            setSaveState({
+              isSaving: true,
+              error: "",
+              message: "",
+            });
+          }
 
           try {
+            const uploadedCommentAttachments = submittedFiles.length
+              ? await uploadTaskAttachmentFiles(submittedFiles, {
+                  environmentId: activeTaskEnvironmentId,
+                  allowWithoutEnvironment: true,
+                })
+              : [];
+            const commentAttachments = normalizePlaygroundTaskAttachmentList(
+              uploadedCommentAttachments
+            ).map((attachment) => ({
+              id: attachment.id,
+              filename: attachment.filename,
+              mimeType: attachment.mimeType,
+              type: attachment.type,
+              size: attachment.size,
+              uploadedAt: attachment.uploadedAt,
+              url: attachment.url,
+              environmentId: attachment.environmentId,
+              sourcePath: attachment.sourcePath,
+              workspacePath: attachment.workspacePath,
+              gcsPath: attachment.gcsPath,
+            }));
+            const commentMetadata = {
+              ...(currentUserAvatarUrl ? { authorAvatarUrl: currentUserAvatarUrl } : {}),
+              ...(parentCommentId ? { parentCommentId } : {}),
+              ...(commentAttachments.length ? { attachments: commentAttachments } : {}),
+            };
             const response = await fetch(backendUrl + "/tasks/" + encodeURIComponent(draftTask.id) + "/comments", {
               method: "POST",
               headers: {
@@ -981,11 +1089,10 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
               },
               body: JSON.stringify({
                 body: nextCommentBody,
+                parentCommentId: parentCommentId || undefined,
                 authorType: "user",
                 authorName: currentUserName || undefined,
-                metadata: currentUserAvatarUrl
-                  ? { authorAvatarUrl: currentUserAvatarUrl }
-                  : undefined,
+                metadata: Object.keys(commentMetadata).length ? commentMetadata : undefined,
               }),
             });
             const data = await response.json().catch(() => ({}));
@@ -993,21 +1100,51 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
               throw new Error(data?.message || data?.error || "Failed to add comment.");
             }
 
-            const createdComment = getPlaygroundTaskCommentResponseRecord(data);
+            const createdCommentResponse = getPlaygroundTaskCommentResponseRecord(data);
+            const createdComment = createdCommentResponse && parentCommentId && !createdCommentResponse.parentCommentId
+              ? {
+                  ...createdCommentResponse,
+                  parentCommentId,
+                }
+              : createdCommentResponse;
+            const createdActivityEvents = normalizePlaygroundTaskActivityList(data?.activityEvents);
             let nextTaskRecord = null;
             if (createdComment) {
               const nextComments = normalizePlaygroundTaskCommentList((draftTask.comments || []).concat(createdComment));
               nextTaskRecord = applyRefreshedTaskDetails({
                 ...normalizePlaygroundTaskRecord(draftTask),
                 comments: nextComments,
+                activity: normalizePlaygroundTaskActivityList([
+                  ...(Array.isArray(draftTask.activity) ? draftTask.activity : []),
+                  ...createdActivityEvents,
+                  {
+                    id: "task_activity_comment_" + createdComment.id,
+                    eventType: "comment_added",
+                    sourceId: createdComment.id,
+                    actorType: createdComment.authorType || "user",
+                    actorUserId: createdComment.authorUserId,
+                    actorAgentId: createdComment.authorAgentId,
+                    actorName: createdComment.authorName,
+                    actorAvatarUrl: createdComment.authorAvatarUrl,
+                    commentId: createdComment.id,
+                    comment: createdComment,
+                    createdAt: createdComment.createdAt,
+                  },
+                ]),
               });
             } else {
               await loadTaskDetails(draftTask.id);
             }
 
-            setTaskCommentInputValue("");
-            setTaskCommentMode("");
-            setTaskCommentComposerOpen(false);
+            if (inline && !isReply) {
+              setTaskActivityCommentValue("");
+              setTaskActivityCommentPending(false);
+              setTaskActivityCommentError("");
+            } else if (!isReply) {
+              setTaskCommentInputValue("");
+              setTaskCommentMode("");
+              setTaskCommentComposerOpen(false);
+            }
             if (commentSubmission.isReview) {
               const taskForReviewRequest = nextTaskRecord || normalizePlaygroundTaskRecord({
                 ...draftTask,
@@ -1020,16 +1157,155 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
                 reviewCommentId: createdComment?.id || "",
                 successMessage: "Change request started",
               });
-            } else {
+            } else if (!inline && !isReply) {
               resetSaveState("Comment added");
             }
+            return createdComment;
           } catch (error) {
-            setSaveState({
-              isSaving: false,
-              error: error instanceof Error ? error.message : "Failed to add comment.",
-              message: "",
+            if (isReply) {
+              throw error;
+            }
+            if (inline) {
+              setTaskActivityCommentPending(false);
+              setTaskActivityCommentError(error instanceof Error ? error.message : "Failed to add comment.");
+            } else {
+              setSaveState({
+                isSaving: false,
+                error: error instanceof Error ? error.message : "Failed to add comment.",
+                message: "",
+              });
+            }
+          }
+        }
+
+        function applyTaskCommentMutation(savedTaskRecord, comments, activity) {
+          const normalizedComments = normalizePlaygroundTaskCommentList(comments);
+          const normalizedActivity = normalizePlaygroundTaskActivityList(activity);
+          const normalizedSavedTask = normalizePlaygroundTaskRecord({
+            ...savedTaskRecord,
+            comments: normalizedComments,
+            activity: normalizedActivity,
+          });
+          const isSelectedTask = selectedTaskIdRef.current === normalizedSavedTask.id;
+          const shouldPreserveDirtyDraft = isSelectedTask && editorDirtyRef.current;
+
+          commitLocalTaskRecord(normalizedSavedTask, {
+            selectTask: isSelectedTask,
+            syncDraft: isSelectedTask && !shouldPreserveDirtyDraft,
+            markClean: !shouldPreserveDirtyDraft,
+          });
+
+          if (shouldPreserveDirtyDraft) {
+            setDraftTask((current) => {
+              if (!current || current.id !== normalizedSavedTask.id) {
+                return current;
+              }
+              return normalizePlaygroundTaskRecord({
+                ...current,
+                comments: normalizedComments,
+                activity: normalizedActivity,
+                updatedAt: normalizedSavedTask.updatedAt,
+              });
             });
           }
+
+          return normalizedSavedTask;
+        }
+
+        async function handleEditTaskComment(commentId, nextText) {
+          const normalizedCommentId = String(commentId || "").trim();
+          const normalizedText = String(nextText || "")
+            .replaceAll(String.fromCharCode(13), "")
+            .trim();
+          if (!draftTask?.id || !normalizedCommentId || !normalizedText) {
+            throw new Error("Comment is unavailable.");
+          }
+
+          const comments = normalizePlaygroundTaskCommentList(draftTask.comments);
+          const existingComment = comments.find((comment) => comment.id === normalizedCommentId);
+          if (!existingComment || !isTaskCommentByCurrentUser(existingComment)) {
+            throw new Error("You can only edit your own comments.");
+          }
+
+          const updatedComment = normalizePlaygroundTaskCommentRecord({
+            ...existingComment,
+            text: normalizedText,
+            metadata: {
+              ...(existingComment.metadata || {}),
+              editedAt: new Date().toISOString(),
+            },
+          });
+          if (!updatedComment) {
+            throw new Error("Comment is unavailable.");
+          }
+
+          const nextComments = comments.map((comment) =>
+            comment.id === normalizedCommentId ? updatedComment : comment
+          );
+          const nextActivity = normalizePlaygroundTaskActivityList(
+            (Array.isArray(draftTask.activity) ? draftTask.activity : []).map((event) => {
+              const eventCommentId = String(
+                event.commentId || (event.eventType === "comment_added" ? event.sourceId : "")
+              ).trim();
+              return eventCommentId === normalizedCommentId
+                ? {
+                    ...event,
+                    commentId: normalizedCommentId,
+                    comment: updatedComment,
+                  }
+                : event;
+            })
+          );
+          const savedTask = await patchTaskRecord(draftTask, {
+            comments: nextComments,
+            activity: nextActivity,
+          });
+          return applyTaskCommentMutation(savedTask, nextComments, nextActivity);
+        }
+
+        async function handleDeleteTaskComment(commentId) {
+          const normalizedCommentId = String(commentId || "").trim();
+          if (!draftTask?.id || !normalizedCommentId) {
+            throw new Error("Comment is unavailable.");
+          }
+
+          const comments = normalizePlaygroundTaskCommentList(draftTask.comments);
+          const existingComment = comments.find((comment) => comment.id === normalizedCommentId);
+          if (!existingComment || !isTaskCommentByCurrentUser(existingComment)) {
+            throw new Error("You can only delete your own comments.");
+          }
+
+          const removedCommentIds = new Set([normalizedCommentId]);
+          let foundNestedReply = true;
+          while (foundNestedReply) {
+            foundNestedReply = false;
+            comments.forEach((comment) => {
+              if (
+                comment.parentCommentId
+                && removedCommentIds.has(comment.parentCommentId)
+                && !removedCommentIds.has(comment.id)
+              ) {
+                removedCommentIds.add(comment.id);
+                foundNestedReply = true;
+              }
+            });
+          }
+
+          const nextComments = comments.filter((comment) => !removedCommentIds.has(comment.id));
+          const nextActivity = normalizePlaygroundTaskActivityList(
+            (Array.isArray(draftTask.activity) ? draftTask.activity : []).filter((event) => {
+              if (event.eventType !== "comment_added") {
+                return true;
+              }
+              const eventCommentId = String(event.commentId || event.sourceId || "").trim();
+              return !removedCommentIds.has(eventCommentId);
+            })
+          );
+          const savedTask = await patchTaskRecord(draftTask, {
+            comments: nextComments,
+            activity: nextActivity,
+          });
+          return applyTaskCommentMutation(savedTask, nextComments, nextActivity);
         }
 
         async function handleApproveTaskReview() {
@@ -1191,6 +1467,8 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
           if (!draftTask?.id) {
             return;
           }
+          setTaskDetailTypeSearchQuery("");
+          setTaskDetailSelectPopover("");
           const currentTaskType = normalizePlaygroundTaskType(draftTask.taskType);
           if (normalizedType === "subtask") {
             openTaskParentPicker();
@@ -1345,7 +1623,17 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
         }
 
         function applyRefreshedTaskDetails(taskRecord) {
-          const normalized = normalizePlaygroundTaskRecord(taskRecord);
+          const incomingTask = normalizePlaygroundTaskRecord(taskRecord);
+          const existingTask = draftTask?.id === incomingTask.id
+            ? draftTask
+            : tasks.find((task) => task.id === incomingTask.id);
+          const normalized = normalizePlaygroundTaskRecord({
+            ...incomingTask,
+            activity: normalizePlaygroundTaskActivityList([
+              ...(Array.isArray(existingTask?.activity) ? existingTask.activity : []),
+              ...(Array.isArray(incomingTask.activity) ? incomingTask.activity : []),
+            ]),
+          });
           const isSelectedTask = selectedTaskIdRef.current === normalized.id;
           const shouldPreserveDirtyDraft = isSelectedTask && editorDirtyRef.current;
 
@@ -1363,6 +1651,10 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function updateDraftTask(up
               return normalizePlaygroundTaskRecord({
                 ...current,
                 comments: normalized.comments,
+                activity: normalizePlaygroundTaskActivityList([
+                  ...(Array.isArray(current.activity) ? current.activity : []),
+                  ...(Array.isArray(normalized.activity) ? normalized.activity : []),
+                ]),
                 linkedThreadIds: normalized.linkedThreadIds,
                 lastStartedThreadId: normalized.lastStartedThreadId,
 `;

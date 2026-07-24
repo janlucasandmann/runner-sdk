@@ -532,6 +532,7 @@ export const TEAMS_PAGE_MEMBERS_SCRIPT = `          const getTeamMemberUserId = 
 	            ariaLabel: "Team members",
 	            className: "playground-team-members-platform-data-table",
 	            surface: "plain",
+	            variant: "minimalistic-ui",
 	            sorting: {
 	              value: { id: teamPageMemberSort, direction: normalizedTeamPageMemberSortDirection },
 	              manual: true,
@@ -549,6 +550,7 @@ export const TEAMS_PAGE_MEMBERS_SCRIPT = `          const getTeamMemberUserId = 
 	              ariaLabel: (row) => "Select " + getTeamMemberRowDisplayName(row),
 	            },
 	            toolbar: {
+	              title: "All Members",
 	              search: {
 	                value: teamPageMemberSearchQuery,
 	                onChange: setTeamPageMemberSearchQuery,
@@ -576,12 +578,10 @@ export const TEAMS_PAGE_MEMBERS_SCRIPT = `          const getTeamMemberUserId = 
 	              : "No members yet.",
 	          });
 
-	          const renderMembersTab = () => React.createElement("div", { className: "playground-team-detail-panel" },
-            React.createElement("section", {
-                className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-current-tasks-section playground-project-overview-work-list-section playground-project-overview-threads-section playground-agents-detail-threads-section playground-evaluations-runs-section playground-agents-overview-list-section playground-team-grid-table-section playground-team-members-table-section",
-              },
-	              teamMembersDataTable
-	            ),
+	          const renderMembersTab = () => React.createElement("div", {
+	              className: "playground-team-detail-panel playground-team-members-table-section",
+	            },
+	            teamMembersDataTable
 	          );
 
 `;

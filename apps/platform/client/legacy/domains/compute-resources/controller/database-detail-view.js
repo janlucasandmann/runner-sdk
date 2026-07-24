@@ -1056,16 +1056,15 @@
   	          const databaseOwnerMissingTeamIds = databaseSharedTeamIds.filter((teamId) => (
   	            !Object.prototype.hasOwnProperty.call(databaseOwnerTeamMembersById, teamId)
   	          ));
-  	          const databasePermissionTeams = [
-  	            {
-  	              id: "all_agents",
-  	              name: "All Agents",
-  	              meta: "Always included",
-  	              permission: "Database default",
-  	              createdAt: "",
-  	              locked: true,
-  	            },
-  	            ...databaseSharedTeamIds.map((teamId) => {
+	          const databasePermissionTeams = [
+	            ...createPlatformSystemAccessPrincipalRows().map((principal) => ({
+	              ...principal,
+	              meta: principal.description || "Always included",
+	              permission: principal.id === PLATFORM_ALL_AGENTS_PRINCIPAL_ID
+	                ? "Agent policy"
+	                : "Organization member policy",
+	            })),
+	            ...databaseSharedTeamIds.map((teamId) => {
   	              const team = databaseWorkspaceTeamById.get(teamId) || { id: teamId, name: "Team" };
   	              return {
   	                ...team,
@@ -1307,90 +1306,38 @@
 	              renderAddDatabaseTeamsMenuContent()
 	            )
 	            : null;
-	          const databaseAccessColumns = [
-	            {
-	              id: "team",
-	              header: "Team",
-	              accessor: (team) => team.name || "Untitled team",
-	              sortable: true,
-	              width: "minmax(220px, 1.45fr)",
-	              cell: ({ row: team }) => React.createElement("div", null,
-	                React.createElement("div", { className: "playground-team-table-title" }, team.name),
-	                React.createElement("div", { className: "playground-team-table-meta" }, team.meta)
-	              ),
-  	            },
-  	            {
-  	              id: "policy",
-  	              header: "Policy",
-  	              accessor: (team) => team.permission || "",
-  	              sortable: true,
-	              width: "minmax(145px, 0.85fr)",
-  	            },
-  	            {
-  	              id: "created",
-  	              header: "Created",
-  	              accessor: (team) => Date.parse(String(team.createdAt || "")) || 0,
-  	              sortable: true,
-  	              sortDescFirst: true,
-  	              width: "minmax(120px, 0.7fr)",
-  	              align: "end",
-	              cell: ({ row: team }) => team.locked ? "Default" : (formatDatabaseTeamCreatedDate(team.createdAt) || "—"),
-	            },
-	          ];
 	          const databaseTeamAccessPlatformSection = React.createElement("section", {
 	              className: "playground-project-settings-access-section",
 	            },
-	            React.createElement(PlatformDataTable, {
-	              rows: databasePermissionTeams,
-	              columns: databaseAccessColumns,
-	              getRowId: (team) => String(team.id || ""),
-	              ariaLabel: "Database team access",
+	            React.createElement(PlatformResourceAccessTable, {
+	              teams: databasePermissionTeams.filter((team) => !isPlatformSystemAccessPrincipalId(team.id)),
+	              resourceLabel: "Database",
 	              className: "playground-database-access-platform-data-table",
-	              variant: "minimalistic-ui",
-	              sorting: { defaultValue: { id: "team", direction: "asc" } },
-  	              selection: {
-  	                enabled: true,
-  	                value: selectedDatabaseAccessTeamIds,
-  	                isRowSelectable: (team) => !team.locked,
-  	                ariaLabel: (team) => team.locked ? "All Agents is always included" : "Select " + team.name,
-  	                onChange: ({ selectedIds }) => setSelectedDatabaseAccessTeamIds(new Set(selectedIds)),
-  	              },
-	              toolbar: {
-	                title: "Manage Database Access",
-	                ...(databaseAddTeamsControl ? { trailing: databaseAddTeamsControl } : {}),
-  	              },
-  	              onRowActivate: (team) => {
-  	                setDatabaseTeamMenuId("");
-  	                setDatabasePermissionRoleId("member");
-  	                setDatabasePermissionTeamId(team.id);
-  	              },
-  	              getRowActions: (team) => team.locked
-  	                ? []
-  	                : [
-  	                    ...(typeof onOpenTeamPage === "function" ? [{
-  	                      id: "view-team",
-  	                      label: "View team",
-  	                      icon: ExternalLink,
-  	                      onSelect: () => onOpenTeamPage(team.id),
-  	                    }] : []),
-  	                    {
-  	                      id: "remove",
-  	                      label: "Remove team access",
-  	                      icon: Trash2,
-  	                      danger: true,
-  	                      disabled: databaseSaveState.isSaving || Boolean(databaseTeamAccessState.action),
-  	                      onSelect: ({ rows }) => {
-  	                        const targets = rows.filter((row) => !row.locked);
-  	                        if (targets.length > 1) void handleRemoveDatabaseTeamAccessBulk(targets);
-  	                        else if (targets[0]) void handleRemoveDatabaseTeamAccess(targets[0]);
-  	                      },
-  	                    },
-  	                  ],
-  	              error: databaseTeamAccessState.error || null,
-	              emptyState: "No teams have database access.",
-	              noResultsState: "No matching team access found.",
-  	            })
-  	          );
+	              selectedIds: selectedDatabaseAccessTeamIds,
+	              onSelectedIdsChange: setSelectedDatabaseAccessTeamIds,
+	              trailing: databaseAddTeamsControl,
+	              busy: databaseSaveState.isSaving || Boolean(databaseTeamAccessState.action),
+	              onOpenPermissions: (team) => {
+	                setDatabaseTeamMenuId("");
+	                setDatabasePermissionRoleId("member");
+	                setDatabasePermissionTeamId(team.id);
+	              },
+	              getTeamActions: (team) => typeof onOpenTeamPage === "function"
+	                ? [{
+	                      id: "view-team",
+	                      label: "View team",
+	                      icon: ExternalLink,
+	                      onSelect: () => onOpenTeamPage(team.id),
+	                  }]
+	                : [],
+	              onRemoveTeams: (teams) => {
+	                if (teams.length > 1) void handleRemoveDatabaseTeamAccessBulk(teams);
+	                else if (teams[0]) void handleRemoveDatabaseTeamAccess(teams[0]);
+	              },
+	              formatCreatedAt: (value) => formatDatabaseTeamCreatedDate(value) || "—",
+	              error: databaseTeamAccessState.error || null,
+	            })
+	          );
   	          const databaseSettingsOverviewContent = React.createElement("section", {
   	              className: "playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-teams-section playground-project-settings-root playground-database-settings-root",
   	            },
@@ -1400,11 +1347,11 @@
 	            ),
 	            databaseDangerSection
 	          );
-  	          const selectedDatabaseRoleDefinition = getPlaygroundTeamRoleDefinition(databasePermissionRoleId);
-  	          const selectedDatabaseRolePermissionSet = selectedDatabasePermissionTeam && selectedDatabasePermissionTeam.id !== "all_agents"
-  	            ? getDatabaseTeamRolePermissionSet(draftDatabase, selectedDatabasePermissionTeam.id, selectedDatabaseRoleDefinition.id)
-  	            : null;
-  	          const databaseTeamRolePages = selectedDatabasePermissionTeam && selectedDatabasePermissionTeam.id !== "all_agents"
+	          const selectedDatabaseRoleDefinition = getPlaygroundTeamRoleDefinition(databasePermissionRoleId);
+	          const selectedDatabaseRolePermissionSet = selectedDatabasePermissionTeam && !isPlatformSystemAccessPrincipalId(selectedDatabasePermissionTeam.id)
+	            ? getDatabaseTeamRolePermissionSet(draftDatabase, selectedDatabasePermissionTeam.id, selectedDatabaseRoleDefinition.id)
+	            : null;
+	          const databaseTeamRolePages = selectedDatabasePermissionTeam && !isPlatformSystemAccessPrincipalId(selectedDatabasePermissionTeam.id)
   	            ? React.createElement(PlatformRolePermissionsPage, {
   	                roles: PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => ({
   	                  id: role.id,
@@ -1465,14 +1412,19 @@
   	                  React.createElement("span", null, "Settings")
   	                ),
   	                React.createElement("div", { className: "playground-project-team-permissions-title" },
-  	                  selectedDatabasePermissionTeam.id === "all_agents"
-  	                    ? "All Agents Permissions"
-  	                    : (selectedDatabasePermissionTeam.name || "Team") + " Database Access"
-  	                )
-  	              ),
-  	              selectedDatabasePermissionTeam.id === "all_agents"
-  	                ? React.createElement(PlatformPermissionsPage, {
-  	                  permissionSet: normalizePlaygroundPermissionSet(draftDatabase.permissionSet, "database"),
+	                  isPlatformSystemAccessPrincipalId(selectedDatabasePermissionTeam.id)
+	                    ? selectedDatabasePermissionTeam.name + " Permissions"
+	                    : (selectedDatabasePermissionTeam.name || "Team") + " Database Access"
+	                )
+	              ),
+	              isPlatformSystemAccessPrincipalId(selectedDatabasePermissionTeam.id)
+	                ? React.createElement(PlatformPermissionsPage, {
+	                  permissionSet: getPlatformSystemPrincipalPermissionSet(
+	                    draftDatabase.metadata,
+	                    selectedDatabasePermissionTeam.id,
+	                    "database",
+	                    draftDatabase.permissionSet
+	                  ),
   	                  subjectType: "database",
   	                  animationKey: databasePermissionChartAnimationKey,
   	                  disabled: isDatabaseTemplatePreview,
@@ -1513,10 +1465,6 @@
 	              renderDatabaseSidebarRow("Creator", databaseCreatorValue, {
 	                valueClassName: "playground-server-detail-sidebar-identity-cell",
 	              }),
-	              renderDatabaseSidebarRow("Owner", databaseOwnerSelectorControl, {
-	                className: "playground-server-detail-sidebar-owner-row",
-	                valueClassName: "playground-server-detail-sidebar-owner-cell",
-	              }),
 	              renderDatabaseSidebarRow("Provider",
 	                renderDatabaseSidebarValue(draftDatabase.provider || "firestore")
 	              ),
@@ -1531,7 +1479,11 @@
 	              ),
 	              renderDatabaseSidebarRow("Updated",
 	                renderDatabaseSidebarValue(formatPlaygroundFileDate(draftDatabase.updatedAt))
-	              )
+	              ),
+	              renderDatabaseSidebarRow("Owner", databaseOwnerSelectorControl, {
+	                className: "playground-server-detail-sidebar-owner-row",
+	                valueClassName: "playground-server-detail-sidebar-owner-cell",
+	              })
 	            )
 	          );
 	          const databaseDetailSidebarCollapsed = Boolean(databaseDetailsCollapsed);

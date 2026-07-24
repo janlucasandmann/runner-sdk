@@ -45,6 +45,8 @@ export const EVALUATIONS_PAGE_VERSIONS_SCRIPT = String.raw`      function stripP
 
       function buildPlaygroundEvaluationVersionSnapshot(set) {
         const normalizedSet = normalizePlaygroundEvaluationSet(set || createPlaygroundEvaluationSetDraft());
+        const dataRows = (Array.isArray(normalizedSet.dataRows) ? normalizedSet.dataRows : [])
+          .map((row, index) => normalizePlaygroundEvaluationDataRow(row, index));
         return {
           name: String(normalizedSet.name || "").trim() || "Untitled Evaluation",
           description: String(normalizedSet.description || ""),
@@ -55,8 +57,8 @@ export const EVALUATIONS_PAGE_VERSIONS_SCRIPT = String.raw`      function stripP
           environmentType: String(normalizedSet.environmentType || "").trim() === "project" ? "project" : "computer",
           environmentId: String(normalizedSet.environmentId || "").trim(),
           projectId: String(normalizedSet.projectId || "").trim(),
-          dataRows: (Array.isArray(normalizedSet.dataRows) ? normalizedSet.dataRows : [])
-            .map((row, index) => normalizePlaygroundEvaluationDataRow(row, index)),
+          dataRows,
+          cases: dataRows,
           runs: (Array.isArray(normalizedSet.runs) ? normalizedSet.runs : [])
             .map((run, index) => normalizePlaygroundEvaluationRun(run, index)),
           creator: normalizePlaygroundEvaluationPersonIdentity(normalizedSet.creator || normalizedSet.createdBy || {}),

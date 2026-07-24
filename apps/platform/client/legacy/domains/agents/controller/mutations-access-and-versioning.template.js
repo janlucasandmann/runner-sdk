@@ -449,19 +449,185 @@
             if (!normalizedTeamId) {
               return normalizedAgent;
             }
-            const metadata = {
-              ...getAgentMetadataRecord(normalizedAgent),
-            };
-            const nextTeamIds = Array.from(new Set([
-              ...getAgentSharedTeamIds(normalizedAgent),
-              normalizedTeamId,
-            ]));
-            metadata.sharedTeamIds = nextTeamIds;
-            metadata.teamAccessIds = nextTeamIds;
             return normalizePlaygroundAgentRecord({
               ...normalizedAgent,
-              metadata,
+              metadata: buildPlatformTeamAccessMetadata(
+                getAgentMetadataRecord(normalizedAgent),
+                normalizedTeamId,
+                true,
+                "agent_team_role",
+                PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => role.id)
+              ),
             });
+          }
+
+          function buildAgentTeamAccessRecord(agentRecord, teamId, shouldInclude) {
+            const normalizedAgent = normalizePlaygroundAgentRecord(agentRecord || buildPlaygroundDefaultAgentDraft());
+            return normalizePlaygroundAgentRecord({
+              ...normalizedAgent,
+              metadata: buildPlatformTeamAccessMetadata(
+                getAgentMetadataRecord(normalizedAgent),
+                teamId,
+                shouldInclude,
+                "agent_team_role",
+                PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => role.id)
+              ),
+            });
+          }
+
+          function getAgentTeamRolePermissionSet(agentRecord, teamId, roleId) {
+            return getPlatformTeamRolePermissionSet(
+              getAgentMetadataRecord(agentRecord),
+              teamId,
+              roleId,
+              "agent_team_role",
+              PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => role.id)
+            );
+          }
+
+          function getAgentSystemRolePermissionSet(agentRecord, principalId, roleId) {
+            return getPlatformSystemPrincipalRolePermissionSet(
+              getAgentMetadataRecord(agentRecord),
+              principalId,
+              roleId,
+              "agent_team_role"
+            );
+          }
+
+          async function flushQueuedAgentAccessPermissionSave() {
+            if (agentAccessPermissionSaveInFlightRef.current) return;
+            agentAccessPermissionSaveInFlightRef.current = true;
+            try {
+              while (agentAccessPermissionSaveQueuedRef.current) {
+                const queuedSave = agentAccessPermissionSaveQueuedRef.current;
+                const agentToSave = normalizePlaygroundAgentRecord(queuedSave?.agent || queuedSave);
+                const teamIds = Array.from(new Set(
+                  (Array.isArray(queuedSave?.teamIds) ? queuedSave.teamIds : [queuedSave?.teamId])
+                    .map((teamId) => String(teamId || "").trim())
+                    .filter(Boolean)
+                ));
+                agentAccessPermissionSaveQueuedRef.current = null;
+                try {
+                  const savedAgent = await persistAgentRecordFromAction(
+                    agentToSave,
+                    "Failed to save agent access permissions."
+                  );
+                  for (const teamId of teamIds) {
+                    await syncAgentTeamResourceShare(savedAgent, teamId);
+                  }
+                } catch (error) {
+                  setAgentAccessState({
+                    teamId: "",
+                    action: "",
+                    error: error instanceof Error ? error.message : "Failed to save agent access permissions.",
+                  });
+                  return;
+                }
+              }
+            } finally {
+              agentAccessPermissionSaveInFlightRef.current = false;
+            }
+          }
+
+          function queueAgentAccessPermissionSave(agentRecord, teamId = "") {
+            const normalizedAgent = normalizePlaygroundAgentRecord(agentRecord || buildPlaygroundDefaultAgentDraft());
+            if (!normalizedAgent?.id || normalizedAgent.id === PLAYGROUND_AGENT_DRAFT_ID) return;
+            const queuedTeamIds = Array.isArray(agentAccessPermissionSaveQueuedRef.current?.teamIds)
+              ? agentAccessPermissionSaveQueuedRef.current.teamIds
+              : [agentAccessPermissionSaveQueuedRef.current?.teamId];
+            const normalizedTeamId = String(teamId || "").trim();
+            agentAccessPermissionSaveQueuedRef.current = {
+              agent: normalizedAgent,
+              teamIds: Array.from(new Set([
+                ...queuedTeamIds.map((queuedTeamId) => String(queuedTeamId || "").trim()).filter(Boolean),
+                ...(normalizedTeamId ? [normalizedTeamId] : []),
+              ])),
+            };
+            setAgentDetailsById((current) => ({
+              ...current,
+              [normalizedAgent.id]: normalizedAgent,
+            }));
+            if (selectedAgentIdRef.current === normalizedAgent.id) {
+              setDraftAgent(normalizedAgent);
+            }
+            setAgentAccessState({ teamId: "", action: "saving", error: "" });
+            if (agentAccessPermissionSaveTimerRef.current) {
+              window.clearTimeout(agentAccessPermissionSaveTimerRef.current);
+            }
+            agentAccessPermissionSaveTimerRef.current = window.setTimeout(() => {
+              agentAccessPermissionSaveTimerRef.current = null;
+              void flushQueuedAgentAccessPermissionSave().finally(() => {
+                if (!agentAccessPermissionSaveQueuedRef.current) {
+                  setAgentAccessState((current) => current.error
+                    ? current
+                    : { teamId: "", action: "", error: "" });
+                }
+              });
+            }, 450);
+          }
+
+          function updateAgentSystemAccessPermissionSet(permissionSet) {
+            const currentAgent = normalizePlaygroundAgentRecord(draftAgent || selectedAgentSnapshot || buildPlaygroundDefaultAgentDraft());
+            const principalId = isPlatformSystemAccessPrincipalId(agentAccessPrincipalId)
+              ? normalizePlatformAccessPrincipalId(agentAccessPrincipalId)
+              : PLATFORM_ALL_AGENTS_PRINCIPAL_ID;
+            const nextPermissionSet = normalizePlaygroundPermissionSet(permissionSet, "agent_resource");
+            const nextAgent = normalizePlaygroundAgentRecord({
+              ...currentAgent,
+              metadata: buildPlatformSystemPrincipalPermissionMetadata(
+                getAgentMetadataRecord(currentAgent),
+                principalId,
+                nextPermissionSet,
+                "agent_resource"
+              ),
+            });
+            queueAgentAccessPermissionSave(nextAgent);
+          }
+
+          function updateAgentSystemRoleAccessPermissionSet(roleId, permissionSet) {
+            const principalId = normalizePlatformAccessPrincipalId(agentAccessPrincipalId);
+            const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
+            if (
+              !isPlatformRoleScopedSystemAccessPrincipalId(principalId)
+              || normalizedRoleId === "owner"
+            ) {
+              return;
+            }
+            const currentAgent = normalizePlaygroundAgentRecord(
+              draftAgent || selectedAgentSnapshot || buildPlaygroundDefaultAgentDraft()
+            );
+            const nextAgent = normalizePlaygroundAgentRecord({
+              ...currentAgent,
+              metadata: buildPlatformSystemPrincipalRolePermissionMetadata(
+                getAgentMetadataRecord(currentAgent),
+                principalId,
+                normalizedRoleId,
+                normalizePlaygroundPermissionSet(permissionSet, "agent_team_role"),
+                "agent_team_role"
+              ),
+            });
+            queueAgentAccessPermissionSave(nextAgent);
+          }
+
+          function updateAgentTeamRoleAccessPermissionSet(roleId, permissionSet) {
+            const normalizedTeamId = String(agentAccessPrincipalId || "").trim();
+            const normalizedRoleId = normalizePlaygroundTeamRoleId(roleId, "member");
+            if (!normalizedTeamId || isPlatformSystemAccessPrincipalId(normalizedTeamId) || normalizedRoleId === "owner") {
+              return;
+            }
+            const currentAgent = normalizePlaygroundAgentRecord(draftAgent || selectedAgentSnapshot || buildPlaygroundDefaultAgentDraft());
+            const nextAgent = normalizePlaygroundAgentRecord({
+              ...currentAgent,
+              metadata: buildPlatformTeamRolePermissionMetadata(
+                getAgentMetadataRecord(currentAgent),
+                normalizedTeamId,
+                normalizedRoleId,
+                normalizePlaygroundPermissionSet(permissionSet, "agent_team_role"),
+                "agent_team_role",
+                PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => role.id)
+              ),
+            });
+            queueAgentAccessPermissionSave(nextAgent, normalizedTeamId);
           }
   
           function buildAgentTeamSharePayload(agentRecord, teamRecord) {
@@ -497,6 +663,17 @@
                 resourceKind: "agent",
                 sharedTeamId: normalizedTeam.id || "",
                 sharedTeamName: normalizedTeam.name || "",
+                permissionSet: getPlatformTeamPermissionSet(
+                  getAgentMetadataRecord(normalizedAgent),
+                  normalizedTeam.id,
+                  "agent_team_role"
+                ),
+                rolePermissionSets: getPlatformTeamRolePermissionSets(
+                  getAgentMetadataRecord(normalizedAgent),
+                  normalizedTeam.id,
+                  "agent_team_role",
+                  PLAYGROUND_TEAM_ROLE_DEFINITIONS.map((role) => role.id)
+                ),
                 owner,
                 ownerId: owner.id,
                 ownerUserId: owner.userId,
@@ -506,6 +683,146 @@
                 agent: agentSnapshot,
               },
             };
+          }
+
+          async function syncAgentTeamResourceShare(agentRecord, teamId) {
+            const normalizedTeamId = String(teamId || "").trim();
+            if (!normalizedTeamId) return;
+            const teamRecord = availableAgentShareTeams.find((team) => (
+              String(team?.id || "").trim() === normalizedTeamId
+            )) || { id: normalizedTeamId };
+            const { response, data } = await fetchJsonWithTimeout(
+              backendUrl + "/teams/" + encodeURIComponent(normalizedTeamId) + "/resource-shares",
+              {
+                method: "POST",
+                credentials: "include",
+                cache: "no-store",
+                headers: {
+                  ...requestHeaders,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(buildAgentTeamSharePayload(agentRecord, teamRecord)),
+              },
+              8000
+            );
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to update agent team permissions.");
+            }
+          }
+
+          async function findAgentTeamResourceShare(teamId, agentId) {
+            const { response, data } = await fetchJsonWithTimeout(
+              backendUrl + "/teams/" + encodeURIComponent(teamId) + "/resource-shares",
+              {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+                headers: requestHeaders,
+              },
+              8000
+            );
+            if (!response.ok) {
+              throw new Error(data?.message || data?.error || "Failed to load agent team access.");
+            }
+            const shares = Array.isArray(data?.data)
+              ? data.data
+              : Array.isArray(data?.shares)
+                ? data.shares
+                : [];
+            return shares.find((share) => (
+              String(share?.resourceType || share?.resource_type || "") === "agent"
+              && String(share?.resourceId || share?.resource_id || "") === String(agentId || "")
+            )) || null;
+          }
+
+          async function handleAddAgentTeamAccess(team) {
+            const teamId = String(team?.id || "").trim();
+            const currentAgent = normalizePlaygroundAgentRecord(draftAgent || selectedAgentSnapshot || buildPlaygroundDefaultAgentDraft());
+            if (
+              !teamId
+              || !currentAgent.id
+              || currentAgent.id === PLAYGROUND_AGENT_DRAFT_ID
+              || getAgentSharedTeamIds(currentAgent).includes(teamId)
+            ) {
+              return;
+            }
+            const nextAgent = buildAgentTeamAccessRecord(currentAgent, teamId, true);
+            setAgentAccessState({ teamId, action: "adding", error: "" });
+            setDraftAgent(nextAgent);
+            try {
+              const { response, data } = await fetchJsonWithTimeout(
+                backendUrl + "/teams/" + encodeURIComponent(teamId) + "/resource-shares",
+                {
+                  method: "POST",
+                  credentials: "include",
+                  cache: "no-store",
+                  headers: {
+                    ...requestHeaders,
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify(buildAgentTeamSharePayload(nextAgent, team)),
+                },
+                8000
+              );
+              if (!response.ok && Number(response.status || 0) !== 409) {
+                throw new Error(data?.message || data?.error || "Failed to add team access.");
+              }
+              await persistAgentRecordFromAction(nextAgent, "Failed to save agent team access.");
+              setAgentAccessTeamMenuOpen(false);
+            } catch (error) {
+              setDraftAgent(currentAgent);
+              setAgentAccessState({
+                teamId: "",
+                action: "",
+                error: error instanceof Error ? error.message : "Failed to add team access.",
+              });
+              return;
+            }
+            setAgentAccessState({ teamId: "", action: "", error: "" });
+          }
+
+          async function handleRemoveAgentTeamsAccess(teams) {
+            const requestedTeams = (Array.isArray(teams) ? teams : [teams])
+              .filter((team) => team?.id && !isPlatformSystemAccessPrincipalId(team.id));
+            if (!requestedTeams.length) return;
+            const currentAgent = normalizePlaygroundAgentRecord(draftAgent || selectedAgentSnapshot || buildPlaygroundDefaultAgentDraft());
+            let nextAgent = currentAgent;
+            requestedTeams.forEach((team) => {
+              nextAgent = buildAgentTeamAccessRecord(nextAgent, team.id, false);
+            });
+            setAgentAccessState({ teamId: "", action: "removing", error: "" });
+            try {
+              await Promise.all(requestedTeams.map(async (team) => {
+                const share = await findAgentTeamResourceShare(team.id, currentAgent.id);
+                if (!share?.id) return;
+                const { response, data } = await fetchJsonWithTimeout(
+                  backendUrl + "/teams/" + encodeURIComponent(team.id) + "/resource-shares/" + encodeURIComponent(share.id),
+                  {
+                    method: "DELETE",
+                    credentials: "include",
+                    cache: "no-store",
+                    headers: requestHeaders,
+                  },
+                  8000
+                );
+                if (!response.ok) {
+                  throw new Error(data?.message || data?.error || "Failed to remove team access.");
+                }
+              }));
+              await persistAgentRecordFromAction(nextAgent, "Failed to save agent team access.");
+              setSelectedAgentAccessTeamIds(new Set());
+              if (requestedTeams.some((team) => String(team.id) === String(agentAccessPrincipalId))) {
+                setAgentAccessPrincipalId("");
+              }
+            } catch (error) {
+              setAgentAccessState({
+                teamId: "",
+                action: "",
+                error: error instanceof Error ? error.message : "Failed to remove team access.",
+              });
+              return;
+            }
+            setAgentAccessState({ teamId: "", action: "", error: "" });
           }
   
           function handleAgentOwnerPopoverOpenChange(nextOpen) {

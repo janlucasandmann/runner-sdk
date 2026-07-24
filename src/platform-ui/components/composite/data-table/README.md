@@ -43,6 +43,8 @@
 ```
 
 Use `controlsLeading` for secondary actions that must sit immediately before the search field. Use `leading` for navigation or mode controls that belong at the left edge, and `primaryAction` for the trailing primary command.
+Set `primaryAction.icon` to `null` when the command intentionally has no icon;
+leaving it undefined retains the default plus icon.
 
 `layout="content"` is the default and grows with its rows. `layout="fill"` uses its intrinsic content height up to a constrained flex parent's remaining height and animates between intrinsic heights as its rendered rows change. Once that maximum is reached, only the row body scrolls; the toolbar, column header, and pagination remain outside the scroll viewport. Every parent in a fill-height chain must provide `min-height: 0`.
 

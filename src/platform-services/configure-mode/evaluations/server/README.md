@@ -10,6 +10,7 @@ This directory contains HTTP routing and server-side domain adapters for the Eva
 
 - [`domain/`](domain/) — This directory contains domain contracts, normalization, and pure transformations for the Evaluations service in Configure Mode. It remains subordinate to the service boundary and must not become a cross-service utility layer.
 - [`index.mjs`](index.mjs) — Public barrel or composition entry point.
+- [`run-persistence.mjs`](run-persistence.mjs) — Ordered, retrying durable-write coordination for evaluation runs.
 - [`runtime.mjs`](runtime.mjs) — Runtime composition for this layer.
 
 ## Working in this directory

@@ -9,7 +9,7 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
         }, [selectedTaskId]);
 
         useEffect(() => {
-          if (!selectedTaskId || (taskView !== "backlog" && taskView !== "board")) {
+          if (!selectedTaskId || (taskView !== "overview" && taskView !== "backlog" && taskView !== "board")) {
             setProjectTaskDetailScreenOpen(false);
           }
         }, [selectedTaskId, taskView]);
@@ -103,6 +103,89 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
           taskScheduleDialogState,
           taskSkillsPopoverOpen,
           taskView,
+        ]);
+
+        useEffect(() => {
+          if (!projectTaskDetailScreenOpen || !selectedProjectId || !selectedTaskId || !draftTask) {
+            return undefined;
+          }
+
+          function handleTaskDetailShortcut(event) {
+            if (
+              event.defaultPrevented
+              || event.metaKey
+              || event.ctrlKey
+              || event.altKey
+              || event.repeat
+            ) {
+              return;
+            }
+
+            const key = String(event.key || "").toLowerCase();
+            if (taskDetailSelectPopover === "status" && /^[1-5]$/.test(key)) {
+              const statusOption = PLAYGROUND_TASK_MANUAL_STATUS_OPTIONS[Number(key) - 1];
+              if (!statusOption) {
+                return;
+              }
+              event.preventDefault();
+              event.stopPropagation();
+              selectTaskDetailStatus(statusOption.id);
+              return;
+            }
+            if (taskDetailSelectPopover === "type" && /^[1-3]$/.test(key)) {
+              const typeOption = PLAYGROUND_TASK_TYPE_OPTIONS[Number(key) - 1];
+              if (!typeOption) {
+                return;
+              }
+              event.preventDefault();
+              event.stopPropagation();
+              handleTaskTypeSelection(typeOption.id);
+              return;
+            }
+            if (taskDetailSelectPopover === "priority" && /^[1-4]$/.test(key)) {
+              const priorityOption = PLAYGROUND_TASK_PRIORITY_OPTIONS[Number(key) - 1];
+              if (!priorityOption) {
+                return;
+              }
+              event.preventDefault();
+              event.stopPropagation();
+              selectTaskDetailPriority(priorityOption.id);
+              return;
+            }
+
+            const shortcutPopoverId = key === "s"
+              ? "status"
+              : (key === "t" ? "type" : (key === "p" ? "priority" : ""));
+            if (
+              !shortcutPopoverId
+              || event.shiftKey
+              || isTaskKeyboardNavigationBlocked
+              || isBoardTaskKeyboardNavigationBlockedTarget(event.target)
+              || document.querySelector(".platform-modal-backdrop.is-visible, [role='dialog'][aria-modal='true']")
+            ) {
+              return;
+            }
+
+            event.preventDefault();
+            if (shortcutPopoverId === "status") {
+              setTaskDetailStatusSearchQuery("");
+            } else if (shortcutPopoverId === "type") {
+              setTaskDetailTypeSearchQuery("");
+            } else {
+              setTaskDetailPrioritySearchQuery("");
+            }
+            setTaskDetailSelectPopover(shortcutPopoverId);
+          }
+
+          window.addEventListener("keydown", handleTaskDetailShortcut, true);
+          return () => window.removeEventListener("keydown", handleTaskDetailShortcut, true);
+        }, [
+          draftTask?.id,
+          isTaskKeyboardNavigationBlocked,
+          projectTaskDetailScreenOpen,
+          selectedProjectId,
+          selectedTaskId,
+          taskDetailSelectPopover,
         ]);
 
         useEffect(() => {

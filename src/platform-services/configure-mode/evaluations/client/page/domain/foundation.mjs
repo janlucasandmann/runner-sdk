@@ -220,6 +220,8 @@ export const EVALUATIONS_PAGE_FOUNDATION_SCRIPT = String.raw`
           evaluatorReason: String(source.evaluatorReason || source.evaluator_reason || ""),
           evaluatorParseStatus: String(source.evaluatorParseStatus || source.evaluator_parse_status || ""),
           snapshotVersion: String(source.snapshotVersion || source.snapshot_version || ""),
+          executionStage: String(source.executionStage || source.execution_stage || "").trim(),
+          failureStage: String(source.failureStage || source.failure_stage || "").trim(),
           score: Number.isFinite(score) ? Math.max(0, Math.min(1, score)) : 0,
           costTokens: normalizePlaygroundEvaluationTokenCount(
             source.costTokens
@@ -255,76 +257,168 @@ export const EVALUATIONS_PAGE_FOUNDATION_SCRIPT = String.raw`
 
       function normalizePlaygroundEvaluationRun(rawRun, fallbackIndex = 0) {
         const source = rawRun && typeof rawRun === "object" && !Array.isArray(rawRun) ? rawRun : {};
-        const metadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata) ? source.metadata : {};
+        const sourceMetadata = source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata) ? source.metadata : {};
+        const sourceEmbeddedRun = source.run && typeof source.run === "object" && !Array.isArray(source.run) ? source.run : {};
+        const metadataEmbeddedRun = sourceMetadata.run && typeof sourceMetadata.run === "object" && !Array.isArray(sourceMetadata.run)
+          ? sourceMetadata.run
+          : {};
+        const embeddedRun = {
+          ...metadataEmbeddedRun,
+          ...sourceEmbeddedRun,
+        };
+        const embeddedMetadata = embeddedRun.metadata && typeof embeddedRun.metadata === "object" && !Array.isArray(embeddedRun.metadata)
+          ? embeddedRun.metadata
+          : {};
+        const metadata = {
+          ...embeddedMetadata,
+          ...sourceMetadata,
+        };
+        const resolvedSource = {
+          ...embeddedRun,
+          ...source,
+        };
         const runnerPlayground = metadata.runnerPlayground && typeof metadata.runnerPlayground === "object" && !Array.isArray(metadata.runnerPlayground)
           ? metadata.runnerPlayground
           : {};
-        const cases = Array.isArray(source.cases) ? source.cases.map((item, index) => normalizePlaygroundEvaluationRunCase(item, index)) : [];
-        const passThreshold = normalizePlaygroundEvaluationPassThreshold(source.passThreshold ?? source.pass_threshold ?? source.threshold ?? 0.8);
+        const caseRecords = Array.isArray(source.cases) && source.cases.length > 0
+          ? source.cases
+          : Array.isArray(sourceEmbeddedRun.cases) && sourceEmbeddedRun.cases.length > 0
+            ? sourceEmbeddedRun.cases
+            : Array.isArray(metadataEmbeddedRun.cases)
+              ? metadataEmbeddedRun.cases
+              : Array.isArray(source.cases)
+                ? source.cases
+                : [];
+        const cases = caseRecords.map((item, index) => normalizePlaygroundEvaluationRunCase(item, index));
+        const passThreshold = normalizePlaygroundEvaluationPassThreshold(
+          resolvedSource.passThreshold
+          ?? resolvedSource.pass_threshold
+          ?? metadata.passThreshold
+          ?? metadata.pass_threshold
+          ?? resolvedSource.threshold
+          ?? metadata.threshold
+          ?? 0.8
+        );
         const averageScore = cases.length > 0
           ? cases.reduce((sum, item) => sum + Number(item.score || 0), 0) / cases.length
-          : Number(source.averageScore || source.average_score || 0) || 0;
+          : Number(
+              resolvedSource.averageScore
+              ?? resolvedSource.average_score
+              ?? metadata.averageScore
+              ?? metadata.average_score
+              ?? 0
+            ) || 0;
         const activeStatuses = new Set(["queued", "running", "running_case", "waiting_for_case_summary", "running_evaluator", "scoring"]);
-        const passedCount = cases.filter((item) => !activeStatuses.has(item.status) && item.status !== "error" && Number(item.score || 0) >= passThreshold).length;
+        const explicitTotalCount = Math.max(0, Math.round(Number(
+          resolvedSource.totalCount
+          ?? resolvedSource.total_count
+          ?? resolvedSource.caseCount
+          ?? resolvedSource.case_count
+          ?? metadata.totalCount
+          ?? metadata.total_count
+          ?? metadata.caseCount
+          ?? metadata.case_count
+          ?? 0
+        ) || 0));
+        const totalCount = cases.length > 0 ? cases.length : explicitTotalCount;
+        const explicitPassedCountValue = Number(
+          resolvedSource.passedCount
+          ?? resolvedSource.passed_count
+          ?? metadata.passedCount
+          ?? metadata.passed_count
+        );
+        const passRateValue = Number(
+          resolvedSource.passRate
+          ?? resolvedSource.pass_rate
+          ?? metadata.passRate
+          ?? metadata.pass_rate
+        );
+        const passedCount = cases.length > 0
+          ? cases.filter((item) => !activeStatuses.has(item.status) && item.status !== "error" && Number(item.score || 0) >= passThreshold).length
+          : Math.min(
+              totalCount,
+              Math.max(
+                0,
+                Math.round(
+                  Number.isFinite(explicitPassedCountValue)
+                    ? explicitPassedCountValue
+                    : Number.isFinite(passRateValue)
+                      ? passRateValue * totalCount
+                      : 0
+                )
+              )
+            );
         const costTokens = normalizePlaygroundEvaluationTokenCount(
-          source.costTokens
-          ?? source.cost_tokens
-          ?? source.costCt
-          ?? source.costCT
-          ?? source.cost_ct
-          ?? source.computeTokens
-          ?? source.compute_tokens
-          ?? source.totalCT
-          ?? source.totalCt
-          ?? source.total_ct
-          ?? source.ct
+          resolvedSource.costTokens
+          ?? resolvedSource.cost_tokens
+          ?? resolvedSource.costCt
+          ?? resolvedSource.costCT
+          ?? resolvedSource.cost_ct
+          ?? resolvedSource.computeTokens
+          ?? resolvedSource.compute_tokens
+          ?? resolvedSource.totalCT
+          ?? resolvedSource.totalCt
+          ?? resolvedSource.total_ct
+          ?? resolvedSource.ct
           ?? cases.reduce((sum, item) => sum + normalizePlaygroundEvaluationTokenCount(item.costTokens), 0)
         );
         const costUsd = normalizePlaygroundEvaluationUsdCost(
-          readPlaygroundEvaluationUsdCost(source)
+          readPlaygroundEvaluationUsdCost(resolvedSource)
           || cases.reduce((sum, item) => sum + normalizePlaygroundEvaluationUsdCost(item.costUsd), 0)
         );
+        const evaluationSetId = String(
+          resolvedSource.evaluationSetId
+          || resolvedSource.evaluation_set_id
+          || resolvedSource.evaluationId
+          || resolvedSource.evaluation_id
+          || metadata.evaluationSetId
+          || metadata.evaluation_set_id
+          || metadata.evaluationId
+          || metadata.evaluation_id
+          || ""
+        ).trim();
         return {
-          id: String(source.id || source.runId || source.run_id || "").trim() || createPlaygroundEvaluationId("eval_run"),
-          evaluationSetId: String(source.evaluationSetId || source.evaluation_set_id || "").trim(),
-          evaluationVersionId: String(source.evaluationVersionId || source.evaluation_version_id || "").trim(),
-          evaluationVersionNumber: Math.max(0, Number(source.evaluationVersionNumber || source.evaluation_version_number || 0) || 0),
-          evaluationVersionLabel: String(source.evaluationVersionLabel || source.evaluation_version_label || "").trim(),
-          label: String(source.label || source.name || ("Run " + (fallbackIndex + 1))).trim(),
-          status: ["queued", "running", "completed", "failed"].includes(String(source.status || "").trim().toLowerCase())
-            ? String(source.status || "").trim().toLowerCase()
+          id: String(resolvedSource.id || resolvedSource.runId || resolvedSource.run_id || "").trim() || createPlaygroundEvaluationId("eval_run"),
+          evaluationSetId,
+          evaluationId: evaluationSetId,
+          evaluationVersionId: String(resolvedSource.evaluationVersionId || resolvedSource.evaluation_version_id || resolvedSource.versionId || resolvedSource.version_id || metadata.evaluationVersionId || metadata.evaluation_version_id || metadata.versionId || metadata.version_id || "").trim(),
+          evaluationVersionNumber: Math.max(0, Number(resolvedSource.evaluationVersionNumber || resolvedSource.evaluation_version_number || metadata.evaluationVersionNumber || metadata.evaluation_version_number || 0) || 0),
+          evaluationVersionLabel: String(resolvedSource.evaluationVersionLabel || resolvedSource.evaluation_version_label || metadata.evaluationVersionLabel || metadata.evaluation_version_label || "").trim(),
+          label: String(resolvedSource.label || resolvedSource.name || ("Run " + (fallbackIndex + 1))).trim(),
+          status: ["queued", "running", "completed", "failed", "cancelled"].includes(String(resolvedSource.status || "").trim().toLowerCase())
+            ? String(resolvedSource.status || "").trim().toLowerCase()
             : "completed",
-          createdAt: String(source.createdAt || source.created_at || new Date().toISOString()),
-          completedAt: String(source.completedAt || source.completed_at || source.updatedAt || source.updated_at || new Date().toISOString()),
-          targetAgentId: String(source.targetAgentId || source.target_agent_id || source.agentId || source.agent_id || "").trim(),
-          targetAgentName: String(source.targetAgentName || source.target_agent_name || source.agentName || source.agent_name || "").trim(),
-          targetAgentPhotoUrl: String(source.targetAgentPhotoUrl || source.target_agent_photo_url || source.agentPhotoUrl || source.agent_photo_url || source.photoUrl || source.photoURL || "").trim(),
-          targetAgentVersionId: String(source.targetAgentVersionId || source.target_agent_version_id || source.agentVersionId || source.agent_version_id || runnerPlayground.targetAgentVersionId || runnerPlayground.target_agent_version_id || runnerPlayground.agentVersionId || runnerPlayground.agent_version_id || metadata.targetAgentVersionId || metadata.target_agent_version_id || metadata.agentVersionId || metadata.agent_version_id || "").trim(),
-          targetAgentVersionNumber: Math.max(0, Number(source.targetAgentVersionNumber || source.target_agent_version_number || source.agentVersionNumber || source.agent_version_number || source.versionNumber || source.version_number || runnerPlayground.targetAgentVersionNumber || runnerPlayground.target_agent_version_number || metadata.targetAgentVersionNumber || metadata.target_agent_version_number || 0) || 0),
-          targetAgentVersionLabel: String(source.targetAgentVersionLabel || source.target_agent_version_label || source.agentVersionLabel || source.agent_version_label || source.versionLabel || source.version_label || runnerPlayground.targetAgentVersionLabel || runnerPlayground.target_agent_version_label || metadata.targetAgentVersionLabel || metadata.target_agent_version_label || "").trim(),
-          targetAgentVersionRevisionId: String(source.targetAgentVersionRevisionId || source.target_agent_version_revision_id || source.agentVersionRevisionId || source.agent_version_revision_id || source.revisionId || source.revision_id || runnerPlayground.targetAgentVersionRevisionId || runnerPlayground.target_agent_version_revision_id || metadata.targetAgentVersionRevisionId || metadata.target_agent_version_revision_id || "").trim(),
-          targetGuardrailId: String(source.targetGuardrailId || source.target_guardrail_id || source.guardrailId || source.guardrail_id || runnerPlayground.targetGuardrailId || runnerPlayground.target_guardrail_id || metadata.targetGuardrailId || metadata.target_guardrail_id || metadata.run?.targetGuardrailId || "").trim(),
-          targetGuardrailName: String(source.targetGuardrailName || source.target_guardrail_name || source.guardrailName || source.guardrail_name || metadata.targetGuardrailName || metadata.target_guardrail_name || metadata.run?.targetGuardrailName || "").trim(),
-          targetGuardrailVersionId: String(source.targetGuardrailVersionId || source.target_guardrail_version_id || source.guardrailVersionId || source.guardrail_version_id || metadata.targetGuardrailVersionId || metadata.target_guardrail_version_id || metadata.run?.targetGuardrailVersionId || "").trim(),
-          targetGuardrailVersionNumber: Math.max(0, Number(source.targetGuardrailVersionNumber || source.target_guardrail_version_number || source.guardrailVersionNumber || source.guardrail_version_number || metadata.targetGuardrailVersionNumber || metadata.target_guardrail_version_number || metadata.run?.targetGuardrailVersionNumber || 0) || 0),
-          targetGuardrailVersionLabel: String(source.targetGuardrailVersionLabel || source.target_guardrail_version_label || source.guardrailVersionLabel || source.guardrail_version_label || metadata.targetGuardrailVersionLabel || metadata.target_guardrail_version_label || metadata.run?.targetGuardrailVersionLabel || "").trim(),
-          fineTuningJobId: String(source.fineTuningJobId || source.fine_tuning_job_id || runnerPlayground.fineTuningJobId || runnerPlayground.fine_tuning_job_id || metadata.fineTuningJobId || metadata.fine_tuning_job_id || "").trim(),
-          fine_tuning_job_id: String(source.fine_tuning_job_id || source.fineTuningJobId || runnerPlayground.fine_tuning_job_id || runnerPlayground.fineTuningJobId || metadata.fine_tuning_job_id || metadata.fineTuningJobId || "").trim(),
-          environmentType: String(source.environmentType || source.environment_type || source.targetEnvironmentType || source.target_environment_type || "").trim().toLowerCase() === "project" ? "project" : "computer",
-          environmentId: String(source.environmentId || source.environment_id || source.computerId || source.computer_id || "").trim(),
-          environmentName: String(source.environmentName || source.environment_name || source.computerName || source.computer_name || "").trim(),
-          projectId: String(source.projectId || source.project_id || "").trim(),
-          projectName: String(source.projectName || source.project_name || "").trim(),
-          evaluator: normalizePlaygroundEvaluationEvaluator(source.evaluator),
+          createdAt: String(resolvedSource.createdAt || resolvedSource.created_at || new Date().toISOString()),
+          completedAt: String(resolvedSource.completedAt || resolvedSource.completed_at || resolvedSource.updatedAt || resolvedSource.updated_at || new Date().toISOString()),
+          targetAgentId: String(resolvedSource.targetAgentId || resolvedSource.target_agent_id || resolvedSource.agentId || resolvedSource.agent_id || metadata.targetAgentId || metadata.target_agent_id || metadata.agentId || metadata.agent_id || "").trim(),
+          targetAgentName: String(resolvedSource.targetAgentName || resolvedSource.target_agent_name || resolvedSource.agentName || resolvedSource.agent_name || metadata.targetAgentName || metadata.target_agent_name || metadata.agentName || metadata.agent_name || "").trim(),
+          targetAgentPhotoUrl: String(resolvedSource.targetAgentPhotoUrl || resolvedSource.target_agent_photo_url || resolvedSource.agentPhotoUrl || resolvedSource.agent_photo_url || resolvedSource.photoUrl || resolvedSource.photoURL || metadata.targetAgentPhotoUrl || metadata.target_agent_photo_url || "").trim(),
+          targetAgentVersionId: String(resolvedSource.targetAgentVersionId || resolvedSource.target_agent_version_id || resolvedSource.agentVersionId || resolvedSource.agent_version_id || runnerPlayground.targetAgentVersionId || runnerPlayground.target_agent_version_id || runnerPlayground.agentVersionId || runnerPlayground.agent_version_id || metadata.targetAgentVersionId || metadata.target_agent_version_id || metadata.agentVersionId || metadata.agent_version_id || "").trim(),
+          targetAgentVersionNumber: Math.max(0, Number(resolvedSource.targetAgentVersionNumber || resolvedSource.target_agent_version_number || resolvedSource.agentVersionNumber || resolvedSource.agent_version_number || resolvedSource.versionNumber || resolvedSource.version_number || runnerPlayground.targetAgentVersionNumber || runnerPlayground.target_agent_version_number || metadata.targetAgentVersionNumber || metadata.target_agent_version_number || 0) || 0),
+          targetAgentVersionLabel: String(resolvedSource.targetAgentVersionLabel || resolvedSource.target_agent_version_label || resolvedSource.agentVersionLabel || resolvedSource.agent_version_label || resolvedSource.versionLabel || resolvedSource.version_label || runnerPlayground.targetAgentVersionLabel || runnerPlayground.target_agent_version_label || metadata.targetAgentVersionLabel || metadata.target_agent_version_label || "").trim(),
+          targetAgentVersionRevisionId: String(resolvedSource.targetAgentVersionRevisionId || resolvedSource.target_agent_version_revision_id || resolvedSource.agentVersionRevisionId || resolvedSource.agent_version_revision_id || resolvedSource.revisionId || resolvedSource.revision_id || runnerPlayground.targetAgentVersionRevisionId || runnerPlayground.target_agent_version_revision_id || metadata.targetAgentVersionRevisionId || metadata.target_agent_version_revision_id || "").trim(),
+          targetGuardrailId: String(resolvedSource.targetGuardrailId || resolvedSource.target_guardrail_id || resolvedSource.guardrailId || resolvedSource.guardrail_id || runnerPlayground.targetGuardrailId || runnerPlayground.target_guardrail_id || metadata.targetGuardrailId || metadata.target_guardrail_id || "").trim(),
+          targetGuardrailName: String(resolvedSource.targetGuardrailName || resolvedSource.target_guardrail_name || resolvedSource.guardrailName || resolvedSource.guardrail_name || metadata.targetGuardrailName || metadata.target_guardrail_name || "").trim(),
+          targetGuardrailVersionId: String(resolvedSource.targetGuardrailVersionId || resolvedSource.target_guardrail_version_id || resolvedSource.guardrailVersionId || resolvedSource.guardrail_version_id || metadata.targetGuardrailVersionId || metadata.target_guardrail_version_id || "").trim(),
+          targetGuardrailVersionNumber: Math.max(0, Number(resolvedSource.targetGuardrailVersionNumber || resolvedSource.target_guardrail_version_number || resolvedSource.guardrailVersionNumber || resolvedSource.guardrail_version_number || metadata.targetGuardrailVersionNumber || metadata.target_guardrail_version_number || 0) || 0),
+          targetGuardrailVersionLabel: String(resolvedSource.targetGuardrailVersionLabel || resolvedSource.target_guardrail_version_label || resolvedSource.guardrailVersionLabel || resolvedSource.guardrail_version_label || metadata.targetGuardrailVersionLabel || metadata.target_guardrail_version_label || "").trim(),
+          fineTuningJobId: String(resolvedSource.fineTuningJobId || resolvedSource.fine_tuning_job_id || runnerPlayground.fineTuningJobId || runnerPlayground.fine_tuning_job_id || metadata.fineTuningJobId || metadata.fine_tuning_job_id || "").trim(),
+          fine_tuning_job_id: String(resolvedSource.fine_tuning_job_id || resolvedSource.fineTuningJobId || runnerPlayground.fine_tuning_job_id || runnerPlayground.fineTuningJobId || metadata.fine_tuning_job_id || metadata.fineTuningJobId || "").trim(),
+          environmentType: String(resolvedSource.environmentType || resolvedSource.environment_type || resolvedSource.targetEnvironmentType || resolvedSource.target_environment_type || metadata.environmentType || metadata.environment_type || "").trim().toLowerCase() === "project" ? "project" : "computer",
+          environmentId: String(resolvedSource.environmentId || resolvedSource.environment_id || resolvedSource.computerId || resolvedSource.computer_id || metadata.environmentId || metadata.environment_id || metadata.computerId || metadata.computer_id || "").trim(),
+          environmentName: String(resolvedSource.environmentName || resolvedSource.environment_name || resolvedSource.computerName || resolvedSource.computer_name || metadata.environmentName || metadata.environment_name || metadata.computerName || metadata.computer_name || "").trim(),
+          projectId: String(resolvedSource.projectId || resolvedSource.project_id || metadata.projectId || metadata.project_id || "").trim(),
+          projectName: String(resolvedSource.projectName || resolvedSource.project_name || metadata.projectName || metadata.project_name || "").trim(),
+          evaluator: normalizePlaygroundEvaluationEvaluator(resolvedSource.evaluator || metadata.evaluator),
           passThreshold,
-          datasetVersion: String(source.datasetVersion || source.dataset_version || ""),
-          evaluatorVersion: String(source.evaluatorVersion || source.evaluator_version || ""),
+          datasetVersion: String(resolvedSource.datasetVersion || resolvedSource.dataset_version || metadata.datasetVersion || metadata.dataset_version || ""),
+          evaluatorVersion: String(resolvedSource.evaluatorVersion || resolvedSource.evaluator_version || metadata.evaluatorVersion || metadata.evaluator_version || ""),
           averageScore: Math.max(0, Math.min(1, averageScore)),
           passedCount,
-          totalCount: cases.length,
+          totalCount,
           costTokens,
           costUsd,
-          costSource: String(source.costSource || source.cost_source || ""),
+          costSource: String(resolvedSource.costSource || resolvedSource.cost_source || metadata.costSource || metadata.cost_source || ""),
           metadata: Object.keys(metadata).length ? metadata : null,
           cases,
         };
@@ -392,15 +486,7 @@ export const EVALUATIONS_PAGE_FOUNDATION_SCRIPT = String.raw`
           environmentType: "computer",
           environmentId: "",
           projectId: "",
-          dataRows: [
-            {
-              input: "Summarize the customer request in one sentence.",
-              expectedOutput: "A concise one-sentence summary of the request.",
-              evaluationGuidance: "",
-              createdAt: nowIso,
-              updatedAt: nowIso,
-            },
-          ],
+          dataRows: [],
           runs: [],
           createdAt: nowIso,
           updatedAt: nowIso,

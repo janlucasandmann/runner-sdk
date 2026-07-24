@@ -107,17 +107,22 @@ export const EVALUATIONS_PAGE_CONTROLLER_CASE_DETAIL_SCRIPT = String.raw`       
                 )
               : null,
             React.createElement("input", {
-              type: "number",
-              min: "0",
-              max: "100",
-              step: "0.1",
-              className: "playground-evaluations-input",
+              type: "text",
+              inputMode: "decimal",
+              pattern: "[0-9]*[.]?[0-9]*",
+              autoComplete: "off",
+              className: "playground-evaluations-input playground-evaluations-pass-threshold-input",
               "aria-label": "Pass threshold",
               value: Number((normalizePlaygroundEvaluationPassThreshold(set.passThreshold) * 100).toFixed(1)),
-              onChange: (event) => updateEvaluationSet(set.id, (current) => ({
-                ...current,
-                passThreshold: normalizePlaygroundEvaluationPassThreshold(event.target.value),
-              })),
+              onFocus: (event) => event.currentTarget.select(),
+              onChange: (event) => {
+                const nextValue = String(event.target.value || "").trim();
+                if (!/^(?:100(?:[.]0)?|[0-9]{1,2}(?:[.][0-9])?)$/.test(nextValue)) return;
+                updateEvaluationSet(set.id, (current) => ({
+                  ...current,
+                  passThreshold: normalizePlaygroundEvaluationPassThreshold(nextValue),
+                }));
+              },
             })
           );
         }
@@ -137,147 +142,122 @@ export const EVALUATIONS_PAGE_CONTROLLER_CASE_DETAIL_SCRIPT = String.raw`       
           });
         }
 
-        function renderEvaluationCaseEditorMarkdownSection(field, title, placeholder) {
+        function renderEvaluationDescriptionEditor(set) {
+          const description = String(set?.description || "");
+          return React.createElement(PlatformInstructionsEditor, {
+            value: description,
+            onChange: (value) => updateEvaluationSet(set.id, (current) => ({
+              ...current,
+              description: value,
+            })),
+            title: "Description",
+            placeholder: "Describe the purpose, scope, and expected use of this evaluation.",
+            ariaLabel: "Evaluation description",
+            stickyHeader: true,
+            historyKey: "evaluation-description:" + set.id,
+            className: "playground-evaluations-description-section",
+          });
+        }
+
+        function renderEvaluationCaseEditorMarkdownSection(field, title, placeholder, options = {}) {
           const state = evaluationCaseEditorState;
           const editorKey = buildEvaluationCaseEditorFieldKey(state, field);
-          const value = String(state?.draft?.[field] ?? "");
-          const isEditing = evaluationCaseEditorMarkdownEditingKey === editorKey;
-          const history = evaluationCaseEditorMarkdownHistoryByKey[editorKey] || { past: [], future: [] };
-          const canUndo = Array.isArray(history.past) && history.past.length > 0;
-          const canRedo = Array.isArray(history.future) && history.future.length > 0;
-          const applyHistoryValue = (nextValue) => {
-            updateEvaluationCaseEditorMarkdownValue(editorKey, field, String(nextValue ?? ""), { recordHistory: false });
-            setEvaluationCaseEditorMarkdownEditingKey(editorKey);
-            focusEvaluationCaseEditorTextarea(editorKey, nextValue);
-          };
-          const handleUndo = () => {
-            if (!canUndo) return;
-            const currentValue = value;
-            const previousValue = history.past[history.past.length - 1];
-            setEvaluationCaseEditorMarkdownHistoryByKey((current) => {
-              const currentHistory = current[editorKey] || { past: [], future: [] };
-              return {
-                ...current,
-                [editorKey]: {
-                  past: (Array.isArray(currentHistory.past) ? currentHistory.past : []).slice(0, -1),
-                  future: [currentValue, ...(Array.isArray(currentHistory.future) ? currentHistory.future : [])].slice(0, 80),
-                },
-              };
-            });
-            applyHistoryValue(previousValue);
-          };
-          const handleRedo = () => {
-            if (!canRedo) return;
-            const currentValue = value;
-            const nextValue = history.future[0];
-            setEvaluationCaseEditorMarkdownHistoryByKey((current) => {
-              const currentHistory = current[editorKey] || { past: [], future: [] };
-              return {
-                ...current,
-                [editorKey]: {
-                  past: [...(Array.isArray(currentHistory.past) ? currentHistory.past : []), currentValue].slice(-80),
-                  future: (Array.isArray(currentHistory.future) ? currentHistory.future : []).slice(1),
-                },
-              };
-            });
-            applyHistoryValue(nextValue);
-          };
-          const renderToolbarButton = (action) =>
+          const value = options.value === undefined
+            ? String(state?.draft?.[field] ?? "")
+            : String(options.value || "");
+          return React.createElement(PlatformInstructionsEditor, {
+            variant: "minimalistic-ui",
+            value,
+            onChange: options.onChange || ((nextValue) => updateEvaluationCaseEditorDraft({ [field]: nextValue })),
+            title,
+            placeholder,
+            ariaLabel: options.ariaLabel || (typeof title === "string" ? title : "Evaluation case content"),
+            stickyHeader: false,
+            historyKey: options.historyKey || editorKey,
+            className: "playground-evaluations-case-editor-field" + (options.className ? " " + options.className : ""),
+            autoFocus: options.autoFocus === true,
+          });
+        }
+
+        function renderEvaluationCaseGuidanceTitle() {
+          return React.createElement("span", { className: "playground-evaluations-case-guidance-title" },
+            React.createElement("span", null, "Evaluator Guidance"),
             React.createElement("button", {
-              key: action.id,
-              type: "button",
-              className: "playground-tasks-detail-format-button",
-              title: action.label,
-              "aria-label": action.label,
-              disabled: Boolean(action.disabled),
-              onMouseDown: (event) => event.preventDefault(),
-              onClick: action.onClick || (() => handleEvaluationCaseEditorMarkdownFormat(editorKey, field, action.id)),
-            }, React.createElement(action.icon, {
-              width: 14,
-              height: 14,
-              strokeWidth: action.strokeWidth || 1.8,
-            }));
-          const formatActionGroups = [
-            [
-              { id: "undo", label: "Undo", icon: Undo2, disabled: !canUndo, onClick: handleUndo },
-              { id: "redo", label: "Redo", icon: Redo2, disabled: !canRedo, onClick: handleRedo },
-            ],
-            [
-              { id: "bold", label: "Bold", icon: Bold, strokeWidth: 2.7 },
-              { id: "italic", label: "Italic", icon: Italic },
-              { id: "underline", label: "Underline", icon: Underline },
-            ],
-            [
-              { id: "list", label: "List", icon: List },
-              { id: "ordered-list", label: "Ordered list", icon: ListOrdered },
-            ],
-            [
-              { id: "code", label: "Code", icon: CodeXml },
-              { id: "link", label: "Link", icon: Link2 },
-            ],
-          ];
-          return React.createElement("div", { className: "playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section playground-evaluations-dataset-guidance-section playground-evaluations-case-editor-markdown-section" },
-            React.createElement("div", { className: "playground-tasks-detail-section-header" },
-              React.createElement("div", { className: "playground-tasks-detail-section-title" }, title),
-              React.createElement("div", { className: "playground-tasks-detail-format-actions" },
-                formatActionGroups.flatMap((group, groupIndex) => [
-                  groupIndex > 0
-                    ? React.createElement("span", {
-                        key: "divider:" + groupIndex,
-                        className: "playground-agents-detail-instructions-toolbar-divider",
-                        "aria-hidden": "true",
-                      })
-                    : null,
-                  ...group.map((action) => renderToolbarButton(action)),
-                ])
-              )
-            ),
-            React.createElement("div", {
-              className: "playground-tasks-detail-description-editor" + (isEditing ? " is-editing" : " is-preview"),
-              onClick: () => {
-                setEvaluationCaseEditorMarkdownEditingKey(editorKey);
-                focusEvaluationCaseEditorTextarea(editorKey, value);
+                type: "button",
+                className: "playground-evaluations-pass-threshold-help playground-evaluations-case-guidance-help",
+                "aria-label": "Evaluator guidance information",
+                onClick: (event) => event.preventDefault(),
               },
+              React.createElement(CircleHelp, { width: 12, height: 12, strokeWidth: 1.8, "aria-hidden": "true" }),
+              React.createElement("span", {
+                className: "playground-evaluations-pass-threshold-tooltip playground-evaluations-case-guidance-tooltip",
+                role: "tooltip",
+              },
+                "Optional case-specific instructions for the evaluator. Use them to define scoring criteria, required behavior, tolerances, or partial-credit rules."
+              )
+            )
+          );
+        }
+
+        function renderEvaluationCaseEditorSourceCard(field) {
+          const definition = getEvaluationCaseEditorFieldDefinition(field);
+          const value = String(evaluationCaseEditorState?.draft?.[definition.field] || "");
+          const normalizedValue = value.trim().replace(/\s+/g, " ");
+          const preview = normalizedValue
+            ? normalizedValue.slice(0, 150) + (normalizedValue.length > 150 ? "…" : "")
+            : definition.description;
+          const fileInputRef = definition.field === "expectedOutput"
+            ? evaluationCaseExpectedOutputFileRef
+            : evaluationCaseInputFileRef;
+          const characterCount = value.length;
+          return React.createElement(PlatformUiCard, {
+              as: "article",
+              className: "playground-evaluations-case-source-card" + (normalizedValue ? " has-content" : ""),
             },
-              !isEditing
-                ? React.createElement("div", { className: "playground-tasks-detail-description-preview-scope tb-runner-chat" },
-                    value.trim()
-                      ? typeof PlaygroundTaskDescriptionMarkdown === "function"
-                        ? React.createElement(PlaygroundTaskDescriptionMarkdown, {
-                            content: value,
-                            className: "playground-tasks-detail-description-preview tb-message-markdown",
-                          })
-                        : React.createElement("div", {
-                            className: "playground-tasks-detail-description-preview",
-                          }, value)
-                      : React.createElement("div", {
-                          className: "playground-tasks-detail-description-preview playground-tasks-detail-description-placeholder",
-                        }, placeholder)
-                  )
-                : null,
-              React.createElement("textarea", {
-                ref: (node) => {
-                  if (node) {
-                    evaluationCaseEditorTextareaRefs.current[editorKey] = node;
-                  } else {
-                    delete evaluationCaseEditorTextareaRefs.current[editorKey];
-                  }
+            React.createElement("button", {
+                type: "button",
+                className: "playground-evaluations-case-source-card-main",
+                onClick: () => openEvaluationCaseFocusedEditor(definition.field),
+                "aria-label": "Open " + definition.title + " editor",
+              },
+              React.createElement("span", { className: "playground-evaluations-case-source-card-heading" },
+                React.createElement("span", { className: "playground-evaluations-case-source-card-icon", "aria-hidden": "true" },
+                  React.createElement(FileText, { width: 18, height: 18, strokeWidth: 1.8 })
+                ),
+                React.createElement("span", { className: "playground-evaluations-case-source-card-title" }, definition.title),
+                React.createElement(SquarePen, {
+                  className: "playground-evaluations-case-source-card-edit-icon",
+                  width: 14,
+                  height: 14,
+                  strokeWidth: 1.8,
+                  "aria-hidden": "true",
+                })
+              ),
+              React.createElement("span", {
+                className: "playground-evaluations-case-source-card-preview" + (normalizedValue ? "" : " is-placeholder"),
+              }, preview)
+            ),
+            React.createElement("div", { className: "playground-evaluations-case-source-card-footer" },
+              React.createElement("input", {
+                ref: fileInputRef,
+                type: "file",
+                accept: ".txt,text/plain",
+                hidden: true,
+                onChange: (event) => void handleEvaluationCaseTextFile(definition.field, event),
+              }),
+              React.createElement(PlatformSecondaryButton, {
+                  size: "small",
+                  type: "button",
+                  onClick: () => openEvaluationCaseTextFilePicker(definition.field),
                 },
-                className: "playground-tasks-detail-description-input " + (isEditing ? "is-editing" : "is-preview"),
-                rows: 1,
-                placeholder: isEditing ? placeholder : "",
-                value,
-                onFocus: () => {
-                  setEvaluationCaseEditorMarkdownEditingKey(editorKey);
-                },
-                onChange: (event) => {
-                  updateEvaluationCaseEditorMarkdownValue(editorKey, field, event.target.value);
-                  resizeEvaluationGuidanceTextarea(event.currentTarget);
-                },
-                onBlur: () => {
-                  setEvaluationCaseEditorMarkdownEditingKey((current) => current === editorKey ? "" : current);
-                },
-              })
+                React.createElement(ArrowUpFromLine, { width: 13, height: 13, strokeWidth: 1.8, "aria-hidden": "true" }),
+                React.createElement("span", null, "Upload .txt")
+              ),
+              React.createElement("span", { className: "playground-evaluations-case-source-card-meta" },
+                characterCount > 0
+                  ? characterCount.toLocaleString() + " " + (characterCount === 1 ? "character" : "characters")
+                  : "No content"
+              )
             )
           );
         }

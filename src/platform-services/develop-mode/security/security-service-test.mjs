@@ -16,12 +16,35 @@ assert.deepEqual(Object.keys(SECURITY_APP_SCRIPT_FRAGMENTS), [
   "pageView",
   "setupReturnLifecycle",
 ]);
-assert.match(SECURITY_APP_SCRIPT_FRAGMENTS.navigation, /function openDevelopSecurityPage/);
-assert.match(SECURITY_APP_SCRIPT_FRAGMENTS.sidebarEntry, /id: "develop-security"/);
-assert.match(SECURITY_APP_SCRIPT_FRAGMENTS.sidebarEntry, /label: "Security Agents"/);
+assert.match(
+  SECURITY_APP_SCRIPT_FRAGMENTS.navigation,
+  /function openDevelopSecurityPage/,
+);
+assert.match(
+  SECURITY_APP_SCRIPT_FRAGMENTS.sidebarEntry,
+  /id: "develop-security"/,
+);
+assert.match(
+  SECURITY_APP_SCRIPT_FRAGMENTS.sidebarEntry,
+  /label: "Security Agents"/,
+);
 assert.match(SECURITY_APP_SCRIPT_FRAGMENTS.sidebarEntry, /Icon: Shield/);
-assert.match(SECURITY_APP_SCRIPT_FRAGMENTS.selectedTitle, /return "Security Agents"/);
-assert.match(SECURITY_APP_SCRIPT_FRAGMENTS.topNavigation, /label: "Security Agents"/);
+assert.match(
+  SECURITY_APP_SCRIPT_FRAGMENTS.selectedTitle,
+  /return "Security Agents"/,
+);
+assert.match(
+  SECURITY_APP_SCRIPT_FRAGMENTS.topNavigation,
+  /label: "Security Agents"/,
+);
+assert.match(
+  SECURITY_APP_SCRIPT_FRAGMENTS.topNavigation,
+  /PlatformVersionLabel/,
+);
+assert.match(
+  SECURITY_APP_SCRIPT_FRAGMENTS.topNavigation,
+  /resourcesHeaderState\.title/,
+);
 const securitySidebarIcon = () => null;
 const securitySidebarEntry = new Function(
   "Shield",
@@ -31,9 +54,47 @@ const securitySidebarEntry = new Function(
 )(securitySidebarIcon, "develop-security", () => undefined);
 assert.equal(securitySidebarEntry.Icon, securitySidebarIcon);
 assert.equal(securitySidebarEntry.active, true);
-assert.match(SECURITY_APP_SCRIPT_FRAGMENTS.pageView, /DevelopSecurityWorkspacePage/);
-assert.match(SECURITY_APP_SCRIPT_FRAGMENTS.setupReturnLifecycle, /github_security/);
-assert.doesNotThrow(() => new Function(`
+assert.match(
+  SECURITY_APP_SCRIPT_FRAGMENTS.pageView,
+  /DevelopSecurityWorkspacePage/,
+);
+assert.match(
+  SECURITY_APP_SCRIPT_FRAGMENTS.pageView,
+  /githubConnectionStatus: githubStatus/,
+);
+assert.match(SECURITY_APP_SCRIPT_FRAGMENTS.pageView, /viewerIdentity:/);
+assert.match(
+  SECURITY_APP_SCRIPT_FRAGMENTS.pageView,
+  /name: hasSessionAuth \? accountName : "Me"/,
+);
+assert.match(
+  SECURITY_APP_SCRIPT_FRAGMENTS.pageView,
+  /onConnectGitHub: handleGithubAuthConnect/,
+);
+assert.match(
+  SECURITY_APP_SCRIPT_FRAGMENTS.pageView,
+  /onDisconnectGitHub: handleGithubAuthDisconnect/,
+);
+assert.match(
+  SECURITY_APP_SCRIPT_FRAGMENTS.pageView,
+  /workspaceTeams: teamPageTeams/,
+);
+assert.match(SECURITY_APP_SCRIPT_FRAGMENTS.pageView, /onWorkspaceTeamsRequest/);
+assert.match(
+  SECURITY_APP_SCRIPT_FRAGMENTS.pageView,
+  /versionsDrawerPortalId: "playground-agent-versions-drawer-root"/,
+);
+assert.match(
+  SECURITY_APP_SCRIPT_FRAGMENTS.pageView,
+  /onResourcesHeaderChange: setResourcesHeaderState/,
+);
+assert.match(
+  SECURITY_APP_SCRIPT_FRAGMENTS.setupReturnLifecycle,
+  /github_security/,
+);
+assert.doesNotThrow(
+  () =>
+    new Function(`
   function securityShellHost() {
     ${SECURITY_APP_SCRIPT_FRAGMENTS.navigation}
     const restore = (entry) => { ${SECURITY_APP_SCRIPT_FRAGMENTS.historyRestore} };
@@ -44,41 +105,76 @@ assert.doesNotThrow(() => new Function(`
     ${SECURITY_APP_SCRIPT_FRAGMENTS.setupReturnLifecycle}
     return { restore, title, entries };
   }
-`));
+`),
+);
 
 const compositionSource = await readPlatformCompositionSource();
 assert.match(compositionSource, /develop-mode\/security\/index\.mjs/);
 assert.match(compositionSource, /Shield, Slash/);
 assert.match(compositionSource, /DevelopSecurityWorkspacePage/);
 assert.match(compositionSource, /activePage === "develop-security"/);
-assert.match(compositionSource, /developAgentServiceEntries:\s*SECURITY_APP_SCRIPT_FRAGMENTS\.sidebarEntry/);
-assert.doesNotMatch(compositionSource, /function openDevelopSecurityPage\([\s\S]*function openDevelopSecurityPage\(/);
+assert.match(
+  compositionSource,
+  /developAgentServiceEntries:\s*SECURITY_APP_SCRIPT_FRAGMENTS\.sidebarEntry/,
+);
+assert.doesNotMatch(
+  compositionSource,
+  /function openDevelopSecurityPage\([\s\S]*function openDevelopSecurityPage\(/,
+);
 
 const styleResolution = await fs.readFile(
-  new URL("../../../../apps/platform/shared/development-style-resolution.mjs", import.meta.url),
+  new URL(
+    "../../../../apps/platform/shared/development-style-resolution.mjs",
+    import.meta.url,
+  ),
   "utf8",
 );
-assert.match(styleResolution, /develop-mode\/security\/client\/page\/security\.css/);
+assert.match(
+  styleResolution,
+  /develop-mode\/security\/client\/page\/security\.css/,
+);
 
 const productionAssetSource = await fs.readFile(
   new URL("../../../../scripts/runner-chat-assets.mjs", import.meta.url),
   "utf8",
 );
 assert.match(productionAssetSource, /const securityPageCssPath = path\.join/);
-assert.match(productionAssetSource, /fs\.readFile\(securityPageCssPath, "utf8"\)/);
-assert.match(productionAssetSource, /\$\{securityPageCssText\}\\n\\n\$\{platformPermissionsPageCssText\}/);
+assert.match(
+  productionAssetSource,
+  /fs\.readFile\(securityPageCssPath, "utf8"\)/,
+);
+assert.match(
+  productionAssetSource,
+  /\$\{securityPageCssText\}\\n\\n\$\{platformPermissionsPageCssText\}/,
+);
 
 const pageSourceUrls = [
   "./client/page/develop-security-workspace-page.tsx",
+  "./client/page/security-detail-layout.tsx",
   "./client/page/security-overview-page.tsx",
   "./client/page/security-presenters.tsx",
+  "./client/page/security-repository-access-settings.tsx",
   "./client/page/security-repository-detail-page.tsx",
+  "./client/page/security-repository-sidebar.tsx",
+  "./client/page/security-repository-version-control.tsx",
   "./client/page/security-run-detail-page.tsx",
   "./client/page/security-finding-detail-page.tsx",
 ];
-const pageSources = (await Promise.all(
-  pageSourceUrls.map((relativePath) => fs.readFile(new URL(relativePath, import.meta.url), "utf8")),
-)).join("\n");
+const pageSources = (
+  await Promise.all(
+    pageSourceUrls.map((relativePath) =>
+      fs.readFile(new URL(relativePath, import.meta.url), "utf8"),
+    ),
+  )
+).join("\n");
+const repositoryDetailSource = await fs.readFile(
+  new URL("./client/page/security-repository-detail-page.tsx", import.meta.url),
+  "utf8",
+);
+const repositorySidebarSource = await fs.readFile(
+  new URL("./client/page/security-repository-sidebar.tsx", import.meta.url),
+  "utf8",
+);
 for (const sharedPrimitive of [
   "PlatformUiCard",
   "PlatformPrimaryButton",
@@ -86,12 +182,95 @@ for (const sharedPrimitive of [
   "PlatformIconButton",
   "PlatformLoadingState",
   "PlatformCheckbox",
+  "PlatformButtonSelector",
   "PlatformSelector",
 ]) {
   assert.match(pageSources, new RegExp(`\\b${sharedPrimitive}\\b`));
 }
 assert.doesNotMatch(pageSources, /<button\b/);
-assert.doesNotMatch(pageSources, /develop-security-(?:primary|secondary|danger|icon|link)-button/);
+assert.doesNotMatch(
+  pageSources,
+  /Repository monitoring updated|develop-security-callout is-success/,
+  "Security mutations must not render persistent success banners.",
+);
+assert.doesNotMatch(
+  pageSources,
+  /develop-security-overview-message|GitHub integration details could not be loaded|setMessage\(/,
+  "The Security overview must not render persistent lifecycle, status, or integration banners.",
+);
+assert.doesNotMatch(
+  pageSources,
+  /id: "permissions", label: "Permissions"/,
+  "Repository permissions must be managed from Settings rather than a standalone tab.",
+);
+assert.match(pageSources, /title="Manage access"/);
+assert.match(pageSources, /PlatformRolePermissionsPage/);
+assert.match(pageSources, /PlatformVersionHistorySidebar/);
+assert.match(pageSources, /PlatformVersionPublishControl/);
+assert.match(pageSources, /PlatformVersionSaveDialog/);
+assert.match(pageSources, /PlatformDiffViewer/);
+assert.match(pageSources, /SecurityDetailPageFrame/);
+assert.match(
+  pageSources,
+  /<PlatformLoadingState[\s\S]*className="develop-security-detail-loading-state"/,
+  "Security detail loading must use the centralized loading-state component.",
+);
+assert.match(
+  pageSources,
+  /if \(loading\)[\s\S]*<SecurityDetailLoadingState/,
+  "Security detail routes must keep the centered detail loading frame mounted.",
+);
+assert.match(
+  repositoryDetailSource,
+  /id: "runs-findings", label: "Runs & findings"/,
+);
+assert.match(
+  repositoryDetailSource,
+  /function RunsAndFindings[\s\S]*<SecurityMetricGrid/,
+  "Runs & findings must retain its centralized KPI-card summary.",
+);
+assert.doesNotMatch(
+  repositoryDetailSource,
+  /\{ id: "(?:overview|findings|runs)", label: "(?:Overview|Findings|Runs)"/,
+  "Repository runs and findings must share one tab and must not restore the removed Overview tab.",
+);
+assert.match(
+  pageSources,
+  /sidebarClassName="playground-ticket-detail-sidebar"/,
+);
+assert.match(
+  pageSources,
+  /playground-ticket-detail-sidebar-section playground-ticket-detail-sidebar-details/,
+);
+assert.match(pageSources, /playground-evaluations-detail-sidebar-list/);
+assert.match(pageSources, /playground-evaluations-detail-person/);
+assert.match(pageSources, /playground-evaluations-detail-owner-value/);
+assert.match(repositorySidebarSource, /ariaLabel="Choose repository owner"/);
+assert.match(repositorySidebarSource, /PlatformSelector/);
+assert.match(pageSources, /onLoadOwnerCandidates/);
+assert.doesNotMatch(
+  repositorySidebarSource,
+  /label="Policy"|label="Threat model"/,
+  "Policy and threat-model versions belong in their editors, not the Details sidebar.",
+);
+assert.doesNotMatch(
+  pageSources,
+  /develop-security-repository-detail-facts|playground-tasks-detail-facts is-centralized-sidebar-content/,
+  "Security sidebar cards must not contain a second legacy fact-card surface.",
+);
+assert.match(pageSources, /menuDisabled=\{isBusy \|\| !hasChanges\}/);
+assert.match(
+  pageSources,
+  /playground-project-overview-layout playground-agents-detail-overview-layout develop-security-resource-detail/,
+);
+assert.match(
+  pageSources,
+  /playground-agents-detail-content is-agent-overview-general develop-security-detail-page-frame__content/,
+);
+assert.doesNotMatch(
+  pageSources,
+  /develop-security-(?:primary|secondary|danger|icon|link)-button/,
+);
 
 const securityCss = await fs.readFile(
   new URL("./client/page/security.css", import.meta.url),
@@ -99,6 +278,16 @@ const securityCss = await fs.readFile(
 );
 assert.match(securityCss, /color-scheme:\s*dark/);
 assert.doesNotMatch(securityCss, /var\(--playground-surface,\s*#fff\)/);
+assert.doesNotMatch(
+  securityCss,
+  /\.develop-security-detail-content\s*\{[^}]*padding/,
+  "Security details must inherit the Agent detail content spacing without local padding.",
+);
+assert.match(
+  securityCss,
+  /\.develop-security-detail-loading-state\.platform-loading-state\s*\{[^}]*min-height:/,
+  "The centralized detail loader must occupy the content viewport so it can remain centered.",
+);
 
 const proxyCalls = [];
 const securityService = createSecurityService({
@@ -116,17 +305,26 @@ function dispatchSecurityRequest(method, path) {
     new URL(path, "http://platform.test"),
   );
 }
-assert.equal(dispatchSecurityRequest("GET", "/api/real/security/overview"), true);
+assert.equal(
+  dispatchSecurityRequest("GET", "/api/real/security/overview"),
+  true,
+);
 assert.deepEqual(proxyCalls.pop(), { kind: "get", path: "/security/overview" });
 assert.equal(
-  dispatchSecurityRequest("GET", "/api/real/security/repositories/repository%20one?limit=10"),
+  dispatchSecurityRequest(
+    "GET",
+    "/api/real/security/repositories/repository%20one?limit=10",
+  ),
   true,
 );
 assert.deepEqual(proxyCalls.pop(), {
   kind: "get",
   path: "/security/repositories/repository%20one",
 });
-assert.equal(dispatchSecurityRequest("POST", "/api/real/github/security/setup"), true);
+assert.equal(
+  dispatchSecurityRequest("POST", "/api/real/github/security/setup"),
+  true,
+);
 assert.deepEqual(proxyCalls.pop(), {
   kind: "json",
   method: "POST",
@@ -141,18 +339,35 @@ assert.deepEqual(proxyCalls.pop(), {
   method: "PATCH",
   path: "/security/findings/finding%2Fone",
 });
-assert.equal(dispatchSecurityRequest("OPTIONS", "/api/real/security/overview"), false);
+assert.equal(
+  dispatchSecurityRequest("OPTIONS", "/api/real/security/overview"),
+  false,
+);
 assert.equal(dispatchSecurityRequest("GET", "/security/overview"), false);
 
 const platformServicesSource = await fs.readFile(
-  new URL("../../../../apps/platform/server/platform-services.mjs", import.meta.url),
+  new URL(
+    "../../../../apps/platform/server/platform-services.mjs",
+    import.meta.url,
+  ),
   "utf8",
 );
-assert.match(platformServicesSource, /securityService:\s*createSecurityService\(/);
+assert.match(
+  platformServicesSource,
+  /securityService:\s*createSecurityService\(/,
+);
 const serviceRoutesSource = await fs.readFile(
-  new URL("../../../../apps/platform/server/routes/service-routes.mjs", import.meta.url),
+  new URL(
+    "../../../../apps/platform/server/routes/service-routes.mjs",
+    import.meta.url,
+  ),
   "utf8",
 );
-assert.match(serviceRoutesSource, /securityService\.handleRequest\(req, res, url\)/);
+assert.match(
+  serviceRoutesSource,
+  /securityService\.handleRequest\(req, res, url\)/,
+);
 
-console.log("Repository Security ownership, proxy, shell composition, and style contracts passed.");
+console.log(
+  "Repository Security ownership, proxy, shell composition, and style contracts passed.",
+);

@@ -1,4 +1,4 @@
-import { KeyRound } from "lucide-react";
+import { Vault } from "lucide-react";
 import type { DevelopResourceDefinition } from "../../../shared/client/domain/index.js";
 
 export const SECRETS_RESOURCE_DEFINITION = Object.freeze({
@@ -7,8 +7,13 @@ export const SECRETS_RESOURCE_DEFINITION = Object.freeze({
   plural: "Secrets",
   resourceCountKey: "secrets",
   documentationPath: "/developers/libraries/secrets",
-  icon: KeyRound,
+  icon: Vault,
   activityMetrics: [
-    { id: "secret-reads", key: "secretReads", label: "Secret Reads", color: "#8fc4ff" },
+    {
+      id: "secret-reads",
+      key: "secretReads",
+      label: "Secret Reads",
+      color: "#8fc4ff",
+    },
   ],
 } satisfies DevelopResourceDefinition);

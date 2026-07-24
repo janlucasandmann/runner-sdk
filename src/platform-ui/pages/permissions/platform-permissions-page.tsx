@@ -6,6 +6,7 @@ import {
   PlatformSettingsSection,
   PlatformSettingsSectionList,
 } from "../../components/composite/settings-section/index.js";
+import { PlatformPrimaryButton } from "../../components/ui/button/index.js";
 import { PlatformSelector } from "../../components/ui/selector/index.js";
 import {
   PLATFORM_PERMISSION_ACTION_DEFINITIONS,
@@ -27,7 +28,9 @@ import type {
   PlatformPermissionAccessOption,
   PlatformPermissionActionDefinition,
   PlatformPermissionRingDefinition,
+  PlatformPermissionsOverviewProps,
   PlatformPermissionsPageProps,
+  PlatformPermissionsSettingsSummaryProps,
 } from "./permission-types.js";
 
 function PermissionAccessSelect({
@@ -113,6 +116,138 @@ interface PermissionActionTableRow {
   inheritedAccess: PlatformPermissionAccess;
   explicitAccess: PlatformPermissionAccess | "";
   effectiveAccess: PlatformPermissionAccess;
+}
+
+export function PlatformPermissionHelpTooltip({
+  text,
+  ariaLabel,
+  placement = "top",
+  className = "",
+}: {
+  text: string;
+  ariaLabel?: string;
+  placement?: "top" | "bottom";
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      className={`platform-permission-help-tooltip platform-permissions-page__summary-info playground-permission-ring-summary-info is-${placement}${className ? ` ${className}` : ""}`}
+      aria-label={ariaLabel || text}
+      data-tooltip={text}
+    >
+      <Info width={12} height={12} strokeWidth={1.8} />
+    </button>
+  );
+}
+
+export function PlatformPermissionsOverview({
+  permissionSet,
+  accessOptions = PLATFORM_PERMISSION_ACCESS_OPTIONS,
+  ringDefinitions = PLATFORM_PERMISSION_RING_DEFINITIONS,
+  animationKey = 0,
+  disabled = false,
+  ariaLabel = "Permission rings",
+  className = "",
+  variant = "default",
+  onRingAccessChange,
+}: PlatformPermissionsOverviewProps) {
+  const ringAccessById = Object.fromEntries(
+    ringDefinitions.map((ring) => [
+      ring.id,
+      getPlatformPermissionRingAccess(permissionSet, ring, accessOptions),
+    ]),
+  );
+
+  return (
+    <section
+      className={`platform-permissions-page__overview playground-permission-rings-overview is-${variant}${className ? ` ${className}` : ""}`}
+      aria-label={ariaLabel}
+      data-platform-permissions-overview={variant}
+    >
+      <div className="platform-permissions-page__visual playground-permission-rings-visual" aria-hidden="true">
+        <PlatformPermissionRingsChart
+          rings={ringDefinitions}
+          ringAccessById={ringAccessById}
+          accessOptions={accessOptions}
+          animationKey={animationKey}
+        />
+      </div>
+      <div className="platform-permissions-page__summary playground-permission-rings-copy">
+        {ringDefinitions.map((ring) => (
+          <div
+            key={ring.id}
+            className="platform-permissions-page__summary-row playground-permission-ring-summary-row"
+          >
+            <div className="platform-permissions-page__summary-copy playground-permission-ring-summary-copy">
+              <div className="platform-permissions-page__summary-title-row playground-permission-ring-summary-title-row">
+                <PlatformPermissionMiniRingIcon
+                  ringId={ring.id}
+                  icon={ring.icon}
+                  accessOptions={accessOptions}
+                />
+                <div className="platform-permissions-page__summary-title playground-permission-ring-summary-title">
+                  {ring.label} · {ring.title}
+                </div>
+                <PlatformPermissionHelpTooltip text={ring.description} />
+              </div>
+            </div>
+            <PermissionAccessSelect
+              value={ringAccessById[ring.id]}
+              accessOptions={accessOptions}
+              disabled={disabled || !onRingAccessChange}
+              ariaLabel={`${ring.label} default permissions`}
+              onChange={(access) => onRingAccessChange?.(ring.id, access)}
+            />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function PlatformPermissionsSettingsSummary({
+  title = "Permissions",
+  tooltip,
+  editLabel = "Edit",
+  editDisabled = false,
+  onEdit,
+  className = "",
+  variant = "compact",
+  ...overviewProps
+}: PlatformPermissionsSettingsSummaryProps) {
+  return (
+    <section
+      className={`platform-permissions-settings-summary${className ? ` ${className}` : ""}`}
+      data-platform-permissions-settings-summary="true"
+    >
+      <header className="platform-permissions-settings-summary__header">
+        <div className="platform-permissions-settings-summary__title-row">
+          <h2 className="platform-permissions-settings-summary__title">{title}</h2>
+          {tooltip ? (
+            <PlatformPermissionHelpTooltip
+              text={tooltip}
+              ariaLabel={`About ${typeof title === "string" ? title : "permissions"}`}
+            />
+          ) : null}
+        </div>
+        {onEdit ? (
+          <PlatformPrimaryButton
+            size="small"
+            disabled={editDisabled}
+            onClick={onEdit}
+          >
+            {editLabel}
+          </PlatformPrimaryButton>
+        ) : null}
+      </header>
+      <PlatformPermissionsOverview
+        {...overviewProps}
+        variant={variant}
+        disabled
+      />
+    </section>
+  );
 }
 
 function PermissionRingTable({
@@ -275,12 +410,6 @@ export function PlatformPermissionsPage({
   onActionRingChange,
   onActionAccessChange,
 }: PlatformPermissionsPageProps) {
-  const ringAccessById = Object.fromEntries(
-    ringDefinitions.map((ring) => [
-      ring.id,
-      getPlatformPermissionRingAccess(permissionSet, ring, accessOptions),
-    ]),
-  );
   const visibleActions = actionDefinitions.filter((action) =>
     shouldShowPlatformPermissionAction(action, subjectType)
   );
@@ -292,52 +421,14 @@ export function PlatformPermissionsPage({
       data-platform-permissions-page="true"
     >
       {showOverview ? (
-        <section className="platform-permissions-page__overview playground-permission-rings-overview">
-          <div className="platform-permissions-page__visual playground-permission-rings-visual" aria-hidden="true">
-            <PlatformPermissionRingsChart
-              rings={ringDefinitions}
-              ringAccessById={ringAccessById}
-              accessOptions={accessOptions}
-              animationKey={animationKey}
-            />
-          </div>
-          <div className="platform-permissions-page__summary playground-permission-rings-copy">
-            {ringDefinitions.map((ring) => (
-              <div
-                key={ring.id}
-                className="platform-permissions-page__summary-row playground-permission-ring-summary-row"
-              >
-                <div className="platform-permissions-page__summary-copy playground-permission-ring-summary-copy">
-                  <div className="platform-permissions-page__summary-title-row playground-permission-ring-summary-title-row">
-                    <PlatformPermissionMiniRingIcon
-                      ringId={ring.id}
-                      icon={ring.icon}
-                      accessOptions={accessOptions}
-                    />
-                    <div className="platform-permissions-page__summary-title playground-permission-ring-summary-title">
-                      {ring.label} · {ring.title}
-                    </div>
-                    <button
-                      type="button"
-                      className="platform-permissions-page__summary-info playground-permission-ring-summary-info"
-                      aria-label={ring.description}
-                      data-tooltip={ring.description}
-                    >
-                      <Info width={12} height={12} strokeWidth={1.8} />
-                    </button>
-                  </div>
-                </div>
-                <PermissionAccessSelect
-                  value={ringAccessById[ring.id]}
-                  accessOptions={accessOptions}
-                  disabled={disabled || !onRingAccessChange}
-                  ariaLabel={`${ring.label} default permissions`}
-                  onChange={(access) => onRingAccessChange?.(ring.id, access)}
-                />
-              </div>
-            ))}
-          </div>
-        </section>
+        <PlatformPermissionsOverview
+          permissionSet={permissionSet}
+          accessOptions={accessOptions}
+          ringDefinitions={ringDefinitions}
+          animationKey={animationKey}
+          disabled={disabled}
+          onRingAccessChange={onRingAccessChange}
+        />
       ) : null}
 
       <div className="platform-permissions-page__details playground-permissions-panel-details">

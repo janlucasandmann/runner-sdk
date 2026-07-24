@@ -15,6 +15,11 @@ The shell is deliberately domain-agnostic. Service modules supply labels,
 counts, icons, destinations, and callbacks. Fetching, permissions, routing, and
 product-specific state do not belong in this directory.
 
+`PlatformHomeFeatureGrid` exposes the same feature-card composition for service
+overview pages that continue into a table or another domain-owned section.
+Feature rows without an `onClick` callback render as non-interactive facts, which
+is useful for KPIs and explanatory summaries.
+
 ## Usage
 
 ```tsx

@@ -9,12 +9,20 @@ export const PROJECTS_DOMAIN_FOUNDATION_SCRIPT = `
         { id: "calendar", label: "Calendar", icon: Clock },
       ];
 	      const PLAYGROUND_TASK_STATUS_OPTIONS = [
-	        { id: "todo", label: "To do" },
-	        { id: "in_progress", label: "In doing" },
-	        { id: "blocked", label: "Blocked" },
-	        { id: "in_review", label: "In Review" },
-	        { id: "done", label: "Finished" },
+	        { id: "backlog", label: "Backlog", icon: CircleDashed, toneClassName: "is-backlog", manual: true },
+	        { id: "todo", label: "Todo", icon: Circle, toneClassName: "is-todo", manual: true },
+	        { id: "in_progress", label: "In Progress", icon: CircleEllipsis, toneClassName: "is-in-progress", manual: true },
+	        { id: "done", label: "Done", icon: CircleCheck, toneClassName: "is-done", manual: true },
+	        { id: "canceled", label: "Canceled", icon: CircleMinus, toneClassName: "is-canceled", manual: true },
+	        { id: "blocked", label: "Blocked", icon: AlertCircle, toneClassName: "is-blocked", manual: false },
+	        { id: "in_review", label: "In Review", icon: CircleEllipsis, toneClassName: "is-in-review", manual: false },
 	      ];
+	      const PLAYGROUND_TASK_MANUAL_STATUS_OPTIONS = PLAYGROUND_TASK_STATUS_OPTIONS.filter((option) => option.manual);
+	      const PLAYGROUND_TASK_TERMINAL_STATUS_IDS = new Set(["done", "canceled"]);
+
+	      function isPlaygroundTaskTerminalStatus(status) {
+	        return PLAYGROUND_TASK_TERMINAL_STATUS_IDS.has(String(status || "").trim().toLowerCase());
+	      }
       const PLAYGROUND_TASK_PRIORITY_OPTIONS = [
         { id: "low", label: "Low" },
         { id: "medium", label: "Medium" },

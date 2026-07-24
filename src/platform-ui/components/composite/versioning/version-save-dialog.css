@@ -153,7 +153,7 @@
 .platform-version-save-dialog__description-editor.platform-instructions-editor.is-minimalistic-ui
   .platform-instructions-editor__preview,
 .platform-version-save-dialog__description-editor.platform-instructions-editor.is-minimalistic-ui
-  .platform-instructions-editor__input {
+  .platform-instructions-editor__prosemirror {
   min-height: 32px;
   padding: 0;
 }

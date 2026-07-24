@@ -42,7 +42,9 @@ afterEach(() => {
   cleanup();
 });
 
-function renderTable(overrides: Partial<ComponentProps<typeof PlatformDataTable<TestRow>>> = {}) {
+function renderTable(
+  overrides: Partial<ComponentProps<typeof PlatformDataTable<TestRow>>> = {},
+) {
   return render(
     <PlatformDataTable<TestRow>
       rows={rows}
@@ -56,27 +58,53 @@ function renderTable(overrides: Partial<ComponentProps<typeof PlatformDataTable<
 }
 
 function getRenderedNames(): string[] {
-  return screen.getAllByRole("row").slice(1).map((row) => within(row).getByText(/Alpha|Beta/).textContent || "");
+  return screen
+    .getAllByRole("row")
+    .slice(1)
+    .map((row) => within(row).getByText(/Alpha|Beta/).textContent || "");
 }
 
 describe("PlatformDataTable", () => {
   it("sorts rows and exposes the active direction", async () => {
     const user = userEvent.setup();
-    renderTable({ sorting: { defaultValue: { id: "name", direction: "asc" } } });
+    renderTable({
+      sorting: { defaultValue: { id: "name", direction: "asc" } },
+    });
 
     expect(getRenderedNames()).toEqual(["Alpha", "Beta"]);
-    expect(screen.getByRole("columnheader", { name: /Name/ }).getAttribute("aria-sort")).toBe("ascending");
+    expect(
+      screen
+        .getByRole("columnheader", { name: /Name/ })
+        .getAttribute("aria-sort"),
+    ).toBe("ascending");
 
-    const sortButton = screen.getByRole("button", { name: "Sort Name descending" });
-    expect(sortButton.querySelector(".platform-data-table__sort-icon")?.classList.contains("is-bottom-active")).toBe(true);
-    expect(sortButton.querySelectorAll(".lucide-chevrons-up-down")).toHaveLength(2);
+    const sortButton = screen.getByRole("button", {
+      name: "Sort Name descending",
+    });
+    expect(
+      sortButton
+        .querySelector(".platform-data-table__sort-icon")
+        ?.classList.contains("is-bottom-active"),
+    ).toBe(true);
+    expect(
+      sortButton.querySelectorAll(".lucide-chevrons-up-down"),
+    ).toHaveLength(2);
     expect(sortButton.querySelector(".lucide-arrow-up-down")).toBeNull();
 
     await user.click(sortButton);
 
     expect(getRenderedNames()).toEqual(["Beta", "Alpha"]);
-    expect(screen.getByRole("columnheader", { name: /Name/ }).getAttribute("aria-sort")).toBe("descending");
-    expect(screen.getByRole("button", { name: "Sort Name ascending" }).querySelector(".platform-data-table__sort-icon")?.classList.contains("is-top-active")).toBe(true);
+    expect(
+      screen
+        .getByRole("columnheader", { name: /Name/ })
+        .getAttribute("aria-sort"),
+    ).toBe("descending");
+    expect(
+      screen
+        .getByRole("button", { name: "Sort Name ascending" })
+        .querySelector(".platform-data-table__sort-icon")
+        ?.classList.contains("is-top-active"),
+    ).toBe(true);
   });
 
   it("filters through the standard toolbar search", async () => {
@@ -90,7 +118,10 @@ describe("PlatformDataTable", () => {
       },
     });
 
-    await user.type(screen.getByRole("searchbox", { name: "Search resources" }), "published");
+    await user.type(
+      screen.getByRole("searchbox", { name: "Search resources" }),
+      "published",
+    );
 
     expect(getRenderedNames()).toEqual(["Alpha"]);
   });
@@ -105,17 +136,23 @@ describe("PlatformDataTable", () => {
     const toolbar = container.querySelector(".platform-data-table__toolbar");
     const table = screen.getByRole("table", { name: "Test resources" });
     const surface = container.querySelector(".platform-data-table__surface");
-    const controls = container.querySelector(".platform-data-table__toolbar-controls");
+    const controls = container.querySelector(
+      ".platform-data-table__toolbar-controls",
+    );
     const search = screen.getByRole("searchbox", { name: "Search resources" });
 
     expect(toolbar).not.toBeNull();
-    expect(screen.getByRole("heading", { name: "All Resources", level: 2 })).not.toBeNull();
+    expect(
+      screen.getByRole("heading", { name: "All Resources", level: 2 }),
+    ).not.toBeNull();
     expect(controls?.contains(search)).toBe(true);
     expect(search.closest("[data-platform-search='true']")).not.toBeNull();
     expect(table.contains(toolbar)).toBe(false);
     expect(toolbar?.nextElementSibling).toBe(surface);
     expect(surface?.contains(table)).toBe(true);
-    expect(within(table).getByRole("columnheader", { name: /Name/ })).not.toBeNull();
+    expect(
+      within(table).getByRole("columnheader", { name: /Name/ }),
+    ).not.toBeNull();
 
     rerender(
       <PlatformDataTable<TestRow>
@@ -127,7 +164,9 @@ describe("PlatformDataTable", () => {
     );
 
     expect(container.querySelector(".platform-data-table__toolbar")).toBeNull();
-    expect(screen.getByRole("table", { name: "Test resources" })).not.toBeNull();
+    expect(
+      screen.getByRole("table", { name: "Test resources" }),
+    ).not.toBeNull();
     expect(screen.getByRole("columnheader", { name: /Name/ })).not.toBeNull();
 
     rerender(
@@ -150,20 +189,25 @@ describe("PlatformDataTable", () => {
       toolbar: {
         title: "All Resources",
         search: { placeholder: "Search resources" },
-        filters: [{
-          id: "status",
-          label: "Status",
-          value: "all",
-          onChange,
-          options: [
-            { id: "all", label: "All" },
-            { id: "published", label: "Published" },
-          ],
-        }],
+        filters: [
+          {
+            id: "status",
+            label: "Status",
+            value: "all",
+            onChange,
+            options: [
+              { id: "all", label: "All" },
+              { id: "published", label: "Published" },
+            ],
+          },
+        ],
       },
     });
 
-    const title = screen.getByRole("heading", { name: "All Resources", level: 2 });
+    const title = screen.getByRole("heading", {
+      name: "All Resources",
+      level: 2,
+    });
     const filterButton = screen.getByRole("button", { name: "Filter" });
     expect(title.nextElementSibling).toBe(filterButton);
     expect(filterButton.classList.contains("is-icon-only")).toBe(true);
@@ -179,18 +223,22 @@ describe("PlatformDataTable", () => {
     const { container } = renderTable({
       toolbar: {
         leading: <nav aria-label="Resource types">Types</nav>,
-        filters: [{
-          id: "status",
-          label: "Status",
-          value: "all",
-          onChange: () => undefined,
-          options: [{ id: "all", label: "All" }],
-        }],
+        filters: [
+          {
+            id: "status",
+            label: "Status",
+            value: "all",
+            onChange: () => undefined,
+            options: [{ id: "all", label: "All" }],
+          },
+        ],
       },
     });
 
     const toolbar = container.querySelector(".platform-data-table__toolbar");
-    const leading = container.querySelector(".platform-data-table__toolbar-leading");
+    const leading = container.querySelector(
+      ".platform-data-table__toolbar-leading",
+    );
     const filterButton = screen.getByRole("button", { name: "Filter" });
 
     expect(toolbar?.firstElementChild).toBe(leading);
@@ -205,20 +253,44 @@ describe("PlatformDataTable", () => {
       },
     });
 
-    const controls = container.querySelector(".platform-data-table__toolbar-controls");
-    const controlsLeading = container.querySelector(".platform-data-table__toolbar-controls-leading");
+    const controls = container.querySelector(
+      ".platform-data-table__toolbar-controls",
+    );
+    const controlsLeading = container.querySelector(
+      ".platform-data-table__toolbar-controls-leading",
+    );
     const search = screen.getByRole("searchbox", { name: "Search resources" });
 
     expect(controls?.firstElementChild).toBe(controlsLeading);
     expect(controlsLeading?.nextElementSibling?.contains(search)).toBe(true);
   });
 
+  it("allows an explicitly iconless primary action", () => {
+    renderTable({
+      toolbar: {
+        primaryAction: {
+          label: "Manage Repos",
+          icon: null,
+          onClick: () => undefined,
+        },
+      },
+    });
+
+    expect(
+      screen.getByRole("button", { name: "Manage Repos" }).querySelector("svg"),
+    ).toBeNull();
+  });
+
   it("keeps the fill-layout header outside the row scroll viewport", () => {
     const { container } = renderTable({ layout: "fill" });
     const root = container.querySelector(".platform-data-table");
     const table = screen.getByRole("table", { name: "Test resources" });
-    const scrollViewport = container.querySelector(".platform-data-table__scroll");
-    const header = container.querySelector(".platform-data-table__header-group");
+    const scrollViewport = container.querySelector(
+      ".platform-data-table__scroll",
+    );
+    const header = container.querySelector(
+      ".platform-data-table__header-group",
+    );
     const body = container.querySelector(".platform-data-table__body");
 
     expect(root?.classList.contains("is-fill-layout")).toBe(true);
@@ -231,8 +303,14 @@ describe("PlatformDataTable", () => {
 
   it("exposes the minimalistic UI variant without changing the default table", () => {
     const { container, rerender } = renderTable({ variant: "minimalistic-ui" });
-    expect(container.querySelector(".platform-data-table.is-minimalistic-ui")).not.toBeNull();
-    expect(container.querySelector(".platform-data-table.is-minimalistic-ui .platform-data-table__surface")).not.toBeNull();
+    expect(
+      container.querySelector(".platform-data-table.is-minimalistic-ui"),
+    ).not.toBeNull();
+    expect(
+      container.querySelector(
+        ".platform-data-table.is-minimalistic-ui .platform-data-table__surface",
+      ),
+    ).not.toBeNull();
 
     rerender(
       <PlatformDataTable<TestRow>
@@ -242,7 +320,9 @@ describe("PlatformDataTable", () => {
         ariaLabel="Test resources"
       />,
     );
-    expect(container.querySelector(".platform-data-table.is-minimalistic-ui")).toBeNull();
+    expect(
+      container.querySelector(".platform-data-table.is-minimalistic-ui"),
+    ).toBeNull();
   });
 
   it("supports embedded minimal tables without toolbar, footer, or pagination chrome", () => {
@@ -255,9 +335,13 @@ describe("PlatformDataTable", () => {
 
     expect(container.querySelector(".platform-data-table__toolbar")).toBeNull();
     expect(container.querySelector(".platform-data-table__footer")).toBeNull();
-    expect(container.querySelector(".platform-data-table__pagination")).toBeNull();
+    expect(
+      container.querySelector(".platform-data-table__pagination"),
+    ).toBeNull();
     expect(screen.getByRole("columnheader", { name: /Name/ })).not.toBeNull();
-    expect(screen.getByRole("table", { name: "Test resources" })).not.toBeNull();
+    expect(
+      screen.getByRole("table", { name: "Test resources" }),
+    ).not.toBeNull();
   });
 
   it("paginates rows and keeps navigation outside the scroll viewport", async () => {
@@ -267,14 +351,23 @@ describe("PlatformDataTable", () => {
       name: `Item ${index + 1}`,
       status: "Active",
     }));
-    const { container } = renderTable({ rows: paginatedRows, layout: "fill", pagination: {} });
+    const { container } = renderTable({
+      rows: paginatedRows,
+      layout: "fill",
+      pagination: {},
+    });
     const table = screen.getByRole("table", { name: "Test resources" });
-    const pagination = screen.getByRole("navigation", { name: "Test resources pagination" });
+    const pagination = screen.getByRole("navigation", {
+      name: "Test resources pagination",
+    });
 
     expect(screen.getByText("1-20 of 22")).not.toBeNull();
     expect(screen.getAllByRole("row")).toHaveLength(21);
     expect(table.contains(pagination)).toBe(false);
-    expect(container.querySelector(".platform-data-table__surface")?.lastElementChild).toBe(pagination);
+    expect(
+      container.querySelector(".platform-data-table__surface")
+        ?.lastElementChild,
+    ).toBe(pagination);
 
     await user.click(screen.getByRole("button", { name: "Next page" }));
 
@@ -282,7 +375,10 @@ describe("PlatformDataTable", () => {
     expect(screen.getByRole("row", { name: "Item 21" })).not.toBeNull();
     expect(screen.queryByRole("row", { name: "Item 1" })).toBeNull();
 
-    await user.selectOptions(screen.getByRole("combobox", { name: "Rows per page" }), "50");
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "Rows per page" }),
+      "50",
+    );
 
     expect(screen.getByText("1-22 of 22")).not.toBeNull();
     expect(screen.getAllByRole("row")).toHaveLength(23);
@@ -290,11 +386,17 @@ describe("PlatformDataTable", () => {
 
   it("left-aligns every data column regardless of legacy alignment settings", () => {
     const { container } = renderTable();
-    const statusCells = Array.from(container.querySelectorAll<HTMLElement>('[data-column-id="status"]'));
+    const statusCells = Array.from(
+      container.querySelectorAll<HTMLElement>('[data-column-id="status"]'),
+    );
 
     expect(statusCells.length).toBeGreaterThan(1);
-    expect(statusCells.every((cell) => cell.classList.contains("is-start"))).toBe(true);
-    expect(statusCells.some((cell) => cell.classList.contains("is-end"))).toBe(false);
+    expect(
+      statusCells.every((cell) => cell.classList.contains("is-start")),
+    ).toBe(true);
+    expect(statusCells.some((cell) => cell.classList.contains("is-end"))).toBe(
+      false,
+    );
   });
 
   it("supports row selection and partial select-all state", async () => {
@@ -309,9 +411,15 @@ describe("PlatformDataTable", () => {
     });
 
     await user.click(screen.getByRole("checkbox", { name: "Select Alpha" }));
-    expect(screen.getByRole("checkbox", { name: "Select all visible rows" }).getAttribute("aria-checked")).toBe("mixed");
+    expect(
+      screen
+        .getByRole("checkbox", { name: "Select all visible rows" })
+        .getAttribute("aria-checked"),
+    ).toBe("mixed");
 
-    await user.click(screen.getByRole("checkbox", { name: "Select all visible rows" }));
+    await user.click(
+      screen.getByRole("checkbox", { name: "Select all visible rows" }),
+    );
     const latestChange = onChange.mock.calls.at(-1)?.[0];
     expect([...latestChange.selectedIds].sort()).toEqual(["row-a", "row-b"]);
   });
@@ -325,15 +433,19 @@ describe("PlatformDataTable", () => {
         defaultValue: new Set(["row-a", "row-b"]),
         ariaLabel: (row) => `Select ${row.name}`,
       },
-      getRowActions: () => [{
-        id: "duplicate",
-        label: "Duplicate",
-        icon: Copy,
-        onSelect: duplicate,
-      }],
+      getRowActions: () => [
+        {
+          id: "duplicate",
+          label: "Duplicate",
+          icon: Copy,
+          onSelect: duplicate,
+        },
+      ],
     });
 
-    await user.click(screen.getByRole("button", { name: "Open actions for Alpha" }));
+    await user.click(
+      screen.getByRole("button", { name: "Open actions for Alpha" }),
+    );
     await user.click(screen.getByRole("menuitem", { name: "Duplicate" }));
 
     expect(duplicate).toHaveBeenCalledTimes(1);
@@ -349,7 +461,9 @@ describe("PlatformDataTable", () => {
     alphaRow.focus();
     await user.keyboard("{Enter}");
 
-    expect(onRowActivate).toHaveBeenCalledWith(expect.objectContaining({ id: "row-a" }));
+    expect(onRowActivate).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "row-a" }),
+    );
   });
 
   it("renders expanded row content through the shared row surface", () => {
@@ -367,10 +481,14 @@ describe("PlatformDataTable", () => {
     const onRowActionTrigger = vi.fn();
     renderTable({ onRowActionTrigger });
 
-    await user.click(screen.getByRole("button", { name: "Open actions for Alpha" }));
+    await user.click(
+      screen.getByRole("button", { name: "Open actions for Alpha" }),
+    );
 
     expect(onRowActionTrigger).toHaveBeenCalledTimes(1);
-    expect(onRowActionTrigger.mock.calls[0]?.[1]).toEqual(expect.objectContaining({ id: "row-a" }));
+    expect(onRowActionTrigger.mock.calls[0]?.[1]).toEqual(
+      expect.objectContaining({ id: "row-a" }),
+    );
   });
 
   it("uses the canonical loading and empty states", () => {
@@ -389,8 +507,14 @@ describe("PlatformDataTable", () => {
     );
     const emptyMessage = screen.getByText("No resources yet");
     const emptyRow = emptyMessage.closest('[role="row"]');
-    expect(emptyRow?.classList.contains("platform-data-table__state-row")).toBe(true);
-    expect(within(emptyRow as HTMLElement).getByRole("cell").getAttribute("aria-colspan")).toBe("2");
+    expect(emptyRow?.classList.contains("platform-data-table__state-row")).toBe(
+      true,
+    );
+    expect(
+      within(emptyRow as HTMLElement)
+        .getByRole("cell")
+        .getAttribute("aria-colspan"),
+    ).toBe("2");
   });
 
   it("renders filtered no-results content in the canonical empty table row", () => {
@@ -405,13 +529,21 @@ describe("PlatformDataTable", () => {
     });
 
     const noResultsMessage = screen.getByText("No matching resources");
-    expect(noResultsMessage.closest('[role="row"]')?.classList.contains("platform-data-table__state-row")).toBe(true);
+    expect(
+      noResultsMessage
+        .closest('[role="row"]')
+        ?.classList.contains("platform-data-table__state-row"),
+    ).toBe(true);
   });
 
   it("animates the shared nine-dot loading sequence", () => {
     vi.useFakeTimers();
     const { container } = renderTable({ rows: [], loading: true });
-    const dots = Array.from(container.querySelectorAll<HTMLElement>(".platform-data-table__dot-loader > span"));
+    const dots = Array.from(
+      container.querySelectorAll<HTMLElement>(
+        ".platform-data-table__dot-loader > span",
+      ),
+    );
     const initialOpacities = dots.map((dot) => dot.style.opacity);
 
     expect(dots).toHaveLength(9);

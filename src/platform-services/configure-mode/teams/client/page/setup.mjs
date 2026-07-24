@@ -383,6 +383,21 @@ export const TEAMS_PAGE_SETUP_SCRIPT = `        function renderTeamPage() {
                     }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
                   ),
                   React.createElement("div", { className: "playground-team-modal-form" },
+                    React.createElement("div", { className: "playground-team-create-profile-row" },
+                      React.createElement(PlatformProfileImagePicker, {
+                        value: teamPageCreateProfileImageUrl,
+                        fallback: getPlatformProfileImageInitials(teamPageCreateName || "Team", "T"),
+                        editable: true,
+                        disabled: teamPageActionId === "create-team",
+                        ariaLabel: "Choose team profile picture",
+                        className: "playground-team-create-profile-picker",
+                        onChange: (url) => setTeamPageCreateProfileImageUrl(url),
+                      }),
+                      React.createElement("div", { className: "playground-team-create-profile-copy" },
+                        React.createElement("span", { className: "playground-team-modal-label" }, "Profile picture"),
+                        React.createElement("span", { className: "playground-team-create-profile-description" }, "Choose how this team appears across the workspace.")
+                      )
+                    ),
                     React.createElement("div", { className: "playground-team-modal-field" },
                       React.createElement("label", { className: "playground-team-modal-label", htmlFor: "team-create-name" }, "Team name"),
                       React.createElement("input", {
@@ -886,6 +901,8 @@ export const TEAMS_PAGE_SETUP_SCRIPT = `        function renderTeamPage() {
               return {
                 id,
                 name,
+                profileImageUrl: getTeamPageProfileImageUrl(team),
+                profileFallback: getPlatformProfileImageInitials(name, "T"),
                 roleLabel,
                 ownerLabel,
                 ownership: isOwned ? "owned" : "member",

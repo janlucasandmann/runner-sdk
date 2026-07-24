@@ -272,7 +272,19 @@ export const FINE_TUNING_PAGE_CONTROLLER_EDITOR_SCRIPT = String.raw`        func
             if (normalizedItem.id !== normalizedJobId) return item;
             const nextJob = mergePlaygroundFineTuningJobRecords(normalizedItem, updater(normalizedItem));
             if (options.persist) {
-              void persistFineTuningRuntimeJob(nextJob).catch(() => {});
+              const delayMs = Math.max(0, Number(options.delayMs || 0) || 0);
+              const existingTimer = fineTuningPersistTimersRef.current.get(normalizedJobId);
+              if (existingTimer && typeof window !== "undefined") window.clearTimeout(existingTimer);
+              if (delayMs > 0 && typeof window !== "undefined") {
+                const timerId = window.setTimeout(() => {
+                  fineTuningPersistTimersRef.current.delete(normalizedJobId);
+                  void persistFineTuningRuntimeJob(nextJob).catch(() => {});
+                }, delayMs);
+                fineTuningPersistTimersRef.current.set(normalizedJobId, timerId);
+              } else {
+                fineTuningPersistTimersRef.current.delete(normalizedJobId);
+                void persistFineTuningRuntimeJob(nextJob).catch(() => {});
+              }
             }
             return nextJob;
           }));
@@ -348,4 +360,3 @@ export const FINE_TUNING_PAGE_CONTROLLER_EDITOR_SCRIPT = String.raw`        func
         }
 
 `;
-

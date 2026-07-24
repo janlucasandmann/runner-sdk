@@ -829,6 +829,7 @@
   
           if (embeddedInResources) {
             return React.createElement(React.Fragment, null,
+              agentsTitleActions,
               agentsTopNavActions,
               shouldShowAgentsHome || (agentCreationSetupOpen && !agentCreationSetupDraft)
                 ? React.createElement("section", { className: "playground-environments-detail playground-plugins-detail playground-skills-page playground-resources-page playground-agents-overview-page is-develop-configure-page" },

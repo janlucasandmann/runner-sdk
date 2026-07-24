@@ -904,11 +904,12 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
             if (typeof setProjectOverviewPermissionTeamId === "function") {
               setProjectOverviewPermissionTeamId(teamId);
             }
-            const shouldAutoCollapseSidebar = teamId !== "all_agents" && !projectOverviewSidebarCollapsed;
+            const isSystemPrincipal = isPlatformSystemAccessPrincipalId(teamId);
+            const shouldAutoCollapseSidebar = !isSystemPrincipal && !projectOverviewSidebarCollapsed;
             if (shouldAutoCollapseSidebar) {
               projectOverviewSidebarAutoCollapsedForPermissionRef.current = true;
               setProjectOverviewSidebarCollapsed(true);
-            } else if (teamId !== "all_agents") {
+            } else if (!isSystemPrincipal) {
               projectOverviewSidebarAutoCollapsedForPermissionRef.current = false;
             }
           }

@@ -1,4 +1,4 @@
-import { ChevronRight, Plus, SquarePen, UsersRound } from "lucide-react";
+import { ChevronRight, Plus, SquarePen } from "lucide-react";
 import { useMemo, useState } from "react";
 import type {
   PlatformDataTableAction,
@@ -14,6 +14,8 @@ import { TeamsOverviewGuide } from "./teams-overview-guide.js";
 export interface TeamOverviewRow {
   id: string;
   name: string;
+  profileImageUrl?: string;
+  profileFallback?: string;
   roleLabel: string;
   ownerLabel: string;
   ownership: "owned" | "member";
@@ -61,9 +63,9 @@ export function TeamsOverviewPage({
         cell: ({ row }) => (
           <ResourceOverviewIdentityCell
             title={row.name}
-            icon={UsersRound}
-            iconClassName="is-connection"
-            size="compact"
+            imageUrl={row.profileImageUrl}
+            fallback={row.profileFallback}
+            iconClassName="is-agent"
           />
         ),
       },

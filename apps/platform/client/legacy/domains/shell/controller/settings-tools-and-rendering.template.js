@@ -962,35 +962,15 @@
                 ? getSettingsTelegramDisplayName(settingsTelegramStatus)
                 : "Not connected";
             }
-            if (pluginId === "github") {
-              const profile = githubStatus?.profile || {};
-              return githubStatus?.connected
-                ? (profile.login || profile.email || profile.name || "Connected")
-                : "Not connected";
-            }
-            if (pluginId === "google-drive") {
-              const profile = googleDriveStatus?.profile || {};
-              return googleDriveStatus?.connected
-                ? (profile.email || profile.username || "Connected")
-                : "Not connected";
-            }
-            if (pluginId === "gmail") {
-              const profile = gmailStatus?.profile || {};
-              return gmailStatus?.connected
-                ? (profile.email || profile.username || "Connected")
-                : "Not connected";
-            }
-            if (pluginId === "one-drive") {
-              const profile = oneDriveStatus?.profile || {};
-              return oneDriveStatus?.connected
-                ? (profile.email || profile.username || "Connected")
-                : "Not connected";
-            }
-            if (pluginId === "notion") {
-              const profile = notionStatus?.profile || {};
-              return notionStatus?.connected
-                ? (profile.workspaceName || profile.name || profile.email || "Connected")
-                : "Not connected";
+            const reusablePluginStatuses = {
+              github: githubStatus,
+              "google-drive": googleDriveStatus,
+              gmail: gmailStatus,
+              "one-drive": oneDriveStatus,
+              notion: notionStatus,
+            };
+            if (Object.hasOwn(reusablePluginStatuses, pluginId)) {
+              return getPlatformPluginConnectionIdentity(pluginId, reusablePluginStatuses[pluginId]);
             }
             if (pluginId === "gitlab") {
               return "Available via webhooks";

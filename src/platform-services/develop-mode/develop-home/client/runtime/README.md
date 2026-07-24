@@ -4,11 +4,10 @@
 
 ## Purpose
 
-This directory contains stateful runtime orchestration for the Develop Home service in Develop Mode. It remains subordinate to the service boundary and must not become a cross-service utility layer.
+This directory contains stateful runtime orchestration for Develop resource analytics in Develop Mode. The centralized Develop Home does not fetch analytics on mount; these fragments are loaded only for resource pages that require them. It remains subordinate to the service boundary and must not become a cross-service utility layer.
 
 ## Contents
 
-- [`home-lifecycle.mjs`](home-lifecycle.mjs) — Focused implementation of Home Lifecycle.
 - [`index.mjs`](index.mjs) — Public barrel or composition entry point.
 - [`operational-metrics.mjs`](operational-metrics.mjs) — Focused implementation of Operational Metrics.
 - [`resource-lifecycle.mjs`](resource-lifecycle.mjs) — Focused implementation of Resource Lifecycle.

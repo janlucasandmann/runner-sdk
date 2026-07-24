@@ -20,6 +20,24 @@ export const EVALUATIONS_PAGE_SOURCE_THREADS_SCRIPT = String.raw`      function 
           status: String(source.status || source.state || "").trim(),
           agentId: String(source.agentId || source.agent_id || agent.id || metadata.agentId || metadata.agent_id || runnerPlayground.agentId || taskPreview.agentId || "").trim(),
           agentName: String(source.agentName || source.agent_name || agent.name || agent.label || metadata.agentName || metadata.agent_name || runnerPlayground.agentName || taskPreview.agentName || "").trim(),
+          agentAvatarUrl: String(
+            source.agentAvatarUrl
+            || source.agent_avatar_url
+            || agent.photoUrl
+            || agent.photoURL
+            || agent.avatarUrl
+            || agent.avatarURL
+            || agent.imageUrl
+            || agent.imageURL
+            || agent.avatar
+            || metadata.agentAvatarUrl
+            || metadata.agent_avatar_url
+            || runnerPlayground.agentAvatarUrl
+            || runnerPlayground.agent_avatar_url
+            || taskPreview.agentAvatarUrl
+            || taskPreview.agent_avatar_url
+            || ""
+          ).trim(),
           environmentId: String(source.environmentId || source.environment_id || source.computerId || source.computer_id || environment.id || metadata.environmentId || metadata.environment_id || runnerPlayground.environmentId || taskPreview.environmentId || "").trim(),
           environmentName: String(source.environmentName || source.environment_name || source.computerName || source.computer_name || environment.name || environment.label || metadata.environmentName || metadata.environment_name || runnerPlayground.environmentName || taskPreview.environmentName || "").trim(),
           createdAt: String(source.createdAt || source.created_at || "").trim(),
@@ -186,4 +204,3 @@ export const EVALUATIONS_PAGE_SOURCE_THREADS_SCRIPT = String.raw`      function 
       }
 
 `;
-

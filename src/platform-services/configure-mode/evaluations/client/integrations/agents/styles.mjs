@@ -68,7 +68,9 @@ export const EVALUATIONS_AGENT_STYLES = `      .playground-agents-detail-evaluat
         margin: 0 0 8px;
       }
 
-      .playground-agents-detail-evaluation-modal .playground-mission-control-modal-body {
+      .playground-agents-detail-evaluation-modal-body.platform-modal-body {
+        display: flex;
+        flex-direction: column;
         gap: 14px;
       }
 

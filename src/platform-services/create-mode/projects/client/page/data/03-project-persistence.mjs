@@ -521,16 +521,12 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
               setIssueComposerDetailSelectPopover("");
               return;
             }
-            if (issueComposerEnvironmentPopoverOpen) {
-              setIssueComposerEnvironmentPopoverOpen(false);
-              return;
-            }
             closeProjectIssueComposer();
           }
 
           window.addEventListener("keydown", handleIssueComposerEscape);
           return () => window.removeEventListener("keydown", handleIssueComposerEscape);
-        }, [issueComposerClosing, issueComposerDetailSelectPopover, issueComposerEnvironmentPopoverOpen, issueComposerOpen, issueComposerSaveState.isSaving]);
+        }, [issueComposerClosing, issueComposerDetailSelectPopover, issueComposerOpen, issueComposerSaveState.isSaving]);
 
         useEffect(() => {
           if (!releaseComposerOpen) return undefined;
@@ -624,40 +620,6 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
           document.addEventListener("mousedown", handleProjectComposerEnvironmentPopoverPointerDown);
           return () => document.removeEventListener("mousedown", handleProjectComposerEnvironmentPopoverPointerDown);
         }, [projectComposerEnvironmentPopoverOpen]);
-
-        useEffect(() => {
-          if (!issueComposerEnvironmentPopoverOpen) {
-            return undefined;
-          }
-
-          function handleIssueComposerEnvironmentPopoverPointerDown(event) {
-            const target = event?.target instanceof Node ? event.target : null;
-            if (!target || !issueComposerEnvironmentPopoverRef.current || issueComposerEnvironmentPopoverRef.current.contains(target)) {
-              return;
-            }
-            setIssueComposerEnvironmentPopoverOpen(false);
-          }
-
-          document.addEventListener("mousedown", handleIssueComposerEnvironmentPopoverPointerDown);
-          return () => document.removeEventListener("mousedown", handleIssueComposerEnvironmentPopoverPointerDown);
-        }, [issueComposerEnvironmentPopoverOpen]);
-
-        useEffect(() => {
-          if (!issueComposerDetailSelectPopover) {
-            return undefined;
-          }
-
-          function handleIssueComposerDetailSelectPopoverPointerDown(event) {
-            const target = event?.target instanceof Node ? event.target : null;
-            if (!target || !issueComposerDetailSelectPopoverRef.current || issueComposerDetailSelectPopoverRef.current.contains(target)) {
-              return;
-            }
-            setIssueComposerDetailSelectPopover("");
-          }
-
-          document.addEventListener("mousedown", handleIssueComposerDetailSelectPopoverPointerDown);
-          return () => document.removeEventListener("mousedown", handleIssueComposerDetailSelectPopoverPointerDown);
-        }, [issueComposerDetailSelectPopover]);
 
         useEffect(() => {
           if (missionControlSetupOutcomeMenuIndex < 0) {
@@ -794,32 +756,7 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
         }, [backlogTaskContextMenu]);
 
         useEffect(() => {
-          if (!taskStatusMenuState?.taskId) return undefined;
-
-          function handleTaskStatusMenuPointerDown(event) {
-            const target = event?.target instanceof Node ? event.target : null;
-            if (!target || !taskStatusMenuRef.current || taskStatusMenuRef.current.contains(target)) {
-              return;
-            }
-            setTaskStatusMenuState(null);
-          }
-
-          function handleTaskStatusMenuEscape(event) {
-            if (event.key === "Escape") {
-              setTaskStatusMenuState(null);
-            }
-          }
-
-          document.addEventListener("mousedown", handleTaskStatusMenuPointerDown);
-          window.addEventListener("keydown", handleTaskStatusMenuEscape);
-          return () => {
-            document.removeEventListener("mousedown", handleTaskStatusMenuPointerDown);
-            window.removeEventListener("keydown", handleTaskStatusMenuEscape);
-          };
-        }, [taskStatusMenuState]);
-
-        useEffect(() => {
-          if (!taskDetailPopover) return undefined;
+          if (!taskDetailPopover || projectTaskDetailScreenOpen) return undefined;
 
           function handleTaskDetailPopoverPointerDown(event) {
             const target = event?.target instanceof Node ? event.target : null;
@@ -831,7 +768,7 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
 
           document.addEventListener("mousedown", handleTaskDetailPopoverPointerDown);
           return () => document.removeEventListener("mousedown", handleTaskDetailPopoverPointerDown);
-        }, [taskDetailPopover]);
+        }, [projectTaskDetailScreenOpen, taskDetailPopover]);
 
         useEffect(() => {
           if (taskDetailPopover) {
@@ -848,6 +785,9 @@ export const PROJECTS_DATA_03_FRAGMENT = `          );
 
         useEffect(() => {
           setTaskDetailSelectPopover("");
+          setTaskDetailStatusSearchQuery("");
+          setTaskDetailTypeSearchQuery("");
+          setTaskDetailPrioritySearchQuery("");
         }, [draftTask?.id, taskDetailsCollapsed]);
 
         useEffect(() => {

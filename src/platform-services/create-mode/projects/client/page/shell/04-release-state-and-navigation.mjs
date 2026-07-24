@@ -314,7 +314,7 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
           }
           return dependencyIds.some((dependencyId) => {
             const dependencyTask = tasksById[dependencyId] || null;
-            return Boolean(dependencyTask && String(dependencyTask.status || "").trim() !== "done");
+            return Boolean(dependencyTask && !isPlaygroundTaskTerminalStatus(dependencyTask.status));
           });
         }
 
@@ -342,7 +342,7 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
           if (task?.status === "blocked") {
             return hasIncompleteTaskDependencies(task) ? "blocked" : "todo";
           }
-	          if (task?.status === "done" || task?.status === "in_review") {
+	          if (isPlaygroundTaskTerminalStatus(task?.status) || task?.status === "in_review") {
 	            return task.status;
 	          }
           if (isOptimisticallyInProgress) {
@@ -360,7 +360,7 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
             : null;
           const shouldKeepCompletedTaskVisible = Boolean(
             keepVisibleCompletedTaskIds
-            && task?.status === "done"
+            && isPlaygroundTaskTerminalStatus(task?.status)
             && typeof task?.id === "string"
             && keepVisibleCompletedTaskIds.has(task.id)
           );
@@ -374,12 +374,12 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
             return isPlaygroundSubtaskRecord(task);
           }
           if (filterMode === "done") {
-            return task.status === "done";
+            return isPlaygroundTaskTerminalStatus(task.status);
           }
           if (shouldKeepCompletedTaskVisible) {
             return true;
           }
-          if (task.status === "done") {
+          if (isPlaygroundTaskTerminalStatus(task.status)) {
             return false;
           }
           if (filterMode === "started") {
@@ -400,7 +400,7 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
           }
           const boardStatus = getTaskBoardStatus(task);
           if (filterMode === "done") {
-            return boardStatus === "done";
+            return isPlaygroundTaskTerminalStatus(boardStatus);
           }
           if (filterMode === "blocked") {
             return boardStatus === "blocked";
@@ -482,8 +482,8 @@ export const PROJECTS_SHELL_04_FRAGMENT = `          if (normalizedMimeType.star
             return compareBacklogDefaultTaskOrder(left, right);
           }
           if (filterMode === "all") {
-            const leftIsDone = left.status === "done";
-            const rightIsDone = right.status === "done";
+            const leftIsDone = isPlaygroundTaskTerminalStatus(left.status);
+            const rightIsDone = isPlaygroundTaskTerminalStatus(right.status);
             if (leftIsDone !== rightIsDone) {
               return leftIsDone ? 1 : -1;
             }

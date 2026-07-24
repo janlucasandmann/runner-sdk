@@ -4,9 +4,9 @@ import { PlatformDataTable, type PlatformDataTableColumn } from "../../../../../
 import { PlatformUiCard } from "../../../../../platform-ui/components/composite/ui-card/index.js";
 import { PlatformPrimaryButton, PlatformSecondaryButton } from "../../../../../platform-ui/components/ui/button/index.js";
 import { PlatformLabel } from "../../../../../platform-ui/components/ui/label/index.js";
-import { ResourceDetailPage } from "../../../../../platform-ui/pages/details/index.js";
 import type { SecurityAuditEvent, SecurityFinding, SecurityRunDetail } from "../domain/index.js";
 import { formatSecurityAction, formatSecurityTimestamp } from "../domain/index.js";
+import { SecurityResourceDetailPage } from "./security-detail-layout.js";
 import {
   SecurityBackHeader,
   SecurityFindingStatusLabel,
@@ -110,16 +110,13 @@ export function SecurityRunDetailPage({ detail, busy = false, onBack, onRefresh,
   );
 
   return (
-    <ResourceDetailPage<SecurityRunTab>
+    <SecurityResourceDetailPage<SecurityRunTab>
       header={<SecurityBackHeader eyebrow="Security run" title={run.repositoryFullName || run.id} description={<span><GitCommitHorizontal width={13} height={13} /> <code>{run.headSha || "commit pending"}</code></span>} onBack={onBack} />}
       headerActions={<div className="develop-security-inline-actions"><PlatformSecondaryButton size="small" onClick={onRefresh} disabled={busy}>Refresh</PlatformSecondaryButton>{cancellable ? <PlatformPrimaryButton size="small" className="is-destructive" onClick={onCancel} disabled={busy}><Ban width={14} height={14} /> Cancel run</PlatformPrimaryButton> : null}</div>}
       tabs={RUN_TABS}
       activeTab={activeTab}
       onTabChange={setActiveTab}
       ariaLabel={`Security run ${run.id}`}
-      className="develop-security-resource-detail"
-      contentClassName="develop-security-detail-content"
-      sidebarClassName="develop-security-detail-sidebar"
       sidebar={(
         <PlatformUiCard as="section" variant="sidebar" cardTitle="Run properties">
           <SecurityPropertyList items={[
@@ -136,6 +133,6 @@ export function SecurityRunDetailPage({ detail, busy = false, onBack, onRefresh,
       )}
     >
       {content}
-    </ResourceDetailPage>
+    </SecurityResourceDetailPage>
   );
 }

@@ -33,44 +33,30 @@ afterEach(() => {
 });
 
 describe("AgentDetailPage", () => {
-  it("composes the shared detail shell and canonical agent tabs", () => {
+  it("composes the shared detail shell without local header navigation", () => {
     const { container } = render(
       <AgentDetailPage
-        header={<h1>Atlas</h1>}
-        tabBarActions={<button type="button">Versions</button>}
-        sidebarToggle={<button type="button">Toggle sidebar</button>}
         sidebar={<div>Agent model</div>}
         activeTab="general"
-        onTabChange={vi.fn()}
       >
         <div>Agent instructions</div>
       </AgentDetailPage>,
     );
 
     expect(container.querySelectorAll("[data-resource-detail-page='true']")).toHaveLength(1);
-    expect(container.querySelectorAll("[data-platform-detail-tab-bar='true']")).toHaveLength(1);
+    expect(container.querySelectorAll("[data-platform-detail-tab-bar='true']")).toHaveLength(0);
     expect(container.querySelectorAll("[data-platform-detail-sidebar='true']")).toHaveLength(1);
-    expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual([
-      "General",
-      "Insights",
-      "Evaluation",
-      "Guardrails",
-      "Permissions",
-    ]);
-    expect(screen.getByRole("button", { name: "Versions" })).not.toBeNull();
-    expect(screen.getByRole("button", { name: "Toggle sidebar" })).not.toBeNull();
+    expect(container.querySelector(".resource-detail-page__header")).toBeNull();
+    expect(screen.queryByRole("tab")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Toggle sidebar" })).toBeNull();
     expect(screen.queryByRole("button", { name: /back/i })).toBeNull();
   });
 
   it("renders the agent-owned permissions page for the permissions tab", () => {
     const { container } = render(
       <AgentDetailPage
-        header={<h1>Atlas</h1>}
-        tabBarActions={<button type="button">Versions</button>}
-        sidebarToggle={<button type="button">Toggle sidebar</button>}
         sidebar={<div>Agent model</div>}
         activeTab="permissions"
-        onTabChange={vi.fn()}
         permissions={{
           permissionSet: createPlatformDefaultPermissionSet("agent"),
           onPermissionSetChange: vi.fn(),
@@ -82,5 +68,7 @@ describe("AgentDetailPage", () => {
 
     expect(container.querySelectorAll("[data-platform-permissions-page='true']")).toHaveLength(1);
     expect(screen.queryByText("Legacy permissions content")).toBeNull();
+    expect(screen.queryByRole("tab", { name: "Permissions" })).toBeNull();
+    expect(container.querySelectorAll("[data-platform-detail-tab-bar='true']")).toHaveLength(0);
   });
 });

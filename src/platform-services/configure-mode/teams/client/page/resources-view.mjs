@@ -153,29 +153,6 @@ export const TEAMS_PAGE_RESOURCES_VIEW_SCRIPT = `          const openTeamResourc
               }, ownerLabel || "-")
             );
           };
-          const renderTeamResourceNewMenu = () => {
-            if (teamPageResourceToolbarPopover !== "new") {
-              return null;
-            }
-            return React.createElement(PlatformPopupSurface, {
-                className: "playground-tasks-toolbar-popup-menu playground-project-resources-new-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                onClick: (event) => event.stopPropagation(),
-              },
-              resourceTypeOptions.map((typeOption) => {
-                const meta = getTeamResourceTypeMeta(typeOption.value);
-                const Icon = meta.Icon || Layers;
-                return React.createElement("button", {
-                    key: typeOption.value,
-                    type: "button",
-                    className: "tb-popup-row playground-project-team-menu-item",
-                    onClick: () => openTeamShareResourceModal(typeOption.value),
-                  },
-                  React.createElement(Icon, { width: 14, height: 14, strokeWidth: 1.8 }),
-                  React.createElement("span", null, typeOption.label)
-                );
-              })
-            );
-          };
 	          const renderTeamResourceRowMenu = (row, options = {}) => {
 	            const share = row?.directShare || row?.record || {};
 	            const menuId = getTeamResourceRowMenuId(row);
@@ -336,74 +313,131 @@ export const TEAMS_PAGE_RESOURCES_VIEW_SCRIPT = `          const openTeamResourc
 	              ? createPortal(menuElement, document.body)
 	              : menuElement;
 	          };
+	          const teamResourceDataTableColumns = [
+	            {
+	              id: "resource",
+	              header: "Resource",
+	              accessor: (row) => row?.title || "Untitled resource",
+	              sortable: true,
+	              width: "minmax(220px, 1.45fr)",
+	              cell: ({ row }) => {
+	                const meta = getTeamResourceTypeMeta(row?.type || row?.resourceType || "") || { label: "Resource", Icon: Layers };
+	                return React.createElement("div", { className: "playground-project-resource-title-cell" },
+	                  renderTeamResourceIcon(row, meta),
+	                  React.createElement("span", { className: "playground-project-resource-title-copy" },
+	                    React.createElement("span", { className: "playground-project-resource-title-main" }, row?.title || "Untitled resource")
+	                  )
+	                );
+	              },
+	            },
+	            {
+	              id: "access",
+	              header: "Access",
+	              accessor: (row) => row?.accessLabel || row?.accessLevel || "",
+	              sortable: true,
+	              width: "minmax(120px, 0.78fr)",
+	              cell: ({ row }) => renderTeamResourceAccess(row),
+	            },
+	            {
+	              id: "source",
+	              header: "Shared Through",
+	              accessor: (row) => row?.sourceLabel || "",
+	              sortable: true,
+	              width: "minmax(135px, 0.82fr)",
+	              hideBelow: 820,
+	              cell: ({ row }) => renderTeamResourceSource(row),
+	            },
+	            {
+	              id: "updated",
+	              header: "Updated",
+	              accessor: (row) => row?.updatedAt || row?.updatedLabel || "",
+	              sortable: true,
+	              sortDescFirst: true,
+	              width: "minmax(120px, 0.72fr)",
+	              hideBelow: 680,
+	              cell: ({ row }) => row?.updatedLabel || "-",
+	            },
+	            {
+	              id: "owner",
+	              header: "Owner",
+	              accessor: (row) => row?.ownerLabel || "",
+	              sortable: true,
+	              width: "minmax(135px, 0.85fr)",
+	              hideBelow: 940,
+	              cell: ({ row }) => renderTeamResourceOwner(row),
+	            },
+	          ];
+	          const teamResourcesDataTable = React.createElement(PlatformDataTable, {
+	            rows: teamResourceRows,
+	            columns: teamResourceDataTableColumns,
+	            getRowId: getTeamResourceSelectionId,
+	            ariaLabel: "Team resources",
+	            className: "playground-team-resources-platform-data-table",
+	            surface: "plain",
+	            variant: "minimalistic-ui",
+	            sticky: false,
+	            sorting: {
+	              value: { id: teamPageResourceSort, direction: teamPageResourceSortDirection === "desc" ? "desc" : "asc" },
+	              manual: true,
+	              onChange: (nextSorting) => {
+	                if (nextSorting) handleTeamResourceSortChange(nextSorting.id, nextSorting.direction);
+	              },
+	            },
+	            selection: {
+	              enabled: true,
+	              value: selectedTeamPageResourceIds,
+	              onChange: ({ selectedIds }) => setSelectedTeamPageResourceIds(new Set(selectedIds)),
+	              ariaLabel: (row) => "Select " + (row?.title || "resource"),
+	            },
+	            toolbar: {
+	              title: "All Resources",
+	              search: {
+	                value: teamPageResourceSearchQuery,
+	                onChange: setTeamPageResourceSearchQuery,
+	                placeholder: "Search resources",
+	                ariaLabel: "Search team resources",
+	                manual: true,
+	              },
+	              filters: [{
+	                id: "resource-type",
+	                label: "Type",
+	                value: teamPageResourceFilter,
+	                options: teamResourceTypeFilters,
+	                onChange: setTeamPageResourceFilter,
+	              }],
+	            },
+	            onRowActivate: openTeamResourceRow,
+	            onRowActionTrigger: (event, row) => {
+	              const selectionId = getTeamResourceSelectionId(row);
+	              if (selectionId && selectedTeamPageResourceIds.has(selectionId) && selectedTeamPageResourceIds.size > 1) {
+	                openTeamPageResourceBulkActionMenu(event, Array.from(selectedTeamPageResourceIds));
+	                return;
+	              }
+	              openTeamPageResourceActionMenu(event, row, { openLeft: true });
+	            },
+	            isRowActionOpen: (row) => Boolean(
+	              teamPageResourceActionMenuState?.menuId
+	              && getTeamResourceRowMenuId(row) === teamPageResourceActionMenuState.menuId
+	            ),
+	            onRowContextMenu: (event, row) => {
+	              const selectionId = getTeamResourceSelectionId(row);
+	              if (selectionId && selectedTeamPageResourceIds.has(selectionId) && selectedTeamPageResourceIds.size > 1) {
+	                openTeamPageResourceBulkActionMenu(event, Array.from(selectedTeamPageResourceIds));
+	                return;
+	              }
+	              openTeamPageResourceActionMenu(event, row, { context: true });
+	            },
+	            loading: teamPageLoading && teamResourceRowsAll.length === 0,
+	            emptyState: teamResourceRowsAll.length === 0
+	              ? "No resources shared yet."
+	              : "No shared resources match this view yet.",
+	          });
 	          const renderResourcesTab = () => React.createElement("div", { className: "playground-team-detail-panel playground-team-resources-panel" },
 	            React.createElement(React.Fragment, null,
-	              React.createElement(PlaygroundSharedResourcesTab, {
-	              rows: teamResourceRows,
-              allRows: teamResourceRowsAll,
-              searchQuery: teamPageResourceSearchQuery,
-              onSearchQueryChange: setTeamPageResourceSearchQuery,
-              toolbarPopover: teamPageResourceToolbarPopover,
-              onToolbarPopoverChange: setTeamPageResourceToolbarPopover,
-              filter: teamPageResourceFilter,
-              onFilterChange: setTeamPageResourceFilter,
-              typeFilters: teamResourceTypeFilters,
-	              viewMode: teamPageResourceViewMode,
-	              onViewModeChange: setTeamPageResourceViewMode,
-	              sortKey: teamPageResourceSort,
-	              sortDirection: teamPageResourceSortDirection,
-	              sortableColumns: ["resource", "access", "source", "updated", "owner"],
-	              onSortChange: handleTeamResourceSortChange,
-	              menuId: teamPageResourceMenuId,
-              onMenuIdChange: setTeamPageResourceMenuId,
-              getTypeMeta: getTeamResourceTypeMeta,
-              getRowMenuId: getTeamResourceRowMenuId,
-              renderIcon: renderTeamResourceIcon,
-              renderCreator: renderTeamResourceAccess,
-              renderSource: renderTeamResourceSource,
-	              renderOwner: renderTeamResourceOwner,
-	              renderNewMenu: renderTeamResourceNewMenu,
-              onNewButtonClick: () => openTeamShareResourceModal(),
-              onRowOpen: openTeamResourceRow,
-              metaCellsStopRowOpen: false,
-	              newButtonLabel: "Add Resource",
-	              newButtonClassName: "playground-top-nav-private-chat-button playground-agents-nav-create-button playground-agents-overview-toolbar-create-button",
-	              searchAriaLabel: "Search team resources",
-              primaryHeader: "Resource",
-              secondaryHeader: "Access",
-              sourceHeader: "Shared Through",
-              tertiaryHeader: "Updated",
-              ownerHeader: "Owner",
-              emptyLabel: teamPageLoading ? "Loading resources..." : "No resources shared yet.",
-	              noMatchesLabel: "No shared resources match this view yet.",
-	              showNewButton: canManageTeam,
-	              showSelectionColumn: true,
-	              selectedRowIds: selectedTeamPageResourceIds,
-	              getSelectionId: getTeamResourceSelectionId,
-		              onToggleRowSelection: toggleTeamPageResourceSelection,
-		              onToggleVisibleSelection: toggleVisibleTeamPageResourceSelection,
-	              onRowActionMenuOpen: (event, row, options = {}) => {
-	                const selectionId = getTeamResourceSelectionId(row);
-	                if (selectionId && selectedTeamPageResourceIds.has(selectionId) && selectedTeamPageResourceIds.size > 1) {
-	                  openTeamPageResourceBulkActionMenu(event, Array.from(selectedTeamPageResourceIds || []));
-	                  return;
-	                }
-	                openTeamPageResourceActionMenu(event, row, options);
-	              },
-		              onRowContextMenu: (event, row) => {
-		                const selectionId = getTeamResourceSelectionId(row);
-		                if (selectionId && selectedTeamPageResourceIds.has(selectionId) && selectedTeamPageResourceIds.size > 1) {
-		                  openTeamPageResourceBulkActionMenu(event, Array.from(selectedTeamPageResourceIds || []));
-		                  return;
-		                }
-		                openTeamPageResourceActionMenu(event, row, { context: true });
-		              },
-		              activeRowMenuId: teamPageResourceActionMenuState?.menuId || "",
-		            }),
+	              teamResourcesDataTable,
 	              renderTeamResourceActionMenuPortal(),
 	              renderTeamResourceBulkActionMenuPortal()
 	            )
 	          );
 
 `;
-

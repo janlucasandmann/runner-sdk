@@ -55,6 +55,17 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
           }
         }
 
+        function handleTaskDetailBack() {
+          const parentTaskId = isPlaygroundSubtaskRecord(draftTask)
+            ? getPlaygroundTaskParentTaskId(draftTask)
+            : null;
+          if (parentTaskId) {
+            openProjectTaskDetailScreen(parentTaskId);
+            return;
+          }
+          handleCloseTaskDetail();
+        }
+
         function handleOpenTaskThreadChanges(task) {
           const threadId = getTaskStartedThreadId(task);
           if (!threadId || typeof onThreadStarted !== "function") {
@@ -130,7 +141,7 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
                 : React.createElement(Play, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
               React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
                 React.createElement("span", null, canRunHumanTask ? (task?.status === "done" ? "Reopen task" : "Mark complete") : "Run thread"),
-                React.createElement("span", null, canRunHumanTask ? "Move this human task into Finished." : "Start a fresh agent thread from this task.")
+                React.createElement("span", null, canRunHumanTask ? "Move this human task into Done." : "Start a fresh agent thread from this task.")
               )
             ),
             canShowRevertTaskChanges
@@ -500,17 +511,7 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
 
         function getTaskPreviewStatusOptions(taskRecord) {
           const currentStatus = getTaskPreviewStatusValue(taskRecord);
-          const transitionOrder = currentStatus === "blocked"
-            ? ["todo"]
-            : (
-                currentStatus === "todo"
-                  ? ["in_progress", "done", "in_review"]
-                  : ["todo", "in_progress", "done", "in_review"]
-              );
-          return transitionOrder
-            .filter((status) => status !== currentStatus)
-            .map((status) => PLAYGROUND_TASK_STATUS_OPTIONS.find((option) => option.id === status))
-            .filter(Boolean);
+          return PLAYGROUND_TASK_MANUAL_STATUS_OPTIONS.filter((option) => option.id !== currentStatus);
         }
 
         async function handleTaskPreviewStatusChange(taskRecord, nextStatus, event) {
@@ -530,7 +531,7 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
             return;
           }
 
-          const completedAt = normalizedNextStatus === "done" ? new Date().toISOString() : null;
+          const completedAt = isPlaygroundTaskTerminalStatus(normalizedNextStatus) ? new Date().toISOString() : null;
           const nextDependencyIds = [];
           const previousTask = normalizePlaygroundTaskRecord(normalizedTask);
           const optimisticTask = normalizePlaygroundTaskRecord(syncPlaygroundTaskRecordMetadata({
@@ -597,59 +598,44 @@ export const PROJECTS_ACTIONS_05_FRAGMENT = `            taskType: "subtask",
           }
 
           const currentStatus = getTaskPreviewStatusValue(normalizedTask);
-          const currentLabel = getTaskPreviewStatusLabel(normalizedTask);
           const statusOptions = getTaskPreviewStatusOptions(normalizedTask);
           const isOpen = isTaskPreviewStatusMenuOpen(normalizedTask.id);
           const isDisabled = saveState.isSaving || statusOptions.length === 0;
 
-          return React.createElement("div", {
-              className: "playground-tasks-backlog-status-control playground-tasks-toolbar-popup-shell" + (isOpen ? " is-open" : ""),
-              ref: isOpen ? taskStatusMenuRef : null,
-              onClick: (event) => event.stopPropagation(),
+          return React.createElement(PlatformSelector, {
+            value: currentStatus,
+            options: statusOptions.map((option) => ({
+              value: option.id,
+              label: option.label,
+              leading: renderPlaygroundTaskStatusGlyph(option.id),
+            })),
+            onValueChange: (nextStatus) => {
+              void handleTaskPreviewStatusChange(normalizedTask, nextStatus);
             },
-            React.createElement("button", {
-              type: "button",
-              className: "playground-tasks-backlog-status-button",
-              title: "Change status",
-              "aria-label": "Change ticket status",
-              "aria-expanded": isOpen ? "true" : "false",
-              disabled: isDisabled,
-              onClick: (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                if (isDisabled) {
-                  return;
-                }
-                setTaskStatusMenuState((current) => current?.taskId === normalizedTask.id
-                  ? null
-                  : { taskId: normalizedTask.id }
-                );
-              },
-            },
-              React.createElement(ChevronDown, { className: "playground-tasks-backlog-status-chevron", strokeWidth: 1.8 }),
-              React.createElement("span", { className: "playground-tasks-backlog-status-label" }, currentLabel)
+            ariaLabel: "Change ticket status",
+            label: renderPlaygroundTaskStatusValue(
+              currentStatus,
+              "playground-tasks-backlog-status-label"
             ),
-            isOpen
-              ? React.createElement(PlatformPopupSurface, {
-                  className: "playground-tasks-toolbar-popup-menu playground-tasks-backlog-status-menu playground-tasks-toolbar-popup-menu-animate-down-in",
-                },
-                  statusOptions.map((option) =>
-                    React.createElement("button", {
-                        key: option.id,
-                        type: "button",
-                        className: "tb-popup-row tb-popup-row-select",
-                        disabled: saveState.isSaving,
-                        onClick: (event) => void handleTaskPreviewStatusChange(normalizedTask, option.id, event),
-                      },
-                      React.createElement("span", { className: "tb-popup-check-slot" }),
-                      React.createElement("div", { className: "playground-tasks-toolbar-popup-item-copy" },
-                        React.createElement("span", null, option.label)
-                      )
-                    )
-                  )
-                )
-              : null
-          );
+            disabled: isDisabled,
+            open: isOpen,
+            onOpenChange: (nextOpen) => {
+              setTaskStatusMenuState((current) => {
+                if (nextOpen) {
+                  return { taskId: normalizedTask.id };
+                }
+                return current?.taskId === normalizedTask.id ? null : current;
+              });
+            },
+            alignment: "end",
+            popupAlignment: "right",
+            popupWidth: "176px",
+            className: "playground-tasks-backlog-status-control" + (isOpen ? " is-open" : ""),
+            triggerClassName: "playground-tasks-backlog-status-button",
+            popupClassName: "playground-tasks-backlog-status-menu",
+            optionClassName: "playground-tasks-backlog-status-option",
+            onClick: (event) => event.stopPropagation(),
+          });
         }
 
         async function handleCreateSprint() {
